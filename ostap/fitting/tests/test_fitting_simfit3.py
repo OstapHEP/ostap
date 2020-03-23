@@ -101,91 +101,98 @@ for i in range (NC2) :
          mass2.setVal ( v2 )
          mass3.setVal ( v3 )
          dataset2.add ( varset2 )
-        
+
+         
 # =============================================================================
-## low statistic, high-background "signal channel"
-signal2  = Models.Gauss_pdf ( 'G2'                  ,
-                              xvar  = mass2         ,
-                              mean  = ( 15  , 20  ) ,
-                              sigma = ( 0.1 , 5.0 ) )
+def test_simfit3() : 
 
-signal3  = Models.Gauss_pdf ( 'G3'                  ,
-                              xvar  = mass3         ,
-                              mean  = signal2.mean  ,
-                              sigma = signal2.sigma ) 
+    ## low statistic, high-background "signal channel"
+    signal2  = Models.Gauss_pdf ( 'G2'                  ,
+                                  xvar  = mass2         ,
+                                  mean  = ( 15  , 20  ) ,
+                                  sigma = ( 0.1 , 5.0 ) )
+    
+    signal3  = Models.Gauss_pdf ( 'G3'                  ,
+                                  xvar  = mass3         ,
+                                  mean  = signal2.mean  ,
+                                  sigma = signal2.sigma ) 
+    
+    model_S   = Models.Fit2DSym  ( suffix   = 'M2'    ,
+                                   yvar     = mass3   , 
+                                   signal_x = signal2 ,
+                                   signal_y = signal3 ,
+                                   bkg_1x   = None    ,
+                                   bkg_2x   = None    )
+    model_S.BB = NB2
+    model_S.SS = NS2
+    model_S.SB = NC2  
+    model_S.SB.setMin ( -500 ) 
+    
+    ## fit 2
+    rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
+    rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
+    rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
+    rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
+    
+    
+    logger.info ( 'Fit results for signal sample only: %s' % rS )
+    
+    # =========================================================================
+    ## high statistic, low-background "control/normalization channel"
+    mean_N   = signal2.vars_subtract ( signal2.mean  , 10.0 )
+    sigma_N  = signal2.vars_multiply ( signal2.sigma ,  0.5 )
+    
+    signal_N = Models.Gauss_pdf ( 'G1'            ,
+                                  xvar  = mass1   ,
+                                  mean  = mean_N  ,
+                                  sigma = sigma_N )
+    
+    model_N   = Models.Fit1D ( suffix = 'M1' , signal = signal_N ,  background = -1 )
+    model_N.S = NS1
+    model_N.B = NB1 
+    
+    ## fit 1 
+    rN , fN = model_N.fitTo ( dataset1 , draw = False , nbins = 50 , silent = True )
+    rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
+    
+    logger.info ( 'Fit results for normalization sample only: %s' % rN )
+    
+    # =========================================================================
+    ## combine data
+    
+    sample  = ROOT.RooCategory ('sample','sample'  , 'S' , 'N' )
+    
+    ## combine datasets
+    from ostap.fitting.simfit import combined_data 
+    vars    = ROOT.RooArgSet ( mass1 , mass2 , mass3 )
+    dataset = combined_data  ( sample , vars , { 'N' : dataset1 , 'S' : dataset2 } )
+    
+    ## combine PDFs
+    model_sim  = Models.SimFit (
+        sample , { 'S' : model_S  , 'N' : model_N } , name = 'X'
+        )
+    
+    # =========================================================================
+    rC , fC = model_sim.fitTo ( dataset , silent = True )
+    rC , fC = model_sim.fitTo ( dataset , silent = True )
+    
+    fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+    fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
+    fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
+    
+    logger.info ( 'Combined fit  results are: %s ' % rC )
+    
+    logger.info ( ' Value |        Simple fit         |    Combined fit ' )
+    logger.info ( ' #N    | %25s | %-25s '  % ( rS.SSM2     * 1 , rC.SSM2     * 1 ) )
+    logger.info ( ' mean  | %25s | %-25s '  % ( rS.mean_G2  * 1 , rC.mean_G2  * 1 ) )
+    logger.info ( ' sigma | %25s | %-25s '  % ( rS.sigma_G2 * 1 , rC.sigma_G2 * 1 ) )
 
-model_S   = Models.Fit2DSym  ( suffix   = 'M2'    ,
-                               yvar     = mass3   , 
-                               signal_x = signal2 ,
-                               signal_y = signal3 ,
-                               bkg_1x   = None    ,
-                               bkg_2x   = None    )
-model_S.BB = NB2
-model_S.SS = NS2
-model_S.SB = NC2  
-model_S.SB.setMin ( -500 ) 
-
-## fit 2
-rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
-rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
-rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
-rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
-
-
-logger.info ( 'Fit results for signal sample only: %s' % rS )
-
-# =======================================================================================
-## high statistic, low-background "control/normalization channel"
-mean_N   = signal2.vars_subtract ( signal2.mean  , 10.0 )
-sigma_N  = signal2.vars_multiply ( signal2.sigma ,  0.5 )
-
-signal_N = Models.Gauss_pdf ( 'G1'            ,
-                              xvar  = mass1   ,
-                              mean  = mean_N  ,
-                              sigma = sigma_N )
-
-model_N   = Models.Fit1D ( suffix = 'M1' , signal = signal_N ,  background = -1 )
-model_N.S = NS1
-model_N.B = NB1 
-
-## fit 1 
-rN , fN = model_N.fitTo ( dataset1 , draw = False , nbins = 50 , silent = True )
-rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
-
-logger.info ( 'Fit results for normalization sample only: %s' % rN )
 
 # =============================================================================
-## combine data
+if '__main__' == __name__ :
 
-sample  = ROOT.RooCategory ('sample','sample'  , 'S' , 'N' )
+    test_simfit3 () 
 
-
-## combine datasets
-from ostap.fitting.simfit import combined_data 
-vars    = ROOT.RooArgSet ( mass1 , mass2 , mass3 )
-dataset = combined_data  ( sample , vars , { 'N' : dataset1 , 'S' : dataset2 } )
-
-
-## combine PDFs
-model_sim  = Models.SimFit (
-    sample , { 'S' : model_S  , 'N' : model_N } , name = 'X'
-    )
-
-# =============================================================================
-rC , fC = model_sim.fitTo ( dataset , silent = True )
-rC , fC = model_sim.fitTo ( dataset , silent = True )
-
-fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
-fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
-
-logger.info ( 'Combined fit  results are: %s ' % rC )
-
-logger.info ( ' Value |        Simple fit         |    Combined fit ' )
-logger.info ( ' #N    | %25s | %-25s '  % ( rS.SSM2     * 1 , rC.SSM2     * 1 ) )
-logger.info ( ' mean  | %25s | %-25s '  % ( rS.mean_G2  * 1 , rC.mean_G2  * 1 ) )
-logger.info ( ' sigma | %25s | %-25s '  % ( rS.sigma_G2 * 1 , rC.sigma_G2 * 1 ) )
-   
 
 # =============================================================================
 ##                                                                      The END 

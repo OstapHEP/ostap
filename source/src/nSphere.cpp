@@ -87,6 +87,7 @@ Ostap::Math::NSphere::NSphere
  *  @param nPhases  dimensionality of N-sphere 
  *  @param bias     use the rotated sphere? 
  */
+// ============================================================================
 Ostap::Math::NSphere::NSphere 
 ( const std::vector<double>& phases  )
   : Ostap::Math::NSphere::NSphere ( phases , phases.size() + 1 ) 

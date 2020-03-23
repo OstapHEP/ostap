@@ -24,15 +24,21 @@ fname  = os.path.join ( tmpdir , 'test_frame.root' )
 
 # A simple helper function to fill a test tree
 def fill_tree ( tname , fname ):
-    tdf = DataFrame(1000)
-    tdf.Define ("one", "1.0").Define ("b1" , "(double) tdfentry_").Define ("b2" , "(1.0+b1)*(1.0+b1)").Snapshot ( tname, fname )
+    
+    tdf = DataFrame        ( 1000 )
+    a   = tdf.ProgressBar  ( 1000 )
+    tdf.Define   ("one", "1.0"               )\
+       .Define   ("b1" , "(double) tdfentry_")\
+       .Define   ("b2" , "(1.0+b1)*(1.0+b1)" )\
+       .Snapshot ( tname, fname )
     
 # We prepare an input tree to run on
 tname = "myTree"
-fill_tree(tname, fname)
+fill_tree ( tname, fname )
 
 frame = DataFrame ( tname        , fname        )
 tree  = Tree      ( name = tname , file = fname ).chain
+
 
 from ostap.utils.utils  import implicitMT
 from ostap.utils.timing import timing
@@ -86,7 +92,7 @@ def test_frame1 () :
                     c += obj[0].kurtosis ( 'b1' , 'b1/(b2+1)' ) 
                                                           
 
-def tets_frame2 ( ) :
+def test_frame2 ( ) :
 
     h1 = tree .draw('b1','1/b1')
     h2 = frame.draw('b1','1/b1')

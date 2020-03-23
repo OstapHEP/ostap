@@ -36,6 +36,8 @@ namespace
     return (gsl_integration_workspace*) _ws ;
   }
   // ==========================================================================
+  // get size of GSL-wporkspace 
+  // ==========================================================================
   /** @var s_SIZE
    *  the workspace size parameter for GSL-integration
    *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
@@ -44,7 +46,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE  = 600 ;
+  const std::size_t s_SIZE  = 1000 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,

@@ -12,8 +12,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'DataFrame'   , ## RDataFrame object
-    'report_prnt' , ## print the report 
+    'DataFrame'          , ## RDataFrame object
+    'report_print'       , ## print the report 
+    'report_print_table' , ## print the report 
+    'report_as_table'    , ## print the report 
     ) 
 # =============================================================================
 import ROOT
@@ -26,8 +28,11 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for ROOT::RDataFrame objects')
 # =============================================================================
-from   ostap.core.core    import cpp, Ostap 
-from   ostap.logger.utils import multicolumn
+from   ostap.core.core        import cpp, Ostap 
+from   ostap.core.ostap_types import integer_types 
+from   ostap.logger.utils     import multicolumn
+from   ostap.utils.basic      import terminal_size, isatty
+from   ostap.logger.colorized import allright
 # =============================================================================
 try : 
     DataFrame = ROOT.ROOT.RDataFrame
@@ -81,7 +86,42 @@ def _fr_len_ ( f ) :
     >>> print len(frame)
     """
     return f.Count().GetValue() 
+
+# =============================================================================
+## Draw (lazy) progress bar for the    DataFrame:
+#  @code
+#  f = DataFrame ( ... )
+#  p = f.ProgressBar  ( 1000 ) ## number of elements!
+#  ....
+#  @endcode 
+def _fr_progress_bar_ ( self          , 
+                        length        ,
+                        width  = None ,
+                        symbol = "#"  ) :
+    """ Draw (lazy) progress bar for the    DataFrame:
+    >>> f = DataFrame ( ... )
+    >>> p = f.ProgressBar  ( 1000 ) ## number of elements!
+    >>> ....
+    """
     
+    cnt = self.Count () 
+    if not isatty() : return cnt
+    
+    length = length if isinstance ( length , integer_types ) and  0 < length else len ( self )
+    width  = width  if isinstance ( width  , integer_types ) and 10 < width  else terminal_size()[1]
+    
+    if width < 16 : width = 16 
+    nchunks = width - 14
+    csize   = length / nchunks 
+
+    left   = "[ "
+    right  = " ]"
+    symbol = allright ( symbol )
+
+    fun = Ostap.Utils.frame_progress ( csize , nchunks , symbol , ' ' , left , right )
+    cnt.OnPartialResultSlot  ( csize , fun )
+
+    return cnt
 
 # =============================================================================
 ## Get the effective entries in data frame
@@ -170,32 +210,36 @@ def _fr_print_ ( t ) :
     return res
 
 # ===============================================================================
-## Print the frame report
-def report_prnt ( report , title  = '' , prefix = '' ) :
-    """Print a frame report
+## Print the frame report data
+def report_print_table ( report , title  = '' , prefix = '' ) :
+    """Print a frame report data 
     """
     from ostap.core.core import binomEff
-    table  = []
-    lmax   = 5
+    
     n0     = -1 
-    for c in report :
-        if  n0 <= 0 : n0 = c.GetAll () 
-        name    = c.GetName ()
-        passed  = c.GetPass ()
-        all     = c.GetAll  ()
-        eff1    = binomEff  ( passed , all ) * 100 
-        eff2    = binomEff  ( passed ,  n0 ) * 100 
-        table.append (  ( name , passed , all , eff1 , eff2 )  )
-        lmax    = max ( len ( name ) , lmax , len ( 'Filter' ) )
+    lmax   =  5
+    table  = []
+    
+    for name, passed, all in report :
 
+        n0 = max ( n0 , all , passed )
+        
+        eff1 = binomEff ( passed , all ) * 100
+        
+        eff2 = binomEff ( passed ,  n0 ) * 100
+        
+        lmax = max ( len ( name ) , lmax , len ( 'Filter ' ) ) 
+        
+        item = name ,  passed , all , eff1 , eff2 
+        table.append ( item )
+        
     lmax          =  max ( lmax + 2 , len ( 'Selection' ) + 2 )
     fmt_name      =  '%%-%ds ' % lmax 
     fmt_input     =  '%10d'
     fmt_passed    =  '%-10d'
     fmt_eff       =  '%8.3g +- %-8.3g'
     fmt_cumulated =  '%8.3g +- %-8.3g'
-    
-    
+        
     header = ( ( '{:^%d}' % lmax ).format ( 'Filter'   ) ,               
                ( '{:>10}'        ).format ( '#input '  ) ,
                ( '{:<10}'        ).format ( ' #passed' ) ,
@@ -214,16 +258,43 @@ def report_prnt ( report , title  = '' , prefix = '' ) :
     import ostap.logger.table as T
     return T.table ( table_data , title , prefix )
 
+# ===============================================================================
+## Print the frame report
+def report_as_table ( report ) :
+    """Print a frame report
+    """
+    table = []
+    for c in report:
+        name    = c.GetName ()
+        passed  = c.GetPass ()
+        all     = c.GetAll  ()
+        table.append (  ( name , passed , all )  )
+
+    return table 
+
+# ===============================================================================
+## Print the frame report
+def report_print ( report , title  = '' , prefix = '' ) :
+    """Print a frame report
+    """
+    table = report_as_table ( report ) 
+    return report_print_table ( table , title, prefix )
+
+
+
 # ==============================================================================
 # decorate 
 # ==============================================================================
 if not hasattr ( DataFrame , '__len__') : DataFrame.__len__ = _fr_len_
-DataFrame .__str__    = _fr_print_ 
-DataFrame .__repr__   = _fr_print_
+DataFrame .__str__     = _fr_print_ 
+DataFrame .__repr__    = _fr_print_
 
-DataFrame .nEff       = _fr_nEff_
-DataFrame .statVar    = _fr_statVar_
-DataFrame .statCov    = _fr_statCov_
+DataFrame .nEff        = _fr_nEff_
+DataFrame .statVar     = _fr_statVar_
+DataFrame .statCov     = _fr_statCov_
+DataFrame .ProgressBar = _fr_progress_bar_
+DataFrame .progress    = _fr_progress_bar_
+
 
 from ostap.stats.statvars import  data_decorate 
 data_decorate ( DataFrame )
@@ -244,6 +315,9 @@ _new_methods_       = (
     DataFrame.__str__          ,
     DataFrame.columns          , 
     DataFrame.branches         ,
+    #
+    DataFrame.ProgressBar      ,
+    DataFrame.progress         ,
     #
     DataFrame.draw             , 
     DataFrame.project          ,
@@ -276,5 +350,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

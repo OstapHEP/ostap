@@ -1204,7 +1204,7 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
-    norm = VE(  h1.integrate().value() , 0 ) 
+    norm = VE (  h1.integrate().value() , 0 ) 
     return r , pdf , func , norm , pdf_fun, f  
 
 # =============================================================================

@@ -35,7 +35,7 @@ else :
     logger = getLogger( __name__ )
 # =============================================================================
 ## create a file with tree 
-def create_tree ( item ) :
+def create_tree ( jobid , item ) :
     """Create a file with a tree
     >>> create_tree ( ('1.root' ,  1000 ) ) 
     """
@@ -176,7 +176,7 @@ def test_kisa2 () :
         st = chain.process ( selector , silent = False , shortcut = True )
         ds = selector.data
         del selector 
-    logger.info ( 'Dataset: %s' % ds )
+    logger.info ( 'Dataset:\n%s' % ds )
     
     with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
         selector = SelectorWithVars  (
@@ -191,7 +191,7 @@ def test_kisa2 () :
                                    ppservers  = ppservers )
         ds = selector.data 
         del selector 
-    logger.info ( 'Dataset: %s' % ds )
+    logger.info ( 'Dataset:\n%s' % ds )
 
 
 ## # =============================================================================

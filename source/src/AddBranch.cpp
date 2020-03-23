@@ -2,6 +2,7 @@
 // Include files 
 // ============================================================================
 #include <string>
+#include <tuple>
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -32,8 +33,9 @@ namespace
     INVALID_TREE          = 750 , 
     CANNOT_CREATE_BRANCH  = 751 , 
     CANNOT_CREATE_FORMULA = 752 , 
-    INVALID_TH2           = 753 , 
-    INVALID_TH1           = 754 , 
+    INVALID_TREEFUNCTION  = 753 , 
+    INVALID_TH2           = 754 , 
+    INVALID_TH1           = 755 , 
   };
   // ==========================================================================
 }
@@ -105,6 +107,123 @@ Ostap::Trees::add_branch
   Ostap::Utils::Notifier notifier ( tree , func.get () ) ;
   //
   return add_branch ( tree , name , *func ) ;
+}
+// ============================================================================
+/*  add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param name     the name for new branch 
+ *  @param branches the map name->formula use to calculate newbranch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                                   tree     ,  
+  const std::map<std::string,std::string>& branches ) 
+{
+  //
+  if      ( !tree            ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  else if ( branches.empty() ) { return Ostap::StatusCode::SUCCESS         ; }
+  //
+  typedef FUNCTREEMAP                                                  MAP   ;
+  typedef std::vector<std::unique_ptr<Ostap::Functions::FuncFormula> > STORE ;
+  //
+  STORE store ;
+  MAP   map ;
+  //
+  store.reserve( branches.size () ) ;
+  //
+  Ostap::Utils::Notifier notifier ( tree ) ;
+  //
+  for ( const auto& entry : branches )
+  {
+    store.emplace_back ( std::make_unique<Ostap::Functions::FuncFormula>( entry.second ,  tree ) ) ;
+    auto const& func = store.back() ;
+    if ( !func ) { return Ostap::StatusCode ( CANNOT_CREATE_FORMULA ) ; }
+    //
+    notifier.add ( func.get() )   ;
+    map [ entry.first ] = func.get () ;    
+    //
+  }
+  //
+  // due to some very strange reasons we need to invoke the Notifier explicitely.
+  // - otherwise crash could happen causes crash..
+  notifier.Notify() ;
+  //
+  return add_branch ( tree , map ) ;
+}
+// ============================================================================
+/*  add new branches to the tree
+ *  the value of the branch each  is taken from <code>branches</code>
+ *  @param tree     input tree 
+ *  @param name     the name for new branch 
+ *  @param branches the map name->function use to calculate new branch
+ *  @return status code 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-05-14
+ */
+// ============================================================================
+Ostap::StatusCode 
+Ostap::Trees::add_branch 
+( TTree*                           tree     ,  
+  const Ostap::Trees::FUNCTREEMAP& branches ) 
+{
+  // 
+  if      ( !tree            ) { return Ostap::StatusCode ( INVALID_TREE ) ; }
+  else if ( branches.empty() ) { return Ostap::StatusCode::SUCCESS         ; }
+  //
+  typedef std::vector<const Ostap::IFuncTree*> FUNCTIONS ;
+  typedef std::vector<double>                  VALUES    ;
+  typedef std::vector<TBranch*>                BRANCHES  ;
+  //
+  const std::size_t N = branches.size() ;
+  VALUES    values    ( N ) ;
+  BRANCHES  tbranches ( N ) ;
+  FUNCTIONS functions ( N ) ;
+  //
+  // Notifier
+  Ostap::Utils::Notifier notifier { tree } ;
+  //
+  unsigned int index = 0 ;
+  for ( const auto& entry : branches ) 
+  {
+    const auto&             name = entry.first  ;
+    const Ostap::IFuncTree* func = entry.second ;
+    if ( !func   ) { return Ostap::StatusCode ( INVALID_TREEFUNCTION ) ; }
+    functions [ index ] = func ;
+    //
+    const TObject* o = dynamic_cast<const TObject*>( func ) ;
+    if ( nullptr != o ) { notifier.add ( const_cast<TObject*> ( o ) ) ; }
+    //
+    TBranch* branch   = tree->Branch
+      ( name.c_str() ,
+        &values[index] , (name + "/D").c_str() );
+    if ( !branch ) { return Ostap::StatusCode ( CANNOT_CREATE_BRANCH ) ; }
+    tbranches [ index ] = branch ;
+    //
+    ++index ;
+  }
+  //
+  // due to some very strange reasons we need to invoke the Notifier explicitely.
+  // - otherwise crash could happen  
+  //
+  notifier.Notify() ;
+  //
+  const Long64_t nentries = tree->GetEntries(); 
+  for ( Long64_t i = 0 ; i < nentries ; ++i )
+  {
+    if ( tree->GetEntry ( i ) < 0 ) { break ; };
+    //
+    // evaluate the functions
+    for ( unsigned int k = 0 ; k < N ; ++k ) { values    [ k ] = (*functions[ k ]) ( tree ) ; }
+    // fill the branches
+    for ( unsigned int j = 0 ; j < N ; ++j ) { tbranches [ j ] -> Fill ()                   ; }
+  }
+  //
+  return Ostap::StatusCode::SUCCESS ; 
 }
 // ============================================================================
 /*  add new branch to TTree, sampling it from   the 1D-histogram

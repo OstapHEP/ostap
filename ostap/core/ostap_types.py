@@ -20,6 +20,8 @@ __all__     = (
     'str_types'       , ## string  types (only string!)
     'listlike_types'  , ## list-like types (list, tuple, set, collections.Iterable)
     'list_types'      , ## list types (list, tuple)
+    'dict_types'      , ## dict types 
+    'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
     ##
     'is_integer'      , ## is a value of int-like type?
@@ -41,24 +43,29 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-import math, collections
+import math
 from   sys import version_info as python_version 
 if python_version.major > 2:
     long           = int
     string_types   = bytes , str 
     integer_types  = int   ,
     long_type      = int
+    import collections.abc as C
 else :
     string_types   = str   , unicode
     integer_types  = int   , long
     long_type      = long 
     python_version = 2 
+    import collections     as C
 
 num_types = integer_types + ( float , ) 
 str_types = str,
 
-list_types     = list, tuple
-listlike_types = list_types + ( set , collections.Iterable ) 
+list_types     = list , tuple
+listlike_types = list_types + ( set , C.Sequence )
+dict_types     = dict ,
+dictlike_types = dict ,               C.Mapping  
+
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

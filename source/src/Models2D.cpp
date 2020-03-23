@@ -11,7 +11,6 @@
 #include <numeric>
 #include <array>
 #include <tuple>
-#include <iostream>
 #include <functional>
 // ============================================================================
 // ROOT
@@ -116,7 +115,7 @@ namespace
         workspace ( work )   ,   // workspace
         s_PRECISION          ,   // absolute precision
         s_PRECISION          ,   // relative precision
-        s_SIZE               ,   // maximum number of subintervals
+        work.size ()         ,   // maximum number of subintervals
         message              ,   // message 
         __FILE__  , __LINE__ ) ; // filename & line number 
     //
@@ -595,7 +594,7 @@ double Ostap::Math::PS2DPol2::integrateY
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   //
@@ -637,7 +636,7 @@ double Ostap::Math::PS2DPol2::integrateX
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   //
@@ -777,7 +776,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   // ==========================================================================
@@ -866,10 +865,18 @@ Ostap::Math::PS2DPol3::PS2DPol3
 std::vector<double> Ostap::Math::PS2DPol3::pars() const 
 {
   std::vector<double> result ( npars() , 0.0 ) ;
-  const std::vector<double>& xps = xpars () ;
-  const std::vector<double>& yps = ypars () ;
-  std::copy ( xps.begin() , xps.end() , result.begin()              ) ;
-  std::copy ( yps.begin() , yps.end() , result.begin() + xps.size() ) ;
+  const unsigned short nPx = m_psx.npars() ;
+  const unsigned short nPy = m_psy.npars() ;
+  //
+  for ( unsigned short ix = 0 ; ix < nPx ; ++ix )
+  { result [       ix ] = m_psx.par ( ix ) ; }
+  for ( unsigned short iy = 0 ; iy < nPy ; ++iy )
+  { result [ nPx + iy ] = m_psy.par ( iy ) ; }
+  //
+  // const std::vector<double>& xps = xpars () ;
+  // const std::vector<double>& yps = ypars () ;
+  // std::copy ( xps.begin() , xps.end() , result.begin()              ) ;
+  // std::copy ( yps.begin() , yps.end() , result.begin() + xps.size() ) ;
   return result ;
 }
 // ===========================================================================
@@ -960,7 +967,7 @@ double Ostap::Math::PS2DPol3::integrateY
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   // ==========================================================================
@@ -999,7 +1006,7 @@ double Ostap::Math::PS2DPol3::integrateX
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   // ==========================================================================
@@ -1137,7 +1144,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
       workspace ( m_workspace ) ,   // workspace
       s_PRECISION               ,   // absolute precision
       s_PRECISION               ,   // relative precision
-      s_SIZE                    ,   // maximum number of subintervals
+      m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
   // ==========================================================================

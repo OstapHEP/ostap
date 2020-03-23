@@ -17,12 +17,13 @@ __all__     = (
     'useStorage'    , ## define (as context) the default storage for  RooDataStore 
     'PDF_fun'       , ## wrapper of PDF to ``simple'' function 
     'SETVAR'        , ## context manager to preserve the current value for RooRealVar
+    'FIXVAR'        , ## context manager to fix/unfix the variable 
     'var_from_name' , ## "convert" name/expression into variable/formula
     ) 
 # =============================================================================
 import ROOT, random
 from   ostap.core.core              import Ostap, VE
-from   ostap.fitting.variables      import SETVAR 
+from   ostap.fitting.variables      import SETVAR, FIXVAR  
 import ostap.fitting.roocollections
 import ostap.fitting.roofitresult
 import ostap.fitting.printable
@@ -173,5 +174,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

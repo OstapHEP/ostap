@@ -22,10 +22,11 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2019-08-31"
 __all__     = (
-    'table'       , ## format the list of rows as a  table.
-    'the_table'   , ## format the list of rows as a  table (local version)
-    'table_width' , ## true  width of the table
-    'add_prefix'  , ## add the prefix to each row of the table 
+    'table'        , ## format the list of rows as a  table.
+    'the_table'    , ## format the list of rows as a  table (local version)
+    'table_width'  , ## true  width of the table
+    'align_column' , ## align the certain column of the table  
+    'add_prefix'   , ## add the prefix to each row of the table 
     )
 # =============================================================================
 from ostap.logger.colorized import infostr, allright, decolorize        
@@ -204,7 +205,46 @@ def add_prefix ( table , prefix = '' ) :
     """    
     return prefix + table.replace ( '\n' , '\n' + prefix ) if prefix else table 
 
+# ==============================================================================
+## Aling the certain column of the table
+#  @code
+#  aligned = align_column ( table , 1 , 'left' ) 
+#  @endcode 
+def align_column ( table , index , align = 'left') :
+    """Aling the certain column of the table
+    >>> aligned = align_column ( table , 1 , 'left' ) 
+    """
+    nrows = [ list ( row ) for row in table ]
+    lmax  =  0 
 
+    for row in nrows :
+        if index <= len ( row ) :
+            item = decolorize ( row [ index ] )
+            lmax = max ( lmax , len ( item )  )
+
+    if not lmax : return table 
+
+    left   =              align.lower() in ( 'left'  , '<' , 'l' )
+    right  = not left and align.lower() in ( 'right' , '>' , 'r' )
+
+    new_table = []
+    for row in nrows :
+        if index <= len ( row ) :
+            item   = decolorize ( row [ index ] )
+            nspace = lmax - len ( item ) 
+            if   left :
+                item = row [ index ] + nspace * ' '
+            elif right:
+                item = nspace * ' ' + row [ index ]
+            else :
+                sl = nspace / 2
+                sr = nspace - sl 
+                item = sl * ' ' + row [ index ] + sr * ' '
+            row[ index ] = item                        
+        new_table.append ( row )
+            
+    return [ tuple ( row ) for row in new_table ] 
+    
 # =============================================================================
 if __name__ == '__main__' :
 

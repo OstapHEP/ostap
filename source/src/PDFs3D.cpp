@@ -16,11 +16,35 @@
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_roofit.h"
+// ============================================================================
 /** @file 
  *  Implementation file for namespace Ostap::Models
  *  @author Vanya BELYAEV  Ivan.Belyaev@cern.ch
  *  @date   2017-11-21
  */
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+#include "BatchHelpers.h"
+// ============================================================================
+typedef BatchHelpers::BracketAdapter<double> BA ;
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  template<class TX, class TY, class TZ , class FUN>
+  void compute_XYZ ( RooSpan<double> output , FUN& fun , TX x , TY y , TZ z ) 
+  {
+    const int n = output.size();
+    for ( int i = 0 ; i < n ; ++i ) 
+    { output [ i ] = fun ( x [ i ] , y [ i ] , z [ i ] ) ; }
+  }
+  // ==========================================================================
+}
+#endif
 // ============================================================================
 // generic polinomial
 // ============================================================================
@@ -46,24 +70,15 @@ Ostap::Models::Poly3DPositive::Poly3DPositive
                  z.getMin() , z.getMax() ) 
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Poly3DPositive"          ) ;
   //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly3DPositive"            , 
-                            Ostap::StatusCode::FAILURE         ) ; }
-  
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Poly3DPositive"          ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -94,26 +109,7 @@ Ostap::Models::Poly3DPositive::clone( const char* name ) const
 { return new Ostap::Models::Poly3DPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Poly3DPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis , m_positive ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -176,9 +172,49 @@ Double_t Ostap::Models::Poly3DPositive::analyticalIntegral
     ( m_x , m_y ,  
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
-
-
-
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Poly3DPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  auto z = m_z . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  const bool ez = z.empty()  ;
+  //
+  if ( ex && ey && ez ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
+  else if (  ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
+  else if (  ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
+  else if (  ex && !ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
+  else if ( !ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
+  else if ( !ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
+  else 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
 
 // ============================================================================
 // symmetric polinomial
@@ -202,23 +238,15 @@ Ostap::Models::Poly3DSymPositive::Poly3DSymPositive
                  std::max ( x.getMax() , std::max ( y.getMax() , z.getMax() ) ) )
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Poly3DSymPositive"       ) ;
   //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly3DSymPositive"         , 
-                            Ostap::StatusCode::FAILURE         ) ; }
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Poly3DSymPositive"       ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -249,26 +277,7 @@ Ostap::Models::Poly3DSymPositive::clone( const char* name ) const
 { return new Ostap::Models::Poly3DSymPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Poly3DSymPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis , m_positive ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -332,6 +341,49 @@ Double_t Ostap::Models::Poly3DSymPositive::analyticalIntegral
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
 // ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Poly3DSymPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  auto z = m_z . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  const bool ez = z.empty()  ;
+  //
+  if ( ex && ey && ez ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
+  else if (  ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
+  else if (  ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
+  else if (  ex && !ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
+  else if ( !ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
+  else if ( !ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
+  else 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 
 // ============================================================================
 // mixed symmetry polinomial
@@ -357,23 +409,15 @@ Ostap::Models::Poly3DMixPositive::Poly3DMixPositive
                  z.getMin() , z.getMax() )
 {
   //
-  RooAbsArg*   coef = 0 ;
-  unsigned int num  = 0 ;
-  Ostap::Utils::Iterator tmp ( phis ) ;
-  while ( ( coef = (RooAbsArg*) tmp.next() ) && num < m_positive.npars() )
-  {
-    RooAbsReal* r = dynamic_cast<RooAbsReal*> ( coef ) ;
-    if ( 0 == r ) { continue ; }
-    m_phis.add ( *coef ) ;
-    ++num ;  
-  }
+  ::copy_real   ( phis , m_phis , "Invalid phi-parameter!" ,
+                  "Ostap::Models::Poly2DMixPositive"       ) ;
   //
-  if ( num != m_positive.npars() ) 
-  { Ostap::throwException ( "Invalid size of parameters vector", 
-                            "Ostap::Poly3DMixPositive"         , 
-                            Ostap::StatusCode::FAILURE         ) ; }
+  Ostap::Assert ( ::size ( m_phis ) == m_positive.npars () , 
+                  "Widths/#channels mismatch"              , 
+                  "Ostap::Models::Poly3DMixPositive"       ) ;
   //
   setPars () ;
+  //
 }
 // ============================================================================
 // copy constructor
@@ -404,26 +448,7 @@ Ostap::Models::Poly3DMixPositive::clone( const char* name ) const
 { return new Ostap::Models::Poly3DMixPositive(*this,name) ; }
 // ============================================================================
 void Ostap::Models::Poly3DMixPositive::setPars () const 
-{
-  //
-  RooAbsArg*       phi   = 0 ;
-  const RooArgSet* nset  = m_phis.nset() ;
-  //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_phis ) ;
-  while ( ( phi = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( phi ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double phiv   = r->getVal ( nset ) ;
-    //
-    m_positive.setPar ( k  , phiv ) ;
-    //
-    ++k ;
-  }
-  //
-}
+{ ::set_pars ( m_phis , m_positive ) ; }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
@@ -486,6 +511,50 @@ Double_t Ostap::Models::Poly3DMixPositive::analyticalIntegral
     ( m_x , m_y ,  
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+// ============================================================================
+RooSpan<double> 
+Ostap::Models::Poly3DMixPositive::evaluateBatch 
+( std::size_t begin     , 
+  std::size_t batchSize ) const 
+{ 
+  // 
+  auto x = m_x . getValBatch ( begin , batchSize ) ;
+  auto y = m_y . getValBatch ( begin , batchSize ) ;
+  auto z = m_z . getValBatch ( begin , batchSize ) ;
+  //
+  const bool ex = x.empty()  ;
+  const bool ey = y.empty()  ;
+  const bool ez = z.empty()  ;
+  //
+  if ( ex && ey && ez ) { return {} ; }
+  //
+  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
+  //
+  setPars() ;
+  //
+  if      ( !ex &&  ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
+  else if (  ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
+  else if (  ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
+  else if (  ex && !ey && !ez ) 
+  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
+  else if ( !ex &&  ey && !ez ) 
+  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
+  else if ( !ex && !ey &&  ez ) 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
+  else 
+  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
+  //
+  return output ;
+}
+// ============================================================================
+#endif
+// ============================================================================
+
 // ============================================================================
 ClassImp(Ostap::Models::Poly3DPositive       )
 ClassImp(Ostap::Models::Poly3DSymPositive    )

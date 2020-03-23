@@ -72,26 +72,30 @@ def _h_new_init_ ( self , *args ) :
 
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
-#  - it automaticlaly assign unique ID
+#  - it automatically assign unique ID
 #  - it ensures that cloned histogram is not going to die with
 #    the accidentally opened file/directory
+#  - a title can be optionally redefined 
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , hid = '' ) :
+def _h_new_clone_ ( self , name = '' , title = ''  ) :
     """Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
+    - a title can be optionally redefined 
     """
-    if not hid : hid = hID()
+    if not name : name = hID()
     #
     with ROOTCWD() :
         ROOT.gROOT.cd() 
-        nh = self._old_clone_ ( hid )
+        nh = self._old_clone_ ( name )
         nh.SetDirectory ( ROOT.gROOT ) ## ATTENTION!
         ## optionally 
-        if not nh.GetSumw2() : nh.Sumw2() 
+        if not nh.GetSumw2() : nh.Sumw2()
+        
+    if title : nh.SetTitle ( title ) 
     return nh
 
 # =============================================================================
@@ -733,7 +737,6 @@ def _h1_call_ ( h1                    ,
         tx = interpolate
     elif not interpolate :
         tx  = 0
-
         
     ## use C++ function for fast interpolation 
     result = _interpolate_1D_ ( h1 , x , tx , edges , extrapolate , density )
@@ -774,7 +777,7 @@ class Histo1DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x ) :
-        return self.__histo ( x , **self.__confif )
+        return self.__histo ( x , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""
@@ -806,8 +809,7 @@ ROOT.TH3   .   size       = lambda s : s.GetNbinsX() * s.GetNbinsY() * s.GetNbin
 ROOT.TH1D  . nbins        = lambda s : s.GetNbinsX() 
 ROOT.TH1F  . nbins        = lambda s : s.GetNbinsX() 
 ROOT.TH1D  .  bins        = lambda s : s.GetNbinsX() 
-ROOT.TH1F  .  bins        = lambda s : s.GetNbinsX() 
-
+ROOT.TH1F  .  bins        = lambda s : s.GetNbinsX()
 ROOT.TH2D  . nbinsx       = lambda s : s.GetNbinsX()
 ROOT.TH2D  . nbinsy       = lambda s : s.GetNbinsY()
 ROOT.TH2F  . nbinsx       = lambda s : s.GetNbinsX()
@@ -1366,7 +1368,7 @@ class Histo2DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x , y ) :
-        return self.__histo ( x , y , **self.__confif )
+        return self.__histo ( x , y , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""
@@ -1474,7 +1476,7 @@ class Histo3DFun (object) :
             }
     ##  the only one imporant method
     def __call__ ( x , y , z ) :
-        return self.__histo ( x , y , z , **self.__confif )
+        return self.__histo ( x , y , z , **self.__config )
     @property
     def histo ( self )  :
         """``histo'': the  histogram itself"""
@@ -4844,6 +4846,25 @@ def _h1_accumulate_ ( h                        ,
     return result
 
 
+# =============================================================================
+## perform some accumulation for the histogram
+#  @code
+#  h =...
+#  sum = h.accumulate ()
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _hh_accumulate_ ( histo ) :
+    
+    """Accumulate the function value over the histogram
+    >>> h =...
+    >>> sum = h.accumulate ()
+    """
+    result = VE(0) 
+    for i in  histo :
+        result += histo [ i ]
+    return result
+
 
 # =============================================================================
 ## get the sum of entries 
@@ -5266,13 +5287,13 @@ for t in ( ROOT.TH1F , ROOT.TH1D ) :
     t . integrate   = _h1_integrate_ 
 
 for t in ( ROOT.TH2F , ROOT.TH2D ) :    
-    t . accumulate = _h1_accumulate_ 
-    t . sum        = _h1_accumulate_
+    t . accumulate = _hh_accumulate_ 
+    t . sum        = _hh_accumulate_
     t . integrate  = _h2_integrate_ 
 
 for t in ( ROOT.TH3F , ROOT.TH3D ) :    
-    t . accumulate = _h1_accumulate_ 
-    t . sum        = _h1_accumulate_
+    t . accumulate = _hh_accumulate_ 
+    t . sum        = _hh_accumulate_
     t . integrate  = _h3_integrate_ 
 
 # generic sscaling
@@ -7041,7 +7062,7 @@ for t in  ( ROOT.TH1D             ,
             setattr ( t , method , dumpHisto )
 
 # =============================================================================
-## Hashing finction for the histograms
+## Hashing function for the histograms
 #  @code
 #  histo = ...
 #  h     = hash ( histo ) 

@@ -4,7 +4,9 @@
 // ============================================================================
 // Include files
 // ============================================================================
+#include "Ostap/AddVars.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/BLOB.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/Bernstein1D.h"
 #include "Ostap/Bernstein2D.h"
@@ -43,6 +45,8 @@
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"
 #include "Ostap/MoreMath.h"
+#include "Ostap/MoreRooFit.h"
+#include "Ostap/MoreVars.h"
 #include "Ostap/Mute.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/NStatEntity.h"
@@ -55,7 +59,6 @@
 #include "Ostap/PySelector.h"
 #include "Ostap/PySelectorWithCuts.h"
 #include "Ostap/Polarization.h"
-#include "Ostap/Rotated.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/StatVar.h"

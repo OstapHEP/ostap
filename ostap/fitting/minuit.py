@@ -15,9 +15,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-import ROOT
-from   ostap.core.core  import cpp, VE
-from   ostap.core.ostap_types import integer_types
+import ROOT, ctypes 
+from   sys                    import version_info as python_version
+from   ostap.core.core        import cpp, VE
+from   ostap.core.ostap_types import integer_types, string_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -26,6 +27,8 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.minuit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some useful decorations for (T)Minuit functions')
+# =============================================================================
+partypes = integer_types
 # =============================================================================
 ## get the parameter from Minuit 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -40,15 +43,24 @@ def _mn_par_ ( self , i ) :
     """
     if not i in self : raise IndexError
     #
-    ip  = ROOT.Long   ( i )
-    val = ROOT.Double ( 0 )
-    err = ROOT.Double ( 0 )
+    ## val = ROOT.Double ( 0 )
+    ## err = ROOT.Double ( 0 )
+    ##
+    val = ctypes.c_double ( 0 )  
+    err = ctypes.c_double ( 0 ) 
     #
-    res = self.GetParameter ( ip , val , err )
+    res = self.GetParameter ( i , val , err )
+    #
+    val = float ( val.value )
+    err = float ( err.value )
     #
     return VE ( val , err*err )
 
-ROOT.TMinuit . __contains__ = lambda s,i : isinstance(i, integer_type + (ROOT.Long,) ) and 0<=i<s.GetNumPars() 
+# =============================================================================
+def _mn_contains_ (  self , p ) :
+    return  isinstance ( p, partypes )  and 0 <= p < self.GetNumPars()
+    
+ROOT.TMinuit . __contains__ = _mn_contains_ 
 ROOT.TMinuit . __len__      = lambda s : s.GetNumPars() 
 
 ROOT.TMinuit . par         = _mn_par_
@@ -73,23 +85,26 @@ def _mn_iter_ ( self ) :
 ROOT.TMinuit . __iter__ = _mn_iter_
 
 # =============================================================================
+## Simple wrapper for <code>ROOT.TMinuit.mnexcm</code> function
+## @see TMinuit::mnexcm
 ## excute MINUIT command
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-04-01
 def _mn_exec_ ( self , command , *args ) :
     """Execute MINUIT  command
+    Simple wrapper for ROOT.TMinuit.mnexcm function
+    - see ROOT.TMinuit.mnexcm    
     """
-    if not args :
-        args = [0]
-        logger.warning ( 'TMinuit::execute: empty vector replaced with  %s ' % args ) 
-
+    if not  args : args = 0 ,
+    
     from array import array
     arglist = array ( 'd' , [ i for i in args ]  )
-    ierr    = ROOT.Long   ( 0 )
-    #        
-    self.mnexcm ( command , arglist , len(arglist) , ierr )
     #
-    return ierr
+    ierr = ctypes.c_int ( 0 ) 
+    ##
+    self.mnexcm ( command , arglist , len ( arglist ) , ierr )
+    #
+    return int ( ierr.value )
 
 _mn_exec_ . __doc__  += '\n' + ROOT.TMinuit.mnexcm . __doc__
 
@@ -99,7 +114,7 @@ ROOT.TMinuit.execute = _mn_exec_
 ## excute MINUIT "SHOW" command
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-04-01
-def _mn_show_ ( self , what , *args ) :
+def _mn_show_ ( self , what = 'PAR' , *args ) :
     """Execute MINUIT  command
     """
     if not args : args = [ 0 ]
@@ -119,12 +134,11 @@ def _mn_set_par_ ( self , i , val , fix = False ) :
     """
     if not i in self : raise IndexError
     #
-    ip = ROOT.Long ( i )
     if hasattr ( val , 'value' ) : val = val.value()
     #
     ierr =  _mn_exec_ ( self , "SET PAR" , i + 1 , val )
     #
-    if fix : self.FixParameter ( ROOT.Long ( ip ) ) 
+    if fix : self.FixParameter ( i ) 
     #
     return ierr 
 
@@ -133,6 +147,7 @@ ROOT.TMinuit . setParameter = _mn_set_par_
 
 ROOT.TMinuit . fixPar       = lambda s,i,v: _mn_set_par_ ( s , i , v , True )
 ROOT.TMinuit . fixParameter = lambda s,i,v: _mn_set_par_ ( s , i , v , True )
+ROOT.TMinuit . fix          = lambda s,i,v: _mn_set_par_ ( s , i , v , True )
 
 
 ROOT.TMinuit . __setitem__ = _mn_set_par_ 
@@ -178,10 +193,10 @@ ROOT.TMinuit . migrade  = _mn_min_
 ROOT.TMinuit . migrad   = _mn_min_
 ROOT.TMinuit . fit      = _mn_min_
 
-ROOT.TMinuit . hesse    = lambda s : _mn_exec_ ( s , 'HESSE'   , 0 )
-ROOT.TMinuit . minimize = lambda s : _mn_exec_ ( s , 'MIN'     , 0 )
-ROOT.TMinuit . seek     = lambda s : _mn_exec_ ( s , 'SEEK'    , 0 )
-ROOT.TMinuit . simplex  = lambda s : _mn_exec_ ( s , 'SIMPLEX' , 0 )
+ROOT.TMinuit . hesse    = lambda s,*a : _mn_exec_ ( s , 'HESSE'   , *a )
+ROOT.TMinuit . minimize = lambda s,*a : _mn_exec_ ( s , 'MIN'     , *a )
+ROOT.TMinuit . seek     = lambda s,*a : _mn_exec_ ( s , 'SEEK'    , *a )
+ROOT.TMinuit . simplex  = lambda s,*a : _mn_exec_ ( s , 'SIMPLEX' , *a )
 
 # =============================================================================
 ## set the parameter 
@@ -222,11 +237,13 @@ def _mn_add_par_ ( self    , name      ,
     starts  = array ( 'd' , 1 * [ start ] )
     steps   = array ( 'd' , 1 * [ step  ] )
     #
-    ipar    = len ( self ) 
-    ierr    = ROOT.Long   ( 0 )
+    ipar    = len         ( self )
+    ##
+    ierr = ctypes.c_int ( 0 ) 
+    ##
     self.mnparm ( ipar , name ,  start , step , low , high , ierr )
     #
-    return ierr 
+    return int ( ierr.value )
 
 ROOT.TMinuit . addpar = _mn_add_par_
 ROOT.TMinuit . addPar = _mn_add_par_
@@ -243,7 +260,7 @@ def _mn_minerr_ ( self , i ) :
     """Get MINOS errors for parameter:
 
     >>> m = ...       # TMinuit object
-    >>> pos,neg = m.minosErr( 0 )
+    >>> pos , neg = m.minosErr( 0 )
     
     """
     #
@@ -312,21 +329,26 @@ def _mn_stat_  ( self ) :
     *
     
     """
-    fmin    = ROOT.Double ( )
-    fedm    = ROOT.Double ( )
-    errdef  = ROOT.Double ( )
-    npari   = ROOT.Long   (1)
-    nparx   = ROOT.Long   (2)
-    istat   = ROOT.Long   (0)
+    # fmin    = ROOT.Double ( )
+    # fedm    = ROOT.Double ( )
+    # errdef  = ROOT.Double ( )
+    
+    fmin    = ctypes.c_double () 
+    fedm    = ctypes.c_double ()
+    errdef  = ctypes.c_double () 
+    
+    npari   = ctypes.c_int ( 1 )
+    nparx   = ctypes.c_int ( 2 )
+    istat   = ctypes.c_int ( 0 )
     #
     self . mnstat( fmin, fedm, errdef, npari , nparx , istat )
     #
-    return { 'FMIN'   : float( fmin   ) ,
-             'FEDM'   : float( fmin   ) ,
-             'ERRDEF' : float( errdef ) ,
-             'NPARI'  : int  ( npari  ) ,
-             'NPARX'  : int  ( nparx  ) ,
-             'ISTAT'  : int  ( nparx  ) } 
+    return { 'FMIN'   : float( fmin   . value ) ,
+             'FEDM'   : float( fmin   . value ) ,
+             'ERRDEF' : float( errdef . value ) ,
+             'NPARI'  : int  ( npari  . value ) ,
+             'NPARX'  : int  ( nparx  . value ) ,
+             'ISTAT'  : int  ( istat  . value ) } 
 
 _mn_stat_ . __doc__  += '\n' + ROOT.TMinuit.mnstat . __doc__
 
@@ -406,10 +428,11 @@ def _mn_cov_ ( self , size = -1 , root = False ) :
     matrix = array ( 'd' , [ 0 for i in range(0, size * size) ]  )
     self.mnemat ( matrix , size )
     #
-    mtrx = cpp.Ostap.Math.StmMatrix(size)
+    from ostap.math.linalg import Ostap 
+    mtrx = Ostap.Math.SymMatrix ( size )() 
     for i in range ( 0 , size ) :
         for j in range ( i , size ) :            
-            mtrx [i,j] = matrix [ i * size + j ]
+            mtrx [ i , j ] = matrix [ i * size + j ]
             
     return mtrx
 
@@ -454,7 +477,7 @@ def _mn_cor_ ( self , size = -1 , root  = False ) :
                 
             else :
                 
-                if _root and _rv < 6 : cor [ i ] [ j ] = 0 
+                if root and _rv < 6  : cor [ i ] [ j ] = 0 
                 else                 : cor [ i ,   j ] = 0
 
     return cor

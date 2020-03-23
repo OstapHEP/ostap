@@ -30,7 +30,7 @@ has very attractive functionality and solve the issues with pickling
 @see https://github.com/uqfoundation/pathos
 
 """
-# ========================================_====================================
+# =============================================================================
 __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
@@ -49,7 +49,8 @@ from   builtins         import range
 # PATHOS components 
 # =============================================================================
 import dill 
-import ppft 
+import ppft
+import multiprocess 
 import pathos.core              as PC
 import pathos.secure            as PS
 import pathos.multiprocessing
@@ -102,12 +103,13 @@ class WorkManager ( object ) :
             
         self.__ppservers = ()
         self.__locals    = ()
-
+        self.__pool      = ()
+        
         import socket
         local_host = socket.getfqdn ().lower()  
  
         from ostap.core.ostap_types    import string_types 
-        if isinstance ( ppservers , string_types ) and ppservers.lower() in ( 'config' , 'auto' ) : 
+        if isinstance ( ppservers , string_types ) and ppservers.lower() in ( 'config' , 'auto' , '*' ) : 
             from ostap.parallel.utils import get_ppservers
             ppservers = get_ppservers ( local_host )
 
@@ -123,35 +125,45 @@ class WorkManager ( object ) :
             environment = kwargs.pop ( 'environment' , ''   )
             script      = kwargs.pop ( 'script'      , None )
             profile     = kwargs.pop ( 'profile'     , None ) 
-            secret      = kwargs.pop ( 'secret'      , ''   )
+            secret      = kwargs.pop ( 'secret'      , None )
             timeout     = kwargs.pop ( 'timeout'     , 7200 )
             
             if script :
                 assert os.path.exists ( script ) and os.path.isfile ( script ) ,\
                        'WorkManager: no script %s is found' % script
                 
-            if not secret :
+            if secret is None :
                 from ostap.utils.utils import gen_password 
                 secret = gen_password ( 16 )
-                
-            self.__ppservers = [
-                ppServer ( remote                    ,
-                           environment = environment ,
-                           script      = script      ,
-                           profile     = profile     ,
-                           secret      = secret      ,
-                           timeout     = timeout     ) for remote in ppservers ]
+
+            ppsrvs = [ ppServer ( remote                    ,
+                                  environment = environment ,
+                                  script      = script      ,
+                                  profile     = profile     ,
+                                  secret      = secret      ,
+                                  timeout     = timeout     ,
+                                  silent      = silent      ) for remote in ppservers ]
+            
+            ppbad  = [ p for p in ppsrvs if not p.pid ]
+            ppgood = [ p for p in ppsrvs if     p.pid ]
+            
+            self.__ppservers = tuple ( ppgood ) 
+            
+            if ppbad :
+                rs = [ p.remote_host for p in ppbad ] 
+                logger.warning ('Failed to start remote ppservers at %s' %  rs ) 
 
             ## if remote servers are available, reduce a bit the load for local server
             ## if ncpus == 'autodetect' or ncpus == 'auto' :
             ##    self.ncpus = max  ( 0 , self.ncpus - 2 )
             
-            ##  some trick to setup the password.
-            ## unfortnuately  ParallelPool interface does not allow it :-( 
-            import pathos.parallel as PP
-            _ds = PP.pp.Server.default_secret 
-            PP.pp.Server.default_secret = secret 
-            
+            ## some trick to setup the password.
+            ## unfortunately ParallelPool interface does not allow it :-(
+            if secret : 
+                import pathos.parallel as PP
+                _ds = PP.pp.Server.default_secret 
+                PP.pp.Server.default_secret = secret 
+                
             from pathos.pools import ParallelPool 
             self.__pool      = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
 
@@ -167,7 +179,7 @@ class WorkManager ( object ) :
         ps = '%s' % self.pool
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
-        logger.info ( 'WorkManager is %s' % ps )
+        if not silent : logger.info ( 'WorkManager is %s' % ps )
         
         self.stats  = {}
         self.silent = True if silent else  False 
@@ -209,6 +221,8 @@ class WorkManager ( object ) :
         del self.__ppservers 
         del self.__locals 
         
+
+
     # =========================================================================
     ## process callable object or Task :
     #  - process <code>Task</code>:
@@ -220,7 +234,7 @@ class WorkManager ( object ) :
     #  @endcode
     #  -  process callable object 
     #  @code
-    #  def my_fun ( x ) :
+    #  def my_fun ( jobid , x ) :
     #      return x**2 
     #  wm = WorkManager ( ... )
     #  items = range ( 10 )
@@ -241,7 +255,7 @@ class WorkManager ( object ) :
         
         -  process callable object
         
-        >>> def my_fun ( x ) : return x**2 
+        >>> def my_fun ( jobid , x ) : return x**2 
         >>> wm = WorkManager ( ... )
         >>> items = range ( 10 )
         >>> result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
@@ -272,6 +286,9 @@ class WorkManager ( object ) :
         """Helper internal method to process the task with chunks of data 
         """
 
+        from timeit import  default_timer as _timer
+        start = _timer()
+
         if isinstance ( task , Task ) :
             kwargs.pop ( 'merger' , None ) 
             return self.__process_task ( task , chunks , **kwargs ) 
@@ -281,6 +298,7 @@ class WorkManager ( object ) :
         merged_stat_pp = StatMerger ()
         merger         = kwargs.pop ( 'merger' , TaskMerger ( ) ) 
 
+        
         njobs = sum  ( len(c) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
         with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
@@ -289,8 +307,8 @@ class WorkManager ( object ) :
                 
                 chunk = chunks.pop() 
                 
-                from itertools      import repeat
-                jobs_args = zip ( repeat ( task ) , chunk )
+                from itertools import repeat , count 
+                jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
                 jobs      = self.pool.uimap ( func_executor , jobs_args  )
@@ -309,8 +327,8 @@ class WorkManager ( object ) :
                 self.pool.join  ()
 
         ## finalize task 
-        what.finalize () 
-        self.print_statistics ( merged_stat_pp , merged_stat )
+        what.finalize ()
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return merger.results 
 
@@ -321,13 +339,16 @@ class WorkManager ( object ) :
         """
         assert isinstance ( task , Task ), 'Invalid task type  %s' % type (  task ) 
         
+        from timeit import  default_timer as _timer
+        start = _timer()
+
         ## inialize the task
         task.initialize_local ()
         
         ## mergers for statistics 
         merged_stat    = StatMerger ()
         merged_stat_pp = StatMerger ()
-
+        
         njobs = sum  ( len(c) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
         with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
@@ -336,8 +357,8 @@ class WorkManager ( object ) :
                 
                 chunk = chunks.pop() 
                 
-                from itertools      import repeat
-                jobs_args = zip ( repeat ( task ) , chunk )
+                from itertools import repeat , count 
+                jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
                 jobs      = self.pool.uimap ( task_executor , jobs_args  )
@@ -356,7 +377,7 @@ class WorkManager ( object ) :
                 self.pool.join  ()
 
         task.finalize () 
-        self.print_statistics ( merged_stat_pp , merged_stat )
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
         ## 
         return task.results ()
     
@@ -381,15 +402,15 @@ class WorkManager ( object ) :
     
     # =========================================================================
     ## print the job execution statistics 
-    def print_statistics ( self , stat_pp , stat_loc ) :
+    def print_statistics ( self , stat_pp , stat_loc , cputime =  None ) :
         """Print the job execution statistics 
         """        
         if self.silent : return
 
         if stat_pp.njobs == stat_loc.njobs : 
-            stat_pp .print_stats ( 'pp-' )
+            stat_pp .print_stats ( 'pp-' , cputime )
         else : 
-            stat_loc.print_stats ( 'qq-' )
+            stat_loc.print_stats ( 'qq-' , cputime )
                 
             
 # =============================================================================
@@ -429,7 +450,11 @@ class ppServer(object) :
                    script      = None ,
                    profile     = None ,
                    secret      = None ,
-                   timeout     =   -1 ) :
+                   timeout     =   -1 ,
+                   silent      = True ) :
+
+        self.__session = None
+        self.__pid     = 0
         
         ## split user@remote
         remote_user , at , remote = remote.rpartition('@')
@@ -565,7 +590,6 @@ class ppServer(object) :
         if r : logger.error ('SERVER:response from %s : %s' % ( self.session , r ) )
 
 
-        self.__pid = None
         for i in range ( 15 ) :
             try :
                 import time 
@@ -573,7 +597,7 @@ class ppServer(object) :
                 self.__pid = PC.getpid ( pattern , self.remote_host )
                 logger.verbose ('PID for remote ppserver is %s:%d' % ( self.remote_host , self.__pid ) )
             except OSError : pass
-            if self.__pid  : break 
+            if self.__pid > 0 : break 
         else :
             logger.warning ('Cannot acquire PID for remote ppserver at %s:%s' % ( self.remote_host , self.remote_port ) )
 
@@ -583,6 +607,9 @@ class ppServer(object) :
         logger.debug   ( "%s" % self )
         logger.verbose ( command     )
 
+        if not silent : 
+            logger.info ( 'Tunnel: %6d -> %s:%s pid:%-6d' % ( self.local_port , self.remote_host , self.remote_port , self.pid ) )
+            
     def start ( self ) : return self
     def end   ( self ) :
 

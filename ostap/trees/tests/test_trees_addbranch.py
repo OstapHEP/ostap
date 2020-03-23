@@ -100,6 +100,7 @@ def test_addbranch() :
     """
     
     files = prepare_data ( 100 , 1000 )
+    ## files = prepare_data ( 2 , 10 )
         
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -114,6 +115,24 @@ def test_addbranch() :
     data.reload ()
     logger.info ( 'With formula:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'et' in data.chain , "Branch ``et'' is  not here!"
+
+
+    # =========================================================================
+    ## 2) add several new branches as TTree-formula:
+    # =========================================================================
+    data.chain.add_new_branch ( { 'Et1' : 'sqrt(pt*pt+mass*mass)'   ,
+                                  'Et2' : 'sqrt(pt*pt+mass*mass)*2' ,
+                                  'Et3' : 'sqrt(pt*pt+mass*mass)*3' } , None )
+    
+    ## reload the chain and check: 
+    data.reload ()
+    logger.info ( 'With formula:\n%s' % data.chain.table ( prefix = '# ' ) )
+    assert 'Et1' in data.chain , "Branch ``Et1'' is  not here!"
+    assert 'Et2' in data.chain , "Branch ``Et2'' is  not here!"
+    assert 'Et3' in data.chain , "Branch ``Et3'' is  not here!"
+
+
+
 
     # =========================================================================
     ## 2) add new branch as pure python function 

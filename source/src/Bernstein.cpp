@@ -25,6 +25,7 @@
 #include "Exception.h"
 #include "local_math.h"
 #include "local_hash.h"
+#include "bernstein_utils.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -33,37 +34,6 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  // De Casteljau's algorithm
-  template <class ITERATOR>
-  long double _casteljau_
-  ( ITERATOR          first ,
-    ITERATOR          last  ,
-    const long double t0    ,
-    const long double t1    )
-  {
-    // the trivial cases
-    if      ( first == last    ) { return 0       ; }
-    //
-    const std::size_t len  = std::distance ( first , last  ) ;
-    //
-    if      ( 1 == len ) { return       *first                        ; }
-    else if ( 2 == len ) { return t1 * (*first) + t0 * ( *(first+1) ) ; }
-    //
-    ITERATOR second = --last ;
-    //
-    // prepare recursion
-    for ( ITERATOR it = first ; it != second ; ++it )
-    { *it = t1 * ( *it )  + t0 * ( *( it+1 ) ) ; }
-    //
-    // recursion
-    return _casteljau_ ( first , second , t0 , t1 ) ;
-  }
-  // ==========================================================================
-}
 // ============================================================================
 // constructor from the order
 // ============================================================================
@@ -314,70 +284,58 @@ Ostap::Math::Bernstein::Bernstein
 /* construct Bernstein polynomial from its roots
  *  Polinomial has a form
  *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
- *  @param xmin low  edge for Bernstein polynomial
- *  @param xmax high edge for Bernstein polynomial
- *  @param r the list of real  roots of the polinomial
- *  @param c the list of complex roots (only one root from cc-pair is needed)
+ *  @param xmin   low  edge for Bernstein polynomial
+ *  @param xmax   high edge for Bernstein polynomial
+ *  @param rroots the list of real  roots of the polinomial
+ *  @param croots the list of complex roots (only one root from cc-pair is needed)
  */
-// ============================================================================
+// ========================================================================
 Ostap::Math::Bernstein::Bernstein 
-( const double xmin                            , 
-  const double xmax                            , 
-  const std::vector<double>& r                 ,
-  const std::vector<std::complex<double> > & c )
-  : Ostap::Math::PolySum ( r.size() + 2*c.size() ) 
+( const double xmin                                        , 
+  const double xmax                                        , 
+  const std::vector<double>&                 roots_real    ,
+  const std::vector<std::complex<double> > & roots_complex )
+  : Ostap::Math::PolySum ( roots_real.size() + 2 * roots_complex.size () ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
 {
+  // temporary  storage 
+  std::vector<double>  vtmp ( npars() , 0.0 ) ;
+  std::array<double,2> v1   { { 0 , 0 } } ;
   //
-  Bernstein result ( std::vector<double> ( 1 , 1.0 ) , xmin , xmax ) ;
-  Bernstein b1     ( std::vector<double> ( 2 , 1.0 ) , xmin , xmax ) ;
-  Bernstein b2     ( std::vector<double> ( 3 , 1.0 ) , xmin , xmax ) ;
-  for ( double rr : r )
-  { 
-    const double dmn = m_xmin - rr  ;
-    const double dmx = m_xmax - rr  ;
-    if      ( s_zero ( dmn ) ) 
-    {
-      b1.setPar ( 0 , 0 ) ;
-      b1.setPar ( 1 , 1 ) ; 
-    }
-    else if ( s_zero ( dmx ) ) 
-    {
-      b1.setPar ( 0 , 1 ) ;
-      b1.setPar ( 1 , 0 ) ; 
-    }
-    else 
-    {
-      b1.setPar ( 0 , dmn ) ;
-      b1.setPar ( 1 , dmx ) ;
-    }
-    result = result * b1 ;
-  }
-  const double xmid = 0.5 * ( m_xmin + m_xmax );
-  for ( std::complex<double> cr : c )
+  m_pars[0]        = 1 ;
+  unsigned short m = 1 ;
+  //
+  for  ( const double r : roots_real )
   {
-    //  a * x * x + bx + c 
-    const double a =  1               ;
-    const double b = -2*cr.real()     ;
-    const double c = std::norm ( cr ) ;    
+    const double tr = t ( r ) ;
+    if      ( s_zero  ( tr     ) ) { v1 [ 0 ] =    0 ; v1 [ 1 ] =       1 ; }
+    else if ( s_equal ( tr , 1 ) ) { v1 [ 0 ] =    1 ; v1 [ 1 ] =       0 ; }
+    else                           { v1 [ 0 ] = - tr ; v1 [ 1 ] =  1 - tr ; }
     //
-    const double a0 = c + m_xmin * ( b + m_xmin * a ) ;
-    const double a1 = c +   xmid * ( b +   xmid * a ) ;
-    const double a2 = c + m_xmax * ( b + m_xmax * a ) ;
-    //    
-    b2.setPar ( 0 ,     a0                      ) ;
-    b2.setPar ( 1 ,  2 * a1 - 0.5 * ( a0 + a2 ) ) ;
-    b2.setPar ( 2 ,     a2                      ) ;
-    //
-    result = result * b2 ;
+    Ostap::Math::Utils::b_multiply 
+      ( m_pars.begin() , m_pars.begin() + m , v1.begin() , v1.end() , vtmp.begin() ) ;
+    std::swap  ( m_pars , vtmp ) ;
+    ++m ;
   }
   //
-  this->m_pars = std::move( result.m_pars ) ;
+  std::array<double,3> v2 { { 0 , 0 , 0 }}  ;
+  for  ( std::complex<double> r : roots_complex ) 
+  {
+    const double a = t ( r.real () ) ;
+    const double b =     r.imag ()   ;
+    const double n = a * a + b * b   ;
+    //
+    v2 [ 0 ] = n             ;
+    v2 [ 1 ] = n - a         ;
+    v2 [ 2 ] = 1 + n - 2 * a ;
+    //
+    Ostap::Math::Utils::b_multiply
+      ( m_pars.begin() , m_pars.begin() + m , v2.begin() , v2.end() , vtmp.begin() ) ;
+    std::swap  ( m_pars , vtmp ) ;
+    m += 2 ;
+  }
   //
-  // scale it 
-  const short sf = Ostap::Math::frexp2 (  norm() ).second ;
-  Ostap::Math::scale_exp2 (  m_pars , -sf + 1 ) ;
 } 
 // ============================================================================
 /*  construct Bernstein polynomial from its roots
@@ -609,8 +567,8 @@ double Ostap::Math::Bernstein::derivative ( const double x   ) const
   const double t0 = t ( x ) ;
   const double t1 = 1 - t0  ;
   //
-  return
-    _casteljau_ ( ck.begin() + 1 , ck.end() , t0 , t1 ) * ( npars()-1 )  / ( m_xmax - m_xmin ) ;
+  return Ostap::Math::Utils::casteljau 
+    ( ck.begin() + 1 , ck.end() , t0 , t1 ) * ( npars()-1 )  / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
 // get the value
@@ -639,11 +597,12 @@ double Ostap::Math::Bernstein::evaluate ( const double x ) const
   {
     std::array<long double,16> _pars;
     std::copy( m_pars.begin() , m_pars.end() , _pars.begin() ) ;
-    return _casteljau_ ( _pars.begin() , _pars.begin() + npars() , t0 , t1 ) ;
+    return Ostap::Math::Utils::casteljau
+      ( _pars.begin() , _pars.begin() + npars() , t0 , t1 ) ;
   }
   // generic case:
   std::vector<long double> dcj ( m_pars.begin() , m_pars.end() ) ;
-  return _casteljau_ ( dcj.begin() , dcj.end() , t0 , t1 ) ;
+  return Ostap::Math::Utils::casteljau ( dcj.begin() , dcj.end() , t0 , t1 ) ;
 }
 // ============================================================================
 Ostap::Math::Bernstein&
@@ -1041,30 +1000,21 @@ Ostap::Math::Bernstein::multiply ( const Ostap::Math::Bernstein& other ) const
     return b1.multiply ( b2 ) ;
   }
   //
-  if ( zero() || other.zero() ) { return Bernstein( degree() , xmin() , xmax() ) ; }
-  //
   const unsigned short m =       degree() ;
   const unsigned short n = other.degree() ;
   //
+  if ( 0 == m ) { return   other *       m_pars [ 0 ] ; }
+  if ( 0 == n ) { return (*this) * other.m_pars [ 0 ] ; }
+  //
+  if ( zero() || other.zero() ) { return Bernstein( degree() , xmin() , xmax() ) ; }
+  //
   Bernstein result ( m + n , xmin() , xmax() ) ;
   //
-  long double c = 1 ;
-  for ( unsigned short k = 0 ; k <= m + n ; ++k ) 
-  {
-    if ( 0 != k ) {  c *= ( m + n - k + 1 ) ; c /= k; }
-    //
-    const unsigned jmax = std::min ( m , k ) ;
-    const unsigned jmin = k > n ? k - n : 0 ;
-    long double     cc  = 0 == jmin ? 
-      c_nk ( n , k - jmin ) :
-      c_nk ( m ,     jmin ) ;  
-    for ( unsigned short j = jmin ; j <= jmax ; ++j ) 
-    {
-      if ( j != jmin ) { cc *= ( m - j + 1 )  * ( k - j + 1 ) ; cc /= j * ( n - k + j ) ; }
-      result.m_pars[k] += cc * m_pars [ j]  * other.m_pars[k-j] ;
-    }
-    result.m_pars[k] /= c ;
-  }
+  Ostap::Math::Utils::b_multiply
+    ( m_pars        . begin () ,         m_pars . end () ,
+      other.m_pars  . begin () , other . m_pars . end () , 
+      result.m_pars . begin () ) ;
+  //
   return result ; 
 }
 // ============================================================================
@@ -1188,7 +1138,7 @@ namespace
     {
       if ( 0 != j ) { c *= j ; c /= ( m - j ) ; }
       const long double t = c * _m_head_ ( m , first , first + ( j + 1 ) ) ;
-      *output = 0== j%2 ? t : -t ;
+      *output = ( 0 == j%2 ) ? t : -t ;
     }
     return output ;
   }
@@ -1479,7 +1429,8 @@ double Ostap::Math::casteljau
   const long double t0 =     x  ;
   const long double t1 = 1 - t0 ;
   //
-  return _casteljau_ ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
+  return Ostap::Math::Utils::casteljau 
+    ( _tmp.begin() , _tmp.end  () , t0 , t1 ) ;
 }
 // ============================================================================
 namespace 

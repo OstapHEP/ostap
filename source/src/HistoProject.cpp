@@ -4,7 +4,6 @@
 // ROOT 
 // ============================================================================
 #include "RooDataSet.h"
-#include "RooFormulaVar.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -13,10 +12,13 @@
 // ============================================================================
 #include "Ostap/StatVar.h"
 #include "Ostap/Formula.h"
+#include "Ostap/FormulaVar.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/Iterator.h"
 // ============================================================================
 #include "OstapDataFrame.h"
+#include "local_math.h"
+#include "local_utils.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::HistoProject
@@ -68,25 +70,45 @@ Ostap::HistoProject::project
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo->GetXaxis()->GetXmin () ;
+  const double xmax = histo->GetXaxis()->GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    //
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = expression.getVal()  ;
-    // fill the histogram  (only for non-zero weights)
-    histo->Fill ( xvalue , w ) ; 
     //
+    // check the range 
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
+    //
+    // fill the histogram  (only for non-zero weights and in-range entries!)
+    histo -> Fill ( xvalue , w ) ; 
+    //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we ) && s_equal ( we , w ) )
+      {
+        const int    bin    = histo -> FindBin     ( xvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
@@ -121,26 +143,49 @@ Ostap::HistoProject::project2
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo -> GetXaxis () -> GetXmin () ;
+  const double xmax = histo -> GetXaxis () -> GetXmax () ;
+  const double ymin = histo -> GetYaxis () -> GetXmin () ;
+  const double ymax = histo -> GetYaxis () -> GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
+    // check the range 
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
+    // calculate the values (only for non-zero weights)
     const double yvalue = yexpression.getVal()  ;
+    // check the range 
+    if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
+    //
     // fill the histogram  (only for non-zero weights)
     histo->Fill ( xvalue , yvalue , w ) ; 
     //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we ) && s_equal ( we , w ) ) 
+      {
+        const int    bin    = histo -> FindBin     ( xvalue , yvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
@@ -177,27 +222,50 @@ Ostap::HistoProject::project3
   //
   const bool weighted = data->isWeighted() ;
   //
+  const double xmin = histo -> GetXaxis () -> GetXmin () ;
+  const double xmax = histo -> GetXaxis () -> GetXmax () ;
+  const double ymin = histo -> GetYaxis () -> GetXmin () ;
+  const double ymax = histo -> GetYaxis () -> GetXmax () ;
+  const double zmin = histo -> GetZaxis () -> GetXmin () ;
+  const double zmax = histo -> GetZaxis () -> GetXmax () ;
+  //
   for ( unsigned long entry = first ; entry < nEntries ; ++entry )   
   {
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // calculate the weight 
-    const double w = 
-      selection && weighted ? selection->getVal() * data->weight() : 
-      selection             ? selection->getVal()                  :
-      weighted              ?                       data->weight() : 1.0 ;
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    // data weight 
+    const double dw = weighted  ? data      -> weight () : 1.0 ;
+    // calculate the total weight 
+    const double w = sw * dw ;
     //
     // skip null weights 
     if ( !w ) { continue ; }
     //
     // calculate the values (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
+    if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
     const double yvalue = yexpression.getVal()  ;
+    if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
     const double zvalue = zexpression.getVal()  ;
+    if ( zmax <= zvalue || zvalue < zmin ) { continue ; }
+    //
     // fill the histogram  (only for non-zero weights)
     histo->Fill ( xvalue , yvalue , zvalue , w ) ; 
     //
+    if  ( weighted )
+    {
+      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
+      if  ( !s_zero ( we )  && s_equal ( we , w ) )
+      {
+        const int    bin    = histo -> FindBin     ( xvalue , yvalue , zvalue ) ;
+        const double binerr = histo -> GetBinError ( bin    ) ;
+        const double err2   = binerr * binerr - w * w + we * we  ;
+        histo -> SetBinError ( bin , std::sqrt ( err2 ) ) ;  
+      }
+    }
   }
   //
   return StatusCode::SUCCESS ;  
@@ -235,22 +303,22 @@ Ostap::HistoProject::project
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    cuts.reset ( new RooFormulaVar( "" , selection.c_str() , alst ) ) ;
+    cuts.reset ( new Ostap::FormulaVar( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , expression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    xwhat.reset( new RooFormulaVar( "" ,  expression.c_str() , alst ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( expression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
@@ -295,30 +363,30 @@ Ostap::HistoProject::project2
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    cuts.reset ( new RooFormulaVar( "" , selection.c_str() , alst ) ) ;
+    cuts.reset ( new Ostap::FormulaVar ( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    xwhat.reset( new RooFormulaVar( "" ,  xexpression.c_str() , alst ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
   const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
-  std::unique_ptr<RooFormulaVar> ywhat ;
+  std::unique_ptr<Ostap::FormulaVar> ywhat ;
   if ( 0 == y_var ) 
-  {
-    ywhat.reset( new RooFormulaVar( "" ,  yexpression.c_str() , alst ) ) ;
+  { 
+    ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
     if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
   }
   //
@@ -366,38 +434,38 @@ Ostap::HistoProject::project3
   RooAbsArg*   coef = 0 ;
   while ( ( coef = (RooAbsArg*) iter.next() ) ){ alst.add ( *coef ); }
   //
-  // convert expressions into RooFormulaVar 
+  // convert expressions into FormulaVar 
   const bool        with_cuts   = !selection.empty() ;
   const RooAbsReal* cut_var     = 0 ;
   if ( with_cuts ) { cut_var =get_var ( *aset , selection ) ; }
-  std::unique_ptr<RooFormulaVar> cuts ;
+  std::unique_ptr<Ostap::FormulaVar> cuts ;
   if ( with_cuts && 0 == cut_var ) 
   {
-    cuts.reset ( new RooFormulaVar( "" , selection.c_str() , alst ) ) ;
+    cuts.reset ( new Ostap::FormulaVar( selection , alst , false ) ) ;
     if ( !cuts->ok () ) { return Ostap::StatusCode(302) ; } //        // RETURN 
   }
   //
   const RooAbsReal* x_var = get_var ( *aset , xexpression ) ;
-  std::unique_ptr<RooFormulaVar> xwhat ;
+  std::unique_ptr<Ostap::FormulaVar> xwhat ;
   if ( 0 == x_var ) 
   {
-    xwhat.reset( new RooFormulaVar( "" ,  xexpression.c_str() , alst ) ) ;
+    xwhat.reset( new Ostap::FormulaVar( xexpression , alst , false ) ) ;
     if ( !xwhat->ok()   ) { return Ostap::StatusCode(303)  ; }             // RETURN
   }
   //
   const RooAbsReal* y_var = get_var ( *aset , yexpression ) ;
-  std::unique_ptr<RooFormulaVar> ywhat ;
+  std::unique_ptr<Ostap::FormulaVar> ywhat ;
   if ( 0 == y_var ) 
   {
-    ywhat.reset( new RooFormulaVar( "" ,  yexpression.c_str() , alst ) ) ;
+    ywhat.reset( new Ostap::FormulaVar( yexpression , alst , false ) ) ;
     if ( !ywhat->ok()   ) { return Ostap::StatusCode(304)  ; }             // RETURN
   }
   //
   const RooAbsReal* z_var = get_var ( *aset , zexpression ) ;
-  std::unique_ptr<RooFormulaVar> zwhat ;
+  std::unique_ptr<Ostap::FormulaVar> zwhat ;
   if ( 0 == z_var ) 
   {
-    zwhat.reset( new RooFormulaVar( "" ,  zexpression.c_str() , alst ) ) ;
+    zwhat.reset( new Ostap::FormulaVar( zexpression , alst , false ) ) ;
     if ( !zwhat->ok()   ) { return Ostap::StatusCode(305)  ; }             // RETURN
   }
   //
@@ -423,7 +491,8 @@ Ostap::StatusCode Ostap::HistoProject::project
   const std::string&  selection  ) 
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  else if ( dynamic_cast<TH2*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
   else { histo->Reset() ; } // reset the histogram 
   //
   TH1D model {} ; histo->Copy ( model ) ;
@@ -459,7 +528,8 @@ Ostap::StatusCode Ostap::HistoProject::project2
   const std::string&  selection   )
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if      ( nullptr == histo            ) { return Ostap::StatusCode ( 301 ) ; }
+  else if ( dynamic_cast<TH3*>( histo ) ) { return Ostap::StatusCode ( 301 ) ; }  
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection ) ;
@@ -499,7 +569,7 @@ Ostap::StatusCode Ostap::HistoProject::project3
   const std::string&  selection   )
 {
   //
-  if ( 0 == histo ) { return Ostap::StatusCode ( 301 ) ; }
+  if ( nullptr  == histo ) { return Ostap::StatusCode ( 301 ) ; }
   else { histo->Reset() ; } // reset the historgam 
   //
   const bool no_cuts = trivial ( selection  ) ; 
@@ -524,5 +594,5 @@ Ostap::StatusCode Ostap::HistoProject::project3
   return Ostap::StatusCode::SUCCESS ;
 }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

@@ -15,6 +15,12 @@ __all__ = (
     'set_style'        , ## configure style from the dictionary
     'make_styles'      , ## create the styles from the configuration
     'make_ostap_style' , ## create Ostap-like style
+    'canvas_width'     , ## (default) canvas width
+    'canvas_height'    , ## (default) canvas height
+    'margin_top'       , ## (default) top margin 
+    'margin_bottom'    , ## (default) top margin 
+    'margin_left'      , ## (default) top margin 
+    'margin_right'     , ## (default) top margin 
     )
 # =============================================================================
 # logging 
@@ -39,9 +45,63 @@ ostap_latex . SetTextFont   ( ostap_font )
 ostap_latex . SetTextColor  ( 1          )
 ostap_latex . SetTextSize   ( 0.04       )
 ostap_latex . SetTextAlign  ( 12         )
-# =============================================================================
+# ==============================================================================
+margin_top    = 0.05
+margin_bottom = 0.12
+margin_left   = 0.12
+margin_right  = 0.05
+# ==============================================================================
+import ostap.core.config as OCC
+width_  = OCC.canvas.get ( 'Width'       , fallback = '1000' )
+try               : width_  = int  ( width_ ) 
+except ValueError : width_  = 1000
+canvas_width  = width_  if 20 <= width_  else 1000
+# 
+height_ = OCC.canvas.get ( 'Height'      , fallback =  '800' )
+try               : height_ = int  ( height_ ) 
+except ValueError : height_ = 800
+canvas_height = height_ if 20 <= height_ else  800
+##
+w2h  =  float ( canvas_width  ) / float ( canvas_height )
+h2w  =  float ( canvas_height ) / float ( canvas_width  )
+
+tmp_    = OCC.canvas.get ( 'MarginRight'   , fallback = '%f'  % margin_right       )
+try               : tmp_  = float ( tmp_ ) 
+except ValueError : tmp_  = margin_right
+if   0 <      tmp_ < 1            : margin_right = tmp_
+elif 0 < -1 * tmp_ < canvas_width : margin_right = abs ( 1.0 * tmp_ / canvas_width )
+##
+tmp_    = OCC.canvas.get ( 'MarginBottom'   , fallback = '%f'  % margin_bottom ) 
+try               : tmp_  = float ( tmp_ ) 
+except ValueError : tmp_  = margin_bottom
+if   0 <      tmp_ < 1             : margin_bottom = tmp_
+elif 0 < -1 * tmp_ < canvas_height : margin_bottom = abs ( 1.0 * tmp_ / canvas_height )  
+
+tmp_    = OCC.canvas.get ( 'MarginLeft' , fallback = '%f' %  margin_left  )
+try               : tmp_  = float ( tmp_ ) 
+except ValueError : tmp_  = margin_left 
+if   0 <      tmp_ < 1            : margin_left = tmp_
+elif 0 < -1 * tmp_ < canvas_width : margin_left = abs ( 1.0 * tmp_ / canvas_width )  
+#
+
+tmp_    = OCC.canvas.get ( 'MarginTop'   , fallback = '%f'  % margin_top ) 
+try               : tmp_  = float ( tmp_ ) 
+except ValueError : tmp_  = margin_top 
+if   0 <      tmp_ < 1             : margin_top = tmp_
+elif 0 < -1 * tmp_ < canvas_height : margin_top = abs ( 1.0 * tmp_ / canvas_weight )  
+#
+
+logger.verbose ( 'Default parameters: ')
+logger.verbose ( '  canvas_height : %s ' % canvas_height )
+logger.verbose ( '  canvas_width  : %s ' % canvas_width  )
+logger.verbose ( '  margin_top    : %s ' % margin_top    )
+logger.verbose ( '  margin_bottom : %s ' % margin_bottom )
+logger.verbose ( '  margin_left   : %s ' % margin_left   )
+logger.verbose ( '  margin_right  : %s ' % margin_right  )
+
+# ==============================================================================
 ## @class StyleStore
-#  Store for all created/cofigures styles
+#  Store for all created/configured styles
 class StyleStore(object) :
     """Store for all created/cofigures styles
     """
@@ -436,10 +496,10 @@ def make_ostap_style ( name                           ,
         elif 'LETTER' in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kUSletter 
         else :  conf ['PaperSize'   ] = get_int ( config , 'PaperSize' , ROOT.TStyle.kA4 )
             
-    conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'    , 0.05                   ) 
-    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'  , 0.14 if colz else 0.05 ) 
-    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'   , 0.10                   ) 
-    conf [ 'PadBottomMargin'   ] = get_float ( config , 'PadBottomMargin' , 0.10                   ) 
+    conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'    ,                   margin_top    ) 
+    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'  , 0.14 if colz else margin_right  ) 
+    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'   ,                   margin_left   ) 
+    conf [ 'PadBottomMargin'   ] = get_float ( config , 'PadBottomMargin' ,                   margin_bottom ) 
     
     conf [ 'TextFont'          ] = get_int   ( config , 'TextFont'        , font         ) 
     conf [ 'TextSize'          ] = get_float ( config , 'FontSize'        , 0.08 * scale ) 
@@ -467,7 +527,7 @@ def make_ostap_style ( name                           ,
     conf [ 'GridWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
     
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'   , 20  ) 
-    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'    , 1.2 )
+    conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'    , 1.0 )
     
     conf [ 'LabelOffset'       ] = get_float ( config , 'LabelOffset'   , 0.015 ) 
 
@@ -511,6 +571,7 @@ def make_ostap_style ( name                           ,
     conf [ 'LineStyleString_12' ] = "60 16 8 16"
     conf [ 'LineStyleString_13' ] = "168 32"
     conf [ 'LineStyleString_14' ] = "32  32"
+    conf [ 'LineStyleString_15' ] = "80  20"
 
     ## create the style 
     style       = ROOT.TStyle ( name , description )

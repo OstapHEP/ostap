@@ -189,7 +189,18 @@ def test_shelves():
     h1tq = tu_sql [1]
     h1tz = tu_zip [1]
     h1tr = tu_root[1]
+
+    ## clone them 
+    dbs = [ db_sql , db_zip , db_bz2 , db_root ]
+    if lzshelve : dbs.append ( db_lz )
     
+    for db in dbs :
+        cdb = db.clone ( CU.CleanUp.tempfile ( suffix = '.db'  ) )
+        logger.info('Cloned:')
+        cdb.ls()
+    del dbs 
+        
+                         
     with timing('Close SQL'  ) : db_sql .close() 
     with timing('Close ZIP'  ) : db_zip .close()
     with timing('Close BZ2'  ) : db_bz2 .close()

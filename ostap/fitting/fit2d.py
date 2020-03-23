@@ -26,7 +26,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random 
-from   ostap.core.core      import dsID , VE , Ostap, hID , iszero
+from   ostap.core.core      import dsID , VE , Ostap, hID , iszero, valid_pointer
 from   ostap.core.ostap_types     import integer_types 
 from   ostap.fitting.roofit import SETVAR
 from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
@@ -181,7 +181,8 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None , **kwargs ) :
+                in_range = None ,
+                args     = ()   , **kwargs ) :
         """ Draw the projection over 1st variable
         
         >>> r,f = model.fitTo ( dataset ) ## fit dataset
@@ -194,15 +195,17 @@ class PDF2 (PDF) :
         
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            with rooSilent ( 3 ) : self.yvar.setRange ( 'aux_rng2' , in_range[0] , in_range[1] )
-            in_range = 'aux_rng2'
-            
+            range_name = 'aux2_rng2_%s' % self.name 
+            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
+            in_range = range_name 
+
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake 
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
     
     # =========================================================================
     ## draw the projection over 2nd variable
@@ -221,7 +224,8 @@ class PDF2 (PDF) :
                 dataset  = None ,
                 nbins    = 100  ,
                 silent   = True ,
-                in_range = None , **kwargs ) :
+                in_range = None ,
+                args     = ()   , **kwargs ) :
         """
         Draw the projection over 2nd variable
         
@@ -235,15 +239,17 @@ class PDF2 (PDF) :
 
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
-            with rooSilent ( 3 ) : self.xvar.setRange ( 'aux_rng1' , in_range[0] , in_range[1] )
-            in_range = 'aux_rng1'
+            range_name = 'aux2_rng1_%s' % self.name 
+            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range[0] , in_range[1] )
+            in_range = range_name
 
         return self.draw ( drawvar  = self.yvar ,
                            dataset  = dataset   ,
                            nbins    = nbins     ,
                            ybins    = 20        , ## fake
                            silent   = silent    ,
-                           in_range = in_range  , **kwargs )
+                           in_range = in_range  ,
+                           args     = args      , **kwargs )
 
     # =========================================================================
     ## draw as 2D-histograms 
@@ -283,58 +289,53 @@ class PDF2 (PDF) :
                ybins                 =   20 ,
                silent                = True ,
                in_range              = None ,
+               args                  = ()   , 
                **kwargs                     ) : 
         """
         Make 1D-plot:
         """
-        
+
         if   drawvar in ( 'x'  , 'X' , '1' , 1 , self.xvar.name ) : drawvar = self.xvar
         elif drawvar in ( 'y'  , 'Y' , '2' , 2 , self.yvar.name ) : drawvar = self.yvar
 
-        #
+        # 
         ## special case:  do we need it? 
         #
 
         if drawvar is None : return self.draw_H2D( dataset , nbins , ybins )
-        
-        
-        ## copy arguments:
-        args = kwargs.copy ()
+                
+        newargs = kwargs.copy ()
         
         if in_range and isinstance ( in_range , list_types ) and 2 == len ( in_range ) :
-            low  = in_range[0]
-            high = in_range[1]
-            if isinstance ( low , num_types ) and isinstancee ( high , num_types ) and low  < high : 
-                with rooSilent ( 3 ) : drawvar.setRange ( 'aux_range' , low , high )
-                in_range = 'aux_range'
+            low  = in_range [ 0 ]
+            high = in_range [ 1 ]
+            if isinstance ( low , num_types ) and isinstance ( high , num_types ) and low < high :
+                range_name = 'aux2_range_%s' % self.name 
+                with rooSilent ( 3 ) : drawvar.setRange ( range_name , low , high )
+                in_range = range_name
     
-        if in_range and not isinstance ( in_range , list_types ) : in_range = in_range ,  
+        if in_range and not isinstance ( in_range , list_types ) :
+            in_range = in_range ,
+            
         if in_range :
-            data_options        = self.draw_option (       'data_options' , **args )
-            background_options  = self.draw_option ( 'background_options' , **args )
-            signal_options      = self.draw_option (     'signal_options' , **args )
-            component_options   = self.draw_option (  'component_options' , **args )
-            crossterm1_options  = self.draw_option ( 'crossterm1_options' , **args )
-            crossterm2_options  = self.draw_option ( 'crossterm2_options' , **args )
-            total_fit_options   = self.draw_option (  'total_fit_options' , **args )
-
-            for i in in_range :
-                data_options       += ROOT.RooFit.CutRange        ( i ) , 
-                signal_options     += ROOT.RooFit.ProjectionRange ( i ) , 
-                background_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                component_options  += ROOT.RooFit.ProjectionRange ( i ) , 
-                crossterm1_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                crossterm2_options += ROOT.RooFit.ProjectionRange ( i ) , 
-                total_fit_options  += ROOT.RooFit.ProjectionRange ( i ) , 
+            options_cut     = tuple ( [  ROOT.RooFit.CutRange        ( i ) for i in in_range ] )
+            newargs [ 'data_options' ] = self.draw_option ( 'data_options' , **newargs ) + options_cut
             
-            args [       'data_options' ] =       data_options
-            args [     'signal_options' ] =     signal_options
-            args [ 'background_options' ] = background_options
-            args [  'component_options' ] =  component_options
-            args [ 'crossterm1_options' ] = crossterm1_options
-            args [ 'crossterm2_options' ] = crossterm2_options
-            args [  'total_fit_options' ] =  total_fit_options
-            
+        if in_range : 
+            options_project = tuple ( [  ROOT.RooFit.ProjectionRange ( i ) for i in in_range ] )
+            for key in  ( 'total_fit_options'           ,
+                          #
+                          'signal_options'              ,
+                          'background_options'          ,
+                          'component_options'           ,
+                          'crossterm1_options'          ,
+                          'crossterm2_options'          ,
+                          #
+                          'combined_signal_options'     ,
+                          'combined_background_options' ,
+                          'combined_component_options'  ) :
+                newargs [ key ] =  self.draw_option ( key , **newargs ) + options_project
+                
         #
         ## redefine the drawing variable:
         # 
@@ -346,7 +347,8 @@ class PDF2 (PDF) :
         result = PDF.draw ( self            ,
                             dataset         ,
                             nbins  = nbins  ,
-                            silent = silent ,  **args )
+                            silent = silent ,
+                            args   = args   , **newargs )
 
         self.draw_var = None
         return result 
@@ -412,9 +414,14 @@ class PDF2 (PDF) :
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
     #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , extended = True )     
+    #  data   = model.generate ( 100000 , varset , sample = True )     
     #  @endcode
-    def generate ( self ,  nEvents , varset = None , extended = False ,  *args ) :
+    def generate ( self             ,  
+                   nEvents          ,
+                   varset   = None  ,
+                   binning  = {}    ,
+                   sample   = False , 
+                   args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
@@ -423,13 +430,19 @@ class PDF2 (PDF) :
         >>> data   = model.generate ( 100000 , varset )
         >>> data   = model.generate ( 100000 , varset , extended =  =   True )
         """
+        nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
+        assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
+        
         args = args + ( ROOT.RooFit.Name ( dsID() ) , ROOT.RooFit.NumEvents ( nEvents ) )
-        if  extended :
-            args = args + ( ROOT.RooFit.Extended () , )
+        
+        if binning is True :
+            args    = args + ( ROOT.AllBinned() , ) 
+            binning = {}
+
         if   not varset :
             varset = ROOT.RooArgSet( self.xvar , self.yvar )
         elif isinstance ( varset , ROOT.RooAbsReal ) :
-            varset = ROOT.RooArgSet( varser )
+            varset = ROOT.RooArgSet( varset )
 
         if not self.xvar in varset :
             vs = ROOT.RooArgSet()
@@ -442,8 +455,19 @@ class PDF2 (PDF) :
             vs . add ( self.yvar )
             for  v in varset : vs.add ( v )
             varset = vs
-            
-        return self.pdf.generate ( varset , *args )
+
+        from ostap.fitting.variables import KeepBinning        
+        with KeepBinning ( self.xvar ) , KeepBinning ( self.yvar ) : 
+
+            if binning :
+                
+                xbins = binning.get ( self.xvar.name , None )
+                ybins = binning.get ( self.yvar.name , None )
+
+                if xbins : self.xvar.bins = xbins
+                if ybins : self.yvar.bins = ybins
+                                        
+            return self.pdf.generate ( varset , *args )
 
     # =========================================================================
     ## simple 'function-like' interface 
@@ -959,15 +983,17 @@ class Generic2D_pdf(PDF2) :
     """
     ## constructor 
     def __init__ ( self , pdf , xvar , yvar ,
-                   name           = None  ,
-                   special        = False ,
-                   add_to_signals = True  ) :
+                   name           = None    ,
+                   special        = False   ,                  
+                   add_to_signals = True    ,
+                   prefix         = ''      ,
+                   suffix         = ''      ) :
 
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"        
         assert isinstance ( pdf  , ROOT.RooAbsReal  ) , "``pdf'' must be ROOT.RooAbsReal"
         
-        if not name : name = pdf.GetName()        
+        name = name if name else prefix + pdf.GetName () + suffix 
         PDF2  . __init__ ( self , name , xvar , yvar , special = special )
 
         if not self.special : 
@@ -975,7 +1001,12 @@ class Generic2D_pdf(PDF2) :
 
         ## PDF! 
         self.pdf = pdf
-        
+
+        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+            self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
+        if not self.yvar in self.pdf.getParameters ( 0 ) : 
+            self.warning ( "Function/PDF does not depend on yvar=%s" % self.yvar.name )
+
         ## add it to the list of signal components ?
         self.__add_to_signals = True if add_to_signals else False
         
@@ -990,27 +1021,33 @@ class Generic2D_pdf(PDF2) :
             'name'           : self.name           ,
             'special'        : self.special        ,  
             'add_to_signals' : self.add_to_signals , 
+            'prefix'         : prefix              ,
+            'suffix'         : suffix              ,            
             }
             
     @property
     def add_to_signals ( self ) :
-        """``add_to_signals'' : shodul PDF be added into list of signal components?"""
+        """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
 
     ## redefine the clone method, allowing only the name to be changed
     #  @attention redefinition of parameters and variables is disabled,
     #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar  = None , yvar = None ) :
+    def clone ( self , pdf = None , xvar  = None , yvar = None , **kwargs ) :
         """Redefine the clone method, allowing only the name to be changed
          - redefinition of parameters and variables is disabled,
          since it can't be done in a safe way          
         """
+        if pdf  and not  pdf is self.pdf  :
+            raise AttributeError("Generic2D_pdf can not be cloned with different `pdf''" )
         if xvar and not xvar is self.xvar :
             raise AttributeError("Generic2D_pdf can not be cloned with different `xvar''")
         if yvar and not yvar is self.yvar :
             raise AttributeError("Generic2D_pdf can not be cloned with different `yvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
-
+        if 'special' in kwargs and self.special != kwargs['special'] :
+            raise AttributeError("Generic2D_pdf can not be cloned with different ``special''")
+        
+        return PDF.clone ( self , **kwrags )
 
 # =============================================================================
 ## @class Sum2D
@@ -1417,12 +1454,12 @@ class Fit2D (PDF2) :
 
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , prefix = 'SX' , suffix = suffix )
         else : raise AttributeError("Invalid ``signal_x'' argument: %s" % signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , prefix = 'SY' , suffix = suffix )
         else : raise AttributeError("Invalid ``signal_y'' argument: %s" % signal_y )
             
         #
@@ -1430,10 +1467,11 @@ class Fit2D (PDF2) :
         #
         if not name :
             name = "%s&%s" % ( self.__signal_x.name , self.__signal_y.name )
-            if suffix : name += '_'+ suffix
+            if suffix : name += '_' + suffix 
             
-        PDF2.__init__ ( self , name , self.__signal_x.xvar , self.__signal_y.xvar ) 
-
+        PDF2.__init__ ( self , name          ,
+                        self.__signal_x.xvar ,
+                        self.__signal_y.xvar ) 
 
         
         # =====================================================================
@@ -1447,9 +1485,9 @@ class Fit2D (PDF2) :
         if   sig_2D and isinstance ( sig_2D , PDF2 ) :
             self.__ss_cmp = sig_2D
         elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
-            self.__ss_cmp = Gneric2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_pdf' )
+            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_' + self.name  )
         elif not sig_2D : 
-            self.__ss_cmp = Model2D ( "SS_pdf" + suffix ,
+            self.__ss_cmp = Model2D ( "SS_" + self.name ,
                                       self.__signal_x   ,
                                       self.__signal_y   , 
                                       title = "Signal(x) x Signal(y)" )
@@ -1460,8 +1498,8 @@ class Fit2D (PDF2) :
         ## Second component: Background(1) and Signal(2)
         # =====================================================================
 
-        self.__bkg_1x = self.make_bkg ( bkg_1x  , 'Bkg1X_BS' + suffix , self.xvar )
-        self.__bs_cmp = Model2D ( "BS_pdf" + suffix         ,
+        self.__bkg_1x = self.make_bkg ( bkg_1x  , 'Bkg1X_BS' + self.name , self.xvar )
+        self.__bs_cmp = Model2D ( "BS_" + self.name         ,
                                   self.__bkg_1x             ,
                                   self.__signal_y           ,
                                   title = "Backround1(x) x Signal(y)" )
@@ -1470,8 +1508,8 @@ class Fit2D (PDF2) :
         ## Third component:  Signal(1) and Background(2)
         # =====================================================================
         
-        self.__bkg_1y = self.make_bkg ( bkg_1y   , 'Bkg1Y_SB' + suffix , self.yvar )
-        self.__sb_cmp = Model2D ( "SB_pdf" + suffix         ,
+        self.__bkg_1y = self.make_bkg ( bkg_1y   , 'Bkg1Y_SB' + self.name , self.yvar )
+        self.__sb_cmp = Model2D ( "SB_" + self.name         ,
                                   self.__signal_x           ,
                                   self.__bkg_1y             ,
                                   title = "Signal(x) x Background1(y)" )
@@ -1503,14 +1541,14 @@ class Fit2D (PDF2) :
 
         if   isinstance ( bkg_2D , PDF2             ) : self.__bb_cmp = bkg_2D        
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf   ) : ## generic PDF 
-            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )            
+            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar , 'BB_' + self.name )            
         elif isinstance ( bkg_2D , ( tuple , list ) ) : ## polynomials 
             from ostap.fitting.models_2d import make_B2D
-            self.__bb_cmp = make_B2D ( "BB_pdf" + suffix , self.xvar , self.yvar , *bkg_2D )
+            self.__bb_cmp = make_B2D ( "BB_" + self.name  , self.xvar , self.yvar , *bkg_2D )
         else     :                       
-            self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
-            self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_BB' + suffix , self.yvar )            
-            self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
+            self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + self.name , self.xvar )
+            self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_BB' + self.name , self.yvar )            
+            self.__bb_cmp = Model2D ( "BB_" + self.name         ,
                                       self.__bkg_2x             ,
                                       self.__bkg_2y             ,
                                       title = "Background2(x) x Background2(y)" )
@@ -1519,13 +1557,13 @@ class Fit2D (PDF2) :
         ## coefficients/yields 
         # =====================================================================
     
-        self.__ss = self.make_var ( ss   , "SS"                       + suffix ,
+        self.__ss = self.make_var ( ss   , "SS"               + suffix ,
                                     "Signal(x,y)"             + suffix , None , 1000  , 0 , 1.e+7 )
-        self.__sb = self.make_var ( sb   ,  "SB"                      + suffix ,
+        self.__sb = self.make_var ( sb   ,  "SB"              + suffix ,
                                     "Signal(x)&Background(y)" + suffix , None ,  100  , 0 , 1.e+7 )
-        self.__bs = self.make_var ( bs   , "BS"                      + suffix ,
+        self.__bs = self.make_var ( bs   , "BS"               + suffix ,
                                     "Background(x)&Signal(y)" + suffix , None ,  100  , 0 , 1.e+7 )        
-        self.__bb = self.make_var ( bb   , "BB"                      + suffix ,
+        self.__bb = self.make_var ( bb   , "BB"               + suffix ,
                                     "Background(x,y)"         + suffix , None ,   10  , 0 , 1.e+7 )
         
         self.alist1 = ROOT.RooArgList (
@@ -1543,10 +1581,10 @@ class Fit2D (PDF2) :
         self.__nums_components = [] 
         icmp = 0
         self.__more_components = []
-        for cmp in components :
+        for i , cmp in enumerate ( components ) :
             
             if   isinstance  ( cmp , PDF2           ) : cc = cmp  
-            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar ) 
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar ,  prefix = 'C%d_' % i , suffix = suffix ) 
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -1569,10 +1607,10 @@ class Fit2D (PDF2) :
         #
         ## build the final PDF 
         # 
-        self.pdf  = ROOT.RooAddPdf  ( "model2D"      + suffix ,
-                                      "Model2D(%s)"  % suffix ,
-                                      self.alist1 ,
-                                      self.alist2 )
+        pdfname  = "Fit2D_"    + self.name
+        pdftitle = "Fit2D(%s)" % self.name
+        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -1593,7 +1631,7 @@ class Fit2D (PDF2) :
             'ss'         : self.SS              ,
             'sb'         : self.SB              ,
             'bs'         : self.BS              ,
-            'BB'         : self.BB              ,
+            'bb'         : self.BB              ,
             'components' : self.more_components ,
             'xvar'       : self.xvar            , 
             'yvar'       : self.yvar            , 
@@ -1857,7 +1895,7 @@ class Fit2DSym (PDF2) :
     """
     def __init__ ( self               ,
                    #
-                   signal_x          , 
+                   signal_x           , 
                    signal_y   = None  ,
                    suffix     = ''    ,
                    #
@@ -1899,16 +1937,17 @@ class Fit2DSym (PDF2) :
         
         self.__suffix      = suffix
 
+        # ============================================================================
         if   isinstance ( signal_x , PDF            )          : self.__signal_x = signal_x
         elif isinstance ( signal_x , ROOT.RooAbsPdf ) and xvar :
-            self.__signal_x = Generic1D_pdf ( signal_x , xvar , 'SX' )
+            self.__signal_x = Generic1D_pdf ( signal_x , xvar , prefix = 'SX' , suffix = suffix )
         else : raise AttributeError ( "Invalid ``signal_x'' argument: %s" %  signal_x )
             
         if   isinstance ( signal_y , PDF            )          : self.__signal_y = signal_y
         elif isinstance ( signal_y , ROOT.RooAbsPdf ) and yvar :
-            self.__signal_y = Generic1D_pdf ( signal_y , yvar , 'SY' )
+            self.__signal_y = Generic1D_pdf ( signal_y , yvar , prefix = 'SX' , suffix = suffix )
         elif yvar and not signal_y :
-            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name = 'SY' )
+            self.__signal_y = self.__signal_x.clone ( xvar = yvar , name_prefix = 'SY_' )
             self.debug('signal y-component is cloned from the signal_x component')
         else : raise AttributeError ( "Invalid ``signal_y'' argument: %s" % signal_y )
             
@@ -1917,51 +1956,52 @@ class Fit2DSym (PDF2) :
         # =====================================================================
         if not name :
             name = "%s&%s" % ( self.__signal_x.name , self.__signal_y.name )
-            if suffix : name += '_'+ suffix
+            if suffix : name += '_' + suffix 
 
         ##  initialize the base class 
-        PDF2.__init__ ( self , name , self.__signal_x.xvar , self.__signal_y.xvar ) 
+        PDF2.__init__ ( self , name          ,
+                        self.__signal_x.xvar ,
+                        self.__signal_y.xvar ) 
         
-
         # =====================================================================
         ## First component: Signal(1) and Signal(2)
         # =====================================================================
 
         if   sig_2D and isinstance ( sig_2D , PDF2 ) :
-           self.__ss_cmp = sig_2D
+            self.__ss_cmp = sig_2D
         elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
-            self.__ss_cmp = Gneric2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_pdf' )
+            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_' + self.name  )
         elif not sig_2D : 
-            self.__ss_cmp = Model2D ( "SS_pdf" + suffix ,
-                                      self.__signal_x   ,
-                                      self.__signal_y   , 
+            self.__ss_cmp = Model2D ( 'SS_' + self.name  ,
+                                      self.__signal_x    ,
+                                      self.__signal_y    , 
                                       title = "Signal(x) x Signal(y)" )
         else :
             raise TypeError("Fit2D: can't create Signal(x,y)-component!")
         
-        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BS' + suffix , self.xvar )
-        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SB' + suffix , self.yvar )
+        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BS' + self.name , self.xvar )
+        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SB' + self.name , self.yvar )
 
         # =====================================================================
         ## Second sub-component: Background (1) and Signal     (2)
         ## Third  sub-component: Signal     (1) and Background (2)
         # =====================================================================
 
-        self.__sb_cmp_raw = Model2D ( "S1B2_pdf" + suffix       ,
+        self.__sb_cmp_raw = Model2D ( "S1B2_" + self.name       ,
                                       self.__signal_x           ,
                                       self.__bkg_1y             ,
                                       title = "Signal(x) x Background(y)" )
         
-        self.__bs_cmp_raw = Model2D ( "B1S2_pdf" + suffix       ,
+        self.__bs_cmp_raw = Model2D ( "B1S2_" + self.name       ,
                                       self.__bkg_1x             ,
                                       self.__signal_y           ,    
                                       title = "Background(x) x Signal(y)" )
         
         self.__sb_cmp     = Generic2D_pdf (
-            self.make_sum ( "SB_pdf" + suffix ,
+            self.make_sum ( "SB_" + self.name    ,
                             "Signal(x) x Background(y) + Background(x) x Signal(y)"   ,
                             self.__sb_cmp_raw.pdf ,
-                            self.__bs_cmp_raw.pdf ) , self.xvar , self.yvar )
+                            self.__bs_cmp_raw.pdf ) , self.xvar , self.yvar , 'SB_' + self.name )
         
         ## alias, just for convinience 
         self.__bs_cmp    = self.__sb_cmp
@@ -1983,21 +2023,22 @@ class Fit2DSym (PDF2) :
     
         self.__bkg_2x = None
         self.__bkg_2y = None
-        
+
+        bb_name = 'BB_' + self.name 
         if   isinstance ( bkg_2D , PDF2           ) : self.__bb_cmp = bkg_2D  
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf ) :
-            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar )
+            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar , bb_name )
         elif isinstance ( bkg_2D , int ) :
 
             from ostap.fitting.models_2d import make_B2Dsym
-            self.__bb_cmp = make_B2Dsym ( "BB_pdf" + suffix , self.xvar , self.yvar , bkg_2D )
+            self.__bb_cmp = make_B2Dsym ( bb_name , self.xvar , self.yvar , bkg_2D )
 
         else     :                        
-            self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_BB' + suffix , self.xvar )
-            self.__bkg_2y = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_BB' + suffix , self.yvar )
-            self.__bb_cmp = Model2D ( "BB_pdf" + suffix         ,
-                                      self.__bkg_2x             ,
-                                      self.__bkg_2y              ,
+            self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_BB' + self.name , self.xvar )
+            self.__bkg_2y = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_BB' + self.name , self.yvar )
+            self.__bb_cmp = Model2D ( bb_name       ,
+                                      self.__bkg_2x ,
+                                      self.__bkg_2y ,
                                       title = "Background2(x) x Backrgound2(y)" )
             
         # =====================================================================
@@ -2030,10 +2071,10 @@ class Fit2DSym (PDF2) :
         self.__nums_components = [] 
         icmp = 0
         self.__more_components = []
-        for cmp in components :
+        for i , cmp in enumerate ( components ) :
             
             if   isinstance  ( cmp , PDF2           ) : cc = cmp  
-            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar ) 
+            elif isinstance  ( cmp , ROOT.RooAbsPdf ) : cc = Generic2D_pdf ( cmp ,  self.xvar , self.yvar , prefix = 'C%d_' % i , suffix = suffix )
             else :
                 self.error ("unknown ``other''component %s/%s, skip it!" % ( cc , type(cc) ) )
                 continue  
@@ -2054,14 +2095,13 @@ class Fit2DSym (PDF2) :
         for c in self.__nums_components  : self.alist2.add ( c )
             
         #
-
-
         ## build the final PDF 
-        # 
-        self.pdf  = ROOT.RooAddPdf  ( "model2D"      + suffix ,
-                                      "Model2D(%s)"  % suffix ,
-                                      self.alist1 ,
-                                      self.alist2 )
+        #
+        pdfname  = "Fit2DSym_"    + self.name
+        pdftitle = "Fit2DSym(%s)" % self.name
+        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        self.pdf = ROOT.RooAddPdf  ( *pdfargs )
+
 
         self.signals     .add ( self.__ss_cmp.pdf )
         self.backgrounds .add ( self.__bb_cmp.pdf )
@@ -2268,8 +2308,6 @@ class Fit2DSym (PDF2) :
         return self.__bs_cmp_raw
 
  
-
-
 # =============================================================================
 if '__main__' == __name__ :
     

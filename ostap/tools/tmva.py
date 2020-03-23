@@ -79,11 +79,11 @@ class WeightsFiles(CleanUp) :
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
-                    tmpdir = self.tempdir ( prefix = 'weights_' )
+                    tmpdir = self.tempdir ( prefix = 'tmp-tmva-weights-' )
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
-                    self.__trash = tmpdir 
+                    self.trash.add ( tmpdir ) 
             else :
                 weights_files = [ weights_files ]
 
@@ -122,17 +122,6 @@ class WeightsFiles(CleanUp) :
         self.__methods       = tuple ( [ i for  i in  weights_files.keys() ] )
         import copy
         self.__weights_files = copy.deepcopy ( weights_files ) 
-
-    # ========================================================================
-    ## clean the temporary trash
-    def clean ( self ) :
-        if self.__trash :
-            self.remove_dir ( self.__trash )
-            self.__trash = None 
-            
-    ## delete the file 
-    def __del__ (  self ):
-        self.clean ()
 
     @property
     def methods ( self ) :
@@ -250,12 +239,13 @@ class Trainer(object):
                    signal                     ,  # signal sample/tree
                    background                 ,  # background sample/tree 
                    signal_cuts       = ''     ,  # signal cuts 
-                   background_cuts   = ''     ,  # background cuts 
+                   background_cuts   = ''     ,  # background cuts                   
                    spectators        = []     ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
                    configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents" ,
                    signal_weight     = None   ,                
                    background_weight = None   ,
+                   prefilter         = ''     ,  ## prefilter cuts before TMVA data loader 
                    ##
                    output_file       = ''     ,  ## the name of output file
                    verbose           = True   ,
@@ -288,8 +278,36 @@ class Trainer(object):
         self.__variables         = tuple ( variables  )
         
         from ostap.trees.trees import Chain
-        if isinstance ( signal     , Chain ) : signal     =     signal.chain 
-        if isinstance ( background , Chain ) : background = background.chain 
+        
+        if   isinstance ( signal     , Chain           ) : pass 
+        elif isinstance ( background , ROOT.TTree      ) : signal = Chain ( signal ) 
+        elif isinstance ( signal     , ROOT.RooAbsData ) :
+            signal.convertToTreeStore ()
+            if signal.isWeighted() : 
+                from ostap.core.core import Ostap
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( signal ) 
+                if ws :
+                    sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
+                    signal_weight = sw
+                    logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
+            signal     = Chain ( signal.tree () ) 
+
+            
+        if   isinstance ( background , Chain           ) : pass 
+        elif isinstance ( background , ROOT.TTree      ) : background = Chain ( background ) 
+        elif isinstance ( background , ROOT.RooAbsData ) :
+            background.convertToTreeStore ()
+            if background.isWeighted() : 
+                from ostap.core.core import Ostap             
+                ## try to get the weight from dataset 
+                ws = Ostap.Utils.getWeight ( background ) 
+                if ws :
+                    bw = ws if not background_weight else background_weight * ROOT.TCut ( ws )
+                    backround_weight = bw 
+                    logger.info ( 'Redefine Background weight to be %s' % background_weight )
+            background = Chain ( background.tree () )
+            
 
         self.__signal            = signal
         self.__signal_cuts       = signal_cuts  
@@ -298,12 +316,17 @@ class Trainer(object):
         self.__background        = background
         self.__background_cuts   = background_cuts 
         self.__background_weight = background_weight
+
+        self.__prefilter         = ROOT.TCut ( prefilter ) 
+        
         self.__category          = int ( category )
         self.__make_plots        = True if make_plots else False
         
         self.__spectators        = [] 
         
-        self.__verbose = True if verbose else False 
+        ## self.__verbose = True if verbose else False 
+        self.__verbose = True if ( verbose and  self.category <= 0 ) else False 
+
         self.__name    = name 
 
         self.__logging           = False
@@ -398,7 +421,7 @@ class Trainer(object):
     @property
     def signal ( self ) :
         """``signal'' :  TTree for signal events"""
-        return self.__signal
+        return self.__signal.chain 
     
     @property
     def signal_cuts ( self ) :
@@ -413,7 +436,7 @@ class Trainer(object):
     @property
     def background ( self ) :
         """``background'' :  TTree for background events"""
-        return self.__background
+        return self.__background.chain
     
     @property
     def background_cuts ( self ) :
@@ -424,6 +447,11 @@ class Trainer(object):
     def background_weight ( self ) :
         """``background_weight'' : weight to be applied for ``background'' sample"""
         return self.__background_weight
+
+    @property
+    def prefilter ( self ) :
+        """``prefilter'' : cuts ot be applied/prefilter before processing"""
+        return self.__prefilter
     
     @property
     def bookingoptions ( self ) :
@@ -618,25 +646,27 @@ class Trainer(object):
                 self.bookingoptions   )
 
             factory.SetVerbose( self.verbose )
-
         
             ## 
             dataloader = ROOT.TMVA.DataLoader ( self.dirname )
 
             #
+            all_vars = [] 
             for v in self.variables :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
+                all_vars.append ( vv[0] ) 
                 dataloader.AddVariable  ( *vv )    
             logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
 
             for v in self.spectators :
                 vv = v
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )             
+                all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
                 #
             if self.spectators : 
-                logger.info ( "Trainer(%s):        spectators:%s" % ( self.name , self.spectators ) )
+                logger.info ( "Trainer(%s):        spectators:``%s''" % ( self.name ,      self.spectators ) )
             #            
             if self.signal_cuts :
                 logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
@@ -644,6 +674,36 @@ class Trainer(object):
             if self.background_cuts :
                 logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
             #
+            if self.prefilter :
+                if self.verbose : logger.info ( 'Start data pre-filtering before TMVA processing' )
+                all_vars.append   ( self.prefilter )
+                
+                if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+                if self.signal_weight     : all_vars.append ( self.signal_weight     )
+                if self.background_cuts   : all_vars.append ( self.background_cuts   )
+                if self.background_weight : all_vars.append ( self.background_weight )
+                
+                import ostap.trees.trees
+                avars = self.signal.the_variables ( all_vars )
+
+                import ostap.trees.cuts 
+                cuts  = ROOT.TCut ( self.prefilter )
+                scuts = { 'PreSelect' : cuts }
+                bcuts = { 'PreSelect' : cuts } 
+                if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
+                if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
+
+                ## import ostap.frames.tree_reduce       as TR
+                import ostap.parallel.parallel_reduce as TR
+                
+                silent = not self.verbose or not self.category in ( 0, -1 )
+                logger.info ( 'Pre-filter Signal     before processing' )
+                self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
+                logger.info ( 'Pre-filter Background before processing' )
+                self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )                                
+                self.__signal     = self.__SigTR
+                self.__background = self.__BkgTR
+                
             if self.verbose :
                 sc = ROOT.TCut ( self.    signal_cuts )
                 bc = ROOT.TCut ( self.background_cuts )
@@ -783,12 +843,14 @@ class Trainer(object):
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
         with batch ( ROOT.gROOT.IsBatch () or not show_plots ) :
-
-            ROOT.TMVA.variables                          ( self.name , output     )
-            ROOT.TMVA.correlations                       ( self.name , output     )
-            for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
-            ## ROOT.TMVA.mvaeffs                         ( self.name , output     )
-            for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
+ 
+            ROOT.TMVA.variables                              ( self.name , output     )
+            
+            if 62000 > ROOT.gROOT.GetVersionInt() : 
+                ROOT.TMVA.correlations                       ( self.name , output     )
+                for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
+                ## ROOT.TMVA.mvaeffs                            ( self.name , output     )
+                for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
         
         ## convert EPS  files to PDF 
         if cmd_exists ( 'epstopdf' ) :
@@ -1162,7 +1224,7 @@ class Reader(object)  :
     #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg))
     # @endcode        
     def __getitem__ ( self , method ) :
-        """Helper utility to  get the correspondig function from the  reader:
+        """Helper utility to  get the corresponding function from the  reader:
         - Use the reader
         >>> tree =  ....  ## TTree/TChain/RooDataSet with data
         >>> mlp_fun  =  reader['MLP']  ## <-- here! 
@@ -1358,7 +1420,7 @@ def _add_response_tree  ( tree  , *args ) :
 
 # =============================================================================
 def _add_response_chain ( chain , *args ) :
-    """Specific axction to ROOT.TChain
+    """Specific action to ROOT.TChain
     """
     
     import ostap.trees.trees
@@ -1366,6 +1428,10 @@ def _add_response_chain ( chain , *args ) :
     files  = chain.files()
     cname  = chain.GetName() 
     
+    if not files :
+        logger.warning ( 'addTMVAResponse: empty chain (no files)' )
+        return Ostap.StatusCode ( 900 ) , chain 
+
     status = None 
     
     verbose = True and 1 < len ( files )

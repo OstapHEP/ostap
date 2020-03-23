@@ -52,7 +52,7 @@ class  FillTask(Task) :
     def initialize_local   ( self ) : self.__output = () 
 
     ## the actual processing 
-    def process ( self , item ) :
+    def process ( self , jobid , item ) :
 
         import ROOT
         from ostap.logger.logger import logWarning
@@ -91,11 +91,12 @@ class  FillTask(Task) :
         
         self.__output = selector.data, selector.stat  
         
-        if  num < 0 : logger.warning ("Processing status %s"  % num )
+        if  num < 0 :
+            logger.warning ("Processing status %s (jobid #%s)"  %  ( num % jobid ) ) 
         
         ##del selector.data
         ##del      selector        
-        logger.debug ( 'Processed %s and filled %d entries ' % ( item , len( self.__output ) ) )
+        logger.debug ( 'Processed %s and filled %d entries (jobid #%s)' % ( item , len( self.__output ) , jobid ) )
 
         return self.__output 
 

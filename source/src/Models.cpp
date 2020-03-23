@@ -277,7 +277,7 @@ double Ostap::Math::GramCharlierA::integral
       ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,                                   // size of workspace
+      m_workspace.size()              ,                                   // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -453,7 +453,7 @@ double  Ostap::Math::PhaseSpacePol::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -626,7 +626,7 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1892,7 +1892,7 @@ double Ostap::Math::Argus::cdf ( const double x ) const
   //
   const double y2 = 1 - y * y ;
   //
-  const double res =  Psi_ ( m_shape * y2 ) / Psi_( m_shape ) ;
+  const double res =  Psi_ ( m_shape * std::sqrt ( y2 )) / Psi_( m_shape ) ;
   return m_high > m_low ?  ( 1 - res ) : res ;
 }
 // ============================================================================
@@ -2030,7 +2030,7 @@ double Ostap::Math::Sigmoid::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2416,7 +2416,7 @@ double Ostap::Math::Tsallis::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2521,7 +2521,7 @@ double Ostap::Math::QGSM::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

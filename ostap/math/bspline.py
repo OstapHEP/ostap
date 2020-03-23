@@ -139,7 +139,7 @@ def deboor ( x      ,
 # =============================================================================
 ## reconstruct knot vector from greville abscissas and spline degree 
 def knots_from_abscissas ( abscissas , order , convert = True ) :
-    """Reconstruc knot vector from greville abscissas and spline degree
+    """Reconstruct knot vector from greville abscissas and spline degree
     abscissas : vector of abscissas
     order     : the order/degree  of spline
     convert   : convert to tuple ?
@@ -154,42 +154,49 @@ def knots_from_abscissas ( abscissas , order , convert = True ) :
     ## if convert  : knots = tuple ( knots ) 
     ## return  knots
 
-    if len(abscissas) < order  + 1 :
+    if   isinstance ( abscissas  , Ostap.Math.Interpolation.Table ) :
+        data = abscissas.data()
+        abscissas = [ i.first for i in data ]
+    elif isinstance (  anscissas , Ostap.Math.Interpolation.TABLE ) :
+        data = abscissas
+        abscissas = [ i.first for i in data ]
+    elif isinstance ( abscissas , list ) :  abscissas.sort()
+    else : 
+        abscissas = list ( abscissas )
+        abscissas.sort ()
+        
+    if len ( abscissas ) < order  + 1 :
         raise AttributeError("Vector of abscissas is too short")
-    degree = order 
-    abscissas = list(abscissas)
-    abscissas.sort()
-    af = abscissas[ 0]
-    al = abscissas[-1]
+    
+    degree    = order 
+    af = abscissas [  0 ]
+    al = abscissas [ -1 ]
 
-    knots = [ af ] + abscissas + [ al ]
-    
-    if 1 ==  order : return knots
-    while len(knots) < len(abscissas) + order + 1 :
-        knots = [ af ] + knots + [ al ]
-
-    return knots 
-    
-    
+    ## knots = [ af ] + abscissas + [ al ]
+    ## 
+    ## if 1 ==  order : return knots
+    ## while len(knots) < len(abscissas) + order + 1 :
+    ##     knots = [ af ] + knots + [ al ]
+    ## 
+    ## return knots 
+        
     knots = (degree+1)*[ af ]
     N     = len ( abscissas )
     
     for i in  range(1,N) :
-        st = sum ( knots [ -(degree-1) :] )
-        ti = abscissas[i] * (degree  ) - st 
+        st = sum ( knots [ -( degree-1 ) :] )
+        ti = abscissas[i] * ( degree   ) - st 
         knots.append ( ti )
         
-    while len(knots) < N + order + 1 :
+    while len ( knots ) < N + order + 1 :
         knots.append ( al )
 
     abscissas = doubles ( abscissas )
     knots2 = Ostap.Math.knots_from_abscissas ( abscissas , order )
     
-    return knots, knots2  
+    return knots2  
         
     
-    
-
 # =============================================================================    
 ## Construct the interpolation Bs-spline 
 #  @code
@@ -206,7 +213,7 @@ def interpolate ( func , abscissas , spline , *args ) :
     
     func      : the ``function''
     abscissas : abscissas, if None/Empty,  Greville's abscissas from spline will be used
-    spline    : th epsline qwill be constructed forem ``spline'' and ``args''
+    spline    : the spline will be constructed from ``spline'' and ``args''
     
     :Example:
     
@@ -215,44 +222,46 @@ def interpolate ( func , abscissas , spline , *args ) :
     >> b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 2 )  
     >> b4 = interpolate ( lambda x : x*x , None    , 3 )  
     """
+
+    bs = None 
+    if isinstance ( func , Ostap.Math.Interpolation.Table ) and not abscissas :
+
+        if isinstance ( spline , int ) and 0 <= spline and not args :
+            ## get initial spline
+            a  = [ p[0] for p in func ]
+            a.sort()
+            bs = Ostap.Math.BSpline ( a , spline )
+            ## get the Greville's abscissas 
+            ga = [ g  for g in bs.greville_abscissas () ] 
+            ##
+            N = len ( func ) 
+            while N + 1 < len ( ga ) + bs.degree() :
+                del ga[1]
+                if N + 1 < len ( ga ) + bs.degree() :
+                    del ga[-2]
+                                
+            ## and use them as knots 
+            bs = Ostap.Math.BSpline ( ga , spline )
+        else :
+            bs = Ostap.Math.BSpline ( spline , *args )
+            
+        sc = Ostap.Math.Interpolation.bspline ( func , bs )
+        if sc.isFailure() : raise TypeError("Ostap.Math.Bspline/1: Can't iterpolate!%s" %  sc )
+        return bs
     
-    bs  = Ostap.Math.BSpline ( spline , *args )
-    if not abscissas :
-        abscissas = bs.greville_abscissas() 
-        
-    from types       import GeneratorType as GT
-    from collections import Iterable      as IT
-    from collections import Mapping       as MT
+    elif not abscissas :
+        bs        = Ostap.Math.BSpline ( spline , *args )
+        abscissas = bs.greville_abscissas () 
     
-    if isinstance ( abscissas , GT ):
-        abscissas = [ x for x in abscissas ]
-        
-    if   callable ( func ) and abscissas :
-        func = [ func (x)  for x in abscissas ]                  ## callable 
-    elif isinstance ( func , dict ) and not abscissas :          ## mapping 
-        keys = func.keys()
-        keys.sort()
-        abscissas = [ x       for x in keys ]
-        func      = [ func[x] for x in keys ]
-    elif isinstance ( func , GT   ) : func = [ f for f in func ] ## generator
-    elif isinstance ( func , IT   ) : pass                       ## iterable 
-    else :
-        raise TypeError("Can't treat ``func''=%s"  %  func )
+    if not bs : bs = Ostap.Math.BSpline ( spline , *args )
 
-    ##
-    from ostap.math.base import doubles
-    _x = doubles ( abscissas )
-    _y = doubles ( func      )
-
-    bs  = Ostap.Math.BSpline ( spline , *args )
-    if len(bs) != len(_x) :
-        raise TypeError("Can't interpolate:  different number of parameters  %s/%s" %  ( len(_x) ,  len(bs) ) )
-
-    sc  = Ostap.Math.Interpolation.bspline ( _x , _y , bs )
-    if sc.isFailure() :
-        raise TypeError("Ostap.Math.Bspline: Can't iterpolate!%s" %  sc )
+    from ostap.math.interpolation import points 
+    table = points ( func , abscissas )
+    sc    = Ostap.Math.Interpolation.bspline ( table , bs )
+    if sc.isFailure () : raise TypeError("Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
     
     return bs 
+
 
 # =============================================================================    
 ## Construct the variation diminishing approximation 
@@ -676,6 +685,7 @@ _decorated_classes_ = set( [
     Ostap.Math.PositiveSpline2D     ,
     Ostap.Math.PositiveSpline2DSym  ,
     ])
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -683,5 +693,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

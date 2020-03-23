@@ -48,7 +48,7 @@ __all__     = (
     'Data2'       , ## collect files and create two TChain objects 
     )
 # =============================================================================
-import ROOT, glob, random, math  
+import ROOT, os, glob, random, math  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -74,6 +74,7 @@ class DataProcessor (object) :
         data = self.data.clone() 
         data.add_files ( items )
         return data
+
 # =============================================================================
 ## @class Files
 #  Simple utility to pickup the list of files 
@@ -119,12 +120,17 @@ class Files(object):
 
         if not self.silent :
             logger.info ('Loaded: %s' % self )
-            
+
+    ## append the file to the list of the files 
+    def _append_to_files (  self , f ) :
+        """Append the file to the list of the files"""
+        self.__files.append ( f )
+        
     @property 
     def files     ( self ) :
         """``files'' : the list of files"""
         return tuple ( self.__files    )
-    
+
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
@@ -144,19 +150,26 @@ class Files(object):
         """Get the list of files form the patterns"""
         
         _files = set ()
+        
+        _prots = 0 
+        _norms = 0 
         for pattern in  self.patterns :
             
             _added = False  
             for p in protocols :
-                if p in pattern : 
-                    if not pattern in self.files :
+                if pattern.startswith ( p ) or p in pattern : 
+                    if not pattern in _files :
                         _files.add  ( pattern )
+                        _prots +=1 
                     _added = True
                     break
                 
             if not _added : 
                 for f in glob.iglob ( pattern ) :
-                    if not f in self.files :
+                    f = os.path.abspath  ( f )
+                    f = os.path.normpath ( f )                    
+                    if not f in _files :
+                        _norms += 1 
                         _files.add ( f )
 
         ## final sort 
@@ -199,7 +212,6 @@ class Files(object):
         self.description = state.get ( 'description', ''    )
         self.maxfiles    = state.get ( 'maxfiles'   , -1    )
         self.silent      = state.get ( 'silent'     , False )
-
 
     ## add files 
     def add_files ( self , files ) :
@@ -262,7 +274,7 @@ class Files(object):
             return NotImplemented
         return self.add_data ( other )    
     
-    ## merge two sets togather
+    ## merge two sets together
     def __add__ ( self , other ) :
         """ Merge two sets together
         >>> ds1 = ...
@@ -396,7 +408,80 @@ class Files(object):
     def __repr__    ( self ) : return self.__str__()
     def __nonzero__ ( self ) : return bool ( self.files )
     def __len__     ( self ) : return len  ( self.files )
-  
+
+
+    ## merge all files using <code>hadd</code> script from ROOT
+    #  @param output  name of the output merged file, if None,
+    #                 the temporary name will be generated,
+    #                 that will be deleted at the end of the session
+    #  @param opts   options for command <code>hadd</code>
+    #  @return the name of the merged file
+    # OPTIONS:
+    # -a                                   Append to the output
+    # -k                                   Skip corrupt or non-existent files, do not exit
+    # -T                                   Do not merge Trees
+    # -O                                   Re-optimize basket size when merging TTree
+    # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+    # -j                                   Parallelize the execution in multiple processes
+    # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+    # -d                                   Carry out the partial multiprocess execution in the specified directory
+    # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+    # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+    # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+    # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+    # -fk                                  Sets the target file to contain the baskets with the same compression
+    #                                      as the input files (unless -O is specified). Compresses the meta data
+    #                                      using the compression level specified in the first input or the
+    #                                      compression setting after fk (for example 206 when using -fk206)
+    # -ff                                  The compression level use is the one specified in the first input
+    # -f0                                  Do not compress the target file
+    # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)    
+    def hadd ( self , output = None , opts = "-ff" ) :
+        """<erge all files using <code>hadd</code> script from ROOT
+        - `output`  name of the output merged file
+        - `opts`   options for command <code>hadd</code>
+        It returns the name of the merged file
+        
+        If no output file name is specified, the temporary name
+        will be generate and the temporary file will be deleted
+        at the end of the session
+
+        OPTIONS:
+        # -a                                   Append to the output
+        # -k                                   Skip corrupt or non-existent files, do not exit
+        # -T                                   Do not merge Trees
+        # -O                                   Re-optimize basket size when merging TTree
+        # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+        # -j                                   Parallelize the execution in multiple processes
+        # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+        # -d                                   Carry out the partial multiprocess execution in the specified directory
+        # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+        # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+        # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+        # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+        # -fk                                  Sets the target file to contain the baskets with the same compression
+        #                                      as the input files (unless -O is specified). Compresses the meta data
+        #                                      using the compression level specified in the first input or the
+        #                                      compression setting after fk (for example 206 when using -fk206)
+        # -ff                                  The compression level use is the one specified in the first input
+        # -f0                                  Do not compress the target file
+        # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
+        """
+        if not output :
+            import ostap.utils.cleanup as CU
+            output = CU.CleanUp.tempfile ( suffix = '.root' )
+            
+
+        import subprocess
+        
+        args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]
+        subprocess.check_call ( args )
+        
+        if os.path.exists ( output ) and os.path.isfile ( output ) :
+            return output 
+        
+        raise IOError ( "The output file %s does not exist!" % output )
+
 
 # =============================================================================
 ## @class Data
@@ -421,6 +506,8 @@ class Data(Files):
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees 
 
+        self.__quick = True if quick else False
+        
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
 
@@ -444,7 +531,12 @@ class Data(Files):
             self.silent = silent
             self.files  = self._quick_add_ ( self.chain ,  files )
             if not self.silent : logger.info ('Loaded: %s' % self )
-                
+
+    @property
+    def  quick ( self ) :
+        """``quick'' :  quick processing?"""
+        return self.__quick
+    
     ## can ``quick-add'' be applied for certain patterns?
     def _use_quick_ ( self , files ) :
         """Can ``quick-add'' be applied for certain patterns?
@@ -476,14 +568,14 @@ class Data(Files):
         state = Files.__getstate__( self )
         state [ 'e_list1' ] = self.e_list1
         state [ 'chain'   ] = self.chain.GetName()
-        
+        state [ 'quick'   ] = self.quick 
         return state
 
     ## unpickling 
     def __setstate__ ( self , state ) :
 
         Files.__setstate__ ( self , state )
-        
+        self.__quick     = state.get('quick'      , False )
         self.e_list1     = state.get('e_list1'    , set() )
         self.chain       = ROOT.TChain( state['chain'] )
         for f in  self.files :   self.chain.Add ( f ) 
@@ -685,6 +777,18 @@ class Data(Files):
                       silent      = self.silent           ,
                       quick       = self.quick            )
 
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame ( self ) :
+        """Get the DataFrame for the chain"""
+        from   ostap.frames.frames import DataFrame
+        f = DataFrame ( self.chain )
+        if not self.filent:
+            pb = f.ProgressBar ( len ( self.chain ) )
+        return f 
+    
 # =============================================================================
 ## @class Data2
 #  Simple utility to access two chains in the set of ROOT-files
@@ -866,7 +970,7 @@ class Data2(Data):
         if not isinstance ( other , Data2 ) : return NotImplemented        
         return self.add_data ( other )    
 
-    ## merge two sets togather
+    ## merge two sets together
     def add_data ( self , other ) :
         """ Merge two datasets
         """
@@ -889,11 +993,11 @@ class Data2(Data):
         for f in other.files :
             if not f in self.files : 
                 self.chain1. Add   ( f )
-                self.files.append  ( f ) 
+                self._append_to_files ( f ) 
         for f in other.files2 :
             if not f in self.files2 : 
                 self.chain2. Add   ( f )
-                self.files2.append ( f ) 
+                self.__files2.append ( f ) 
         return self 
 
     ## get an intersection of two datasets 
@@ -1032,6 +1136,18 @@ class Data2(Data):
                        missing1st  = self.missing1st        ,
                        missing2nd  = self.missing2nd        )
  
+    # =========================================================================
+    ## get DataFrame for the chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame2 ( self ) :
+        """Get the DataFrame for the chain"""
+        from   ostap.frames.frames import DataFrame
+        f = DataFrame ( self.chain2 )
+        if not self.silent :
+            pb = f.ProgressBar ( len ( self.chain2 ) ) 
+        return f
+    
 # =============================================================================
 
 # =============================================================================

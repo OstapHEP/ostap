@@ -27,12 +27,12 @@ from   array                    import array
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_tmva' )
+    logger = getLogger ( 'ostap.test_tools_tmva2' )
 else : 
     logger = getLogger ( __name__ )
 # ==============================================================================
 from ostap.utils.cleanup import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva2_' )
 if not os.path.exists( data_file ) :
     import random 
     nB = 10000
@@ -182,6 +182,7 @@ methods = reader.methods[:]
 ## # =============================================================================
 
 
+# =============================================================================
 ## read input data file 
 with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
@@ -197,24 +198,31 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     # =========================================================================
     
     from ostap.tools.tmva import addTMVAResponse
-
-    tSignal = addTMVAResponse ( tSignal ,
-                                inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                                weights_files = tar_file ,
-                                prefix        = 'tmva_'     ,
-                                suffix        = '_response' )
-    tBkg    = addTMVAResponse ( tBkg    ,
-                                inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
-                                weights_files = tar_file ,
-                                prefix        = 'tmva_'     ,
-                                suffix        = '_response' )
+    addTMVAResponse ( tSignal ,
+                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                      weights_files = tar_file ,
+                      prefix        = 'tmva_'     ,
+                      suffix        = '_response' )
+    addTMVAResponse ( tBkg    ,
+                      inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
+                      weights_files = tar_file ,
+                      prefix        = 'tmva_'     ,
+                      suffix        = '_response' )
     
     # =========================================================================
     ## The END of addTMVAResponse  fragment
     # =========================================================================
+
+# =============================================================================
+## read input data file 
+with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
-    logger.info ('tree SIG: %s' %  tSignal )
-    logger.info ('tree BKG: %s' %  tBkg    )
+    datafile.ls()
+    tSignal  = datafile['S']
+    tBkg     = datafile['B']
+
+    logger.info ('tree SIG:\n%s' %  tSignal )
+    logger.info ('tree BKG:\n%s' %  tBkg    )
     
     for m in methods :
         

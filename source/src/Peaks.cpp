@@ -1106,7 +1106,7 @@ double Ostap::Math::Bukin::integral
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1137,7 +1137,7 @@ double Ostap::Math::Bukin::integral () const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message1          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1151,7 +1151,7 @@ double Ostap::Math::Bukin::integral () const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1317,7 +1317,7 @@ double Ostap::Math::Novosibirsk::integral
       ( high   <= x_low  ) ? s_PRECISION_TAIL :
       ( x_high <=   low  ) ? s_PRECISION_TAIL :
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1365,7 +1365,7 @@ void Ostap::Math::Novosibirsk::integrate()
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message1          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1379,7 +1379,7 @@ void Ostap::Math::Novosibirsk::integrate()
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION_TAIL    ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message2          , 
       __FILE__ , __LINE__ ) ;
   //
@@ -1949,7 +1949,7 @@ std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const
  *  @param b     b-parameter 
  */
 // ============================================================================
-Ostap::Math::Apolonios::Apolonios
+Ostap::Math::Apollonios::Apollonios
 ( const double m0    ,
   const double sigma ,
   const double alpha ,
@@ -1977,9 +1977,9 @@ Ostap::Math::Apolonios::Apolonios
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::Math::Apolonios::~Apolonios(){}
+Ostap::Math::Apollonios::~Apollonios(){}
 // ============================================================================
-bool  Ostap::Math::Apolonios::setM0 ( const double value )
+bool  Ostap::Math::Apollonios::setM0 ( const double value )
 {
   //
   if ( s_equal ( value , m_m0 ) ) { return false ; }
@@ -1989,7 +1989,7 @@ bool  Ostap::Math::Apolonios::setM0 ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setSigma ( const double value )
+bool Ostap::Math::Apollonios::setSigma ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigma ) ) { return false ; }
@@ -1999,7 +1999,7 @@ bool Ostap::Math::Apolonios::setSigma ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setAlpha  ( const double value )
+bool Ostap::Math::Apollonios::setAlpha  ( const double value )
 {
   //
   if ( s_equal ( value , m_alpha ) ) { return false ; }
@@ -2011,7 +2011,7 @@ bool Ostap::Math::Apolonios::setAlpha  ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setN      ( const double value )
+bool Ostap::Math::Apollonios::setN      ( const double value )
 {
   const double value_ = std::fabs ( value );
   if ( s_equal ( value_ , m_n     ) ) { return false ; }
@@ -2022,7 +2022,7 @@ bool Ostap::Math::Apolonios::setN      ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios::setB  ( const double value )
+bool Ostap::Math::Apollonios::setB  ( const double value )
 {
   //
   const double value_ = std::abs ( value );
@@ -2038,9 +2038,9 @@ bool Ostap::Math::Apolonios::setB  ( const double value )
   return true ;
 }
 // ============================================================================
-//  evaluate Apolonios' function
+//  evaluate Apollonios' function
 // ============================================================================
-double Ostap::Math::Apolonios::pdf ( const double x ) const
+double Ostap::Math::Apollonios::pdf ( const double x ) const
 {
   //
   const double dx    = ( x - m_m0 ) / m_sigma ;
@@ -2060,7 +2060,7 @@ double Ostap::Math::Apolonios::pdf ( const double x ) const
 // ============================================================================
 // get the integral between low and high
 // ============================================================================
-double Ostap::Math::Apolonios::integral
+double Ostap::Math::Apollonios::integral
 ( const double low ,
   const double high ) const
 {
@@ -2088,8 +2088,8 @@ double Ostap::Math::Apolonios::integral
     //
     // use GSL to evaluate the integral
     //
-    static const Ostap::Math::GSL::Integrator1D<Apolonios> s_integrator {} ;
-    static char s_message[] = "Integral(Apolonios)" ;
+    static const Ostap::Math::GSL::Integrator1D<Apollonios> s_integrator {} ;
+    static char s_message[] = "Integral(Apollonios)" ;
     //
     const auto F = s_integrator.make_function ( this ) ;
     int    ierror   =  0 ;
@@ -2102,7 +2102,7 @@ double Ostap::Math::Apolonios::integral
         workspace ( m_workspace ) ,    // workspace
         s_PRECISION         ,          // absolute precision
         s_PRECISION         ,          // relative precision
-        s_SIZE              ,          // size of workspace
+        m_workspace.size()              ,          // size of workspace
         s_message           , 
         __FILE__ , __LINE__ ) ;
     //  
@@ -2123,7 +2123,7 @@ double Ostap::Math::Apolonios::integral
 // ============================================================================
 // get the tag 
 // ============================================================================
-std::size_t Ostap::Math::Apolonios::tag () const 
+std::size_t Ostap::Math::Apollonios::tag () const 
 { return std::hash_combine ( m_m0      , m_sigma , 
                              m_alpha   , m_n     , m_b ) ; }
 // ============================================================================
@@ -2138,7 +2138,7 @@ std::size_t Ostap::Math::Apolonios::tag () const
  *  @param b     b-parameter 
  */
 // ============================================================================
-Ostap::Math::Apolonios2::Apolonios2
+Ostap::Math::Apollonios2::Apollonios2
 ( const double m0     ,
   const double sigmaL ,
   const double sigmaR ,
@@ -2159,9 +2159,9 @@ Ostap::Math::Apolonios2::Apolonios2
 // ============================================================================
 // destructor
 // ============================================================================
-Ostap::Math::Apolonios2::~Apolonios2(){}
+Ostap::Math::Apollonios2::~Apollonios2(){}
 // ============================================================================
-bool  Ostap::Math::Apolonios2::setM0 ( const double value )
+bool  Ostap::Math::Apollonios2::setM0 ( const double value )
 {
   //
   if ( s_equal ( value , m_m0 ) ) { return false ; }
@@ -2171,7 +2171,7 @@ bool  Ostap::Math::Apolonios2::setM0 ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setSigmaL ( const double value )
+bool Ostap::Math::Apollonios2::setSigmaL ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaL ) ) { return false ; }
@@ -2181,7 +2181,7 @@ bool Ostap::Math::Apolonios2::setSigmaL ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setSigmaR ( const double value )
+bool Ostap::Math::Apollonios2::setSigmaR ( const double value )
 {
   const double value_ = std::abs ( value );
   if ( s_equal ( value_ , m_sigmaR ) ) { return false ; }
@@ -2191,7 +2191,7 @@ bool Ostap::Math::Apolonios2::setSigmaR ( const double value )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::Apolonios2::setBeta ( const double value )
+bool Ostap::Math::Apollonios2::setBeta ( const double value )
 {
   //
   const double value_ = std::abs ( value );
@@ -2205,9 +2205,9 @@ bool Ostap::Math::Apolonios2::setBeta ( const double value )
   return true ;
 }
 // ============================================================================
-//  evaluate Apolonios' function
+//  evaluate Apollonios' function
 // ============================================================================
-double Ostap::Math::Apolonios2::pdf ( const double x ) const
+double Ostap::Math::Apollonios2::pdf ( const double x ) const
 {
   //
   const double dx = 
@@ -2222,7 +2222,7 @@ double Ostap::Math::Apolonios2::pdf ( const double x ) const
 // ============================================================================
 // get the integral between low and high
 // ============================================================================
-double Ostap::Math::Apolonios2::integral
+double Ostap::Math::Apollonios2::integral
 ( const double low ,
   const double high ) const
 {
@@ -2243,8 +2243,8 @@ double Ostap::Math::Apolonios2::integral
   //
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<Apolonios2> s_integrator {} ;
-  static char s_message[] = "Integral(Apolonios2)" ;
+  static const Ostap::Math::GSL::Integrator1D<Apollonios2> s_integrator {} ;
+  static char s_message[] = "Integral(Apollonios2)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -2257,7 +2257,7 @@ double Ostap::Math::Apolonios2::integral
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2266,7 +2266,7 @@ double Ostap::Math::Apolonios2::integral
 // ============================================================================
 // get the tag 
 // ============================================================================
-std::size_t Ostap::Math::Apolonios2::tag () const 
+std::size_t Ostap::Math::Apollonios2::tag () const 
 { return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
 // ============================================================================
 
@@ -2322,8 +2322,9 @@ double Ostap::Math::Atlas::pdf        ( const double x ) const
   return std::exp ( -0.5 * x2 ) / ( s_ATLAS * m_sigma )  ;
 }
 // ============================================================================
-double Ostap::Math::Atlas::integral ( const double low  ,
-                                      const double high ) const 
+double Ostap::Math::Atlas::integral
+( const double low  ,
+  const double high ) const 
 {
   //
   if      ( s_equal ( low ,high ) ) { return 0 ; }
@@ -2359,7 +2360,7 @@ double Ostap::Math::Atlas::integral ( const double low  ,
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2458,7 +2459,120 @@ std::size_t Ostap::Math::Sech::tag () const
 { return std::hash_combine ( m_mean , m_sigma ) ; }
 // ============================================================================
 
-
+// ============================================================================
+/*  constructor with all parameters
+ *  @param mean  \f$\mu\f$-parameter 
+ *  @param alpha \f$\alpha\f$-parameter 
+ *  @param beta  \f$\beta\f$-parameter 
+ */
+// ============================================================================
+Ostap::Math::Losev::Losev
+( const double mu    , 
+  const double alpha , 
+  const double beta  ) 
+  : m_mu        ( mu                 ) 
+  , m_alpha     ( std::abs ( alpha ) ) 
+  , m_beta      ( std::abs ( beta  ) ) 
+  , m_norm      ( -1 )
+  , m_workspace () 
+{}
+// ============================================================================
+bool Ostap::Math::Losev::setMu ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu  = value ;
+  return true ;
+}
+// =============================================================================
+bool Ostap::Math::Losev::setAlpha ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_alpha  ) ) { return false ; }
+  m_alpha  = v  ;
+  m_norm   = -1 ;
+  return true ;
+}
+// =============================================================================
+bool Ostap::Math::Losev::setBeta ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_beta  ) ) { return false ; }
+  m_beta   = v  ;
+  m_norm   = -1 ;
+  return true ;
+}
+// =============================================================================
+// the mode of the distribution 
+// =============================================================================
+double Ostap::Math::Losev::mode () const 
+{ return m_mu + std::log ( m_alpha / m_beta ) / ( m_alpha + m_beta ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Losev::tag () const 
+{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+// =============================================================================
+// evaluate the function 
+// =============================================================================
+double Ostap::Math::Losev::pdf ( const double x ) const 
+{
+  if ( m_norm <= 0 ) 
+  {
+    const double sumab = m_alpha + m_beta ;
+    m_norm = sumab * std::sin ( M_PI * m_beta / sumab ) / M_PI ;
+  }
+  //
+  const double dx = x - m_mu ;
+  return 0 <= dx  ? 
+    m_norm * std::exp ( -m_beta  * dx ) / ( 1 + std::exp  ( - ( m_alpha + m_beta ) * dx ) ) :
+    m_norm * std::exp (  m_alpha * dx ) / ( 1 + std::exp  (   ( m_alpha + m_beta ) * dx ) ) ;  
+}
+// ============================================================================
+/*  get the integral between low and high values 
+ *  \f$ \int_{low}^{high}f(x) dx\f$
+ */
+// ============================================================================
+double Ostap::Math::Losev::integral 
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low ,high ) ) { return 0 ; }
+  else if ( low > high            ) { return -integral ( high , low ) ; }
+  //  
+  // split 
+  const double left  = m_mu - 6 * m_alpha;  
+  if ( low < left && left < high ) 
+  { return integral ( low , left ) + integral ( left   , high ) ; }
+  //
+  const double right = m_mu + 6 * m_beta ;  
+  if ( low < right && right < high ) 
+  { return integral ( low , right ) + integral ( right , high ) ; }
+  //
+  const bool in_tail = ( high <= left || low >= right ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Losev> s_integrator {} ;
+  static char s_message[] = "Integral(Losev)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+    ( tag () , 
+      &F     , 
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size()              ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
 // ============================================================================
 // Logistic
 // ============================================================================
@@ -2542,6 +2656,10 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
 std::size_t Ostap::Math::Logistic::tag () const 
 { return std::hash_combine ( m_mean , m_sigma ) ; }
 // ============================================================================
+
+
+
+
 
 
 
@@ -3042,6 +3160,8 @@ std::size_t Ostap::Math::JohnsonSU::tag () const
 
 
 
+
+
 // ============================================================================
 /*  Constructor from location and mean 
  *  @param mu location 
@@ -3473,7 +3593,7 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
       workspace ( m_workspace ) ,    // workspace
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
       in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()   ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

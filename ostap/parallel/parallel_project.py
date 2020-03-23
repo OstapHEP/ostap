@@ -25,6 +25,9 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 import ROOT
 from   ostap.parallel.parallel import Task, WorkManager
+import ostap.core.pyrouts 
+import ostap.trees.trees
+
 # =============================================================================
 ## The simple task object for more efficient projection of loooong chains/trees 
 #  into histogarms
@@ -45,7 +48,7 @@ class ProjectTask(Task) :
         """        
         self.histo = histo
         self.what  = what 
-        self.cuts  = str(cuts) 
+        self.cuts  = str  ( cuts ) 
         self.histo.Reset()
         
     ## local initialization (executed once in parent process)
@@ -56,7 +59,7 @@ class ProjectTask(Task) :
         self.__output = 0, self.histo.clone()
     
     ## remote initialization (executed for each sub-processs)
-    def initialize_remote  ( self ) :
+    def initialize_remote  ( self , jobid = -1 ) :
         """Remote initialization (executed for each sub-processs
         """
         import ROOT,ostap.core.pyrouts
@@ -73,7 +76,7 @@ class ProjectTask(Task) :
     #  - the selection/weighting criteria 
     #  - the first entry in tree to process
     #  - number of entries to process
-    def process ( self , item ) :
+    def process ( self , jobid , item ) :
         """The actual processing
         ``params'' is assumed to be a tuple-like entity:
         - the file name
@@ -83,37 +86,58 @@ class ProjectTask(Task) :
         - the first entry in tree to process
         - number of entries to process
         """
-
+        
         import ROOT
         from ostap.logger.utils import logWarning
-        with logWarning() : import ostap.core.pyrouts 
-
-        import ostap.trees.trees
+        with logWarning() :
+            import ostap.core.pyrouts        
+            import ostap.trees.trees 
+            import ostap.histos.histos
+            import ostap.frames.frames
+            from ostap.trees.trees import Chain,   Tree
+            
+        input    = Chain ( name    = item.name    ,
+                           files   = item.files   , 
+                           first   = item.first   ,
+                           nevents = item.nevents )
         
-        chain    = item.chain 
-        first    = item.first
-        nevents  = item.nevents
-
-        ## Create the output histogram   NB! (why here???) 
-        self.output = 0 , self.histo.Clone()
+        chain    = input.chain
+        first    = input.first
+        nevents  = input.nevents
         
         ## use the regular projection  
-        from ostap.trees.trees import _tt_project_ 
-        self.__output = _tt_project_ ( chain      , self.output[1] ,
-                                       self.what  , self.cuts      ,
-                                       ''         ,
-                                       nevents    , first          )
+        from ostap.trees.trees import _tt_project_
+        
+        ## Create the output histogram  NB! (why here???)
+        from ostap.core.core import ROOTCWD
+
+        with ROOTCWD() :
+            
+            ROOT.gROOT.cd() 
+            histo    =  self.histo.Clone ()
+            self.__output = 0 , histo
+
+            from ostap.trees.trees import _tt_project_            
+            self.__output = _tt_project_ ( tree     = chain      , histo = histo      ,
+                                           what     = self.what  , cuts  = self.cuts  ,
+                                           options  = ''         ,
+                                           nentries = nevents    , firstentry = first )            
         del item
         
         return self.__output 
         
     ## merge results 
     def merge_results ( self , result ) :
-        filtered    = self.__output[0] + result[0] 
-        self.__output[1].Add ( result[1] )
-        self.output = filtered, self.__output[1]
-        result[1].Delete () 
 
+        import ostap.histos.histos
+        if not self.__output : self.__output =  result
+        else : 
+            filtered      = self.__output[0] + result[0]            
+            self.__output[1].Add ( result[1] )
+            self.__output = filtered, self.__output[1]
+            
+        result[1].Delete () 
+            
     ## get the results 
     def results (  self ) :
         return self.__output 
@@ -149,16 +173,15 @@ def  cproject ( chain                ,
     For 12-core machine, clear speedup factor of about 8 is achieved     
     """
     #
-    
     from ostap.trees.trees import Chain
     ch    = Chain ( chain , first = first , nevents = nentries )
     
-    task  = ProjectTask            ( histo , what , cuts )
-    wmgr  = WorkManager   ( silent = silent )
-    wmgr.process ( task  , ch.split  ( chunk_size  = chunk_size , max_files = max_files ) )
+    task  = ProjectTask ( histo , what , cuts )
+    wmgr  = WorkManager ( silent = silent )    
+    wmgr.process ( task , ch.split ( chunk_size = chunk_size , max_files = max_files ) )
 
     ## unpack results 
-    _f , _h = task.results ()
+    _f , _h    = task.results ()
     filtered   = _f
     histo     += _h
     del _h 
@@ -196,7 +219,7 @@ def  tproject ( tree                 ,   ## the tree
                 nentries   = -1      ,   ## number of entries 
                 first      =  0      ,   ## the first entry 
                 chunk_size = 1000000 ,   ## chunk size 
-                max_files  = 5       ,   ## not-used .... 
+                max_files  = 50      ,   ## not-used .... 
                 silent     = False   ) : ## silent processing 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain
@@ -216,7 +239,7 @@ def  tproject ( tree                 ,   ## the tree
     """
 
     from ostap.trees.trees import Tree
-    ch    = Tree ( tree , first = first , nevents = nevents )
+    ch    = Tree ( tree , first = first , nevents = nentries )
     
     task  = ProjectTask            ( histo , what , cuts )
     wmgr  = WorkManager            ( silent     = silent       )

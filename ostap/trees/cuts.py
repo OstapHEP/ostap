@@ -136,7 +136,7 @@ def _tc_ior_ ( self , other ) :
 #  @see ROOT::TCut
 #  cut       = ...
 #  other_cut = ...
-#  cut      &= other_cut
+#  cut      *= other_cut
 #  @author Vanya BELYAEV Ivan.Belyaev
 #  @date   2014-08-31
 def _tc_imul_ ( self , other ) :

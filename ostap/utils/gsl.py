@@ -3,23 +3,10 @@
 # =============================================================================
 ## @file
 #  Module with some simple but useful utilities fro GSL Error handling 
-#   - timing
-#   - memory
-#   - profiling
-#   - ... 
-#
-#  It is recommended to install psutil module 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
-#  
 # =============================================================================
-"""Module with some simple but useful utilities for GSL erro handling 
-- timing
-- memory
-- profiling
-- etc
-
-It is recommended to install psutil module 
+"""Module with some simple but useful utilities for GSL error handling 
 """
 # =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"

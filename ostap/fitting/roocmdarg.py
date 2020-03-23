@@ -167,6 +167,8 @@ def _rca_print_ ( self ) :
     elif 'Minimizer'            == name : return "Minimizer('%s','%s')"% ( self.getString ( 0 ) ,
                                                                            self.getString ( 1 ) )                                                                           
     elif 'OffsetLikelihood'     == name : return 'Offset(%s)'          %   self.getBool () 
+    elif 'BatchMode'            == name : return 'BatchMode(%s)'       %   self.getBool () 
+    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)' %   self.getBool () 
     
     
     ## RooAbsPdf::paramOn arguments
@@ -285,7 +287,8 @@ def _rca_print_ ( self ) :
 
 
     ## ? 
-    if   'MultiArg'               == name : return "MultiArg({.})"
+    if   'MultiArg'               == name :
+        return "MultiArg(%s)" % [ i for i in self.subArgs() ]
     
     return name
 

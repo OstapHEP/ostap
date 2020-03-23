@@ -34,7 +34,6 @@ jobs:
     displayName: 'docker container'
   - script: |
      docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
-     docker cp  ostap-build:/osya/build .
     displayName: 'build stage'
   - script: |
      sudo cvmfs_config chksetup

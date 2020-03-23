@@ -75,15 +75,15 @@ double Ostap::Math::details::gaussian_int_num
   //
   Ostap::Math::WorkSpace ws ;
   const int ierror = gsl_integration_qag
-    ( &F                ,            // the function
-      a     ,   b       ,            // low & high edges
-      s_PRECISION       ,            // absolute precision
-      s_PRECISION       ,            // relative precision
-      s_SIZE            ,            // size of workspace
-      GSL_INTEG_GAUSS31 ,            // integration rule
-      workspace ( ws )  ,            // workspace
-      &result           ,            // the result
-      &error            ) ;          // the error in result
+    ( &F                 ,            // the function
+      a     ,   b        ,            // low & high edges
+      s_PRECISION        ,            // absolute precision
+      s_PRECISION        ,            // relative precision
+      ws.size()          ,            // size of workspace
+      GSL_INTEG_GAUSS31  ,            // integration rule
+      workspace ( ws )   ,            // workspace
+      &result            ,            // the result
+      &error             ) ;          // the error in result
   //
   if ( ierror )
   { gsl_error ( "Ostap::Math::gaussian_int" , __FILE__ , __LINE__ , ierror ) ; }

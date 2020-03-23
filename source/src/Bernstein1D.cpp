@@ -12,12 +12,14 @@
 // Ostap 
 // ============================================================================
 #include "Ostap/Math.h"
+#include "Ostap/Choose.h"
 #include "Ostap/Bernstein1D.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "bernstein_utils.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -132,7 +134,6 @@ Ostap::Math::BernsteinEven::__truediv__   ( const double value ) const
 // POSITIVE 
 // ============================================================================
 
-
 // ============================================================================
 // constructor from the order
 // ============================================================================
@@ -141,45 +142,60 @@ Ostap::Math::Positive::Positive
   const double              xmin  ,
   const double              xmax  )
   : m_bernstein ( N , xmin , xmax )
-  , m_sphere    ( N , 3 ) 
+  , m_sphereA   ( 1                      ) 
+  , m_sphereR   ( std::max ( 1 , N - 1 ) )
+  , m_rs        ( std::max ( 1 , N - 1 ) , 0.0  ) 
+  , m_v1        ( N + 1 , 0.0 ) 
+  , m_v2        ( N + 1 , 0.0 ) 
+  , m_aux       ( N + 1 , 0.0 ) 
 {
   updateBernstein () ;
 }
-// ============================================================================
-// constructor from the list of phases 
-// ============================================================================
-Ostap::Math::Positive::Positive
-( const std::vector<double>& pars ,
-  const double               xmin ,
-  const double               xmax )
-  : m_bernstein ( pars.size() , xmin , xmax )
-  , m_sphere    ( pars , 3 ) 
-{
-  updateBernstein () ;
-}
-// ============================================================================
-// constructor from the sphere with coefficients  
-// ============================================================================
-Ostap::Math::Positive::Positive
-( const Ostap::Math::NSphere& sphere , 
-  const double                xmin   , 
-  const double                xmax   )
-  : m_bernstein ( sphere.dim() , xmin , xmax )
-  , m_sphere    ( sphere ) 
-{
-  updateBernstein () ;
-}
+// // ============================================================================
+// // constructor from the list of phases 
+// // ============================================================================
+ Ostap::Math::Positive::Positive
+ ( const std::vector<double>& pars ,
+   const double               xmin ,
+   const double               xmax )
+   : m_bernstein ( pars.size() , xmin , xmax )
+   , m_sphereA   ( 1 ) 
+   , m_sphereR   (std::max ( 1 , int(pars.size())- 1 )) 
+  , m_rs        ( std::max ( 1 , int(pars.size())- 1 ) , 0.0  ) 
+  , m_v1        ( pars.size() + 1 , 0.0 ) 
+  , m_v2        ( pars.size() + 1 , 0.0 ) 
+  , m_aux       ( pars.size() + 1 , 0.0 ) 
+ {
+    for ( unsigned short  i = 0 ; i < pars.size() ; ++i ){
+      setPar(i,pars[i]);
+    }
+
+   updateBernstein () ;
+ }
+// // ============================================================================
+// // constructor from the sphere with coefficients  
+// // ============================================================================
+// Ostap::Math::Positive::Positive
+// ( const Ostap::Math::NSphere& sphere , 
+//   const double                xmin   , 
+//   const double                xmax   )
+//   : m_bernstein ( sphere.dim() , xmin , xmax )
+//   , m_sphere    ( sphere ) 
+// {
+//   updateBernstein () ;
+// }
 // =============================================================================
 // update bernstein coefficients
 // =============================================================================
 bool Ostap::Math::Positive::updateBernstein ()
 {
-  ///
-  bool         update = false ;
-  /// degree 
-  const unsigned short o = degree() ;
   //
-  const double   norm    = m_bernstein.npars() / 
+  bool update = false ;
+  //
+  // degree 
+  const unsigned short o    = degree() ;
+  //
+  const long double    norm = m_bernstein.npars() / 
     ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
   //
   // few simple cases 
@@ -187,70 +203,101 @@ bool Ostap::Math::Positive::updateBernstein ()
   if       ( 0 == o ) { return m_bernstein.setPar ( 0 , norm ) ; }
   else if  ( 1 == o )  
   {
-    const bool updated0 = m_bernstein.setPar ( 0 , m_sphere.x2 ( 0 ) * norm ) ;
+    const bool updated0 = m_bernstein.setPar ( 0 , m_sphereA.x2 ( 0 ) * norm ) ;
     update              = updated0 || update ;
-    const bool updated1 = m_bernstein.setPar ( 1 , m_sphere.x2 ( 1 ) * norm ) ;
+    const bool updated1 = m_bernstein.setPar ( 1 , m_sphereA.x2 ( 1 ) * norm ) ;
     update              = updated1 || update ;
     //
-    return update ;
+    return updated0 || updated1 ;
   }
-  //
-  // get the parameters of "global" parabola 
-  //
-  const double a0     =     m_sphere.x2 ( 0 ) ;
-  const double a1_    = 2 * m_sphere.x2 ( 1 ) ; // NB! factor 2 is here! 
-  const double a2     =     m_sphere.x2 ( 2 ) ;
-  //
-  const double a1_min = - std::sqrt ( a0 * a2 ) ; //
-  const double a1     = a1_min + a1_ ;            // positivity constraint 
-  //
-  // simple parabola (probably the most common case in practice) 
-  //
-  if ( 2 == o ) 
+  else if  ( 2 == o )
   {
-    const double norm2  = norm / ( a0 + a1 + a2 ) ;
+    // get the root from R-sphere 
+    const long double r  = m_sphereR.x2 ( 0 ) ;
+    const long double ri = 1 - r ;
+    /// get alpha and beta from A-sphere 
+    long double alpha     = m_sphereA . x2 ( 0 ) ;
+    long double beta      = m_sphereA . x2 ( 1 ) ;
+    ///
+    const long double c0 =   r  * r  * alpha ;
+    const long double c1 = - r  * ri * alpha ;
+    const long double c2 =   ri * ri * alpha ;
     //
-    const bool updated0 = m_bernstein.setPar ( 0 , a0 * norm2 ) ;
-    update              = updated0 || update ;
-    const bool updated1 = m_bernstein.setPar ( 1 , a1 * norm2 ) ;
-    update              = updated1 || update ;
-    const bool updated2 = m_bernstein.setPar ( 2 , a2 * norm2 ) ;
-    update              = updated2 || update ;
+    const bool updated1 = m_bernstein.setPar ( 0 , c0              ) ;
+    const bool updated2 = m_bernstein.setPar ( 1 , c1 + 0.5 * beta ) ;
+    const bool updated3 = m_bernstein.setPar ( 2 , c2              ) ;
     //
-    return update ;
+    m_bernstein *= ( norm / ( c0 + c1 + c2 + 0.5 * beta ) ) ;
+    //
+    return updated1 || updated2 || updated3 ;
   }
-  //
+  // ==========================================================================
   // generic case 
+  // ==========================================================================
+  /// get alpha and beta from A-sphere 
+  const long double alpha     = m_sphereA . x2 ( 0 ) ;
+  const long double beta      = m_sphereA . x2 ( 1 ) ;
+  ///
+  /// get root-parameters from R-sphere and integrate them to get the roots 
+  const unsigned nR = m_rs.size() ;
+  for ( unsigned short iR = 0 ; iR < nR ; ++iR ) { m_rs [ iR ] = m_sphereR.x2 ( iR ) ; }
+  std::partial_sum ( m_rs.begin() , m_rs.end () , m_rs.begin() ) ;
+  ///
+  const bool even = ( 0 == o % 2 );
   //
-  // get the coefficients from the sphere 
-  // this actually represent the positive polynomial with 
-  //   - f  (0)=0 
-  //   - f' (0)=0  
-  //   - f''(0)=0 
-  std::vector<double> v ( m_sphere.nX() ) ;
-  const unsigned short vs = v.size() ;
-  for ( unsigned short ix = 3 ; ix < vs ; ++ix ) { v[ix] = m_sphere.x2 ( ix ) ; }
+  std::array<long double,3> br ;   // helper second order polynomial 
+  /// "half-order"
+  const unsigned short m = even ? o / 2 :  ( o - 1 ) / 2 ;
   //
-  const double c0 = a0         ;
-  const double c1 = 2*(a1-a0)  ;
-  const double c2 = a0+a2-2*a1 ; 
+  unsigned short n1 = 2 ;
+  unsigned short n2 = 2 ;
   //
-  for ( unsigned short k = 0 ; k < vs ; ++k ) 
+  if ( even )
   {
-    double vv = c0 ;
-    const double r1 =  double(k) / o ;
-    if ( 0 != k ) { vv += r1             * c1             ; }
-    if ( 1 <  k ) { vv += r1 * ( k - 1 ) * c2 / ( o - 1 ) ; }
-    v[k] +=  vv ;
-    if ( 0 != v[k] && s_zero ( v[k] ) ) {  v[k] = 0 ; }
+    m_v1 [ 0 ] = alpha ;                                           n1 = 1 ;    
+    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = 0.5 *beta ; m_v2 [ 2 ] = 0 ; n2 = 3 ;
+  }
+  else 
+  {
+    m_v1 [ 0 ] = beta  ; m_v1 [ 1 ] = 0     ; n1 = 2 ;
+    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = alpha ; n2 = 2 ;
   }
   //
-  const double isum = norm / std::accumulate ( v.begin() , v.end() , 0.0 ) ;
-  //
-  for ( unsigned short ix = 0 ; ix < m_sphere.nX() ; ++ix ) 
+  for ( unsigned short iR = 0 ; iR < nR ; ++iR ) 
   {
-    const bool updated = m_bernstein.setPar ( ix , v[ix] * isum ) ;
-    update = updated || update ;
+    const long double r  = m_rs [ iR ] ;
+    const long double ri = 1 - r ;
+    //
+    br[ 0 ] =   r  * r ;
+    br[ 1 ] =  -r  * ri ;
+    br[ 2 ] =   ri * ri ;
+    //
+    if ( 0 == iR % 2 ) 
+    {
+      Ostap::Math::Utils::b_multiply 
+        ( m_v1.begin () , m_v1.begin () + n1 , br.begin () , br.end () , m_aux.begin () );
+      n1  += 2 ;
+      std::swap  ( m_v1 , m_aux ) ;
+    }
+    else 
+    {
+      Ostap::Math::Utils::b_multiply 
+        ( m_v2.begin () , m_v2.begin () + n2 , br.begin () , br.end () , m_aux.begin () );
+      n2  += 2 ;
+      std::swap  ( m_v2 , m_aux ) ;      
+    }
+    //
+  }
+  //
+  const unsigned short nP = m_bernstein.npars() ;
+  for ( unsigned short iP = 0 ; iP < nP ; ++iP )
+  { update |= m_bernstein.setPar ( iP , m_v1 [ iP ] + m_v2 [ iP ] ) ; }
+  //
+  if ( update ) 
+  {
+    const long double s1 = std::accumulate ( m_bernstein.pars() . begin () , 
+                                             m_bernstein.pars() . end   () , 0.0L ) ;
+    m_bernstein *= norm / s1 ;
   }
   //
   return update ;
@@ -265,7 +312,18 @@ double Ostap::Math::Positive::integral
     s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
     m_bernstein.integral ( low , high )  ; 
 }
-
+// ============================================================================
+// get all parameters (phases on sphere)
+// ============================================================================
+std::vector<double> Ostap::Math::Positive::pars  () const
+{
+  std::vector<double> r ( npars() , 0.0 ) ;
+  r [ 0 ] = m_sphereA.par( 0 ) ;
+  const std::vector<double>& p = m_sphereR.pars () ;
+  std::copy  ( p.begin() , p.end() , r.begin() + 1 ) ;
+  return r  ;  
+}
+   
 
 
 

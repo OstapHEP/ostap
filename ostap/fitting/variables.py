@@ -18,14 +18,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
     'SETVAR'          , ## context manager to preserve the current value for RooRealVar
-    'FIXVAR'          , ## context manager to fix/unfix variables 
-    'scale_var'       , ## construct "easy" RooFormulaVar  
-    'add_var'         , ## construct "easy" RooFormulaVar
-    ## simple "inline" formulas
-    'scale_var'       , ## "inline" creation of A*B
-    'add_var'         , ## "inline" creation of A+B
-    'ratio_var'       , ## "inline" creation of A/B
-    'fraction_var'    , ## "inline" creation of A/(A+B)
+    'FIXVAR'          , ## context manager to fix/unfix variables
+    'KeepBinning'     , ## context manager to preserve the binning scheme
     ## ``converters''
     'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
     'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
@@ -34,7 +28,8 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core  import VE
-from   ostap.core.ostap_types import num_types 
+from   ostap.core.ostap_types import ( num_types     , list_types   ,
+                                       integer_types , string_types )   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -203,6 +198,7 @@ _new_methods_ += [
 # =============================================================================
 ## Math operations 
 # =============================================================================
+val_types = num_types + ( VE , ROOT.RooAbsReal )
 
 # ============================================================================
 ## Addition of RooRealVar and ``number''
@@ -214,6 +210,8 @@ def _rrv_add_ ( s , o ) :
     >>> res = var + num
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+    
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -230,7 +228,9 @@ def _rrv_sub_ ( s , o ) :
     >>> num = ...
     >>> res = var - num
     
-    """
+    """    
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -247,7 +247,9 @@ def _rrv_mul_ ( s , o ) :
     >>> num = ...
     >>> res = var * num
     
-    """
+    """    
+    if not isinstance ( o , val_types ) : return NotImplemented
+    
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -265,6 +267,8 @@ def _rrv_div_ ( s , o ) :
     >>> res = var / num
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -282,6 +286,8 @@ def _rrv_radd_ ( s , o ) :
     >>> res = num + var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -299,6 +305,8 @@ def _rrv_rsub_ ( s , o ) :
     >>> res = num - var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -315,6 +323,8 @@ def _rrv_rmul_ ( s , o ) :
     >>> num = ...
     >>> res = num * var     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -331,6 +341,8 @@ def _rrv_rdiv_ ( s , o ) :
     >>> num = ...
     >>> res = num / var     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -347,6 +359,8 @@ def _rrv_pow_ ( s , o ) :
     >>> num = ...
     >>> res = var ** num     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -364,6 +378,8 @@ def _rrv_rpow_ ( s , o ) :
     >>> res = num ** var 
     
     """
+    if not isinstance ( o , val_types ) : return NotImplemented
+
     if   isinstance ( o , _RRV_    ) and not o.isConstant() : o = o.ve     () 
     elif hasattr    ( o , 'getVal' )                        : o = o.getVal ()
     #
@@ -371,6 +387,19 @@ def _rrv_rpow_ ( s , o ) :
     #
     return o**v   
 
+# ============================================================================
+def _rrv_iadd_ ( s , o ) :
+    s.setVal ( s.getVal() + float ( o ) )
+    return s
+def _rrv_imul_ ( s , o ) :
+    s.setVal ( s.getVal() * float ( o ) )
+    return s
+def _rrv_isub_ ( s , o ) :
+    s.setVal ( s.getVal() - float ( o ) )
+    return s
+def _rrv_idiv_ ( s , o ) :
+    s.setVal ( s.getVal() / float ( o ) )
+    return s
 
 # ============================================================================
 ROOT.RooRealVar . __add__   = _rrv_add_
@@ -385,18 +414,26 @@ ROOT.RooRealVar . __rdiv__  = _rrv_rdiv_
 ROOT.RooRealVar . __rmul__  = _rrv_rmul_
 ROOT.RooRealVar . __rpow__  = _rrv_rpow_
 
+ROOT.RooRealVar . __iadd__  = _rrv_iadd_
+ROOT.RooRealVar . __isub__  = _rrv_isub_
+ROOT.RooRealVar . __idiv__  = _rrv_idiv_
+
 
 _new_methods_ += [
-    ROOT.RooRealVar.__add__  , 
-    ROOT.RooRealVar.__sub__  , 
-    ROOT.RooRealVar.__div__  , 
-    ROOT.RooRealVar.__mul__  , 
-    ROOT.RooRealVar.__pow__  , 
-    ROOT.RooRealVar.__radd__ , 
-    ROOT.RooRealVar.__rsub__ , 
-    ROOT.RooRealVar.__rdiv__ , 
-    ROOT.RooRealVar.__rmul__ , 
-    ROOT.RooRealVar.__rpow__ , 
+    ROOT.RooRealVar.__add__   , 
+    ROOT.RooRealVar.__sub__   , 
+    ROOT.RooRealVar.__div__   , 
+    ROOT.RooRealVar.__mul__   , 
+    ROOT.RooRealVar.__pow__   , 
+    ROOT.RooRealVar.__radd__  , 
+    ROOT.RooRealVar.__rsub__  , 
+    ROOT.RooRealVar.__rdiv__  , 
+    ROOT.RooRealVar.__rmul__  , 
+    ROOT.RooRealVar.__rpow__  ,
+    #
+    ROOT.RooRealVar.__iadd__  , 
+    ROOT.RooRealVar.__isub__  , 
+    ROOT.RooRealVar.__idiv__  , 
     ]
 
 # =============================================================================
@@ -645,187 +682,6 @@ def _rar_name_ ( vname ) :
     #
     return vname 
 
-# =============================================================================
-## construct (on-flight) RooFormularVar A*B
-#  @code
-#  var1 = ...
-#  var2 = ...
-#  var3 = var1.scale_var ( var2 )
-#  var4 = scale_var ( var1 , 2.0  )    
-#  @endcode 
-def scale_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar  A*B
-    >>> var1 = ...
-    >>> var2 = ...
-    >>> var3 = var1.scale_var ( var2 )
-    >>> var4 = scale_var ( var1 , 2.0  )    
-    """
-    
-    f1 = isinstance ( var1 , num_types )
-    f2 = isinstance ( var2 , num_types )
-    
-    if   f1 and f2 :
-        res  = float ( var1 ) * float ( var2 ) 
-        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
-    elif f1 : 
-        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
-        return scale_var ( var1 , var2 , name , title )
-    elif f2 : 
-        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
-        return scale_var ( var1 , var2 , name , title )
-    
-    vnames = var1.name , var2.name 
-    
-    if not name  : name   = 'Product_%s_%s'   % vnames 
-    if not title : title  = '(%s) times (%s)' % vnames 
-    
-    formula = '(%s*%s)' % vnames
-    varlist = ROOT.RooArgList    ( var1 , var2                     )
-    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-    #
-    result._varlist = [ var1 , var2 , varlist ]
-    #
-    return result
-
-# =============================================================================
-## construct (on-flight) RooFormularVar  A+B
-#  @code
-#  var1 = ...
-#  var2 = ...
-#  var3 = var1.add_var ( var2 )
-#  var4 = add_var ( var1 , 2.0  )    
-#  @endcode 
-def add_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar: A+B
-    >>> var1 = ...
-    >>> var2 = ...
-    >>> var3 = var1.add_var ( var2 )
-    >>> var4 = add_var ( var1 , 2.0  )    
-    """
-    
-    f1 = isinstance ( var1 , num_types )
-    f2 = isinstance ( var2 , num_types )
-    
-    if   f1 and f2 :
-        res  = float ( var1 ) + float ( var2 ) 
-        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
-    elif f1 : 
-        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
-        return add_var ( var1 , var2 , name , title )
-    elif f2 : 
-        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
-        return add_var ( var1 , var2 , name , title )
-    
-    vnames = var1.name , var2.name 
-    
-    if not name  : name   = 'Sum_%s_%s'       % vnames 
-    if not title : title  = '(%s) plus (%s)'  % vnames 
-    
-    formula = '(%s+%s)' % vnames
-    varlist = ROOT.RooArgList    ( var1 , var2                     )
-    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-    #
-    result._varlist = [ var1 , var2 , varlist ]
-    #
-    return result
-
-# =============================================================================
-## construct (on-flight) RooFormularVar: A/B
-#  @code
-#  var1 = ...
-#  var2 = ...
-#  var3 = var1.ratio_var ( var2 )
-#  var4 = ratio_var ( var1 , var2 )
-#  @endcode 
-def ratio_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar A/B
-    >>> var1 = ...
-    >>> var2 = ...
-    >>> var3 = var1.ratio_var ( var2 )
-    >>> var4 = ratio_var ( var1 , var2 )
-    """
-    
-    f1 = isinstance ( var1 , num_types )
-    f2 = isinstance ( var2 , num_types )
-    
-    if   f1 and f2 :
-        res  = float ( var1 ) / float ( var2 )
-        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
-    elif f1 : 
-        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
-        return ratio_var ( var1 , var2 , name , title )
-    elif f2 : 
-        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
-        return ratio_var ( var1 , var2 , name , title )
-    
-    vnames = var1.name , var2.name 
-    
-    if not name  : name   = 'Ratio_%s_%s'     % vnames 
-    if not title : title  = '(%s) ratio (%s)' % vnames 
-    
-    formula = '(%s/%s)' % vnames
-    varlist = ROOT.RooArgList    ( var1 , var2                     )
-    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-    #
-    result._varlist = [ var1 , var2 , varlist ]
-    #
-    return result
-
-# =============================================================================
-## construct (on-flight) RooFormularVar: A/(A+B)
-#  @code
-#  var1 = ...
-#  var2 = ...
-#  var3 = var1.fraction_var ( var2 )
-#  var4 = fraction_var ( var1 , var2 ) 
-#  @endcode 
-def fraction_var ( var1 , var2 , name = '' , title = '' ) :
-    """Construct (on-flight) RooFormularVar A/(A+B)
-    >>> var1 = ...
-    >>> var2 = ...
-    >>> var3 = var1.fraction_var ( var2 )
-    >>> var4 = fraction_var ( var1 , var2 )
-    """
-    
-    f1 = isinstance ( var1 , num_types )
-    f2 = isinstance ( var2 , num_types )
-    
-    if   f1 and f2 :
-        res  = float ( var1 ) / float ( var2 )
-        return ROOT.RooConstVar ( 'CONST_%s' % res  , 'Constant(%s)'  % res  , res )
-    elif f1 : 
-        var1 = ROOT.RooConstVar ( 'CONST_%s' % var1 , 'Constant(%s)'  % var1 , var1 )
-        return ratio_var ( var1 , var2 , name , title )
-    elif f2 : 
-        var2 = ROOT.RooConstVar ( 'CONST_%s' % var2 , 'Constant(%s)'  % var2 , var2 )
-        return ratio_var ( var1 , var2 , name , title )
-    
-    vnames = var1.name , var2.name 
-    
-    if not name  : name   = 'Fraction_%s_%s'     % vnames 
-    if not title : title  = '(%s) fraction (%s)' % vnames 
-    
-    formula = '(%s/(%s+%s))' % ( var1.name , var1.name , var2.name )
-    varlist = ROOT.RooArgList    ( var1 , var2                     )
-    result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-    #
-    result._varlist = [ var1 , var2 , varlist ]
-    #
-    return result
-
-
-ROOT.RooAbsReal.scale_var    = scale_var
-ROOT.RooAbsReal.add_var      = add_var
-ROOT.RooAbsReal.ratio_var    = ratio_var
-ROOT.RooAbsReal.fraction_var = fraction_var
-
-_new_methods_ += [
-    ROOT.RooAbsReal.   scale_var ,
-    ROOT.RooAbsReal.     add_var ,    
-    ROOT.RooAbsReal.   ratio_var ,    
-    ROOT.RooAbsReal.fraction_var ,    
-    ]
-
 # ==============================================================================
 ## convert two yields into "total yield" and "ratio"
 #  @code
@@ -979,7 +835,7 @@ class FIXVAR(object):
             
     def __enter__ ( self        ) :
 
-        self.fixed = [ c.isConstant() for c in self.vars ]  
+        self.fixed = tuple ( [ c.isConstant() for c in self.vars ] )
         for v in self.vars : v.fix ()
         
         return self
@@ -988,14 +844,209 @@ class FIXVAR(object):
         for v , c in zip ( self.vars , self.fixed ) :
             if not c : v.release()
             
+# =============================================================================
+## Simple context manager to keep the binning scheme
+#  @code
+#  var = ...
+#  var.setBins      ( 100 )
+#  with KeepBinning ( var ) :
+#     vars.setBins  ( 10 )
+#  @endcode
+class KeepBinning(object):
+    """Simple context manager to keep the binning scheme
+    >>> var = ...
+    >>> var.setBins   ( 100 )
+    >>> with KeepBins ( var ) :
+    ...     vars.setBins ( 10 )
+    """
+    def __init__  ( self , var ) :
+        self.__var  = var
+        self.__bins = None
+        
+    def __enter__ ( self ) :
+        self.__bins = self.__var.getBinning()
+        return self
+    
+    def __exit__  ( self , *_ ) :
+        ## self.__var.setBinning ( self.__bins )
+        if self.__bins : self.__var.bins = self.__bins
+    
+    @property
+    def bins ( self ) :
+        """``bins'' : the binning scheme"""
+        return self.__bins
+    
+# =============================================================================
+## set the binning scheme 
+def _rrv_setbins_ ( self , bins ) :
+    """Set the binnning scheme"""
+
+    ## prepended/appended with name?
+    name = None
+    
+    if bins and isinstance  ( bins , list_types ) :
+        if   2 == len ( bins ) and isinstance ( bins[-1] , string_types ) :
+            bins, name = bins 
+        elif 2 == len ( bins ) and isinstance ( bins[ 0] , string_types ) :
+            name , bins = bins 
+        elif isinstance ( bins[-1] , string_types ) :
+            bins = bins [:-1] 
+            name = bins [ -1]
+        elif isinstance ( bins[ 0] , string_types ) :
+            bins = bins [1: ] 
+            name = bins [0  ]
+        
+    if   bins and isinstance ( bins , ROOT.RooAbsBinning ) :
+        if name : self.setBinning ( bins , name )
+        else    : self.setBinning ( bins )
+        return
+
+    elif isinstance  ( bins , integer_types ) and 0 < bins :
+        if name : self.setBins ( bins , name )
+        else    : self.setBins ( bins )
+        return
+
+    if isinstance  ( bins , list_types ) :
+        if   4 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
+        elif 3 == len ( bins ) and isinstance ( bins[-1] , string_types ) : bins = bins [:-1]
+    else :
+        logger.error ('bins: invalid binning scheme/1 %s/%s' % ( bins , type ( bins  ) ) ) 
+        return 
+
+    if   3 == len ( bins ) : ## low,high,bins or bins,low,high
+        
+        if   isinstance  ( bins[0] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[1] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[2] , integer_types   ) and 0 < nbins[2]      :
+            
+            low , high , n = bins 
+            bs = ROOT.RooParamBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            return 
+            
+        elif isinstance  ( bins[0] , integer_types   ) and 0 < nbins[0]      and \
+             isinstance  ( bins[1] , ROOT.RooAbsReal )                       and \
+             isinstance  ( bins[2] , ROOT.RooAbsReal ) : 
+            
+            n , low , high = bins 
+            bs = ROOT.RooParamBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            return 
+            
+        elif isinstance  ( bins[0] , num_types       )                       and \
+             isinstance  ( bins[1] , num_types       ) and bins[0] < bins[1] and \
+             isinstance  ( bins[2] , integer_types   ) and 0 < nbins[2]      :
+
+            low , high , n = bins 
+            bs = ROOT.RooUniformBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            self.setBinning ( bs )
+            return 
+
+        elif isinstance  ( bins[0] , integer_types   ) and 0 < nbins[0]      and \
+             isinstance  ( bins[1] , num_types       )                       and \
+             isinstance  ( bins[2] , num_types       ) and bins[1] < bins[2] : 
+            
+            n , low , high = bins 
+            bs = ROOT.RooUniformBinning ( low , high , n )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return 
+
+    elif 2 == len ( bins )  :  ## nbins, bins  or bins, nbins 
+
+        if   isinstance  ( bins[0] , integer_types ) and 0 < bins[0]       and \
+             isinstance  ( bins[1] , list_types    ) and \
+             len( bins[1] ) == bins[0] + 1 :
+        
+            from array import array
+            a  = array  ( 'd' , bins[1] )
+            bs = ROOT.RooBinning ( bins[0] , a )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return 
+
+        elif isinstance  ( bins[1] , integer_types ) and 0 < bins[1]       and \
+             isinstance  ( bins[0] , list_types    ) and \
+             len( bins[0] ) == bins[1] + 1 :
+
+            from array import array
+            a  = array  ( 'd' , bins[1] )
+            bs = ROOT.RooBinning ( bins[0] , a )
+            if name : self.setBinning ( bs  , name )
+            else    : self.setBinning ( bs         )
+            return
+        
+    elif 4 <= len ( bins ) :  ## bins
+
+        from array import array
+        a  = array  ( 'd' , bins )
+        bs = ROOT.RooBinning ( len  ( bins ) - 1 , a )
+        if name : self.setBinning ( bs  , name )
+        else    : self.setBinning ( bs         )
+        return
+                    
+    logger.error ('bins: invalid binning scheme/3 %s/%s' % ( bins , type ( bins  ) ) ) 
+
+_bins_doc_ = """Get bining scheme :
+
+>>> vars =. ..
+>>> bins = vars.bins
+
+Set Binning scheme : 
+
+>>> vars.bins = ROOT.RooBinning ( ... )
+
+>>> vars.bins = 100 , [0, 2, 3, 4, 5, 6]
+
+>>> vars.bins = 100 , 1.0 , 2.0
+
+>>> vars.bins = 1.0 , 2.0 , 100 
+"""
+
+# =============================================================================
+ROOT.RooRealVar.bins = property (  ROOT.RooRealVar.getBinning ,
+                                   _rrv_setbins_  , None  , _bins_doc_ )
+        
+_new_methods_ += [
+    ROOT.RooRealVar. bins ,
+    ]
+
+
+ROOT.RooRealVar.getValue = ROOT.RooRealVar.getVal
+ROOT.RooRealVar.setValue = ROOT.RooRealVar.setVal
+
+
+_new_methods_ += [
+    ROOT.RooRealVar.getValue , 
+    ROOT.RooRealVar.setValue , 
+    ]
+
+
+# =============================================================================
+## printout for RooUniformBinning
+def _rub_str_ ( bins ) :
+    """Printout for RooUniformBinning"""
+    l = bins. lowBound ()
+    h = bins.highBound ()
+    n = bins.numBoundaries () - 1
+    x = bins.GetName()
+    if not x : return "RooUniformBinning(%s,%s,%d)" % ( l , h , n )
+    return "RooUniformBinning(%s,%s,%d,'%s')" % ( l , h , n , x )
+    
+ROOT.RooUniformBinning.__str__  = _rub_str_
+ROOT.RooUniformBinning.__repr__ = _rub_str_
+
+
 
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.RooRealVar       ,
-    ROOT.RooConstVar      ,
-    ROOT.RooFormulaVar    ,
-    ROOT.RooAbsReal       ,
-    ROOT.RooAbsRealLValue
+    ROOT.RooRealVar        ,
+    ROOT.RooConstVar       ,
+    ROOT.RooFormulaVar     ,
+    ROOT.RooAbsReal        ,
+    ROOT.RooAbsRealLValue  ,
+    ROOT.RooUniformBinning
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 
@@ -1007,5 +1058,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

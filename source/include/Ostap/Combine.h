@@ -4,6 +4,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL 
+// ============================================================================
+#include <array>
+// ============================================================================
 // ROOT
 // ============================================================================
 #include  "Math/SVector.h"
@@ -17,10 +21,19 @@
 #include "Ostap/SVectorWithError.h"
 // ============================================================================
 /** @file Ostap/Combine.h 
- *  Helper utility to combine   correlated measurements 
+ *  Helper utility to combine   correlated measurements:
+ *   "BLUE" : Best Linear Unbiased Estimator 
+ * 
  *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
  *  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
  *  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+ * 
+ *  @see Louis Lyons, Duncan Gibaut, Peter Clifford, 
+ *       "How to combine correlated estimates of a single physical quantity",
+ *       Nuclear Instruments and Methods in Physics Research Section A:
+ *        Accelerators, Spectrometers, Detectors and Associated Equipment
+ *        Volume 270, Issue 1, 1 July 1988, Pages 110-117
+ *  @see https://doi.org/10.1016/0168-9002(88)90018-6
  */  
 // ============================================================================
 namespace  Ostap
@@ -31,9 +44,18 @@ namespace  Ostap
     // ========================================================================
     /** @class Combine
      *  Helper utility to combine   correlated measurements 
+     *  "BLUE" : Best Linear Unbiased Estimator 
+     *
      *  @see P.Avery "Combining measurements with correlated errors", CBX 95 55
      *  @see http://www.phys.ufl.edu/~avery/fitting/error_correl.ps.gz
      *  @see http://www.researchgate.net.publication/2345482_Combining_Measurements_with_Correlated_Errors
+     *  @see Louis Lyons, Duncan Gibaut, Peter Clifford, 
+     *       "How to combine correlated estimates of a single physical quantity",
+     *       Nuclear Instruments and Methods in Physics Research Section A:
+     *        Accelerators, Spectrometers, Detectors and Associated Equipment
+     *        Volume 270, Issue 1, 1 July 1988, Pages 110-117
+     *  @see https://doi.org/10.1016/0168-9002(88)90018-6
+     *
      *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-09-28
      */
@@ -75,11 +97,14 @@ namespace  Ostap
         , m_w    () 
       { m_w = this->getWeights() ; }
       // ======================================================================
-      // constructor from the vector of data and cov matrix 
-      Combine ( const Covariance& cov2 , 
-                const Data&       data )
+      // constructor from the vector of data and cov matrices 
+      Combine ( const Data&       data , 
+                const Covariance& cov1 , 
+                const Covariance& cov2 ,
+                const Covariance& cov3 ,
+                const Covariance& cov4 )
         : m_data ( data ) 
-        , m_cov2 ( cov2 ) 
+        , m_cov2 ( cov1 + cov2 + cov3 + cov4 ) 
         , m_w    () 
       { m_w = this->getWeights() ; }
       // ======================================================================
@@ -87,6 +112,14 @@ namespace  Ostap
       Combine ( const DataWithError& data ) 
         : m_data ( data.value() ) 
         , m_cov2 ( data.cov2 () ) 
+        , m_w    () 
+      { m_w = this->getWeights() ; }
+      // ======================================================================
+      // constructor from the vector of data and cov matrix 
+      Combine ( const std::array<double,D>& data , 
+                const Covariance&           cov2 ) 
+        : m_data ( data.begin() , data.end ()  ) 
+        , m_cov2 ( cov2 ) 
         , m_w    () 
       { m_w = this->getWeights() ; }
       // ======================================================================
@@ -218,6 +251,51 @@ namespace Ostap
     ( const Ostap::Math::ValueWithError& x1   ,
       const Ostap::Math::ValueWithError& x2   , 
       const Ostap::SymMatrix2x2&         syst ) ;
+    // ========================================================================
+    /** combine three measurements:
+     *  - <code>x1</code>, 
+     *  - <code>x2</code> and 
+     *  - <code>x3</code>
+     *  using their "statistical" uncertainties (assumed to be uncorrelated) 
+     *  and a covariance matrix of "systematic" uncertainties
+     *  @param x1   (INPUT) the first  measurement 
+     *  @param x2   (INPUT) the second measurement 
+     *  @param x3   (INPUT) the third  measurement 
+     *  @param syst (INPUT) covariance matrix of systematic uncertainties  
+     *  @return combined result
+     *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-09-28
+     */
+    Ostap::Math::ValueWithError 
+    combine 
+    ( const Ostap::Math::ValueWithError& x1   ,
+      const Ostap::Math::ValueWithError& x2   , 
+      const Ostap::Math::ValueWithError& x3   , 
+      const Ostap::SymMatrix3x3&         syst ) ;
+    // ========================================================================
+    /** combine four measurements:
+     *  - <code>x1</code>, 
+     *  - <code>x2</code>,
+     *  - <code>x3</code> and 
+     *  - <code>x4</code>
+     *  using their "statistical" uncertainties (assumed to be uncorrelated) 
+     *  and a covariance matrix of "systematic" uncertainties
+     *  @param x1   (INPUT) the first  measurement 
+     *  @param x2   (INPUT) the second measurement 
+     *  @param x3   (INPUT) the third  measurement 
+     *  @param x4   (INPUT) the fourth measurement 
+     *  @param syst (INPUT) covariance matrix of systematic uncertainties  
+     *  @return combined result
+     *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2015-09-28
+     */
+    Ostap::Math::ValueWithError 
+    combine 
+    ( const Ostap::Math::ValueWithError& x1   ,
+      const Ostap::Math::ValueWithError& x2   , 
+      const Ostap::Math::ValueWithError& x3   , 
+      const Ostap::Math::ValueWithError& x4   , 
+      const Ostap::SymMatrix4x4&         syst ) ;
     // ========================================================================
   }
   // ==========================================================================

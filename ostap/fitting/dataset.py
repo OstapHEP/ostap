@@ -23,7 +23,7 @@ __all__     = (
     'ds_project' , ## project variables from RooDataSet to histogram 
     )
 # =============================================================================
-import ROOT, random, math
+import ROOT, random, math, sys 
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
@@ -41,6 +41,10 @@ logger.debug( 'Some useful decorations for RooAbsData object')
 # =============================================================================
 from ostap.logger.colorized import allright,  attention
 _new_methods_ = []
+# =============================================================================
+_maxv =  0.99 * sys.float_info.max
+_minv = -0.99 * sys.float_info.max
+# =============================================================================
 
 # =============================================================================
 ## iterator for RooAbsData
@@ -449,12 +453,12 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
     if isinstance ( what , str       ) : what = what.strip()
     if isinstance ( cuts , str       ) : cuts = cuts.strip()
     
-    ## native RooFit...  I have some suspicion that it does not work properly
-    if isinstance ( what , ROOT.RooArgList ) and \
-       isinstance ( histo , ROOT.TH1       ) and \
-       hasattr ( dataset , 'fillHistogram' ) :
-        histo.Reset() 
-        return dataset.fillHistogram  ( histo , what , cuts , *args )
+    ## ## native RooFit...  I have some suspicion that it does not work properly
+    ## if isinstance ( what  , ROOT.RooArgList ) and \
+    ##    isinstance ( histo , ROOT.TH1        ) and \
+    ##    hasattr ( dataset , 'fillHistogram'  ) :
+    ##     histo.Reset() 
+    ##     return dataset.fillHistogram  ( histo , what , cuts , *args )
     
     ## delegate to TTree (only for non-weighted dataset with TTree-based storage type) 
     if hasattr ( dataset , 'isWeighted') and not dataset.isWeighted() \
@@ -489,7 +493,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         cuts0 = cuts 
         if ''   == cuts : cuts0 = 0
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
+            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
     if isinstance ( histo , str ) :
@@ -514,24 +518,37 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         
         if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() )
+            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
+    
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
-        return Ostap.HistoProject.project3 ( dataset ,
-                                             histo   , 
-                                             what[2] ,
-                                             what[1] ,
-                                             what[0] , cuts , *args) 
+        sc = Ostap.HistoProject.project3 ( dataset ,
+                                           histo   , 
+                                           what[2] ,
+                                           what[1] ,
+                                           what[0] , cuts , *args)
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
+            return None
+        return histo
     elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
-        return Ostap.HistoProject.project2 ( dataset ,
-                                             histo   , 
-                                             what[1] ,
-                                             what[0] , cuts , *args )
+        sc = Ostap.HistoProject.project2 ( dataset ,
+                                           histo   , 
+                                           what[1] ,
+                                           what[0] , cuts , *args )
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
+            return None
+        return histo
     elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
-        return Ostap.HistoProject.project  ( dataset ,
-                                             histo   , 
-                                             what[0] , cuts , *args )
+        sc = Ostap.HistoProject.project  ( dataset ,
+                                           histo   , 
+                                           what[0] , cuts , *args )
+        if not sc.isSuccess() :
+            logger.error ( "Error from Ostap.HistoProject.project  %s" % sc )
+            return None
+        return histo
     
     raise AttributeError ( 'DataSet::project, invalid case' )
 
@@ -702,6 +719,7 @@ _new_methods_ += [
 
 # =============================================================================
 ROOT.RooDataSet.draw         = ds_draw
+ROOT.RooAbsData.draw         = ds_draw
 ROOT.RooDataSet.project      = ds_project
 ROOT.RooDataSet .__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__getattr__ = _ds_getattr_
@@ -709,8 +727,9 @@ ROOT.RooDataHist.__getattr__ = _ds_getattr_
 ROOT.RooDataHist.__len__    = lambda s : s.numEntries() 
 
 _new_methods_ += [
-    ROOT.RooDataSet.draw      ,
-    ROOT.RooDataSet.project   ,
+    ROOT.RooDataSet.draw    ,
+    ROOT.RooAbsData.draw    ,
+    ROOT.RooDataSet.project ,
     ]
 
 # =============================================================================
@@ -806,7 +825,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     vset     = dataset.get()
     for   v     in vset : vlst.add ( v )
     #
-    vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst )
+    vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst , False )
     dataset.addColumn ( vcol )
     #
     return dataset 
@@ -956,13 +975,33 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
                              cuts               ,
                              wvarname           )
 
-# =============================================================================
 ROOT.RooDataSet.makeWeighted = _rds_makeWeighted_
+
+# =============================================================================
+## ``Unweight'' weighted  dataset
+#  @code
+#  wdata = ...
+#  data  = wdata.unweight() 
+#  @endcode
+def _rds_unWeighted_ ( dataset , weight = '' ) :
+    """``Unweight'' weighted  dataset
+    >>> wdata = ...
+    >>> data  = wdata.unweight() 
+    """
+    if not dataset.isWeighted() :
+        logger.error ("unweight: dataset is not weighted!") 
+        return None, ''
+    
+    ds , w = Ostap.Utils.unweight (  dataset , weight )  
+    return ds , w 
+
+# =============================================================================
+ROOT.RooDataSet.unWeighted = _rds_unWeighted_
 
 _new_methods_ += [
     ROOT.RooDataSet .makeWeighted ,
+    ROOT.RooDataSet .unWeighted   ,
     ]
-
 # =============================================================================
 
 
@@ -1222,7 +1261,12 @@ _new_methods_ += [
 
 
 # ==============================================================================
-def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**62 ) :
+def _ds_table_0_ ( dataset        ,
+                   variables = [] ,
+                   cuts      = '' ,
+                   first     = 0  ,
+                   last      = 2**62 ,
+                   prefix    =  '' ) :
     """Print data set as table
     """
     varset = dataset.get()
@@ -1421,22 +1465,22 @@ def _ds_table_0_ ( dataset , variables = [] , cuts = '' , first = 0 , last = 2**
         table_data.append ( tuple ( cols ) ) 
 
     import ostap.logger.table as T
-    t  = T.table ( table_data , title )
+    t  = T.table ( table_data , title , prefix =  prefix )
     w  = T.table_width ( t ) 
     return t , w 
 
 # ==============================================================================
-## print dataset in  a form of the table
+## print dataset in a form of the table
 #  @code
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset ,  variables = [] ) :
+def _ds_table_ (  dataset ,  variables = [] , prefix = '' ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_0_ ( dataset ,  variables )[0]
+    return _ds_table_0_ ( dataset ,  variables , prefix = prefix )[0]
 
 # =============================================================================
 ##  print DataSet
@@ -1525,7 +1569,9 @@ _new_methods_ += [
     ROOT.RooDataSet.symmetrize , 
     ]
 
+
 # =============================================================================
+
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.RooAbsData )
 

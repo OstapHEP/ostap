@@ -1077,7 +1077,67 @@ namespace Ostap
     ( const Ostap::Vector3D& a  , 
       const Ostap::Vector3D& b  ) ;
     // ========================================================================
-  } //                                             end of namespace Ostap::Math
+    /** momentum of the first partle form two-body decay
+     *  \f$ m\rightarrow m_1 m_2 \f$ in th eret frasme of \f$ m \f$.
+     *  \f[ q ( m , m_1 , m_2 )  \equiv 
+     *  \frac{\lambda^{1/2}\left( m^2, m_1^2, m_2^2\right)}{2m} \f]
+     */
+    double q 
+    ( const double m  , 
+      const double m1 ,
+      const double m2 ) ;
+    // ========================================================================
+    /** two-body phase space: 
+     *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} 
+     *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f]
+     * Note that there exist also an alternative normalization:
+     *  \f[ \Phi_2^{\prime}( m ) = \dfrac{\pi}{2} 
+     *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f],
+     *  this one is used e.g. in  
+     *  E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, Eq. (V.1.9)
+     *  @see Ostap::Kinematics::phasespace2_bk 
+     */
+    double phasespace2
+    ( const double x  , 
+      const double m1 , 
+      const double m2 ) ; 
+    // ========================================================================
+    /** two-body phase space: 
+     *  \f[ \Phi_2^{\prime}( m ) = \dfrac{\pi}{2} 
+     *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f],
+     *  This one is used e.g. in  
+     *  E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, Eq. (V.1.9)
+     * Note that there exist also an alternative normalization:
+     *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} 
+     *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f]
+     *  @see Ostap::Kinematics::phasespace2_bk 
+     */
+    double phasespace2_bk 
+    ( const double x  , 
+      const double m1 , 
+      const double m2 ) ; 
+    // ========================================================================
+    /** three-body phase space, analytic symmetric expression via 
+     *  elliptic  integrals 
+     *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
+     *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
+     *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     */
+    double phasespace3 ( const double x  , 
+                         const double m1 , 
+                         const double m2 , 
+                         const double m3 ) ; 
+    // ========================================================================
+  } //                                      end of namespace Ostap::Kinenmatics 
+  // ==========================================================================
+  namespace Math 
+  {
+    using Ostap::Kinematics::q        ;
+    using Ostap::Kinematics::kallen   ;
+    using Ostap::Kinematics::triangle ;    
+  }
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================

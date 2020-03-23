@@ -17,12 +17,11 @@
 // ============================================================================
 // ROOT
 // ============================================================================
-using std::size_t ;
-// ============================================================================
-#include "RooAbsPdf.h"
+#include "RVersion.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
 #include "RooAbsReal.h"
+#include "RooAbsPdf.h"
 // ============================================================================
 namespace Ostap
 {
@@ -47,7 +46,7 @@ namespace Ostap
    *  - double-sided Crystal Ball
    *  - Needham: Crystal Ball with \f$\alpha(\sigma)\f$
    *  - Apolonios
-   *  - Apolonios2 (bifurcated apolonious)
+   *  - Apollonios2 (bifurcated apolonious)
    *  - Bifurcated Gauissian
    *  - Generalized Gaussian v1
    *  - Generalized Gaussian v2
@@ -154,7 +153,7 @@ namespace Ostap
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
+      // fake default constructor, needed just for proper (de)serialization
       BreitWigner() {} ;
       // ======================================================================
     public:
@@ -184,6 +183,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::BreitWigner& function  () const { return *m_bw ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -196,9 +205,6 @@ namespace Ostap
       std::unique_ptr<Ostap::Math::BreitWigner> m_bw{}  ; // the actual function
       // ======================================================================
     } ;
-
-
-
     // ========================================================================
     /** @class BreitWignerMC
      *  @see Ostap::Math::BreitWignerMC
@@ -260,6 +266,16 @@ namespace Ostap
       std::complex<double>            amplitude () const  ;
       /// access to underlying function
       const Ostap::Math::BreitWignerMC& function  () const { return *m_bw ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -367,6 +383,16 @@ namespace Ostap
       /// set all parameters
       void setPars () const ; // set all parameters
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -379,6 +405,93 @@ namespace Ostap
       mutable Ostap::Math::BW23L m_bw ;            // the actual function
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class BWI 
+     *  Breit-Wigner with some embedded interference: 
+     *  \f[ f(x) = \left| \upalpha b(x) + A(x)_{\mathrm{BW}} \right|^2 \f], 
+     *  where \f$b(x)\f$ - any smooth function and 
+     *  \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
+     */
+    class BWI  : public BreitWigner
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::BWI, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///constructor from Breit-Wigner and backround 
+      BWI ( const char*                         name  , 
+            const Ostap::Models::BreitWigner&   bw    ,
+            RooAbsReal&                         b     , 
+            RooAbsReal&                         ab    , 
+            RooAbsReal&                         phib  ) ;
+      /// constructor from all parameters
+      BWI ( const char*          name      ,
+            const char*          title     ,
+            RooAbsReal&          x         ,
+            RooAbsReal&          mass      ,
+            RooAbsReal&          width     ,
+            const double         m1        ,
+            const double         m2        ,
+            const unsigned short L         , 
+            RooAbsReal&          b         ,
+            RooAbsReal&          ab        , 
+            RooAbsReal&          phib      ) ;
+      /// constructor from all parameters
+      BWI ( const char*          name      ,
+            const char*          title     ,
+            RooAbsReal&          x         ,
+            RooAbsReal&          mass      ,
+            RooAbsReal&          width     ,
+            const double         m1        ,
+            const double         m2        ,
+            const unsigned short L                         ,
+            const Ostap::Math::FormFactors::JacksonRho rho , 
+            RooAbsReal&          b         ,
+            RooAbsReal&          ab        , 
+            RooAbsReal&          phib      ) ;
+      /// constructor from main parameters and "shape"
+      BWI ( const char*          name          ,
+            const char*          title         ,
+            RooAbsReal&          x             ,
+            RooAbsReal&          mass          ,
+            RooAbsReal&          width         ,
+            const Ostap::Math::BreitWigner& bw , 
+            RooAbsReal&          b             ,
+            RooAbsReal&          ab            , 
+            RooAbsReal&          phib          ) ;
+      /// "copy" constructor
+      BWI ( const BWI& , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~BWI() ;
+      /// clone
+      BWI* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default constructor, needed just for the proper (de)serialization
+      BWI () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate () const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_b    ;  // background shape 
+      RooRealProxy m_ab   ;  // background factor  
+      RooRealProxy m_phib ;  // background phase 
+      // ======================================================================
+    };
     // ========================================================================
     /** @class Flatte
      *
@@ -448,6 +561,16 @@ namespace Ostap
       // ======================================================================
       /// set all parameters
       void setPars () const ; // set all parameters
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -527,6 +650,16 @@ namespace Ostap
       std::complex<double>     amplitude () const ;
       /// access to underlying function
       const Ostap::Math::LASS& function  () const { return m_lass ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -613,6 +746,16 @@ namespace Ostap
       std::complex<double>        amplitude () const ; // get the complex amplitude
       /// access to underlying function
       const Ostap::Math::LASS23L& function  () const { return m_lass ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -702,6 +845,16 @@ namespace Ostap
       std::complex<double>     amplitude () const ;
       /// access to underlying function
       const Ostap::Math::Bugg& function  () const { return m_bugg ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -796,6 +949,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Bugg23L& function  () const { return m_bugg ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       /// the mass
@@ -876,6 +1039,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Voigt& function() const { return m_voigt ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -949,6 +1122,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PseudoVoigt& function() const { return m_voigt ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1035,6 +1218,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Swanson& function() const { return m_swanson ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1114,6 +1307,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::CrystalBall& function() const { return m_cb ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1189,6 +1392,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::CrystalBallRightSide& function() const { return m_cb ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1268,6 +1481,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::CrystalBallDoubleSided& function() const
       { return m_cb2 ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1351,6 +1574,16 @@ namespace Ostap
       /// get current alpha
       double                      alpha   () const ;
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1367,7 +1600,7 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios
+    /** @class Apollonios
      *  A modified gaussian with power-law tail on rigth ride and exponential
      *  tail on low-side
      *  The function is proposed by Diego Martinez Santos
@@ -1375,22 +1608,22 @@ namespace Ostap
      *  Here a bit modified version is used with redefined parameter <code>n</code>
      *  to be coherent with local definitions of Crystal Ball
      *
-     *  @see Ostap::Math::Apolonios
+     *  @see Ostap::Math::Apollonios
      *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
      *  @date 2013-12-01
      */
     // ========================================================================
-    class  Apolonios : public RooAbsPdf
+    class  Apollonios : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::Apolonios, 1) ;
+      ClassDef(Ostap::Models::Apollonios, 1) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
-      Apolonios
+      Apollonios
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
@@ -1400,16 +1633,16 @@ namespace Ostap
         RooAbsReal&          n         ,
         RooAbsReal&          b         ) ;
       /// "copy" constructor
-      Apolonios  ( const Apolonios& right , const char* name = 0  ) ;
+      Apollonios  ( const Apollonios& right , const char* name = 0  ) ;
       /// virtual destructor
-      virtual ~Apolonios () ;
+      virtual ~Apollonios () ;
       /// clone
-      Apolonios* clone ( const char* name ) const override;
+      Apollonios* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      Apolonios () {} ;
+      Apollonios () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1434,7 +1667,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Apolonios& function() const { return m_apo ; }
+      const Ostap::Math::Apollonios& function() const { return m_apo ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1448,30 +1691,30 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Apolonios m_apo ;                // the function
+      mutable Ostap::Math::Apollonios m_apo ;                // the function
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios2
+    /** @class Apollonios2
      *  A modified gaussian with exponential
      *  tails on low-side
      *
-     *  @see Ostap::Math::Apolonios2
+     *  @see Ostap::Math::Apollonios2
      *  @author Vanya BELYAEV Ivane.BElyaev@itep.ru
      *  @date 2013-12-01
      */
     // ========================================================================
-    class  Apolonios2 : public RooAbsPdf
+    class  Apollonios2 : public RooAbsPdf
     {
       // ======================================================================
     public :
       // ======================================================================
-      ClassDef(Ostap::Models::Apolonios2, 1) ;
+      ClassDef(Ostap::Models::Apollonios2, 1) ;
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
-      Apolonios2
+      Apollonios2
       ( const char*          name      ,
         const char*          title     ,
         RooAbsReal&          x         ,
@@ -1480,16 +1723,16 @@ namespace Ostap
         RooAbsReal&          sigmaR    ,
         RooAbsReal&          beta      ) ;
       /// "copy" constructor
-      Apolonios2  ( const Apolonios2& right , const char* name = 0  ) ;
+      Apollonios2  ( const Apollonios2& right , const char* name = 0  ) ;
       /// virtual destructor
-      virtual ~Apolonios2 () ;
+      virtual ~Apollonios2 () ;
       /// clone
-      Apolonios2* clone ( const char* name ) const override;
+      Apollonios2* clone ( const char* name ) const override;
       // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default contructor, needed just for proper (de)serialization
-      Apolonios2 () {} ;
+      Apollonios2 () {} ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1514,7 +1757,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// access to underlying function
-      const Ostap::Math::Apolonios2& function() const { return m_apo2 ; }
+      const Ostap::Math::Apollonios2& function() const { return m_apo2 ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1527,7 +1780,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      mutable Ostap::Math::Apolonios2 m_apo2 ;                // the function
+      mutable Ostap::Math::Apollonios2 m_apo2 ;                // the function
       // ======================================================================
     } ;
     // ========================================================================
@@ -1590,6 +1843,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::BifurcatedGauss& function() const { return m_bg ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1667,6 +1930,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenGaussV1& function() const { return m_ggv1 ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1742,6 +2015,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::GenGaussV2& function() const { return m_ggv2 ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1819,6 +2102,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::SkewGauss& function() const { return m_sg ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -1836,7 +2129,7 @@ namespace Ostap
     /** @class Bukin
      *  "Bukin"-function, aka "Modified Novosibirsk function"
      *  @see http://arxiv.org/abs/1107.5751
-     *  @see http://dx.doi.org/10.1007/JHEP06(2012)141
+     *  @see https://doi.org/10.1007/JHEP06(2012)141
      *  @see Ostap::Math::Bukin
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-12-05
@@ -1896,6 +2189,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Bukin& function() const { return m_bukin ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -1978,6 +2281,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::StudentT& function() const { return m_stt ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -2052,6 +2365,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::BifurcatedStudentT& function() const { return m_stt ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -2131,6 +2454,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GramCharlierA& function() const { return m_gca ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -2204,6 +2537,16 @@ namespace Ostap
       /// access to underlying function       /// access to underlying function
       const Ostap::Math::PhaseSpace2& function() const { return m_ps2 ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -2271,6 +2614,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PhaseSpaceLeft& function() const { return m_left ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -2341,6 +2694,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PhaseSpaceRight& function() const { return m_right ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -2414,6 +2777,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PhaseSpaceNL& function() const { return m_ps ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -2553,6 +2926,16 @@ namespace Ostap
       // ======================================================================
       const Ostap::Math::PhaseSpacePol& function() const { return m_ps ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
    private:
       // ======================================================================
       RooRealProxy m_x    ;
@@ -2631,6 +3014,16 @@ namespace Ostap
     public:
       // ======================================================================
       const Ostap::Math::PhaseSpaceLeftExpoPol& function() const { return m_ps ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     private:
       // ======================================================================
@@ -2722,6 +3115,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::PhaseSpace23L& function() const { return m_ps23L ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -2801,6 +3204,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Positive& function() const { return m_positive ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -2874,6 +3287,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::PositiveEven& function() const { return m_even ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================
@@ -2949,6 +3372,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Monotonic& function() const { return m_monotonic ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================
@@ -3026,6 +3459,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Convex& function() const { return m_convex ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -3101,6 +3544,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::ConvexOnly& function() const { return m_convex ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -3175,6 +3628,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::ExpoPositive& function() const { return m_positive ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================
@@ -3254,6 +3717,16 @@ namespace Ostap
       const Ostap::Math::Sigmoid& sigmoid () const { return m_sigmoid    ; }
       /// access to underlying function
       const Ostap::Math::Sigmoid& function() const { return   sigmoid () ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================
@@ -3339,6 +3812,16 @@ namespace Ostap
       // ======================================================================
       const Ostap::Math::TwoExpoPositive& function() const { return m_2expopos ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x     ;
@@ -3413,6 +3896,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::GammaDist& function() const { return m_gamma ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -3496,6 +3989,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::GenGammaDist& function() const { return m_ggamma ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3573,6 +4076,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Amoroso& function() const { return m_amoroso ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x      ;
@@ -3649,6 +4162,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::LogGammaDist& function() const { return m_gamma ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3722,6 +4245,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Log10GammaDist& function() const { return m_gamma ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -3805,6 +4338,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::LogGamma& function() const { return m_lgamma ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3882,6 +4425,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::BetaPrime& function() const { return m_betap ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -3957,6 +4510,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Landau& function() const { return m_landau ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4048,6 +4611,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::SinhAsinh& function() const { return m_sinhasinh ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4146,6 +4719,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::JohnsonSU& function() const { return m_johnsonSU ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4224,6 +4807,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Atlas& function() const { return m_atlas ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4316,6 +4909,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Sech& function() const { return m_sech ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4326,6 +4929,102 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::Sech m_sech ; // the actual function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Losev
+     *  Asymmetric variant of hyperbolic secant distribution
+     *  \f[ f(x;\mu,\alpha,\beta) \equiv 
+     *   \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
+     *                         \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
+     *  where \f$ A = \frac{\left|\alpha\right|+\left|\beta\right|}{\pi}
+     *  \sin \frac{\pi\left| \beta\right| }{\left|\alpha\right|+\left|\beta\right|}\f$ 
+     *  - Leptokurtic distribution with exponential tails 
+     *  @see Losev, A., "A new lineshape for fitting x‐ray photoelectron peaks", 
+     *           Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+     *  @see  https://doi.org/10.1002/sia.740141207
+     *  @see  https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-11-25
+     *  @see Ostap::Math::Losev
+     */
+    class  Losev : public RooAbsPdf
+    {
+      // ======================================================================
+    public :
+      // ======================================================================
+      ClassDef(Ostap::Models::Losev, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      Losev
+      ( const char*           name      ,
+        const char*           title     ,
+        RooAbsReal&           x         ,
+        RooAbsReal&           mu        ,
+        RooAbsReal&           alpha     ,
+        RooAbsReal&           beta      ) ;
+      /// "copy constructor"
+      Losev
+      ( const Losev&          right     ,
+        const char*           name  = 0 )  ;
+      /// destructor
+      virtual ~Losev () ;
+      /// clone
+      Losev* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Losev () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Losev& function() const { return m_losev ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
+    protected:
+      // ======================================================================
+      RooRealProxy m_x        ;
+      RooRealProxy m_mu       ;
+      RooRealProxy m_alpha    ;
+      RooRealProxy m_beta     ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Losev m_losev ; // the actual function
       // ======================================================================
     } ;
     // ========================================================================
@@ -4393,6 +5092,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Logistic& function() const { return m_logistic ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4469,6 +5178,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::Argus& function() const { return m_argus ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4484,7 +5203,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class  Slash 
-     *  ``Slash''-distribution -  symmetric peak with veyr heavy tail
+     *  ``Slash''-distribution -  symmetric peak with very heavy tails
      *  @see https://en.wikipedia.org/wiki/Slash_distribution
      *  Tails arew so heavy that moments (e.g. variance) do not exist 
      *  @see Ostap::Math::Slash
@@ -4542,6 +5261,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::Slash& function () const { return m_slash ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4614,6 +5343,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::AsymmetricLaplace& function () const { return m_laplace ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // ======================================================================
@@ -4704,6 +5443,16 @@ namespace Ostap
       const Ostap::Math::Tsallis& function () const { return m_tsallis ; }
       const Ostap::Math::Tsallis& tsallis  () const { return m_tsallis ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4792,6 +5541,16 @@ namespace Ostap
       const Ostap::Math::QGSM& function() const { return m_qgsm ; }
       const Ostap::Math::QGSM& qgsm    () const { return m_qgsm ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x        ;
@@ -4870,6 +5629,16 @@ namespace Ostap
       const Ostap::Math::TwoExpos& function() const { return m_2expos ; }
       const Ostap::Math::TwoExpos& twoexpos() const { return m_2expos ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // ======================================================================
       RooRealProxy m_x     ;
@@ -4941,6 +5710,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::DoubleGauss& function () const { return m_2gauss ; }
       // =====================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x         ;
@@ -5024,6 +5803,16 @@ namespace Ostap
       const Ostap::Math::Gumbel& function () const { return m_gumbel ; }
       const Ostap::Math::Gumbel& gumbel   () const { return m_gumbel ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x    ;
@@ -5100,6 +5889,16 @@ namespace Ostap
       const Ostap::Math::Weibull& function () const { return m_weibull ; }
       const Ostap::Math::Weibull& weibull  () const { return m_weibull ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected:
       // =====================================================================
       RooRealProxy m_x     ;
@@ -5173,6 +5972,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::RaisingCosine& function () const { return m_rcos ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // =====================================================================
@@ -5253,6 +6062,16 @@ namespace Ostap
       // ======================================================================
       /// access to underlying function
       const Ostap::Math::QGaussian& function () const { return m_qgauss ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected:
       // =====================================================================
@@ -5345,6 +6164,16 @@ namespace Ostap
       const Ostap::Math::PositiveSpline& function() const { return m_spline ; }
       const Ostap::Math::PositiveSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -5426,6 +6255,16 @@ namespace Ostap
       const Ostap::Math::MonotonicSpline& function() const { return m_spline ; }
       const Ostap::Math::MonotonicSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -5438,7 +6277,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class ConvexPnlySpline
+    /** @class ConvexOnlySpline
      *  The special spline for non-negative
      *  convex or concave function
      *  @see Ostap::Math::ConvexSpline
@@ -5504,6 +6343,16 @@ namespace Ostap
       /// access to underlying function
       const Ostap::Math::ConvexOnlySpline& function() const { return m_spline ; }
       const Ostap::Math::ConvexOnlySpline& spline  () const { return m_spline ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================
@@ -5584,6 +6433,16 @@ namespace Ostap
       const Ostap::Math::ConvexSpline& function() const { return m_spline ; }
       const Ostap::Math::ConvexSpline& spline  () const { return m_spline ; }
       // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
+      // ======================================================================
     protected :
       // ======================================================================
       RooRealProxy m_x    ;
@@ -5656,6 +6515,16 @@ namespace Ostap
       // ======================================================================
       //  dimensionality of the PDF
       unsigned short dim () const { return m_dim ; }      
+      // ======================================================================
+    private:
+      // ======================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+      // ======================================================================
+      RooSpan<double> evaluateBatch 
+      ( std::size_t begin     , 
+        std::size_t batchSize ) const ;
+      // ======================================================================
+#endif
       // ======================================================================
     protected :
       // ======================================================================

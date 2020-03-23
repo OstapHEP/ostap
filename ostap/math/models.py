@@ -11,7 +11,14 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
-__all__     = ()
+__all__     = (
+    'tf1'     , ## convert model/function to TF1 ,
+    'tf2'     , ## convert model/function to TF2 ,
+    'tf3'     , ## convert model/function to TF3 ,
+    'f1_draw' , ## draw 1D-function via conversion to TF1 
+    'f2_draw' , ## draw 1D-function via conversion to TF2 
+    'f3_draw' , ## draw 1D-function via conversion to TF3 
+    )
 # =============================================================================
 import  ROOT 
 from    ostap.core.core import cpp, Ostap, funID
@@ -43,11 +50,11 @@ class _WO3_ (object)  :
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
 # =============================================================================
-## convert the model into TF1
-def _tf1_ ( self                 ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            npars = 0            , args = () ) :
+## convert the model/function into TF1
+def tf1  ( self                 ,
+           xmin  = neg_infinity ,
+           xmax  = pos_infinity ,
+           npars = 0            , args = () ) :
     """Convert the function to TF1    
     >>> obj = ...
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
@@ -57,9 +64,15 @@ def _tf1_ ( self                 ,
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( self )
     if not self._wo1                 : self._wo1 = _WO1_ ( self )
     #
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
     #
     assert xmin > neg_infinity, \
           "``xmin''-parameter needs to be specified %s" % xmin
@@ -74,12 +87,12 @@ def _tf1_ ( self                 ,
 
 # =============================================================================
 ## convert the model into TF2
-def _tf2_ ( self ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            ymin  = neg_infinity ,
-            ymax  = pos_infinity ,
-            npars = 0            , args = () ) :
+def tf2 ( self ,
+          xmin  = neg_infinity ,
+          xmax  = pos_infinity ,
+          ymin  = neg_infinity ,
+          ymax  = pos_infinity ,
+          npars = 0            , args = () ) :
     """Convert the function to TF2
     >>> obj = ...    
     >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
@@ -88,12 +101,23 @@ def _tf2_ ( self ,
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( self )
     if not self._wo2                 : self._wo2 = _WO2_ ( self )
-    ## 
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
-    if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    ##
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'ymin'  ) :
+        ymn   = self.ymin
+        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+    if hasattr ( self , 'ymax'  ) :
+        ymx   = self.ymax
+        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
+
     ##
     assert xmin > neg_infinity, \
            "``xmin''-parameter needs to be specified %s" % xmin
@@ -113,14 +137,14 @@ def _tf2_ ( self ,
 
 # =============================================================================
 ## convert the model into TF3
-def _tf3_ ( self ,
-            xmin  = neg_infinity ,
-            xmax  = pos_infinity ,
-            ymin  = neg_infinity ,
-            ymax  = pos_infinity ,
-            zmin  = neg_infinity ,
-            zmax  = pos_infinity ,
-            npars = 0            , args = () ) :
+def tf3 ( self ,
+          xmin  = neg_infinity ,
+          xmax  = pos_infinity ,
+          ymin  = neg_infinity ,
+          ymax  = pos_infinity ,
+          zmin  = neg_infinity ,
+          zmax  = pos_infinity ,
+          npars = 0            , args = () ) :
     """Convert the function to TF3
     >>> obj = ...    
     >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
@@ -129,14 +153,31 @@ def _tf3_ ( self ,
     ##
     if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( self )
     if not self._wo3                 : self._wo3 = _WO3_ ( self )
-    ## 
-    if hasattr ( self , 'xmin'  ) : xmin  = max ( xmin  , self.xmin () )
-    if hasattr ( self , 'xmax'  ) : xmax  = min ( xmax  , self.xmax () )
-    if hasattr ( self , 'ymin'  ) : ymin  = max ( ymin  , self.ymin () )
-    if hasattr ( self , 'ymax'  ) : ymax  = min ( ymax  , self.ymax () )
-    if hasattr ( self , 'zmin'  ) : zmin  = max ( zmin  , self.zmin () )
-    if hasattr ( self , 'zmax'  ) : zmax  = min ( zmax  , self.zmax () )
-    if hasattr ( self , 'npars' ) : npars = max ( npars , self.npars() )
+    ##
+
+    if hasattr ( self , 'xmin'  ) :
+        xmn   = self.xmin
+        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+    if hasattr ( self , 'xmax'  ) :
+        xmx   = self.xmax
+        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+    if hasattr ( self , 'ymin'  ) :
+        ymn   = self.ymin
+        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+    if hasattr ( self , 'ymax'  ) :
+        ymx   = self.ymax
+        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+    if hasattr ( self , 'zmin'  ) :
+        zmn   = self.zmin
+        zmin  = max ( zmin  , zmn () if callable ( zmn ) else zmn )
+    if hasattr ( self , 'zmax'  ) :
+        zmx   = self.zmax
+        zmax  = min ( zmax  , zmx () if callable ( zmx ) else zmx )
+    if hasattr ( self , 'npars' ) :
+        nps   = self.npars
+        npars = max ( npars , nps () if callable ( nps ) else nps )
+
+
     #
     assert xmin > neg_infinity, \
            "``xmin''-parameter needs to be specified %s" % xmin
@@ -161,7 +202,7 @@ def _tf3_ ( self ,
 
 # =============================================================================
 ## draw the function 
-def _f1_draw_ ( self , opts ='' , **kwargs ) :
+def f1_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF1    
     >>> fun = ...
     >>> fun.draw()    
@@ -173,11 +214,11 @@ def _f1_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args'  , () )
         
-        self._tf1        = _tf1_ ( self          ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   npars = npars ,
-                                   args  = args  )
+        self._tf1        =  tf1 ( self          ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  npars = npars ,
+                                  args  = args  )
         
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
@@ -196,7 +237,7 @@ def _f1_draw_ ( self , opts ='' , **kwargs ) :
 
 # =============================================================================
 ## draw the function 
-def _f2_draw_ ( self , opts ='' , **kwargs ) :
+def f2_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF2    
     >>> fun = ...
     >>> fun.draw()    
@@ -210,19 +251,19 @@ def _f2_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args' , () )
 
-        self._tf2        = _tf2_ ( self ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   ymin  = ymin  ,
-                                   ymax  = ymax  ,
-                                   npars = npars , 
-                                   args  = args  )
+        self._tf2        =  tf2 ( self ,
+                                  xmin  = xmin  ,
+                                  xmax  = xmax  ,
+                                  ymin  = ymin  ,
+                                  ymax  = ymax  ,
+                                  npars = npars , 
+                                  args  = args  )
         
     return self._tf2.draw ( opts , **kwargs )
 
 # =============================================================================
 ## draw the function 
-def _f3_draw_ ( self , opts ='' , **kwargs ) :
+def f3_draw ( self , opts ='' , **kwargs ) :
     """Drawing the function object through conversion to ROOT.TF3    
     >>> fun = ...
     >>> fun.draw()    
@@ -238,15 +279,15 @@ def _f3_draw_ ( self , opts ='' , **kwargs ) :
         npars = kwargs.pop ( 'npars' , 0  ) 
         args  = kwargs.pop ( 'args' , () )
 
-        self._tf3        = _tf3_ ( self ,
-                                   xmin  = xmin  ,
-                                   xmax  = xmax  ,
-                                   ymin  = ymin  ,
-                                   ymax  = ymax  ,
-                                   zmin  = zmin  ,
-                                   zmax  = zmax  ,
-                                   npars = npars , 
-                                   args  = args  )
+        self._tf3        = tf3 ( self ,
+                                 xmin  = xmin  ,
+                                 xmax  = xmax  ,
+                                 ymin  = ymin  ,
+                                 ymax  = ymax  ,
+                                 zmin  = zmin  ,
+                                 zmax  = zmax  ,
+                                 npars = npars , 
+                                 args  = args  )
         
     return self._tf3.draw ( opts , **kwargs )
 
@@ -784,6 +825,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.CrystalBallDoubleSided ,
                Ostap.Math.GramCharlierA          ,
                Ostap.Math.PhaseSpace2            ,
+               Ostap.Math.PhaseSpace3            ,
+               Ostap.Math.PhaseSpace3s           ,
                Ostap.Math.PhaseSpaceLeft         ,
                Ostap.Math.PhaseSpaceRight        ,
                Ostap.Math.PSDalitz               ,
@@ -791,7 +834,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.PhaseSpace23L          ,
                Ostap.Math.BreitWigner            ,
                Ostap.Math.BreitWignerBase        ,
-               Ostap.Math.BreitWignerMC,
+               Ostap.Math.BreitWignerMC          ,
                Ostap.Math.Rho0                   ,
                Ostap.Math.Kstar0                 ,
                Ostap.Math.Phi0                   ,
@@ -824,6 +867,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.JohnsonSU              ,
                Ostap.Math.Atlas                  ,
                Ostap.Math.Sech                   ,
+               Ostap.Math.Losev                  ,
                Ostap.Math.Swanson                ,
                Ostap.Math.Argus                  ,
                Ostap.Math.Slash                  ,
@@ -848,12 +892,15 @@ for model in ( Ostap.Math.Chebyshev              ,
                ## interpolation polynomials 
                Ostap.Math.Neville     ,
                Ostap.Math.Lagrange    ,
-               Ostap.Math.Barycentric ,               
+               Ostap.Math.Barycentric ,
+               ## helper stufff
+               Ostap.Functions.PyCallable        , 
+               Ostap.Math.ChebyshevApproximation ,
                ) :
-    model.tf1          = _tf1_ 
+    model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D
     model.__getattr__  = _tf1_getattr_
-    model.draw         = _f1_draw_
+    model.draw         =  f1_draw
     
     if not hasattr ( model , 'max' ) : 
         if hasattr ( model , 'mode' ) :
@@ -915,8 +962,8 @@ for model in ( Ostap.Math.Bernstein         ,
                Ostap.Math.ConvexSpline      , 
                Ostap.Math.ConvexOnlySpline  ) : 
     
-    model.draw = _f1_draw_
-    model.Draw = _f1_draw_
+    model.draw = f1_draw
+    model.Draw = f1_draw
 
 
 # =============================================================================
@@ -1013,9 +1060,9 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.Expo2DPolSym        ,
                Ostap.Math.LegendreSum2        ) :
     
-    model . tf2  = _tf2_ 
-    model . tf   = _tf2_
-    model . draw = _f2_draw_ 
+    model . tf2  =  tf2 
+    model . tf   =  tf2
+    model . draw =  f2_draw
     model.sp_integrate    = sp_integrate_2D
     model.sp_integrate_2D = sp_integrate_2D
     model.sp_integrate_x  = sp_integrate_2Dx
@@ -1040,9 +1087,9 @@ for model in ( Ostap.Math.Bernstein3D    ,
                Ostap.Math.Positive3DMix  ,
                Ostap.Math.LegendreSum3   ) :
     
-    model . tf3  = _tf3_ 
-    model . tf   = _tf3_ 
-    model . draw = _f3_draw_ 
+    model . tf3  =  tf3 
+    model . tf   =  tf3 
+    model . draw =  f3_draw
     model.sp_integrate    = sp_integrate_3D
     model.sp_integrate_x  = sp_integrate_3Dx
     model.sp_integrate_y  = sp_integrate_3Dy
@@ -1072,7 +1119,8 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
                  
 
 for pdf in ( Ostap.Models.BreitWigner        ,
-             Ostap.Models.BreitWignerMC , 
+             Ostap.Models.BreitWignerMC      , 
+             Ostap.Models.BWI                , 
              Ostap.Models.Flatte             ,
              Ostap.Models.Bukin              ,
              Ostap.Models.PhaseSpace2        ,
@@ -1086,8 +1134,8 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.CrystalBall        ,
              Ostap.Models.CrystalBallRS      ,
              Ostap.Models.CrystalBallDS      , 
-             Ostap.Models.Apolonios          ,
-             Ostap.Models.Apolonios2         , 
+             Ostap.Models.Apollonios          ,
+             Ostap.Models.Apollonios2         , 
              Ostap.Models.GramCharlierA      , 
              Ostap.Models.Voigt              ,
              Ostap.Models.PseudoVoigt        ,
@@ -1117,6 +1165,7 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.JohnsonSU          ,
              Ostap.Models.Atlas              ,
              Ostap.Models.Sech               ,
+             Ostap.Models.Losev              ,
              Ostap.Models.Swanson            ,
              Ostap.Models.Argus              ,
              Ostap.Models.Slash              ,
@@ -1388,7 +1437,7 @@ Ostap.Math.BreitWignerBase . amp = _amp_
 import ostap.math.derivative as _D1
 import ostap.math.integral   as _D2
 for i in ( _D1.Derivative , _D2.Integral , _D2.IntegralCache ) :
-    if not hasattr ( i , 'tf1' ) : i.tf1 = _tf1_
+    if not hasattr ( i , 'tf1' ) : i.tf1 = tf1
 
 # =============================================================================
 def _ff_str_ ( ff ) :
@@ -1433,7 +1482,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Flatte23L         ,
     Ostap.Math.BreitWigner       ,
     Ostap.Math.BreitWignerBase   ,
-    Ostap.Math.BreitWignerMC ,
+    Ostap.Math.BreitWignerMC     ,
     Ostap.Math.Swanson           ,
     ##
     Ostap.Math.Chebyshev              ,
@@ -1461,6 +1510,8 @@ _decorated_classes_ = set( [
     Ostap.Math.CrystalBallDoubleSided ,
     Ostap.Math.GramCharlierA          ,
     Ostap.Math.PhaseSpace2            ,
+    Ostap.Math.PhaseSpace3            ,
+    Ostap.Math.PhaseSpace3s           ,
     Ostap.Math.PhaseSpaceLeft         ,
     Ostap.Math.PhaseSpaceRight        ,
     Ostap.Math.PSDalitz               ,
@@ -1468,7 +1519,7 @@ _decorated_classes_ = set( [
     Ostap.Math.PhaseSpace23L          ,
     Ostap.Math.BreitWigner            ,
     Ostap.Math.BreitWignerBase        ,
-    Ostap.Math.BreitWignerMC,
+    Ostap.Math.BreitWignerMC          ,
     Ostap.Math.Rho0                   ,
     Ostap.Math.Kstar0                 ,
     Ostap.Math.Phi0                   ,
@@ -1501,6 +1552,7 @@ _decorated_classes_ = set( [
     Ostap.Math.JohnsonSU              ,
     Ostap.Math.Atlas                  ,
     Ostap.Math.Sech                   ,
+    Ostap.Math.Losev                  ,
     Ostap.Math.Swanson                ,
     Ostap.Math.Argus                  ,
     Ostap.Math.Slash                  ,
@@ -1587,7 +1639,8 @@ _decorated_classes_ = set( [
     Ostap.Math.Expo2DPolSym   ,
     ##
     Ostap.Models.BreitWigner        , 
-    Ostap.Models.BreitWignerMC , 
+    Ostap.Models.BreitWignerMC      , 
+    Ostap.Models.BWI                , 
     Ostap.Models.Flatte             ,
     Ostap.Models.Bukin              ,
     Ostap.Models.PhaseSpace2        ,
@@ -1601,8 +1654,8 @@ _decorated_classes_ = set( [
     Ostap.Models.CrystalBall        ,
     Ostap.Models.CrystalBallRS      ,
     Ostap.Models.CrystalBallDS      , 
-    Ostap.Models.Apolonios          ,
-    Ostap.Models.Apolonios2         , 
+    Ostap.Models.Apollonios         ,
+    Ostap.Models.Apollonios2        , 
     Ostap.Models.GramCharlierA      , 
     Ostap.Models.Voigt              ,
     Ostap.Models.PseudoVoigt        ,
@@ -1632,6 +1685,7 @@ _decorated_classes_ = set( [
     Ostap.Models.JohnsonSU          ,
     Ostap.Models.Atlas              ,
     Ostap.Models.Sech               ,
+    Ostap.Models.Losev              ,
     Ostap.Models.Swanson            ,
     Ostap.Models.Argus              ,
     Ostap.Models.Slash              ,
@@ -1680,9 +1734,9 @@ _decorated_classes_ = set( [
     Ostap.Math.Flatte        ,
     Ostap.Math.Flatte2       , 
     Ostap.Math.Flatte23L     , 
-    Ostap.Math.BreitWigner             ,
-    Ostap.Math.BreitWignerBase         ,
-    Ostap.Math.BreitWignerMC ,
+    Ostap.Math.BreitWigner     ,
+    Ostap.Math.BreitWignerBase ,
+    Ostap.Math.BreitWignerMC   ,
     ##
     Ostap.Math.Bernstein3D    ,
     Ostap.Math.Bernstein3DSym ,

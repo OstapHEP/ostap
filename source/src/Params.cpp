@@ -50,7 +50,7 @@ unsigned long Ostap::DataParam::parameterize
   // invalid tree or emptry range 
   if ( nullptr == tree || last <= first ) { return 0 ; }
   //
-  Ostap::Formula var ( "" , expression , tree ) ;
+  Ostap::Formula var ( expression , tree ) ;
   Ostap::Assert ( var.ok()                                    , 
                   "Invalid expression:\"" + expression + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;
@@ -111,12 +111,12 @@ double Ostap::DataParam::parameterize
   { return parameterize ( tree ,  sum , expression , first , last ) ; }
   //
   //
-  Ostap::Formula var ( "" , expression , tree ) ;
+  Ostap::Formula var ( expression , tree ) ;
   Ostap::Assert ( var.ok()                                    , 
                   "Invalid expression:\"" + expression + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;
   //
-  Ostap::Formula weight  ( "" , selection , tree ) ;
+  Ostap::Formula weight ( selection , tree ) ;
   Ostap::Assert ( weight.ok()                                 , 
                   "Invalid selection:\"" + selection   + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;
@@ -178,11 +178,11 @@ unsigned long Ostap::DataParam::parameterize
   // invalid tree or emptry range 
   if ( nullptr == tree || last <= first ) { return 0 ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                     , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                     , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
@@ -245,16 +245,16 @@ double Ostap::DataParam::parameterize
   if ( 0 == selection.size() ) 
   { return parameterize ( tree , sum , xexpression , yexpression , first , last ) ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                     , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                     , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
 
-  Ostap::Formula weight  ( "" , selection , tree ) ;
+  Ostap::Formula weight  ( selection , tree ) ;
   Ostap::Assert ( weight.ok()                                 , 
                   "Invalid selection:\"" + selection   + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;
@@ -319,15 +319,15 @@ unsigned long Ostap::DataParam::parameterize
   // invalid tree or emptry range 
   if ( nullptr == tree || last <= first ) { return 0 ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                      , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                      , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
-  Ostap::Formula zvar ( "" , zexpression , tree ) ;
+  Ostap::Formula zvar ( zexpression , tree ) ;
   Ostap::Assert ( zvar.ok()                                      , 
                   "Invalid z-expression:\"" + zexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
@@ -394,20 +394,20 @@ double Ostap::DataParam::parameterize
   { return parameterize ( tree , sum , 
                           xexpression , yexpression , zexpression , first , last ) ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                     , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                     , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula zvar ( "" , zexpression , tree ) ;
+  Ostap::Formula zvar ( zexpression , tree ) ;
   Ostap::Assert ( zvar.ok()                                     , 
                   "Invalid z-expression:\"" + zexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
 
-  Ostap::Formula weight  ( "" , selection , tree ) ;
+  Ostap::Formula weight  ( selection , tree ) ;
   Ostap::Assert ( weight.ok()                                 , 
                   "Invalid selection:\"" + selection   + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;
@@ -475,19 +475,19 @@ unsigned long Ostap::DataParam::parameterize
   // invalid tree or emptry range 
   if ( nullptr == tree || last <= first ) { return 0 ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                      , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                      , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
-  Ostap::Formula zvar ( "" , zexpression , tree ) ;
+  Ostap::Formula zvar ( zexpression , tree ) ;
   Ostap::Assert ( zvar.ok()                                      , 
                   "Invalid z-expression:\"" + zexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
-  Ostap::Formula uvar ( "" , uexpression , tree ) ;
+  Ostap::Formula uvar ( uexpression , tree ) ;
   Ostap::Assert ( uvar.ok()                                      , 
                   "Invalid u-expression:\"" + uexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "            ) ;
@@ -558,24 +558,24 @@ double Ostap::DataParam::parameterize
                           xexpression , yexpression , 
                           zexpression , uexpression , first , last ) ; }
   //
-  Ostap::Formula xvar ( "" , xexpression , tree ) ;
+  Ostap::Formula xvar ( xexpression , tree ) ;
   Ostap::Assert ( xvar.ok()                                     , 
                   "Invalid x-expression:\"" + xexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula yvar ( "" , yexpression , tree ) ;
+  Ostap::Formula yvar ( yexpression , tree ) ;
   Ostap::Assert ( yvar.ok()                                     , 
                   "Invalid y-expression:\"" + yexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula zvar ( "" , zexpression , tree ) ;
+  Ostap::Formula zvar ( zexpression , tree ) ;
   Ostap::Assert ( zvar.ok()                                     , 
                   "Invalid z-expression:\"" + zexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
-  Ostap::Formula uvar ( "" , uexpression , tree ) ;
+  Ostap::Formula uvar ( uexpression , tree ) ;
   Ostap::Assert ( uvar.ok()                                     , 
                   "Invalid u-expression:\"" + uexpression + "\"" ,
                   "Ostap::DataParams::parameterize  "           ) ;
 
-  Ostap::Formula weight  ( "" , selection , tree ) ;
+  Ostap::Formula weight ( selection , tree ) ;
   Ostap::Assert ( weight.ok()                                 , 
                   "Invalid selection:\"" + selection   + "\"" ,
                   "Ostap::DataParams::parameterize"           ) ;

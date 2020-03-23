@@ -25,6 +25,7 @@ __all__     = (
 import ROOT, os, tempfile  
 import ostap.core.core
 import ostap.plotting.style
+from   sys import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,26 +33,20 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-_canvases = {} 
+_canvases = {}
 # =============================================================================
-## The default configuration 
-# =============================================================================
-import ostap.core.config as OCC
-width_  = OCC.canvas.get ( 'Width'  , fallback = '1000' )
-try               : width_  = int  ( width_ ) 
-except ValueError : width_  = 1000 
-height_ = OCC.canvas.get ( 'Height' , fallback =  '800' )
-try               : height_ = int  ( height_ ) 
-except ValueError : height_ = 800 
+from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
+                                         margin_left  , margin_right  ,
+                                         margin_top   , margin_bottom )
 
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-10-19
-def getCanvas ( name   = 'glCanvas' ,   ## canvas name 
-                title  = 'Ostap'    ,   ## canvas title
-                width  = width_     ,   ## canvas width
-                height = height_    ) : ## canvas height 
+def getCanvas ( name   = 'glCanvas'    ,   ## canvas name 
+                title  = 'Ostap'       ,   ## canvas title
+                width  = canvas_width  ,   ## canvas width
+                height = canvas_height ) : ## canvas height 
     """Get create canvas/create new canvas
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
@@ -80,31 +75,107 @@ all_extensions = (
     'cxx'  , 'c'    , 
     'jpg'  , 'jpeg' , 'svg' , 
     'root' , 'xml'  , 'xpm' , 
-    'tiff' , 'tex' 
+    'tiff' , 'tex'  , 
+    'json'
     )
 
 # =============================================================================
-## define simplified print for TCanvas 
-def _cnv_print_ ( cnv , fname , exts = ( 'pdf' , 'png' , 'eps', 'C' ) ) :
+## Define simplified print for TCanvas
+#  Alows to create several output file types  at once
+#  - if extension is equal to <code>tar</code> or <code>tgz</code>,
+#    (gzipped) tar-files is created
+#  - if extension is equal to <code>zip</code>, zip-archive is created
+#  @code
+#  canvas.print_ ( 'A' ) ## 
+#  canvas.save   ( 'A' ) ## ditto 
+#  canvas >> 'A'         ## ditto
+#  @endcode 
+def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
+                                         'jpg'  , 'gif' , 'json' , 'svg' ) ) :
     """A bit simplified version for TCanvas print
-    >>> canvas.print ( 'fig' )    
+    It Alows to create several output file types  at once
+    - if extension is equal to `tar` or `tgz`, single (gzipped) tar-files is created
+    - if extension is equal to `zip`, single zip-archive is created 
+    >>> canvas.print_ ( 'A' )
+    >>> canvas.save   ( 'A' ) ## ditto
+    >>> canvas >> 'fig'       ## ditto
     """
     #
     cnv.Update () 
-    from ostap.logger.utils import rootWarning 
-    n,d,e = fname.rpartition('.')
-    if d and e.lower() in all_extensions : 
+    from ostap.logger.utils import rootWarning
+    n , e  = os.path.splitext ( fname )
+    el = e.lower() 
+    if n and el in all_extensions : 
         with rootWarning () :
             cnv.Update   () 
             cnv.Print    ( fname )
             logger.debug ( 'Canvas --> %s' % fname )
             return cnv
         
+    if n and el in ( 'tgz' , 'gztar' , 'targz' , 'tar' ,
+                     'zip' ,
+                     'tbz' , 'tbz2'  , 'tarbz' , 'tarbz2' , 'bztar' , 'bz2tar' ,                     
+                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar') :
+        
+        files = [] 
+        for ext in exts :
+            with rootWarning () :
+                name = n + '.' + ext
+                cnv.Print    ( name )
+                logger.debug ( 'Canvas --> %s' % name )
+                if os.path.exists ( name ) and os.path.isfile ( name ) : 
+                    files.append ( name )
+                    
+        if   files and el in  ( 'tgz' , 'targz'  , 'gztar' ) : 
+            import tarfile
+            with tarfile.open ( fname , "w:gz" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'tgz-archive created %s' % fname )
+                
+        elif files and el in  ( 'tar' , ) : 
+            import tarfile
+            with tarfile.open ( fname , "w" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'tar-archive created %s' % fname )
+                
+        elif files and el in  ( 'tbz' , 'tarbz' , 'tarbz2' , 'tbz2' , 'bztar' , 'bz2tar' ) : 
+            import tarfile
+            with tarfile.open ( fname , "w:bz2" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'tbz-archive created %s' % fname )
+
+        elif files and el in  ( 'txz'   , 'tlz'   ,
+                                'tarxz' , 'tarlz' ,
+                                'xztar' , 'lztar' ) and 3 <= python_version.major : 
+            import tarfile
+            with tarfile.open ( fname , "w:xz" ) as output :
+                for f in files : output.add   ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'txz-archive created %s' % fname )
+                            
+        elif files and el in  ( 'zip' , ) : 
+            import zipfile
+            with zipfile.ZipFile( fname , "w"  ) as output :
+                for f in files : output.write ( f )
+            if os.path.exists ( fname ) :
+                logger.debug  ( 'zip-archive created %s' % fname )
+
+        for f in files :
+            try :
+                os.remove ( f )
+            except OSError :
+                pass
+
+        return cnv
+    
     for ext in exts :
         with rootWarning () :
             name = fname + '.' + ext
-            cnv.Print   ( name )
-            logger.debug('Canvas --> %s' % name )
+            cnv.Print    (  name )
+            logger.debug ( 'Canvas --> %s' % name )
             
     return cnv 
 
@@ -119,6 +190,7 @@ def _cnv_rshift_ ( cnv , fname ) :
     """
     return _cnv_print_ ( cnv , fname )
 
+ROOT.TVirtualPad.save       = _cnv_print_
 ROOT.TVirtualPad.print_     = _cnv_print_
 ROOT.TVirtualPad.__rshift__ = _cnv_rshift_
 
@@ -275,15 +347,15 @@ atexit.register ( _remove_canvases_ )
 #       histo_ij.Draw()
 #  @endcode
 #  @see https://root.cern/doc/master/canvas2_8C.html
-def canvas_partition ( canvas               , 
-                       nx                   ,
-                       ny                   ,
-                       left_margin   = 0.10 ,
-                       right_margin  = 0.05 ,   
-                       bottom_margin = 0.10 ,
-                       top_margin    = 0.05 ,
-                       hSpacing      = 0.0  ,
-                       vSpacing      = 0.0  ) :
+def canvas_partition ( canvas                        , 
+                       nx                            ,
+                       ny                            ,
+                       left_margin   = margin_left   , 
+                       right_margin  = margin_right  , 
+                       bottom_margin = margin_bottom , 
+                       top_margin    = margin_right  ,
+                       hSpacing      = 0.0           ,
+                       vSpacing      = 0.0           ) :
     """Perform partition of Canvas into pads with no inter-margins
 
     canvas = ...
@@ -312,16 +384,15 @@ def canvas_partition ( canvas               ,
     wsy = abs ( canvas.GetWindowHeight () ) 
 
     #
-    ## if parametes given in the absolute units, convert them into relative coordinates
+    ## if parameters given in the absolute units, convert them into relative coordinates
     #
     
-    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
-    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
-    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
-    if    top_margin < 0 :    top_margin = abs (    top_margin ) / wsy
-    
-    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
-    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+    if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
+    if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
+    if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
+    if not 0 < top_margin    < 1 :    top_margin = abs (    top_margin ) / wsy    
+    if not 0 < vSpacing      < 1 :      vSpacing = abs ( vSpacing )      / wsy
+    if not 0 < hSpacing      < 1 :      hSpacing = abs ( hSpacing )      / wsx
 
     #
     ## check consistency 
@@ -344,7 +415,7 @@ def canvas_partition ( canvas               ,
     vStep    = ( 1.0 - bottom_margin - top_margin   - (ny-1) * vSpacing ) / ny
     if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
         
-    hStep    = ( 1.0 - left_margin   - right_margin - (nx-1) * vSpacing ) / nx 
+    hStep    = ( 1.0 - left_margin   - right_margin - (nx-1) * hSpacing ) / nx 
     if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
 
     hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
@@ -392,7 +463,7 @@ def canvas_partition ( canvas               ,
                 vmaru   = 0.0
 
             canvas.cd(0)
-            pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+            pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
             pad   = ROOT.gROOT.FindObject ( pname )
             if pad : del pad
             pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
@@ -448,41 +519,22 @@ ROOT.TCanvas.pads = property ( _cnv_pads_ , None , _cnv_del_pads_ )
 ROOT.TCanvas.partition = canvas_partition
 
 # ==============================================================================
-## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+## Split canvas in y-direction into non-equal pads,
+#  proportionally to <code>heights</code> 
 #  @code
-#  canvas    = ...
-#  pad_u, pud_b= canvas.pull_partition ( 0.20 )    
-#  canvas.cd(0)
-#  pad_u.Draw()
-#  pad_u.cd() 
-#  object1.Draw()    
-#  canvas.cd(0)
-#  pad_b.Draw()
-#  pad_b.cd() 
-#  object2.Draw()
+#  canvas = ...
+#  pads   = canvas.vsplit ( [1,2,1] )    
 #  @endcode 
-def canvas_pull ( canvas               ,
-                  ratio         = 0.80 ,
-                  left_margin   = 0.10 ,
-                  right_margin  = 0.05 ,   
-                  bottom_margin = 0.10 ,
-                  top_margin    = 0.05 ,
-                  hSpacing      = 0.0  ,
-                  vSpacing      = 0.0  ) :
-    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
-    
-    >>> canvas    = ...
-    >>> pad_u, pud_b= canvas.pull_partition ( 0.20 )
-    
-    >>> canvas.cd(0)
-    >>> pad_u.Draw()
-    >>> pad_u.cd() 
-    >>> object1.Draw()
-    
-    >>> canvas.cd(0)
-    >>> pad_b.Draw()
-    >>> pad_b.cd() 
-    >>> object2.Draw()
+def canvas_vsplit ( canvas                        ,
+                    heights                       ,
+                    left_margin   = margin_left   , 
+                    right_margin  = margin_right  , 
+                    bottom_margin = margin_bottom , 
+                    top_margin    = margin_top    ,
+                    vSpacing      = 0.0           ) :
+    """ Split canvas in y-direction into non-equal pads, proportionally to heights
+    >>> canvas = ...
+    >>> pads   = canvas.vsplit ( [1,2,1] )    
     """
 
     ## get the window size
@@ -493,59 +545,66 @@ def canvas_pull ( canvas               ,
     ## if parametes given in the absolute units, convert them into relative coordinates
     #
     
-    if   left_margin < 0 :   left_margin = abs (   left_margin ) / wsx
-    if  right_margin < 0 :  right_margin = abs (  right_margin ) / wsx
-    if bottom_margin < 0 : bottom_margin = abs ( bottom_margin ) / wsy
-    if    top_margin < 0 :    top_margin = abs ( bottom_margin ) / wsy
-    
-    if hSpacing      < 0 : hSpacing = abs ( hSpacing ) / wsx
-    if vSpacing      < 0 : vSpacing = abs ( vSpacing ) / wsy
+    if not 0 <  left_margin  < 1 :   left_margin = abs (   left_margin ) / wsx
+    if not 0 < right_margin  < 1 :  right_margin = abs (  right_margin ) / wsx
+    if not 0 < bottom_margin < 1 : bottom_margin = abs ( bottom_margin ) / wsy
+    if not 0 < top_margin    < 1 :    top_margin = abs (    top_margin ) / wsy    
+    if not 0 < vSpacing      < 1 :      vSpacing = abs (      vSpacing ) / wsy
+
+    hSpacing = 0
     
     hposr, hposl, hmarr, hmarl, hfactor = 0.,0.,0.,0.,0.
     vposr, vposd, vmard, vmaru, vfactor = 0.,0.,0.,0.,0.
-
-    nx = 1
-    ny = 2
     
+    nx = 1
+    ny = len ( heights ) 
+
+    vSize    = ( 1.0 - bottom_margin - top_margin   - ( ny - 1 ) * vSpacing ) 
+    hSize    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * hSpacing ) 
+
     vStep    = ( 1.0 - bottom_margin - top_margin   - ( ny - 1 ) * vSpacing ) / ny
     if 0 > vStep : raise AttributeError('partition: v-step=%f' % vStep  )
     
-    hStep    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * vSpacing ) / nx 
+    hStep    = ( 1.0 - left_margin   - right_margin - ( nx - 1 ) * hSpacing ) / nx 
     if 0 > hStep : raise AttributeError('partition: h-step=%f' % hStep  )
-    
+
+    sumy = sum ( heights ) / vSize 
+    hy   = [ h*vSize/sum(heights) for h in reversed ( heights ) ]
+
     hposl   = 0
-    hposr   = left_margin + hStep
+    hposr   = left_margin + hStep 
     hfactor = hposr - hposl
     hmarl   = left_margin / hfactor
     hmarr   = 0.0
 
-    
-
-
-    vStep0 = 2 * vStep * 1     / ( 1 + ratio )
-    vStep1 = 2 * vStep * ratio / ( 1 + ratio )
-
     del canvas.pads
     pads   = {}
     
-    ix     = 0 
-    for iy in range(2) :
+    ix     = 0
+    
+    for iy , height in enumerate ( hy ) : 
         
         if 0 == iy : 
             vposd   = 0.0
-            vposu   = bottom_margin + vStep0
+            vposu   = bottom_margin + height
             vfactor = vposu - vposd 
             vmard   = bottom_margin / vfactor
             vmaru   = 0.0 
-        else : 
+        elif ny == iy + 1 : 
             vposd   = vposu + vSpacing
-            vposu   = vposd + vStep1 + top_margin
+            vposu   = vposd + height + top_margin
             vfactor = vposu - vposd
             vmard   = 0.0
             vmaru   = top_margin    / vfactor
+        else :
+            vposd   = vposu + vSpacing
+            vposu   = vposd + height
+            vfactor = vposu - vposd
+            vmard   = 0.0
+            vmaru   = 0.0
             
-        canvas.cd(0)
-        pname = 'pad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
+        canvas.cd ( 0 )
+        pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
         pad   = ROOT.gROOT.FindObject ( pname )
         if pad : del pad
         pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
@@ -575,6 +634,35 @@ def canvas_pull ( canvas               ,
             
     return canvas.pads 
 
+ROOT.TCanvas.vsplit = canvas_vsplit 
+
+# ==============================================================================
+## Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+#  @code
+#  canvas = ...
+#  pads   = canvas.pull_partition ( 0.20 ) ## top-pad 4-times larger    
+#  @endcode 
+def canvas_pull ( canvas                        ,
+                  ratio         = 4.0           ,
+                  left_margin   = margin_left   , 
+                  right_margin  = margin_right  , 
+                  bottom_margin = margin_bottom , 
+                  top_margin    = margin_top    ,
+                  vSpacing      = 0.0           ) :
+    """Perform partition of Canvas into 1x2 non-equal pads with no inter-margins
+    
+    >>> canvas = ...
+    >>> pads   = canvas.pull_partition ( 4.0 ) ## top-pad 4-times larger    
+    
+    """
+    return canvas_vsplit ( canvas                        ,
+                           heights       = ( 1 , ratio ) ,
+                           left_margin   =   left_margin ,
+                           right_margin  =  right_margin ,
+                           bottom_margin = bottom_margin ,
+                           top_margin    =    top_margin ,
+                           vSpacing      = vSpacing      )
+
 ROOT.TCanvas.pull_partition = canvas_pull
 
 # =============================================================================
@@ -585,7 +673,11 @@ ROOT.TCanvas.pull_partition = canvas_pull
 #  frames = ...
 #  draw_pads ( frames , pads , fontsize = 25 ) 
 #  @endcode 
-def draw_pads ( objects , pads , fontsize = 25 ) :
+def draw_pads ( objects            ,
+                pads               ,
+                fontsize   = 36    ,
+                trim_left  = False ,
+                trim_right = False ) :
     """Draw sequence of object on sequence of pads,
     - the label font size is adjusted to be uniform (in pixels)     
     >>> pads   = ...
@@ -606,7 +698,7 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
         pad.draw ()
         pad.cd   ()
 
-        ## redefne label font and size 
+        ## redefine the label font and size 
         for attr in ( 'GetXaxis' , 'GetYaxis' , 'GetZaxis' ) :
             if not hasattr ( obj , attr ) : continue
             
@@ -622,6 +714,25 @@ def draw_pads ( objects , pads , fontsize = 25 ) :
 
             ## redefine label size 
             axis.SetLabelSize ( fontsize  )
+
+        if  ( trim_left or trim_right ) and hasattr ( obj , 'GetXaxis' ) :
+            
+            axis  = obj.GetXaxis()
+            xmin  = axis.GetXmin()
+            xmax  = axis.GetXmax()
+            delta = xmax - xmin
+            
+            if   trim_left and isinstance ( trim_left , float ) :
+                xmin += trim_left * delta
+            elif trim_left :
+                xmin += 0.001 * delta
+                
+            if   trim_right and isinstance ( trim_right , float ) :
+                xmax -= trim_right * delta
+            elif trim_right :
+                xmax -= 0.001 * delta 
+                
+            axis.SetLimits ( xmin , xmax )
 
         ## draw object on the pad 
         obj.draw ()

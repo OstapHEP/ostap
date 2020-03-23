@@ -1,6 +1,7 @@
 # root_generate_dictionary(ostap_dict ${CMAKE_CURRENT_SOURCE_DIR}/dict/Dict.h ${CMAKE_CURRENT_SOURCE_DIR}/dict/selections.xml)
 
 ## find_package(ROOT 6 CONFIG REQUIRED)
+## find_package(ROOT 6 CONFIG REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 find_package(ROOT 6 CONFIG REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 
 # =============================================================================
@@ -39,6 +40,7 @@ find_package(PythonLibs                     REQUIRED )
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
@@ -74,15 +76,19 @@ add_library(ostap SHARED src/format.cpp
                          src/Bernstein3D.cpp
                          src/Binomial.cpp
                          src/BreitWigner.cpp
+                         src/ChebyshevApproximation.cpp
                          src/Choose.cpp
                          src/Combine.cpp
                          src/Chi2Fit.cpp
                          src/Dalitz.cpp
+                         src/DataFrameUtils.cpp
+                         src/DalitzIntegrator.cpp
                          src/EigenSystem.cpp   
                          src/Error2Exception.cpp   
                          src/Exception.cpp
                          src/Faddeeva.cpp 
                          src/Formula.cpp   
+                         src/FormulaVar.cpp   
                          src/Fourier.cpp   
                          src/Funcs.cpp   
                          src/GetWeight.cpp 
@@ -91,6 +97,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Hesse.cpp
                          src/HistoDump.cpp
                          src/HistoInterpolation.cpp
+                         src/HistoInterpolators.cpp
                          src/HistoMake.cpp
                          src/HistoProject.cpp
                          src/HistoStat.cpp
@@ -105,6 +112,8 @@ add_library(ostap SHARED src/format.cpp
                          src/Models.cpp
                          src/Models2D.cpp
                          src/MoreMath.cpp
+                         src/MoreRooFit.cpp
+                         src/MoreVars.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
@@ -119,8 +128,9 @@ add_library(ostap SHARED src/format.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Printable.cpp
-                         src/PyFuncs.cpp ## temporarily removed 
-                         src/PyPdf.cpp   ## temporarily removed 
+                         src/PyCallable.cpp 
+                         src/PyFuncs.cpp 
+                         src/PyPdf.cpp   
                          src/PyIterator.cpp
                          src/PySelector.cpp
                          src/PySelectorWithCuts.cpp
@@ -133,6 +143,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Tee.cpp
                          src/Tensors.cpp
                          src/Tmva.cpp
+                         src/Topics.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp

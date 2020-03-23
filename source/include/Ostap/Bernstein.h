@@ -21,13 +21,10 @@
  *  @see http://en.wikipedia.org/wiki/Bernstein_polynomial
  *  @see  Rida Farouki, ``The Bernstein polynomial basis: A centennial retrospective'', 
  *        Computer Aided Geometric Design, 29 (2012) 379. 
- *  @see http://dx.doi.org/10.1016/j.cagd.2012.03.001
+ *  @see https://doi.org/10.1016/j.cagd.2012.03.001
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
-
-
-
 // ============================================================================
 namespace Ostap
 {
@@ -257,16 +254,14 @@ namespace Ostap
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
-       *  @param r  the list of real  roots of the polinomial
-       *  @param c  the list of complex roots (only one root from cc-pair is needed)
+       *  @param roots_real    the list of real  roots of the polinomial
+       *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
        */
       Bernstein 
       ( const double xmin , 
         const double xmax , 
-        const std::vector<double>&                 r = 
-        std::vector<double> () , 
-        const std::vector<std::complex<double> > & c = 
-        std::vector<std::complex<double> > ()  );
+        const std::vector<double>&                 roots_real    = std::vector<double> () , 
+        const std::vector<std::complex<double> > & roots_complex = std::vector<std::complex<double> > () );
       // ======================================================================
       /** construct Bernstein polynomial from its roots
        *
@@ -275,15 +270,14 @@ namespace Ostap
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
-       *  @param c  the list of complex roots (only one root from cc-pair is needed)
-       *  @param r  the list of real  roots of the polinomial
+       *  @param roots_complex the list of complex roots (only one root from cc-pair is needed)
+       *  @param roots_real    the list of real  roots of the polinomial
        */
       Bernstein 
       ( const double xmin , 
         const double xmax , 
-        const std::vector<std::complex<double> > & c ,
-        const std::vector<double>&                 r = 
-        std::vector<double> () ) ;
+        const std::vector<std::complex<double> > & roots_complex ,
+        const std::vector<double>&                 roots_real    = std::vector<double> () ) ;
       // ======================================================================
     public: // constructors from different plynomial types 
       // ======================================================================

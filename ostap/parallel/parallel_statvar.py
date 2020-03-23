@@ -59,7 +59,7 @@ class StatVarTask(Task) :
     #  - the selection/weighting criteria 
     #  - the first entry in tree to process
     #  - number of entries to process
-    def process ( self , item ) :
+    def process ( self , jobid , item ) :
         """The actual processing
         ``params'' is assumed to be a tuple-like entity:
         - the file name

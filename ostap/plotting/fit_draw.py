@@ -123,6 +123,7 @@ __all__     = (
     'crossterm2_options'           , ## draw options for "crossterm2"   component(s)    
     'component_options'            , ## draw options for "other"        component(s)
     'total_fit_options'            , ## draw options for the total fit curve
+    'curve_options'                , ## draw options for the curve 
     ##
     'signal_style'                 , ## style for "signal"        component(s)
     'background_style'             , ## style for "background"    component(s)
@@ -130,6 +131,14 @@ __all__     = (
     'crossterm1_style'             , ## style for "crossterm1"    component(s)
     'crossterm2_style'             , ## style for "crossterm2"    component(s)
     'component_style'              , ## style for "other"         component(s)
+    ##
+    'combined_signal_options'      , ## draw options for combined "signal"       component(s)
+    'combined_background_options'  , ## draw options for combined "background"   component(s)
+    'combined_component_options'   , ## draw options for "other"        component(s)
+    ##
+    'combined_signal_style'        , ## style for combined "signal"        component(s)
+    'combined_background_style'    , ## style for combined "background"    component(s)
+    'combined_component_style'     , ## style for combined "other"         component(s)
     ##
     'default_data_options'         , ## defautl data options
     'default_signal_options'       , ## default options for the signal component
@@ -139,6 +148,7 @@ __all__     = (
     'default_crossterm2_options'   , ## draw options for "crossterm2" component(s)
     'default_component_options'    , ## draw options for "other"      component(s)
     'default_total_fit_options'    , ## draw options for the total fit curve    
+    'default_curve_options'        , ## draw options for the curve    
     ##
     'default_signal_style'         , ## style for "signal"        component(s)
     'default_background_style'     , ## style for "background"    component(s)
@@ -170,28 +180,45 @@ def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
 #
 ## the list of predefined "draw"-keys 
 keys = (
-    'data_options'          ,
+    'data_options'                ,
     ##
-    'background_options'    ,
-    'background_style'      ,
+    'background_options'          ,
+    'background_style'            ,
     ##
-    'background2D_options'  ,
-    'background2D_style'    ,
+    'background2D_options'        ,
+    'background2D_style'          ,
     ##
-    'crossterm1_options'    ,
-    'crossterm1_style'      ,
+    'crossterm1_options'          ,
+    'crossterm1_style'            ,
     ##
-    'crossterm2_options'    ,
-    'crossterm2_style'      ,
+    'crossterm2_options'          ,
+    'crossterm2_style'            ,
     ##
-    'component_options'     ,
-    'component_style'       ,
+    'component_options'           ,
+    'component_style'             ,
     ##
-    'signal_options'        ,
-    'signal_style'          ,
+    'signal_options'              ,
+    'signal_style'                ,
     ##
-    'draw_axis_title'       , ## draw the titles for the axes ?
-    'draw_options'          , ## generic ROOT draw options, e.g. 'same'
+    'draw_axis_title'             , ## draw the titles for the axes ?
+    'draw_options'                , ## generic ROOT draw options, e.g. 'same'
+    ##
+    'total_fit_options'           ,
+    'curve_options'               ,
+    ##
+    'combined_background_options' ,
+    'combined_background_style'   ,
+    ##
+    'combined_signal_options'     ,
+    'combined_signal_style'       ,
+    ##
+    'combined_component_options'  ,
+    'combined_component_style'    ,
+    ## 
+    'draw_combined_signal'        ,
+    'draw_combined_background'    ,
+    'draw_combined_component'     ,
+    ##
     )
 # =============================================================================
 ## get draw options:
@@ -570,7 +597,8 @@ data_options_plain              = ()
 
 ## suppress small bars at the end of error bars 
 data_options_nobars             = ROOT.RooFit.MarkerStyle ( 20   ) , \
-                                  ROOT.RooFit.DrawOption  ( "zp" )
+                                  ROOT.RooFit.DrawOption  ( "zp" ) , \
+                                  ROOT.RooFit.MarkerSize  ( 0.75 ) 
 
 ## sutable for large number of bins: small markers 
 data_options_small              = ROOT.RooFit.MarkerStyle ( 20   ) , \
@@ -593,6 +621,9 @@ default_total_fit_options       = ( lineWidth ( 3 )                     ,
                                     lineColor ( ROOT.kOrange + 1 )      ,
                                     ROOT.RooFit.Precision ( precision ) )
 
+## default curve : thick red orange line 
+default_curve_options           = default_total_fit_options 
+
 ## default optios for cross-terms 
 default_crossterm1_options      = ROOT.RooFit.Precision ( precision  ) ,   
 
@@ -601,6 +632,20 @@ default_crossterm2_options      = ROOT.RooFit.Precision ( precision  ) ,
 
 ## background:  thin short-dashed line
 default_background2D_options    = default_background_options
+
+# ==============================================================================
+## @var draw_combined_signals
+#  Should one draw the combined signals    (if any?)
+draw_combined_signal            = False
+# =============================================================================
+## @var draw_combined_backgrounds    
+#  Should one draw the combined signals    (if any?)
+draw_combined_background        = True
+# =============================================================================
+## @var draw_combined_components
+#  Should one draw the combined components (if any?)
+draw_combined_component        = False 
+# =============================================================================
 
 # =============================================================================
 ## get the options from configuration parser 
@@ -629,22 +674,30 @@ def  get_options ( config , option , default ) :
 # =============================================================================
 import ostap.core.config as CONFIG 
 data_options       = get_options (
-    CONFIG.fit_draw , 'data_options'         , default_data_options         )
+    CONFIG.fit_draw , 'data_options'                , default_data_options         )
 signal_options     = get_options (
-    CONFIG.fit_draw , 'signal_options'       , default_signal_options       )
+    CONFIG.fit_draw , 'signal_options'              , default_signal_options       )
 background_options = get_options (
-    CONFIG.fit_draw , 'background_options'   , default_background_options   )
+    CONFIG.fit_draw , 'background_options'          , default_background_options   )
 component_options  = get_options (
-    CONFIG.fit_draw , 'component_options'    , default_component_options    )
+    CONFIG.fit_draw , 'component_options'           , default_component_options    )
 crossterm1_options = get_options (
-    CONFIG.fit_draw , 'crossterm1_options'   , default_crossterm1_options   )
+    CONFIG.fit_draw , 'crossterm1_options'          , default_crossterm1_options   )
 crossterm2_options = get_options (
-    CONFIG.fit_draw , 'crossterm2_options'   , default_crossterm2_options   )
+    CONFIG.fit_draw , 'crossterm2_options'          , default_crossterm2_options   )
 total_fit_options  = get_options (
-    CONFIG.fit_draw , 'total_fit_options'    , default_total_fit_options    )
+    CONFIG.fit_draw , 'total_fit_options'           , default_total_fit_options    )
+curve_options      = get_options (
+    CONFIG.fit_draw , 'curve_options'               , default_curve_options        )
 background2D_options = get_options (
-    CONFIG.fit_draw , 'background2D_options' , default_background2D_options )
-
+    CONFIG.fit_draw , 'background2D_options'        , default_background2D_options )
+## combined stuff 
+combined_signal_options     = get_options (
+    CONFIG.fit_draw , 'combined_signal_options'     , default_signal_options       )
+combined_background_options = get_options ( 
+    CONFIG.fit_draw , 'combined_background_options' , default_background_options   )
+combined_component_options  = get_options (
+    CONFIG.fit_draw , 'combined_component_options'  , default_component_options    )
 
 
 # =============================================================================
@@ -661,11 +714,21 @@ default_signal_style  = (
     ) 
 
 default_background_style = (
-    Line  ( linecolor = ROOT.kBlue         , linestyle =  7 ) ,
+    Line  ( linecolor = ROOT.kBlue         , linestyle = 14 ) ,
     Line  ( linecolor = ROOT.kBlue    -  9 , linestyle = 11 ) ,
     Line  ( linecolor = ROOT.kBlue    +  3 , linestyle = 12 ) ,
     Line  ( linecolor = ROOT.kBlue    -  2 , linestyle = 13 ) ,
-    Line  ( linecolor = ROOT.kBlue    - 10 , linestyle = 14 ) ,
+    Line  ( linecolor = ROOT.kBlue    - 10 , linestyle =  9 ) ,
+    )
+
+default_combined_signal_style     = (
+    Line  ( linecolor = ROOT.kMagenta , linestyle =  3 , linewidth = 2 ) ,
+    )
+default_combined_background_style = (
+    Line  ( linecolor = 8             , linestyle = 15 , linewidth = 2 ) ,
+    )
+default_combined_component_style  = (
+    Line  ( linecolor = ROOT.kYellow  , linestyle =  5 , linewidth = 2 ) ,
     )
 
 default_component_style  = (
@@ -734,6 +797,13 @@ crossterm2_style   = get_style (
     CONFIG.fit_draw , 'crossterm2_style'   , default_crossterm2_style   )
 background2D_style = get_style (
     CONFIG.fit_draw , 'background2D_style' , default_background2D_style )
+# ==============================================================================
+combined_signal_style     = get_style (
+    CONFIG.fit_draw , 'combined_signal_style'      , default_combined_signal_style     )
+combined_background_style = get_style (
+    CONFIG.fit_draw , 'combined_background_style'  , default_combined_background_style )
+combined_component_style  = get_style (
+    CONFIG.fit_draw , 'combined_component_style'   , default_combined_component_style  )
 
 # =============================================================================
 if '__main__' == __name__ :

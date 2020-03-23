@@ -562,7 +562,7 @@ namespace Ostap
      *  for description of asymmetric peaks with the exponential tails
      *
      *  @see http://arxiv.org/abs/1107.5751
-     *  @see http://dx.doi.org/10.1007/JHEP06(2012)141
+     *  @see https://doi.org/10.1007/JHEP06(2012)141
      *  @date 2011-04-19
      */
     class  Bukin 
@@ -1107,7 +1107,7 @@ namespace Ostap
     } ;
 
     // ========================================================================
-    /** @class Apolonios
+    /** @class Apollonios
      *  A modified gaussian with power-law tail on right side
      *  and an exponential tail on low-side
      *
@@ -1133,7 +1133,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios
+    class  Apollonios
     {
     public:
       // ======================================================================
@@ -1144,20 +1144,20 @@ namespace Ostap
        *  @param n      n        parameter (equal for N-1 for "standard" definition)
        *  @param b      b        parameter
        */
-      Apolonios
+      Apollonios
       ( const double m0    = 0 ,
         const double sigma = 1 ,
         const double alpha = 2 ,
         const double n     = 1 ,
         const double b     = 1 ) ;
       /// destructor
-      ~Apolonios () ;
+      ~Apollonios () ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Apolonios's function
+      /// evaluate Apollonios's function
       double pdf        ( const double x ) const ;
-      /// evaluate Apolonios's function
+      /// evaluate Apollonios's function
       double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
@@ -1216,8 +1216,8 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Apolonios2
-     *  "Bifurcated Apolonios"
+    /** @class Apollonios2
+     *  "Bifurcated Apollonios"
      *  A modified gaussian with asymmetric exponential tails on both sides
      *
      *  A convinient reparameterization is applied to keep reduce
@@ -1240,7 +1240,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date  2013-12-01
      */
-    class  Apolonios2 
+    class  Apollonios2 
     {
     public:
       // ======================================================================
@@ -1250,19 +1250,19 @@ namespace Ostap
        *  @param alphaR  alphaR    parameter
        *  @param beta    beta      parameter
        */
-      Apolonios2
+      Apollonios2
         ( const double m0      = 0   ,
           const double sigmaL  = 1   ,
           const double alphaR  = 1   ,
           const double beta    = 100 ) ;  // large beta correponds to gaussian
       /// destructor
-      ~Apolonios2 () ;
+      ~Apollonios2 () ;
       // ======================================================================
     public:
       // ======================================================================
-      /// evaluate Apolonios2's function
+      /// evaluate Apollonios2's function
       double pdf        ( const double x ) const ;
-      /// evaluate Apolonios2's function
+      /// evaluate Apollonios2's function
       double operator() ( const double x ) const { return pdf ( x ) ; }
       // ======================================================================
     public: // trivial accessors
@@ -1954,8 +1954,97 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Losev 
+     *  ``Losev distribution'' - asymmetric variant of Hyperbolic secant/Sech-function
+     *  \f[ f(x;\mu,\alpha,\beta) \equiv 
+     *   \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
+     *                         \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
+     *  where \f$ A = \frac{\left|\alpha\right|+\left|\beta\right|}{\pi}.
+     *  \sin \frac{\pi\left| \beta\right| }{\left|\alpha\right|+\left|\beta\right|}\f$. 
+     *  - Leptokurtic distribution with exponential tails 
+     *  @see Losev, A., "A new lineshape for fitting x‐ray photoelectron peaks", 
+     *           Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+     *  @see  https://doi.org/10.1002/sia.740141207
+     *  @see  https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+     */
+    class Losev 
+    {
+    public:
+      // ======================================================================
+      /** constructor from positive parameters alpha and beta 
+       *  @param mean  \f$\mu\f$-parameter 
+       *  @param alpha \f$\alpha\f$-parameter 
+       *  @param beta  \f$\beta\f$-parameter 
+       */ 
+      Losev ( const double mu    = 0 , 
+              const double alpha = 1 , 
+              const double beta  = 1 ) ;        
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the function 
+      double operator() ( const double x ) const { return pdf ( x ) ; }
+      /// evaluate the function 
+      double pdf        ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// parameter mu 
+      double mu    () const { return m_mu    ; }
+      /// parameter alpha
+      double alpha () const { return m_alpha ; }
+      /// parameter beta 
+      double beta  () const { return m_beta  ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setMu    ( const double mu ) ;
+      bool setAlpha ( const double mu ) ;
+      bool setBeta  ( const double mu ) ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the mode of the distribution 
+      double mode () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================      
+    public :
+      // ======================================================================
+      /// get the integral \f$ \int_{-\infty}^{+\infty} f(x) dx \f$
+      double integral () const { return 1 ; }
+      /** get the integral between low and high values 
+       *  \f$ \int_{low}^{high}f(x) dx\f$
+       */
+      double integral ( const double low  , 
+                        const double high ) const ;
+      // ======================================================================      
+    private :
+      // ======================================================================
+      /// parameteter "mu"
+      double m_mu     { 0 }  ; // parameter
+      /// left exponent 
+      double  m_alpha { 1 } ; // left exponent 
+      /// right exponent 
+      double  m_beta  { 1 } ; // right exponent 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// normalization 
+      mutable double m_norm { -1 } ; // normalization 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // integration workspace
+      // ======================================================================
+    } ;  
+    // ========================================================================
     /** @class  Slash 
-     *  ``Slash''-distribution -  symmetric peak with veyr heavy tail
+     *  ``Slash''-distribution -  symmetric peak with very heavy tail
      *  @see https://en.wikipedia.org/wiki/Slash_distribution
      *  Tails arew so heavy that moments (e.g. variance) do not exist 
      */

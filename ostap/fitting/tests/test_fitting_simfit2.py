@@ -81,67 +81,74 @@ for i in range (NB2 ) :
     if v2 in mass2 :
         mass2.setVal ( v2 )
         dataset2.add ( varset2 )
-        
-# =============================================================================
-signal1  = Models.Gauss_pdf ( 'G1'                 ,
-                              xvar  = mass1        ,
-                              mean  = (1.5 , 6.5 ) ,
-                              sigma = (0.1 , 2.5 ) )
-
-model1   = Models.Fit1D ( suffix = 'M1' , signal = signal1 ,  background = -1 )
-model1.S = NS1
-model1.B = NB1 
-
-
-mean2    = signal1.vars_add      ( signal1.mean  , 10.0 )
-sigma2   = signal1.vars_multiply ( signal1.sigma , 0.5  )
-
-signal2  = Models.Gauss_pdf ( 'G2'            ,
-                              xvar  = mass2   ,
-                              mean  = mean2   ,
-                              sigma = sigma2  )
-
-model2  = Models.Fit1D ( suffix = 'M2' , signal = signal2 ,  background = -1  )
-model2.S = NS2
-model2.B = NB2 
 
 # =============================================================================
-## fit 1 
-r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+def test_simfit2 ( ) :
+    
+    # =========================================================================    
+    signal1  = Models.Gauss_pdf ( 'G1'                 ,
+                                  xvar  = mass1        ,
+                                  mean  = (1.5 , 6.5 ) ,
+                                  sigma = (0.1 , 2.5 ) )
+    
+    model1   = Models.Fit1D ( suffix = 'M1' , signal = signal1 ,  background = -1 )
+    model1.S = NS1
+    model1.B = NB1 
+    
+    
+    mean2    = signal1.vars_add      ( signal1.mean  , 10.0 )
+    sigma2   = signal1.vars_multiply ( signal1.sigma , 0.5  )
+    
+    signal2  = Models.Gauss_pdf ( 'G2'            ,
+                                  xvar  = mass2   ,
+                                  mean  = mean2   ,
+                                  sigma = sigma2  )
+    
+    model2  = Models.Fit1D ( suffix = 'M2' , signal = signal2 ,  background = -1  )
+    model2.S = NS2
+    model2.B = NB2 
+    
+    # =========================================================================
+    ## fit 1 
+    r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+    
+    ## fit 2
+    r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+    # =========================================================================
+    
+    ## combine data
+    sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
+    
+    ## combine datasets
+    from ostap.fitting.simfit import combined_data 
+    vars    = ROOT.RooArgSet ( mass1 , mass2 )
+    dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
+    
+    
+    ## combine PDFs
+    model_sim  = Models.SimFit (
+        sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
+        )
+    
+    # =========================================================================
+    r , f = model_sim.fitTo ( dataset , silent = True )
+    r , f = model_sim.fitTo ( dataset , silent = True )
+    
+    fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
+    fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
+    
+    fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
+    
+    ## significance 
+    wilks = model_sim.wilks    ( 'SM2' , dataset  )
+    
+    logger.info ( 'Fit  results are: %s ' % r )
 
-## fit 2
-r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+
 # =============================================================================
+if '__main__' == __name__ :
 
-## combine data
-
-sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
-
-
-## combine datasets
-from ostap.fitting.simfit import combined_data 
-vars    = ROOT.RooArgSet ( mass1 , mass2 )
-dataset = combined_data  ( sample , vars , { 'A' : dataset1 , 'B' : dataset2 } )
-
-
-## combine PDFs
-model_sim  = Models.SimFit (
-    sample , { 'A' : model1  , 'B' : model2 } , name = 'X'
-    )
-
-# =============================================================================
-r , f = model_sim.fitTo ( dataset , silent = True )
-r , f = model_sim.fitTo ( dataset , silent = True )
-
-fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
-fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
-
-fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
-
-## significance 
-wilks = model_sim.wilks    ( 'SM2' , dataset  )
-
-logger.info ( 'Fit  results are: %s ' % r )
+    test_simfit2 () 
 
 # =============================================================================
 ##                                                                      The END 

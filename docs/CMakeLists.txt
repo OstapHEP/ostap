@@ -6,9 +6,9 @@ find_package(Doxygen COMPONENTS dot)
 
 if (BUILD_DOC AND DOXYGEN_FOUND)
 
-   message ('project source dir' ${PROJECT_SOURCE_DIR})
-   message ('current source dir' ${CMAKE_CURRENT_SOURCE_DIR})
-   message ('current binary dir' ${CMAKE_CURRENT_BINARY_DIR})
+## message ('project source dir' ${PROJECT_SOURCE_DIR})
+## message ('current source dir' ${CMAKE_CURRENT_SOURCE_DIR})
+## message ('current binary dir' ${CMAKE_CURRENT_BINARY_DIR})
 
    set  (ROOT_DOXYTAG "master")
    find_package (ROOT)

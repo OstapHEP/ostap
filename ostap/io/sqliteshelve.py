@@ -57,6 +57,15 @@
 #
 # @endcode 
 #
+# @attention: When one tries to read the database with pickled ROOT object using newer
+# version of ROOT, one could get a ROOT read error,
+# in case of evoltuion in ROOT streamers for some  classes, e.g. <code>ROOT.TH1D</code>>
+# @code 
+# Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+# Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+# @endcode
+# The solution is simple and described in  file ostap.io.dump_root
+# @see ostap.io.dump_root
 # 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
@@ -99,6 +108,14 @@ Access to DB in read-only mode :
 # >>> for key in db : print key
 # ...
 # >>> abcd = db['some_key']
+
+ Attention: When one tries to read the database with pickled ROOT object using newer
+ version of ROOT, one could get a ROOT read error,
+ in case of evoltuion in ROOT streamers for some  classes, e.g. ROOT.TH1D
+ > Error in <TBufferFile::ReadClassBuffer>: Could not find the StreamerInfo for version 2 of the class TH1D, object skipped at offset 19
+ > Error in <TBufferFile::CheckByteCount>: object of class TH1D read too few bytes: 2 instead of 878
+ The solution is simple and described in  file ostap.io.dump_root
+ - see ostap.io.dump_root
 """
 # =============================================================================
 from   __future__        import print_function
@@ -117,9 +134,9 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
-from   ostap.io.sqlitedict import SqliteDict
-import sys, zlib 
+import os , sys , zlib 
 import sqlite3
+from   ostap.io.sqlitedict import SqliteDict
 # =============================================================================
 try:
     from cPickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
@@ -272,7 +289,17 @@ class SQLiteShelf(SqliteDict):
         
         self.__compression = compress_level 
         self.__protocol    = protocol
+        self.__sizes       = {}
 
+    @property
+    def  writeback  ( self ):
+        """``writeback'' : the same as ``autocommit'':
+        If one  enables `autocommit`, changes will be committed after each operation
+        (more inefficient but safer).
+        Otherwise, changes are committed on `self.commit()`,
+        `self.clear()` and `self.close()`."""        
+        return self.autocommit
+    
     @property
     def compression ( self ) :
         """The  compression level from zlib"""
@@ -283,6 +310,28 @@ class SQLiteShelf(SqliteDict):
         """The pickling protocol"""
         return self.__protocol
     
+    # =========================================================================
+    ## iterator over good keys 
+    def ikeys ( self , pattern = '' ) :
+        """Iterator over avilable keys (patterns included).
+        Pattern matching is performed accoriding to
+        fnmatch/glob/shell rules [it is not regex!] 
+        
+        >>> db = ...
+        >>> for k in db.ikeys('*MC*') : print(k)
+        
+        """
+        keys_ = self.keys()
+        
+        if not pattern :
+            good = lambda s,p : True
+        else :
+            import fnmatch
+            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
+        
+        for k in sorted ( keys_ ) :
+            if good ( k , pattern ) : yield k
+
     ## list the avilable keys 
     def __dir ( self , pattern = '' ) :
         """ List the avilable keys (patterns included).
@@ -294,17 +343,12 @@ class SQLiteShelf(SqliteDict):
         >>> db.ls ('*MC*')
         
         """
-        keys_ = self.keys()
-        if pattern :
-            import fnmatch
-            _keys = [ k for k in keys_ if fnmatch.fnmatchcase ( k , pattern ) ]
-            keys_ = _keys
-        #
-        for key in sorted(keys_) : print(key)
+        for k in self.ikeys ( patters ) : print ( key )
         
+    # =========================================================================
     ## list the avilable keys 
-    def ls    ( self , pattern = '' ) :
-        """List the avilable keys (patterns included).
+    def ls    ( self , pattern = '' , load = True ) :
+        """List the available keys (patterns included).
         Pattern matching is performed accoriding to
         fnmatch/glob/shell rules [it is not regex!] 
 
@@ -313,76 +357,139 @@ class SQLiteShelf(SqliteDict):
         >>> db.ls ('*MC*')        
         
         """
-        return self.__dir( pattern )
+        n  = os.path.basename ( self.filename )
+        ap = os.path.abspath  ( self.filename ) 
+        
+        try :
+            fs = os.path.getsize ( self.filename )
+        except :
+            fs = -1
+            
+        if    fs < 0            : size = "???"
+        elif  fs < 1024         : size = str(fs)
+        elif  fs < 1024  * 1024 :
+            size = '%.2fkB' % ( float ( fs ) / 1024 )
+        elif  fs < 1024  * 1024 * 1024 :
+            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
+        else :
+            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+            
+                        
+        keys = [] 
+        for k in self.ikeys ( pattern ): keys.append ( k )
+        keys.sort()
+        if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
+        else    : mlen = 2 
+        fmt = ' --> %%-%ds : %%s' % mlen
 
-# =============================================================================
-## ``get-and-uncompress-item'' from dbase 
-def _zip_getitem (self, key):
-    """ ``get-and-uncompress-item'' from dbase 
-    """
-    GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
-    item = self.conn.select_one(GET_ITEM, (key,))
-    if item is None: raise KeyError(key)
+        table = [ ( 'Key' , 'type' , '   size   ') ] 
+        for k in keys :
+            size = '' 
+            ss   =   self.__sizes.get ( k , -1 )
+            if    ss < 0    : size = '' 
+            elif  ss < 1024 : size = '%7d   ' % ss 
+            elif  ss < 1024 * 1024 :
+                size = '%7.2f kB' %  ( float ( ss ) / 1024 )
+            elif  ss < 1024 * 1024 * 1024 :
+                size = '%7.2f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+            else :
+                size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+                
+            ot    = type ( self [ k ] )
+            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size 
+            table.append ( row )
 
-    f     = BytesIO ( zlib.decompress ( item[0] ) ) 
-    value = Unpickler(f).load()
+        import ostap.logger.table as T
+        t      = self.__class__.__name__
+        title  = '%s:%s' % ( t  , n )
+        maxlen = 0
+        for row in table :
+            rowlen = 0 
+            for i in row : rowlen += len ( i )
+            maxlen = max ( maxlen, rowlen ) 
+        if maxlen + 3 <= len ( title ) :
+            title = '<.>' + title [ -maxlen : ] 
+        table = T.table ( table , title = title , prefix = '# ' )
+        ll    = getLogger ( n )
+        line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
+        ll.info (  '%s\n%s' %  ( line , table ) )
+ 
+   
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    def clone ( self , new_name , keys = () ) : 
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        new_db = SQLiteShelf ( new_name                           ,
+                               mode           = 'n'               ,
+                               tablename      = self.tablename    ,
+                               writeback      = self.writeback    ,                                
+                               protocol       = self.protocol     ,
+                               compress_level = self.compression  , 
+                               journal_mode   = self.journal_mode )
+        
+        ## copy the content
+        if keys :
+            for key in self.keys() :
+                if key in keys     : new_db [ key ] = self [ key ]
+        else : 
+            for key in self.keys() : new_db [ key ] = self [ key ]
+        
+        new_db.sync ()  
+        return new_db 
 
-    return value
+    # =============================================================================
+    ## ``get-and-uncompress-item'' from dbase 
+    def __getitem__ ( self, key ):
+        """ ``get-and-uncompress-item'' from dbase 
+        """
+        GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
+        item = self.conn.select_one ( GET_ITEM , ( key , ) )
+        if item is None: raise KeyError(key)
+        
+        self.__sizes [ key ] = len ( item[0] ) 
+        f     = BytesIO ( zlib.decompress ( item [ 0 ] ) ) 
+        value = Unpickler ( f ) . load ()
+        
+        return value
 
-# =============================================================================
-## ``set-and-compress-item'' to dbase 
-def _zip_setitem ( self , key , value ) :
-    """ ``set-and-compress-item'' to dbase 
-    """
-    ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
-    
-    f     = BytesIO()
-    p     = Pickler(f, self.protocol )
-    p.dump(value)
-    blob  = f.getvalue() 
-    zblob = zlib.compress ( blob , self.compression ) 
-    self.conn.execute(ADD_ITEM, (key, sqlite3.Binary( zblob ) ) )
+    # =============================================================================
+    ## ``set-and-compress-item'' to dbase 
+    def __setitem__ ( self , key , value ) :
+        """ ``set-and-compress-item'' to dbase 
+        """
+        ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
+        
+        f     = BytesIO ()
+        p     = Pickler ( f , self.protocol )
+        p.dump ( value )
+        blob  = f.getvalue ( ) 
+        zblob = zlib.compress ( blob , self.compression )
+        
+        self.__sizes [ key ] = len ( zblob )
+        self.conn.execute ( ADD_ITEM, ( key , sqlite3.Binary ( zblob ) ) )
+        
+    ## context manager
+    def __enter__ ( self      ) :
+        """Context manager"""
+        return self
 
-                      
-SQLiteShelf.__setitem__ = _zip_setitem
-SQLiteShelf.__getitem__ = _zip_getitem
+    ## context manager: close at exit
+    def __exit__  ( self , *_ ) :
+        """Context manager: close at exit
+        """
+        try :
+            self.close()
+        except :
+            pass
 
-def _sql_enter_ ( self      ) : return self
-def _sql_exit_  ( self , *_ ) :
-    try :
-        os.close()
-    except : pass
-
-SQLiteShelf.__enter__ = _sql_enter_
-SQLiteShelf.__exit__  = _sql_exit_ 
-
-# =============================================================================
-## add an object into data base
-#  @code
-#  dbase  = ...
-#  object = ...
-#  dbase.ls() 
-#  object >> dbase ## add object into dbase 
-#  dbase.ls() 
-#  @endcode 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2016-06-04
-def _db_rrshift_ ( db , obj ) :
-    """Add an object into data base
-    
-    dbase  = ...
-    object = ...
-    dbase.ls() 
-    object >> dbase ## add object into dbase 
-    dbase.ls() 
-    """
-    if   hasattr ( obj , 'GetName' ) : name = obj.GetName()
-    elif hasattr ( obj , 'name'    ) : name = obj.name   ()
-    else : name =  obj.__class__.__name__
-    #
-    db [ name ] = obj
-    
-SQLiteShelf.__rrshift__ = _db_rrshift_
 
 # =============================================================================
 ## open new SQLiteShelve data base
@@ -392,13 +499,13 @@ SQLiteShelf.__rrshift__ = _db_rrshift_
 #  db['a'] = ...
 #  @endcode
 #  @see SQLiteShelf
-def open(*args, **kwargs):
+def open ( *args , **kwargs ):
     """See documentation of the SQLiteShelf class.
     >>> import SQLiteShleve as DBASE
     >>> db = DBASE.open('data.msql','c')
     >>> db['a'] = ...
     """
-    return SQLiteShelf(*args, **kwargs)
+    return SQLiteShelf ( *args , **kwargs )
 
 # =============================================================================
 ## @class TmpSQLiteShelf

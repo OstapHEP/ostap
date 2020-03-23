@@ -28,39 +28,53 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    unsigned long long  choose ( const unsigned short n ,
-                                 const unsigned short k ) ;
+    unsigned long long  choose 
+    ( const unsigned short n ,
+      const unsigned short k ) ;
+    // ========================================================================
+    /** calculate the inverse binomial conefficient 
+     *  \f$ a = C(n,k)^{-1} = \frac{ (n-k)!k!}{n!}\f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2020-01-31
+     */
+    double ichoose 
+    ( const unsigned short n , 
+      const unsigned short k ) ;
     // ========================================================================
     /** calculate the logarithm of binomial coefficient
      *  \f$ \log C^n_k \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    double log_choose ( const unsigned short n ,
-                        const unsigned short k ) ;
+    double log_choose
+    ( const unsigned short n ,
+      const unsigned short k ) ;
     // ========================================================================
     /** calculate the binomial coefficient C(k,n) = n!/((n-k)!*k!)
      *  @author Vanya BELYAEV Ivan.Belyaev@irep.ru
      *  @date 2015-03-08
      */
-    double choose_double       ( const unsigned short n , 
-                                 const unsigned short k ) ;
+    double choose_double 
+    ( const unsigned short n , 
+      const unsigned short k ) ;
     // ========================================================================
     /** calculate the generalized binomial coefficient C(a,k) 
      *  \f$C(\alpha,k) = \frac{\alpha}{k}\frac{\alpha-1}{k-1}...\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    double gen_choose ( const double         a ,
-                        const unsigned short k ) ;
+    double gen_choose
+    ( const double         a ,
+      const unsigned short k ) ;
     // ========================================================================
     /** calculate the generalized binomial coefficient C(n/2,k) 
      *  \f$C(n,k) = \frac{n/2}{k}\frac{n/2-1}{k-1}...\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2015-03-08
      */
-    double choose_half ( const int            n ,
-                         const unsigned short k ) ;
+    double choose_half
+    ( const int            n ,
+      const unsigned short k ) ;
     // ========================================================================
     
     // ========================================================================

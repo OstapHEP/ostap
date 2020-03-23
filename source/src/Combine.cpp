@@ -83,7 +83,7 @@ Ostap::Math::combine
   const Ostap::Math::ValueWithError& x2   , 
   const Ostap::SymMatrix2x2&         syst ) 
 {
-  Ostap::Vector2      data ( x1.value() , x2.value() ) ;
+  std::array<double,2> data { x1.value() , x2.value() } ;
   Ostap::SymMatrix2x2 cov  ( syst ) ;
   cov ( 0 , 0 ) += x1.cov2() ;
   cov ( 1 , 1 ) += x2.cov2() ;
@@ -92,7 +92,71 @@ Ostap::Math::combine
   return combiner.result() ;
 }
 // =========================================================================
-
+/* combine three measurements <code>x1</code>, <code>x2</code> and <code>x3</code>
+ *  using their "statistical" uncertainties (assumed to be uncorrelated) 
+ *  and a covariance matrix of "systematic" uncertainties
+ *  @param x1   (INPUT) the first  measurement 
+ *  @param x2   (INPUT) the second measurement 
+ *  @param x3   (INPUT) the third  measurement 
+ *  @param syst (INPUT) covariance matrix of systematic uncertainties  
+ *  @return combined result
+ *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-09-28
+ */
+// =========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::combine  
+( const Ostap::Math::ValueWithError& x1   ,
+  const Ostap::Math::ValueWithError& x2   , 
+  const Ostap::Math::ValueWithError& x3   , 
+  const Ostap::SymMatrix3x3&         syst ) 
+{
+  std::array<double,3> data { x1.value() , x2.value() , x3.value () }  ;
+  Ostap::SymMatrix3x3 cov  ( syst ) ;
+  cov ( 0 , 0 ) += x1.cov2() ;
+  cov ( 1 , 1 ) += x2.cov2() ;
+  cov ( 2 , 2 ) += x3.cov2() ;
+  //
+  Ostap::Math::Combine<3> combiner  ( data , cov ) ;
+  return combiner.result() ;
+}
 // ============================================================================
-// The END 
+/*  combine four measurements:
+ *  - <code>x1</code>, 
+ *  - <code>x2</code>,
+ *  - <code>x3</code> and 
+ *  - <code>x4</code>
+ *  using their "statistical" uncertainties (assumed to be uncorrelated) 
+ *  and a covariance matrix of "systematic" uncertainties
+ *  @param x1   (INPUT) the first  measurement 
+ *  @param x2   (INPUT) the second measurement 
+ *  @param x3   (INPUT) the third  measurement 
+ *  @param x4   (INPUT) the fourth measurement 
+ *  @param syst (INPUT) covariance matrix of systematic uncertainties  
+ *  @return combined result
+ *  @author  Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2015-09-28
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::combine  
+( const Ostap::Math::ValueWithError& x1   ,
+  const Ostap::Math::ValueWithError& x2   , 
+  const Ostap::Math::ValueWithError& x3   , 
+  const Ostap::Math::ValueWithError& x4   , 
+  const Ostap::SymMatrix4x4&         syst ) 
+{
+  std::array<double,4> data { x1.value() , x2.value() , x3.value () , x4.value() } ;
+  Ostap::SymMatrix4x4 cov  ( syst ) ;
+  cov ( 0 , 0 ) += x1.cov2() ;
+  cov ( 1 , 1 ) += x2.cov2() ;
+  cov ( 2 , 2 ) += x3.cov2() ;
+  cov ( 3 , 3 ) += x4.cov2() ;
+  //
+  Ostap::Math::Combine<4> combiner  ( data , cov ) ;
+  return combiner.result() ;
+
+}
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

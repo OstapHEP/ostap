@@ -16,7 +16,7 @@ from __future__ import print_function
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_math_primes'   )
+if '__main__' ==  __name__ : logger = getLogger ( 'tests_math_primes'  )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
 from ostap.math.primes import primes, Primes 

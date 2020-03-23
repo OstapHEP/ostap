@@ -31,7 +31,7 @@ Ostap::Kinematics::Dalitz::Dalitz
   , m_m3 ( std::abs ( m3 ) )
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
   , m_cache {{  
-      ( m_m1 + m_m2 ) * ( m_m1 + m_m2 ) , // [0]
+    ( m_m1 + m_m2 ) * ( m_m1 + m_m2 ) , // [0]
       ( m_M  - m_m3 ) * ( m_M  - m_m3 ) , // [1]
       ( m_m2 + m_m3 ) * ( m_m2 + m_m3 ) , // [2] 
       ( m_M  - m_m1 ) * ( m_M  - m_m1 ) , // [3]
@@ -40,10 +40,14 @@ Ostap::Kinematics::Dalitz::Dalitz
       // sum of all invariants 
       m_M * m_M + m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3  , //    [6] 
       // mass-squared 
-      m_m1 * m_m1 ,  // [7] 
-      m_m2 * m_m2 ,  // [8]
-      m_m3 * m_m3 ,  // [9] 
-      m_M  * m_M     // [10]
+      m_m1 * m_m1 ,   // [7] 
+      m_m2 * m_m2 ,   // [8]
+      m_m3 * m_m3 ,   // [9] 
+      m_M  * m_M ,    // [10]
+      // max e1 , e2 , e3 
+      ( m_M * m_M + m_m1 * m_m1 - ( m_m2 + m_m3 ) * ( m_m2 + m_m3 ) ) / ( 2 * m_M ) ,
+      ( m_M * m_M + m_m2 * m_m2 - ( m_m1 + m_m3 ) * ( m_m1 + m_m3 ) ) / ( 2 * m_M ) ,
+      ( m_M * m_M + m_m3 * m_m3 - ( m_m1 + m_m2 ) * ( m_m1 + m_m2 ) ) / ( 2 * m_M ) 
       }}
 {
   Ostap::Assert ( m_M > m_m1 + m_m2 + m_m3 , 

@@ -13,6 +13,7 @@
 // Local
 // ============================================================================
 #include "Exception.h"
+#include "local_utils.h"
 // ============================================================================
 /** Implementation file for class Ostap::Formula
  *  @see Ostap::Formula
@@ -37,6 +38,18 @@ Ostap::Formula::Formula
   const TCut&        expression ,
   TTree*             tree       ) 
   : TTreeFormula ( name.c_str() , expression , tree )
+{}
+// ============================================================================
+Ostap::Formula::Formula
+( const std::string& expression ,
+  TTree*             tree       ) 
+  : Formula ( Ostap::tmp_name ( "formula_" , expression ) , expression , tree )
+{}
+// ============================================================================
+Ostap::Formula::Formula
+( const TCut&        expression ,
+  TTree*             tree       ) 
+  : Formula ( Ostap::tmp_name ( "formula_" , expression.GetName()) , expression , tree )
 {}
 // ============================================================================
 // destructor 

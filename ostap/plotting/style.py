@@ -32,8 +32,10 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.style' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-from ostap.plotting.makestyles import ( ostap_font       , ostap_label ,
-                                        ostap_line_width , ostap_latex )
+from ostap.plotting.makestyles import ( ostap_font       ,
+                                        ostap_label      ,
+                                        ostap_line_width ,
+                                        ostap_latex      )
 # =============================================================================
 ## the dictionary of known  styles 
 styles = {}

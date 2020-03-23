@@ -368,6 +368,8 @@ ROOT.RooArgSet . union                = _ras_union_
 ROOT.RooArgSet . difference           = _ras_difference_
 ROOT.RooArgSet . symmetric_difference = _ras_symmetric_difference_
 ROOT.RooArgSet . __sub__              = _ras_difference_ 
+ROOT.RooArgSet . __or__               = ROOT.RooArgSet.__add__
+ROOT.RooArgSet . __ior__              = ROOT.RooArgSet.__iadd__
 
 _new_methods_ += [
     ROOT.RooArgList    . clone        ,
@@ -390,7 +392,9 @@ _new_methods_ += [
     ROOT.RooArgSet     . union                ,
     ROOT.RooArgSet     . difference           ,
     ROOT.RooArgSet     . symmetric_difference ,
-    ROOT.RooArgSet     . __sub__
+    ROOT.RooArgSet     . __sub__  , 
+    ROOT.RooArgSet     . __or__   , 
+    ROOT.RooArgSet     . __ior__  , 
     ##
     ]
 

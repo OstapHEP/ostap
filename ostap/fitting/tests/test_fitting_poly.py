@@ -61,6 +61,7 @@ def test_poly4 () :
     model = Models.PolyPos_pdf('P4'  , x , power = 4 )
     
     result,f  = model.fitTo ( dataset , silent = True )  
+    model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -82,6 +83,7 @@ def test_monotonic4 () :
     with rooSilent() : 
         result,f  = model.fitTo ( dataset )  
         result,f  = model.fitTo ( dataset )  
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -101,6 +103,7 @@ def test_convex4() :
     model = Models.Convex_pdf('C4'  , x , power = 4 , increasing = False , convex = True  )
     
     result,f  = model.fitTo ( dataset , silent = True )  
+    model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -122,6 +125,7 @@ def test_expopoly2() :
     result,f  = model.fitTo ( dataset , silent = True )
     model.tau.release() 
     result,f  = model.fitTo ( dataset , silent = True )  
+    model.draw ( dataset )        
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -146,6 +150,7 @@ def test_pspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
+    model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -167,6 +172,7 @@ def test_mspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
+    model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -188,6 +194,7 @@ def test_cspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
+    model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -227,5 +234,5 @@ if '__main__' == __name__ :
     test_db          ()          
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # ============================================================================= 

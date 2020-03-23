@@ -26,8 +26,8 @@ Empricial PDFs to describe narrow peaks :
   - right-side Crystal Ball
   - double-side Crystal Ball
   - Needham function for J/psi, psi' and Y peaks
-  - Apolonios
-  - Apolonios2 (bifurcated Apolonios)
+  - Apollonios
+  - Apollonios2 (bifurcated Apollonios)
   - bifurcated Gauissian
   - double     Gauissian
   - generalized normal v1 
@@ -44,6 +44,7 @@ Empricial PDFs to describe narrow peaks :
   - Q-Gaussian shape
   - Asymmetric Laplace shape
   - Sech  shape
+  - Losev  shape
   - Logistic, aka ``sech-squared'' shape
   
 PDF to describe ``wide'' peaks : 
@@ -81,8 +82,8 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y (CB function with alpha=alpha(sigma))
-    'Apolonios_pdf'          , ## Apolonios function         
-    'Apolonios2_pdf'         , ## Apolonios function         
+    'Apollonios_pdf'         , ## Apollonios function         
+    'Apollonios2_pdf'        , ## Apollonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
@@ -99,6 +100,7 @@ __all__ = (
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
+    'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
     'Logistic_pdf'           , ## Logistic aka ``sech-squared'' PDF
     #
     ## specializations:
@@ -127,6 +129,7 @@ __all__ = (
     ##
     'Voigt_pdf'            , ## Voigt-profile 
     'PseudoVoigt_pdf'      , ## Voigt-profile 
+    'BWI_pdf'              , ## Breit-Wigner with interference 
     'BW23L_pdf'            , ## BW23L
     'BWMC_pdf'             , ## BWMC
     'Swanson_pdf'          , ## Swanson's S-wave cusp
@@ -170,6 +173,8 @@ __all__ = (
     'CSpline_pdf'          , ## positive monotonic convex or concave spline 
     'CPSpline_pdf'         , ## positive convex or concave spline
     ##
+    'PSSmear_pdf'          , ## smeared PhaseSpace-based PDF 
+    ##
     'Linear_pdf'           , ## positive linear polynom 
     'Parabolic_pdf'        , ## positive parabolic polynom  
     ## the native RooFit background shapes
@@ -193,11 +198,6 @@ __all__ = (
     'PSPol2D2sym_pdf' , ## Symmetric product of phase spaces, modulated with 2D polynomial
     'ExpoPol2Dsym_pdf', ## Symmetric version of above
     'Spline2Dsym_pdf' , ## Symmetric 2D positive spline
-    #
-    ## 2D-rotated models
-    #
-    'Rotated2Gauss_pdf' , ## Rotated product of two Gaussians 
-    'Rotated2CB_pdf'    , ## Rotated product of two double-sided Crystal Ball functions 
     #
     ## models for Pt-spectra fitting
     #
@@ -257,8 +257,6 @@ logger.debug ("Import 2D-fit machinery            from ``fit2d''"        )
 from ostap.fitting.fit2d         import *
 logger.debug ("Import 2D background        models from ``models_2d''"    )
 from ostap.fitting.models_2d     import *  
-logger.debug ("Import 2D rotated (signal)  models from ``rotated_2d''"   )
-from ostap.fitting.rotated_2d    import *  
 logger.debug ("Import 3D-fit machinery            from ``fit3d''"        )
 from ostap.fitting.fit3d         import *
 logger.debug ("Import 3D background        models from ``models_3d''"    )
@@ -275,6 +273,8 @@ logger.debug ("Import modifiers                   from ``modifiers''"    )
 from ostap.fitting.modifiers     import *
 logger.debug ("Import PyPDF                       from ``pypdf''"        )
 from ostap.fitting.pypdf         import PyPDF
+logger.debug ("Import functions                   from ``roofuncs''"     )
+from ostap.fitting.roofuncs      import * 
 
 models = []
 from ostap.fitting.signals       import models as _models 
@@ -289,8 +289,8 @@ from ostap.fitting.resolution    import models as _models
 models += _models
 from ostap.fitting.models_2d     import models as _models 
 models += _models
-from ostap.fitting.rotated_2d    import models as _models 
-models += _models
+
+
 
 # ============================================================================
 ## add the product operator for multiplication of two PDFs 
@@ -302,8 +302,8 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger , symbols = models )
-    
- 
+
+
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

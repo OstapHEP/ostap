@@ -672,7 +672,7 @@ interpolate = lagrange
 barycentric = lagrange 
 
 # ==================================================================================
-## Construct collection of interpolated points 
+## Construct collection of interpolated points/interpolation table  
 #  @code
 #  p1 = points ( lambda x : x*x , [0,0.5,1,2]  )  
 #  p2 = points ( { 0:0 , 0.5:0.25 , 1:1 }      )  
@@ -747,17 +747,26 @@ def points ( func , abscissas  = None ) :
     ##
     from ostap.math.base import doubles
     ##
+
     if _A : return Ostap.Math.Interpolation.Table (   abscissas   , doubles ( func ) )
     ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
 
-
 # =============================================================================
-## Bernstein & Bspline interpolation
+## Bernstein & BSpline interpolation
 # =============================================================================
 from ostap.math.bernstein import interpolate as interpolate_bernstein
 from ostap.math.bspline   import interpolate as interpolate_bspline  
 # =============================================================================
+
+# =============================================================================
+## Scipy-based spline interpolation
+# =============================================================================
+try :
+    from ostap.math.sp_interpolation import SplineInterpolator
+    __all__ =  __all__ + ( 'SplineInterpolator', ) 
+except  ImportError :
+    pass 
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -766,5 +775,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

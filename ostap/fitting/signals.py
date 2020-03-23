@@ -26,8 +26,8 @@ Empricial PDFs to describe narrow peaks
   - right-side Crystal Ball
   - double-side Crystal Ball
   - Needham function for J/psi, psi' and Y peaks
-  - Apolonios
-  - Apolonios2 (bifurcated Apolonious)
+  - Apollonios
+  - Apollonios2 (bifurcated Apollonios)
   - bifurcated Gauissian
   - double     Gauissian
   - generalized normal v1 
@@ -42,6 +42,7 @@ Empricial PDFs to describe narrow peaks
   - Slash_pdf
   - AsymmetricLaplace_pdf  
   - Sech_pdf   
+  - Losev_pdf   
   - Logistic_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
@@ -49,6 +50,7 @@ Empricial PDFs to describe narrow peaks
 PDF to describe ``wide'' peaks
 
   - BreitWigner
+  - BreitWigner with interference 
   - LASS
   - Bugg
   - Flatte
@@ -75,8 +77,8 @@ __all__ = (
     'CrystalBallRS_pdf'      , ## right-side Crystal-ball function
     'CB2_pdf'                , ## double-sided Crystal Ball function    
     'Needham_pdf'            , ## Needham function for J/psi or Y fits 
-    'Apolonios_pdf'          , ## Apolonios function         
-    'Apolonios2_pdf'         , ## Apolonios function         
+    'Apollonios_pdf'          , ## Apollonios function         
+    'Apollonios2_pdf'         , ## Apollonios function         
     'BifurcatedGauss_pdf'    , ## bifurcated Gauss
     'DoubleGauss_pdf'        , ## double Gauss
     'GenGaussV1_pdf'         , ## generalized normal v1  
@@ -92,12 +94,14 @@ __all__ = (
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
-    'Sech_pdf'               , ## hyperboilic secant  (inverse-cosh) 
+    'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
+    'Losev_pdf'              , ## asymmetric hyperbolic secant
     'Logistic_pdf'           , ## Logistic aka "sech-squared"   
     #
     ## pdfs for "wide" peaks, to be used with care - phase space corrections are large!
     # 
     'BreitWigner_pdf'        , ## (relativistic) 2-body Breit-Wigner
+    'BWI_pdf'                , ## (relativistic) Breit-Wigner with interference 
     'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
     'LASS_pdf'               , ## kappa-pole
     'Bugg_pdf'               , ## sigma-pole
@@ -117,7 +121,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' 
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
 from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import MASS, PDF  
+from   ostap.fitting.basic import MASS, PDF 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -538,17 +542,17 @@ class Needham_pdf(MASS) :
             
 models.append ( Needham_pdf )    
 # =============================================================================
-## @class Apolonios_pdf
-#  simple wrapper over Apolonios PDF 
-#  @see Ostap::Models::Apolonios 
+## @class Apollonios_pdf
+#  simple wrapper over Apollonios PDF 
+#  @see Ostap::Models::Apollonios 
 #  The function is proposed by Diego Martinez Santos 
 #  @see http://arxiv.org/abs/1312.5000
 #  Here a bit modified version is used with redefined parameter <code>n</code>
 #  to be coherent with local definitions of Crystal Ball
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
-class Apolonios_pdf(MASS) :
-    """Apolonios function
+class Apollonios_pdf(MASS) :
+    """Apollonios function
     http://arxiv.org/abs/1312.5000
     
     The function is proposed by Diego Martinez Santos 
@@ -595,9 +599,9 @@ class Apolonios_pdf(MASS) :
         #
         ## finally build PDF
         #
-        self.pdf  = Ostap.Models.Apolonios (
-            "apolo_"        + name ,
-            "Apolonios(%s)" % name ,
+        self.pdf  = Ostap.Models.Apollonios (
+            "apollo_"        + name ,
+            "Apollonios(%s)" % name ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -616,23 +620,9 @@ class Apolonios_pdf(MASS) :
             'b'      : self.b     ,
             }
         
-
-    ## make a clone of this PDF    
-    def clone ( self , name  = '' , xvar = None ) :
-        """Make a ``clone''  of this PDF
-        >>> sig1 = ...
-        >>> sig2 = sig1.clone ( xvar = yvar ) 
-        """
-        return Apolonious_pdf ( name if name else self.name + '_copy'  ,
-                                xvar if xvar else self.xvar            ,
-                                self.mean  , 
-                                self.sigma ,
-                                self.alpha ,
-                                self.n     ,
-                                self.b     )
     @property
     def alpha ( self ) :
-        """``alpha''-parameter for Apolonious tail"""
+        """``alpha''-parameter for Apollonios tail"""
         return self.__alpha
     @alpha.setter
     def alpha ( self, value ) :
@@ -642,7 +632,7 @@ class Apolonios_pdf(MASS) :
     
     @property
     def n ( self ) :
-        """``n''-parameter for Apolonios tail"""
+        """``n''-parameter for Apollonios tail"""
         return self.__n
     @n.setter
     def n ( self, value ) :
@@ -652,7 +642,7 @@ class Apolonios_pdf(MASS) :
 
     @property
     def b ( self ) :
-        """``b''-parameter for Apolonios function"""
+        """``b''-parameter for Apollonios function"""
         return self.__b
     @b.setter
     def b ( self, value ) :
@@ -661,10 +651,10 @@ class Apolonios_pdf(MASS) :
         self.__b.setVal ( value )
 
 
-models.append ( Apolonios_pdf )    
+models.append ( Apollonios_pdf )    
 # =============================================================================
-## @class Apolonios2_pdf
-#  "Bifurcated Apolonious"
+## @class Apollonios2_pdf
+#  "Bifurcated Apollonios"
 #  Gaussian with exponential (asymmetrical) tails
 #
 #  A convinient reparameterization is applied to keep reduce 
@@ -680,11 +670,11 @@ models.append ( Apolonios_pdf )
 #          \right.\f]
 #  Large betas corresponds to gaussian 
 #      
-#  @see Ostap::Models::Apolonios2 
+#  @see Ostap::Models::Apollonios2 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-08-20
-class Apolonios2_pdf(MASS) :
-    """Bifurcated Apolonious:
+class Apollonios2_pdf(MASS) :
+    """Bifurcated Apollonios:
     Gaussian with exponential (asymmetrical) tails
     
     f(x; mu, sigma_l, sigma_r, beta) ~ exp( |beta|(|\beta| - sqrt( beta^2+( delta x)^2 ))      
@@ -741,9 +731,9 @@ class Apolonios2_pdf(MASS) :
         #
         ## finally build PDF
         #
-        self.pdf  = Ostap.Models.Apolonios2 (
-            "apolo2_"        + name ,
-            "Apolonios2(%s)" % name ,
+        self.pdf  = Ostap.Models.Apollonios2 (
+            "apollo2_"        + name ,
+            "Apollonios2(%s)" % name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -762,7 +752,7 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Apolonious-2 function"""
+        """``asymmetry''-parameter for Apollonios2 function"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -772,7 +762,7 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def beta ( self ) :
-        """``beta''-parameter for Apolonious-2 function"""
+        """``beta''-parameter for Apollonios-2 function"""
         return self.__beta
     @beta.setter
     def beta ( self, value ) :
@@ -782,17 +772,17 @@ class Apolonios2_pdf(MASS) :
 
     @property
     def sigmaL ( self ) :
-        """(left)sigma-parameter for Apolonious-2 function"""
+        """(left)sigma-parameter for Apollonios-2 function"""
         return self.__sigmaL
     
     @property
     def sigmaR ( self ) :
-        """(right)sigma-parameter for Apolonious-2 function"""
+        """(right)sigma-parameter for Apollonios2 function"""
         return self.__sigmaR
 
     
 
-models.append ( Apolonios2_pdf )    
+models.append ( Apollonios2_pdf )    
 # =============================================================================
 ## @class BifurcatedGauss_pdf
 #  simple wrapper over bifurcated-gaussian
@@ -1317,7 +1307,7 @@ models.append ( SkewGauss_pdf )
 #  - for rho_{l,r}=0 left/right tails are exponential.
 #  - for large asymmetry parameter function has weird shape
 #
-#  @see http://dx.doi.org/10.1007/JHEP06(2012)141     
+#  @see https://doi.org/10.1007/JHEP06(2012)141     
 #  @see Ostap::Math::Bukin
 #  @see Analusis::Models::Bukin
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
@@ -1328,7 +1318,7 @@ class Bukin_pdf(MASS) :
     - exponential (optionally gaussian) asymmetrical tails
     see http://journals.aps.org/prd/abstract/10.1103/PhysRevD.84.112007
     see http://arxiv.org/abs/1107.5751
-    see http://dx.doi.org/10.1007/JHEP06(2012)141     
+    see https://doi.org/10.1007/JHEP06(2012)141     
     Here small reparameterization is applied to achieve more stable fits.
     
     It is very well suitable to describe high statistic charm meson peaks,
@@ -2231,6 +2221,121 @@ class Sech_pdf(MASS) :
     
 models.append ( Sech_pdf )      
 
+#==============================================================================
+## @class Losev_pdf
+#  Asymmetric variant of hyperbolic secant distribution
+#   \f[ f(x;\mu,\alpha,\beta) \equiv 
+#      \frac{A}{\mathrm{e}^{-\left|\alpha\right| (x-\mu)} + 
+#                           \mathrm{e}^{\left|\beta\right|(x-mu)}}, \f]
+#  where \f$ A = \frac{\left|\alpha\right|+\left|\beta\right|}{\pi}
+#  \sin \frac{\pi\left| \beta\right| }{\left|\alpha\right|+\left|\beta\right|}\f$ 
+#   - Leptokurtic distribution with exponential tails 
+#   @see Losev, A., "A new lineshape for fitting x‐ray photoelectron peaks", 
+#           Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+#   @see  https://doi.org/10.1002/sia.740141207
+#   @see  https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+#   @see Ostap::Models::Losev 
+#   @see Ostap::Math::Losev 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2019-11-026
+class Losev_pdf(MASS) :
+    """ Asymmetric variant of hyperbolic secant distribution
+    - Leptokurtic distribution with exponential tails
+    see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
+    Surf. Interface Anal., 14: 845-849. doi:10.1002/sia.740141207
+    see https://doi.org/10.1002/sia.740141207
+    see https://en.wikipedia.org/wiki/Hyperbolic_secant_distribution
+    see Ostap::Models::Losev 
+    see Ostap::Math::Losev 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mean      = None ,   ## related to mean/location  
+                   alpha     = None ,   ## left tail 
+                   beta      = None ) : ## rigth tail
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar , mean , None )
+
+        ## rename if possible 
+        if mean is not self.mean :
+            sname  = self.mean.GetName  ()
+            stitle = self.mean.GetTitle ()
+            gname  = sname .replace ( 'mean' , 'mu_%s' % self.name  )
+            gtitle = stitle.replace ( 'mean' , 'mu'                 )
+            self.mean.SetName  ( gname  ) 
+            self.mean.SetTitle ( gtitle )
+
+        ## left tail 
+        self.__alpha = self.make_var ( alpha ,
+                                       'alpha_%s'           % name ,
+                                       '#alpha_{Losev}(%s)' % name , alpha ,
+                                       1.0 , 1.e-3 , 1000 )
+
+        ## right tail 
+        self.__beta  = self.make_var ( beta   ,
+                                       'beta_%s'            % name ,
+                                       '#beta_{Losev}(%s)'  % name , beta  ,
+                                       1.0 , 1.e-3 , 1000 )
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Losev (
+            "losev_"    + name ,
+            "Losev(%s)" % name ,
+            self.xvar      ,
+            self.mean      ,
+            self.alpha     ,
+            self.beta      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'alpha'     : self.alpha ,
+            'beta'      : self.beta  ,
+            }
+        
+    @property
+    def mu ( self ) :
+        """``mu''- location parameter for Losev distribution (same as ``mean'')
+        """
+        return self.mean
+    @mu.setter 
+    def mu ( self , value ) :
+        self.mean = value 
+
+    @property
+    def alpha ( self ) :
+        """`alpha''- parameter for Losev distribution (left tail)
+        """
+        return self.__alpha
+    @alpha.setter 
+    def alpha ( self , value ) :
+        value = float ( value )
+        assert 0 < value , "``alpha'' must be positive!"
+        self.__alpha.setVal ( value )
+
+    @property
+    def beta ( self ) :
+        """`beta''- parameter for Losev distribution (right tail)
+        """
+        return self.__beta
+    @beta.setter 
+    def beta ( self , value ) :
+        value = float ( value )
+        assert 0 < value , "``beta'' must be positive!"
+        self.__beta.setVal ( value )
+
+
+    
+models.append ( Losev_pdf )      
+
 # =============================================================================
 ## @class Logistic_pdf
 #  Logistic, aka "sech-square" PDF
@@ -2534,7 +2639,7 @@ models.append ( Voigt_pdf )
 #       "Extended pseudo-Voigt function for approximating the Voigt profile"
 #       J. Appl. Cryst. (2000). 33, 1311-1316
 #  @see doi:10.1107/S0021889800010219
-#  @see http://dx.doi.org/10.1107/S0021889800010219
+#  @see https://doi.org/10.1107/S0021889800010219
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-06-15
 class PseudoVoigt_pdf(Voigt_pdf) :
@@ -2546,11 +2651,11 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     ``Extended pseudo-Voigt function for approximating the Voigt profile''
     J. Appl. Cryst. (2000). 33, 1311-1316
     - see doi:10.1107/S0021889800010219
-    - see http://dx.doi.org/10.1107/S0021889800010219
+    - see https://doi.org/10.1107/S0021889800010219
     
     Parameters
     - mean  : location 
-    - gamma : gamma for breight-wigner pole
+    - gamma : gamma for Breight-Wigner pole
     - sigma : resolution parameter for gaussian 
     """
     def __init__ ( self             ,
@@ -2931,6 +3036,111 @@ class BWMC_pdf(MASS) :
         return self.__fractions
 
 models.append ( BWMC_pdf )
+
+# =============================================================================
+## @class BWI_pdf
+#  (relativistic) Breit-Wigner function + some interference
+#   Breit-Wigner with some embedded interference: 
+#   \f[ f(x) = \left| \upalpha b(x) + A(x)_{\mathrm{BW}} \right|^2 \f], 
+#   where \f$b(x)\f$ - any smooth function and 
+#   \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
+#  @see Ostap.Models.BWI
+class BWI_pdf (BreitWigner_pdf) :
+    """ (Relativistic) Breit-Wigner function + some interference
+    Breit-Wigner with some embedded interference
+    - see Ostap.Models.BWI
+    """
+    def __init__ ( self         ,
+                   name         ,
+                   breitwigner  ,
+                   xvar         ,
+                   mean  = None ,
+                   gamma = None ,
+                   bkg   = -1   ,   ## background function 
+                   a     = None ,   ## background scale 
+                   phi   = 0    ) : ## bakcgrouns phase 
+        
+        ## initialize the base 
+        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , mean , gamma )
+
+        self.__bw = self.pdf
+
+        if   isinstance ( bkg , PDF             ) :             ## PDF ? 
+            ## PDF?
+            self.__bkg = bkg
+            self.__b   = self.__bkg.pdf
+        elif isinstance ( bkg , ROOT.RooAbsPdf  ) :              ## PDF? 
+            ## PDF? 
+            from ostap.fitting.basic import Generic1D_pdf as G1D 
+            self.__bkg = G1D ( bkg , self.xvar ) 
+            self.__b   = self.__bkg.pdf
+        elif isinstance ( bkg , ROOT.RooRealVar ) or isinstance ( bkg , ROOT.RooConstVar ) :
+            ## constant?
+            self.__bkg = bkg
+            self.__b   = self.make_var ( bkg              ,
+                                         "bkg_%s"  % name ,
+                                         "bkg(%s)" % name , bkg )
+        elif isinstance ( bkg , ROOT.RooAbsReal ) :               ## function ?
+            ## function? 
+            from ostap.fitting.basic import Generic1D_pdf as G1D 
+            self.__bkg = G1D ( bkg , self.xvar , special = True ) 
+            self.__b   = self.__bkg.pdf
+        else :                                                    ## function?
+            ## function ? 
+            from ostap.fitting.background import make_bkg as MKB
+            self.__bkg = MKB ( bkg , 'B_4'+ self.name , self.xvar )
+            self.__b   = self.__bkg.pdf 
+            
+        ## create background phase
+        self.__a  = self.make_var  ( a              ,
+                                     "a_%s"    % name ,
+                                     "a(%s)"   % name , a , 0 , 1.e+5 )
+        
+        ## create background phase 
+        self.__phi = self.make_var ( phi              ,
+                                     "phi_%s"  % name ,
+                                     "phi(%s)" % name , phi , -10 , 10 )
+
+        
+        ## finally create PDF
+        self.pdf = Ostap.Models.BWI ( 'rbwi'     + name , 
+                                      self.bw           ,
+                                      self.b            ,
+                                      self.a            ,
+                                      self.phi          ) 
+            
+        ## save configuration
+        self.config = {
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        , 
+            'breitwigner' : self.breitwigner , 
+            'mean'        : self.mean        ,
+            'gamma'       : self.gamma       ,
+            'bkg'         : self.bkg         ,
+            'a'           : self.a           , 
+            'phi'         : self.phi         } 
+                        
+    @property
+    def bw          ( self ) :
+        """The Breit-Wigner PDF itself"""
+        return self.__bw
+    @property
+    def bkg          ( self ) :
+        """The background"""
+        return self.__bkg
+    @property
+    def b           ( self ) :
+        """The background"""
+        return self.__b
+    @property
+    def a           ( self ) :
+        """The background factor"""
+        return self.__a
+    @property
+    def phi         ( self ) :
+        """The background phase"""
+        return self.__phi
+
 
 # =============================================================================
 ## @class BW23L_pdf
@@ -3364,7 +3574,7 @@ models.append ( LASS_pdf )
 # =============================================================================
 ## @class Bugg_pdf
 #  The parameterization of sigma pole by B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-#  @see http://dx.doi.org/10.1103/PhysRevD.48.R3948
+#  @see https://doi.org/10.1103/PhysRevD.48.R3948
 #  @see Ostap::Models::Bugg
 #  @see Ostap::Math::Bugg
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -3372,7 +3582,7 @@ models.append ( LASS_pdf )
 class Bugg_pdf(MASS) :
     """ The parameterization of sigma pole by
     B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-    http://dx.doi.org/10.1103/PhysRevD.48.R3948
+    https://doi.org/10.1103/PhysRevD.48.R3948
     """
     def __init__ ( self           ,
                    name           ,

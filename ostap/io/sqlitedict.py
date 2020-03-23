@@ -148,8 +148,10 @@ class SqliteDict(DictClass):
         """
         self.in_temp = filename is None
         if self.in_temp:
-            import tempfile
-            filename = tempfile.mktemp  ( prefix = 'sql_'  )            
+            ## import tempfile
+            ## filename = tempfile.mktemp  ( prefix = 'tmpdb-'  , suffix = '.sqldb' )
+            import ostap.utils.cleanup as CU 
+            filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.sqldb' )
             # randpart = hex(random.randint(0, 0xffffff))[2:]
             # filename = os.path.join(tempfile.gettempdir(), 'sqldict' + randpart)
 
@@ -175,7 +177,7 @@ class SqliteDict(DictClass):
         self.encode = encode
         self.decode = decode
 
-        logger.info("opening Sqlite table %r in %s" % (tablename, filename))
+        logger.debug ("opening Sqlite table %r in %s" % (tablename, filename))
         MAKE_TABLE = 'CREATE TABLE IF NOT EXISTS "%s" (key TEXT PRIMARY KEY, value BLOB)' % self.tablename
         self.conn = self._new_conn()
         self.conn.execute(MAKE_TABLE)
@@ -346,7 +348,7 @@ class SqliteDict(DictClass):
         if self.filename == ':memory:':
             return
 
-        logger.info("deleting %s" % self.filename)
+        logger.debug ("deleting %s" % self.filename)
         try:
             if os.path.isfile(self.filename):
                 os.remove(self.filename)

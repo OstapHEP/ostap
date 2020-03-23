@@ -19,6 +19,7 @@
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_ellint.h"
 // ============================================================================
 // LHCbMath
 // ============================================================================
@@ -617,21 +618,10 @@ double Ostap::Math::kummer
   if ( ierror ) 
   {
     //
+    gsl_error ( "Error from hyperg_1F1_int_e function" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-    { return std::numeric_limits<double>::quiet_NaN(); }
+    { return std::numeric_limits<double>::quiet_NaN() ; }
     //
-    if ( ierror == GSL_ERANGE   ||    // output range error, e.g. exp(1e100)
-         ierror == GSL_EINVAL   ||    // invalid argument supplied by user
-         ierror == GSL_EUNDRFLW ||    // underflow
-         ierror == GSL_EOVRFLW  ||    // overflow
-         ierror == GSL_ELOSS    ||    // loss of accuracy
-         ierror == GSL_EROUND    )    // failed because of roundoff error
-    {}
-    else
-    {
-      gsl_error ( "Error from kummer function" ,
-                  __FILE__ , __LINE__ , ierror ) ;
-    } 
   }
   //
   return result.val ;
@@ -763,21 +753,10 @@ double Ostap::Math::igamma ( const double x )
   if ( ierror ) 
   {
     //
+    gsl_error ( "Error from gsl_sf_gammainv_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
     //
-    if ( ierror == GSL_ERANGE   ||    // output range error, e.g. exp(1e100)
-         ierror == GSL_EINVAL   ||    // invalid argument supplied by user
-         ierror == GSL_EUNDRFLW ||    // underflow
-         ierror == GSL_EOVRFLW  ||    // overflow
-         ierror == GSL_ELOSS    ||    // loss of accuracy
-         ierror == GSL_EROUND    )    // failed because of roundoff error
-    {}
-    else
-    {
-      gsl_error ( "Error from gsl_sf_gammainv_e" ,
-                  __FILE__ , __LINE__ , ierror ) ;
-    } 
   }
   //
   return result.val ;
@@ -799,21 +778,10 @@ double Ostap::Math::psi ( const double x )
   if ( ierror ) 
   {
     //
+    gsl_error ( "Error from gsl_sf_psi_e" , __FILE__ , __LINE__ , ierror ) ;
     if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
     { return std::numeric_limits<double>::quiet_NaN(); }
     //
-    if ( ierror == GSL_ERANGE   ||    // output range error, e.g. exp(1e100)
-         ierror == GSL_EINVAL   ||    // invalid argument supplied by user
-         ierror == GSL_EUNDRFLW ||    // underflow
-         ierror == GSL_EOVRFLW  ||    // overflow
-         ierror == GSL_ELOSS    ||    // loss of accuracy
-         ierror == GSL_EROUND    )    // failed because of roundoff error
-    {}
-    else
-    {
-      gsl_error ( "Error from gsl_sf_psi_e" ,
-                  __FILE__ , __LINE__ , ierror ) ;
-    } 
   }
   //
   return result.val ;
@@ -916,12 +884,10 @@ double Ostap::Math::gauss_cdf ( const double x     ,
   return 0.5 * ( 1 + std::erf ( y ) ) ;
 }
 // ============================================================================
-#include <iostream>
 namespace 
 {
   // ==========================================================================
   typedef unsigned long long ULL ;
-  // ==========================================================================
   // ==============================================================================
   // calculate Pochhammer symbol
   // ==============================================================================
@@ -1082,6 +1048,250 @@ double Ostap::Math::falling_factorial ( const double x , const unsigned short n 
 std::pair<double,double> Ostap::Math::pochhammer_with_derivative 
 ( const double         x , 
   const unsigned short n ) { return _pochhammer2_ ( x , n ) ; }
+// ============================================================================
+
+
+
+// ============================================================================
+// Elliptic integrals 
+// ============================================================================
+/*  Complete elliptic integral \f$ K(k) \f$  
+ *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_K ( const double k ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_Kcomp_e ( k , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_Kcomp_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/**  Complete elliptic integral \f$ E(k) \f$  
+ *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_E ( const double k   ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_Ecomp_e ( k , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_Ecomp_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/*  Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+ *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_F ( const double phi , const double k   ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_F_e ( phi , k , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_F_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/* Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+ *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+double Ostap::Math::elliptic_E ( const double phi , const double k   ) 
+{
+  // use GSL: 
+  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_E_e ( phi , k , GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_E_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/*  Jacobi zeta function \f$ Z(\beta k) \f$
+ *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
+ */
+// ============================================================================
+double Ostap::Math::elliptic_Z ( const double beta  , const double k   ) 
+{
+  const double K_k  = elliptic_K ( k ) ;
+  const double E_k  = elliptic_E ( k ) ;
+  const double E_bk = elliptic_E ( beta , k ) ;
+  const double F_bk = elliptic_F ( beta , k ) ;
+  //
+  return E_bk - E_k * F_bk / K_k ;
+}
+// ============================================================================
+/*  Product of Jacobi zeta function \f$ Z(\beta,k) \f$
+ *  and complete elliptic integral \f$ K(k) \f$
+ *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::elliptic_KZ ( const double beta  , const double k   ) 
+{
+  const double sinbeta = std::sin ( beta ) ;
+  const double cosbeta = std::cos ( beta ) ;
+  const double alpha   = 1.0L - k * k * sinbeta * sinbeta ;
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_RJ_e ( 0.0       ,
+                                          1 - k * k ,
+                                          1.0       ,
+                                          alpha     ,
+                                          GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_RJ_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return k * k * sinbeta * cosbeta * std::sqrt ( alpha ) * result.val / 3 ;
+}
+// ============================================================================
+/*  difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
+ *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
+ *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::elliptic_KmE ( const double k   )
+{
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_RD_e ( 0.0       ,
+                                          1 - k * k ,
+                                          1.0       ,
+                                          GSL_PREC_DOUBLE , &result ) ;
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_RD_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return k * k * result.val / 3 ;
+}
+// ============================================================================
+/*  get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
+ *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
+ *  @see S.U.Chung "Formulas for Angular-Momentum Barrier Factors", BNL-QGS-06-01
+ *  @see https://physique.cuso.ch/fileadmin/physique/document/2015_chung_brfactor1.pdf
+ *
+ *  The complex-valued polynomials \f$ g_l(x) \f$  with integer 
+ *  coefficients can be written as 
+ *  \f[ g_l(x) = \sum_{k=0}^{l} a_{lk}(-ix)^{l-k}\f] with
+ *  \f$ a_{lk} = \frac{(l+k)!}{2^k k! (l-k)!}\f$ and \f$a_{l0}=1\f$.
+ *
+ *  It satisfies the recurrent relation
+ *  \f[ g_{l+1}(x) = (2l+1)g_l(x) -  x^2 g_{l-1}(x)\f] 
+ *  with the initial values of \f$ g_0(x) \equiv 1 \f$ 
+ *  and \f$ g_1(x) \equiv -ix + 1\f$.
+ *  This recurrense relation is used for the actual calculation.
+ *
+ *  @param  x  the value of scaled relative momentum 
+ *  @param  l  the orbital momentum 
+ *  @return the value of \f$ g_l(x) \f$
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date 2019-10-13
+ *  @see Ostap::Math::barrier_factor 
+ *  @see Ostap::Math::barrier_absg 
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::barrier_g 
+( const double       x , 
+  const unsigned int l ) 
+{
+  //
+  if      ( 0 == l ) {  return                        1        ; }
+  else if ( 1 == l ) {  return std::complex<double> ( 1 , -x ) ; }
+  //
+  // real part 
+  const long double re_g = Ostap::Math::Clenshaw::term 
+    ( x  , 
+      l  , 
+      [] ( const unsigned int    k    , 
+           const long double  /* t */ ) -> long double { return  2 * k+1 ; } , 
+      [] ( const unsigned int /* k */ , 
+           const long double     t    ) -> long double { return -t * t   ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  1       ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  1       ; } ) ;
+  //
+  // imaginary part 
+  const long double im_g = Ostap::Math::Clenshaw::term 
+    ( x  , 
+      l  , 
+      [] ( const unsigned int    k    , 
+           const long double  /* t */ ) -> long double { return  2 * k+1 ; } , 
+      [] ( const unsigned int /* k */ , 
+           const long double     t    ) -> long double { return -t * t   ; } , 
+      [] ( const long double  /* t */ ) -> long double { return  0       ; } , 
+      [] ( const long double     t    ) -> long double { return -t       ; } ) ;
+  //
+  return std::complex<double> ( re_g , im_g ) ;
+}
+// ============================================================================
+
+
+
 // ============================================================================
 // The END 
 // ============================================================================

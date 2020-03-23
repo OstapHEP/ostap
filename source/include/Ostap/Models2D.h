@@ -675,9 +675,9 @@ namespace Ostap
       /// get parameters/phases 
       std::vector<double> pars() const ;
       /// x-parameters 
-      const std::vector<double>& xpars() const { return m_psx.pars() ; }
+      // const std::vector<double>& xpars() const { return m_psx.pars() ; }
       /// y-parameters 
-      const std::vector<double>& ypars() const { return m_psy.pars() ; }      
+      // const std::vector<double>& ypars() const { return m_psy.pars() ; }      
       /// get nX & nY
       unsigned short nX () const { return m_psx.n () ; }
       unsigned short nY () const { return m_psy.n () ; }
@@ -826,7 +826,7 @@ namespace Ostap
       /// get the parameter value
       double  parameter ( const unsigned int k ) const { return par ( k ) ; }
       /// get parameters/phases 
-      const std::vector<double>& pars () const { return m_ps.pars() ; }
+      // const std::vector<double>& pars () const { return m_ps.pars() ; }
       /// get nX & nY
       unsigned short n  () const { return m_ps.n () ; }
       unsigned short nX () const { return m_ps.n () ; }

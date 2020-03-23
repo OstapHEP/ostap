@@ -755,6 +755,35 @@ def _gr_setitem_ ( graph , ipoint , point )  :
     graph.SetPoint      ( ipoint , x , y )
 
 
+# ==============================================================================
+## remove the point from the graph
+#  @code
+#  graph = ...
+#  del graph[1] 
+#  @endcode 
+def _gr_delitem_ ( graph, ipoint ) :
+    """Remove the point from the graph
+    >>> graph = ...
+    >>> del graph[1] 
+    >>> del graph[1:-1:2] 
+    """
+    #
+    if isinstance ( ipoint , slice ) :
+        old_len   = len ( graph ) 
+        istart , istop , istep = ipoint.indices ( old_len  )
+        idel = 0
+        np   = 0
+        for i in  range ( istart , istop , istep ) :
+            np += 1 
+            d = graph.RemovePoint ( i - idel )
+            if 0 <= d : idel += 1
+        new_len = len ( graph ) 
+        return newlen + np == old_len
+    elif not ipoint in graph : raise IndexError 
+    #
+    d = graph.RemovePoint ( ipoint )
+    return  0 <= d
+
 # =============================================================================
 ## iterate over the points in TGraph
 #  @code 
@@ -1402,80 +1431,48 @@ def _gr2_sorted_ ( graph , reverse = False ) :
     return new_graph 
 
 # =============================================================================
-## filter points from the graph
+## remove points that do not satisfy the criteria
 #  @code
 #  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr0_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
+#  graph.remove ( lambda s : s[0]<0.0 ) 
+#  @endcode 
+def _gr_remove_ ( graph , remove ) :
+    """Remove points that do not satisfy the criteria
+    >> graph = ...
+    >>> graph.remove ( lambda s : s[0]<0.0 ) 
     """
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraph ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
+    old_len = len ( graph ) 
 
-    return new_graph
-
-# =============================================================================
-## filter points from the graph
-#  @code
-#  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr1_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
-    """
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraphErrors ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph
-
-
-# =============================================================================
-## filter points from the graph
-#  @code
-#  graph = ...
-#  f     = graph.filter( lambda s : s[1]>0 ) 
-#  @endcode
-#  @date   2016-03-28 
-def _gr2_filter_ ( graph , accept ):
-    """Filter points from the graph
-    >>> graph = ...
-    >>> f     = graph.filter( lambda s : s[1]>0 ) 
-    """
-    
-    oitems =      ( i for i in graph.items() ) 
-    fitems = list ( filter ( accept , oitems ) )
-    
-    new_graph = ROOT.TGraphAsymmErrors ( len( fitems ) )
-    copy_graph_attributes ( graph , new_graph )
-    
-    ip = 0 
-    for item in fitems :
-        new_graph[ip] = item[1:]
-        ip += 1
+    removed = [] 
+    for point in graph :
+        if remove ( *graph [ point ] ) :
+            removed.append ( point )
         
+    ir = 0 
+    for i in  removed :
+        d = graph.RemovePoint ( i - ir ) 
+        if 0 <= d : ir += 1
+
+    return len ( graph ) - old_len 
+
+# =============================================================================
+## create new graph, that contais only "good/filtered" points
+#  @code
+#  graph = ...
+#  new_graph = graph.filter ( lambda s : s[0]<0.0 ) 
+#  @endcode 
+def _gr_filter_ ( graph , accept , name = '' ) :
+    """ Create new graph, that contais only ``good/filtered'' points
+    >>> graph = ...
+    >>> new_graph = graph.filter ( lambda s : s[0]<0.0 ) 
+    """
+
+    if not name : name = graph.GetName() + '_filter'
+    new_graph = graph.Clone ( name )
+    copy_graph_attributes ( graph , new_graph )
+    
+    new_graph.remove ( lambda *s : not accept ( *s ) )
+    
     return new_graph
 
 
@@ -1513,7 +1510,44 @@ def _gr_transform_ ( graph , fun = lambda x , y : y ) :
 
 
 # =============================================================================
-ROOT.TGraph       . __len__       = ROOT.TGraphErrors . GetN 
+## transform the graph
+#  @code
+#  nll = ....
+#  fun = lambda x, y : math.exp ( -1 * y )  
+#  lh  = nll.transform ( fun ) 
+#  @endcode e
+def _grae_transform_ ( graph , fun = lambda x , y : y ) :
+    """Transform the graph
+    
+    >>> nll = ....
+    >>> fun = lambda x, y : math.exp ( -1 * y )  
+    >>> lh  = nll.transform ( fun ) 
+    
+    """
+    
+    new_graph = ROOT.TGraphAsymmErrors ( graph ) 
+    ## make a copy 
+    copy_graph_attributes ( graph , new_graph )
+    
+    for i in graph :
+        
+        x , exl , exh , y ,  eyl , eyh  = graph [ i ]
+
+        v  = float ( fun ( x , y               ) )
+        v1 = float ( fun ( x , y + abs ( eyh ) ) )
+        v2 = float ( fun ( x , y - abs ( eyl ) ) ) 
+
+        vmin = min ( v , v1 , v2 )
+        vmax = max ( v , v1 , v2 )
+        evl  = vmin - v
+        evh  = vmax - v
+        
+        new_graph[i] = x , exl , exh , v , evl , evh 
+        
+    return new_graph 
+
+# =============================================================================
+ROOT.TGraph       . __len__       = ROOT.TGraph . GetN 
 ROOT.TGraph       . __contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraph       . __iter__      = _gr_iter_ 
 ROOT.TGraph       . __call__      = _gr_call_
@@ -1530,6 +1564,7 @@ ROOT.TGraph       .  minmax       = _gr_yminmax_
 
 ROOT.TGraph       . __getitem__   = _gr_getitem_ 
 ROOT.TGraph       . __setitem__   = _gr_setitem_
+ROOT.TGraph       . __delitem__   = _gr_delitem_
 ROOT.TGraph       .     items     = _gr_iteritems_
 ROOT.TGraph       . iteritems     = _gr_iteritems_
 
@@ -1565,6 +1600,8 @@ ROOT.TGraphAsymmErrors . ymin        = _grae_ymin_
 ROOT.TGraphAsymmErrors . xmax        = _grae_xmax_ 
 ROOT.TGraphAsymmErrors . ymax        = _grae_ymax_ 
 
+ROOT.TGraphAsymmErrors . transform   = _grae_transform_
+
 ROOT.TGraph       . integral         = _gr_integral_
 ROOT.TGraph       . asTF1            = _gr_as_TF1_
 
@@ -1578,10 +1615,43 @@ ROOT.TGraphErrors      .sorted        = _gr1_sorted_
 ROOT.TGraphAsymmErrors .sorted        = _gr2_sorted_ 
 
 
-ROOT.TGraph            .filter        = _gr0_filter_
-ROOT.TGraphErrors      .filter        = _gr1_filter_ 
-ROOT.TGraphAsymmErrors .filter        = _gr2_filter_ 
+ROOT.TGraph            .filter        = _gr_filter_
+ROOT.TGraph            .remove        = _gr_remove_
 
+
+# ==========================================================================
+import ostap.math.math_ve as mve
+
+ROOT.TGraph.__exp__    = lambda g : g.transform ( fun = lambda x, y : mve.exp    ( y ) )
+ROOT.TGraph.__exp2__   = lambda g : g.transform ( fun = lambda x, y : mve.exp2   ( y ) )
+ROOT.TGraph.__expm1__  = lambda g : g.transform ( fun = lambda x, y : mve.expm1  ( y ) )
+ROOT.TGraph.__sqrt__   = lambda g : g.transform ( fun = lambda x, y : mve.sqrt   ( y ) )
+ROOT.TGraph.__cbrt__   = lambda g : g.transform ( fun = lambda x, y : mve.cbrt   ( y ) )
+ROOT.TGraph.__log__    = lambda g : g.transform ( fun = lambda x, y : mve.log    ( y ) )
+ROOT.TGraph.__log2__   = lambda g : g.transform ( fun = lambda x, y : mve.log2   ( y ) )
+ROOT.TGraph.__log10__  = lambda g : g.transform ( fun = lambda x, y : mve.log10  ( y ) )
+ROOT.TGraph.__log1p__  = lambda g : g.transform ( fun = lambda x, y : mve.log1p  ( y ) )
+ROOT.TGraph.__sin__    = lambda g : g.transform ( fun = lambda x, y : mve.sin    ( y ) )
+ROOT.TGraph.__cos__    = lambda g : g.transform ( fun = lambda x, y : mve.cos    ( y ) )
+ROOT.TGraph.__tan__    = lambda g : g.transform ( fun = lambda x, y : mve.tan    ( y ) )
+ROOT.TGraph.__sinh__   = lambda g : g.transform ( fun = lambda x, y : mve.sinh   ( y ) )
+ROOT.TGraph.__cosh__   = lambda g : g.transform ( fun = lambda x, y : mve.cosh   ( y ) )
+ROOT.TGraph.__tanh__   = lambda g : g.transform ( fun = lambda x, y : mve.tanh   ( y ) )
+ROOT.TGraph.__asin__   = lambda g : g.transform ( fun = lambda x, y : mve.asin   ( y ) )
+ROOT.TGraph.__acos__   = lambda g : g.transform ( fun = lambda x, y : mve.acos   ( y ) )
+ROOT.TGraph.__atan__   = lambda g : g.transform ( fun = lambda x, y : mve.atan   ( y ) )
+ROOT.TGraph.__asinh__  = lambda g : g.transform ( fun = lambda x, y : mve.asinh  ( y ) )
+ROOT.TGraph.__acosh__  = lambda g : g.transform ( fun = lambda x, y : mve.acosh  ( y ) )
+ROOT.TGraph.__atanh__  = lambda g : g.transform ( fun = lambda x, y : mve.atanh  ( y ) )
+ROOT.TGraph.__erf__    = lambda g : g.transform ( fun = lambda x, y : mve.erf    ( y ) )
+ROOT.TGraph.__erfc__   = lambda g : g.transform ( fun = lambda x, y : mve.erfc   ( y ) )
+ROOT.TGraph.__erfcx__  = lambda g : g.transform ( fun = lambda x, y : mve.erfcx  ( y ) )
+ROOT.TGraph.__erfi__   = lambda g : g.transform ( fun = lambda x, y : mve.erfi   ( y ) )
+ROOT.TGraph.__tgamma__ = lambda g : g.transform ( fun = lambda x, y : mve.tgamma ( y ) )
+ROOT.TGraph.__lgamma__ = lambda g : g.transform ( fun = lambda x, y : mve.lgamma ( y ) )
+ROOT.TGraph.__sech__   = lambda g : g.transform ( fun = lambda x, y : mve.sech   ( y ) )
+ROOT.TGraph.__probit__ = lambda g : g.transform ( fun = lambda x, y : mve.probit ( y ) )
+ROOT.TGraph.__pow__    = lambda g , *o : g.transform ( fun = lambda x, y : mve.pow ( y , *o ) )
 
 # =============================================================================
 ## set color attributes  
@@ -2562,7 +2632,7 @@ ROOT.TMultiGraph.T         = _grae_transpose_
 #  >>> spline = histo.(p,i,d)spline( .... )
 #  >>> graph  = histo.lw_graph ( spline[2] ) 
 #  @endcode 
-#  @see http://dx.doi.org/10.1016/0168-9002(94)01112-5
+#  @see https://doi.org/10.1016/0168-9002(94)01112-5
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def _lw_graph_ ( histo , func ) :
@@ -2674,7 +2744,7 @@ ROOT.TH1F.lw_graph = _lw_graph_
 #  >>> spline = histo.(p,i,d)spline( .... )
 #  >>> graph  = lw_graph ( histo ,  spline[2] ) 
 #  @endcode 
-#  @see http://dx.doi.org/10.1016/0168-9002(94)01112-5
+#  @see https://doi.org/10.1016/0168-9002(94)01112-5
 #  @author  Vanya BELYAEV  Ivan.Belyaev@itep.ru
 #  @date    2014-12-08
 def lw_graph ( histo , func ) :
@@ -2870,6 +2940,37 @@ _new_methods_      = (
     #
     ROOT.TGraph       . transform     ,
     #
+    ROOT.TGraph . __exp__    , 
+    ROOT.TGraph . __exp2__   ,
+    ROOT.TGraph . __expm1__  , 
+    ROOT.TGraph . __sqrt__   , 
+    ROOT.TGraph . __cbrt__   , 
+    ROOT.TGraph . __log__    , 
+    ROOT.TGraph . __log2__   , 
+    ROOT.TGraph . __log10__  , 
+    ROOT.TGraph . __log1p__  ,
+    ROOT.TGraph . __sin__    ,
+    ROOT.TGraph . __cos__    ,
+    ROOT.TGraph . __tan__    ,
+    ROOT.TGraph . __sinh__   ,
+    ROOT.TGraph . __cosh__   ,
+    ROOT.TGraph . __tanh__   ,
+    ROOT.TGraph . __asin__   ,
+    ROOT.TGraph . __acos__   ,
+    ROOT.TGraph . __atan__   ,
+    ROOT.TGraph . __asinh__  ,
+    ROOT.TGraph . __acosh__  ,
+    ROOT.TGraph . __atanh__  ,
+    ROOT.TGraph . __erf__    ,
+    ROOT.TGraph . __erfc__   ,
+    ROOT.TGraph . __erfcx__  ,
+    ROOT.TGraph . __erfi__   ,
+    ROOT.TGraph . __tgamma__ ,
+    ROOT.TGraph . __lgamma__ ,
+    ROOT.TGraph . __sech__   ,
+    ROOT.TGraph . __probit__ ,
+    ROOT.TGraph . __pow__    ,
+    #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
     ROOT.TGraphErrors .     items     ,
@@ -2953,8 +3054,7 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors .sorted        ,
     #
     ROOT.TGraph            .filter        ,
-    ROOT.TGraphErrors      .filter        ,
-    ROOT.TGraphAsymmErrors .filter        ,
+    ROOT.TGraph            .remove        ,
     ##
     ROOT.TGraph.transpose                 ,
     ROOT.TGraph.T                         ,     

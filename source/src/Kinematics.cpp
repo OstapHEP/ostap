@@ -13,6 +13,7 @@
 #include "Ostap/Tensors.h"
 #include "Ostap/SymmetricMatrixTypes.h"
 #include "Ostap/GenericMatrixTypes.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -821,6 +822,140 @@ Ostap::Vector3D Ostap::Kinematics::parallel
   Ostap::Vector3D r( b );
   r *= ( ab / b2 );
   return r;
+}
+// ============================================================================
+/*  momentum of the first partle form two-body decay
+ *  \f$ m\rightarrow m_1 m_2 \f$ in th eret frasme of \f$ m \f$.
+ *  \f[ q ( m , m_1 , m_2 )  \equiv 
+ *  \frac{\lambda^{1/2}\left( m^2, m_1^2, m_2^2\right)}{2m} \f]
+ */
+// ============================================================================
+double Ostap::Kinematics::q 
+( const double m  , 
+  const double m1 ,
+  const double m2 ) 
+{
+  if ( m <= m1 + m2 || m1 < 0 || m2 < 0 ) { return 0 ; }
+  //
+  const double l = triangle  ( m * m , m1 * m1 , m2 * m2 ) ;
+  //
+  return 0 < l ?  0.5 * std::sqrt ( l ) / m : 0.0 ;
+}
+// ============================================================================
+/*  two-body phase space 
+ *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f] 
+ * Note that there exist also an alternative normalization:
+ *  \f[ \Phi_2^{\prime}( m ) = \dfrac{\pi}{2} 
+ *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f],
+ *  this one is used e.g. in  
+ *  E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+ *              London, New York, Sydney, Toronto, 1973, Eq. (V.1.9)
+ *  @see Ostap::Kinematics::phasespace2_bk 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace2
+( const double x  , 
+  const double m1 , 
+  const double m2 ) 
+{
+  //
+  const double xm1 = std::max ( 0.0 , m1 ) ;
+  const double xm2 = std::max ( 0.0 , m2 ) ;
+  //
+  if ( x <= xm1 + xm2 ) { return 0 ; } //  RETURN 
+  //
+  const double msq = x * x ;
+  const double lam = Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
+  //
+  static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
+  //
+  return 0 < lam ? s_inv8pi * std::sqrt ( lam ) / msq : 0.0 ;
+}
+// ============================================================================
+/* two-body phase space: 
+ *  \f[ \Phi_2^{\prime}( m ) = \dfrac{\pi}{2} 
+ *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f],
+ *  This one is used e.g. in  
+ *  E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+ *              London, New York, Sydney, Toronto, 1973, Eq. (V.1.9)
+ * Note that there exist also an alternative normalization:
+ *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} 
+ *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f]
+ *  @see Ostap::Kinematics::phasespace2_bk 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace2_bk 
+( const double x  , 
+  const double m1 , 
+  const double m2 ) 
+{
+  const double xm1 = std::max ( 0.0 , m1 ) ;
+  const double xm2 = std::max ( 0.0 , m2 ) ;
+  //
+  if ( x <= xm1 + xm2 ) { return 0 ; } //  RETURN 
+  //
+  const double msq = x * x ;
+  const double lam = Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
+  //
+  static const double s_norm = 0.5 * M_PI ;  
+  //
+  return 0 < lam ? s_norm * std::sqrt ( lam ) / msq : 0.0 ;
+}
+// ============================================================================
+/** three-body phase space 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace3 
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+{
+  //
+  double xm1 = std::max ( 0.0 , m1 ) ;
+  double xm2 = std::max ( 0.0 , m2 ) ;
+  double xm3 = std::max ( 0.0 , m3 ) ;
+  //
+  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; } //   RETURN
+  //
+  static const double s_norm = 0.125 * M_PI * M_PI ;
+  //
+  const double p2    = x * x ;
+  const double M     = x     ;
+  //
+  const double Qp = 
+    ( M + xm1 + xm2 + xm3 ) *
+    ( M + xm1 - xm2 - xm3 ) *
+    ( M - xm1 + xm2 - xm3 ) *
+    ( M - xm1 - xm2 + xm3 ) ;
+  //
+  const double Qm = 
+    ( M - xm1 - xm2 - xm3 ) *
+    ( M - xm1 + xm2 + xm3 ) *
+    ( M + xm1 - xm2 + xm3 ) *
+    ( M + xm1 + xm2 - xm3 ) ;
+  //
+  const double k = std::sqrt ( Qm / Qp ) ;
+  //
+  if  ( 1 - k < 1.e-10 ) { return s_norm * p2 ; }  // RETURN 
+  //
+  const double sqrt_Qp  = std::sqrt ( Qp ) ;
+  //
+  const double sin_phi1 = sqrt_Qp / ( p2 + xm1 * xm1 - xm2 * xm2 - xm3 * xm3 ) ;
+  const double sin_phi2 = sqrt_Qp / ( p2 - xm1 * xm1 + xm2 * xm2 - xm3 * xm3 ) ;
+  const double sin_phi3 = sqrt_Qp / ( p2 - xm1 * xm1 - xm2 * xm2 + xm3 * xm3 ) ;
+  //
+  const double KZ1 = 
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi1 ) , k ) / ( sin_phi1 * sin_phi1 ) ;
+  const double KZ2 = 
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi2 ) , k ) / ( sin_phi2 * sin_phi2 ) ;
+  const double KZ3 = 
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi3 ) , k ) / ( sin_phi3 * sin_phi3 ) ;
+  //
+  const double E_minus_K = - Ostap::Math::elliptic_KmE ( k ) ;
+  //
+  return ( sqrt_Qp * ( p2 + xm1 * xm1 + xm2 * xm2 + xm3 * xm3 ) * E_minus_K
+           + Qp * ( KZ1 + KZ2 + KZ3 ) ) / p2  * s_norm ;
 }
 // ============================================================================
 //                                                                      The END 

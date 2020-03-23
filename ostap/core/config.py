@@ -45,10 +45,13 @@ type(config).__repr__ = _cp_str_
 config [ 'General'  ] = {
     'Quiet'     : str ( _config.quiet   ) ,
     'Verbose'   : str ( _config.verbose ) ,
-    'Parallel'  : 'PATHOS'
+    'Parallel'  : 'PATHOS'                ,
     }
 
-config [ 'Canvas'   ] = { 'Width' :  '1000' , 'Height' :  '800' } 
+config [ 'Canvas'   ] = { 'Width'       :  '1000' , 'Height'       :  '800' , 
+                          'MarginTop'   : '0.05'  , 'MarginBottom' : '0.12' ,
+                          'MarginRight' : '0.05'  , 'MarginLeft'   : '0.12' }
+
 config [ 'Fit Draw' ] = {}
 config [ 'Parallel' ] = {}
 
@@ -77,7 +80,7 @@ fit_draw = config [ 'Fit Draw' ]
 # =============================================================================
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.core.config' )
-else                       : logger = getLogger ( __name__     )
+else                       : logger = getLogger ( __name__  )
 # =============================================================================
 import logging
 logging.disable ( ( logging.WARNING - 1 ) if quiet   else

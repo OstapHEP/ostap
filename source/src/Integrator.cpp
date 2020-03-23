@@ -4,7 +4,6 @@
 // STD&STL
 // =============================================================================
 #include <functional>
-#include <iostream>
 // =============================================================================
 // Ostap
 // =============================================================================
@@ -57,8 +56,6 @@ double Ostap::Math::Integrator::integrate
       __FILE__          ,   // the file 
       __LINE__          ) ; // the line 
   //
-  //
-  std::cout << " I " << ";   result=" << result << std::endl ;
   //
   return result ;
 }
@@ -208,8 +205,6 @@ double Ostap::Math::Integrator::integrate_with_cache
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
       __LINE__          ) ; // the line 
-  //
-  std::cout << " I/tag= " << tag << ";   result=" << result << std::endl ;
   //
   return result ;
 }

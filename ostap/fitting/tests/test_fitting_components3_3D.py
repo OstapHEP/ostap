@@ -226,6 +226,10 @@ def test_comp_3dMixfit () :
         
         r = model.fitTo ( dataset , ncpu=8 )
 
+        model.draw1 ( dataset  )
+        model.draw2 ( dataset  )
+        model.draw3 ( dataset  )
+
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
     
@@ -233,6 +237,7 @@ def test_comp_3dMixfit () :
 if '__main__' == __name__ :
 
     test_comp_3dMixfit ()
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

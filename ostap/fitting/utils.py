@@ -26,19 +26,29 @@ __all__     = (
     'component_clone'   , ## Should one use ``cloned'' component?
     # 
     'numcpu'            , ## number of CPUs
-    'ncpu'              , ## fuction to builf ROOT.RooFit.NumCPU
+    'ncpu'              , ## fuction to build ROOT.RooFit.NumCPU
+    ## add/remove RooFit topic
+    'remove_topic'      , ## remove topic from RooMsgService
+    'add_topic'         , ## add    topic from RooMsgService
+    'suppress_topics'   , ## suppress topics from RooMsgService 
     #
     'Phases'            , ##  helper class for Ostap polynomial/PDFs
-    'RooPolyBase'       , ##  helper class for RooFit polynomials
+    'ParamsPoly'        , ##  helper class for RooFit polynomials
+    'ShiftScalePoly'    , ##  helper class for RooFit polynomials
+    #
+    "NameDuplicates"    , ## allow/disallow name duplicates 
     )
 # =============================================================================
 import ROOT, math, string
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core        import rootID, VE, items_loop
-from   ostap.core.ostap_types import num_types, list_types, integer_types, string_types 
+from   ostap.core.core        import Ostap, rootID, VE, items_loop
+from   ostap.core.ostap_types import ( num_types     , list_types   ,
+                                       integer_types , string_types ,
+                                       is_good_number               )
 from   ostap.logger.utils     import roo_silent
 from   sys                    import version_info as python_version 
+from   ostap.math.random_ext  import ve_gauss, poisson  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -51,7 +61,7 @@ else                       : logger = getLogger ( __name__              )
 # - status =  2 : full matrix but forced pos def
 # - status =  3 : full accurate matrix
 _cov_qual_ = {
-    -1 :  '-1/not available (inversion failed or Hesse failed)' ,
+    -1 :  '-1/not available (inversion failed or Hesse failed or externally provided)' ,
     0  :  ' 0/available but not positive defined',
     1  :  ' 1/covariance only approximate',
     2  :  ' 2/full matrix but forced pos def',
@@ -147,21 +157,31 @@ class RangeVar(object) :
         self.var.setMax ( self.omax )
 
 # =============================================================================
+## @class NameDuplicates
+#  Are name duplicates allowed?
+#  @code
+#  if NameDuplicates.allowed()
+#  ...
+#  NameDuplicates.allow ( True ) 
+#  @endcode
+#  @attention allowing name duplication is a dangerous action!
+class NameDuplicates(object) :
+    """ Are name duplicates allowed?
+    >>> if NameDuplicates.allowed() : .... 
+    ...
+    >>> NameDuplicates.allow ( True )
+    - Attention:  allowing name duplication is a dangerous action!
+    """
+    __allowed = False
+    @classmethod
+    def allowed ( cls ) : return cls.__allowed
+    @classmethod
+    def allow   ( cls , allowed ) :
+        cls.__allowed = True if allowed else False 
+# =============================================================================
 ## keep the list of local loggers  
 _loggers  = {}           
 # =============================================================================
-def val2str ( value , format = 'CONST_%s' ) :
-    #
-    result = format % value
-    result = result.replace ( '-' , '_negate_')
-    result = result.replace ( '.' , '_dot_'   )
-    result = result.replace ( '+' , '_plus_'  )
-    #
-    if ( not result ) or ( result[0] not in string.ascii_letters ) :
-        result = 'v_' + result
-    #
-    return result
-# ============================================================================
 ## @class MakeVar
 #  Helper class that allows implement several purely  technical methods:
 #   - creation of <code>ROOT.RooRealVar objects</code>
@@ -173,6 +193,9 @@ class MakeVar ( object ) :
     - creation of <code>ROOT.RooRealVar objects</code>
     - store newly created RooFit objects
     """
+    __pdf_names = set()
+    __var_names = set()
+    
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
@@ -206,7 +229,7 @@ class MakeVar ( object ) :
     def verbose ( self , message , *args , **kwargs ) :
         """Produce VERBOSE  message using the local logger"""
         return self.logger.verbose ( message , *args , **kwargs )
-    
+
     @property
     def aux_keep ( self ) :
         """``aux_keep'' -  the list of objects to be kept by this PDF"""
@@ -228,7 +251,10 @@ class MakeVar ( object ) :
         return self.__name if self.__name else '' 
     @name.setter
     def name ( self , value ) :
-        assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type(value) ) 
+        assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
+        if value in self.__pdf_names and not NameDuplicates.allowed() :
+            self.warning ( 'The name "%s" for PDF already defined!' % value )
+        self.__pdf_names.add ( value )     
         self.__name = value
 
     # =============================================================================
@@ -256,29 +282,31 @@ class MakeVar ( object ) :
         """
         # var = ( value )
         # var = ( min , max )
-        # var = ( value , min , max ) 
+        # var = ( value , min , max )
+
         if   isinstance   ( var , tuple ) :
-            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name 
-            var = ROOT.RooRealVar ( name , comment , *var )
+            assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
+            var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
 
         ## if only name is specified :
         if   isinstance  ( var , string_types ) and 2 <= len ( args ):
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            var = ROOT.RooRealVar( var , name + comment , *args )
+            var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
             
         # var = value 
         if isinstance   ( var , num_types ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            if   not    args       : var = ROOT.RooRealVar ( name , comment , var             )
-            elif 2 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args     )
-            elif 3 == len ( args ) : var = ROOT.RooRealVar ( name , comment , var , *args[1:] )
-        
+            if   not    args       : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
+            elif 2 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
+            elif 3 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+                
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            var = ROOT.RooRealVar ( name , comment , *args )
-            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-        
+            var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
+            
+        self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
         elif isinstance ( fix , num_types  ) :
@@ -296,6 +324,17 @@ class MakeVar ( object ) :
 
         return var
 
+    # ==========================================================================
+    ## check the possible name  duplication
+    def var_name  ( self , name ) :
+        """Check the possible name duplication
+        """
+        if name in self.__var_names and not NameDuplicates.allowed() :
+            self.warning ( 'The variable name "%s" is already defined!' % name )
+            
+        self.__var_names.add ( name )
+        return name
+    
     # =========================================================================
     ## create ROOT.RooFit.Binning from TAxis
     #  @see RooFit::Binning
@@ -333,7 +372,7 @@ class MakeVar ( object ) :
         """Technical method to parse the constraints argument
         >>>  pdf.fiTo ( ..  , constraints = ... , ... )
         """
-
+        
         if   isinstance ( arg , ROOT.RooCmdArg   ) :
             return arg        
         elif isinstance ( arg , ROOT.RooArgSet   ) :
@@ -359,9 +398,10 @@ class MakeVar ( object ) :
         return None 
             
     # =========================================================================
-    ## technical function to parse arguments for <code>fitTo</code>  function
+    ## technical function to parse arguments for <code>fitTo</code> and 
+    #  <code>nll</code>  methods
     def parse_args ( self ,  dataset = None , *args , **kwargs ) :
-        """Technical function to parse arguments for fitTo function
+        """Technical function to parse arguments for fitTo/nll/.. methods
         """
         _args = []
         for a in args :
@@ -370,42 +410,56 @@ class MakeVar ( object ) :
             else : _args.append ( a ) 
 
         from ostap.plotting.fit_draw import keys  as drawing_options
+
+        silent  = None
+        verbose = None
         
         for k , a in items_loop ( kwargs ) :
             
-            klow = k.lower ()
-            kup  = k.upper ()
+            klow = k.lower ().replace('_','')
+            kup  = k.upper ().replace('_','')
             
             ## skip "drawing" options 
             if   klow in drawing_options                            : continue 
-            if   klow in ( 'draw' , 'draw_option', 'draw_options' ) : continue 
+            if   klow in ( 'draw'            ,
+                           'drawoption'      ,
+                           'drawoptions'     ) : continue 
             
             if   isinstance ( a , ROOT.RooCmdArg ) : _args.append ( a )
             
             elif kup in ( 'VERBOSE' ,        ) and isinstance ( a , bool ) :
-                _args.append ( ROOT.RooFit.Verbose (     a ) ) 
+                
+                if not verbose is None :
+                    if a != verbose : 
+                        logger.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
+                        verbose = a                        
+                if not silent is None :
+                    if a == silent :
+                        logger.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
+                        silent = not a 
+                _args.append ( ROOT.RooFit.Verbose (     a ) )
             elif kup in ( 'SILENT'           ,
-                           'SILENCE'         ) and isinstance ( a , bool ) :
+                          'SILENCE'          ) and isinstance ( a , bool ) :
+                if not silent is None :
+                    if a != silent : 
+                        logger.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
+                        verbose = a                        
+                if not verbose is None :
+                    if a == verbose :
+                        logger.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
+                        verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
             elif kup in ( 'STRATEGY'         , 
                           'MINUITSTRATEGY'   ,
-                          'MINUIT_STRATEGY'  ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
+                          'STRATEGYMINUIT'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
                 _args.append ( ROOT.RooFit.Strategy (    a ) ) 
             elif kup in ( 'PRINTLEVEL'       ,
-                          'PRINT_LEVEL'      ,
                           'MINUITPRINT'      ,
-                          'MINUIT_PRINT'     ,
-                          'MINUITLEVEL'      ,
-                          'MINUIT_LEVEL'     ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
+                          'MINUITLEVEL'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
                 _args.append ( ROOT.RooFit.PrintLevel ( a ) ) 
             elif kup in ( 'PRINTEVALERRORS'  ,
-                          'PRINT_EVAL_ERRORS',
-                          'PRINTEVAL_ERRORS' ,
-                          'PRINT_EVALERRORS' ,
                           'PRINTERRORS'      ,
-                          'PRINT_ERRORS'     ,
-                          'ERRORSPRINT'      ,
-                          'ERRORS_PRINT'     ) and isinstance ( a , integer_types ) and -1 <= a :
+                          'ERRORSPRINT'      ) and isinstance ( a , integer_types ) and -1 <= a :
                 _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )                
             elif kup in ( 'TIMER'            ,
                           'TIMING'           ) and isinstance ( a , bool ) :
@@ -414,9 +468,10 @@ class MakeVar ( object ) :
                           'WARNINGS'         ) and isinstance ( a , bool ) :
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
-            elif kup in ( 'WEIGHTED'         ,
-                          'SUMW2'            ,
-                          'SUMW2ERROR'       ) and isinstance ( a , bool ) :
+            elif kup in ( 'SUMW2'            ,
+                          'SUMW2ERR'         ,
+                          'SUMW2ERROR'       ,
+                          'SUMW2ERRORS'      ) and isinstance ( a , bool ) :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -426,15 +481,36 @@ class MakeVar ( object ) :
                     self.warning ('parse_args: SumW2-flag is False for     weighted dataset')                    
 
                 _args.append (  ROOT.RooFit.SumW2Error( a ) )
+                                    
+            elif kup in ( 'ASYMPTOTIC'       ,
+                          'ASYMPTOTICERR'    ,
+                          'ASYMPTOTICERROR'  ,
+                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= ROOT.gROOT.GetVersionInt() :
+                
+                if   a and dataset and     dataset.isWeighted()           : pass 
+                elif a and dataset and not dataset.isWeighted()           :
+                    self.warning ('parse_args: AsymptoticError-flag is True  for non-weighted dataset')
+                elif       dataset and not dataset.isWeighted() and not a : pass 
+                elif       dataset and     dataset.isWeighted() and not a :
+                    self.warning ('parse_args: AsymptoticError-flag is False for     weighted dataset')                    
+
+                _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
+            elif kup in ( 'BATCH'            ,
+                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= ROOT.gROOT.GetVersionInt() :
+                _args.append (  ROOT.RooFit.BatchMode ( a ) )                                
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Extended ( a ) )                
-            elif kup in ( 'NCPU'             ,
+            elif kup in ( 'CPU'              ,
+                          'CPUS'             ,
+                          'NCPU'             ,
                           'NCPUS'            ,
                           'NUMCPU'           ,
                           'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a : 
                 _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
-            elif kup in ( 'NCPU'             ,
+            elif kup in ( 'CPU'              ,
+                          'CPUS'             ,
+                          'NCPU'             ,
                           'NCPUS'            ,
                           'NUMCPU'           ,
                           'NUMCPUS'          ) and \
@@ -445,18 +521,15 @@ class MakeVar ( object ) :
                 
             elif kup in ( 'RANGE'            ,
                           'FITRANGE'         ,
-                          'FIT_RANGE'        ,
                           'RANGES'           ,
-                          'FITRANGES'        ,
-                          'FIT_RANGES'       ) and isinstance ( a , string_types ) :
+                          'FITRANGES'        ) and isinstance ( a , string_types ) :
                 _args.append   (  ROOT.RooFit.Range ( a ) )  
             elif kup in ( 'RANGE'            ,
-                          'FITRANGE'         ,
-                          'FIT_RANGE'        ) and isinstance ( a , list_types   ) \
+                          'FITRANGE'         ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
                  and a[0] < a[1]  : 
-                _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )                 
+                _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
             elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
@@ -464,10 +537,9 @@ class MakeVar ( object ) :
             elif kup in  ( 'HESSE'    ,      ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Hesse ( a )  )
             elif kup in  ( 'INITIALHESSE'    ,
-                           'INITIAL_HESSE'   ,
-                           'INIT_HESSE'      ,
-                           'HESSE_INIT'      ,
-                           'HESSE_INITIAL'   ) and isinstance ( a , bool ) :
+                           'INITHESSE'       ,
+                           'HESSEINIT'       ,
+                           'HESSEINITIAL'    ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
             elif kup in ( 'OPTIMIZE'         ,
                           'OPTIMISE'         ) and isinstance ( a , integer_types  ) :
@@ -484,9 +556,7 @@ class MakeVar ( object ) :
             elif kup in ( 'OFFSET'           ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
             elif kup in ( 'FITOPTIONS'       ,
-                          'FITOPTION'        ,
-                          'FIT_OPTIONS'      ,
-                          'FIT_OPTION'       ) and isinstance ( a , string_types ) :
+                          'FITOPTION'        ) and isinstance ( a , string_types ) :
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
                 
             elif kup in ( 'CONSTRAINT'       ,
@@ -511,6 +581,15 @@ class MakeVar ( object ) :
                 nc = numcpu()
                 if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
 
+        # =============================================================
+        ## check sumw2 for the weighted datasets 
+        if dataset and dataset.isWeighted() :
+            for a in _args :
+                if 'SumW2Error'      == a.name and not bool ( a.getInt ( 0 ) ) :
+                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!")
+                if 'AsymptotocError' == a.name and not bool ( a.getInt ( 0 ) ) :
+                    logger.warning ("parse_args: 'asymptorocerror=False' is specified for the weighted  dataset!")
+
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
         
@@ -520,12 +599,30 @@ class MakeVar ( object ) :
         kset.discard  ( 'NumCPU'     ) ## trivial
         kset.discard  ( 'Verbose'    ) ## trivial 
         kset.discard  ( 'Timer'      ) ## trivial 
-        kset.discard  ( 'PrintLevel' ) ## trivial 
+        kset.discard  ( 'PrintLevel' ) ## trivial
+
+        ## duplicates? 
+        if len ( kset ) != len ( keys ) :
+            self.warning ("duplicated options!")            
         #
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
         ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
+        
+        def chunks(lst, n):
+            """Yield successive n-sized chunks from lst."""
+            for i in range(0, len(lst), n):
+                yield lst[i:i + n]
 
+        ## _args.append ( ROOT.RooFit.BatchMode ( True ) )
+        
+        nn = 4 
+        while nn < len ( _args ) :
+            _a = [] 
+            for c in chunks ( _args , nn ) :
+                _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+            _args = _a 
+                                    
         return tuple ( _args )
     
     # =========================================================================
@@ -533,8 +630,8 @@ class MakeVar ( object ) :
     # =========================================================================
     
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the product of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) variable for the product of
+    #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -544,7 +641,7 @@ class MakeVar ( object ) :
     #  var4 = xxx.vars_product  ( var1 , 2.0  )    
     #  @endcode 
     def vars_multiply ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) RooFormularVar  for var1*var2 
+        """Construct (on-flight) variable for var1*var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_multiply ( var1 , var2   )
@@ -557,38 +654,34 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) * float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) * float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            # shortcut 
+            if   1 == var1 : return var2                             ## SHORTCUT
+            elif 0 == var1 : return ROOT.RooRealConstant.value ( 0 ) ## SHORTCUT
+            # 
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_multiply ( var1 , var2 , name , title )
         elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+            # shortcut 
+            if   1 == var2 : return var1                             ## SHORTCUT
+            elif 0 == var2 : return ROOT.RooRealConstant.value ( 0 ) ## SHORTCUT
+            # 
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_multiply ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Multiply_%s_%s'  % vnames 
-        title = title if title else '(%s) times (%s)' % vnames 
-        
-        formula = '(%s*%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-        #
-        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit. Product  ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
 
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the sum  of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) variable for the sum  of
+    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  v_1 + v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -598,7 +691,7 @@ class MakeVar ( object ) :
     #  var6 = xxx.vars_sum ( var1 , 2.0  )    
     #  @endcode 
     def vars_add ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) RooFormularVar  for var1+var2 
+        """Construct (on-flight) variable for var1+var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_add ( var1 , var2   )
@@ -611,39 +704,32 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) + float ( var2 )
-            name  = name  if name   else val2str ( res )
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) + float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return var2                      ## SHORTCUT
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 )                         
             return self.vars_add ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return var1                      ## SHORTCUT
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_add ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Add_%s_%s'  % vnames 
-        title = title if title else '(%s) plus (%s)' % vnames 
-        
-        formula = '(%s+%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-        #
-        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Addition  ( var1 , var2 )
         self.aux_keep.append ( result  )
-        
+                
         return result
 
-
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the subtraction  of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) variable for the subtraction  of
+    #  <code>var1</code> and <code>var1</code>: \f$ v\equiv v_1 - v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -653,7 +739,7 @@ class MakeVar ( object ) :
     #  var6 = xxx.vars_difference ( var1 , 2.0  )    
     #  @endcode 
     def vars_subtract ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) RooFormularVar  for var1-var2 
+        """Construct (on-flight) variable  for var1-var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_subtract   ( var1 , var2   )
@@ -661,43 +747,36 @@ class MakeVar ( object ) :
         >>> var5 = xxx.vars_difference ( var1 , var2   )
         >>> var6 = xxx.vars_difference ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
-        
+
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) - float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            ##
+            res  = float ( var1 ) - float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## 
+            var1 = ROOT.RooRealConstant.value ( var1 )                         
             return self.vars_subtract ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return var1                      ## SHORTCUT
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_subtract ( var1 , var2 , name , title )
-        
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Subtract_%s_%s'  % vnames 
-        title = title if title else '(%s) minus (%s)' % vnames 
-        
-        formula = '(%s-%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-        #
-        self.aux_keep.append ( varlist )
-        self.aux_keep.append ( result  )
-        
-        return result
 
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Subtraction  ( var1 , var2 )
+        self.aux_keep.append ( result  )
+                
+        return result
+            
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the division of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) variable for the ratio of
+    #  <code>var1</code> and <code>var2</code>: \f$   v\equiv \frac{v_1}{v_2} \f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -707,7 +786,7 @@ class MakeVar ( object ) :
     #  var6 = xxx.vars_ratio  ( var1 , 2.0  )    
     #  @endcode 
     def vars_divide ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) RooFormularVar  for var1/var2 
+        """Construct (on-flight) variable for var1/var2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_divide ( var1 , var2   )
@@ -721,42 +800,24 @@ class MakeVar ( object ) :
 
         if f1 and f2 :
             res   = float ( var1 ) / float ( var2 )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
-            return self.vars_divide ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
-            return self.vars_divide ( var1 , var2 , name , title )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_divide   ( var1 , var2 , name , title )
+        elif f2 :
+            return self.vars_multiply ( var1 , 1.0/var2 , name , title )
         
-        vnames = var1.name , var2.name 
-        
-        name  = name  if name  else 'Divide_%s_%s'     % vnames 
-        title = title if title else '(%s) divide (%s)' % vnames 
-        
-        formula = '(%s/%s)' % vnames
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-        #
-        self.aux_keep.append ( varlist )
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Division  ( var1 , var2 )
         self.aux_keep.append ( result  )
-        
+                
         return result
-    
-    vars_sum        = vars_add 
-    vars_product    = vars_multiply
-    vars_ratio      = vars_divide
-    vars_difference = vars_subtract
 
     # =============================================================================
-    ## construct (on-flight) RooFormularVar for the fraction  of
-    #  <code>var1</code> and <code>var1</code>
+    ## construct (on-flight) variable  for the fraction  of
+    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1}{v_1+v_2}\f$
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -764,7 +825,7 @@ class MakeVar ( object ) :
     #  var4 = xxx.vars_fraction ( var1 , 2.0  )    
     #  @endcode 
     def vars_fraction ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) RooFormularVar  for var1/(var2+var1)
+        """Construct (on-flight) variable  for var1/(var2+var1)
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_fraction ( var1 , var2   )
@@ -775,36 +836,238 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res   = float ( var1 ) /  ( float ( var2 ) + float ( var1 ) )
-            name  = name  if name   else val2str ( res ) 
-            title = title if title  else 'Constant(%s)' % res
-            var   = ROOT.RooConstVar ( name , title , res )
-            self.aux_keep.append ( var )
-            return  var
-        elif f1 : 
-            var1 = ROOT.RooConstVar  ( val2str ( var1 ) , 'Constant(%s)'  % var1 , var1 )
-            self.aux_keep.append ( var1 )
+            res  = float ( var1 ) / ( float ( var2 ) + float ( var1 ) )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1  : return ROOT.RooRealConstant.value ( 0 ) ## SHORTCUT
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
             return self.vars_fraction ( var1 , var2 , name , title )
-        elif f2 : 
-            var2 = ROOT.RooConstVar  ( val2str ( var2 ) , 'Constant(%s)'  % var2 , var2 )
-            self.aux_keep.append ( var2 )
+        elif f2 :
+            ## shortcut
+            if 0 == var2  : return ROOT.RooRealConstant.value ( 1 ) ## SHORTCUT
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
             return self.vars_fraction ( var1 , var2 , name , title )
         
-        vnames = var1.name , var2.name 
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Fraction  ( var1 , var2 )
+        self.aux_keep.append ( result  )
         
-        name  = name  if name  else 'Fraction_%s_%s'     % vnames 
-        title = title if title else '(%s) fraction (%s)' % vnames 
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for the asymmetry of
+    #  <code>var1</code> and <code>var2</code>: \f$ v \equiv \frac{v_1-v_2}{v_1+v_2}\f$
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_asymmetry     ( var1 , var2 )
+    #  var4 = xxx.vars_asymmetry     ( var1 , 2.0  )    
+    #  var3 = xxx.vars_reldifference ( var1 , var2 )
+    #  var4 = xxx.vars_reldifference ( var1 , 2.0  )    
+    #  @endcode 
+    def vars_asymmetry ( self , var1 , var2 , name = '' , title = '' ) :
+        """Construct (on-flight) variable for (var1-var2)/(var2+var1)
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_asymmetry     ( var1 , var2   )
+        >>> var4 = xxx.vars_asymmetry     ( var1 , 2 , 'sigma2' , title = 'exression' )
+        >>> var3 = xxx.vars_reldifference ( var1 , var2   )
+        >>> var4 = xxx.vars_reldifference ( var1 , 2 , 'sigma2' , title = 'exression' )
+        """
         
-        formula = '(%s/(%s+%s))' %   ( var1.name , var1.name , var2.name )
-        varlist = ROOT.RooArgList    ( var1 , var2                     )
-        result  = ROOT.RooFormulaVar ( name , title , formula, varlist )
-        #
-        self.aux_keep.append ( varlist )
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooRealConstant.value ( -1 ) ## shortcut
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_asymmetry ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooRealConstant.value (  1 ) ## shortcut
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_asymmetry ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ a^b \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_power        ( var1 , var2 )
+    #  var4 = xxx.vars_power        ( var1 , 2.0  )    
+    #  var4 = xxx.vars_power        ( 2.0  , var2 )    
+    #  @endcode 
+    def vars_power ( self , var1 , var2 , name = '' , title = '' ) :
+        """ construct (on-flight) variable  for \f$ a^b \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_power        ( var1 , var2 )
+        >>> var4 = xxx.vars_power        ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_power        ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = float ( var1 ) ** float ( var2 )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 1 == var1 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooRealConstant.value (  1 ) ## shortcut
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_power ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Power ( var1 , var2 )
+        self.aux_keep.append ( result  )
+        
+        return result
+
+    # =============================================================================
+    ## construct (on-flight) variable  for \f$ exp(ab) \f$ 
+    #  <code>var1</code> and <code>var2</code>: 
+    #  @code
+    #  var1 = ...
+    #  var2 = ...
+    #  var3 = xxx.vars_exp ( var1 , var2 )
+    #  var4 = xxx.vars_exp ( var1 , -1   )    
+    #  var4 = xxx.vars_exp ( -1   , var2 )    
+    #  @endcode 
+    def vars_exp ( self , var1 , var2 = 1 , name = '' , title = '' ) :
+        """ construct (on-flight) variable  for \f$ exp(a*b) \f$ 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> var3 = xxx.vars_exp ( var1 , var2 )
+        >>> var4 = xxx.vars_exp ( var1 , 2.0  )    
+        >>> var4 = xxx.vars_exp ( 2.0  , var2 )    
+        """
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        if f1 and f2 :
+            res  = math.exp ( float ( var1 ) * float ( var2 ) )
+            return ROOT.RooRealConstant.value ( res ) 
+        elif f1 :
+            ## shortcut 
+            if 0 == var1 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var1 = ROOT.RooRealConstant.value ( var1 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        elif f2 :
+            ## shortcut 
+            if 0 == var2 : return ROOT.RooRealConstant.value ( 1 ) ## shortcut
+            #
+            var2 = ROOT.RooRealConstant.value ( var2 ) 
+            return self.vars_exp ( var1 , var2 , name , title )
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        result = Ostap.MoreRooFit.Exp ( var1 , var2 )
         self.aux_keep.append ( result  )
         
         return result
 
     
+    vars_sum           = vars_add 
+    vars_product       = vars_multiply
+    vars_ratio         = vars_divide
+    vars_difference    = vars_subtract
+    vars_reldifference = vars_asymmetry
+    vars_pow           = vars_power
+    vars_expo          = vars_exp
+
+    # =========================================================================
+    ## helper function to create <code>RooFormulaVar</code>
+    #  @code
+    #  OBJ = ...
+    #  f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+    #  @endcode 
+    def vars_formula ( self , formula , vars , name = '' , title = '' ) :
+        """helper function to create <code>RooFormulaVar</code>
+        >>> OBJ = ...
+        >>> f   = OBJ.vars_formula ( '%s*%s/%s' , [ a , b, c ] , name = 'myvar' )
+        """
+
+        assert vars and len ( vars ) , 'Variables must be specified!'
+
+        vvars = []
+        for v in  vars :
+            if isinstance    ( v , ROOT.RooAbsArg ) :
+                vvars.append ( v )
+            elif isinstance  ( v , string_types   ) :
+                try :
+                    vv = self.parameter ( v )
+                    vvars.append ( vv ) 
+                except :
+                    raise TypeError ( "Unknown parameter name %s" % v)
+            else :
+                raise TypeError( "Unknown parameter type %s/%s" % ( v , type ( v ) ) ) 
+
+        vlst = ROOT.RooArgList()
+        for v in vvars : vlst.add ( v )
+
+        has_at      = '@' in formula
+        has_percent = '%' in formula
+        import re
+        has_index   = re.search ( r'\[( *)(?P<degree>\d*)( *)\]' , formula )
+        has_format1 = re.search ( r'\{( *)(?P<degree>\d*)( *)\}' , formula )
+        has_format2 = re.search ( r'\{( *)(?P<degree>\w*)( *)\}' , formula )
+
+        formula_ = formula 
+        if   has_at      : pass 
+        elif has_index   : pass 
+        elif has_percent :  
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula % vnames
+        elif has_format1 :            
+            vnames   = tuple ( [ p.name for p in vlst ] )
+            formula_ = formula.format ( *vnames ) 
+        elif has_format2 :
+            kw  = {}
+            for p in vlist : kw [ p.name ] = p.name
+            formula_ = formula.format ( *kw )
+            
+        name  = name  if name  else 'Formula_%s '    % self.name 
+        title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
+        
+        rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        
+        self.aux_keep.append ( vlst )
+        self.aux_keep.append ( rvf  )
+        
+        return rfv 
+        
+        
     # =========================================================================
     ## Soft/Gaussian constraints 
     # =========================================================================
@@ -830,15 +1093,15 @@ class MakeVar ( object ) :
 
         assert 0 < value.cov2() , 'Invalid error for %s' % value
         
-        name  = name  if name  else 'Gauss_%s_%s'                       % ( var.GetName() , self.name ) 
-        title = title if title else 'Gauissian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+        name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
+        title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
         
         # value & error as RooFit objects: 
         val = ROOT.RooFit.RooConst ( value.value () )
         err = ROOT.RooFit.RooConst ( value.error () )
         
         # Gaussian constrains 
-        gauss = ROOT.RooGaussian ( name , title , var , val , err )
+        gauss = ROOT.RooGaussian ( self.var_name ( name ) , title , var , val , err )
         
         # keep all the created technical stuff  
         self.aux_keep.append ( val   )
@@ -904,7 +1167,6 @@ class MakeVar ( object ) :
         """
         assert isinstance ( value , VE ) and 0 < value.cov2() ,\
                "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
-
 
         fa = isinstance ( a , ROOT.RooAbsReal )
         fb = isinstance ( b , ROOT.RooAbsReal )
@@ -1028,9 +1290,9 @@ class MakeVar ( object ) :
     def make_constraint ( self , var , value , name = '' ,  title = '' ) :
         """Create ready-to-use ``soft'' gaussian constraint for the variable
         
-        >>> var     = ...                            ## the variable 
-        >>> extcntr = var.constaint( VE(1,0.1**2 ) ) ## create constrains 
-        >>> model.fitTo ( ... , extcntr )            ## use it in the fit 
+        >>> var     = ...                              ## the variable 
+        >>> extcntr = xxx.constraint ( VE(1,0.1**2 ) ) ## create constrains 
+        >>> model.fitTo ( ... , constraint = extcntr ) ## use it in the fit 
         """
         
         ## create the gaussian constraint
@@ -1043,6 +1305,35 @@ class MakeVar ( object ) :
         self.aux_keep.append ( cnts   )
         
         return result 
+
+    # =========================================================================
+    ## sample ``random'' positive number of events
+    #  @code
+    #  n =  pdf.gen_sample ( 10            ) ## get poissonian 
+    #  n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
+    #  @endcode
+    def gen_sample ( self , nevents ) :
+        """Sample ``random'' positive number of events
+        >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
+        >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
+        """
+        if   isinstance ( nevents , num_types ) and 0  < nevents :
+            return poisson ( nevents )
+        elif isinstance ( nevents , VE ) and \
+                 ( ( 0 <= nevents.cov2 () and 0 < nevents                       ) or 
+                   ( 0 <  nevents.cov2 () and 0 < nevents + 3 * nevents.error() ) ) :
+            for i in range ( 20000 ) :
+                n = int ( ve_gauss ( nEvents ) )
+                if 0 < n : return n 
+            else :
+                self.error ( "Can't generate positive number from %s" % events )
+                return
+            
+        self.error ( "Can't generate positive number from %s/%s" % ( events , type ( events ) ) )
+        return 
+    
+# =============================================================================
+
 
 # =============================================================================
 ## simple convertor of 1D-histo to data set
@@ -1089,32 +1380,28 @@ class H1D_dset(MakeVar) :
     def xaxis ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-    
+
+
 # =============================================================================
 ## simple convertor of 2D-histo to data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -1161,32 +1448,26 @@ class H2D_dset(MakeVar) :
     def xaxis  ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property     
     def yaxis  ( self ) :
         """The histogram y-axis variable"""
         return self.__yaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
@@ -1243,48 +1524,43 @@ class H3D_dset(MakeVar) :
     def xaxis  ( self ) :
         """The histogram x-axis variable"""
         return self.__xaxis
-
     @property     
     def yaxis  ( self ) :
         """The histogram y-axis variable"""
-        return self.__yaxis
-    
+        return self.__yaxis    
     @property     
     def zaxis  ( self ) :
         """The histogram z-axis variable"""
         return self.__zaxis
-
     @property
     def histo ( self ) :
         """The  histogram itself"""
         return self.__histo
-
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density
-    
+        return self.__density    
     @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
-
     @property
     def dset ( self ) :
         """``dset'' : ROOT.RooDataHist object"""
         return self.__dset
-
     @property
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
     
+
 # =============================================================================
 ## @class Phases
 #  helper class to build/keep the list of ``phi''-arguments
 #   - needed e.g. for polynomial functions
 class Phases(MakeVar) :
-    """Helper class to build/keep the list of ``phi''-arguments (needed e.g. for polynomial functions)
+    """Helper class to build/keep the list of ``phi''-arguments,
+    (needed e.g. for polynomial functions)
     """
     ## Create vector of phases (needed for various polynomial forms)
     def __init__( self  , power , the_phis = None ) :
@@ -1322,7 +1598,7 @@ class Phases(MakeVar) :
             phi_i = self.make_var ( None ,
                                     'phi%d_%s'      % ( i , self.name )  ,
                                     '#phi_{%d}(%s)' % ( i , self.name )  ,
-                                    None , 0 ,  -0.85 * pi  , 1.55 * pi  )
+                                    None , 0 ,  -1.55 * pi  , 3.55 * pi  )
             self.__phis    .append ( phi_i ) 
             self.__phi_list.add    ( phi_i )
         
@@ -1372,6 +1648,11 @@ class Phases(MakeVar) :
         """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
         """
         return self.__phi_list
+    @property
+    def phis_lst ( self ) :
+        """The list/ROOT.RooArgList of ``phases'', used to parameterize polynomial-like shapes
+        """
+        return self.__phi_list
 
     ## ## number of parameters 
     ## def __len__     ( self ) :
@@ -1406,57 +1687,58 @@ class Phases(MakeVar) :
     ##         for p , v in zip (  my_phis , values ) : p.setVal ( float ( v ) )
         
 
-# =============================================================================        
-## @class RooPolyBase
-#  Helper base clas to make Ostap wrapper for the native RooFit polynomials 
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2019-04-27
-class RooPolyBase(MakeVar) :
-    """Helper base class to make Ostap wrapper for the native RooFit polynomials 
+# =============================================================================
+## @class ParamsPoly
+#  Helper base class to implement polynomials 
+class ParamsPoly(MakeVar) :
+    """Helper base class to implement polynomials 
     """
-    ## constructor
-    def __init__ ( self                ,
-                   name                , ## the name 
-                   xvar                , ## the variable
-                   power        = 0    , ## degree of polynomial
-                   coefficients = [] ) : ## the list of coefficients 
-
-        assert isinstance ( power , integer_types ) and  0<= power ,\
-               "Invalid type of ``power''"
+    def __init__ ( self , power = 1 , pars = None ) :
         
-        clist = [] 
-        for c in coefficients  :
-            cvar = self.make_var ( c ,
-                                   'c%s_%d' % ( self.name , i ) ,
-                                   'coefficient for x^%d' % i   , 
-                                   c , 0 ,  -1.e+3 , 1e+3   ) 
-            clist.append ( cvar )
+        ## initialize the base class 
+        MakeVar.__init__ ( self )
+        
+        assert pars or ( isinstance ( power , integer_types ) and 0 <= power ) ,\
+               'Inconsistent power/npars setting'
+
+        self.__pars     = [] 
+        self.__pars_lst = ROOT.RooArgList()
+        
+        params = []
+        if pars :
+            for i , p in enumerate ( pars ) :                
+                pp = self.make_var ( p ,
+                                     'par%d_%s'            % ( i , self.name ) ,
+                                     'parameter %d for %s' % ( i , self.name ) , None , p )
+                if not isinstance ( p , ROOT.RooAbsReal ) : pp.setConstant ( False ) 
+                params.append ( pp )
+        else :
+            for i in range ( power + 1 ) :                
+                pp = self.make_var ( 0.0 ,
+                                     'par%d_%s'            % ( i , self.name ) ,
+                                     'parameter %d for %s' % ( i , self.name ) , None , 0.0 )
+                pp.setConstant ( False ) 
+                params.append ( pp )
+
+        for p  in params :
+            self.__pars.append  ( p )
+            self.__pars_lst.add ( p )
             
-        if not self.__coefficients : 
-            for i in range ( 1 , power + 1 ) : 
-                cvar = self.make_var ( None ,
-                                       'c%s_%d' % ( self.name , i ) ,
-                                       'coefficient for x^%d' % i   , 
-                                       None , 0  ,  -1.e+3 , 1e+3   ) 
-                clist.append ( cvar )
+        self.__pars = tuple ( self.__pars ) 
 
-        self.__power        = len   ( clist )
-        self.__coefficients = tuple ( clist ) 
-        self.__clist        = ROOT.RooArgList()
-        for c in clist : self.__clist.Add ( c )
-        del clist
-        
+        assert self.pars , 'Invalid number of parameters!'
+
+        self.config = {
+            'name' : self.name ,
+            'xvar' : self.xvar ,
+            'pars' : self.pars }
+
     @property
-    def power ( self ) :
-        """``power''-polynomial degree/order"""
-        return self.__power
-    @property 
-    def coefficients ( self ) :
-        """``coefficients'' : list of polynomial coefficients"""
-        return tuple( self.__coefficients )
-    @coefficients.setter
-    def coefficients ( self , values ) : 
-
+    def pars  ( self ) :
+        """``pars'' : the polynomial coefficients/parameters"""
+        return self.__pars    
+    @pars.setter
+    def pars ( self , values ) :    
         from ostap.core.ostap_types import num_types , list_types
         ##
         if   isinstance ( values , num_types          ) : values = [ values           ]
@@ -1467,11 +1749,116 @@ class RooPolyBase(MakeVar) :
         else :
             raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
 
-        for s , v in  zip ( self.__coefficients , values ) :
+        for s , v in  zip ( self.__pars , values ) :
             vv = float ( v  )
-            if s.minmax() and not vv in s :
+            if s.minmax () and not vv in s :
                 self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )
             s.setVal   ( vv )
+            
+    def reset_pars ( self , value = 0 ) :
+        """Set all pars to be value 
+        >>> pdf = ...
+        >>> pdf.reset_pars() 
+        """
+        for f in self.__pars : f.setVal( value )
+
+    @property
+    def pars_lst ( self ) :
+        """``pars_lst'' : the polynomial coefficients/parameters as RooArgList"""
+        return self.__pars_lst
+    
+    @property
+    def power ( self ) :
+        """``power''  : polynomial degree """
+        return len  ( self.pars ) - 1
+
+# =============================================================================
+## @class ShiftScalePoly
+#  Helper base class to implement polynomials
+#  \f$ f(x) = a + b P(x) \f$,
+#  where \f$P(x)\f$ some special polynomial 
+class ShiftScalePoly ( Phases ) :
+    """Helper fbase class to implemnet polynomials 
+    """
+    def __init__ ( self         ,
+                   a     = 0.0  , ## shift/bias
+                   b     = 1.0  , ## scale 
+                   power = 1    ,
+                   pars  = None ) :
+        
+        ## initialize the base class 
+        Phases.__init__ ( self , power , pars ) 
+                          
+        ## parameter a 
+        self.__a  = self.make_var ( a ,
+                                    'a_%s'              % self.name ,
+                                    'bias/shift for %s' % self.name , a )
+        ## parameter a 
+        self.__b  = self.make_var ( b ,
+                                    'b_%s'              % self.name ,
+                                    'scale for %s'      % self.name , b )
+        
+        self.config = {
+            'name' : self.name ,
+            'xvar' : self.xvar ,
+            'pars' : self.pars ,
+            'a'    : self.a    ,
+            'b'    : self.b    }
+
+    @property
+    def a ( self ) :
+        """``a'' : bias parameter for polynomial:  f(x) = a + b*M(x)"""
+        return self.__a
+    @a.setter
+    def a ( self , value ) :
+        vv = float ( value )
+        if self.__a.minmax () and not vv in self.__a  :
+            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+        self.__a.setVal ( vv )
+
+    @property
+    def b ( self ) :
+        """``scale'' : bias parameter for polynomial:  f(x) = a + b*M(x)"""
+        return self.__b
+    @b.setter
+    def b ( self , value ) :
+        vv = float ( value )
+        if self.__b.minmax () and not vv in self.__b  :
+            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+        self.__b.setVal ( vv )
+    
+    @property
+    def shift  ( self ) :
+        """``shift'' : bias/shift parameter  (same as ``a'')"""
+        return self.__a
+    @shift.setter
+    def shift  ( self , value ) : self.a = value 
+    @property
+    def bias  ( self ) :
+        """``bias'' : bias/shift parameter  (same as ``a'')"""
+        return self.__a
+    @bias.setter
+    def bias   ( self , value ) : self.a = value
+    
+    @property
+    def scale ( self ) :
+        """``scale'' : bias/shift parameter  (same as ``b'')"""
+        return self.__b
+    @scale.setter
+    def scale ( self , value ) : self.b = value
+
+    @property
+    def pars  ( self ) :
+        """``pars'' :  polynomial parameters (same as ``phis'')"""
+        return self.phis
+    @pars.setter 
+    def pars  ( self , values ) :
+        self.phis = values 
+    @property
+    def pars_lst ( self ) :
+        """``pars_lst'' :  polynomial parameters as RooArgList"""
+        return self.phis_lst
+    
 
 # ==============================================================================
 ## Should one use ``similar'' component?
@@ -1508,6 +1895,208 @@ def get_i ( what , i , default = None ) :
     return default
         
 # =============================================================================
+## consruct MsgTopic
+#  @see RooFit::MsgTopic
+#  @code
+#  topic = msgTopic ( ROOT.RooFit.Fitting ) 
+#  topic = msgTopic ( ROOT.RooFit.Fitting , ROOT.RooFit.Caching )
+#  topic = msgTopic ( 'Fitting' , 'Caching' )
+#  @endcode
+def msg_topic ( *topics ) :
+    """onsruct MsgTopic
+    >>> topic = msgTopic ( ROOT.RooFit.Fitting ) 
+    >>> topic = msgTopic ( ROOT.RooFit.Fitting , ROOT.RooFit.Caching )
+    >>> topic = msgTopic ( 'Fitting' , 'Caching' )
+    """
+    topic = 0
+    for i in  topics : 
+        if   isinstance ( i , integer_types )  : topic |= i
+        elif isinstance ( i , string_types  )  :
+            ii = i.lower() 
+            if   ii == 'generation'            : topic |=  ROOT.RooFit.Generation 
+            elif ii == 'minimization'          : topic |=  ROOT.RooFit.Minimization
+            elif ii == 'minization'            : topic |=  ROOT.RooFit.Minimization
+            elif ii == 'plotting'              : topic |=  ROOT.RooFit.Plotting
+            elif ii == 'fitting'               : topic |=  ROOT.RooFit.Fitting 
+            elif ii == 'integration'           : topic |=  ROOT.RooFit.Integration 
+            elif ii == 'linkstatemgmt'         : topic |=  ROOT.RooFit.LinkStateMgmt
+            elif ii == 'eval'                  : topic |=  ROOT.RooFit.Eval
+            elif ii == 'caching'               : topic |=  ROOT.RooFit.Caching
+            elif ii == 'optimization'          : topic |=  ROOT.RooFit.Optimization
+            elif ii == 'optimisation'          : topic |=  ROOT.RooFit.Optimization
+            elif ii == 'objecthandling'        : topic |=  ROOT.RooFit.ObjectHandling
+            elif ii == 'inputarguments'        : topic |=  ROOT.RooFit.InputArguments
+            elif ii == 'tracing'               : topic |=  ROOT.RooFit.Tracing
+            elif ii == 'contents'              : topic |=  ROOT.RooFit.Contents
+            elif ii == 'datahandling'          : topic |=  ROOT.RooFit.DataHandling
+            elif ii == 'numintegration'        : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'numericintegration'    : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'numericalintegration'  : topic |=  ROOT.RooFit.NumIntegration
+            elif ii == 'fastevaluations'       : topic |=  ROOT.RooFit.FastEvaluations
+            else : logger.error ( 'MsgTopic/1: unknown topic %s, skip' % i )
+        else : logger.error ( 'MsgTopic/2: unknown topic %s/%s, skip' % ( i , type ( i ) ) )
+        
+    return topic 
+    
+# =============================================================================
+# upgraded constructor for class Ostap::Utils::RemoveTopicsd
+# @code
+# with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ... do something ...
+# with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+#    ... do something ...
+# @endcode
+# @see Ostap::Utils::AddTopic
+# @see Ostap::Utils::RemoveTopic
+def _rt_new_init_ ( self , topics , level = ROOT.RooFit.INFO , streams = -1  ) :
+    """ Upgraded constructor for class Ostap::Utils::RemoveTopics
+    >>> with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+    ...    ... do something ...
+    >>> with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+    ...    ... do something ...
+    - see Ostap::Utils::AddTopic
+    - see Ostap::Utils::RemoveTopic
+    """
+
+    if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
+        return self._old_init_ ( topics , level , streams )    
+    if isinstance ( topics , string_types  ) : topics = topics.split()
+    topic = msg_topic ( *topics )
+    return self._old_init_ ( topic , level , streams )
+
+if not hasattr ( Ostap.Utils.RemoveTopic , '_old_init_' ) :
+    Ostap.Utils.RemoveTopic._old_init_ = Ostap.Utils.RemoveTopic.__init__
+    Ostap.Utils.RemoveTopic.__init__   = _rt_new_init_
+    Ostap.Utils.RemoveTopic.__enter__  = lambda s : s
+    Ostap.Utils.RemoveTopic.__exit__   = lambda s,*_ : s.exit() 
+    
+# =============================================================================
+# upgraded constructor for class Ostap::Utils::AddTopic
+# @code
+# with AddTopic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ... do something ...
+# with AddTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+#    ... do something ...
+# @endcode
+# @see Ostap::Utils::AddTopic
+# @see Ostap::Utils::RemoveTopic
+def _at_new_init_ ( self , topics , streams = -1  ) :
+    """ Upgraded constructor for class Ostap::Utils::AddTopics
+    >>> with RemoveTopic ( [ 'Fitting' , 'Plotting' ] ) :
+    ...    ... do something ...
+    >>> with RemoveTopic ( ROOT.RooFit.Plotting | ROOT.RooFit.Fitting ) :
+    ...    ... do something ...
+    - see Ostap::Utils::AddTopic
+    - see Ostap::Utils::RemoveTopic
+    """
+
+    if isinstance ( topics , integer_types ) and 0 < topics and topics <= 2**16 :
+        return self._old_init_ ( topics , streams )
+    
+    if isinstance ( topics , string_types  ) : topics = [ topics ]
+
+    topic = msg_topic ( *topics )
+    return self._old_init_ ( topic , streams )
+                
+if not hasattr (  Ostap.Utils.AddTopic , '_old_init_' ) :
+    Ostap.Utils.AddTopic._old_init_ = Ostap.Utils.AddTopic.__init__
+    Ostap.Utils.AddTopic.__init__   = _at_new_init_
+    Ostap.Utils.AddTopic.__enter__  = lambda s : s
+    Ostap.Utils.AddTopic.__exit__   = lambda s,*_ : s.exit() 
+    
+
+# ================================================================================
+## remove topic from Roofit message streams
+#  @see RooMsgService
+#  @code
+#  with remove_topic ( ROOT.RooFit.Fitting ) :
+#    ...
+#  with remove_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+#    ...
+#  with remove_topic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ...
+#  @endcode
+#  @see Ostap::Utils::RemoveTopic
+#  @see Ostap::Utils::AddTopic
+def remove_topic ( topics , level = ROOT.RooFit.INFO , stream  = -1 ) :
+    """Remove topic from Roofit message streams
+    - see RooMsgService
+    >>> with remove_topic ( ROOT.RooFit.Fitting ) :
+    ...  ...
+    >>> with remove_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+    ... ...
+    >>> with remove_topic ( [ 'Fitting' , 'Plotting' ] ) :
+    ... ...
+    - see Ostap::Utils::RemoveTopic
+    - see Ostap::Utils::AddTopic
+    """
+    return Ostap.Utils.RemoveTopic ( topics , level , stream ) 
+
+
+# ================================================================================
+## add topic from RooFit message streams
+#  @see RooMsgService
+#  @code
+#  with add_topic ( ROOT.RooFit.Fitting ) :
+#    ...
+#  with add_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+#    ...
+#  with add_topic ( [ 'Fitting' , 'Plotting' ] ) :
+#    ...
+#  @endcode
+#  @see Ostap::Utils::RemoveTopic
+#  @see Ostap::Utils::AddTopic
+def add_topic ( topics , stream  = -1 ) :
+    """Add topic to RooFit message streams
+    - see RooMsgService
+    >>> with add_topic ( ROOT.RooFit.Fitting ) :
+    ...  ...
+    >>> with add_topic ( ROOT.RooFit.Fitting | ROOT.RooFit.Plotting ) :
+    ... ...
+    >>> with add_topic ( [ 'Fitting' , 'Plotting' ] ) :
+    ... ...
+    - see Ostap::Utils::RemoveTopic
+    - see Ostap::Utils::AddTopic
+    """
+    return Ostap.Utils.AddTopic ( topics , level , stream ) 
+
+
+# =============================================================================
+## suppress certain message topics
+#  @code
+#  suppress_topics ( 'Fitting'  , 'Caching' ) 
+#  @endcode 
+def suppress_topics ( *topics ) :
+    """suppress certain message topics
+    >>> suppress_topics ( 'Fitting'  , 'Caching' ) 
+    """
+    if topics and 1 == len( topics ) :
+        t = str ( topics [ 0 ] ).lower()
+        if 'config' == t : return suppress_topics() 
+
+    if not topics :
+        newtopics = [] 
+        import ostap.core.config as CONFIG
+        if 'RooFit' in CONFIG.config :
+            import string
+            ws     = string.whitespace 
+            node   = CONFIG.config [ 'RooFit' ]
+            data   = node.get('RemoveTopics','(,)' )
+            topics = tuple ( i.strip ( ws ) for i in data.split ( ',' ) if i.strip ( ws ) ) 
+            
+    if topics : 
+        svc = ROOT.RooMsgService.instance()
+        svc.saveState () 
+        topic = msg_topic ( *topics ) 
+        num   = svc.numStreams()
+        for i in range ( num ) : ok = Ostap.Utils.remove_topic ( i , topic ) 
+
+# =============================================================================
+## and finally suppress exra RooFit topics! 
+suppress_topics ()
+
+
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
@@ -1515,5 +2104,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+#                                                                       The END 
 # =============================================================================

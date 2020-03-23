@@ -7,8 +7,6 @@
 #   - memory
 #   - profiling
 #   - ... 
-#
-#  It is recommended to install psutil module 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-02-10
 #  
@@ -18,8 +16,6 @@
 - memory
 - profiling
 - etc
-
-It is recommended to install psutil module 
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -72,7 +68,7 @@ __all__     = (
    )
 # =============================================================================
 import ROOT, time, os , sys ## attention here!!
-from   builtins         import range
+from   builtins            import range
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
@@ -712,15 +708,17 @@ def vrange ( x_min , x_max , n = 100 ) :
     >>> for x in vrange ( x_min , x_max , 200 ) :
     ...                print (x) 
     """
-    assert isinstance ( n , int ) and 0 < n,\
-           'Invalid N=%s/%s' % ( n  , type ( n ) ) 
+    assert isinstance ( n , int ) and 0 < n, 'Invalid N=%s/%s' % ( n  , type ( n ) ) 
 
-    fn =  1.0 / float ( n ) 
+    fn = 1.0 / float ( n ) 
     for i in range ( n + 1 ) :
-        f2 = i * fn
-        f1 = 1 - f2
-        yield  x_min * f1 + f2 * x_max 
-
+        #
+        if   0 == i : yield x_max
+        elif n == i : yield x_min
+        else        :
+            f2 = i * fn
+            f1 = 1 - f2
+            yield  x_min * f1 + f2 * x_max 
 
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word

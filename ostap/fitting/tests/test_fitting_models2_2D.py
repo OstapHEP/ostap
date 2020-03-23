@@ -109,6 +109,8 @@ def test_const () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -146,6 +148,8 @@ def test_p2xp2 () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -183,6 +187,8 @@ def test_p1xp1_BB () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -221,6 +227,8 @@ def test_p1xp1_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -238,7 +246,6 @@ def test_p1xp1_BBs () :
 # =============================================================================
 ## gauss as signal, 1st order polynomial as background 
 # =============================================================================
-##if 1 < 2 :
 def test_p1xp1_BBss () :
     
     logger.info ('Symmetrised fit model with non-factorized symmetric background:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
@@ -265,6 +272,8 @@ def test_p1xp1_BBss () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -301,6 +310,8 @@ def test_p1xp1_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -340,6 +351,8 @@ def test_pbxpb_BB  () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -379,6 +392,8 @@ def test_pbxpb_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -415,6 +430,8 @@ def test_pbxpb_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -432,7 +449,6 @@ def test_pbxpb_BBsym () :
 # =============================================================================
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
-##if 1 < 2 :
 def test_psxps_BBs () :
         
     logger.info ('Non-factorizeable symmetric background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
@@ -454,6 +470,8 @@ def test_psxps_BBs () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -491,6 +509,8 @@ def test_psxps_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        model. draw1 ( dataset )
+        model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -515,6 +535,7 @@ def test_db() :
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
+        for m in models : db[ 'model:' + m.name ] = m 
         db['models'  ] = models
         db['dataset' ] = dataset
         db.ls()
@@ -534,9 +555,9 @@ if '__main__' == __name__ :
     with timing ('test_psxps_BBs'   ) : test_psxps_BBs   ()          
     with timing ('test_psxps_BBsym' ) : test_psxps_BBsym ()          
 
-    ## check finally that everything is serializeable:
-    with timing ( 'save to DB'     ) : test_db ()          
+
+    with timing ( 'Save to DB'     ) : test_db ()          
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

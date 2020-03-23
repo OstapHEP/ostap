@@ -71,6 +71,7 @@ def _rc_labels_ ( self ) :
 
     return tuple ( labs ) 
 
+    
 ROOT.RooCategory.labels = _rc_labels_
 
 # =============================================================================
@@ -81,7 +82,7 @@ ROOT.RooCategory.labels = _rc_labels_
 #  ds_cmb = combined_data ( sample  ,
 #                vars    , { 'cc' : ds_cc ,  'zz' : ds_00 } )
 #  @endcode
-#  - weighted variant:
+#  - weighted variant: combine unweighted datasets and then apply weight 
 #  @code
 #  wvars = ROOT.RooArgSet ( m2c , SS_sw ) 
 #  dsw_cmb   = combined_data ( sample ,
@@ -213,9 +214,9 @@ def combined_hdata ( sample        ,
     PAIR = std.pair ( 'const std::string' , 'TH1*' )
     mm   = MAP()
     
-    d1   = 0 
-    d2   = 0 
-    d3   = 0
+    nd1   = 0 
+    nd2   = 0 
+    nd3   = 0
     
     labels = sample.labels ()
     
@@ -223,18 +224,22 @@ def combined_hdata ( sample        ,
         
         histo = histograms.pop  ( label ) 
         
-        if   isinstance ( histo , ROOT.TH3 ) : d3 += 1
-        elif isinstance ( histo , ROOT.TH2 ) : d2 += 1
-        elif isinstance ( histo , ROOT.TH1 ) : d1 += 1
+        if   isinstance ( histo , ROOT.TH3 ) : nd3 += 1
+        elif isinstance ( histo , ROOT.TH2 ) : nd2 += 1
+        elif isinstance ( histo , ROOT.TH1 ) : nd1 += 1
         
         mm.insert ( PAIR ( label , histo ) )
 
+    assert not histograms, 'Unknown histograms: %s' % histograms.keys() 
 
-    assert not historgams, 'Unknown histograms: %s' % histograms.keys() 
-        
-    assert ( d3 or d2 ) and ( d3 or d1 ) and ( d2 or d1 ), \
-           'Histograms of different dimensions cannot be combined !'
-        
+    d1 = 0 < nd1
+    d2 = 0 < nd2
+    d3 = 0 < nd3
+    
+    assert ( not d1 and not d2 ) or \
+           ( not d2 and not d3 ) or \
+           ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
+            
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
@@ -335,11 +340,18 @@ class Sim1D(PDF) :
 
         for k , pdf in items_loop ( self.categories ) :
             
-            for c in pdf.signals     : self.signals    .add ( c ) 
-            for c in pdf.backgrounds : self.backgrounds.add ( c ) 
-            for c in pdf.crossterms1 : self.crossterms1.add ( c ) 
-            for c in pdf.crossterms2 : self.crossterms2.add ( c ) 
+            for c in pdf.signals              : self.signals             .add ( c ) 
+            for c in pdf.backgrounds          : self.backgrounds         .add ( c ) 
+            for c in pdf.crossterms1          : self.crossterms1         .add ( c ) 
+            for c in pdf.crossterms2          : self.crossterms2         .add ( c ) 
+            for c in pdf.combined_signals     : self.combined_signals    .add ( c ) 
+            for c in pdf.combined_backgrounds : self.combined_background .add ( c ) 
+            for c in pdf.combined_components  : self.combined_components .add ( c ) 
 
+            ## copy draw options 
+            for k in pdf.draw_options :
+                self.draw_options [ k ] = pdf.draw_options [ k ]
+            
             ## for c in pdf.alist1      : self.alist1.add ( c ) 
             ## for c in pdf.alist2      : self.alist2.add ( c ) 
 
@@ -437,6 +449,7 @@ class Sim1D(PDF) :
                dataset        ,  ## must be specified!
                nbins   =  100 ,
                silent  = True ,
+               args    = ()   , 
                **kwargs       ) :
         """
         Draw the PDF&data for the given   category
@@ -486,7 +499,8 @@ class Sim1D(PDF) :
             return PDF.draw ( self ,
                               dataset = dataset ,
                               nbins   = nbins   ,
-                              silent  = silent  , **kwargs )
+                              silent  = silent  ,
+                              args    = args    , **kwargs )
         
         
 # =============================================================================
@@ -586,7 +600,7 @@ class SimFit ( MakeVar ) :
         if not name  : name  = 'SimFit_'                 +          sample.GetName()
         if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
 
-        ## propagatethe name 
+        ## propagate the name 
         self.name = name
         
         self.__sample       = sample 
@@ -617,8 +631,9 @@ class SimFit ( MakeVar ) :
             
             self.__categories [ label ] = cmp
             _xv = cmp.xvar
+
             
-        sim_pdf     = PDF ( self.name , xvar = _xv )
+        sim_pdf     = PDF ( self.name + '_Sim' , xvar = _xv )            
         sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
         
         keys = self.categories.keys()
@@ -629,10 +644,13 @@ class SimFit ( MakeVar ) :
         
         for k , cmp in items_loop ( self.categories ) :
             
-            for c in cmp.signals      : self.pdf.signals    .add ( c ) 
-            for c in cmp.backgrounds  : self.pdf.backgrounds.add ( c ) 
-            for c in cmp.crossterms1  : self.pdf.crossterms1.add ( c ) 
-            for c in cmp.crossterms2  : self.pdf.crossterms2.add ( c )
+            for c in cmp.signals              : self.pdf.signals             .add ( c ) 
+            for c in cmp.backgrounds          : self.pdf.backgrounds         .add ( c ) 
+            for c in cmp.crossterms1          : self.pdf.crossterms1         .add ( c ) 
+            for c in cmp.crossterms2          : self.pdf.crossterms2         .add ( c )
+            for c in cmp.combined_signals     : self.pdf.combined_signals    .add ( c )
+            for c in cmp.combined_backgrounds : self.pdf.combined_backgrounds.add ( c )
+            for c in cmp.combined_components  : self.pdf.combined_components .add ( c )
             
             self.pdf.draw_options.update ( cmp.draw_options )
             
@@ -646,28 +664,40 @@ class SimFit ( MakeVar ) :
             cmp = self.categories [ key ] 
             if isinstance  ( cmp , PDF3 ) :
                 from ostap.fitting.fit3d import Generic3D_pdf                
-                dpdf = Generic3D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic3D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
                                        cmp.zvar    ,
+                                       name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
             elif isinstance  ( cmp , PDF2 ) :
                 from ostap.fitting.fit2d import Generic2D_pdf                                
-                dpdf = Generic2D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic2D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
                                        cmp.yvar    ,
+                                       name           = sim_pdf.name + '_draw_' + key , 
                                        add_to_signals = False )
             elif isinstance  ( cmp , PDF  ) :
                 from ostap.fitting.basic import Generic1D_pdf   
-                dpdf = Generic1D_pdf ( sim_pdf.pdf ,
+                dpdf = Generic1D_pdf ( sim_pdf.pdf , 
                                        cmp.xvar    ,
-                                       add_to_signals = False )
+                                       name           = sim_pdf.name + '_draw_' + key , 
+                                       add_to_signals = False  )
                 
-            for c in cmp.signals     : dpdf.signals    .add ( c ) 
-            for c in cmp.backgrounds : dpdf.backgrounds.add ( c ) 
-            for c in cmp.crossterms1 : dpdf.crossterms1.add ( c ) 
-            for c in cmp.crossterms2 : dpdf.crossterms2.add ( c )
-
+            for c in cmp.signals :
+                if not c in dpdf.signals              : dpdf.signals             .add ( c )
+            for c in cmp.backgrounds :
+                if not c in dpdf.backgrounds          : dpdf.backgrounds         .add ( c ) 
+            for c in cmp.crossterms1 :
+                if not c in dpdf.crossterms1          : dpdf.crossterms1         .add ( c )
+            for c in cmp.crossterms2 :
+                if not c in dpdf.crossterms2          : dpdf.crossterms2         .add ( c )
+            for c in cmp.combined_signals :
+                if not c in dpdf.combined_signals     : dpdf.combined_signals    .add ( c ) 
+            for c in cmp.combined_backgrounds :
+                if not c in dpdf.combined_backgrounds : dpdf.combined_backgrounds.add ( c ) 
+            for c in cmp.combined_components :
+                if not c in dpdf.combined_components  : dpdf.combined_components .add ( c ) 
 
             dpdf.draw_options.update ( cmp.draw_options )
                         
@@ -805,6 +835,7 @@ class SimFit ( MakeVar ) :
                dataset        ,  ## must be specified!
                nbins   =  100 ,
                silent  = True ,
+               args    = ()   , 
                **kwargs       ) :
         """
         Draw the PDF&data for the given category
@@ -813,7 +844,7 @@ class SimFit ( MakeVar ) :
         """
         dvar = None
         if   isinstance ( category , ( tuple , list ) ) and 2 == len ( category ) :
-            category, dvar = category 
+            category , dvar = category 
         elif isinstance ( category , str ) :
             category , _ , dvar = category.partition('/')
             
@@ -823,7 +854,7 @@ class SimFit ( MakeVar ) :
                 dvar = ivar 
             except ValueError :
                 pass
-            
+
         assert category    in self.samples ,\
                'Category %s is not in %s' % ( category , self.samples )
         assert self.sample in dataset      ,\
@@ -832,28 +863,27 @@ class SimFit ( MakeVar ) :
         ## 
         sname = self.sample.GetName() 
         dcut  = ROOT.RooFit.Cut ( "%s==%s::%s"  % ( sname , sname , category ) )
-        
-        data_options = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , ) 
+
+        kwargs [ 'data_options' ] = self.draw_option ( 'data_options' , **kwargs ) +  ( dcut , )
         
         self._tmp_vset = ROOT.RooArgSet ( self.sample ) 
+
         _proj  = ROOT.RooFit.ProjWData  ( self._tmp_vset , dataset  ) 
         _slice = ROOT.RooFit.Slice      ( self.sample    , category )
+        for key in  ( 'total_fit_options'           ,
+                      #
+                      'signal_options'              ,
+                      'background_options'          ,
+                      'component_options'           ,
+                      'crossterm1_options'          ,
+                      'crossterm2_options'          ,
+                      #
+                      'combined_signal_options'     ,
+                      'combined_background_options' ,
+                      'combined_component_options'  ) :
 
-        bkgoptions   = self.draw_option ( 'backrground_options' , **kwargs ) + ( _slice , _proj )
-        ct1options   = self.draw_option ( 'crossterm1_options'  , **kwargs ) + ( _slice , _proj )
-        ct2options   = self.draw_option ( 'crossterm2_options'  , **kwargs ) + ( _slice , _proj )        
-        cmpoptions   = self.draw_option (  'component_options'  , **kwargs ) + ( _slice , _proj )
-        sigoptions   = self.draw_option (     'signal_options'  , **kwargs ) + ( _slice , _proj )
-        totoptions   = self.draw_option (  'total_fit_options'  , **kwargs ) + ( _slice , _proj )
+            kwargs [ key ] = self.draw_option ( key , **kwargs ) + ( _slice , _proj ) 
         
-        kwargs [ 'data_options'       ] = data_options
-        kwargs [ 'signal_options'     ] = sigoptions 
-        kwargs [ 'background_options' ] = bkgoptions 
-        kwargs [ 'crossterm1_options' ] = ct1options 
-        kwargs [ 'crossterm2_options' ] = ct2options
-        kwargs [ 'component_options'  ] = cmpoptions 
-        kwargs [ 'total_fit_options'  ] = totoptions 
-
         from ostap.fitting.roocollections import KeepArgs
 
         cat_pdf  = self.categories [ category ]
@@ -872,18 +902,21 @@ class SimFit ( MakeVar ) :
 
             if   isinstance ( draw_pdf , PDF3 ) :
 
-                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) : 
+                if   3 == dvar or dvar in  ( 'z' , 'Z' , '3' , draw_pdf.zvar.name ) :    
                     return draw_pdf.draw3 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) : 
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                     return draw_pdf.draw1 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 else :
                     self.error('Unknown ``dvar'' for 3D-draw pdf!')
                     return None
@@ -893,11 +926,13 @@ class SimFit ( MakeVar ) :
                 if   2 == dvar or dvar in  ( 'y' , 'Y' , '2' , draw_pdf.yvar.name ) :
                     return draw_pdf.draw2 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 elif 1 == dvar or dvar in  ( 'x' , 'X' , '1' , draw_pdf.xvar.name ) : 
                     return draw_pdf.draw1 ( dataset = dataset ,
                                             nbins   = nbins   ,
-                                            silent  = silent  , **kwargs )
+                                            silent  = silent  ,
+                                            args    = args    , **kwargs )
                 else :
                     self.error('Unknown ``dvar'' for 2D-draw pdf! %s' %  dvar )
                     return None 
@@ -906,7 +941,8 @@ class SimFit ( MakeVar ) :
                 
                 return draw_pdf.draw ( dataset = dataset ,
                                        nbins   = nbins   ,
-                                       silent  = silent  , **kwargs )
+                                       silent  = silent  ,
+                                       args    = args    , **kwargs )
             
     # =========================================================================
     ## create NLL
@@ -927,7 +963,7 @@ class SimFit ( MakeVar ) :
         >>> nll, sf = model.nll ( dataset )
         - see RooAbsPdf::createNLL 
         """
-        return self.pdf.nll ( dataset , silent = silenbt , args = args , **kwargs )
+        return self.pdf.nll ( dataset , silent = silent , args = args , **kwargs )
 
     # =========================================================================
     ## draw/prepare NLL or LL-profiles for selected variable
@@ -979,6 +1015,43 @@ class SimFit ( MakeVar ) :
                                 silent = silent ,
                                 args   = args   , **kwargs )
 
+
+    # ========================================================================
+    ## evaluate "significance" using Wilks' theorem via NLL
+    #  @code
+    #  data = ...
+    #  pdf  = ...
+    #  pdf.fitTo ( data , ... )
+    #  sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma' ] )
+    #  @endcode
+    def wilks2 ( self                           ,
+                 var                            ,
+                 dataset                        ,
+                 fix                            , ## variables to fix 
+                 range          = ( 0 , None )  ,
+                 silent         = True          ,
+                 opt_const      = True          ,
+                 max_calls      = 10000         ,
+                 max_iterations = -1            ,
+                 strategy       = None          ,
+                 args           = () , **kwargs ) :
+        """Evaluate ``significance'' using Wilks' theorem via NLL
+        >>> data = ...
+        >>> pdf  = ...
+        >>> pdf.fitTo ( data , ... )
+        >>> sigmas = pdf.wilks2 ( 'S' , data , fix = [ 'mean' , 'gamma'] )
+        """
+        return self.pdf.wilks2 ( var                              ,
+                                 dataset        = dataset         ,
+                                 fix            = fix             ,
+                                 range          = range           , 
+                                 silent         = silent          , 
+                                 opt_const      = opt_const       ,
+                                 max_calls      = max_calls       ,
+                                 max_iterations = max_iterations  ,
+                                 strategy       = strategy        ,
+                                 args           = args , **kwargs )
+    
     # ========================================================================
     ## get the actual minimizer for the explicit manipulations
     #  @code
@@ -990,12 +1063,13 @@ class SimFit ( MakeVar ) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self , dataset   ,
-                 max_calls = -1   ,
-                 max_iter  = -1   , 
-                 optconst  = True , ## optimize const 
-                 strategy  = None ,
-                 args      =   () , **kwargs  ):
+    def minuit ( self , dataset        ,
+                 max_calls      = -1   ,
+                 max_iterations = -1   , 
+                 opt_const      = True , ## optimize const 
+                 strategy       = None ,
+                 nLL            = None , 
+                 args           =   () , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1005,14 +1079,180 @@ class SimFit ( MakeVar ) :
         >>> m.minos ( param )
         - see ROOT.RooMinimizer
         """
-        return self.pdf.minuit ( dataset               ,
-                                 max_calls = max_calls ,
-                                 max_iter  = max_iter  ,
-                                 optconst  = optconst  ,
-                                 strategy  = strategy  ,
-                                 args      = args      , **kwargs )
+        return self.pdf.minuit ( dataset                         ,
+                                 max_calls      = max_calls      ,
+                                 max_iterations = max_iterations ,
+                                 opt_const      = opt_const      ,
+                                 strategy       = strategy       ,
+                                 nLL            = nLL            ,
+                                 args           = args           , **kwargs )
+
     
-                                 
+    # =========================================================================
+    ## generate toy-sample according to PDF
+    #  @code
+    #  model  = ....
+    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  varset = ....
+    #  data   = model.generate ( 100000 , varset )
+    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  @endcode
+    def generate ( self                  , 
+                   nEvents               , 
+                   varset        = None  ,
+                   args          = ()    ,
+                   binning       = {}    ,
+                   sample        = False , 
+                   category_args = {}    ) :
+        """Generate toy-sample according to PDF
+        >>> model  = ....
+        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        
+        >>> varset = ....
+        >>> data   = model.generate ( 100000 , varset )
+        >>> data   = model.generate ( 100000 , varset , sample = True )
+        """
+
+        labels = self.sample.labels()
+        
+        assert len ( labels ) == len ( nEvents ), 'Invalid length of nEvents array'
+        
+        vars   = ROOT.RooArgSet()
+        data   = {}
+
+        weight = None
+        wvar   = None
+        ## generate all categories separately:        
+        for l , n in zip ( labels , nEvents ) :
+            
+            cargs = []
+            for a in args                         : cargs.append ( a )
+            for a in category_args.get ( l , () ) : cargs.append ( a )
+            cargs = tuple ( cargs )
+                
+            pdf   = self.categories [ l ]
+            ds    = pdf.generate ( n                   ,
+                                   varset   = varset   ,
+                                   binning  = binning  ,
+                                   sample   = sample   ,
+                                   args     = cargs    )
+
+            if ds.isWeighted() :
+                ds , weight  = ds.unWeighted ()
+                if weight : wvar = getattr ( ds , weight )
+                
+            data [ l ]  = ds
+            for v in ds.varset() :
+                if not v in vars : vars.add ( v ) 
+                ## vars       |= ds.varset()                 
+
+        ## combine generated datasets
+        args = () if not weight else ( ROOT.RooFit.WeightVar ( weight ) , )
+        return combined_data ( self.sample ,
+                               vars        , 
+                               data        ,
+                               args = args )
+    
+
+    # =========================================================================
+    ## Load parameters from external dictionary <code>{ name : value }</code>
+    #  or sequence of <code>RooAbsReal</code> objects
+    #  @code
+    #  pdf     = ...
+    #  dataset = ...
+    #  params  = { 'A' : 10 , 'B' : ... }
+    #  pdf.load_params ( dataset , params ) 
+    #  params  = ( A , B , C , ... )
+    #  pdf.load_params ( dataset , params )  
+    #  @endcode 
+    def load_params ( self , dataset = None , params = {}  ) :
+        """Load parameters from external dictionary <code>{ name : value }</code>
+        #  or sequence of <code>RooAbsReal</code> objects
+        >>> pdf      = ...
+        >>> dataset = ... 
+        >>> params = { 'A' : 10 , 'B' : ... }
+        >>> pdf.load_params ( dataset , params ) 
+        >>> params = ( A , B , C , ... )
+        >>> pdf.load_params ( dataset , params )  
+        """
+        ## nothing to load 
+        return self.pdf.load_params ( dataset , params )
+
+    
+    # =========================================================================
+    ## get all parameters/variables in form of dictionary
+    #  @code
+    #  pdf    = ...
+    #  params = pdf.parameters ( dataset ) 
+    #  @endcode
+    def parameters ( self , dataset = None ) :
+        """ Get all parameters/varibales in form of dictionary
+        >>> pdf    = ...
+        >>> params = pdf.parameters ( dataset ) 
+        """
+        return self.pdf.parameters ( dataset )
+    
+    # ========================================================================
+    ## get the parameter value by name
+    #  @code
+    #  pdf = ...
+    #  p   = pdf.parameter  ( 'A' )
+    #  @endcode
+    def parameter ( self , param , dataset = None ) :
+        """Get the parameter value by name
+        >>> pdf = ...
+        >>> p   = pdf.parameter  ( 'A' )
+        """
+        return self.pdf.parameter ( param , dataset )
+
+    # ==========================================================================
+    ## get parameter by name 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  @endcode
+    def __getitem__ ( self , param ) :
+        """Get parameter by name 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        """
+        return self.pdf.__getitem__ ( param )
+
+    # =========================================================================
+    ## get NLL/profile-graph for the variable, using the specified bscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_nll ( 'S'               ,
+    #                          range ( 0 , 100 ) ,
+    #                          dataset           )
+    #  @endcode
+    def graph_nll ( self , *args , **kwargs ) :
+        """Get NLL/profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_nll ( 'S'               ,
+        ...                          range ( 0 , 100 ) ,
+        ...                          dataset           )
+        """
+        return self.pdf.graph_nll ( *args , **kwargs )
+    
+    # =========================================================================
+    ## get NLL-profile-graph for the variable, using the specified abscissas
+    #  @code
+    #  pdf   = ...
+    #  graph = pdf.graph_profile ( 'S'                       ,
+    #                              vrange ( 0 , 12.5 , 10  ) ,
+    #                              dataset                   )
+    #  @endcode
+    def graph_profile ( self , *args , **kwargs ) :
+        """Get profile-graph for the variable, using the specified abscissas
+        >>> pdf   = ...
+        >>> graph = pdf.graph_profile ( 'S'                     ,
+        ...                             range ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                 )
+        """
+        return self.pdf.graph_profile ( *args , **kwargs )
+         
+    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.RooCategory , 

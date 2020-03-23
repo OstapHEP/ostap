@@ -6,6 +6,7 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <cmath>
 #include <array>
 // ============================================================================
 namespace Ostap
@@ -126,6 +127,25 @@ namespace Ostap
       /// momentum of the 3rd particle 
       double P3 ( const double s1  , const double s2 ) const ;
       // ======================================================================
+      /// kinetic energy of 1st particle 
+      inline double T1 ( const double s1 , const double s2        ) const 
+      { return E1 ( s1 , s2 ) -  m_m1 ; }
+      /// kinetic energy of 2nd particle 
+      inline double T2 ( const double s1 , const double s2        ) const 
+      { return E2 ( s1 , s2 ) -  m_m2 ; }
+      /// kinetic energy of 3rd particle 
+      inline double T3 ( const double s1 , const double s2        ) const 
+      { return E3 ( s1 , s2 ) -  m_m3 ; }          
+      // ======================================================================
+    public:  // limits for E1 , E2 and E3
+      // ======================================================================
+      double E1_min () const { return m_m1        ; }
+      double E2_min () const { return m_m2        ; }
+      double E3_min () const { return m_m3        ; }
+      double E1_max () const { return m_cache[11] ; }
+      double E2_max () const { return m_cache[12] ; }
+      double E3_max () const { return m_cache[13] ; }
+      // ======================================================================
     public:
       // ======================================================================
       /**  \f$ \theta^{*}_{12}\f$ is angle between 
@@ -209,7 +229,7 @@ namespace Ostap
       /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
        *  \f$ \sin^2 \theta_{31}^{R(1,2)}
        */
-      double sin2_31_R12 ( const double    s1    , const double s2 ) const ;
+      double sin2_31_R12 ( const double   s1    , const double s2 ) const ;
       // ======================================================================
     public: // (2,3)-rest frame 
       // ======================================================================
@@ -242,7 +262,7 @@ namespace Ostap
        * - the same as <c>Ostap::Kinematics::cos_theta    (p1,p2,p2+p3)</c>
        * - the same as <c>Ostap::Kinematics::decayAngle   (p1,p2+p3,-p2)</c>
        */
-      double cos_12_R23 ( const double    s1    , const double s2 ) const ;
+      double cos_12_R23  ( const double    s1    , const double s2 ) const ;
       /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
        *  \f$ \sin^2 \theta_{12}^{R(2,3)}
        */
@@ -374,7 +394,7 @@ namespace Ostap
        */
       bool   inside   ( const double s1 , const double s2 ) const ;
       // =======================================================================
-      /** get the meaure of the distance form the point to the boundary of Dalitz plot. 
+      /** get the measure of the distance form the point to the boundary of Dalitz plot. 
        *  Distance is defined as 
        *  \f$ d \equiv = \lambda ( P_1^2 , P_2^2 , P_3^2 ) \f$ 
        */
@@ -397,7 +417,7 @@ namespace Ostap
       /// the third mass 
       double m_m3 ;                                      //      the third mass 
       /// the precalcualted quantities 
-      std::array<double,11> m_cache ;           // the precalcualted quantities 
+      std::array<double,14> m_cache ;           // the precalcualted quantities 
       // ======================================================================      
     } ;
     // ========================================================================

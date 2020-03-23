@@ -215,8 +215,8 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         return 1
 
 # =============================================================================
-_maxv =  0.95 * sys.float_info.max
-_minv = -0.95 * sys.float_info.max
+_maxv =  0.99 * sys.float_info.max
+_minv = -0.99 * sys.float_info.max
 # =============================================================================
 ## @class Variable
 #  Helper   structure to manage/keep/create the variable for   SelectorWithVars
@@ -380,7 +380,7 @@ def valid_formula ( expression , varset ) :
     from ostap.logger.utils import rooSilent, rootError  
     with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
         with rootError( ROOT.kError + 1 ) :
-            _f = ROOT.RooFormulaVar( '' , expression , varset )
+            _f  = Ostap.FormulaVar( expression , varset , False )
             fok = _f.ok ()
             del _f
             
@@ -705,8 +705,8 @@ class SelectorWithVars(SelectorWithCuts) :
         """``really_trivial'' : is a set of variables really trivial (for RooFit)?"""
         for v in self.variables :
             if not v.really_trivial : return False
-        return True
-    
+        return  not '[' in self.selection and not ']' in self.selection 
+
     @property
     def trivial_sel( self ) :
         """``trivial_sel'' : is the selection ``trivial'' (suitable for fast-processing)?"""
@@ -1141,10 +1141,10 @@ class SelectorWithVarsCached(SelectorWithVars) :
         return 1
 
 # =============================================================================
-## Create thew dataset from the tree
+## Create RooDataset from the tree
 #  @code 
 #  tree = ...
-#  ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
+#  ds   = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
 def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , silent = False ) :
     """Create the dataset from the tree
@@ -1248,7 +1248,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     ## add complex expressions 
     if formulas :
         # a
-        vset   = ds.get()
+        vset = ds.get()
         vlst = ROOT.RooArgList()
         for v in vset : vlst.add ( v )
 
@@ -1257,7 +1257,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         ffs   = []
         fcuts = [] 
         for f in formulas :            
-            fv = ROOT.RooFormulaVar ( f.name , f.description , f.formula , vlst )
+            fv = Ostap.FormulaVar ( f.name , f.description , f.formula , vlst , False )
             assert fv.ok() , 'Invalid formula: %s' % f.formula 
             ffs.append ( fv )
             fcols.add  ( fv )
@@ -1306,6 +1306,32 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
 ROOT.TTree.make_dataset = make_dataset
         
+# =============================================================================
+## Create RooDataset from the tree
+#  @code 
+#  tree = ...
+#  ds   = tree.fill_dataset2 ( [ 'px , 'py' , 'pz' ] ) 
+#  @endcode
+def fill_dataset ( tree                 ,
+                   variables            ,
+                   selection    = ''    ,
+                   name         = ''    ,
+                   title        = ''    ,
+                   shortcut     = True  ,
+                   use_frame    = 50000 , 
+                   silent       = False ) :
+    """Create the dataset from the tree
+    >>> tree = ...
+    >>> ds = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] ) 
+    """
+    selector = SelectorWithVars ( variables , selection , silence = silent ) 
+    tree.process ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
+    data = selector.data
+    stat = selector.stat
+    del selector 
+    return data , stat 
+
+ROOT.TTree.fill_dataset = fill_dataset
 
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
@@ -1364,7 +1390,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        if selector.really_trivial and not selector.morecuts :
+        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection : 
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
             ds , stat  = self.make_dataset ( variables = selector.variables , selection = selector.selection , silent = silent )
             selector.data = ds
@@ -1387,8 +1413,10 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             import ostap.frames.frames
             
             total  = len ( self )
-            
+
             frame  = Ostap.DataFrame ( self , enable = True )
+            if not silent :
+                pb = frame.ProgressBar ( len ( self ) )
             
             vars   = list ( selector.variables )
             tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 
@@ -1452,9 +1480,9 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
 
                 if not silent :
-                    from ostap.frames.frames import report_prnt
+                    from ostap.frames.frames import report_print
                     title =  'Tree -> Frame -> Tree filter/transformation '
-                    logger.info ( title + '\n%s' % report_prnt ( report , title , '# ') )
+                    logger.info ( title + '\n%s' % report_print ( report , title , '# ') )
                     
                 total_0 = -1
                 for c in report :

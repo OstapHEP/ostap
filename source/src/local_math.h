@@ -13,18 +13,16 @@
 // ============================================================================
 #include "Ostap/Math.h"
 // ============================================================================
-/// local namespace to hide all tehcnical symbols 
-
-
+/// local namespace to hide all tehcnical symbols
 namespace 
 {
   // ==========================================================================
   /// equality criteria for doubles
-  const Ostap::Math::Equal_To<double>            s_equal{} ; // equality criteria for doubles
+  const Ostap::Math::Equal_To<double>            s_equal{}      ; // equality criteria for doubles
   /// zero for doubles  
-  const Ostap::Math::Zero<double>                s_zero {} ; // zero for doubles
+  const Ostap::Math::Zero<double>                s_zero {}      ; // zero for doubles
   /// zero for vectors 
-  const Ostap::Math::Zero< std::vector<double> > s_vzero{} ; // zero for vectors
+  const Ostap::Math::Zero< std::vector<double> > s_vzero{}      ; // zero for vectors
   // ==========================================================================
   // Limits? 
   // ==========================================================================
@@ -69,7 +67,6 @@ namespace
   *  representation of negative INFINITY_LOG
   */
   const double  s_INFINITY_LOG_NEG = std::log ( 2 * s_SMALL2 ) ;
-
   // ==========================================================================
   // Constants
   // ==========================================================================

@@ -13,6 +13,7 @@
 #include "Ostap/Tmva.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Formula.h"
+#include "Ostap/FormulaVar.h"
 #include "Ostap/Notifier.h"
 // ============================================================================
 // TMVA
@@ -91,8 +92,7 @@ namespace
         { var = (RooAbsReal*) varset->find ( name.c_str ()  ) ; }
         else 
         {
-          std::string fname = name + "_formula" ;
-          auto _v = std::make_unique<RooFormulaVar>( fname.c_str(), formula.c_str() , varlst ) ;
+          auto _v = std::make_unique<Ostap::FormulaVar>( formula , varlst , false ) ;
           if ( !_v->ok() ) { return Ostap::TMVA:: InvalidFormula ;}      
           var    = _v.get() ;
           _vars.push_back ( std::move ( _v ) ) ;
@@ -141,7 +141,7 @@ namespace
     // ========================================================================    
   private: // cache 
     // ========================================================================
-    std::vector<std::unique_ptr<RooFormulaVar> > _vars {} ;
+    std::vector<std::unique_ptr<Ostap::FormulaVar> > _vars {} ;
     // ========================================================================
   private:  
     // ========================================================================    

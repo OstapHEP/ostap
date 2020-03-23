@@ -326,6 +326,7 @@ def _rd_keys_ ( rdir , recursive = True , no_dir = True ) :
                 for k in ikeys : _res.append ( inam + '/' + k )
                 
         return _res
+
     
 # =============================================================================a
 ## Iterate over the content of ROOT file/directory 
@@ -366,8 +367,8 @@ def _rd_iteritems_ ( rdir , fun = lambda k,t,o : True , recursive = True , no_di
                     if fun ( inam , i , obj ) : yield inam , obj
                 if recursive and idir and not idir is rdir :
                     for k, o in _rd_iteritems_ ( idir , fun , recursive , no_dir ) :
-                        yield k,o
-                        
+                        yield k , o
+
 # =============================================================================a
 ## Iterate over the keys in ROOT file/directory 
 #  @code
@@ -398,7 +399,40 @@ def _rd_iterkeys_ ( rdir , typ = None , recursive = True , no_dir = True ) :
                 if recursive and idir  and not idir is rdir :
                     for k in _rd_iterkeys_ ( idir , typ , recursive , no_dir ) :
                         yield k
-                        
+
+
+
+# =============================================================================a
+## iterator oiver keyname/keys pairs  from ROOT file/directory
+#  @code
+#  for kname, key in rfile.ikeyskeys() :
+#    print kname , key.GetClassName()
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
+#  @date 2015-07-30
+def _rd_ikeyskeys_ ( rdir , recursive = True , no_dir = True ) :
+    """Iterator over  keyname/key pairs  from ROOT file/directory
+    >>> for kname, key in rfile.ikeyskeys() :
+    ...    print kname , key.GetClassName()
+    """
+    ##
+    with ROOTCWD() :
+        ##
+        rdir.cd() 
+        klst = rdir.GetListOfKeys()
+        
+        for key in klst :
+            
+            kname = key.GetName()
+
+            kdir  = rdir.GetDirectory ( kname )            
+            if not kdir or not no_dir :
+                yield kname, key 
+            
+            if recursive and kdir and not kdir is rdir :
+                for kn,kk in _rd_ikeyskeys_ ( kdir , recursive , no_dir ) :
+                    yield kname + '/' + kn , kk 
+
 # =============================================================================a
 ## Iterate over the content of ROOT file/directory 
 #  @code
@@ -526,7 +560,6 @@ def _rd_walk_ ( rdir , topdown = True ) :
     if not topdown :
         yield rdir.GetName(), _subdirs, _objects 
         
-
 # =============================================================================
 ## use ROOT-file with context-manager
 #  @code
@@ -551,7 +584,129 @@ def _rf_exit_  ( self , *_ ) :
         if self and self.IsOpen() : self.Close()
     except:
         pass
-            
+
+
+# =============================================================================
+## create the graphical representation of the directory structure
+#  @code
+#  rdir = ...
+#  for o in rdir.make_graph () : print o.showme() 
+#  @endocode
+def _rd_make_tree_ ( rdir , parent = None , last = False ) :
+    """Create the graphical representation of the directory structure
+    >>> rdir = ...
+    >>> for o in rdir.make_graph () : print o.showme() 
+    """
+    from ostap.logger.utils import DisplayTree
+
+    ## display function for each node 
+    def display ( item , isdir ) :        
+        name = item.GetName()
+        if isdir  : 
+            if isinstance ( item , ROOT.TFile ) :
+                name = os.path.basename ( name )
+            return name + '/'
+        return '%s %% %s' % ( name , item .GetClassName() ) 
+    
+    ## create the root of the tree 
+    root = DisplayTree ( rdir , parent , display , isdir = True , last = last ) 
+                            
+    yield root
+
+    ## get all keys/objects and all keys/subdirectories
+    
+    dirs = []
+    objs = []
+    
+    for key in rdir.GetListOfKeys() :
+        kname = key.GetName()
+        kdir  = rdir.GetDirectory ( kname ) 
+        if kdir : dirs.append ( kdir )
+        else    : objs.append ( key  ) 
+
+    objs.sort ( key = lambda s : s.GetName() )
+    dirs.sort ( key = lambda s : s.GetName() )
+
+    ndirs = len ( dirs )
+    for i , d  in enumerate ( dirs ) :
+        last = ndirs == i + 1
+        for l in _rd_make_tree_ ( d , parent = root , last = last ) :
+            yield l
+        
+    nobjs = len ( objs ) 
+    for i , o in enumerate ( objs ) :
+        last = nobjs == i + 1
+        yield DisplayTree ( o , parent = root , isdir = False , last = last )
+
+# =============================================================================
+## Show the tree directory structure
+#  @code
+#  rdir = ...
+#  print rdir.show_tree()
+#  @endcode
+def _rd_show_tree_ ( rdir , prefix = '' ) :
+    """Show the tree directory structure
+    >>> rdir = ...
+    >>> print rdir.show_tree()
+    """
+    lines = [ prefix + line.showme () for line in _rd_make_tree_ ( rdir ) ]
+    return '\n'.join ( lines ) 
+
+# =============================================================================
+## Show the tree directory structure
+#  @code
+#  rdir = ...
+#  rdir.ls_tree()
+#  @endcode
+def _rd_ls_tree_ ( rdir ) :
+    """Show the tree directory structure
+    >>> rdir = ...
+    >>> rdir.ls_tree()
+    """
+    logger.info ( "Directory %s\n%s" % ( rdir.GetName () ,
+                                         _rd_show_tree_ ( rdir , prefix = '# ' ) ) ) 
+
+# =============================================================================
+## Show the content of the directory as a table
+#  @code
+#  rdir = ...
+#  rdir.ls_table ()
+#  @endcode  
+def _rd_ls_table_ ( rdir , prefix = '# ' ) :
+    """Show the content of the directory as a table
+    >>> rdir = ...
+    >>> rdir.ls_table ()
+    """
+    
+    lines   = [  ( n , k.GetClassName() ) for ( n , k ) in _rd_ikeyskeys_ ( rdir ) ]
+    lines.sort()
+    maxkey  = 5
+    maxtype = 5
+    for l in lines :
+        maxkey  = max ( maxkey  , len ( l[0] ) )
+        maxtype = max ( maxtype , len ( l[1] ) )
+        
+    fmt_type = '%%-%ds' % ( maxtype + 2 )
+    fmt_key  = '%%-%ds' % ( maxkey  + 2 )
+    
+    table = [ ( fmt_key % 'Key' , fmt_type % 'type' ) ]
+    for line in lines :
+        row = fmt_key % line[0] , fmt_type % line[1]
+        table.append ( row ) 
+
+    name = rdir.GetName()
+    if isinstance ( rdir , ROOT.TFile ) :
+        name =  os.path.basename ( name )
+
+    if maxkey + maxtype < len ( name ) :
+        name = '<.>' + name [ -maxkey - maxtype : ]
+        
+    import ostap.logger.table as T
+    table = T.table ( table , title = '%s' % name , prefix = '# ' )
+    logger.info ( 'Directory %s:\n%s' % ( rdir.GetName() , table ) )
+
+
+
 # =============================================================================
 ## the basic protocol:
 
@@ -562,7 +717,6 @@ ROOT.TDirectory.__getattr__  = _rd_getattr_
 ROOT.TDirectory.__delitem__  = _rd_delitem_
 ROOT.TDirectory.__iter__     = _rd_iter_
 
-
 # =============================================================================
 ## the extended protocol
 
@@ -572,6 +726,7 @@ ROOT.TDirectory.has_key      = _rd_contains_
 ROOT.TDirectory.iteritems    = _rd_iteritems_
 ROOT.TDirectory.iterkeys     = _rd_iterkeys_
 ROOT.TDirectory.itervalues   = _rd_itervalues_
+ROOT.TDirectory.ikeyskeys    = _rd_ikeyskeys_
 
 # =============================================================================
 ## some extra stuff 
@@ -580,6 +735,10 @@ ROOT.TDirectory.walk         = _rd_walk_
 ROOT.TDirectory.__rrshift__  = _rd_rrshift_
 ROOT.TNamed    .__rshift__   = _tnamed_rshift_ 
 
+ROOT.TDirectory.show_tree    = _rd_show_tree_
+ROOT.TDirectory.ls_tree      = _rd_ls_tree_
+ROOT.TDirectory.ls_table     = _rd_ls_table_
+
 ROOT.TDirectory.rm           = _rd_rm_
 
 if hasattr ( ROOT.TFile , '__enter__' ) and hasattr ( ROOT.TFile , '__exit__' ) : pass
@@ -587,7 +746,10 @@ else :
     ROOT.TFile.__enter__ = _rf_enter_
     ROOT.TFile.__exit__  = _rf_exit_
 
-    
+ROOT.TDirectory.make_tree = _rd_make_tree_
+ROOT.TDirectory.show_tree = _rd_show_tree_
+ROOT.TDirectory.ls_tree   = _rd_ls_tree_
+
 # =============================================================================
 _modes = {
     ##
@@ -831,7 +993,6 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-
     
 # =============================================================================
 # The END 

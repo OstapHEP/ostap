@@ -49,7 +49,7 @@ Ostap::PyIterator::PyIterator
   { 
     //
     m_last    = std::min ( m_last , (unsigned long) tree->GetEntries() ) ;
-    m_formula.reset ( new Ostap::Formula ( "" ,  cuts , m_tree ) ) ;
+    m_formula.reset ( new Ostap::Formula ( cuts , m_tree ) ) ;
     //
     if ( !m_formula->GetNdim() ) { m_formula.reset()                      ; }
     else                         { m_tree->SetNotify ( m_formula.get() )  ; }
@@ -81,7 +81,7 @@ Ostap::PyIterator::PyIterator
   { 
     //
     m_last    = std::min ( m_last , (unsigned long) tree->GetEntries() ) ;
-    m_formula.reset ( new Ostap::Formula ( "" ,  cuts , m_tree ) ) ;
+    m_formula.reset ( new Ostap::Formula ( cuts , m_tree ) ) ;
     //
     if ( !m_formula->GetNdim() ) { m_formula.reset()                      ; }
     else                         { m_tree->SetNotify ( m_formula.get() )  ; }

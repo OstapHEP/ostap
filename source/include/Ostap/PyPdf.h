@@ -120,7 +120,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PyPdf2 Ostap/PyPdf.h
-     *  ``Light'' verison of PyPdf
+     *  ``Light'' version of PyPdf
      *  @see Ostap::Models::PyPDF
      *  @see ostap.fitting.pypdf.PyPDF2
      *  @author Vanya Belyaev Ivan.Belyaev@itep.ru

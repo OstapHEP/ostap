@@ -44,7 +44,12 @@ __all__     = (
     'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     ##
+    'pretty_float'       , ## printpouit of the floatig number 
+    'pretty_ve'          , ## printpouit of the value with error 
+    'pretty_2ve'         , ## printpouit of the value with asymmetric errors 
+    ##
     'multicolumn'        , ## format the list of strings into multicolumn block
+    'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
 import ROOT,cppyy, time, os,sys ## attention here!!
@@ -53,12 +58,13 @@ ROOT_RooFit_ERROR = 4
 # =============================================================================
 # logging 
 # =============================================================================
-from   ostap.logger.logger import getLogger, logColor, logNoColor 
+from   ostap.logger.logger    import getLogger, logColor, logNoColor 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.utils' )
 else                       : logger = getLogger( __name__ )
 del getLogger 
-from   ostap.logger.logger import  logVerbose,  logDebug, logInfo, logWarning, logError
-from   ostap.utils.utils   import RootError2Exception, rootException 
+from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning, logError
+from   ostap.utils.utils      import RootError2Exception, rootException
+from   ostap.core.ostap_types import integer_types, num_types  
 # =============================================================================
 ## @class MutePy
 #  Very simple context manager to suppress python printout 
@@ -606,6 +612,172 @@ def rootWarning ( level = 1 ) :
     return ROOTIgnore ( ROOT.kWarning + level )
 
 # =============================================================================
+## nice printout of the floating number (string + exponent)
+#  @code
+#  s , n = pretty_float ( number ) 
+#  @endcode
+#  @return nice stirng and the separate exponent 
+def pretty_float ( value , width = 8 , precision = 6 ) :
+    """N Nice printout of the floating number
+    - return nice string and the separate exponent 
+    >>> s , n = pretty_float ( number ) 
+    """
+    assert isinstance ( value     , num_types     ),\
+           'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
+    assert isinstance ( width     , integer_types ) and \
+           isinstance ( precision , integer_types ) and 2 <= precision < width, \
+           "Invalid width/precision parameters %s/%s" % ( width , precision ) 
+
+    
+    v  = value 
+    av = abs ( v ) 
+    if   100 <= av < 1000 :
+        fmt2 = '%%+%d.%df' % ( width , precision - 2 )
+        return fmt2 % v , None
+    elif 10  <= av < 100  :
+        fmt1 = '%%+%d.%df' % ( width , precision - 1 )
+        return fmt1 % v , None 
+    elif 1   <= av < 10   :
+        fmt0 = '%%+%d.%df' % ( width , precision     )
+        return fmt0 % v , None 
+    
+    from  ostap.math.base        import frexp10 
+    v_a , v_e = frexp10 ( av )
+    
+    v_a *= 10
+    v_e -=  1 
+
+    n , r = divmod  ( v_e , 3 )
+    if 0 != r : 
+        r -= 3
+        n += 1
+        
+    ra = v_a * ( 10**r )
+
+    fmt0 = '%%+%d.%df' % ( width , precision     )
+    return fmt0 % ( ra ) , 3 * n
+
+# ===============================================================================
+## nice printout of the ValueWithError obejct  ( string + exponent)
+#  @code
+#  s , n = pretty_ve ( number ) 
+#  @endcode
+#  @return nice stirng and the separate exponent 
+def pretty_ve ( value , width = 8 , precision = 6 ) :
+    """Nice printout of the ValueWithError obejct  ( string + exponent)
+    - return nice stirng and the separate exponent 
+    >>> s , n = pretty_ve ( number ) 
+    """
+    
+    from ostap.math.ve import VE
+    
+    v =           value.value ()
+    e = max ( 0 , value.error () )
+
+    assert isinstance ( value , VE ), 'Invalid type for value %s' % value 
+
+    assert isinstance ( width     , integer_types ) and \
+           isinstance ( precision , integer_types ) and 2 <= precision < width, \
+           "Invalid width/precision parameters %s/%s" % ( width , precision ) 
+    
+    av = max ( abs ( v ) ,  e )
+
+    if   100 <= av < 1000 :
+        fmt2 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 2 , width , precision - 2 )
+        return fmt2 % ( v , e ) , None
+    elif 10  <= av < 100  :
+        fmt1 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
+        return fmt1 % ( v , e ) , None 
+    elif 1   <= av < 10   :
+        fmt0 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+        return fmt0 % ( v , e ) , None 
+
+    from  ostap.math.base        import frexp10 
+    v_a , v_e = frexp10 ( av )
+
+    v /= 10**(v_e-1)
+    e /= 10**(v_e-1)
+    
+    v_e -= 1     
+    n , r = divmod  ( v_e , 3 )    
+    if 0 != r : 
+        r -= 3
+        n += 1
+
+    v *= 10**r
+    e *= 10**r 
+
+    fmt0 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+    return fmt0 % ( v  , e ) , 3 * n
+
+
+# ===============================================================================
+## nice printout of the object with asymmetric  errors   ( string + exponent)
+#  @code
+#  s , n = pretty_2ve ( number , ehigh , elow ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def pretty_2ve ( value         ,
+                 eh            ,
+                 el            ,
+                 width     = 8 ,
+                 precision = 6 ) :
+    
+    assert isinstance ( value     , num_types     ),\
+           'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
+    assert isinstance ( eh       , num_types     ),\
+           'Invalid eh    parameter %s/%s'   % ( eh    , type ( eh    ) )      
+    assert isinstance ( el       , num_types     ),\
+           'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
+
+    v = value 
+    e = max ( abs ( eh ), abs ( el ) )
+
+    assert isinstance ( width     , integer_types ) and \
+           isinstance ( precision , integer_types ) and 2 <= precision < width, \
+           "Invalid width/precision parameters %s/%s" % ( width , precision ) 
+
+    assert 0 <= eh or 0 <= el, 'Both errors cannot be negative!'
+    
+    if   eh < 0  and el < 0 :
+        eh , el =   el , eh
+    elif eh >= 0 and el < 0 :
+        eh , el = eh , abs ( el )
+    
+    av = max ( abs ( v ) ,  e )
+
+    if   100 <= av < 1000 :
+        fmt2  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        return fmt2 % ( v , eh , el ) , None 
+    elif 10  <= av < 100  :
+        fmt1  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        return fmt1 % ( v , eh , el ) , None 
+    elif 1   <= av < 10   :
+        fmt0  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt0 % ( v , eh , el ) , None 
+
+    from  ostap.math.base        import frexp10 
+    v_a , v_e = frexp10 ( av )
+
+    v  /= 10**(v_e-1)
+    eh /= 10**(v_e-1)
+    el /= 10**(v_e-1)
+    
+    v_e -= 1     
+    n , r = divmod  ( v_e , 3 )    
+    if 0 != r : 
+        r -= 3
+        n += 1
+
+    v  *= 10**r
+    eh *= 10**r 
+    el *= 10**r 
+
+    fmt0  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+    return fmt0 % ( v , eh , el ) , 3 * n
+
+
+# =============================================================================
 ## format list of strings into multicolumn string
 #  @code 
 #  >>> strings =  ....
@@ -646,6 +818,93 @@ def multicolumn ( lines , term_width=None , indent = 0 , pad = 2 ):
         result.append ( line )
     return '\n'.join ( result )
 
+
+# =======================================================================================
+## @class DisplayTree
+#  Very simple class to allow a rendering of Tree-like objects,
+#  in particular the structure and the content of directories 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2020-01-029
+class DisplayTree ( object ) :
+    """Very simple class to allow a rendering of Tree-like objects,
+    in particular the structure and the content of directories 
+    """    
+    prefix_item_middle   = '\033(0\x74\033(B' + '\033(0\x71\033(B' + '\033(0\x71\033(B'
+    prefix_item_last     = '\033(0\x6d\033(B' + '\033(0\x71\033(B' + '\033(0\x71\033(B'
+    prefix_parent_middle = '    '  
+    prefix_parent_last   = '\033(0\x78\033(B' +  '   '
+
+
+    def __init__  ( self            ,
+                    payload         ,   ## the object 
+                    parent  = None  ,   ## parent if any  
+                    display = None  ,   ## display function: how to display it? 
+                    isdir   = False ,   ## directory object ?
+                    last    = False ) : ## last in the list? 
+        
+        self.__payload = payload
+        self.__parent  = parent
+
+        if   display :         ## use display function if specified 
+            self.__display = display
+        elif parent  :         ## otherwise pick if from the parent 
+            self.__display = parent.__display
+            
+        self.__last    = last
+        self.__isdir   = isdir        
+        self.__depth   = self.parent.depth + 1 if parent else 0 
+
+    @property
+    def payload ( self ) :
+        """``payload''  : the actual object, hold by the tree leaf"""
+        return self.__payload
+    @property
+    def parent ( self ) :
+        """``parent'' : the parent element in the tree"""
+        return self.__parent
+    @property
+    def last   (  self ) :
+        """``last''  : is it a alst object oin the list? """
+        return self.__last
+    @property
+    def isdir  (  self ) :
+        """``isdir''  : is it `directory-like' item? """
+        return self.__isdir    
+    @property
+    def depth  (  self ) :
+        """``depth''  : how deep is our tree? """
+        return self.__depth 
+    
+    @property 
+    def itemname ( self ) :
+        """``itemname'' : how the name of the leaf is displayed?"""
+        return self.__display ( self.payload , self.isdir )
+
+    # ==========================================================================
+    ##  show the (sub)tree  
+    def showme ( self , prefix = '' ) :
+        """Show the constructed (sub)tree  
+        """        
+        if self.parent is None:
+            return self.itemname
+
+        symbols = self.prefix_item_last if self.last else self.prefix_item_middle
+
+        graph   = [ prefix + '{!s} {!s}'.format ( symbols , self.itemname ) ]
+
+        parent = self.parent        
+        while parent and parent.parent is not None:
+            pp     = self.prefix_parent_middle if parent.last else self.prefix_parent_last
+            graph.append  ( pp )
+            parent = parent.parent
+
+        return ''.join ( reversed ( graph ) )
+
+    def __str__ (  self ) :
+        return 'Leaf(%s,isdir=%s,last=%s)' % ( self.itemname ,
+                                               self.isdir    ,
+                                               self.last     ) 
+    __repr__ = __str__
     
 # =============================================================================
 if '__main__' == __name__ :

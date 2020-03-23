@@ -40,7 +40,7 @@ class AddTMVA(Task) :
         self.__output = ()
         
     def initialize_local  ( self )         : self.__output = () 
-    def process           ( self , trees ) :
+    def process           ( self , jobid , trees ) :
         
         import ostap.trees.trees
         from   ostap.tools.tmva  import addTMVAResponse  as add_response       
@@ -115,7 +115,8 @@ def addTMVAResponse ( chain                  ,   ## input chain
                                    aux           = aux           )
 
     from ostap.trees.trees import Chain
-    ch    = Chain ( chain ) 
+    ch       = Chain ( chain ) 
+    branches = set   ( chain.branches() )
     
     ## create the task 
     task  = AddTMVA     ( inputs        = inputs        ,
@@ -132,6 +133,9 @@ def addTMVAResponse ( chain                  ,   ## input chain
     
     nc = ROOT.TChain ( chain.name )
     for f in ch.files :  nc.Add ( f )
+
+    nb = list ( set ( nc.branches () ) - branches )
+    if nb : logger.info ( 'Added branches:\n%s' % nc.table ( variables = nb , prefix = '# ' ) ) 
     
     return nc
 

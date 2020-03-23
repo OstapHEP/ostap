@@ -8,11 +8,11 @@
 #include "Ostap/Iterator.h"
 #include "Ostap/StatusCode.h"
 #include "Ostap/HFuncs.h"
+#include "Ostap/FormulaVar.h"
 // ============================================================================
 // Root
 // ============================================================================
 #include "TTree.h"
-#include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
 #include "RooAbsData.h"
@@ -20,6 +20,7 @@
 //  Local
 // ============================================================================
 #include "Exception.h"
+#include "local_utils.h"
 // ============================================================================
 /** @file 
  *  Implementation file for classes from namespace Ostap::Functions
@@ -176,13 +177,11 @@ bool Ostap::Functions::FuncRooFormula::make_formula () const
   Ostap::Utils::Iterator iter ( *varset ) ;
   while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
   //
-  m_formula = std::make_unique<RooFormulaVar> 
-    ( m_name .c_str () , m_expression.c_str () , varlst ) ;
+  m_formula = std::make_unique<Ostap::FormulaVar> ( m_name , m_expression , varlst , false ) ;
   //
   return m_formula && m_formula -> ok () ;
 }
-
-  // ============================================================================
+// ============================================================================
 //  evaluate the formula for  Data
 // ============================================================================
 double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) const
@@ -212,72 +211,7 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
 
 
 
-// ===========================================================================
-// FuncTH 
-// ===========================================================================
-/*  constructor
- *  @param tree          (INPUT) the tree 
- *  @param interpolation (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ===========================================================================
-Ostap::Functions::FuncTH::FuncTH 
-( const TTree*         tree          ,
-  const bool           edges         ,
-  const bool           extrapolate   , 
-  const bool           density       )
-  : Ostap::IFuncTree() 
-  , TObject        () 
-  , m_tree         ( tree          ) 
-  , m_edges        ( edges         ) 
-  , m_extrapolate  ( extrapolate   ) 
-  , m_density      ( density       )   
-{}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Functions::FuncTH::FuncTH
-( const Ostap::Functions::FuncTH&  right ) 
-  : Ostap::IFuncTree ( right               ) 
-  , TObject          ( right               ) 
-  , m_tree           ( nullptr             )  //  ATTENTION! Tree is not copied!
-  , m_edges          ( right.m_edges       ) 
-  , m_extrapolate    ( right.m_extrapolate ) 
-  , m_density        ( right.m_density     ) 
-{}
-// ======================================================================
-// destructor 
-// ======================================================================
-Ostap::Functions::FuncTH::~FuncTH(){}
-// ======================================================================
-/*  (protected) constructor without the histogram
- *  @param xvar          (INPUT) the expression/variable 
- *  @param tree          (INPUT) the tree 
- *  @param interpolation (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ===========================================================================
-Ostap::Functions::FuncTH1::FuncTH1
-( const std::string&   xvar          , 
-  const TTree*         tree          ,
-  const Ostap::Math::HistoInterpolation::Type tx , 
-  const bool           edges         ,
-  const bool           extrapolate   , 
-  const bool           density       )
-  : FuncTH     ( tree , edges , extrapolate , density )
-  , m_xvar     ( nullptr ) 
-  , m_xvar_exp ( xvar    )
-  , m_tx       ( tx      )
-{
-  Ostap::Assert ( nullptr == m_tree || make_xvar () ,
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
-                  "Ostap::Function::FuncTH1"             ) ;
-  m_h1.SetDirectory ( nullptr ) ;
-}
+
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the histogram 
@@ -290,75 +224,62 @@ Ostap::Functions::FuncTH1::FuncTH1
  */
 // ===========================================================================
 Ostap::Functions::FuncTH1::FuncTH1
-( const TH1F&          histo         , 
+( const TH1&           histo         , 
   const std::string&   xvar          , 
   const TTree*         tree          ,
   const Ostap::Math::HistoInterpolation::Type tx , 
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : FuncTH1 ( xvar , tree , tx , edges  , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h1 ) ;
-  m_h1.SetDirectory ( nullptr ) ;
-  ///
-}
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo , tx , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_xvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
+// ============================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the historgam 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ */
+// ============================================================================
+Ostap::Functions::FuncTH1::FuncTH1
+( const Ostap::Math::Histo1D& histo , 
+  const std::string&          xvar  , 
+  const TTree*                tree  ) 
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo   )
+  , m_xvar_exp       ( xvar    ) 
+  , m_xvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Functions::FuncTH1&  right ) 
-  : FuncTH     ( right            ) 
-  , m_xvar     ( nullptr          ) // formula it not copied! 
-  , m_xvar_exp ( right.m_xvar_exp ) 
-  , m_tx       ( right.m_tx       ) 
-  , m_h1       ( right.m_h1       ) 
-{
-  m_h1.SetDirectory ( nullptr ) ;
-}
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
 // ===========================================================================
 // clone :
 // ===========================================================================
 Ostap::Functions::FuncTH1* 
 Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
 { return new FuncTH1 ( *this ) ; }
-// ===========================================================================
-/*  constructor from the formula expression 
- *  @param histo         (INPUT) the historgam 
- *  @param xvar          (INPUT) the expression/variable 
- *  @param tree          (INPUT) the tree 
- *  @param interpolation (INPUT) interpolation type 
- *  @param edges         (INPUT) special treatment of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ===========================================================================
-Ostap::Functions::FuncTH1::FuncTH1
-( const TH1D&          histo         , 
-  const std::string&   xvar          , 
-  const TTree*         tree          ,
-  const Ostap::Math::HistoInterpolation::Type tx , 
-  const bool           edges         ,
-  const bool           extrapolate   , 
-  const bool           density       )
-  : FuncTH1( xvar , tree , tx , edges  , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h1 ) ;
-  m_h1.SetDirectory ( nullptr ) ;
-  ///
-}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Functions::FuncTH1::~FuncTH1(){}
 // ============================================================================
 // notify 
 // ============================================================================
 Bool_t Ostap::Functions::FuncTH1::Notify () 
 {  
-  /// attention! here   we delete the variable instead of notofy/reset 
+  /// attention! here  we delete the variable instead of notify/reset 
   m_xvar.reset ( nullptr ) ;
   return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; 
 }
@@ -371,7 +292,7 @@ bool Ostap::Functions::FuncTH1::make_xvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_xvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar   = std::make_unique<Ostap::Formula> ( "" , m_xvar_exp , t ) ;
+  m_xvar   = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
   if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
   return m_xvar && m_xvar->ok () ;
 }
@@ -382,7 +303,6 @@ double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
 {
   //
   // the tree 
-  // if ( nullptr != tree  && tree != m_tree )
   if ( tree != m_tree )
   { 
     m_tree = tree  ;
@@ -409,46 +329,7 @@ double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
   //
   const double xvar = m_xvar->evaluate() ;
   //
-  return Ostap::Math::HistoInterpolation::interpolate_1D
-    ( m_h1  , xvar , m_tx , m_edges , m_extrapolate , m_density ).value() ;
-}
-// ===========================================================================
-/*  (protected) constructor without histogram 
- *  @param histo         (INPUT) the historgam 
- *  @param xvar          (INPUT) the expression/variable 
- *  @param yvar          (INPUT) the expression/variable 
- *  @param tree          (INPUT) the tree 
- *  @param tx            (INPUT) interpolation type 
- *  @param ty            (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ===========================================================================
-Ostap::Functions::FuncTH2::FuncTH2 
-( const std::string&   xvar                      , 
-  const std::string&   yvar                      , 
-  const TTree*         tree                      ,
-  const Ostap::Math::HistoInterpolation::Type tx , 
-  const Ostap::Math::HistoInterpolation::Type ty , 
-  const bool           edges                     ,
-  const bool           extrapolate               , 
-  const bool           density                   ) 
-  : FuncTH ( tree , edges , extrapolate , density ) 
-  , m_xvar     ( nullptr ) 
-  , m_yvar     ( nullptr ) 
-  , m_xvar_exp ( xvar    )
-  , m_yvar_exp ( yvar    )
-  , m_tx       ( tx      )
-  , m_ty       ( ty      )
-{
-  Ostap::Assert ( nullptr == m_tree || make_xvar () , 
-                  "Invalid Formula '" + m_xvar_exp + "'" ,
-                  "Ostap::Function::FuncTH2"             ) ;
-  Ostap::Assert ( nullptr == m_tree || make_yvar () , 
-                  "Invalid Formula '" + m_yvar_exp + "'" ,
-                  "Ostap::Function::FuncTH2"             ) ;
-  m_h2.SetDirectory ( nullptr ) ;
+  return m_histo ( xvar ) ;
 } 
 // ======================================================================
 /*  constructor from the histogram 
@@ -462,7 +343,7 @@ Ostap::Functions::FuncTH2::FuncTH2
  */
 // ======================================================================
 Ostap::Functions::FuncTH2::FuncTH2 
-( const TH2F&          histo                     , 
+( const TH2&           histo                     , 
   const std::string&   xvar                      , 
   const std::string&   yvar                      , 
   const TTree*         tree                      ,
@@ -471,57 +352,50 @@ Ostap::Functions::FuncTH2::FuncTH2
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : FuncTH2 ( xvar ,  yvar , tree ,  tx , ty, edges , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h2 ) ;
-  m_h2.SetDirectory ( nullptr ) ;
-  ///
-}
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo , tx , ty , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the historgam 
  *  @param xvar          (INPUT) the expression/variable 
  *  @param tree          (INPUT) the tree 
- *  @param interpolation (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
  */
 // ======================================================================
 Ostap::Functions::FuncTH2::FuncTH2 
-( const TH2D&          histo                     , 
-  const std::string&   xvar                      , 
-  const std::string&   yvar                      , 
-  const TTree*         tree                      ,
-  const Ostap::Math::HistoInterpolation::Type tx ,
-  const Ostap::Math::HistoInterpolation::Type ty , 
-  const bool           edges                     ,
-  const bool           extrapolate               , 
-  const bool           density                   )
-  : FuncTH2 ( xvar ,  yvar , tree ,  tx , ty, edges , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h2 ) ;
-  m_h2.SetDirectory ( nullptr ) ;
-  ///
-}
+( const Ostap::Math::Histo2D& histo , 
+  const std::string&          xvar  , 
+  const std::string&          yvar  , 
+  const TTree*                tree  ) 
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo   )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH2::FuncTH2
 ( const Ostap::Functions::FuncTH2&  right ) 
-  : FuncTH     ( right      ) 
-  , m_xvar     ( nullptr    ) 
-  , m_yvar     ( nullptr    ) 
-  , m_xvar_exp ( right.m_xvar_exp ) 
-  , m_yvar_exp ( right.m_yvar_exp ) 
-  , m_tx       ( right.m_tx ) 
-  , m_ty       ( right.m_ty )
-  , m_h2       ( right.m_h2 )
-{
-  m_h2.SetDirectory ( nullptr ) ;
-}
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
 // ===========================================================================
 // clone :
 // ===========================================================================
@@ -529,10 +403,6 @@ Ostap::Functions::FuncTH2*
 Ostap::Functions::FuncTH2::Clone ( const char* /* newname */ ) const
 { return new FuncTH2 ( *this ) ; }
 // ===========================================================================
-//  destructor 
-// ============================================================================
-Ostap::Functions::FuncTH2::~FuncTH2(){}
-// ============================================================================
 // notify 
 // ============================================================================
 Bool_t Ostap::Functions::FuncTH2::Notify () 
@@ -554,7 +424,7 @@ bool Ostap::Functions::FuncTH2::make_xvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_xvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar = std::make_unique<Ostap::Formula> ( "" , m_xvar_exp , t ) ;
+  m_xvar = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
   return m_xvar && m_xvar->ok () ;
 }
 // ============================================================================
@@ -566,7 +436,7 @@ bool Ostap::Functions::FuncTH2::make_yvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_yvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_yvar = std::make_unique<Ostap::Formula> ( "" , m_yvar_exp , t ) ;
+  m_yvar = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
   return m_yvar && m_yvar->ok () ;
 }
 // ============================================================================
@@ -599,87 +469,7 @@ double Ostap::Functions::FuncTH2::operator() ( const TTree* tree ) const
   const double xvar = m_xvar->evaluate() ;
   const double yvar = m_yvar->evaluate() ;
   //
-  return Ostap::Math::HistoInterpolation::interpolate_2D
-    ( m_h2  , xvar , yvar , m_tx , m_ty , m_edges , m_extrapolate , m_density ).value() ;
-}
-// ===========================================================================
-/*  (protected) constructor without histogram 
- *  @param xvar          (INPUT) the expression/variable 
- *  @param yvar          (INPUT) the expression/variable 
- *  @param tree          (INPUT) the tree 
- *  @param tx            (INPUT) interpolation type 
- *  @param ty            (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ===========================================================================
-Ostap::Functions::FuncTH3::FuncTH3 
-( const std::string&   xvar                      , 
-  const std::string&   yvar                      , 
-  const std::string&   zvar                      , 
-  const TTree*         tree                      ,
-  const Ostap::Math::HistoInterpolation::Type tx , 
-  const Ostap::Math::HistoInterpolation::Type ty , 
-  const Ostap::Math::HistoInterpolation::Type tz , 
-  const bool           edges                     ,
-  const bool           extrapolate               , 
-  const bool           density                   ) 
-  : FuncTH ( tree , edges , extrapolate , density ) 
-  , m_xvar     ( nullptr ) 
-  , m_yvar     ( nullptr ) 
-  , m_zvar     ( nullptr ) 
-  , m_xvar_exp ( xvar    )
-  , m_yvar_exp ( yvar    )
-  , m_zvar_exp ( zvar    )
-  , m_tx       ( tx      )
-  , m_ty       ( ty      )
-  , m_tz       ( tz      )
-{
-  Ostap::Assert ( nullptr == m_tree || make_xvar () , 
-                  "Invalid Formula '" + m_xvar_exp + "'" ,
-                  "Ostap::Function::FuncTH3"             ) ;
-  Ostap::Assert ( nullptr == m_tree || make_yvar () , 
-                  "Invalid Formula '" + m_yvar_exp + "'" ,
-                  "Ostap::Function::FuncTH3"             ) ;
-  Ostap::Assert ( nullptr == m_tree || make_zvar () , 
-                  "Invalid Formula '" + m_zvar_exp + "'" ,
-                  "Ostap::Function::FuncTH3"             ) ;
-  m_h3.SetDirectory ( nullptr ) ;
-} 
-// ======================================================================
-/*  constructor from the histogram 
- *  @param histo         (INPUT) the historgam 
- *  @param xvar          (INPUT) the expression/variable 
- *  @param yvar          (INPUT) the expression/variable 
- *  @param zvar          (INPUT) the expression/variable 
- *  @param tree          (INPUT) the tree 
- *  @param tx            (INPUT) interpolation type 
- *  @param ty            (INPUT) interpolation type 
- *  @param tz            (INPUT) interpolation type 
- *  @param edges         (INPUT) special tretament of edges?
- *  @param extrapolate   (INPUT) use extrapolation?
- *  @param density       (INPUT) use  density?
- */
-// ======================================================================
-Ostap::Functions::FuncTH3::FuncTH3 
-( const TH3F&          histo                     , 
-  const std::string&   xvar                      , 
-  const std::string&   yvar                      , 
-  const std::string&   zvar                      , 
-  const TTree*         tree                      ,
-  const Ostap::Math::HistoInterpolation::Type tx ,
-  const Ostap::Math::HistoInterpolation::Type ty , 
-  const Ostap::Math::HistoInterpolation::Type tz , 
-  const bool           edges                     ,
-  const bool           extrapolate               , 
-  const bool           density                   )
-  : FuncTH3 ( xvar ,  yvar , zvar , tree ,  tx , ty , tz , edges , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h3 ) ;
-  m_h3.SetDirectory ( nullptr ) ;
-  ///
+  return m_histo ( xvar , yvar ) ;
 }
 // ======================================================================
 /*  constructor from the histogram 
@@ -693,7 +483,7 @@ Ostap::Functions::FuncTH3::FuncTH3
  */
 // ======================================================================
 Ostap::Functions::FuncTH3::FuncTH3
-( const TH3D&          histo                     , 
+( const TH3&           histo                     , 
   const std::string&   xvar                      , 
   const std::string&   yvar                      , 
   const std::string&   zvar                      , 
@@ -704,42 +494,63 @@ Ostap::Functions::FuncTH3::FuncTH3
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : FuncTH3 ( xvar ,  yvar , zvar , tree ,  tx , ty , tz , edges , extrapolate , density ) 
-{
-  /// copy the histogram 
-  histo.Copy ( m_h3 ) ;
-  m_h3.SetDirectory ( nullptr ) ;
-  ///
-}
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo , tx , ty , tz , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_zvar_exp       ( zvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
+// ======================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the historgam 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ */
+// ======================================================================
+Ostap::Functions::FuncTH3::FuncTH3
+( const Ostap::Math::Histo3D& histo , 
+  const std::string&          xvar  , 
+  const std::string&          yvar  , 
+  const std::string&          zvar  , 
+  const TTree*                tree  )
+  : Ostap::IFuncTree () 
+  , TObject          () 
+  , m_histo          ( histo   )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_zvar_exp       ( zvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_tree           ( tree    ) 
+{}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH3::FuncTH3
 ( const Ostap::Functions::FuncTH3&  right ) 
-  : FuncTH     ( right      ) 
-  , m_xvar     ( nullptr    ) 
-  , m_yvar     ( nullptr    ) 
-  , m_zvar     ( nullptr    ) 
-  , m_xvar_exp ( right.m_xvar_exp ) 
-  , m_yvar_exp ( right.m_yvar_exp ) 
-  , m_zvar_exp ( right.m_zvar_exp ) 
-  , m_tx       ( right.m_tx ) 
-  , m_ty       ( right.m_ty )
-  , m_tz       ( right.m_tz )
-  , m_h3       ( right.m_h3 )
-{
-  m_h3.SetDirectory ( nullptr ) ;
-}
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_zvar_exp       ( right.m_zvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
 // ===========================================================================
 // clone :
 // ============================================================================
 Ostap::Functions::FuncTH3* 
 Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
 { return new FuncTH3 ( *this ) ; }
-// ============================================================================
-//  destructor 
-// ============================================================================
-Ostap::Functions::FuncTH3::~FuncTH3(){}
 // ============================================================================
 // notify 
 // ============================================================================
@@ -764,7 +575,7 @@ bool Ostap::Functions::FuncTH3::make_xvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_xvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar = std::make_unique<Ostap::Formula> ( "" , m_xvar_exp , t ) ;
+  m_xvar = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
   return m_xvar && m_xvar->ok () ;
 }
 // ============================================================================
@@ -776,7 +587,7 @@ bool Ostap::Functions::FuncTH3::make_yvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_yvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_yvar = std::make_unique<Ostap::Formula> ( "" , m_yvar_exp , t ) ;
+  m_yvar = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
   return m_yvar && m_yvar->ok () ;
 }
 // ============================================================================
@@ -788,7 +599,7 @@ bool Ostap::Functions::FuncTH3::make_zvar() const
   if ( nullptr == m_tree ) { return false ; }
   m_zvar.reset ( nullptr ) ;
   TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_zvar = std::make_unique<Ostap::Formula> ( "" , m_zvar_exp , t ) ;
+  m_zvar = std::make_unique<Ostap::Formula> ( m_zvar_exp , t ) ;
   return m_zvar && m_zvar->ok () ;
 }
 // ============================================================================
@@ -827,11 +638,442 @@ double Ostap::Functions::FuncTH3::operator() ( const TTree* tree ) const
   const double yvar = m_yvar->evaluate() ;
   const double zvar = m_yvar->evaluate() ;
   //
-  return Ostap::Math::HistoInterpolation::interpolate_3D
-    ( m_h3 , 
-      xvar , yvar , zvar , 
-      m_tx , m_ty , m_tz , m_edges , m_extrapolate , m_density ).value() ;
+  return m_histo ( xvar , yvar , zvar ) ;
+}
+
+// ======================================================================
+// RooAbsData functions
+// ======================================================================
+
+// ======================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the histogram 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ *  @param interpolation (INPUT) interpolation type 
+ *  @param edges         (INPUT) special tretament of edges?
+ *  @param extrapolate   (INPUT) use extrapolation?
+ *  @param density       (INPUT) use  density?
+ */
+// ===========================================================================
+Ostap::Functions::FuncRooTH1::FuncRooTH1
+( const TH1&           histo         , 
+  const std::string&   xvar          , 
+  const RooAbsData*    data          ,
+  const Ostap::Math::HistoInterpolation::Type tx , 
+  const bool           edges         ,
+  const bool           extrapolate   , 
+  const bool           density       )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo , tx , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_xvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the historgam 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ */
+// ============================================================================
+Ostap::Functions::FuncRooTH1::FuncRooTH1
+( const Ostap::Math::Histo1D& histo , 
+  const std::string&          xvar  , 
+  const RooAbsData*           data  )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo   )
+  , m_xvar_exp       ( xvar    ) 
+  , m_xvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncRooTH1::FuncRooTH1
+( const Ostap::Functions::FuncRooTH1&  right ) 
+  : Ostap::IFuncData ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_data           ( nullptr ) 
+{}
+// ===========================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::FuncRooTH1::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH1"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
 }
 // ============================================================================
-// The END 
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRooTH1::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRooTH1"  , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  //
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH1" , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  //
+  return m_histo ( x ) ;
+}
+// ======================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the histogram 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param yvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ *  @param interpolation (INPUT) interpolation type 
+ *  @param edges         (INPUT) special tretament of edges?
+ *  @param extrapolate   (INPUT) use extrapolation?
+ *  @param density       (INPUT) use  density?
+ */
+// ===========================================================================
+Ostap::Functions::FuncRooTH2::FuncRooTH2
+( const TH2&           histo         , 
+  const std::string&   xvar          , 
+  const std::string&   yvar          , 
+  const RooAbsData*    data          ,
+  const Ostap::Math::HistoInterpolation::Type tx , 
+  const Ostap::Math::HistoInterpolation::Type ty , 
+  const bool           edges         ,
+  const bool           extrapolate   , 
+  const bool           density       )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo , tx , ty , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the historgam 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ */
+// ============================================================================
+Ostap::Functions::FuncRooTH2::FuncRooTH2
+( const Ostap::Math::Histo2D& histo , 
+  const std::string&          xvar  , 
+  const std::string&          yvar  , 
+  const RooAbsData*           data  )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo   ) 
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncRooTH2::FuncRooTH2
+( const Ostap::Functions::FuncRooTH2&  right ) 
+  : Ostap::IFuncData ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_data           ( nullptr ) 
+{}
+// ===========================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::FuncRooTH2::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH2"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
+}
+// ============================================================================
+bool Ostap::Functions::FuncRooTH2::make_yvar() const
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH2"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_yvar = std::make_unique<Ostap::FormulaVar>( m_yvar_exp , varlst , false ) ;
+  //
+  return m_yvar && m_yvar -> ok () ;
+}
+// ============================================================================
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRooTH2::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRooTH1"  , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
+  //
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH2" , 
+                   Ostap::StatusCode(708)        ) ; 
+  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH2" , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  const double y = m_yvar->getVal() ;
+  //
+  return m_histo ( x , y ) ;
+}
+// ======================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the histogram 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param yvar          (INPUT) the expression/variable 
+ *  @param zvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ *  @param interpolation (INPUT) interpolation type 
+ *  @param edges         (INPUT) special tretament of edges?
+ *  @param extrapolate   (INPUT) use extrapolation?
+ *  @param density       (INPUT) use  density?
+ */
+// ===========================================================================
+Ostap::Functions::FuncRooTH3::FuncRooTH3
+( const TH3&           histo         , 
+  const std::string&   xvar          , 
+  const std::string&   yvar          , 
+  const std::string&   zvar          , 
+  const RooAbsData*    data          ,
+  const Ostap::Math::HistoInterpolation::Type tx , 
+  const Ostap::Math::HistoInterpolation::Type ty , 
+  const Ostap::Math::HistoInterpolation::Type tz , 
+  const bool           edges         ,
+  const bool           extrapolate   , 
+  const bool           density       )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo , tx , ty , tz , edges , extrapolate , density )
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_zvar_exp       ( zvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+/*  constructor from the histogram 
+ *  @param histo         (INPUT) the historgam 
+ *  @param xvar          (INPUT) the expression/variable 
+ *  @param tree          (INPUT) the tree 
+ */
+// ============================================================================
+Ostap::Functions::FuncRooTH3::FuncRooTH3
+( const Ostap::Math::Histo3D& histo , 
+  const std::string&          xvar  , 
+  const std::string&          yvar  , 
+  const std::string&          zvar  , 
+  const RooAbsData*           data  )
+  : Ostap::IFuncData () 
+  , m_histo          ( histo   ) 
+  , m_xvar_exp       ( xvar    ) 
+  , m_yvar_exp       ( yvar    ) 
+  , m_zvar_exp       ( zvar    ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_data           ( data    ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::FuncRooTH3::FuncRooTH3
+( const Ostap::Functions::FuncRooTH3&  right ) 
+  : Ostap::IFuncData ( right            ) 
+  , m_histo          ( right.m_histo    )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_zvar_exp       ( right.m_zvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_data           ( nullptr ) 
+{}
+// ===========================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::FuncRooTH3::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH3"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
+}
+// ============================================================================
+bool Ostap::Functions::FuncRooTH3::make_yvar() const
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH3"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
+  //
+  return m_yvar && m_yvar -> ok () ;
+}
+// ============================================================================
+bool Ostap::Functions::FuncRooTH3::make_zvar() const
+{
+  m_zvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_zvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRooTH3"  , 
+                             Ostap::StatusCode(705)         ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_zvar = std::make_unique<Ostap::FormulaVar> ( m_zvar_exp , varlst , false ) ;
+  //
+  return m_zvar && m_zvar -> ok () ;
+}
+// ============================================================================
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRooTH3::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+    m_zvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRooTH1"  , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
+  if ( !m_zvar || !m_zvar->ok() ) { make_zvar () ; }
+  //
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH2" , 
+                   Ostap::StatusCode(708)        ) ; 
+  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH2" , 
+                   Ostap::StatusCode(708)        ) ; 
+  Ostap::Assert  ( m_zvar && m_zvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRooTH2" , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  const double y = m_yvar->getVal() ;
+  const double z = m_zvar->getVal() ;
+  //
+  return m_histo ( x , y , z ) ;
+}
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

@@ -58,8 +58,7 @@ else                      : logger = getLogger ( __name__                   )
 # =============================================================================
 logger.debug ( "Absract class for  (c)Pickle-based ``compressed''-database")
 # =============================================================================
-## to be compatible between  Python2 and Python3 
-PROTOCOL = 2
+PROTOCOL = -1 
 ENCODING = 'utf-8'
 # ==============================================================================
 import os, sys, abc, shelve, shutil , time 
@@ -117,7 +116,8 @@ class CompressShelf(shelve.Shelf,object):
         self                   ,
         filename               ,
         mode        = 'c'      , 
-        protocol    = PROTOCOL , 
+        protocol    = PROTOCOL ,
+        compress    = 0        , 
         writeback   = False    ,
         silent      = False    ,
         keyencoding = 'utf-8'  ) :
@@ -135,7 +135,8 @@ class CompressShelf(shelve.Shelf,object):
         filename  = os.path.expandvars ( filename )
         filename  = os.path.expandvars ( filename )
         
-        self.__compress      = False 
+        self.__compresslevel = compress
+        self.__compress      = False
         self.__filename      = filename
         self.__remove        = False
         self.__silent        = silent
@@ -220,6 +221,11 @@ class CompressShelf(shelve.Shelf,object):
         """``protocol'' : pickling protocol used in the shelve"""
         return self._protocol
     
+    @property
+    def compresslevel ( self ) :
+        "``compress level'' : compression level"
+        return self.__compresslevel 
+
     @property 
     def filename ( self ) :
         "``filename'' :   the actual file name for database"
@@ -235,6 +241,11 @@ class CompressShelf(shelve.Shelf,object):
         "``mode'' : the actual open-mode for the database"
         return self.__mode
     
+    @property
+    def silent ( self ) :
+        "``silent'' : silent actions?"
+        return self.__silent 
+
     @property
     def protocol( self ) :
         "``protocol'' : pickling protocol"
@@ -283,7 +294,7 @@ class CompressShelf(shelve.Shelf,object):
 
     # =========================================================================
     ## list the avilable keys 
-    def ls    ( self , pattern = '' ) :
+    def ls    ( self , pattern = '' , load = True ) :
         """List the available keys (patterns included).
         Pattern matching is performed accoriding to
         fnmatch/glob/shell rules [it is not regex!] 
@@ -295,7 +306,6 @@ class CompressShelf(shelve.Shelf,object):
         """
         n  = os.path.basename ( self.filename )
         ap = os.path.abspath  ( self.filename ) 
-        ll = getLogger ( n )
         
         try :
             fs = os.path.getsize ( self.filename )
@@ -311,25 +321,50 @@ class CompressShelf(shelve.Shelf,object):
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
             
-        ll.info ( 'Database: %s #keys: %d size: %s' % ( ap , len ( self ) , size ) )
-                
+                        
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
         if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
         else    : mlen = 2 
-        fmt = ' --> %%-%ds : %%s' % mlen 
+        fmt = ' --> %%-%ds : %%s' % mlen
+
+        table = [ ( 'Key' , 'type',  '   size   ' ) ] 
         for k in keys :
-            ss = len ( self.dict[k] ) ##  compressed size 
-            if    ss < 1024 : size = '%8d' % ss 
-            elif  ss < 1024  * 1024 :
-                size = '%8.3f kB' %  ( float ( ss ) / 1024 )
-            elif  ss < 1024  * 1024 * 1024 :
-                size = '%8.3f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
+            ss = len ( self.dict [ k ] ) ##  compressed size 
+            if    ss < 1024 : size = '%7d   ' % ss 
+            elif  ss < 1024 * 1024 :
+                size = '%7.2f kB' %  ( float ( ss ) / 1024 )
+            elif  ss < 1024 * 1024 * 1024 :
+                size = '%7.2f MB' %  ( float ( ss ) / ( 1024 * 1024 ) )
             else :
-                size = '%8.3f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
-            
-            ll.info ( fmt  % ( k , size ) ) 
+                size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
+
+            otype = ''
+            try :
+                if load : ot = type ( self       [ k ] )
+                else    : ot = type ( self.cache [ k ] )
+                otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
+            except KeyError :
+                pass
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  
+            table.append ( row )
+
+        import ostap.logger.table as T
+        t      = type( self ).__name__
+        title  = '%s:%s' % ( t  , n )
+        maxlen = 0
+        for row in table :
+            rowlen = 0 
+            for i in row : rowlen += len ( i )
+            maxlen = max ( maxlen, rowlen ) 
+        if maxlen + 3 <= len ( title ) :
+            title = '<.>' + title [ -maxlen : ] 
+
+        table = T.table ( table , title = title , prefix = '# ' )
+        ll    = getLogger ( n )
+        line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
+        ll.info (  '%s\n%s' %  ( line , table ) )
         
         
     # =========================================================================
@@ -437,8 +472,8 @@ class CompressShelf(shelve.Shelf,object):
         except KeyError:            
             value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
             if self.writeback : self.cache [ key ] = value            
-        return value       
-
+        return value
+    
     # =========================================================================
     ## ``set-and-compress-item'' to dbase
     #  @code
@@ -455,28 +490,42 @@ class CompressShelf(shelve.Shelf,object):
     @abc.abstractmethod
     def compress_item   ( self , value ) :
         """Compress the value  using the certain compressing engine"""
-        return None
+        return NotImplemented
 
     # =========================================================================
     @abc.abstractmethod
     def uncompress_item ( self , value ) :
         """Uncompress the value  using the certain compressing engine"""
-        return None
+        return NotImplemented
 
     # =========================================================================
     ## Compress the file into temporary location, keep original
     @abc.abstractmethod 
     def compress_file   ( self , filein ) :
         """Compress the file into temporary location, keep the original """
-        return None 
+        return NotImplemented
 
+    # =========================================================================
     ## Uncompress the file into temporary location, keep original
     @abc.abstractmethod 
     def uncompress_file ( self , filein ) :
         """Uncompress the file into temporary location, keep the original"""
-        return None
+        return NotImplemented
 
-
+    # =========================================================================
+    ## clone the database into new one
+    #  @code
+    #  db  = ...
+    #  ndb = db.clone ( 'new_file.db' )
+    #  @endcode
+    @abc.abstractmethod
+    def clone ( self , filename , keys = () ) :
+        """ Clone the database into new one
+        >>> old_db = ...
+        >>> new_db = new_db.clone ( 'new_file.db' )
+        """
+        return NotImplemented
+            
 # ============================================================================
 ## a bit more decorations for shelve  (optional)
 import ostap.io.shelve_ext

@@ -368,6 +368,62 @@ namespace Ostap
       const double high  ) ;
     // ========================================================================
 
+    // ========================================================================
+    // Elliptic integrals 
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ F(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_F ( const double phi , const double k   ) ;
+    // ========================================================================
+    /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
+     *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E ( const double phi , const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ E(k) \f$  
+     *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_E ( const double k   ) ;
+    // ========================================================================
+    /** Complete elliptic integral \f$ K(k) \f$  
+     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    double elliptic_K ( const double k   ) ;
+    // ========================================================================
+    /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
+     *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
+     *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double elliptic_KmE ( const double k   ) ;    
+    // ========================================================================
+    /** Jacobi zeta function
+     *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
+     */
+    double elliptic_Z  ( const double beta  , const double k   ) ;
+    // ========================================================================
+    /** Product of Jacobi zeta function \f$ Z(\beta,k) \f$
+     *  and complete elliptic integral \f$ K(k) \f$
+     *  \f[ K(k) Z( \beta , k ) = \frac{k^2}{3} \sin \beta \cos \beta 
+     *   \sqrt{ 1 - k^2\sin^2\beta } R_J\left(0,1-k^2, 1 , 1-k^2\sin^2\beta\right)\f], 
+     *  where \f$ R_J(x,y,z,t)\f$ is a symmetric Carlson form  
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double elliptic_KZ ( const double beta  , const double k   ) ;
 
     // ========================================================================
     // clenshaw summation algorithms 
@@ -493,6 +549,86 @@ namespace Ostap
       const std::vector<double>& b ) ;
     // ========================================================================    
 
+    // ========================================================================    
+    /** get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
+     *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
+     *  @see S.U.Chung "Formulas for Angular-Momentum Barrier Factors", BNL-QGS-06-01
+     *  @see https://physique.cuso.ch/fileadmin/physique/document/2015_chung_brfactor1.pdf
+     *
+     *  The complex-valued polynomials \f$ g_l(x) \f$  with integer 
+     *  coefficients can be written as 
+     *  \f[ g_l(x) = \sum_{k=0}^{l} a_{lk}(-ix)^{l-k}\f] with
+     *  \f$ a_{lk} = \frac{(l+k)!}{2^k k! (l-k)!}\f$ and \f$a_{l0}=1\f$.
+     *
+     *  It satisfies the recurrent relation
+     *  \f[ g_{l+1}(x) = (2l+1)g_l(x) -  x^2 g_{l-1}(x)\f] 
+     *  with the initial values of \f$ g_0(x) \equiv 1 \f$ 
+     *  and \f$ g_1(x) \equiv -ix + 1\f$.
+     *  This recurrense relation is used for the actual calculation.
+     *
+     *  @param  x  the value of scaled relative momentum 
+     *  @param  l  the orbital momentum 
+     *  @return the value of \f$ g_l(x) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-13
+     *  @see Ostap::Math::barrier_factor 
+     *  @see Ostap::Math::barrier_absg 
+     */
+    std::complex<double>
+    barrier_g 
+    ( const double       x ,
+      const unsigned int l ) ;
+    // ========================================================================
+    /** get the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
+     *  @see S.U.Chung "Formulas for Angular-Momentum Barrier Factors", BNL-QGS-06-01
+     *  @see https://physique.cuso.ch/fileadmin/physique/document/2015_chung_brfactor1.pdf
+     *  the fuction evaluates 
+     *  \f[ f_l(a) \equiv \frac{1}{\left| x h_l^{(1)}(x)\right|} \f], 
+     *  where \f$ h_l^{(1)}\f$ is a spherical Hankel  function of the first kind.
+     *  Actually \f$ f_k(x)\f$ is calculated as 
+     *  \f[ f_l(a) x^l \left| g_l(x) \right|^{-1} \f], 
+     *  where \f$ g_l(x)\f$ is a complex-valued polynomial with integer coefficients, 
+     *  that satisfies the recurrent relation
+     *  \f[ g_{l+1}(x) = (2l+1)g_l(x) -  x^2 g_{l-1}(x)\f] 
+     *  with the initial values of \f$ g_0(x) \equiv 1 \f$ 
+     *  and \f$ g_1(x) \equiv -ix + 1\f$ 
+     *   
+     *  \f$  \left. f_l(x) \right|_{x\rightarrow 0}  = \mathcal{O}(x^l) \f$,
+     *  \f$  \left. f_l(x) \right|_{x\rightarrow +\infty}= 1  \f$,
+     *
+     *  @param  x  the value of scaled relative momentum 
+     *  @param  l  the orbital momentum 
+     *  @return the value of the angular-momentum Blatt-Weisskopf centrifugal-barrier factor
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-13                       
+     *  @see Ostap::Math::barrier_g
+     *  @see Ostap::Math::barrier_absg
+     */
+    inline double barrier_factor ( const double x , const unsigned int l ) 
+    { return std::pow  ( x , l ) / std::abs ( barrier_g ( x , l ) ) ; }
+    // ========================================================================    
+    /** get the absolute value of the intermediate polynom 
+     *  \f$ \left| g_l (x) \rigth| \f$ used for the calculation of 
+     *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
+     *  @see S.U.Chung "Formulas for Angular-Momentum Barrier Factors", BNL-QGS-06-01
+     *  @see https://physique.cuso.ch/fileadmin/physique/document/2015_chung_brfactor1.pdf
+     *  The complex-valued polynomials \f$ g_l(x) \f$  with integer coefficients 
+     *  satisfies the recurrent relation
+     *  \f[ g_{l+1}(x) = (2l+1)g_l(x) -  x^2 g_{l-1}(x)\f] 
+     *  with the initial values of \f$ g_0(x) \equiv 1 \f$ 
+     *  and \f$ g_1(x) \equiv -ix + 1\f$ 
+     *  @param  x  the value of scaled relative momentum 
+     *  @param  l  the orbital momentum 
+     *  @return the absolute value of \f$ g_l(x) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2019-10-13
+     *  @see Ostap::Math::barrier_factor 
+     *  @see Ostap::Math::barrier_g
+     */
+    inline double barrier_absg ( const double x , const unsigned int l ) 
+    { return std::abs ( barrier_g ( x , l ) ) ; }
+    // ========================================================================
+    
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

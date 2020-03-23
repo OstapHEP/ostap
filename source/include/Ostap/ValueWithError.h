@@ -19,7 +19,7 @@
 /** @file Ostap/ValueWithError.h
  *  Collection of useful objects with associated "covariances".
  *  The concept has been stollen from Wouter Hulsbergen's lines 
- *  @author Vanya BELYAEV Ivane.Belyaev@itep.ru
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2009-06-03
  */
 namespace Ostap
@@ -877,17 +877,69 @@ namespace Ostap
     ( const ValueWithError& x ,  
       const unsigned short n ) ;
     // ========================================================================
+    /** Complete elliptic integral \f$ K(k) \f$  
+     *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    ValueWithError elliptic_K ( const ValueWithError& k ) ;
+    // ========================================================================
+    /**  Complete elliptic integral \f$ E(k) \f$  
+     *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     */
+    ValueWithError elliptic_E ( const ValueWithError& k ) ;
+    // ========================================================================
+    /** Triangle, aka Kallen function 
+     *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+     *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
+     *  @see Ostap::Kinematics::triangle 
+     *  @see Ostap::Kinematics::kallen 
+     *  @see Ostap::Math::kallen
+     */
+    ValueWithError triangle 
+    ( const ValueWithError& x , 
+      const double          y , 
+      const double          z ) ;                           
+    // ========================================================================    
+    /** Triangle, aka Kallen function 
+     *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+     *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
+     *  @see Ostap::Kinematics::triangle 
+     *  @see Ostap::Kinematics::kallen 
+     *  @see Ostap::Math::triangle 
+     */
+    inline ValueWithError kallen 
+    ( const ValueWithError& x , 
+      const double          y , 
+      const double          z ) { return triangle ( x , y , z ) ; }
+    // ========================================================================
+    /** momentum in the rest frame for the two-body decay  \f$ n\rightarrow m_1 m_2 \f$ 
+     *  \f[ q ( m , m_1 , m_2 )  \equiv 
+     *  \frac{\lambda^{1/2}\left( m^2, m_1^2, m_2^2\right)}{2m} \f]
+     *  @see  Ostap::Kinematics::q 
+     */
+    ValueWithError q
+    ( const ValueWithError& m  , 
+      const double          m1 ,
+      const double          m2 ) ;
+    // ========================================================================
     /** \overload evaluate standard Gauss PDF 
      *  @param x the value 
      *  @return valeu of the standard gaussian PDF  
      */
-    ValueWithError gauss_pdf ( const ValueWithError& x ) ;
+    ValueWithError gauss_pdf 
+    ( const ValueWithError& x         , 
+      const double          mu    = 0 , 
+      const double          sigma = 1 ) ;
     // ========================================================================
     /** \overload evaluate standard Gauss CDF 
      *  @param x the value 
      *  @return value of the standard gaussian CDF  
      */
-    ValueWithError gauss_cdf  ( const ValueWithError& x ) ;    
+    ValueWithError gauss_cdf  
+    ( const ValueWithError& x         ,
+      const double          mu    = 0 , 
+      const double          sigma = 1 ) ;
     // ========================================================================    
     /** evaluate <code>hypot(x,y)</code>: \f$ \sqrt( x^2 + y^2 ) \f$
      *   @param x (INPUT) the first parameter

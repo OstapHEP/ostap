@@ -108,7 +108,7 @@ def _dp_points_ ( dp , npoints = 250 ) :
                 if s1_min <= x2 <= s1_max : pnts.append ( ( x2 , y ) )
 
     pnts = P + pnts 
-
+    pnts  = [ p for p in pnts if dp.inside ( p[0] , p[1] ) or abs ( dp.distance( p[0] , p[1] ) ) < 1.e-8 * M**2 ]
 
     ## find some point "inside" Dalitz plot
     ## first guess 

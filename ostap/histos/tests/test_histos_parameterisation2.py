@@ -27,12 +27,10 @@ else :
 # =============================================================================
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
-use_scipy = False 
 try :
     import scipy
-    use_scipy = True 
 except ImportError :
-    use_scipy = False 
+    scipy = None 
     
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
@@ -53,8 +51,8 @@ f4   = ROOT.TF1  ( fID() , '1-x**2'           , 0 , 1 )
 f5   = ROOT.TF1  ( fID() , '4*(x-0.5)**2'     , 0 , 1 )
 f6   = ROOT.TF1  ( fID() , '1-4*(x-0.5)**2'   , 0 , 1 )
 
-f_2  = ROOT.TF2 ( fID() , 'x*x+y*y'     , -1 , 1 , 0 , 2          )
-f_3  = ROOT.TF3 ( fID() , 'x*x+y*y+z*z' , -1 , 1 , 0 , 2 , -1 , 2 )
+f_2  = ROOT.TF2  ( fID() , 'x*x+y*y'     , -1 , 1 , 0 , 2          )
+f_3  = ROOT.TF3  ( fID() , 'x*x+y*y+z*z' , -1 , 1 , 0 , 2 , -1 , 2 )
 
 h_2  = ROOT.TH2F ( hID() , '' , 50 , -1 , 1 , 50 , 0 , 2 )
 h_3  = ROOT.TH3F ( hID() , '' , 20 , -1 , 1 , 20 , 0 , 2 , 20 , -1 , 2 ) 
@@ -232,6 +230,23 @@ def test_monomial() :
                                                                            (rP6 , h6) ] ] )
 
 # =============================================================================
+def test_positive() :
+    
+    with timing ( 'Positive[4]' , logger ) :
+        rB1 = h1.positive  ( 4 )
+        rB2 = h2.positive  ( 4 )
+        rB3 = h3.positive  ( 4 )
+        rB4 = h4.positive  ( 4 )
+        rB5 = h5.positive  ( 4 )
+        rB6 = h6.positive  ( 4 )        
+        logger.info ( 'Positive[4]:  diff   %s ' %  [ diff2(*p) for p in [ (rB1 , h1) ,
+                                                                           (rB2 , h2) ,
+                                                                           (rB3 , h3) ,
+                                                                           (rB4 , h4) ,
+                                                                           (rB5 , h5) ,
+                                                                           (rB6 , h6) ] ] )
+
+# =============================================================================
 def test_monotonic() :
     
     with timing ( 'Monotonic[4]' , logger ) :
@@ -292,7 +307,7 @@ def test_fourier () :
 # =============================================================================
 def test_cosine() :
     
-    if not use_scipy :
+    if not scipy :
         logger.warning("No scipy is avilable, skip 'cosine' test")
         return
     
@@ -397,8 +412,10 @@ def test_convex_only_spline () :
                                                                                 (rC4 , h4) ,
                                                                                 (rC5 , h5) ,
                                                                                 (rC6 , h6) ] ] )
-        
 
+
+# =============================================================================
+#  Legendre fast
 # =============================================================================
 def test_legendre_fast () :
     
@@ -464,23 +481,24 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
     
-    ## test_bernstein         ()
-    ## test_legendre          ()
-    ## test_chebyshev         ()
-    ## test_monomial          ()
+    test_bernstein           ()
+    test_legendre            ()
+    test_chebyshev           ()
+    test_monomial            ()
 
-    ## test_monotonic         () 
-    ## test_convex            () 
-    ## test_convex_poly       ()
+    test_positive            ()
+    test_monotonic           () 
+    test_convex              () 
+    test_convex_poly         ()
     
-    ## test_fourier           ()
-    ## test_cosine            ()
+    test_fourier             ()
+    test_cosine              ()
 
-    ## test_generic_spline       () 
-    ## test_positive_spline      () 
-    ## test_monotonic_spline     () 
-    ## test_convex_spline        () 
-    ## test_convex_only_spline   () 
+    test_generic_spline      () 
+    test_positive_spline     () 
+    test_monotonic_spline    () 
+    test_convex_spline       () 
+    test_convex_only_spline  () 
     
     test_legendre_fast       ()
     test_legendre2_fast      ()

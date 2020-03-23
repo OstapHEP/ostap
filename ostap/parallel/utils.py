@@ -39,6 +39,8 @@ __all__     = (
     'get_remote_conf'  , ## get PP-configuration for remote PP-server 
     )
 # =============================================================================
+from builtins import range
+# =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
 else                      : logger = getLogger ( __name__               ) 
@@ -199,6 +201,49 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
         return min ( lim , jobs_chunk )
     return lim
 
+
+# =============================================================================
+## Random number setting for parallel jobs
+#  - python
+#  - ROOT.gRandom
+#  - ROOT.RooRandom 
+#  @code
+#  jobid = ...
+#  random_random ( jobid ) 
+#  @endcode
+def random_random ( jobid ) :
+    """Random number setting for parallel jobs
+    - python
+    - ROOT.gRandom
+    - ROOT.RooRandom
+    >>> jobid = ...
+    >>> random_random ( jobid ) 
+    """
+    
+    import time, random, ROOT, sys , os, socket   
+    ##
+    random.seed ()
+    ##
+    jhid = os.getpid () , os.getppid() , socket.getfqdn () , jobid , os.uname () , time.time () 
+    jhid = hash ( jhid ) 
+    ##
+    if sys.version_info.major < 3 : random.jumpahead ( jhid )
+    else :
+        njumps = jhid % 9967
+        for j in range ( njumps ) : random.uniform ( 0 , 1 )
+
+    ## sleep a bit (up to one second) 
+    time.sleep ( random.uniform ( 0.1 , 1.0 ) )
+    
+    ## now  initialize ROOT
+    ROOT.gRandom.SetSeed ()
+    
+    ## ... and Roofit
+    ROOT.RooRandom.randomGenerator().SetSeed()
+    
+    return random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

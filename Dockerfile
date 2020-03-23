@@ -1,14 +1,23 @@
-FROM tovsiann/ostaphep_base_root_v6.16.00:latest 
+FROM ubuntu:18.04  
 MAINTAINER tatiana.ovsiannikova <tatiana.ovsiannikova@cern.ch>
 LABEL description="ostap HEP framework"
 
-RUN yum -y install doxygen && yum -y clean all
+RUN #!/bin/bash
+RUN  apt-get update\ 
+	&& apt-get  install -y dpkg-dev  git wget tar make binutils
+RUN wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+RUN bash miniconda.sh -b -p /root/miniconda
+ENV PATH="/root/miniconda/bin:${PATH}"
+RUN echo $PATH
+RUN conda config --set always_yes yes --set changeps1 no
+RUN conda config --add channels conda-forge
+RUN conda create -q -n ostapenv python=2.7 root  cmake future
 
 ADD . /ostap
 WORKDIR /ostap
 
-RUN alias python="/usr/local/bin/python2.7" && export LD_LIBRARY_PATH=/usr/local/lib64  && source /usr/src/root-6.16.00/builddir/bin/thisroot.sh && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install 
+ENV PATH="/root/miniconda/envs/ostapenv/bin:${PATH}"
 
-RUN echo "alias python="/usr/local/bin/python2.7"" >> ~/.bashrc && echo "export LD_LIBRARY_PATH=/usr/local/lib64" >> ~/.bashrc && echo "source /usr/src/root-6.16.00/builddir/bin/thisroot.sh" >> ~/.bashrc && echo "source build/INSTALL/thisostap.sh" >> ~/.bashrc
+RUN  mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && echo "source build/INSTALL/thisostap.sh" >> ~/.bashrc
 
 CMD /bin/bash

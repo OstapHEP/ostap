@@ -10,6 +10,7 @@
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/Kinematics.h"
+#include "Ostap/MoreMath.h"
 // ============================================================================
 // GSL
 // ============================================================================
@@ -86,7 +87,7 @@ double  Ostap::Math::PhaseSpace2::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -141,7 +142,7 @@ double Ostap::Math::PhaseSpace2::phasespace
 {
   //
   if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; } // RETURN
-  if ( m < m1 + m2                ) { return 0 ; } // RETURN
+  if ( m <= m1 + m2               ) { return 0 ; } // RETURN
   //
   const double msq = m * m ;
   const double lam = Ostap::Kinematics::triangle ( msq  , m1 * m1 , m2 * m2 ) ;
@@ -163,14 +164,7 @@ double Ostap::Math::PhaseSpace2::q
 ( const double m  ,
   const double m1 ,
   const double m2 )
-{
-  //
-  if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; }
-  //
-  const double lam = Ostap::Kinematics::triangle ( m * m  , m1 * m1 , m2 * m2 ) ;
-  //
-  return 0 < lam ? 0.5  * std::sqrt (  lam ) / m : 0 ;
-}
+{ return Ostap::Kinematics::q ( m , m1 , m2 ) ; }
 // ============================================================================
 /*  calculate the particle momentum in rest frame
  *  @param m the mass
@@ -186,8 +180,6 @@ Ostap::Math::PhaseSpace2::q1
   const double m1 ,
   const double m2 )
 {
-  //
-  if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; }
   //
   const double lam = Ostap::Kinematics::triangle ( m * m , m1 * m1 , m2 * m2 ) ;
   //
@@ -218,10 +210,23 @@ Ostap::Math::PhaseSpace3::PhaseSpace3
   , m_l2  ( l2 )
   , m_tmp ( 0  )   
 {}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::PhaseSpace3::~PhaseSpace3 () {}
+// ===============================================================
+/*  constructor from three masses
+ *  @param l1 the angular momentum between 1st and 2nd particle
+ *  @param l2 the angular momentum between the pair and 3rd particle
+ */
+// ===============================================================
+Ostap::Math::PhaseSpace3::PhaseSpace3
+( const PhaseSpace3s&  ps3 , 
+  const unsigned short l1  ,
+  const unsigned short l2  ) 
+  : m_m1 ( ps3.m1 () ) 
+  , m_m2 ( ps3.m2 () ) 
+  , m_m3 ( ps3.m3 () ) 
+  , m_l1  ( l1 )
+  , m_l2  ( l2 )
+  , m_tmp ( 0  )   
+{}
 // ============================================================================
 // evaluate 3-body phase space
 // ============================================================================
@@ -238,15 +243,30 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
-double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
+/*  evaluate 3-body phase space
+ *  \f[ R_3 ( M ) = \frac{pi^2}{4M^2}\int_{m2+m3}^{M-m_1} \drac{ds_2}{s_2}
+ *   \lambda^{1/2}\left ( s_2 , M^2   , m_1^2\right) 
+ *   \lambda^{1/2}\left ( s_2 , m_2^2 , m_3^2\right) 
+ *  \f] 
+ *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+ *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
+ */
+double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
 {
   //
   if ( x <= lowEdge() ) { return 0 ; }
   //
+  static const double s_norm = 0.25 *  M_PI * M_PI ;
+  //
+  const double norm = s_norm / ( x * x ) ;
+  //
+  // all masses are zero 
+  if ( s_zero ( m_m1 ) && s_zero ( m_m2 ) && s_zero ( m_m3 ) ) { return norm ; }
+  //
   /// set the temporary mass
   m_tmp = x ;
   //
-  // make integral of ps2_aux from m_m1+m_m2 till x-m_m3
+  // make integral of ps2_aux from m_m1 + m_m2 till  x - m_m3
   //
   const double low  = m_m1 + m_m2 ;
   const double high = x    - m_m3 ;
@@ -268,11 +288,11 @@ double Ostap::Math::PhaseSpace3::operator () ( const double x ) const
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
-  return result ;
+  return result * norm ;
 }
 // ============================================================================
 // get the tag 
@@ -287,15 +307,46 @@ double Ostap::Math::PhaseSpace3::ps2_aux
 {
   //
   if ( m_tmp <= lowEdge()    ) { return 0 ; }
-  //
   if ( m12   <= m_m1  + m_m2 ) { return 0 ; }
   if ( m12   >= m_tmp - m_m3 ) { return 0 ; }
   //
   // represent 3-body phase space as extention of 2-body phase space
-  return  m12 / M_PI *
-    Ostap::Math::PhaseSpace2::phasespace ( m12   , m_m1 , m_m2 , m_l1 ) *
-    Ostap::Math::PhaseSpace2::phasespace ( m_tmp , m12  , m_m3 , m_l2 ) ;
   //
+  const double lam1 = Ostap::Kinematics::triangle 
+    ( m12   * m12   , m_m1 * m_m1 , m_m2 * m_m2  ) ;
+  if ( lam1 <= 0 ) { return 0 ; }
+  //
+  const double lam2 = Ostap::Kinematics::triangle 
+    ( m_tmp * m_tmp ,  m12 * m12  , m_m3 * m_m3  ) ;
+  if ( lam2 <= 0 ) { return 0 ; }
+  //
+  //
+  /** True integral is
+   *  \f[ \int_{(m_1+m_2)^2}^{(M-m_3)^2} \frac{ds_1}{s_1}
+   *  \lambda^{1/2}\left ( M^2 , s_1   , m_3^2\right)
+   *  \lambda^{1/2}\left ( s_1 , m_1^2 , m_2^2\right) \f] 
+   *  It is rewritten as 
+   *  \f[ \int_{m_1+m_2}^{M-m_3} \frac{2m_{12}dm_{12}}{m_{12}^2}
+   *  \lambda^{1/2}\left ( M^2      , m_{12}^2   , m_3^2\right)
+   *  \lambda^{1/2}\left ( m_{12}^2 , m_1^2      , m_2^2\right) \f] 
+   *  then \f$ \lambda^{1/2}\f$ are written as  \f$q\f$:
+   *  \f$ q = \frac{\lambda^{1/2}\left(s,m_a^2,m_b^2\right)}{2s}\$ :
+   *  \f[ \int_{m_1+m_2}^{M-m_3} \frac{2m_{12}dm_{12}}{m_{12}^2}
+   *  2M      q (M\rightarrow m_{12} m_3)  
+   *  2m_{12} q ( m_{12}\rightarrow m_{1} m_3) = 
+   *  \int_{m_1_m_2}^{M-m_3} 8 M dm_12 
+   *  q (M\rightarrow m_{12} m_3)  
+   *  q ( m_{12}\rightarrow m_{1} m_3) = \f] 
+   *  and as last step all q-s are exponentiated :
+   *  \f[ \int_{m_1+m_2}^{M-m_3}  8M d m_{12}
+   *  q^{2L_1+1}(M\rightarrow m_{12} m_3)  
+   *  q^{2L_2+1}( m_{12}\rightarrow m_{1} m_3) \f]
+   */
+  // 
+  const double q1 = std::sqrt ( lam1 ) / ( 2 * m12   ) ;
+  const double q2 = std::sqrt ( lam2 ) / ( 2 * m_tmp ) ;
+  //
+  return 8 * std::pow ( q1 , 2 * m_l1 + 1 ) * std::pow ( q2 , 2 * m_l2 + 1 ) * m_tmp ;
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -335,14 +386,84 @@ double  Ostap::Math::PhaseSpace3::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
 // ============================================================================
-
+/** constructor from three masses
+ *  @param m1 the mass of the first  particle
+ *  @param m2 the mass of the second particle
+ *  @param m3 the mass of the third  particle
+ */
+// ============================================================================
+Ostap::Math::PhaseSpace3s::PhaseSpace3s
+( const double m1 ,
+  const double m2 ,
+  const double m3 ) 
+  : m_m1  ( std::abs ( m1 ) ) 
+  , m_m2  ( std::abs ( m2 ) ) 
+  , m_m3  ( std::abs ( m3 ) ) 
+{}
+// ==============================================================================
+// evaluate 3-body phase space
+// ==============================================================================
+double Ostap::Math::PhaseSpace3s::phasespace
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 )
+{ return Ostap::Kinematics::phasespace3 ( x , m1 , m2 , m3 ) ; }
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::PhaseSpace3s::tag ()  const 
+{ return std::hash_combine ( m_m1 , m_m2 , m_m3 ) ; }
+// ==============================================================================
+// evaluate 3-body phase space
+// ==============================================================================
+double Ostap::Math::PhaseSpace3s::evaluate ( const double x ) const
+{ return x <= lowEdge () ? 0.0 : phasespace ( x , m_m1 , m_m2 , m_m3 ) ; }
+// ============================================================================
+// get the integral between low and high limits
+// ============================================================================
+double Ostap::Math::PhaseSpace3s::integral 
+( const double low  ,
+  const double high ) const 
+{
+  //
+  if ( s_equal  ( low , high ) ) { return 0 ; }
+  else if ( low  > high )        { return - integral (   high , low ) ; }
+  else if ( high <= lowEdge()  ) { return 0 ; }
+  //
+  const double xlow  = low  ;
+  const double xhigh = high ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PhaseSpace3s> s_integrator {} ;
+  static char s_message[] = "Integral(PhaseSpace3s)" ;
+  //
+  const auto F = s_integrator.make_function ( this) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    ( tag () , 
+      &F     , 
+      xlow   , xhigh ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      m_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
 // ============================================================================
 // constructor from threshold and number of particles
 // ============================================================================
@@ -351,7 +472,8 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
   const unsigned short num       , 
   const double         scale     ) 
   : m_threshold ( std::abs ( threshold ) )
-  , m_num       ( num )
+  , m_num       ( num   )
+  , m_scale     ( scale ) 
   , m_ps2       () 
 {
   Ostap::Assert ( 2 <= m_num , 
@@ -364,8 +486,9 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const std::vector<double>& masses ,
   const double               scale  )
-  : m_threshold (  0 )
-  , m_num       ( masses.size()      )
+  : m_threshold (  0            )
+  , m_num       ( masses.size() )
+  , m_scale     ( scale ) 
   , m_ps2       () 
 {
   Ostap::Assert ( 2 <= m_num                    , 
@@ -388,20 +511,19 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 // special case: true 2-body phasespace 
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
-( const char*  /* tag */   , 
-  const double m1          , 
-  const double m2          ,
-  const double scale       ) 
-  : m_threshold ( std::abs ( m1 ) + std::abs ( m2 ) ) 
-  , m_num       ( 0 ) 
-  , m_ps2 ( m1 , m2 ) 
+( const Ostap::Math::PhaseSpace2& ps2   , 
+  const double                    scale ) 
+  : m_threshold ( ps2.m1()  + ps2.m2()  ) 
+  , m_num       ( 0       ) // ATTENTION HERE!! 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( ps2     ) 
 {}
 // ============================================================================
 // destructor
 // ============================================================================
 Ostap::Math::PhaseSpaceLeft::~PhaseSpaceLeft(){}
 // ============================================================================
-// evaluate N-body phase space near left threhsold
+// evaluate N-body phase space near left threshold
 // ============================================================================
 double Ostap::Math::PhaseSpaceLeft::operator () ( const double x ) const
 {
@@ -431,7 +553,7 @@ double Ostap::Math::PhaseSpaceLeft::integral
   //
   if ( 0 == m_num ) { return m_ps2.integral ( xlow , xhigh ) ; }
   //
-   // use GSL to evaluate the integral
+  // use GSL to evaluate the integral
   //
   static const Ostap::Math::GSL::Integrator1D<PhaseSpaceLeft> s_integrator {} ;
   static char s_message[] = "Integral(PhaseSpaceLeft)" ;
@@ -447,7 +569,7 @@ double Ostap::Math::PhaseSpaceLeft::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -680,7 +802,7 @@ double  Ostap::Math::PhaseSpaceNL::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -760,7 +882,7 @@ double  Ostap::Math::PSDalitz::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -877,7 +999,7 @@ double  Ostap::Math::PhaseSpace23L::integral
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
-      s_SIZE              ,          // size of workspace
+      m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //

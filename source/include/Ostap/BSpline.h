@@ -1498,7 +1498,7 @@ namespace Ostap
      *  Boehm's algorithm is used 
      *  @see W.Boehm, ``Inserting new knots into B-spline curves'',
      *       Computer-Aided Design, 12, no.4, (1980) 199 
-     *  @see http://dx.doi.org/10.1016/0010-4485(80)90154-2
+     *  @see https://doi.org/10.1016/0010-4485(80)90154-2
      *  @see http://www.sciencedirect.com/science/article/pii/0010448580901542
      *  @param x     (INPUT)  position of new knot 
      *  @param knots (UPDATE) vector of knots 
@@ -1535,6 +1535,18 @@ namespace Ostap
     // ========================================================================
     namespace Interpolation
     {
+      // ======================================================================
+      class Table ;
+      // ======================================================================
+      /** define parameters for the interpolation spline 
+       *  @param data (INPUT)  table of data 
+       *  @param bs   (UPDATE) the spline 
+       *  @return status code 
+       */
+      Ostap::StatusCode
+      bspline 
+      ( const Ostap::Math::Interpolation::Table& data ,
+        Ostap::Math::BSpline&                    bs   ) ;      
       // ======================================================================
       /** define parameters for the interpolation spline 
        *  @param xy (INPUT)   vector of data 
@@ -1601,7 +1613,7 @@ namespace Ostap
         const std::vector<double>& knots     , 
         const unsigned short       order = 3 ) 
       {  
-        // constuct spline  
+        // construct spline  
         Ostap::Math::BSpline      bs ( knots , order ) ;
         // get greville abscissas
         const std::vector<double> ga ( bs.greville_abscissas() ) ;

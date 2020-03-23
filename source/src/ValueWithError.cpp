@@ -17,6 +17,7 @@
 #include "Ostap/Combine.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Kinematics.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -2588,13 +2589,17 @@ Ostap::Math::interpolate
  */
 // ============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::gauss_pdf  ( const Ostap::Math::ValueWithError& x )
+Ostap::Math::gauss_pdf  
+( const Ostap::Math::ValueWithError& x     , 
+  const double                       mu    , 
+  const double                       sigma ) 
 {
-  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_pdf ( x.value() ) ; }
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) 
+  { return gauss_pdf ( x.value() , mu , sigma ) ; }
   // the value  
-  const double v =   gauss_pdf  ( x.value() ) ;
+  const double v = gauss_pdf  ( x.value() , mu , sigma ) ;
   // derivative  
-  const double d = - v * x.value() ;
+  const double d = - v * (  x.value()  - mu ) / ( sigma * sigma ) ;
   // result 
   return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
 }
@@ -2605,18 +2610,113 @@ Ostap::Math::gauss_pdf  ( const Ostap::Math::ValueWithError& x )
  */
 // ============================================================================
 Ostap::Math::ValueWithError
-Ostap::Math::gauss_cdf  ( const Ostap::Math::ValueWithError& x )
+Ostap::Math::gauss_cdf
+( const Ostap::Math::ValueWithError& x , 
+  const double                       mu    , 
+  const double                       sigma ) 
 {
-  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) ) { return gauss_cdf ( x.value() ) ; }
+  if ( 0 >= x.cov2() || s_zero ( x.cov2() ) )
+  {  return gauss_cdf ( x.value() , mu , sigma ) ; }
   // the value  
-  const double v = gauss_cdf ( x.value() ) ;
+  const double v = gauss_cdf ( x.value () , mu , sigma ) ;
   // derivative  
-  const double d = gauss_pdf ( x.value() )  ;
+  const double d = gauss_pdf ( x.value () , mu , sigma )  ;
   // result 
   return Ostap::Math::ValueWithError ( v  , d  * d * x.cov2() ) ;
 }
-// ========================================================================    
- 
+// ========================================================================
+/*  Complete elliptic integral \f$ K(k) \f$  
+ *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ========================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::elliptic_K ( const Ostap::Math::ValueWithError& k ) 
+{
+  //
+  const double kv =  k.value() ;
+  //
+  if ( k.cov2() < 0 || s_zero ( k.cov2() ) || s_zero ( kv ) )
+  { return Ostap::Math::elliptic_K ( kv ) ; }
+  //
+  const double K = Ostap::Math::elliptic_K ( kv ) ;
+  const double E = Ostap::Math::elliptic_E ( kv ) ;
+  //
+  const double d =  ( E / ( 1 - kv * kv ) - K ) / kv ;
+  //
+  return Ostap::Math::ValueWithError ( kv , d * d  * k.cov2 () ) ;
+}
+// ============================================================================
+/*   Complete elliptic integral \f$ E(k) \f$  
+ *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::elliptic_E ( const Ostap::Math::ValueWithError& k ) 
+{
+  //
+  const double kv =  k.value() ;
+  //
+  if ( k.cov2() < 0 || s_zero ( k.cov2() ) || s_zero ( kv ) )
+  { return Ostap::Math::elliptic_K ( kv ) ; }
+  //
+  const double K = Ostap::Math::elliptic_K ( kv ) ;
+  const double E = Ostap::Math::elliptic_E ( kv ) ;
+  //
+  const double d = ( E - K ) / kv ;
+  //
+  return Ostap::Math::ValueWithError ( kv , d * d * k.cov2 () ) ;
+}
+// ============================================================================
+/*  Triangle, aka Kallen function 
+ *  \f[ \lambda ( a , b, c ) = a^2 + b^2 + c^2 - 2ab - 2bc - 2ca \f]
+ *  @see see https://en.wikipedia.org/wiki/K%C3%A4ll%C3%A9n_function          
+ *  @see Ostap::Kinematics::triangle 
+ *  @see Ostap::Kinematics::kallen 
+ *  @see Ostap::Math::kallen
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::triangle 
+( const Ostap::Math::ValueWithError& x , 
+  const double                       y , 
+  const double                       z )
+{
+  //
+  const double v = Ostap::Kinematics::triangle ( x.value() , y , z ) ; 
+  //
+  if ( x.cov2() <= 0 || s_zero ( x.cov2() ) ) { return v ; }
+  //
+  const double d = 2 * ( x.value() - y - z ) ;
+  //
+  return ValueWithError ( v , d * d * x.cov2() ) ;
+}
+// ============================================================================
+/*  momentum in the rest frame for the two-body decay  \f$ n\rightarrow m_1 m_2 \f$ 
+ *  \f[ q ( m , m_1 , m_2 )  \equiv 
+ *  \frac{\lambda^{1/2}\left( m^2, m_1^2, m_2^2\right)}{2m} \f]
+ *  @see  Ostap::Kinematicsq::q 
+ */
+// ============================================================================
+Ostap::Math::ValueWithError 
+Ostap::Math::q
+( const Ostap::Math::ValueWithError& m  , 
+  const double                       m1 ,
+  const double                       m2 ) 
+{
+  //
+  const double mv = m.value() ;
+  if ( mv <= m1 + m2 || m1 < 0 || m2 < 0 ) { return 0 ; }
+  //
+  const double v  = Ostap::Kinematics::q ( mv , m1  , m2 ) ;
+  if ( m.cov2() <= 0 || s_zero ( m.cov2() ) || v <= 0 ) { return v ; }
+  //
+  const  double d = ( m * m - m1 * m1 - m2 * m2 ) / ( 2  * mv * v ) -  v / mv ;
+  //
+  return Ostap::Math::ValueWithError ( v , d * d * m.cov2 () ) ;
+}
+
 
 
 // =============================================================================

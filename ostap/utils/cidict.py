@@ -45,9 +45,9 @@ class cidict(MutableMapping) :
     ...              transform = lambda k : k.lower().replace('_','') )
     """
     
-    def __init__ ( self                           ,
-                   dct       = {}                 ,
-                   transform = lambda k : k.lower ,
+    def __init__ ( self                             ,
+                   dct       = {}                   ,
+                   transform = lambda k : k.lower() ,
                    **kwargs ) :
 
         self.__transform = transform 

@@ -41,7 +41,7 @@ namespace std
     _hash_combine ( seed, args...) ;
     return seed ;
   }
-  // =================================================================
+  // ==========================================================================
   template <typename RT=size_t , typename T1, typename ...T>
   RT hash_combine  ( const T&...   args , const T1& t1 ) 
   {
