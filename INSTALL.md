@@ -76,7 +76,7 @@ To activate or deactivate ostap's environment:
     conda deactivate  
 To get the latest version of the ostap package:
 
-    conda -n ostap-env install ostaphep=version
+    conda install -n ostap-env  ostaphep=version
 The list of available version you can find [here](https://anaconda.org/conda-forge/ostaphep/files).
 To know more about conda-forge, please visit [conda page](https://conda-forge.org).
 
