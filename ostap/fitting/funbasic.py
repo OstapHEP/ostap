@@ -925,8 +925,8 @@ class Fun2D ( FUNC2 ) :
 
         assert not xvar is yvar, "xvar and yvar must be different!"
 
-        if fun is xvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , xvar )
-        if fun is yvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , yvar )
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "" , "" , xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "" , "" , yvar )
             
         if not name : name = 'Fun2D_%s' % fun.GetName() 
 
@@ -1255,9 +1255,9 @@ class Fun3D ( FUNC3 ) :
         assert not xvar is zvar, "xvar and zvar must be different!"
         assert not yvar is zvar, "yvar and zvar must be different!"
         
-        if fun is xvar : fun = Ostap.MoreRooFit.Id ( xvar )
-        if fun is yvar : fun = Ostap.MoreRooFit.Id ( yvar )
-        if fun is zvar : fun = Ostap.MoreRooFit.Id ( zvar )
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "" , "" , xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "" , "" , yvar )
+        if fun is zvar : fun = Ostap.MoreRooFit.Id ( "" , "" , zvar )
             
         if not name : name = 'Fun3D_%s' % fun.GetName() 
 

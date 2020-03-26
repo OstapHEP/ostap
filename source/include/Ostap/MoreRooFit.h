@@ -918,12 +918,6 @@ namespace Ostap
       Id ( const std::string& name  , 
            const std::string& title , 
            RooAbsReal&        a     ) ;
-      /// constructor with two variables 
-      Id ( RooAbsReal&        a           , 
-           const std::string& name  = ""  , 
-           const std::string& title = ""  ) 
-        : Id ( name , title , a )
-      {}
       /// copy 
       Id ( const Id&   right       , 
            const char* newname = 0 ) ;
