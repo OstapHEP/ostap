@@ -54,10 +54,11 @@ class Convolution(object):
                    pdf               ,   ## the PDF to be convoluted 
                    xvar              ,   ## the axis variable
                    resolution        ,   ## the resolution
-                   useFFT  = True    ,   ## use FFT ? 
-                   nbins   = 10000   ,   ## number of bins for FFT
-                   buffer  = 0.25    ,   ## buffer fraction use for setBufferFraction
-                   nsigmas = 6       ) : ## number of sigmas for setConvolutionWindow
+                   useFFT   = True   ,   ## use FFT ? 
+                   nbins    = 10000  ,   ## number of bins for FFT
+                   buffer   = 0.25   ,   ## buffer fraction use for setBufferFraction
+                   bufstrat = None   ,   ## "Buffer strategy" : (0,1,2)
+                   nsigmas  = 6      ) : ## number of sigmas for setConvolutionWindow
 
         ## the axis 
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
@@ -88,9 +89,10 @@ class Convolution(object):
                                                 self.__xvar        ,
                                                 sigma = resolution ,
                                                 mean  = None       )
-        self.__nbins   = nbins
-        self.__buffer  = buffer
-        self.__nsigmas = nsigmas
+        self.__nbins    = nbins
+        self.__buffer   = buffer
+        self.__bufstrat = bufstrat 
+        self.__nsigmas  = nsigmas
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
@@ -121,6 +123,9 @@ class Convolution(object):
                 self.__resolution .pdf )            
             self.__pdf.setBufferFraction ( self.buffer )
             
+            if isinstance ( self.bufstrat , int ) and 0 <= self.bufstrat <= 2 : 
+                self.__pdf.setBufferStrategy ( self.bufstrat )
+                
         else :           ##  Use plain numerical integration (could be slow)
             
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
@@ -171,6 +176,14 @@ class Convolution(object):
         """``buffer'' : buffer fraction for Fast Fourier Transform"""
         return self.__buffer
     @property
+    def bufstrat ( self ) :
+        """``bufstrat'' : buffer strategy:
+        - 'Extend/0' means is that the input p.d.f convolution observable range is widened to include the buffer range
+        - 'Flat/1'   means that the buffer is filled with the p.d.f. value at the boundary of the observable range
+        - 'Mirror/2' means that the buffer is filled with a mirror image of the p.d.f. around the convolution observable boundary
+        """
+        return self.__bufstrat
+    @property
     def nsigmas ( self ) :
         """``nsigmas'' : convolution window for RooNumConvPdf"""
         return self.__nsigmas
@@ -187,15 +200,16 @@ class Convolution_pdf(PDF) :
     >>> pdf = ...
     >>> pdfc = Convolution_pdf( pdf  , xvar = ... , resolution = ... , useFFT = True )
     """
-    def __init__ ( self              ,
-                   pdf               ,   ## the PDF to be convoluted 
-                   resolution        ,   ## the convolution/resolution
-                   xvar    = None    ,   ## the axis varable
-                   useFFT  = True    ,   ## use  FastFourierTransform?
-                   nbins   = 2**14   ,   ## #bins for FFT
-                   buffer  = 0.25    ,   ## buffer fraction ## setBufferFraction
-                   nsigmas = 6       ,   ## number of sigmas for setConvolutionWindow
-                   name    = ''      ) : ## the name 
+    def __init__ ( self             ,
+                   pdf              ,   ## the PDF to be convoluted 
+                   resolution       ,   ## the convolution/resolution
+                   xvar     = None  ,   ## the axis varable
+                   useFFT   = True  ,   ## use  FastFourierTransform?
+                   nbins    = 2**14 ,   ## #bins for FFT
+                   buffer   = 0.25  ,   ## buffer fraction ## setBufferFraction
+                   bufstrat = None  ,   ## "Buffer strategy" : (0,1,2)
+                   nsigmas  = 6     ,   ## number of sigmas for setConvolutionWindow
+                   name     = ''    ) : ## the name 
 
         self.__arg_pdf        = pdf
         self.__arg_resolution = resolution 
@@ -230,6 +244,7 @@ class Convolution_pdf(PDF) :
                                        useFFT     = useFFT           ,
                                        nbins      = nbins            ,
                                        buffer     = buffer           ,
+                                       bufstrat   = bufstrat         ,
                                        nsigmas    = nsigmas          )
 
         ## the  actual convoluted PDF 
@@ -244,6 +259,7 @@ class Convolution_pdf(PDF) :
             'useFFT'     : self.cnv.useFFT     ,
             'nbins'      : self.cnv.nbinsFFT   ,
             'buffer'     : self.cnv.buffer     ,
+            'bufstrat'   : self.cnv.bufstrat   ,
             'nsigmas'    : self.cnv.nsigmas    ,
             }
 

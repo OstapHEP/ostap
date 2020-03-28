@@ -1,10 +1,15 @@
 ## New featires
-
+  1. Modify `Ostap::Models::BWI::evaluate` (temporary action,
+     to be properly fixed in the future)
+  1. Fix `toys.make_toys` for possible memory leak (thanks to
+     Abdul-Kerim Gusseinov for reprting the problem and for solution)
+  1. Add `bufstrat` argument for `Convolution` and `Connvolution_pdf`
+  
 ## Backward incompatible changes
 
 ## Bug fixes:  
 
-  1. fix limits for `right` varibale for `PSRight_pdf`(thans Tto Tatiana Ovsiannikova for reporting the problem)
+  1. fix limits for `right` variable for `PSRight_pdf`(thanks to Tatiana Ovsiannikova for reporting the problem)
 
 
 

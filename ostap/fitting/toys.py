@@ -235,20 +235,22 @@ def make_toys ( pdf                ,
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
-        ## 
-        if r.status () : continue
-
-        ## 4. save results 
-        rpf = r.params ( float_only = True ) 
-        for i in rpf : 
-            results [ i ].append ( rpf[i][0] ) 
-
-        for v in more_vars :
-            func  = more_vars[v] 
-            results [v] .append ( func ( r , pdf ) )
+        ## ok ? 
+        if r and 0 == r.status () :
             
+            ## 4. save results 
+            rpf = r.params ( float_only = True ) 
+            for i in rpf : 
+                results [ i ].append ( rpf[i][0] ) 
+                
+            for v in more_vars :
+                func  = more_vars[v] 
+                results [v] .append ( func ( r , pdf ) )
+                
         dataset.clear()
         del dataset
+        del r
+
         
     ## make a final statistics 
     from   ostap.core.core        import SE 

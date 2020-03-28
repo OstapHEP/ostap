@@ -453,18 +453,20 @@ Double_t Ostap::Models::BWI::evaluate () const
   //
   setPars () ;
   //
+  const double x = m_x ;
+  const std::complex<double> gc  = function().gamma ( x ) ; 
+  const double               gr  = gc.real() ;
+  if ( gr  <= 0 ) { return 0 ; }
+  const double               g   = gr / function().gamma0 () ;
+  //
   const double b    = m_b    ;
   const double ab   = m_ab   ;
   const double phib = m_phib ;
   //
   const std::complex<double> ib  = ab * std::exp ( std::complex<double>(0,1) * phib ) ;
+  const std::complex<double> amp = amplitude() + b * ib ;
   //
-  const double x = m_x ;
-  const std::complex<double> g   = function().gamma ( x ) / function().gamma0 () ;
-  //
-  const std::complex<double> amp = g.real() * amplitude() + b * ib ;
-  //
-  return std::norm ( amp ) ;
+  return std::norm ( amp ) * g ;
 }
 // ============================================================================
 Int_t Ostap::Models::BWI::getAnalyticalIntegral

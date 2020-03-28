@@ -713,8 +713,8 @@ def vrange ( x_min , x_max , n = 100 ) :
     fn = 1.0 / float ( n ) 
     for i in range ( n + 1 ) :
         #
-        if   0 == i : yield x_max
-        elif n == i : yield x_min
+        if   0 == i : yield x_min
+        elif n == i : yield x_max
         else        :
             f2 = i * fn
             f1 = 1 - f2
