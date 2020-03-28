@@ -22,5 +22,5 @@ jobs:
         python-version: 3.8
     - name: Install dependencies
       run: |
-        pip install --upgrade pip pipenv
+        if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh; fi
 
