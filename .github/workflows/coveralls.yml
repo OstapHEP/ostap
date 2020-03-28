@@ -32,4 +32,3 @@ jobs:
         conda create -q -n testenv root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-
