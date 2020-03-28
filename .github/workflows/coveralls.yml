@@ -29,8 +29,11 @@ jobs:
         conda config --set always_yes yes --set changeps1 no
         conda config --add channels conda-forge
         conda create -q -n testenv root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
+    - name: Build
+      run: |
+        export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
         mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
-
+        
 
