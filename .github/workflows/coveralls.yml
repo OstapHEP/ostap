@@ -39,6 +39,7 @@ jobs:
         mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
     - name: Test 
       run: |
+        pip install coverage coveralls
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
