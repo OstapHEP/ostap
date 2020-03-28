@@ -31,5 +31,12 @@ jobs:
         conda create -q -n testenv root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        
+    - name: Build ostap
+      run: |
+        mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
+    - name: test
+      run: |
+        pip install coverage coveralls
+        source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap
+        time coveralls
 
