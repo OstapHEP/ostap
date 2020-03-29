@@ -43,7 +43,7 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap && ls ./coverage/lcov.info
+        source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap && ls ./coverage
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
