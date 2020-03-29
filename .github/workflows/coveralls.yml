@@ -46,6 +46,6 @@ jobs:
         source build/INSTALL/thisostap.sh && nosetests   -s -v -a '!slow' --with-coverage --cover-erase --cover-branches 	--cover-html --cover-html-dir=coverage --cover-package=ostap 
         coveralls
       env:
-        github-token: ${{ secrets.GITHUB_TOKEN }} 
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
 
