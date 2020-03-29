@@ -37,7 +37,7 @@ jobs:
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
         mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
-    - name: Test 
+    - name: Test
       run: |
         pip install coverage coveralls
         export PATH="$HOME/miniconda/bin:$PATH"
@@ -45,5 +45,7 @@ jobs:
         source activate testenv
         source build/INSTALL/thisostap.sh && nosetests   -s -v -a '!slow' --with-coverage --cover-erase --cover-branches 	--cover-html --cover-html-dir=coverage --cover-package=ostap 
         coveralls
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        github-token: ${{ secrets.GITHUB_TOKEN }} 
+
+
