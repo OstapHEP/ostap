@@ -12,7 +12,6 @@ on:
 jobs:
   build:
     env:
-      MIX_ENV: test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     runs-on: ubuntu-latest
@@ -47,4 +46,4 @@ jobs:
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
         source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap
-        mix coveralls.github
+        coveralls.github
