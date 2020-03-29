@@ -43,8 +43,7 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        source build/INSTALL/thisostap.sh && nosetests   -s -v -a '!slow' --with-coverage --cover-erase --cover-branches 	--cover-html --cover-html-dir=coverage --cover-package=ostap && ls ./coverage
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
+        source build/INSTALL/thisostap.sh && nosetests   -s -v -a '!slow' --with-coverage --cover-erase --cover-branches 	--cover-html --cover-html-dir=coverage --cover-package=ostap 
+        coveralls
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
