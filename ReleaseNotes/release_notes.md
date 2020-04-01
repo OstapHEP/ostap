@@ -10,7 +10,7 @@
 ## Bug fixes:  
 
   1. fix limits for `right` variable for `PSRight_pdf`(thanks to Tatiana Ovsiannikova for reporting the problem)
-
+  1. fix `pdg_format` for certaint cases
 
 
 # v1.4.8.1

@@ -122,7 +122,58 @@ def round_N ( value , n ) :
 #  In all cases, the central value is given with a precision that matches that of the error.
 #
 #  @code
-#  v,e,f = pdg_round_ ( value , error )
+#  v,e,f,c = pdg_round_ ( value , error )
+#  print ' Rounded value +/- error is  (%s +/- %s)' % ( v , e )
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2015-07-20 
+def pdg_round__ ( value , error ) :
+    """Make a rounding according to PDG prescription
+    @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+    @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+    
+    Quote: 
+    The basic rule states that if the three highest order digits of the error
+    lie between 100 and 354, we round to two significant digits. If they lie between
+    355 and 949, we round to one significant digit. Finally,
+    if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+    In all cases, the central value is given with a precision that matches that of the error.
+    
+    >>> v,e,f,c = pdg_round__ ( value , error )    
+    >>> print ' Rounded value +/- error is  (%s +/- %s)' % ( v , e )
+    """
+    ##
+    ne = _3digits_ ( error )
+    ##
+    if   abs ( ne ) <= 354 : pr , pe , ca = 2 , 2 , 1
+    elif abs ( ne ) <= 949 : pr , pe , ca = 1 , 1 , 2
+    else                   : pr , pe , ca = 2 , 1 , 3
+    ##
+    ev , bv = _frexp10_ ( value )
+    ee , be = _frexp10_ ( error )
+    ##
+    e = round_N ( error , pe )
+    ##
+    q  = be + 1 - pe 
+    r  = 10**q
+    v  = cpp_round ( value / r ) * r
+    ##
+    return v , e , q , ca 
+
+
+# ===============================================================================
+## make a rounding according to PDG prescription
+#  @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
+#  @see section 5.3 of doi:10.1088/0954-3899/33/1/001
+#  
+#  The basic rule states that if the three highest order digits of the error
+#  lie between 100 and 354, we round to two significant digits. If they lie between
+#  355 and 949, we round to one significant digit. Finally,
+#   if they lie between 950 and 999, we round up to 1000 and keep two significant digits.
+#  In all cases, the central value is given with a precision that matches that of the error.
+#
+#  @code
+#  v,e,f  = pdg_round_ ( value , error )
 #  print ' Rounded value +/- error is  (%s +/- %s)' % ( v , e )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -143,22 +194,9 @@ def pdg_round_ ( value , error ) :
     >>> print ' Rounded value +/- error is  (%s +/- %s)' % ( v , e )
     """
     ##
-    ne = _3digits_ ( error )
+    v , e , q , c = pdg_round__ ( value , error )
     ##
-    if   abs ( ne ) <= 354 : pr,pe = 2,2
-    elif abs ( ne ) <= 949 : pr,pe = 1,1
-    else                   : pr,pe = 2,1
-    ##
-    ev , bv = _frexp10_ ( value )
-    ee , be = _frexp10_ ( error )
-    ##
-    e = round_N ( error , pe )
-    ##
-    q  = be + 1 - pe 
-    r  = 10**q
-    v  = cpp_round ( value / r ) * r
-    ##
-    return v , e , q 
+    return v , e , q  
 
 # =============================================================================
 ## make a rounding according to PDG prescription
@@ -193,9 +231,9 @@ def pdg_round ( value , error ) :
     >>> print ' Rounded value +/- error is  (%s +/- %s)' % ( v , e )
     """
     ##
-    v,e,f = pdg_round_ ( value , error )
+    v , e , f = pdg_round_ ( value , error )
     ##
-    return v, e 
+    return v , e 
 
 # =============================================================================
 ## Round value/error accoriding to PDG prescription and format it for print
@@ -230,28 +268,28 @@ def pdg_format ( value , error , latex = False ) :
     """
 
     ## round value, erorr and get the scaling factor
-    v , e , q = pdg_round_  ( value , error )
+    v , e , q , c = pdg_round__  ( value , error )
     
     ## get scaling factors for printout 
     qv , bv   = _frexp10_ (  value  )
     n         = int       ( math.floor ( bv / 3. ) ) 
 
-    q = abs ( q ) 
     short = ( 0 == n ) or (  1 == n and  abs(v) < 10000 ) or ( -1 == n and  abs(v) > 0.1 ) 
     
     if not short :
 
-        q += 3 * n
+        q = 3 - ( q % 3 ) 
+        if   c == 3 and q == 3 : q = 1
+        elif c == 2 and q == 3 : q = 0
         
-        q  = abs ( q )
-        
+
         if latex : fmt = "$(%%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q )
         else     : fmt =  "(%%.%df +/- %%.%df)*10^{%%d}"      % ( q , q )
 
         v  /= 10**(3*n)
         e  /= 10**(3*n)
         ##
-                
+        
         return fmt % ( v , e , n*3 )
         
     else :
@@ -301,7 +339,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
     if   mode in ( 'min'   , 'mn'  ) : 
         error = min ( abs ( error1 ) , abs ( error2 ) )
     elif mode in ( 'max'   , 'mx'  ) : 
-        error = min ( abs ( error1 ) , abs ( error2 ) )
+        error = max ( abs ( error1 ) , abs ( error2 ) )
     elif mode in ( 'total' , 'tot' ) : 
         error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 )
     else :
@@ -309,24 +347,22 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
         error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 )
 
     ## round value, error and get the scaling factor
-    v  , e  , q  = pdg_round_  ( value , error )
+    v  , e  , q  , c = pdg_round__  ( value , error )
 
-    v_ , e1 , q_ = pdg_round_  ( value , error1 )
-    v_ , e2 , q_ = pdg_round_  ( value , error2 )
+    v_ , e1 , q_ , _ = pdg_round__  ( value , error1 )
+    v_ , e2 , q_ , _ = pdg_round__  ( value , error2 )
 
     ## get scaling factors for printout 
     qv , bv   = frexp10 (  value  )
     n         = int     ( math.floor ( bv / 3. ) ) 
 
-
-    q = abs ( q ) 
     short = ( 0 == n ) or (  1 == n and  abs(v) < 10000 ) or ( -1 == n and  abs(v) > 0.1 ) 
     
     if not short :
 
-        q += 3 * n
-        
-        q  = abs ( q )
+        q = 3 - ( q % 3 ) 
+        if   c == 3 and q == 3 : q = 1
+        elif c == 2 and q == 3 : q = 0
         
         if latex : fmt = "$(%%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q )
         else     : fmt =  "(%%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q )
@@ -386,7 +422,7 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
     if   mode in ( 'min'   , 'mn'  ) : 
         error = min ( abs ( error1 ) , abs ( error2 ) , abs ( error3 ) )
     elif mode in ( 'max'   , 'mx'  ) : 
-        error = min ( abs ( error1 ) , abs ( error2 ) , abs ( error3 ) )
+        error = max ( abs ( error1 ) , abs ( error2 ) , abs ( error3 ) )
     elif mode in ( 'total' , 'tot' ) : 
         error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 + error3 * error3 )
     else :
@@ -394,26 +430,24 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
         error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 + error3 * error3 )
 
     ## round value, error and get the scaling factor
-    v  , e  , q  = pdg_round_  ( value , error )
+    v  , e  , q  , c = pdg_round__  ( value , error )
 
-    v_ , e1 , q_ = pdg_round_  ( value , error1 )
-    v_ , e2 , q_ = pdg_round_  ( value , error2 )
-    v_ , e3 , q_ = pdg_round_  ( value , error3 )
+    v_ , e1 , q_ , _ = pdg_round__  ( value , error1 )
+    v_ , e2 , q_ , _ = pdg_round__  ( value , error2 )
+    v_ , e3 , q_ , _ = pdg_round__  ( value , error3 )
 
     ## get scaling factors for printout 
     qv , bv   = frexp10 (  value  )
     n         = int     ( math.floor ( bv / 3. ) ) 
 
-
-    q = abs ( q ) 
     short = ( 0 == n ) or (  1 == n and  abs(v) < 10000 ) or ( -1 == n and  abs(v) > 0.1 ) 
     
     if not short :
 
-        q += 3 * n
-        
-        q  = abs ( q )
-        
+        q = 3 - ( q % 3 ) 
+        if   c == 3 and q == 3 : q = 1
+        elif c == 2 and q == 3 : q = 0
+
         if latex : fmt = "$(%%.%df \pm %%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q , q )
         else     : fmt =  "(%%.%df +/- %%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q , q )
 
@@ -552,7 +586,9 @@ if '__main__' == __name__ :
         logger.info ( pdg_format3 ( 1.0*s/3 , 0.0050      , 0.000012345  , 0.0001 ) ) 
         logger.info ( pdg_format3 ( 1.0*s/3 , 0.0099      , 0.0020       , 0.0001 ) ) 
         
-    logger.info ( 80*'*' ) 
+    logger.info ( 80*'*' )
+
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
