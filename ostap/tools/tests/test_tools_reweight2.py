@@ -261,7 +261,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 1a) create new "weighted" mcdataset
-       mcds=mcds_.clone()
+        mcds=mcds_.Сlone()
 
     with timing ( 'Add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
