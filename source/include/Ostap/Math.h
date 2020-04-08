@@ -768,6 +768,26 @@ namespace Ostap
      *  @date 2011-07-18
      */
     bool isint  ( const float  x ) ;
+    // ========================================================================
+    /** is the value actually unsigned int ?
+     *  @author Vanya BELYAEV Ivan.Belyaev       
+     *  @date 2011-07-18
+     */
+    bool isuint  ( const double x ) ;
+    // =========================================================================
+    /** is the value actually unsigned long ?
+     *  @author Vanya BELYAEV Ivan.Belyaev       
+     *  @date 2011-07-18
+     */
+    bool isulong  ( const double x ) ;
+    // =========================================================================
+    /** is the value actually long long?
+     */
+    bool islonglong ( const double x ) ;
+    // ========================================================================
+    /** is the value actually nusigned  long long?
+     */
+    bool isulonglong ( const double x ) ;
     // ========================================================================    
     /** check if the double value is actually equal to the integer value  
      *  @param val value to be compared with the integer 
