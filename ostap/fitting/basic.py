@@ -2811,14 +2811,11 @@ class Sum1D(PDF) :
         self.alist1     = ROOT.RooArgList ( self.pdf1.pdf ,
                                             self.pdf2.pdf )
         self.alist2     = ROOT.RooArgList ( self.fraction )
-        ## self.alist3     = self.__pdf1 , self.__pdf2 ## ??? 
         
         self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
                                     self.pdf1.pdf ,
                                     self.pdf2.pdf ,
                                     self.fraction )
-        ## self.alist1 ,
-        ## self.alist2 )
         
         if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
         if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
@@ -2827,6 +2824,7 @@ class Sum1D(PDF) :
             'pdf1'     : self.pdf1 ,
             'pdf2'     : self.pdf2 ,
             'xvar'     : self.xvar ,
+            'name'     : self.name , 
             'fraction' : self.fraction 
             }
 

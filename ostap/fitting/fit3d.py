@@ -1154,6 +1154,7 @@ class Sum3D(PDF3) :
             'pdf2'     : self.pdf2     ,
             'xvar'     : self.xvar     ,
             'yvar'     : self.yvar     ,
+            'zvar'     : self.zvar     ,
             'name'     : self.name     , 
             'fraction' : self.fraction 
             }

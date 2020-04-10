@@ -13,7 +13,7 @@
 
   1. fix limits for `right` variable for `PSRight_pdf`(thanks to Tatiana Ovsiannikova for reporting the problem)
   1. fix `pdg_format` for certaint cases
-
+  1. fix missing `name` attribute fior `Sum1D/Sum3D` clone  machinery  
 
 # v1.4.8.1
 
