@@ -245,7 +245,9 @@ variables  = [
     Variable ( 'x'      , 'x-var'  , 0  , 20 ) , 
     Variable ( 'y'      , 'y-var'  , 0  , 15 ) ,
     ]
-
+selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
+mctree.process ( selector , silent = True )
+mcds_ = selector.data             ## dataset 
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -259,9 +261,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 1a) create new "weighted" mcdataset
-        selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
-        mctree.process ( selector , silent = True )
-        mcds = selector.data             ## dataset        
+        mcds=mcds_.Clone()
 
     with timing ( 'Add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
@@ -375,14 +375,14 @@ for iter in range ( 1 , maxIter + 1 ) :
     
     mcds.clear()
     del mcds
-    del selector
+    
 
 else :
 
     logger.error ( "No convergency!" )
 
     
-    
+del selector   
 logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %mcstat  [:3] ) 
 logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' %datastat[:3] ) 
 
