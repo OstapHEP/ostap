@@ -37,10 +37,10 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy              ## attention here!!
-from   ostap.core.core        import cpp, VE, grID
-from   ostap.core.ostap_types import num_types 
-from   builtins               import range
-# 
+from   ostap.core.core                import cpp, VE, grID
+from   ostap.core.ostap_types         import num_types 
+from   builtins                       import range
+from   ostap.plotting.draw_attributes import copy_graph_attributes  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -50,54 +50,8 @@ else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( '(T)Graph-related decorations')
 # =============================================================================
-## copy graph attributes
-#  - LineColor
-#  - LineWidth
-#  - LineStyle
-#  - MarkerColor 
-#  - MarkerSize
-#  - MarkerStyle 
-#  - FillColor
-#  - FillStyle  
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07  
-def copy_graph_attributes ( o_from , o_to ) :
-    """Copy graph attributes
-    - LineColor
-    - LineWidth
-    - LineStyle
-    - MarkerColor 
-    - MarkerSize
-    - MarkerStyle 
-    - FillColor
-    - FillStyle  
-    """
-    ##
-    ## line attributes:
-    ## 
-    if hasattr ( o_from , 'GetLineColor' ) and hasattr ( o_to , 'SetLineColor' ) :
-        o_to.SetLineColor   ( o_from.GetLineColor () ) 
-    if hasattr ( o_from , 'GetLineWidth' ) and hasattr ( o_to , 'SetLineWidth' ) :
-        o_to.SetLineWidth   ( o_from.GetLineWidth () ) 
-    if hasattr ( o_from , 'GetLineStyle' ) and hasattr ( o_to , 'SetLineStyle' ) :
-        o_to.SetLineStyle   ( o_from.GetLineStyle () ) 
-    ##
-    ## marker attributes:
-    ## 
-    if hasattr ( o_from , 'GetMarkerColor' ) and hasattr ( o_to , 'SetMarkerColor' ) :
-        o_to.SetMarkerColor ( o_from.GetMarkerColor () ) 
-    if hasattr ( o_from , 'GetMarkerSize'  ) and hasattr ( o_to , 'SetMarkerSize'  ) :
-        o_to.SetMarkerSize  ( o_from.GetMarkerSize  () ) 
-    if hasattr ( o_from , 'GetMarkerStyle' ) and hasattr ( o_to , 'SetMarkerStyle' ) :
-        o_to.SetMarkerStyle ( o_from.GetMarkerStyle () ) 
-    ##
-    ## Fill attributes:
-    ##
-    if hasattr ( o_from , 'GetFillColor' ) and hasattr ( o_to , 'SetFillColor' ) :
-        o_to.SetFillColor   ( o_from.GetFillColor () ) 
-    if hasattr ( o_from , 'GetFillStyle' ) and hasattr ( o_to , 'SetFillStyle' ) :
-        o_to.SetFillStyle   ( o_from.GetFillStyle () ) 
-    
+pos_infinity = float('+inf')
+neg_infinity = float('-inf')
 # =============================================================================
 ## make graph from data 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -142,7 +96,6 @@ def makeGraph ( x , y = []  , ex = [] , ey = [] ) :
         gr .SetPointError ( i , _ex , _ey )
         
     return gr
-
 
 # =============================================================================
 ## create TGraph from the plain text two-column format with optional comments.
@@ -1132,7 +1085,7 @@ def _gre_ymax_ ( graph ) :
         x , y = graph[ip] 
         y = y.value() + abs ( y.error() ) 
         if None == ymx or y >= ymx : ymx = y
-    return xmx
+    return ymx
 
 
 # =============================================================================
@@ -1211,13 +1164,13 @@ def _grae_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    yxm  = None
+    ymx  = None
     np   = len(graph) 
     for ip in range( np ) :
         x , exl , exh , y , eyl , eyh = graph[ip] 
         y = y + abs( eyh ) 
         if None == ymx or y >= ymx : ymx = y
-    return xmx
+    return ymx
 
 
 # =============================================================================
@@ -1581,7 +1534,6 @@ ROOT.TGraphErrors . ymin          = _gre_ymin_
 ROOT.TGraphErrors . xmax          = _gre_xmax_ 
 ROOT.TGraphErrors . ymax          = _gre_ymax_ 
 
-
 ROOT.TH1F.asGraph = hToGraph
 ROOT.TH1D.asGraph = hToGraph
 ROOT.TH1F.toGraph = hToGraph
@@ -1727,12 +1679,12 @@ def _gr_xmax_ ( graph ) :
     """
     #
     _size = len ( graph )
-    if 0 == _sise : return 1
+    if 0 == _size : return 1
     #
     _last = _size - 1
     x_ = ROOT.Double(0)
     v_ = ROOT.Double(0)    
-    g.GetPoint ( _last , x_ , v_ )
+    graph.GetPoint ( _last , x_ , v_ )
     #
     return x_
 # =============================================================================
@@ -1743,7 +1695,7 @@ def _gr_xmin_ ( graph ) :
     """
     #
     _size = len ( graph )
-    if 0 == _sise : return 0
+    if 0 == _size : return 0
     #
     x_ = ROOT.Double(0)
     v_ = ROOT.Double(0)    
@@ -2503,7 +2455,9 @@ def _gr_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraph( len ( self ) )
     for i , x , y in self.iteritems() :
-        new_graph[i] = y , x 
+        new_graph[i] = y , x
+
+    copy_graph_attribute ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2521,7 +2475,9 @@ def _gre_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraphErrors ( len ( self ) )
     for i , x , y in self.iteritems() :
-        new_graph[i] = y , x 
+        new_graph[i] = y , x
+        
+    copy_graph_attribute ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2540,8 +2496,11 @@ def _grae_transpose_ ( self ) :
     new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
     for item in self.iteritems() :
         ip, x , exl , exh , y , eyl , eyh =  item 
-        new_graph [ ip ] = y , eyl , eyh , x , exl , exh         
+        new_graph [ ip ] = y , eyl , eyh , x , exl , exh
+        
+    copy_graph_attribute ( self , new_graph ) 
     return new_graph 
+
 
 ROOT.TGraph.transpose            =   _gr_transpose_ 
 ROOT.TGraph.T                    =   _gr_transpose_ 
@@ -2549,6 +2508,9 @@ ROOT.TGraphErrors.transpose      =  _gre_transpose_
 ROOT.TGraphErrors.T              =  _gre_transpose_ 
 ROOT.TGraphAsymmErrors.transpose = _grae_transpose_ 
 ROOT.TGraphAsymmErrors.T         = _grae_transpose_ 
+
+
+# ===============================================================================
 
 # =============================================================================
 ## propagate the color for each graph in multigraph 
@@ -2583,13 +2545,42 @@ ROOT.TMultiGraph.yellow   = _mg_yellow_
 
 
 # =============================================================================
+##  get graph  with certaoniono index
+#   @code
+#    mg = ....
+#    g0 = mg[0] 
+#   @endcode  
+def _mg_getitem_ ( mgraph , item ) :
+    """Get graph with certain index
+    >>> mg = ....
+    >>> g0 = mg[0] 
+    """
+
+    for i , g in enumerate  ( mgraph ) :
+        if i == item  : return g
+        
+    raise IndexError("Invalid index for multigraph %s" % item )
+
+ROOT.TMultiGraph.__getitem__ = _mg_getitem_             
+
+# ==============================================================================
+## length  of the multigraph
+def _mg_len_  ( mgraph ) :
+    """ Len of multigraph
+    """
+    _graphs = mgraph.GetListOfGraphs()
+    return 0 if not _graphs else len ( _graphs ) 
+
+ROOT.TMultiGraph.__len__ = _mg_len_             
+
+# =============================================================================
 ## transpose the graph
 #  @code
 #  graph   = ...
 #  graph_T = graph.transpose ()  
 #  graph_T = graph.T() ## ditto 
 #  @endcode
-def _mt_transpose_ ( self ) :
+def _mg_transpose_ ( graph ) :
     """Transpose the graph:
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
@@ -2598,16 +2589,53 @@ def _mt_transpose_ ( self ) :
     new_graph         = ROOT.TMultiGraph()
     new_graph._graphs = [] 
     
-    _graphs = mgraph.GetListOfGraps()
+    _graphs = graph.GetListOfGraphs()
     for g in _graphs :
         tg =  g.T() 
-        new_graph.Add            ( tg )
+        opt = graph.GetGraphDrawOption( g )
+        new_graph.Add            ( tg , opt )
         new_graph._graphs.append ( tg )
         
     return new_graph 
 
-ROOT.TMultiGraph.transpose = _grae_transpose_ 
-ROOT.TMultiGraph.T         = _grae_transpose_ 
+ROOT.TMultiGraph.transpose = _mg_transpose_ 
+ROOT.TMultiGraph.T         = _mg_transpose_ 
+
+
+# =============================================================================
+## get xmin/xmax for MultiGraph 
+def  _mg_xminmax_ ( graph ) :
+    """Get xmin/xmax for MultiGraph
+    """
+    xmin , xmax = pos_infinity , neg_infinity
+    for g in graph :
+        xmn , xmx = g.xminmax ()
+        xmin = min ( xmin , xmn ) 
+        xmax = max ( xmax , xmx ) 
+    return xmin, xmax
+
+# =============================================================================
+## get ymin/ymax for MultiGraph 
+def  _mg_yminmax_ ( graph ) :
+    """Get ymin/ymax for MultiGraph
+    """
+    ymin , ymax = pos_infinity , neg_infinity
+    for g in graph :
+        ymn , ymx = g.yminmax ()
+        ymin = min ( ymin , ymn ) 
+        ymax = max ( ymax , ymx ) 
+    return ymin, ymax
+
+
+ROOT.TMultiGraph.xminmax = _mg_xminmax_
+ROOT.TMultiGraph.yminmax = _mg_yminmax_
+ROOT.TMultiGraph. minmax = _mg_yminmax_
+
+ROOT.TMultiGraph.xmin = lambda s : s.xminmax()[0]
+ROOT.TMultiGraph.ymin = lambda s : s.yminmax()[0]
+ROOT.TMultiGraph.xmax = lambda s : s.xminmax()[1]
+ROOT.TMultiGraph.ymax = lambda s : s.yminmax()[1]
+
 
 # =============================================================================
 ## Convert the histogram to into "Laffery-Wyatt" graph
@@ -2764,8 +2792,6 @@ def lw_graph ( histo , func ) :
     return _lw_graph_ ( histo , func ) 
 
 
-pos_infinity = float('+inf')
-neg_infinity = float('-inf')
 # =============================================================================
 ## Create a graph, that represents the area between two curves/functions:
 #  @code
@@ -2884,14 +2910,69 @@ def fill_area ( fun1                     ,
     return graph 
 
 
+# ==============================================================================
+##  transpose the arrow
+#   @code
+#   a = ROOT.TArrow ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _ar_transpose_ (  arrow ) :
+    """Transpose the arrow
+    >>>  = ROOT.TArrow ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TArrow()
+    arrow.Copy ( na )
+
+    na.SetX1 ( arrow.GetY1 () )  
+    na.SetY1 ( arrow.GetX1 () )  
+    na.SetX2 ( arrow.GetY2 () )  
+    na.SetY2 ( arrow.GetX2 () )  
+
+    return na
+
+ROOT.TArrow.transpose = _ar_transpose_
+ROOT.TArrow.T         = _ar_transpose_
+
+# ==============================================================================
+##  transpose the box
+#   @code
+#   a = ROOT.TBox ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _box_transpose_ ( box  ) :
+    """Transpose the box
+    >>>  = ROOT.TBox ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TBox()
+    box.Copy ( na )
+
+    na.SetX1 ( box.GetY1 () )  
+    na.SetY1 ( box.GetX1 () )  
+    na.SetX2 ( box.GetY2 () )  
+    na.SetY2 ( box.GetX2 () )  
+
+    return na
+
+ROOT.TBox.transpose = _box_transpose_
+ROOT.TBox.T         = _box_transpose_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F              ,
     ROOT.TH1D              ,
     ROOT.TGraph            , 
     ROOT.TGraphErrors      ,
-    ROOT.TGraphAsymmErrors 
+    ROOT.TGraphAsymmErrors ,
+    ROOT.TArrow            ,  
+    ROOT.TBox 
     )
+
 
 _new_methods_      = (
     #
@@ -2905,6 +2986,15 @@ _new_methods_      = (
     ROOT.TGraph       . xmax          ,
     ROOT.TGraph       . ymax          ,
     #
+    ROOT.TMultiGraph  . xmin          , 
+    ROOT.TMultiGraph  . ymin          ,
+    ROOT.TMultiGraph  . xmax          , 
+    ROOT.TMultiGraph  . ymax          ,
+    ROOT.TMultiGraph  . xminmax       , 
+    ROOT.TMultiGraph  . yminmax       ,
+    ROOT.TMultiGraph  .  minmax       ,
+    
+
     ROOT.TGraph       . xminmax       ,
     ROOT.TGraph       . yminmax       ,
     ROOT.TGraph       .  minmax       ,
@@ -3088,6 +3178,11 @@ _new_methods_      = (
     #
     ROOT.TH1D.lw_graph         , 
     ROOT.TH1F.lw_graph         ,
+    ##
+    ROOT.TArrow.transpose      ,
+    ROOT.TArrow.T              ,
+    ROOT.TBox.transpose        ,
+    ROOT.TBox.T                ,
     )
 
 # =============================================================================

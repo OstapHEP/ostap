@@ -50,7 +50,8 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               isint    , islong    ,
                               natural_entry        ,
                               natural_number       )
-from ostap.core.ostap_types import integer_types, num_types , long_type
+from   ostap.core.ostap_types import integer_types, num_types , long_type
+import ostap.plotting.draw_attributes 
 # =============================================================================
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')

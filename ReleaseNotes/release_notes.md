@@ -5,6 +5,8 @@
      Abdul-Kerim Gusseinov for reprting the problem and for solution)
   1. Add `bufstrat` argument for `Convolution` and `Connvolution_pdf`
   1. add more functions `isuint`, `isulong` , `islonglong` , `isulonglong`
+  1. more operationns with `TMultiGraph`
+  1. add `graph_summary`
   
   
 ## Backward incompatible changes
@@ -14,7 +16,8 @@
   1. fix limits for `right` variable for `PSRight_pdf`(thanks to Tatiana Ovsiannikova for reporting the problem)
   1. fix `pdg_format` for certaint cases
   1. fix missing `name` attribute fior `Sum1D/Sum3D` clone  machinery  
-
+  1. fix some bugs in `graphs.py`
+  
 # v1.4.8.1
 
 
