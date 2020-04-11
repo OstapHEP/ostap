@@ -162,20 +162,17 @@ def copy_graph_attributes ( o_from , o_to ) :
     ##
     ## Copy All 
     ##
-    ## if isinstance ( o_to , ROOT.TAttLine   ) and isinstance ( o_from , ROOT.TAttLine   ) :
-    ##     tmp = ROOT.TAttLine   ()
-    ##     o_from.Copy ( tmp  )
-    ##     tmp.Copy    ( o_to )
+    if isinstance ( o_to , ROOT.TAttLine   ) and isinstance ( o_from , ROOT.TAttLine   ) :
+        tmp = ROOT.TAttLine   ( o_from )
+        tmp.Copy    ( o_to )
         
-    ## if isinstance ( o_to , ROOT.TAttFill   ) and isinstance ( o_from , ROOT.TAttFill   ) :
-    ##     tmp = ROOT.TAttFill   ()
-    ##     o_from.Copy ( tmp  )
-    ##     tmp.Copy    ( o_to )
+    if isinstance ( o_to , ROOT.TAttFill   ) and isinstance ( o_from , ROOT.TAttFill   ) :
+        tmp = ROOT.TAttFill   ( o_from )
+        tmp.Copy    ( o_to )
         
-    ## if isinstance ( o_to , ROOT.TAttMarker ) and isinstance ( o_from , ROOT.TAttMarker ) :
-    ##     tmp = ROOT.TAttMarker ()
-    ##     o_from.Copy ( tmp  )
-    ##     tmp.Copy    ( o_to )
+    if isinstance ( o_to , ROOT.TAttMarker ) and isinstance ( o_from , ROOT.TAttMarker ) :
+        tmp = ROOT.TAttMarker ( o_from )
+        tmp.Copy    ( o_to )
 
 # =============================================================================
 ##  ditto 
