@@ -245,10 +245,11 @@ class Average(Record) :
         """Construct a graph objejct for this ``average'' at givel level
         """
         
-        epos , eneg  = self.positive_errors, self.negative_errors
+        epos , eneg  = reversed ( self.positive_errors ) , \
+                       reversed ( self.negative_errors )
 
         boxes  = []
-        for i , e in enumerate ( reversed ( zip ( epos, eneg ) ) ) :
+        for i , e in enumerate ( zip ( epos, eneg ) ) :
             ep , en = e 
             b = ROOT.TBox  ( self.value - en , 0., self.value + ep , level )
             
@@ -399,7 +400,7 @@ if '__main__' == __name__ :
              Limit  ( 1.4 , 1.e-6 , **aconf )  
              ]
 
-    ave = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  
+    ave = Average ( VE(2.0, 0.2**2 ) , (-0.3, 0.8) )  
     result1 = draw_summary (
         data + [ ave ] , average = ave  )
 
