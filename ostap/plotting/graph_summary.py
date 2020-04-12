@@ -63,6 +63,11 @@ class Limit(DrawConfig) :
         
         if not 'marker_style' in self.config : self.config [ 'marker_style' ] = 1
         
+        if 'color' in self.config :
+            if not 'marker_color' in self.config : self.config [ 'marker_color' ] = self.config [ 'color' ]
+            if not 'line_color'   in self.config : self.config [ 'line_color'   ] = self.config [ 'color' ]
+            if not 'fill_color'   in self.config : self.config [ 'fill_color'   ] = self.config [ 'color' ]
+            
     @property
     def limit ( self ) :
         """The upper/lower limit"""
@@ -118,7 +123,11 @@ class Record(DrawConfig) :
 
         if not 'marker_style' in self.config : self.config [ 'marker_style' ] = 20
         if not 'marker_size'  in self.config : self.config [ 'marker_size'  ] =  2
-        
+
+        if 'color' in self.config :
+            if not 'marker_color' in self.config : self.config [ 'marker_color' ] = self.config [ 'color' ]
+            if not 'line_color'   in self.config : self.config [ 'line_color'   ] = self.config [ 'color' ] 
+            
         covp  = 0.0
         covn  = 0.0
         self.__errsp = []
@@ -229,7 +238,7 @@ class Average(Record) :
         if not 'fill_style' in self.config : self.config [ 'fill_style' ] = 1001 
         if not 'fill_color' in self.config : self.config [ 'fill_color' ] = ROOT.kOrange   
         if not 'line_color' in self.config : self.config [ 'line_color' ] = ROOT.kOrange + len ( self.positive_errors )    
-        if not 'line_width' in self.config : self.config [ 'line_width' ] = 3 
+        if not 'average_width' in self.config : self.config [ 'average_width' ] = 3 
         
     ## construct a box object for the average 
     def boxes ( self , level ) :
@@ -251,6 +260,8 @@ class Average(Record) :
         ##  mean value 
         line  = ROOT.TLine( self.value , 0 , self.value , level )
         line.set_line_attributes ( **self.config )
+        line.SetLineWidth ( self.config[ 'average_width' ] )
+        
         boxes.append (  line  )   
         
         return tuple ( boxes ) 
@@ -262,6 +273,7 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
     np      = len ( data)
     grpahs  = []
     points  = ROOT.TMultiGraph()
+
     limits  = []
 
     ldata = reversed ( data ) if transpose else data 
@@ -387,12 +399,16 @@ if '__main__' == __name__ :
              Limit  ( 1.4 , 1.e-6 , **aconf )  
              ]
 
-    histo, points, limits , box = draw_summary (
-        data , average = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  )
+    ave = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  
+    result1 = draw_summary (
+        data + [ ave ] , average = ave  )
 
-    histo, points, limits , box = draw_summary (
-        data , average = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  , transpose = True )
+    result2 = draw_summary (
+        data + [ ave ] , average = ave  , transpose = True )
 
+    del result1
+    del result2
+    
 # =============================================================================
 ##                                                                     The END
 # =============================================================================

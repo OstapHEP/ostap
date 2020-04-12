@@ -36,9 +36,9 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-import ROOT, cppyy              ## attention here!!
+import ROOT, ctypes        
 from   ostap.core.core                import cpp, VE, grID
-from   ostap.core.ostap_types         import num_types 
+from   ostap.core.ostap_types         import num_types, integer_types  
 from   builtins                       import range
 from   ostap.plotting.draw_attributes import copy_graph_attributes  
 # =============================================================================
@@ -194,7 +194,7 @@ def makeGraph2 ( text ) :
 #  # quark = charm
 #  # final state = quark
 #  # ebeam1 = 3500, ebeam2 = 3500
-#  # PDF set = CTEQ6.6
+  # PDF set = CTEQ6.6
 #  # ptmin = 5
 #  # ptmax = 20
 #  # ymin  = -1
@@ -608,6 +608,33 @@ ROOT.TH1F.toGraph3 = hToGraph3
 ROOT.TH1D.toGraph3 = hToGraph3
 
 # =============================================================================
+##  get point
+#   @code
+#   graph = ...
+#   x, y = graph.point ( 3  ) 
+#   @endcode
+def _gr_point_ ( graph , point ) :
+    """Get the point fmorm the graph :
+    >>> graph = ...
+    >>> x, y = graph.point ( 3  )
+    >>> x, y = graph.get_point ( 3  ) ## ditto 
+    """
+    if isinstance ( point , integer_types ) and 0 <= point < len ( graph ) :
+        
+        x = ctypes.c_double ( 0.0 )
+        y = ctypes.c_double ( 1.0 )
+        
+        graph.GetPoint ( point , x , y )
+
+        return float ( x.value ) , float ( y.value )
+    
+    raise IndexError ( "Invalid index %s" % p ) 
+    
+
+ROOT.TGraph.    point = _gr_point_
+ROOT.TGraph.get_point = _gr_point_
+
+# =============================================================================
 ## use graph as function 
 #  @code
 #  graph = ...
@@ -677,13 +704,7 @@ def _gr_getitem_ ( graph , ipoint )  :
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
-    
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
-    
-    return x_,v_
+    return graph.point ( ipoint )
 
 # =============================================================================
 ## set the point in TGraph
@@ -779,11 +800,8 @@ def _gre_getitem_ ( graph , ipoint )  :
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
-    
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
+
+    x_, v_ = graph.get_point ( ipoint ) 
     
     x = VE ( x_ , graph.GetErrorX ( ipoint )**2 )
     v = VE ( v_ , graph.GetErrorY ( ipoint )**2 )
@@ -870,10 +888,7 @@ def _grae_getitem_ ( graph , ipoint ) :
     if not ipoint in graph : raise IndexError 
     #
     
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
+    x_ , v_ = graph.get_point ( ipoint )
     
     exl = graph.GetErrorXlow  ( ipoint )
     exh = graph.GetErrorXhigh ( ipoint )
@@ -935,13 +950,9 @@ def _gr_xmin_ ( graph ) :
     """Get minimal x for the points
     >>> graph = ...
     >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
+    """
+    xmin , xmax  = graph.xminmax  ()
+    return xmin
 
 # =============================================================================
 ## get maximal-x 
@@ -956,12 +967,9 @@ def _gr_xmax_ ( graph ) :
     >>> graph = ...
     >>> xmax  = graph.xmax () 
     """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
+    xmin , xmax  = graph.xminmax  ()
+    return xmax
+
 
 # =============================================================================
 ## get minimal-y
@@ -975,13 +983,9 @@ def _gr_ymin_ ( graph ) :
     """ Get minimal y for the points
     >>> graph = ...
     >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
+    """
+    ymin , ymax  = graph.yminmax  ()
+    return ymin
 
 # =============================================================================
 ## get maximal-y
@@ -996,182 +1000,8 @@ def _gr_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    ymx  = None
-    np   = len ( graph ) 
-    for ip in range ( np ) :
-        x , y = graph[ip] 
-        if None == ymx or y >= ymx : ymx = y
-    return ymx
-
-# =============================================================================
-## get minimal-x 
-#  @code
-#  graph = ...
-#  xmin  = graph.xmin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_xmin_ ( graph ) :
-    """Get minimal x for the points
-    >>> graph = ...
-    >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip]
-        x = x.value() - x.error() 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
-
-# =============================================================================
-## get maximal-x 
-#  @code
-#  graph = ...
-#  xmax  = graph.xmax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_xmax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> xmax  = graph.xmax () 
-    """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        x = x.value() + x.error() 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
-
-# =============================================================================
-## get minimal-y
-#  @code
-#  graph = ...
-#  ymin  = graph.ymin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_ymin_ ( graph ) :
-    """Get minimal y for the points
-    >>> graph = ...
-    >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        y = y.value() - y.error() 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
-
-# =============================================================================
-## get maximal-y
-#  @code
-#  graph = ...
-#  ymax  = graph.ymax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_ymax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> ymax  = graph.ymax () 
-    """    
-    ymx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        y = y.value() + abs ( y.error() ) 
-        if None == ymx or y >= ymx : ymx = y
-    return ymx
-
-
-# =============================================================================
-## get minimal-x 
-#  @code
-#  graph = ...
-#  xmin  = graph.xmin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_xmin_ ( graph ) :
-    """Get minimal x for the points
-    >>> graph = ...
-    >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        x = x - abs( exl ) 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
-
-# =============================================================================
-## get maximal-x 
-#  @code
-#  graph = ...
-#  xmax  = graph.xmax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_xmax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> xmax  = graph.xmax () 
-    """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        x = x + abs( exh ) 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
-
-# =============================================================================
-## get minimal-y
-#  @code
-#  graph = ...
-#  ymin  = graph.ymin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_ymin_ ( graph ) :
-    """Get minimal y for the points
-    >>> graph = ...
-    >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        y = y - abs( eyl ) 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
-
-# =============================================================================
-## get maximal-y
-#  @code
-#  graph = ...
-#  ymax  = graph.ymax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_ymax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> ymax  = graph.ymax () 
-    """    
-    ymx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        y = y + abs( eyh ) 
-        if None == ymx or y >= ymx : ymx = y
-    return ymx
-
+    ymin , ymax  = graph.yminmax  ()
+    return ymax
 
 # =============================================================================
 ## get minimal and maximal x for the points
@@ -1186,9 +1016,15 @@ def _gr_xminmax_ ( graph ) :
     >>> graph = ...
     >>> xmin,xmax = graph.xminmax() 
     """
-    xmn  = graph.xmin()
-    xmx  = graph.xmax()
-    return xmn , xmx 
+    xmin = pos_infinity
+    xmax = neg_infinity
+    
+    for i , x , y in graph.iteritems() :
+        
+        xmin = min ( xmin , x ) 
+        xmax = max ( xmax , x )
+        
+    return xmin, xmax
 
 # =============================================================================
 ## get minimal and maximal value for the points
@@ -1203,10 +1039,116 @@ def _gr_yminmax_ ( graph ) :
     Get minimal and maximal  for the points
     >>> graph = ...
     >>> mn,mx = graph.yminmax() 
-    """    
-    ymn  = graph.ymin()
-    ymx  = graph.ymax()
-    return ymn , ymx 
+    """
+    ymin = pos_infinity
+    ymax = neg_infinity
+    
+    for i , x , y in graph.iteritems() :
+        
+        ymin = min ( ymin , y ) 
+        ymax = max ( ymax , y )
+        
+    return ymin, ymax
+
+# =============================================================================
+## get minimal and maximal x for the points
+#  @code
+#  graph = ...
+#  xmin,xmax = graph.xminmax() 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _gre_xminmax_ ( graph ) :
+    """Get minimal and maximal x for the points
+    >>> graph = ...
+    >>> xmin,xmax = graph.xminmax() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    
+    for i , x , y in graph.iteritems() :
+
+        xv = x.value ()
+        ex = x.error ()
+        
+        xmin = min ( xmin , xv + ex , xv - ex  ) 
+        xmax = max ( xmax , xv + ex , xv - ex  )
+        
+    return xmin, xmax
+
+# =============================================================================
+## get minimal and maximal value for the points
+#  @code
+#  graph = ...
+#  mn,mx = graph.yminmax() 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _gre_yminmax_ ( graph ) :
+    """
+    Get minimal and maximal  for the points
+    >>> graph = ...
+    >>> mn,mx = graph.yminmax() 
+    """
+    ymin = pos_infinity
+    ymax = neg_infinity
+    
+    for i , x , y in graph.iteritems() :
+        
+        yv = y.value ()
+        ey = y.error ()
+        
+        ymin = min ( ymin , yv + ey , yv - ey  ) 
+        ymax = max ( ymax , yv + ey , yv - ey  )
+
+    return ymin, ymax
+
+# =============================================================================
+## get minimal and maximal x for the points
+#  @code
+#  graph = ...
+#  xmin,xmax = graph.xminmax() 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _grae_xminmax_ ( graph ) :
+    """Get minimal and maximal x for the points
+    >>> graph = ...
+    >>> xmin,xmax = graph.xminmax() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    
+    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
+        
+        xmin = min ( xmin , xv - abs ( enx ) , xv + epx  ) 
+        xmax = max ( xmax , xv - abs ( enx ) , xv + epx  )
+        
+    return xmin , xmax
+
+# =============================================================================
+## get minimal and maximal value for the points
+#  @code
+#  graph = ...
+#  mn,mx = graph.yminmax() 
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2011-06-07
+def _grae_yminmax_ ( graph ) :
+    """
+    Get minimal and maximal  for the points
+    >>> graph = ...
+    >>> mn,mx = graph.yminmax() 
+    """
+    ymin = pos_infinity
+    ymax = neg_infinity
+    
+    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
+        
+        ymin = min ( ymin , yv - abs ( eny ) , yv + epy  ) 
+        ymax = max ( ymax , yv - abs ( eny ) , yv + epy  )
+        
+    return ymin , ymax
 
 # =============================================================================
 ## get "slice" for graph 
@@ -1510,7 +1452,6 @@ ROOT.TGraph       . ymin          = _gr_ymin_
 ROOT.TGraph       . xmax          = _gr_xmax_ 
 ROOT.TGraph       . ymax          = _gr_ymax_ 
 
-
 ROOT.TGraph       . xminmax       = _gr_xminmax_ 
 ROOT.TGraph       . yminmax       = _gr_yminmax_ 
 ROOT.TGraph       .  minmax       = _gr_yminmax_ 
@@ -1528,11 +1469,9 @@ ROOT.TGraphErrors . __setitem__   = _gre_setitem_
 ROOT.TGraphErrors .     items     = _gre_iteritems_ 
 ROOT.TGraphErrors . iteritems     = _gre_iteritems_ 
 
-
-ROOT.TGraphErrors . xmin          = _gre_xmin_ 
-ROOT.TGraphErrors . ymin          = _gre_ymin_ 
-ROOT.TGraphErrors . xmax          = _gre_xmax_ 
-ROOT.TGraphErrors . ymax          = _gre_ymax_ 
+ROOT.TGraphErrors . xminmax       = _gre_xminmax_ 
+ROOT.TGraphErrors . yminmax       = _gre_yminmax_ 
+ROOT.TGraphErrors .  minmax       = _gre_yminmax_ 
 
 ROOT.TH1F.asGraph = hToGraph
 ROOT.TH1D.asGraph = hToGraph
@@ -1542,15 +1481,15 @@ ROOT.TH1D.toGraph = hToGraph
 ROOT.TGraphAsymmErrors.__len__       = ROOT.TGraphAsymmErrors . GetN 
 ROOT.TGraphAsymmErrors.__contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraphAsymmErrors.__iter__      = _gr_iter_ 
-ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_ 
+ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_
 ROOT.TGraphAsymmErrors. iteritems    = _grae_iteritems_ 
 ROOT.TGraphAsymmErrors.__getitem__   = _grae_getitem_ 
 ROOT.TGraphAsymmErrors.__setitem__   = _grae_setitem_ 
 
-ROOT.TGraphAsymmErrors . xmin        = _grae_xmin_ 
-ROOT.TGraphAsymmErrors . ymin        = _grae_ymin_ 
-ROOT.TGraphAsymmErrors . xmax        = _grae_xmax_ 
-ROOT.TGraphAsymmErrors . ymax        = _grae_ymax_ 
+ROOT.TGraphAsymmErrors . xminmax     = _grae_xminmax_ 
+ROOT.TGraphAsymmErrors . yminmax     = _grae_yminmax_ 
+ROOT.TGraphAsymmErrors .  minmax     = _grae_yminmax_ 
+
 
 ROOT.TGraphAsymmErrors . transform   = _grae_transform_
 
@@ -1682,9 +1621,8 @@ def _gr_xmax_ ( graph ) :
     if 0 == _size : return 1
     #
     _last = _size - 1
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)    
-    graph.GetPoint ( _last , x_ , v_ )
+    #
+    x_ , y_ = graph.get_point ( _last )
     #
     return x_
 # =============================================================================
@@ -1697,9 +1635,7 @@ def _gr_xmin_ ( graph ) :
     _size = len ( graph )
     if 0 == _size : return 0
     #
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)    
-    graph.GetPoint ( 0 , x_ , v_ )
+    x_ , y_ = graph.get_point ( 0 )
     #
     return x_
 
@@ -2545,6 +2481,18 @@ ROOT.TMultiGraph.yellow   = _mg_yellow_
 
 
 # =============================================================================
+##  delete method fro multigraph 
+def  _mg_delete_ ( mgraph ) :
+    """Delete method for multigraph
+    """
+    c = ROOT.gPad
+    if c:
+        lst = c.GetListOfPrimitives()
+        if lst and  mgraph in lst : lst.RecursiveRemove ( mgraph )
+        
+ROOT.TMultiGraph.__del__ = _mg_delete_ 
+
+# =============================================================================
 ##  get graph  with certaoniono index
 #   @code
 #    mg = ....
@@ -3017,14 +2965,22 @@ _new_methods_      = (
     ROOT.TMultiGraph  . ymin          ,
     ROOT.TMultiGraph  . xmax          , 
     ROOT.TMultiGraph  . ymax          ,
+    #
     ROOT.TMultiGraph  . xminmax       , 
     ROOT.TMultiGraph  . yminmax       ,
     ROOT.TMultiGraph  .  minmax       ,
-    
-
+    #
     ROOT.TGraph       . xminmax       ,
     ROOT.TGraph       . yminmax       ,
     ROOT.TGraph       .  minmax       ,
+    #
+    ROOT.TGraphErrors . xminmax       ,
+    ROOT.TGraphErrors . yminmax       ,
+    ROOT.TGraphErrors .  minmax       ,
+    #
+    ROOT.TGraphAsymmErrors . xminmax       ,
+    ROOT.TGraphAsymmErrors . yminmax       ,
+    ROOT.TGraphAsymmErrors .  minmax       ,
     #
     ROOT.TGraph       . __getitem__   ,
     ROOT.TGraph       . __setitem__   ,
