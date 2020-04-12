@@ -2,7 +2,7 @@
   1. Modify `Ostap::Models::BWI::evaluate` (temporary action,
      to be properly fixed in the future)
   1. Fix `toys.make_toys` for possible memory leak (thanks to
-     Abdul-Kerim Gusseinov for reprting the problem and for solution)
+     Abdul-Kerim Gusseinov for repoting the problem and for solution)
   1. Add `bufstrat` argument for `Convolution` and `Connvolution_pdf`
   1. add more functions `isuint`, `isulong` , `islonglong` , `isulonglong`
   1. more operationns with `TMultiGraph`
