@@ -2457,7 +2457,7 @@ def _gr_transpose_ ( self ) :
     for i , x , y in self.iteritems() :
         new_graph[i] = y , x
 
-    copy_graph_attribute ( self , new_graph ) 
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2477,7 +2477,7 @@ def _gre_transpose_ ( self ) :
     for i , x , y in self.iteritems() :
         new_graph[i] = y , x
         
-    copy_graph_attribute ( self , new_graph ) 
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2498,7 +2498,7 @@ def _grae_transpose_ ( self ) :
         ip, x , exl , exh , y , eyl , eyh =  item 
         new_graph [ ip ] = y , eyl , eyh , x , exl , exh
         
-    copy_graph_attribute ( self , new_graph ) 
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
 
@@ -2962,6 +2962,32 @@ def _box_transpose_ ( box  ) :
 ROOT.TBox.transpose = _box_transpose_
 ROOT.TBox.T         = _box_transpose_
 
+# ==============================================================================
+##  transpose the line 
+#   @code
+#   a = ROOT.TLine ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _line_transpose_ ( line  ) :
+    """Transpose the line
+    >>>  = ROOT.TBox ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TLine()
+    line.Copy ( na )
+
+    na.SetX1 ( line.GetY1 () )  
+    na.SetY1 ( line.GetX1 () )  
+    na.SetX2 ( line.GetY2 () )  
+    na.SetY2 ( line.GetX2 () )  
+
+    return na
+
+ROOT.TLine.transpose = _line_transpose_
+ROOT.TLine.T         = _line_transpose_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F              ,
@@ -2970,7 +2996,8 @@ _decorated_classes_ = (
     ROOT.TGraphErrors      ,
     ROOT.TGraphAsymmErrors ,
     ROOT.TArrow            ,  
-    ROOT.TBox 
+    ROOT.TBox              ,
+    ROOT.TLine
     )
 
 
@@ -3183,6 +3210,8 @@ _new_methods_      = (
     ROOT.TArrow.T              ,
     ROOT.TBox.transpose        ,
     ROOT.TBox.T                ,
+    ROOT.TLine.transpose       ,
+    ROOT.TLine.T               ,
     )
 
 # =============================================================================

@@ -25,6 +25,7 @@ import ROOT
 from   ostap.core.ostap_types import num_types, string_types  
 from   ostap.core.core        import VE, hID
 from   ostap.utils.cidict     import cidict 
+from   ostap.utils.utils      import vrange  
 import ostap.histos.graphs
 # =============================================================================
 ##  @class DrawConfig
@@ -87,6 +88,8 @@ class Limit(DrawConfig) :
 
         point = ROOT.TGraph(1)
         point[0] = self.limit , 1. * level
+        name = self.config.get('name','')
+        if name : point.SetName ( name ) 
         
         point.set_line_attributes   ( **self.config )
         point.set_fill_attributes   ( **self.config )
@@ -151,6 +154,9 @@ class Record(DrawConfig) :
             self.__errsp.append ( covp ** 0.5 ) 
             self.__errsn.append ( covn ** 0.5 ) 
 
+        self.__errsp = tuple ( self.__errsp )
+        self.__errsn = tuple ( self.__errsn )
+        
     @property
     def value ( self ) :
         """``value'' : the value/measurement/data point"""
@@ -193,6 +199,9 @@ class Record(DrawConfig) :
         graph.set_line_attributes   ( **self.config )
         graph.set_fill_attributes   ( **self.config )
         graph.set_marker_attributes ( **self.config )
+        
+        name = self.config.get('name','')
+        if name : graph.SetName ( name ) 
 
         return graph
 
@@ -210,31 +219,41 @@ class Average(Record) :
     >>> p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
     >>> p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
     """
-    def  __init__ ( self  , value , **config ) :
+    def  __init__ ( self  , value , *errors  , **config ) :
 
         assert isinstance ( value , VE ) and 0 < value.cov2() , 'Invalid average %s/%s' % ( value , type(value) )
         
         ## initialize  the base  
-        super(Average,self).__init__ ( value , **config )
+        super(Average,self).__init__ ( value , *errors  , **config )
         
-        if not 'fill_style' in self.config : self.config['fill_style'] = 1001 
-        if not 'fill_color' in self.config : self.config['fill_color'] =   93   
-        if not 'line_color' in self.config : self.config['line_color'] =   93   
-        
+        if not 'fill_style' in self.config : self.config [ 'fill_style' ] = 1001 
+        if not 'fill_color' in self.config : self.config [ 'fill_color' ] = ROOT.kOrange   
+        if not 'line_color' in self.config : self.config [ 'line_color' ] = ROOT.kOrange + len ( self.positive_errors )    
+        if not 'line_width' in self.config : self.config [ 'line_width' ] = 3 
         
     ## construct a box object for the average 
-    def box ( self , level ) :
-        """Contruct a graph objejct for this data point/measurement  at givel level
+    def boxes ( self , level ) :
+        """Construct a graph objejct for this ``average'' at givel level
         """
         
-        epos , eneg = self.positive_errors, self.negative_errors
+        epos , eneg  = self.positive_errors, self.negative_errors
 
-        box = ROOT.TBox ( self.value - eneg [0] , 0., self.value + epos[0] , level )
+        boxes  = []
+        for i , e in enumerate ( reversed ( zip ( epos, eneg ) ) ) :
+            ep , en = e 
+            b = ROOT.TBox  ( self.value - en , 0., self.value + ep , level )
+            
+            b.set_fill_attributes ( **self.config )
+            ##  adjust  the color
+            b.SetFillColor ( self.config ['fill_color'] + i )
+            boxes.append ( b )
 
-        box.set_line_attributes ( **self.config )
-        box.set_fill_attributes ( **self.config )
+        ##  mean value 
+        line  = ROOT.TLine( self.value , 0 , self.value , level )
+        line.set_line_attributes ( **self.config )
+        boxes.append (  line  )   
         
-        return box 
+        return tuple ( boxes ) 
 
 # =============================================================================================
 ##  make summary (multi) graph
@@ -244,8 +263,10 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
     grpahs  = []
     points  = ROOT.TMultiGraph()
     limits  = []
-    
-    for i , record in enumerate ( data ) :
+
+    ldata = reversed ( data ) if transpose else data 
+
+    for i , record in enumerate ( ldata ) :
 
         iv = np - i - 0.5
 
@@ -275,18 +296,16 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
            'Invalid average %s/%s'% ( average , type(average) )   
 
 
-    box = None  
+    boxes = () 
     if isinstance( average , VE ) : average  = Average ( average  )
-    
     if average  : 
-        box  = average.box ( np ) 
+        boxes = average.boxes ( np ) 
     
     if transpose  :
         
         points = points.T ()
-        lims   = limits 
-        limits = [ l.T()  for l in lims  ]
-        if box : box = box.T()
+        limits = [ l.T()  for l in limits  ]
+        boxes  = [ b.T()  for b in boxes   ] 
         
         points.GetXaxis().SetNdivisions(0)
 
@@ -296,7 +315,7 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
         points.SetMinimum ( 0  )
         points.SetMaximum ( np )
     
-    return points, limits, box 
+    return points, limits, boxes 
 
 
 # =============================================================================================
@@ -307,7 +326,7 @@ def draw_summary ( data      = []     ,
                    vmin      = None   ,
                    vmax      = None   ) : 
 
-    points , limits , box  = graph_summary ( data , average  , transpose )
+    points , limits , boxes  = graph_summary ( data , average  , transpose )
 
     if transpose :
         
@@ -336,19 +355,19 @@ def draw_summary ( data      = []     ,
             vmax = points.xmax() 
             for l in limits  : vmax = max ( vmax , l.GetX1()  , l.GetX2() )
             
-        histo = ROOT.TH1F( hID() , '', 10, vmin , vmax )
+        histo = ROOT.TH1F ( hID() , '', 10, vmin , vmax )
 
         histo.GetYaxis().SetNdivisions(0)
         histo.SetMinimum ( 0  )
         histo.SetMaximum ( len ( points )  )
         
     histo.draw()
-    if box : box.draw()  
+    for box in boxes : box.draw()  
     points.draw( 'pe1')
     for l in limits : l.draw()
 
 
-    return histo, points, limits , box   
+    return histo, points, limits , boxes   
     
 
 #  ============================================================================
@@ -369,7 +388,10 @@ if '__main__' == __name__ :
              ]
 
     histo, points, limits , box = draw_summary (
-        data , average = VE(2.0, 0.2**2 ) )
+        data , average = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  )
+
+    histo, points, limits , box = draw_summary (
+        data , average = Average ( VE(2.0, 0.2**2 ) , 0.8 , (-0.3, 0.8) )  , transpose = True )
 
 # =============================================================================
 ##                                                                     The END

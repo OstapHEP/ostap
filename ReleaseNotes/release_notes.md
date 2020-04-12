@@ -7,7 +7,7 @@
   1. add more functions `isuint`, `isulong` , `islonglong` , `isulonglong`
   1. more operationns with `TMultiGraph`
   1. add `graph_summary`
-  
+  1. update `graph_summary` to add colored bands for "averages" `
   
 ## Backward incompatible changes
 
@@ -17,6 +17,7 @@
   1. fix `pdg_format` for certaint cases
   1. fix missing `name` attribute fior `Sum1D/Sum3D` clone  machinery  
   1. fix some bugs in `graphs.py`
+  1. more bug fixes in `graphs.py`
   
 # v1.4.8.1
 
