@@ -29,7 +29,7 @@ __all__     = (
     'Histo3DFun'      , ## 3D-histogram as function object 
     )
 # =============================================================================
-import ROOT, sys, math
+import ROOT, sys, math, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -3022,11 +3022,12 @@ def _h2_random_ ( h2 ) :
     >>> x,y = h2.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    h2.GetRandom2( _x , _y )
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
     #
-    return float(_x) , float(_y)
+    h2.GetRandom2( x , y )
+    #
+    return float( x.value ) , float( y.value )
 
 # =============================================================================
 ## get the random triplet from 3D-histogram
@@ -3042,12 +3043,14 @@ def _h3_random_ ( h3 ) :
     >>> x,y,z = h3.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    _z = ROOT.Double(2.0)
-    h3.GetRandom3( _x , _y ,_z)
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
+    z = ctypes.c_double ( 2.0 )
     #
-    return float(_x) , float(_y) , float(_z) 
+    h3.GetRandom3( x , y , z )
+    #
+    return float( x.value ) , float( y.value ) , float( z.value )
+
 
 ROOT.TH2F.random = _h2_random_
 ROOT.TH2D.random = _h2_random_

@@ -8,6 +8,8 @@
   1. more operationns with `TMultiGraph`
   1. add `graph_summary`
   1. update `graph_summary` to add colored bands for "averages" `
+  1. replace `ROOT.Double` with `ctypes.c_double`
+  
   
 ## Backward incompatible changes
 

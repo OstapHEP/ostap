@@ -14,7 +14,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
-import ROOT
+import ROOT, ctypes 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,10 +39,11 @@ def _f2_random_ ( f2 ) :
     >>> f2  = ...         ## ROOT TF2
     >>> x,y = f2.random() ## get random number 
     """
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(0.0)
-    f2.GetRandom2( _x , _y )
-    return float(_x) , float(_y)
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
+    
+    f2.GetRandom2 ( x , y )
+    return float( x.value ) , float( y.value )
 
 ROOT.TF2.random = _f2_random_ 
 

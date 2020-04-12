@@ -78,7 +78,7 @@ __all__     = (
     'bernsteineven_sum' , ## - ditto -
     ) 
 # =============================================================================
-import ROOT
+import ROOT, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -105,9 +105,11 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
         elif hasattr ( func , 'GetXmin'  ) : xmin = func.GetXmin  ()
         elif hasattr ( func , 'GetXaxis' ) : xmin = func.GetXaxis ().GetXmin()
         elif hasattr ( func , 'GetRange' ) :
-            xmn  = ROOT.Double()
-            xmx  = ROOT.Double()
+            xmn  = ctypes.c_double()
+            xmx  = ctypes.c_double()
             func.GetRange(xmn,xmx)
+            xmn  = float ( xmn.value )
+            xmx  = float ( xmx.value )
             xmin = xmn 
         else :
             raise AttributeError( "%s: unable to catch xmin %s" % ( name , xmin ) )
@@ -118,9 +120,11 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
         elif hasattr ( func , 'GetXmax'  ) : xmax = func.GetXmax  () 
         elif hasattr ( func , 'GetXaxis' ) : xmax = func.GetXaxis ().GetXmax()  
         elif hasattr ( func , 'GetRange' ) :
-            xmn  = ROOT.Double()
-            xmx  = ROOT.Double()
+            xmn  = ctypes.c_double()
+            xmx  = ctypes.c_double()
             func.GetRange ( xmn , xmx )
+            xmn  = float ( xmn.value )
+            xmx  = float ( xmx.value )            
             xmax = xmx
         else :
             raise AttributeError( "%s: unable to catch xmax %s" % ( name , xmax ) )
