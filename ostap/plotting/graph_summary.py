@@ -12,11 +12,10 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-04-11"
 # =============================================================================
 __all__     = (
-    'DrawConfig'    , ## helper base class  to keep draw attributes
     'Limit'         , ## graphical representation of the upper/lower limit (arrow) 
     'Record'        , ## graphical representation of data poins with several unceratities
     'Average'       , ## graphical representation of average  (box)
-    'Average'       , ## graphical representation of average  (box)
+    'Graph'         , ## the  final summary graph 
     'graph_summary' , ## prepare summary graph 
     'draw_summary'  , ## draw summary graph 
     )
@@ -44,13 +43,40 @@ class DrawConfig(object) :
         return self.__config
 
 # =============================================================================
+## @class Label
+#  Helper base class to keep/create  the label 
+class Label(DrawConfig) :
+    """ Helper base class to keep/create  the label
+    """
+    def __init__  ( self , **config ) :
+        super(Label,self).__init__  ( **config )
+
+        if 'label' in self.config :
+            if not 'text_font'  in self.config : self.config ['text_font' ] = 132
+            if not 'text_align' in self.config : self.config ['text_align'] =  12
+            
+    def label ( self , vpos ) :
+
+        text     = self.config.get ( 'label' , ''         )
+        if not text : return None
+        
+        xpos = self.config.get ( 'label_position' , 0 )
+        
+        label = ROOT.TLatex ( xpos , vpos , text )
+        
+        label.set_text_attributes ( **self.config )
+        
+        return label 
+        
+
+# =============================================================================
 ## @class  Limit
 #  A graphical represenation of upper/lower limit as
 #  arrow from <code>limit</endcode> to <code>zero</endcode>
 #  @code
 #  l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , ,arrow_style = '->' )  
 #  @endcode 
-class Limit(DrawConfig) :
+class Limit(Label) :
     """A graphical represenation of upper/lower limit as
     arrow from `limit`to `zero`
     >>> l = Limit ( 0.25 , line_color = 3  , arrow_size = 0.15 , ,arrow_style = '->' )  
@@ -110,7 +136,7 @@ class Limit(DrawConfig) :
 #   p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
 #   p2 = Record ( VE(15,1**2) , 0.4 , (-0.1,0.2) , marker_style = 20 , marker_size = 4 )
 #   @endcode
-class Record(DrawConfig) :
+class Record(Label) :
     """Graphical representation of the data point/measurement with several
     unceratinties, that can be asymmetric
     >>> p1 = Record ( 15 , 0.3 , 0.4 , (-0.1,0.2) , 0.46 , marker_style = 20 , marker_size = 4 )
@@ -240,8 +266,8 @@ class Average(Record) :
         if not 'line_color' in self.config : self.config [ 'line_color' ] = ROOT.kOrange + len ( self.positive_errors )    
         if not 'average_width' in self.config : self.config [ 'average_width' ] = 3 
         
-    ## construct a box object for the average 
-    def boxes ( self , level ) :
+    ## construct a colored bands for the average 
+    def bands ( self , level ) :
         """Construct a graph objejct for this ``average'' at givel level
         """
         
@@ -267,6 +293,62 @@ class Average(Record) :
         
         return tuple ( boxes ) 
 
+# ==============================================================================================
+##  the final graph 
+class Graph(object) :
+
+    def __init__ ( self          ,
+                   histo  = None ,
+                   points = None ,
+                   limits = ()   ,
+                   bands  = ()   ,
+                   labels = ()   ) :
+
+        self.__histo  = histo
+        self.__points = points 
+        self.__limits = limits
+        self.__bands  = bands
+        self.__labels = labels
+
+    def draw ( self  ) :
+
+        if   self.histo    :
+            self.histo.draw ()
+            for b in self.bands : b.draw()
+            if self.points      : self.points.draw (  'pe1' )
+        else :
+            if self.points : self.points.draw      ( 'ape1' )
+            for b in self.bands : b.draw()
+            if self.points      : self.points.draw (  'pe1' )
+        
+        for l in self.limits    : l.draw()
+        for l in self.labels   : l.draw()
+
+    @property
+    def histo ( self  ) :
+        """``histo'' : histogram associated with graph"""
+        return self.__histo
+
+    @property
+    def points ( self  ) :
+        """``points'' : graph with points/measurements"""
+        return self.__points
+    
+    @property
+    def limits ( self  ) :
+        """``limits'' : upper/lower limits"""
+        return self.__limits
+
+    @property
+    def bands ( self  ) :
+        """``bands'' : color bands associated with mean/averages"""
+        return self.__bands
+
+    @property
+    def labels ( self  ) :
+        """``labels'' : (la)text labels"""
+        return self.__labels
+
 # =============================================================================================
 ##  make summary (multi) graph
 def graph_summary ( data  , average = None  , transpose = False  ) :  
@@ -274,8 +356,9 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
     np      = len ( data)
     grpahs  = []
     points  = ROOT.TMultiGraph()
-
     limits  = []
+    labels  = []
+    
 
     ldata = reversed ( data ) if transpose else data 
 
@@ -291,6 +374,9 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
             if option : points.Add ( point , option )
             else      : points.Add ( point          )
 
+            label = record.label (  iv )
+            if label : labels.append ( label )
+            
         elif isinstance ( record , Limit ) :
 
             arrow , point = record. arrow ( iv ) 
@@ -301,6 +387,9 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
         
             limits.append ( arrow  )
             
+            label = record.label (  iv )
+            if label : labels.append ( label )
+
         else :
             raise TypeError ( 'Invalid record #%d %s/%s' % ( i , str ( record ) , type ( record ) ) )
 
@@ -309,16 +398,18 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
            'Invalid average %s/%s'% ( average , type(average) )   
 
 
-    boxes = () 
+    bands = () 
     if isinstance( average , VE ) : average  = Average ( average  )
     if average  : 
-        boxes = average.boxes ( np ) 
-    
+        bands = average.bands ( np ) 
+
+    labels = tuple ( labels )  
+        
     if transpose  :
         
         points = points.T ()
         limits = [ l.T()  for l in limits  ]
-        boxes  = [ b.T()  for b in boxes   ] 
+        bands  = [ b.T()  for b in bands   ] 
         
         points.GetXaxis().SetNdivisions(0)
 
@@ -327,8 +418,9 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
         points.GetYaxis().SetNdivisions(0)
         points.SetMinimum ( 0  )
         points.SetMaximum ( np )
+
     
-    return points, limits, boxes 
+    return Graph ( points = points, limits = limits, bands  = bands , labels = labels )  
 
 
 # =============================================================================================
@@ -339,7 +431,8 @@ def draw_summary ( data      = []     ,
                    vmin      = None   ,
                    vmax      = None   ) : 
 
-    points , limits , boxes  = graph_summary ( data , average  , transpose )
+    res = graph_summary ( data , average  , transpose )
+    points , limits , bands , labels  = res.points , res.limits , res.bands , res.labels  
 
     if transpose :
         
@@ -373,14 +466,12 @@ def draw_summary ( data      = []     ,
         histo.GetYaxis().SetNdivisions(0)
         histo.SetMinimum ( 0  )
         histo.SetMaximum ( len ( points )  )
-        
-    histo.draw()
-    for box in boxes : box.draw()  
-    points.draw( 'pe1')
-    for l in limits : l.draw()
 
+    graph = Graph ( histo = histo, points = points, limits = limits , bands = bands , labels = labels )
 
-    return histo, points, limits , boxes   
+    graph.draw()
+
+    return graph 
     
 
 #  ============================================================================
@@ -392,23 +483,26 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
-    conf  = { 'marker_style' : 20 , 'marker_size' : 2 , 'marker_color' : 1 , 'line_color' : 1 }
-    aconf = { 'marker_size' : 4 }
+    conf  = { 'marker_style' : 20 , 'marker_size' : 2 , 'marker_color' : 1 , 'line_color' : 1 , 'label_position' : 4.0 }
+    aconf = {}
+    aconf.update ( conf )
+    aconf.update ( { 'marker_size' : 4 , 'marker_style' : 1 } )
     
-    data = [ Record (3 ,0.5,0.5 ,0.5, name = 'LHCb' , **conf ) ,
-             Record ( VE(2.5,0.3**3)  , (-0.8,0.1) ,0.5, name = 'LHCb' , **conf ) ,
-             Limit  ( 1.4 , 1.e-6 , **aconf )  
+    
+    data = [ Record (3 ,0.5,0.5 ,0.5, label = 'LHCb' , **conf ) ,
+             Record ( VE(2.5,0.3**3)  , (-0.8,0.1) ,0.5, label = 'LHCb-2' , **conf ) ,
+             Limit  ( 1.4 , 1.e-6 , label = 'BESIII' , **aconf )  
              ]
 
-    ave = Average ( VE(2.0, 0.2**2 ) , (-0.3, 0.8) )  
+    ave = Average ( VE(2.0, 0.2**2 ) , (-0.3, 0.8) , label = 'PDG' , **conf )  
     result1 = draw_summary (
-        data + [ ave ] , average = ave  )
+        data + [ ave ] , average = ave  , vmax = 6 )
 
-    result2 = draw_summary (
-        data + [ ave ] , average = ave  , transpose = True )
+    ## result2 = draw_summary (
+    ##      data + [ ave ] , average = ave  , transpose = True )
 
     del result1
-    del result2
+    ## del result2
     
 # =============================================================================
 ##                                                                     The END

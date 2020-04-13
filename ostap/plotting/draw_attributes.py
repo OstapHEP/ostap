@@ -17,6 +17,7 @@ __all__     = (
     'set_line_attributes'   ,  ## set line attributes
     'set_fill_attributes'   ,  ## set fill attributes
     'set_marker_attributes' ,  ## set marker attributes
+    'set_text_attributes'   ,  ## set text   attributes
     'copy_graph_attributes' ,  ## copy draw attributed from one object to another
     'copy_draw_attributes'  ,  ## ditto 
   )  
@@ -81,7 +82,7 @@ def set_fill_attributes  ( obj , **kwargs ) :
 
 
 # =============================================================================
-## set markerattributes for the object
+## set marker attributes for the object
 #  @code
 #  set_marker_attribute ( obj , marker_color = 5 , MarkerStyle = 6 , ... ) 
 #  @endocode
@@ -109,6 +110,45 @@ def set_marker_attributes  ( obj , **kwargs ) :
     if hasattr ( obj , 'SetMarkerColorAlpha' ) and hasattr ( obj , 'GetMarkerColor' ) :
         l = keys.get ( 'color_alpha' , None )
         if not l is None : obj.SetMarkerColorAlpha ( object.GetMarkerColor() , l )  
+
+# =============================================================================
+## set text attributes for the object
+#  @code
+#  set_text_attribute ( obj , marker_color = 5 , MarkerStyle , ... ) 
+#  @endocode
+def set_text_attributes  ( obj , **kwargs ) :
+    """Set text attributes for the object
+    >>> set_text_attribute ( obj , marker_color = 5 , markerStyle = 6 , ... ) 
+    """
+    
+    key_transform = lambda k : k.lower().replace('_','').replace('text','')
+    keys = cidict ( transform = key_transform )
+    keys.update ( kwargs ) 
+
+    if hasattr ( obj , 'SetTextAlign' ) :
+        l = keys.get ( 'align' , None )
+        if not l is None : obj.SetTextAlign ( l )  
+
+    if hasattr ( obj , 'SetTextAngle' ) :
+        l = keys.get ( 'angle' , None )
+        if not l is None : obj.SetTextAngle ( l )  
+
+    if hasattr ( obj , 'SetTextFont' ) :
+        l = keys.get ( 'font' , None )
+        if not l is None : obj.SetTextFont  ( l )  
+
+    if hasattr ( obj , 'SetTextSize' ) :
+        l = keys.get ( 'size' , None )
+        if not l is None : obj.SetTextSize  ( l )  
+
+    if hasattr ( obj , 'SetTextColor' ) :
+        l = keys.get ( 'color' , None )
+        if not l is None : obj.SetTextColor ( l )  
+
+
+    if hasattr ( obj , 'SetTextColorAlpha' ) and hasattr ( obj , 'GetTextColor' ) :
+        l = keys.get ( 'color_alpha' , None )
+        if not l is None : obj.SetTextColorAlpha ( object.GetTextColor() , l )  
 
 # =============================================================================
 ## copy graph attributes
@@ -174,6 +214,10 @@ def copy_graph_attributes ( o_from , o_to ) :
         tmp = ROOT.TAttMarker ( o_from )
         tmp.Copy    ( o_to )
 
+    if isinstance ( o_to , ROOT.TAttText   ) and isinstance ( o_from , ROOT.TAttText   ) :
+        tmp = ROOT.TAttText ( o_from )
+        tmp.Copy    ( o_to )
+
 # =============================================================================
 ##  ditto 
 copy_draw_attributes = copy_graph_attributes
@@ -184,11 +228,13 @@ copy_draw_attributes = copy_graph_attributes
 ROOT.TAttLine   .set_line_attributes   = set_line_attributes
 ROOT.TAttFill   .set_fill_attributes   = set_fill_attributes
 ROOT.TAttMarker .set_marker_attributes = set_marker_attributes
+ROOT.TAttText   .set_text_attributes   = set_text_attributes
 
 _decorated_classes_ = (
     ROOT.TAttLine   ,
     ROOT.TAttFill   ,
-    ROOT.TAttMarker 
+    ROOT.TAttMarker ,
+    ROOT.TAttText   ,
     )
 
 # =============================================================================
