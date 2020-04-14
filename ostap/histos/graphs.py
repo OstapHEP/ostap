@@ -2481,18 +2481,6 @@ ROOT.TMultiGraph.yellow   = _mg_yellow_
 
 
 # =============================================================================
-##  delete method fro multigraph 
-def  _mg_delete_ ( mgraph ) :
-    """Delete method for multigraph
-    """
-    c = ROOT.gPad
-    if c:
-        lst = c.GetListOfPrimitives()
-        if lst and  mgraph in lst : lst.RecursiveRemove ( mgraph )
-        
-ROOT.TMultiGraph.__del__ = _mg_delete_ 
-
-# =============================================================================
 ##  get graph  with certaoniono index
 #   @code
 #    mg = ....
@@ -2936,6 +2924,35 @@ def _line_transpose_ ( line  ) :
 ROOT.TLine.transpose = _line_transpose_
 ROOT.TLine.T         = _line_transpose_
 
+# ==============================================================================
+##  transpose the text
+#   @code
+#   a = ROOT.TText ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _text_transpose_ ( text ) :
+    """Transpose the line
+    >>>  = ROOT.TText ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    TEXT = type ( text ) 
+    na   = TEXT ( text )
+    ##
+    na.SetX ( text.GetY () )
+    na.SetY ( text.GetX () )
+    na.SetTextAngle ( 90 - text.GetTextAngle () )
+    
+    ## al = text.GetTextAlign ()
+    ## a1 , a2  = divmod ( al , 10 )
+    ## na.SetTextAlign ( 10 * ( 4 - a1 ) + 4 - a2  )
+
+    return na 
+    
+ROOT.TText.transpose = _text_transpose_
+ROOT.TText.T         = _text_transpose_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F              ,
@@ -2945,7 +2962,8 @@ _decorated_classes_ = (
     ROOT.TGraphAsymmErrors ,
     ROOT.TArrow            ,  
     ROOT.TBox              ,
-    ROOT.TLine
+    ROOT.TLine             , 
+    ROOT.TText
     )
 
 
@@ -3168,6 +3186,8 @@ _new_methods_      = (
     ROOT.TBox.T                ,
     ROOT.TLine.transpose       ,
     ROOT.TLine.T               ,
+    ROOT.TText.transpose       ,
+    ROOT.TText.T               ,
     )
 
 # =============================================================================
@@ -3177,5 +3197,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -10,7 +10,7 @@
   1. update `graph_summary` to add colored bands for "averages" `
   1. replace `ROOT.Double` with `ctypes.c_double`
   1. `graph_summary` : add labels and type `Graph`
-  
+  1. `graph_summary` : rename classes, remove `TMultiGraph` and add documentation`  
   
 ## Backward incompatible changes
 

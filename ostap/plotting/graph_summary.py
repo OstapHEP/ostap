@@ -2,9 +2,51 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 # @file ostap/plotting/graph_summary.py
-# Prepare "summary" plot 
+# Prepare "summary" plot
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# result = draw_summary ( data  , vmax = 5 )
+# @endcode
+# Also one can add colored bands for "average"
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = draw_summary ( data  , average  = average , vmax = 5 )
+# @endcode
+# "Average" can be alsoadded into list of data points:
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
+# @endcode
 # =============================================================================
-"""Prepare ``summary'' plot 
+"""Prepare ``summary'' plot
+>>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+>>> result = draw_summary ( data  , vmax = 5 )
+
+Also one can add colored bands for ``average'':
+
+>>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+>>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+>>> result = draw_summary ( data  , average  = average , vmax = 5 )
+
+``Averag'' data  can be also added into list of data points:
+
+>>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+... Limit  ( 2.5                    , label = 'BESIII'  ) ]
+>>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+>>> result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -15,8 +57,8 @@ __all__     = (
     'Limit'         , ## graphical representation of the upper/lower limit (arrow) 
     'Record'        , ## graphical representation of data poins with several unceratities
     'Average'       , ## graphical representation of average  (box)
-    'Graph'         , ## the  final summary graph 
-    'graph_summary' , ## prepare summary graph 
+    'Summary'       , ## the  final summary graph 
+    'make_summary'  , ## prepare summary graph 
     'draw_summary'  , ## draw summary graph 
     )
 # =============================================================================
@@ -25,14 +67,13 @@ from   ostap.core.ostap_types import num_types, string_types
 from   ostap.core.core        import VE, hID
 from   ostap.utils.cidict     import cidict 
 from   ostap.utils.utils      import vrange  
-import ostap.histos.graphs
+from   ostap.histos.graphs    import pos_infinity, neg_infinity
 # =============================================================================
 ##  @class DrawConfig
 #   Helper base class to keep the configuration of drawing attributes 
 class DrawConfig(object) :
     """Helper base class to keep the configuration of drawingattributes 
-    """
-    
+    """    
     def __init__ ( self , **config ) :
         self.__config = cidict ( transform = lambda k : k.lower().replace('_','' ) )
         self.__config.update   ( config )
@@ -44,7 +85,7 @@ class DrawConfig(object) :
 
 # =============================================================================
 ## @class Label
-#  Helper base class to keep/create  the label 
+#  Helper base class to keep/create  the label
 class Label(DrawConfig) :
     """ Helper base class to keep/create  the label
     """
@@ -55,8 +96,19 @@ class Label(DrawConfig) :
             if not 'text_font'  in self.config : self.config ['text_font' ] = 132
             if not 'text_align' in self.config : self.config ['text_align'] =  12
             
+    # =========================================================================
+    ## Create the label  <code>TLatex</code>
+    #  @code
+    #  point = ...
+    #  label = point.label ( 5 )
+    #  @endcode 
     def label ( self , vpos ) :
-
+        """Create the label  <code>TLatex</code>
+        >>> point = ...
+        >>> label = point.label ( 5 )
+        - see ROOT.TLatex
+        """
+        
         text     = self.config.get ( 'label' , ''         )
         if not text : return None
         
@@ -68,7 +120,6 @@ class Label(DrawConfig) :
         
         return label 
         
-
 # =============================================================================
 ## @class  Limit
 #  A graphical represenation of upper/lower limit as
@@ -103,6 +154,7 @@ class Limit(Label) :
         """Zero value"""
         return self.__zero
 
+    # =========================================================================
     ## create an arrow for the upper limit at certain level 
     def arrow ( self , level ) :
         """ Create the arrow at certain level """
@@ -119,7 +171,7 @@ class Limit(Label) :
 
         point = ROOT.TGraph(1)
         point[0] = self.limit , 1. * level
-        name = self.config.get('name','')
+        name = self.config.get('name', self.config.get ( 'label', '' ))
         if name : point.SetName ( name ) 
         
         point.set_line_attributes   ( **self.config )
@@ -235,7 +287,7 @@ class Record(Label) :
         graph.set_fill_attributes   ( **self.config )
         graph.set_marker_attributes ( **self.config )
         
-        name = self.config.get('name','')
+        name = self.config.get('name', self.config.get( 'label' , '') )
         if name : graph.SetName ( name ) 
 
         return graph
@@ -261,9 +313,9 @@ class Average(Record) :
         ## initialize  the base  
         super(Average,self).__init__ ( value , *errors  , **config )
         
-        if not 'fill_style' in self.config : self.config [ 'fill_style' ] = 1001 
-        if not 'fill_color' in self.config : self.config [ 'fill_color' ] = ROOT.kOrange   
-        if not 'line_color' in self.config : self.config [ 'line_color' ] = ROOT.kOrange + len ( self.positive_errors )    
+        if not 'fill_style'    in self.config : self.config [ 'fill_style'    ] = 1001 
+        if not 'fill_color'    in self.config : self.config [ 'fill_color'    ] = ROOT.kOrange   
+        if not 'line_color'    in self.config : self.config [ 'line_color'    ] = ROOT.kOrange + len ( self.positive_errors )    
         if not 'average_width' in self.config : self.config [ 'average_width' ] = 3 
         
     ## construct a colored bands for the average 
@@ -294,12 +346,25 @@ class Average(Record) :
         return tuple ( boxes ) 
 
 # ==============================================================================================
-##  the final graph 
-class Graph(object) :
-
+## @class Summary
+#   The final graph for the ``summary plot''. It is a container of
+#  - the histogram  *useful to define the range)
+#  - the graph points
+#  - the limit arrows
+#  - the colored bands for ``average''
+#  - the text(TLatex) labels
+class Summary(object) :
+    """The final graph for the ``summary plot''
+    It is a container of
+    - the histogram  *useful to define the range)
+    - the graph points
+    - the limit arrows
+    - the colored bands for ``average''
+    - the text(TLatex) labels
+    """
     def __init__ ( self          ,
                    histo  = None ,
-                   points = None ,
+                   points = ()   ,
                    limits = ()   ,
                    bands  = ()   ,
                    labels = ()   ) :
@@ -309,26 +374,42 @@ class Graph(object) :
         self.__limits = limits
         self.__bands  = bands
         self.__labels = labels
-
-    def draw ( self  ) :
-
-        if   self.histo    :
-            self.histo.draw ()
-            for b in self.bands : b.draw()
-            if self.points      : self.points.draw (  'pe1' )
-        else :
-            if self.points : self.points.draw      ( 'ape1' )
-            for b in self.bands : b.draw()
-            if self.points      : self.points.draw (  'pe1' )
         
-        for l in self.limits    : l.draw()
-        for l in self.labels   : l.draw()
+    # ======================================================================================
+    ##  draw the summary plot
+    #   @code
+    #   summary = ...
+    #   summary .draw()
+    #   @endcode
+    def draw ( self  ) :
+        """Draw the summary plot
+        >>> summary = ...
+        >>> summary .draw()
+        """
+        
+        if   self.histo    :
+            self.histo.draw ()            
+            for b in self.bands  : b.draw()
+            for p in self.points : p.draw('pe1')
+        else :
+
+            if self.points : self.points[0].draw('ape1')
+            for b in self.bands  : b.draw()
+            for p in self.points : p.draw('pe1')
+        
+        for l in self.limits     : l.draw()
+        for l in self.labels     : l.draw()
 
     @property
     def histo ( self  ) :
         """``histo'' : histogram associated with graph"""
         return self.__histo
-
+    @histo.setter
+    def histo ( self , h ) :
+        assert h is None or ( h and isinstance ( h , ROOT.TH1 ) ) ,\
+               'Invalid histo type %s/%s' % ( h , type ( h ) )
+        self.__histo = h
+        
     @property
     def points ( self  ) :
         """``points'' : graph with points/measurements"""
@@ -349,16 +430,128 @@ class Graph(object) :
         """``labels'' : (la)text labels"""
         return self.__labels
 
+    # =========================================================================
+    ## number of data points in the sumamry plot
+    #  @code
+    #  summary = ...
+    #  n = len ( summary )
+    #  @endcode
+    def __len__  ( self ) :
+        """Number of data points in the summary plot
+        >>> summary = ...
+        >>> n = len ( summary )
+        """
+        return len ( self.points ) 
+    # =========================================================================
+    ## get xmin/xmax for this summary graph
+    #  @code
+    #  summary = ...
+    #  xmin, xmax = summary.xminmax()
+    #  @endcode  
+    def xminmax ( self ) :
+        """Get xmin/xmax for this summary graph 
+        >>> summary = ...
+        >>> xmin, xmax = summary.xminmax()
+        """
+        
+        xmin = pos_infinity
+        xmax = neg_infinity
+        
+        for p in self.points  :
+            xmin = min ( xmin , p.xmin  ()  , p.xmax  () )
+            xmax = max ( xmax , p.xmin  ()  , p.xmax  () )
+            
+        for l in self.limits  :
+            xmin = min ( xmin , l.GetX1 ()  , l.GetX2 () )
+            xmax = max ( xmax , l.GetX1 ()  , l.GetX2 () )
+            
+        for b in self.bands   :
+            xmin = min ( xmin , b.GetX1 ()  , b.GetX2 () )
+            xmax = max ( xmax , b.GetX1 ()  , b.GetX2 () )
+            
+        return xmin, xmax
+
+    # =========================================================================
+    ## get ymin/ymax for this summary graph
+    #  @code
+    #  summary  = ...
+    #  ymin, ymax = summary.yminmax()
+    #  @endcode  
+    def yminmax ( self ) :
+        """Get ymin/ymax for this summary graph 
+        >>> summary = ...
+        >>> ymin, ymax = summary.yminmax()
+        """
+        ymin = pos_infinity
+        ymax = neg_infinity
+        
+        for p in self.points  :
+            ymin = min ( ymin , p.ymin  ()  , p.ymax  () )
+            ymax = max ( ymax , p.ymin  ()  , p.ymax  () )
+            
+        for l in self.limits  :
+            ymin = min ( ymin , l.GetY1 ()  , l.GetY2 () )
+            ymax = max ( ymax , l.GetY1 ()  , l.GetY2 () )
+            
+        for b in self.bands   :
+            ymin = min ( ymin , b.GetY1 ()  , b.GetY2 () )
+            ymax = max ( ymax , b.GetY1 ()  , b.GetY2 () )
+            
+        return ymin, ymax 
+
 # =============================================================================================
-##  make summary (multi) graph
-def graph_summary ( data  , average = None  , transpose = False  ) :  
+## make summary plot  
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# result = make_summary ( data  , vmax = 5 )
+# @endcode
+# Also one can add colored bands for "average"
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = make_summary ( data  , average  = average , vmax = 5 )
+# @endcode
+# "Average" can be alsoadded into list of data points:
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = make_summary ( data + [ average ]  , average  = average , vmax = 5 )
+# @endcode
+def make_summary ( data  , average = None  , transpose = False  ) :  
+    """Prepare ``summary'' plot
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> result = make_summary ( data )
     
-    np      = len ( data)
+    Also one can add colored bands for ``average'':
+    
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+    >>> result = make_summary ( data  , average  = average )
+    
+    ``Averag'' data  can be also added into list of data points:
+    
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ... Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+    >>> result = make_summary ( data + [ average ]  , average  = average  )
+    """
+    
+    np      = len ( data )
     grpahs  = []
-    points  = ROOT.TMultiGraph()
     limits  = []
     labels  = []
-    
+    points  = [] 
 
     ldata = reversed ( data ) if transpose else data 
 
@@ -370,10 +563,8 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
             
             point  = record.point ( iv )
             
-            option = record.config.get ( 'option' , '' )
-            if option : points.Add ( point , option )
-            else      : points.Add ( point          )
-
+            points.append ( point )
+            
             label = record.label (  iv )
             if label : labels.append ( label )
             
@@ -381,9 +572,7 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
 
             arrow , point = record. arrow ( iv ) 
             
-            option = record.config.get ( 'option' , '' )
-            if option : points.Add ( point , option )
-            else      : points.Add ( point          )
+            points.append ( point )
         
             limits.append ( arrow  )
             
@@ -404,74 +593,126 @@ def graph_summary ( data  , average = None  , transpose = False  ) :
         bands = average.bands ( np ) 
 
     labels = tuple ( labels )  
-        
+    
+    g = Summary ( points = points ,
+                  limits = limits ,
+                  bands  = bands  ,
+                  labels = labels )  
+    
+    xmin, xmax  = g.xminmax()
+    ymin, ymax  = g.yminmax()
+
     if transpose  :
         
-        points = points.T ()
-        limits = [ l.T()  for l in limits  ]
-        bands  = [ b.T()  for b in bands   ] 
+        limits = tuple ( [ l.T()  for l in g.limits  ] )
+        bands  = tuple ( [ b.T()  for b in g.bands   ] )
+        points = tuple ( [ p.T()  for p in g.points  ] ) 
+        labels = tuple ( [ l.T()  for l in g.labels  ] ) 
+
+        g = Summary( points = points ,
+                     limits = limits ,
+                     bands  = bands  ,
+                     labels = labels )  
         
-        points.GetXaxis().SetNdivisions(0)
-
+        for p in g.points : 
+            p.GetXaxis().SetNdivisions(0)
+            p.SetMinimum ( xmin )
+            p.SetMaximum ( xmax )
+            
     else :
+                
+        
+        for p in points : 
+            p.GetYaxis().SetNdivisions(0)
+            p.SetMinimum ( 0  )
+            p.SetMaximum ( np )        
+            
 
-        points.GetYaxis().SetNdivisions(0)
-        points.SetMinimum ( 0  )
-        points.SetMaximum ( np )
-
-    
-    return Graph ( points = points, limits = limits, bands  = bands , labels = labels )  
-
+    return g
 
 # =============================================================================================
-##  make summary (multi) graph
+##  Prepare and draw "summary" plot
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# result = draw_summary ( data  , vmax = 5 )
+# @endcode
+# Also one can add colored bands for "average"
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = draw_summary ( data  , average  = average , vmax = 5 )
+# @endcode
+# "Average" can be alsoadded into list of data points:
+# @code
+# data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+#          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+#          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+# average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+# result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
+# @endcode
 def draw_summary ( data      = []     ,
                    transpose = False  ,
                    average   = None   , 
                    vmin      = None   ,
                    vmax      = None   ) : 
+    """Prepare and draw the ``summary'' plot
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> result = draw_summary ( data  , vmax = 5 )
+    
+    Also one can add colored bands for ``average'':
+    
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ...          Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+    >>> result = draw_summary ( data  , average  = average , vmax = 5 )
+    
+    ``Averag'' data  can be also added into list of data points:
+    
+    >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
+    ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
+    ... Limit  ( 2.5                    , label = 'BESIII'  ) ]
+    >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
+    >>> result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
+    """
+    
+    summary = make_summary ( data , average  , transpose )
 
-    res = graph_summary ( data , average  , transpose )
-    points , limits , bands , labels  = res.points , res.limits , res.bands , res.labels  
-
+    xmin, xmax = summary.xminmax()
+    ymin, ymax = summary.xminmax()
+    
     if transpose :
         
-        if vmin is None :
-            vmin = points.ymin() 
-            for l in limits  : vmin = min ( vmin , l.GetY1()  , l.GetY2() )
+        if vmin is None : vmin = ymin
+        if vmax is None : vmax = ymax
 
-        if vmax is None :
-            vmax = points.ymax() 
-            for l in limits  : vmax = max ( vmax , l.GetY1()  , l.GetY2() )
-
-            
-        histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( points ) )
+        histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( summary ) )
 
         histo.GetXaxis().SetNdivisions(0)
         histo.SetMinimum ( vmin  )
         histo.SetMaximum ( vmax  )
 
     else :
-
-        if vmin is None :
-            vmin = points.xmin() 
-            for l in limits  : vmin = min ( vmin , l.GetX1()  , l.GetX2() )
-            
-        if vmax is None :
-            vmax = points.xmax() 
-            for l in limits  : vmax = max ( vmax , l.GetX1()  , l.GetX2() )
+        
+        if vmin is None : vmin = xmin
+        if vmax is None : vmax = xmax
             
         histo = ROOT.TH1F ( hID() , '', 10, vmin , vmax )
 
         histo.GetYaxis().SetNdivisions(0)
         histo.SetMinimum ( 0  )
-        histo.SetMaximum ( len ( points )  )
+        histo.SetMaximum ( len ( summary )  )
 
-    graph = Graph ( histo = histo, points = points, limits = limits , bands = bands , labels = labels )
+    summary.histo = histo
+    summary.draw()
 
-    graph.draw()
-
-    return graph 
+    return summary
     
 
 #  ============================================================================
@@ -495,14 +736,13 @@ if '__main__' == __name__ :
              ]
 
     ave = Average ( VE(2.0, 0.2**2 ) , (-0.3, 0.8) , label = 'PDG' , **conf )  
-    result1 = draw_summary (
-        data + [ ave ] , average = ave  , vmax = 6 )
 
-    ## result2 = draw_summary (
-    ##      data + [ ave ] , average = ave  , transpose = True )
+    data.append ( ave  )
+    
+    result1 = draw_summary ( data , average = ave  , vmax = 6 )
 
-    del result1
-    ## del result2
+    result2 = draw_summary ( data , average = ave  , transpose = True , vmax = 6 )
+
     
 # =============================================================================
 ##                                                                     The END
