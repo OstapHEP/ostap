@@ -21,6 +21,8 @@
   1. fix missing `name` attribute fior `Sum1D/Sum3D` clone  machinery  
   1. fix some bugs in `graphs.py`
   1. more bug fixes in `graphs.py`
+  1. fix `Flatte_pdf`
+  
   
 # v1.4.8.1
 
