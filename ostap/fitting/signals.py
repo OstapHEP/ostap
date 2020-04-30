@@ -3273,31 +3273,18 @@ class Flatte_pdf(MASS) :
         
         if  gamma1 is None and gamma2 is None :
             
-            vmin = 0.2 * self.mean.getMin () * self.gamma.getMin ()
-            vmax = 2.0 * self.mean.getMax () * self.gamma.getMax ()
-            
             self.__m0g1 = self.make_var  ( m0g1                          ,
                                            'm0g1_%s'             % name ,
                                            'm_{0}#gamma_{1}(%s)' % name ,
-                                           m0g1 , m0g1 , vmin , xmax )
+                                           m0g1 , m0g1 )
             
             self.__g2og1 = self.make_var ( g2og1    ,
                                            'g2og1_%s'                  % name ,
                                            '#gamma_{2}/#gamma_{1}(%s)' % name ,
-                                           g2og1    ,  1  ,  0.01  , 100  ) 
-            
-            self.__lst1   = ROOT.RooArgList ( self.m0g1  , self.m0     ) 
-            self.__gamma1 = ROOT.RooRealVar ( 
-                'g1_%s'          % name ,
-                '#gamma_{1}(%s)' % name ,
-                '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() ) , 
-                self.__lst1  )
-            self.__lst2   = ROOT.RooArgList ( self.g2og1 , self.gamma1 ) 
-            self.__gamma2 = ROOT.RooRealVar ( 
-                'g2_%s'          % name ,
-                '#gamma_{2}(%s)' % name ,
-                '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() ) , 
-                self.__lst2 )
+                                           g2og1    ,  g2og1  ,  0.01  , 100  ) 
+
+            self.__gamma1 = self.vars_divide ( self.m0g1  , self.m0     , name = 'g1_%s' % name )
+            self.__gamma2 = self.vars_divide ( self.g2og1 , self.gamma1 , name = 'g2_%s' % name )
             
         elif gamma1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
         elif gamma2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
@@ -3317,19 +3304,10 @@ class Flatte_pdf(MASS) :
                                               self.gamma.getVal () ,
                                               self.gamma.getMin () ,
                                               self.gamma.getMax () )
+
             
-            self.__lst1  = ROOT.RooArgList ( self.m0     , self.gamma1 ) 
-            self.__m0g1  = ROOT.RooFormulaVar (
-                'm0g1_%s'             % name ,
-                'm_{0}#gamma_{1}(%s)' % name ,
-                '%s * %s ' % ( self.m0.GetName() , self.gamma1.GetName() ) ,
-                self.__lst1 )
-            self.__lst2  = ROOT.RooArgList ( self.gamma2 , self.gamma1 ) 
-            self.__g2og1 = ROOT.RooFormulaVar ( 
-                'g2og1_%s'                  % name ,
-                '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 ,
-                '%s / %s '  % ( self.gamma2.GetName() , self.gamma1.GetName() ) ,
-                self.__lst2 )
+            self.__m0g1  = self.vars_multiply ( self.m0     , self.gamma1 , name = 'm0g1_%s'  % name )
+            self.__g2og1 = self.vars_divide   ( self.gamma1 , self.gamma1 , name = 'g2og1_%s' % name )
                 
         ## create PDF 
         self.pdf = Ostap.Models.Flatte ( 
@@ -3420,6 +3398,11 @@ class Flatte_pdf(MASS) :
     def gamma0 ( self , value ) :
         value = float ( value )
         self.__gamma0.setVal ( value ) 
+
+    @property
+    def gamma ( self ) :
+        "``gamma''-parameter for Flatte-function: "
+        return self.sigma
 
     @property
     def flatte ( self ) :
