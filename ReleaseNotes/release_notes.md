@@ -1,17 +1,19 @@
-## New featires
+# v1.4.8.2
+
+## New features
   1. Modify `Ostap::Models::BWI::evaluate` (temporary action,
      to be properly fixed in the future)
   1. Fix `toys.make_toys` for possible memory leak (thanks to
      Abdul-Kerim Gusseinov for repoting the problem and for solution)
   1. Add `bufstrat` argument for `Convolution` and `Connvolution_pdf`
   1. add more functions `isuint`, `isulong` , `islonglong` , `isulonglong`
-  1. more operationns with `TMultiGraph`
+  1. more operations with `TMultiGraph`
   1. add `graph_summary`
   1. update `graph_summary` to add colored bands for "averages" `
   1. replace `ROOT.Double` with `ctypes.c_double`
   1. `graph_summary` : add labels and type `Graph`
   1. `graph_summary` : rename classes, remove `TMultiGraph` and add documentation`  
-  1. rewrite `ostap.math.linalg` : more functions & mixed operations: S/T-matrix/vettors+numpy
+  1. rewrite `ostap.math.linalg` : more functions & mixed operations: S/T-matrices/vectors&numpy
   
 ## Backward incompatible changes
 
@@ -28,7 +30,8 @@
 # v1.4.8.1
 
 
-## New features:
+## New features:#include "Ostap/MatrixUtils.h"
+
 
   1. add new roofit variables  (`RooAbsReal`):  
 
