@@ -88,13 +88,12 @@ class FUNC(MakeVar) :
         self.__draw_var     = None
         self.__draw_options = {} ## predefined drawing options for this FUNC/PDF
 
+        self.__checked_keys = set()
+        
         self.config = { 'name' : self.name , 'xvar' : self.xvar  }
 
     ## pickling via reduce 
     def __reduce__ ( self ) :
-        print ('REDUCE', self.config)
-        for k in self.config :
-            print( 'KEY/value/type %s/%s/%s'  % ( k , self.config[k], type(self.config[k])))
         if py2 :  return func_factory , ( type(self) , self.config, )
         return type(self).factory , ( self.config, )
     ## factory method 
@@ -213,6 +212,12 @@ class FUNC(MakeVar) :
         self.__tricks = val
 
     @property
+    def checked_keys ( self ) :
+        """``checked keys'' : special keys for clone-method
+        """
+        return self.__checked_keys
+    
+    @property
     def draw_options ( self ) :
         """``draw_options'' : dictionary with predefined draw-options for this PDF
         """
@@ -321,7 +326,7 @@ class FUNC(MakeVar) :
     #  >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
     #  @endcode 
     def clone ( self , **kwargs ) :
-        """Make a clone for the given fuuction/PDF with
+        """Make a clone for the given fucction/PDF with
         the optional replacement of the certain parameters
         >>> xpdf = ...
         >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
@@ -329,6 +334,13 @@ class FUNC(MakeVar) :
 
         ## get config 
         conf = {}
+        
+        ## check for the special keys 
+        for k in kwargs :
+            if k in self.checked_keys :
+                if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
+                    raise AttributeError ("Class %s cannot be cloned with ``%s'' key" % ( self.__class__.__name__ , k ) )
+
         conf.update ( self.config ) 
 
         ## modify the name if the name is in config  
@@ -670,22 +682,9 @@ class Fun1D ( FUNC ) :
             'xvar' : self.xvar ,
             'name' : self.name ,            
             }
-
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun1D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun1D cannot be cloned with different ``xvar''")
-
-        return FUNC.clone ( self , **kwargs ) 
+        
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
 
     
 # =============================================================================
@@ -945,24 +944,10 @@ class Fun2D ( FUNC2 ) :
             'yvar' : self.yvar ,
             'name' : self.name ,            
             }
-
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , yvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun2D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun2D cannot be cloned with different ``xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fun2D cannot be cloned with different ``yvar''")
-
-        return FUNC2.clone ( self , **kwargs ) 
+        
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
+        self.checked_keys.add  ( 'yvar' ) 
 
     
 # =============================================================================
@@ -1281,26 +1266,9 @@ class Fun3D ( FUNC3 ) :
             'name' : self.name ,            
             }
 
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , yvar = None , zvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun3D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``zvar''")
-
-        return FUNC3.clone ( self , **kwargs ) 
-
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
+        self.checked_keys.add  ( 'yvar' ) 
 
 # =============================================================================
 ## Operator for `3D-function (op) other`:

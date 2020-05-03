@@ -1048,33 +1048,17 @@ class Generic3D_pdf(PDF3) :
             'suffix'         : suffix              ,                        
             }
 
+        self.checked_keys.add ( 'pdf'    )
+        self.checked_keys.add ( 'xvar'    )
+        self.checked_keys.add ( 'yvar'    )
+        self.checked_keys.add ( 'zvar'    )
+        self.checked_keys.add ( 'special' )
     
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
     
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar = None , yvar = None , zvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `zvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic3D_pdf can not be cloned with different ``special''")
-        
-        return PDF.clone ( self , **kwargs )
-
 # =============================================================================
 ## @class Sum3D
 #  Non-extended sum of two PDFs
@@ -1901,23 +1885,11 @@ class Fit3D (PDF3) :
             'zvar'       : self.zvar    ,
             'name'       : self.name    ,             
             }
-        
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3D can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3D can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3D can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
 
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
+        
     @property
     def SSS ( self ) :
         """The yield of Signal(x)*Signal(y)*Signal(z) component"""
@@ -2638,22 +2610,10 @@ class Fit3DSym (PDF3) :
             'name'       : self.name    ,             
             }
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
-
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
+        
     @property
     def SSS ( self ) :
         """The yield of Signal(x)*Signal(y)*Signal(z) component"""
@@ -3491,21 +3451,9 @@ class Fit3DMix (PDF3) :
             'name'       : self.name    ,             
             }
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
 
     @property
     def SSS ( self ) :

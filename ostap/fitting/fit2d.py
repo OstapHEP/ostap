@@ -1024,30 +1024,17 @@ class Generic2D_pdf(PDF2) :
             'prefix'         : prefix              ,
             'suffix'         : suffix              ,            
             }
-            
+
+        self.checked_keys.add ( 'pdf'     )
+        self.checked_keys.add ( 'xvar'    )
+        self.checked_keys.add ( 'yvar'    )
+        self.checked_keys.add ( 'special' )
+        
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
 
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar  = None , yvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic2D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic2D_pdf can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Generic2D_pdf can not be cloned with different `yvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic2D_pdf can not be cloned with different ``special''")
-        
-        return PDF.clone ( self , **kwrags )
 
 # =============================================================================
 ## @class Sum2D
@@ -1637,20 +1624,9 @@ class Fit2D (PDF2) :
             'yvar'       : self.yvar            , 
             'name'       : self.name    
             }
-    
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar  = None , yvar = None ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit2D can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit2D can not be cloned with different `yvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
+        
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
         
     @property
     def SS ( self ) :
@@ -2125,20 +2101,9 @@ class Fit2DSym (PDF2) :
             'yvar'       : self.yvar            , 
             'name'       : self.name            ,
             }
-    
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar  = None , yvar = None ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit2DSym can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit2DSym can not be cloned with different `yvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
+
+        self.checked_keys.add ( 'xvar' )
+        self.checked_keys.add ( 'yvar' )
         
     @property
     def SS ( self ) :

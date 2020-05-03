@@ -2730,28 +2730,16 @@ class Generic1D_pdf(PDF) :
             'prefix'         : prefix              ,
             'suffix'         : suffix              ,            
             }
-            
+
+        self.checked_keys.add  ( 'pdf'     )
+        self.checked_keys.add  ( 'xvar'    )
+        self.checked_keys.add  ( 'special' )
+        
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic1D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``xvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``special''")
-            
-        return PDF.clone ( self , **kwargs )
     
 # =============================================================================
 ## @class Sum1D
@@ -3260,6 +3248,8 @@ class Fit1D (PDF) :
             'fB'                  : self.fB                  ,
             'fC'                  : self.fC                  ,
             }
+
+        self.checked_keys.add  ( 'xvar' )
         
     @property
     def extended ( self ) :
