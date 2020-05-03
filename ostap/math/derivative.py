@@ -863,7 +863,7 @@ class EvalNVEcov(EvalNVE) :
         
         EvalNVE.__init__ ( self , func = func , N = N , partial = partial , name = name  )
         if cov2getter is None :
-            from ostap.math.linalg import  matrix as get_cov2
+            from ostap.math.linalg import  mgettter as  get_cov2
             cov2getter = get_cov2 
         self.__cov2 = cov2getter 
 
@@ -939,7 +939,7 @@ class EvalNVEcor(EvalNVEcov) :
         
         EvalNVEcov.__init__ ( self , func =  func , N = N , partial = partial , name = name  , cov2getter = corrgetter )
         if corrgetter is None :
-            from ostap.math.linalg import matrix as get_corr
+            from ostap.math.linalg import mgetter as get_corr
             corrgetter = get_corr 
         self.__corr = corrgetter 
 

@@ -22,7 +22,7 @@ from   ostap.core.ostap_types import integer_types, string_types
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger      import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.minuit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -422,7 +422,8 @@ def _mn_cov_ ( self , size = -1 , root = False ) :
     matrix = array ( 'd' , [ 0 for i in range(0, size * size) ]  )
     self.mnemat ( matrix , size )
     #
-    from ostap.math.linalg import Ostap 
+    import ostap.math.linalg
+    from   ostap.core.core import Ostap 
     mtrx = Ostap.Math.SymMatrix ( size )() 
     for i in range ( 0 , size ) :
         for j in range ( i , size ) :            

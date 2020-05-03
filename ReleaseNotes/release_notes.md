@@ -11,6 +11,7 @@
   1. replace `ROOT.Double` with `ctypes.c_double`
   1. `graph_summary` : add labels and type `Graph`
   1. `graph_summary` : rename classes, remove `TMultiGraph` and add documentation`  
+  1. rewrite `ostap.math.linalg` : more functions & mixed operations: S/T-matrix/vettors+numpy
   
 ## Backward incompatible changes
 

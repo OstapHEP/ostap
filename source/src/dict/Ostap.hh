@@ -55,6 +55,8 @@
 #include "Ostap/Kinematics.h"
 #include "Ostap/Math.h"
 #include "Ostap/MatrixUtils.h"
+#include "Ostap/MatrixUtils2.h"
+#include "Ostap/MatrixUtilsT.h"
 #include "Ostap/MatrixTransforms.h"
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"

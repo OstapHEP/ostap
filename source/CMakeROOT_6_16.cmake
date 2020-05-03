@@ -84,6 +84,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
+                         src/MatrixUtils.cpp                         
                          src/Models.cpp
                          src/Models2D.cpp
                          src/MoreMath.cpp

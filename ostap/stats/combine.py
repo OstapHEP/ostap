@@ -135,10 +135,10 @@ class Combine(object) :
         for c in _covs :
 
             c1 = COV2()
-            c1.increment ( c )
+            c1 = c1 + c 
 
-            self.__cov2.increment (        c1   )
-            self.__covs.append    ( COV2 ( c1 ) )
+            self.__cov2 = self.__cov2 + c1               
+            self.__covs.append ( COV2 ( c1 ) )
 
         self.__covs   = tuple ( self.__covs ) 
         self.combiner = COMBINER( self.data , self.cov2 )
