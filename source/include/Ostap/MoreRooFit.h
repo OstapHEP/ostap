@@ -318,6 +318,59 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
+    /** @class Abs
+     *  Evaluate \f$ abs(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Abs: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Abs , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Abs  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Abs ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Abs ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Abs  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Abs ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Abs () =  default ;
+      // ======================================================================
+      // copy 
+      Abs ( const Abs&     right       , 
+            const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Abs () {} ;
+      // ======================================================================
+      // clone method 
+      Abs* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
     /** @class Exp
      *  Evaluate \f$ exp(ab) \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
@@ -416,6 +469,59 @@ namespace Ostap
       // ======================================================================
       // clone method 
       Log* clone ( const char* newname ) const override ;
+      // ====================================================================== 
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;    
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Log10
+     *  Evaluate \f$ \log10 ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Log10: public Division 
+    {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::Log10 , 1 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Log10  ( const std::string& name  , 
+               const std::string& title , 
+               RooAbsReal&        a     , 
+               RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Log10 ( RooAbsReal&         a           , 
+              RooAbsReal&         b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Log10  ( name , title , a , b )
+      {}
+      /// constructor with one variable
+      Log10  ( const std::string& name  , 
+               const std::string& title , 
+               RooAbsReal&        a     ) 
+        : Log10 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      /// default constructor 
+      Log10 () =  default ;
+      // ======================================================================
+      // copy 
+      Log10 ( const Log10&   right       , 
+              const char*    newname = 0 ) 
+        : Division ( right  , newname ) 
+      {}
+      // ======================================================================
+      // destructor 
+      virtual ~Log10 () {} ;
+      // ======================================================================
+      // clone method 
+      Log10* clone ( const char* newname ) const override ;
       // ====================================================================== 
     protected:
       // ======================================================================

@@ -30,6 +30,7 @@ from   ostap.core.core        import dsID , hID ,  VE , Ostap , valid_pointer
 from   ostap.core.ostap_types import integer_types
 from   ostap.logger.utils     import roo_silent , rooSilent
 from   ostap.fitting.utils    import H3D_dset , component_similar , component_clone
+from   ostap.fitting.funbasic import FUNC3
 from   ostap.fitting.basic    import PDF  , Flat1D 
 from   ostap.fitting.fit2d    import PDF2 , Model2D 
 from   ostap.fitting.roofit   import SETVAR
@@ -43,31 +44,15 @@ else                       : logger = getLogger ( __name__              )
 # The helper base class for implementation of 3D-pdfs 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2017-11-11
-class PDF3 (PDF2) :
+class PDF3 (PDF2,FUNC3) :
     """ Useful helper base class for implementation of PDFs for 3D-fit
     """
-    def __init__ ( self , name , xvar = None , yvar = None , zvar  = None , special = False ) : 
+    def __init__ ( self , name , xvar , yvar , zvar, special = False ) : 
         
-        PDF2.__init__ ( self , name , xvar , yvar , special = special ) 
-        
-        ## create the variable 
-        if isinstance ( zvar , tuple ) and 2 == len(zvar) :  
-            self.__zvar = self.make_var ( zvar               , ## var 
-                                    'z'                , ## name 
-                                    'z-variable(mass)' , ## title/comment
-                                    None               , ## fix ?
-                                    *zvar              ) ## min/max 
-        elif isinstance ( zvar , ROOT.RooAbsReal ) :
-            self.__zvar = self.make_var ( zvar               , ## var 
-                                    'z'                , ## name 
-                                    'z-variable/mass'  , ## title/comment
-                                    fix = None         ) ## fix ? 
-        else :
-            self.warning('``z-variable''is not specified properly %s/%s' % ( zvar , type ( zvar ) ) )
-            self.__zvar = self.make_var( zvar , 'z' , 'z-variable' )
+        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special ) 
+        FUNC3.__init__ ( self , self.name , self.xvar , self.yvar , zvar )
 
-
-        self.vars.add ( self.__zvar )
+        self.vars.add ( self.zvar )
         
         ## save the configuration
         self.config = {
@@ -77,20 +62,6 @@ class PDF3 (PDF2) :
             'zvar' : self.zvar ,            
             }
         
-    def zminmax ( self ) :
-        """Min/max values for z-variable"""
-        return self.__zvar.minmax()
-    
-    @property 
-    def zvar ( self ) :
-        """``z''-variable for the fit (same as ``z'')"""
-        return self.__zvar
-
-    @property 
-    def z    ( self ) :
-        """``z''-variable for the fit (same as ``zvar'')"""
-        return self.__zvar
-
     # =========================================================================
     ## make the actual fit 
     #  @code

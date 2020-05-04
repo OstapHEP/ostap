@@ -31,8 +31,10 @@ ClassImp(Ostap::MoreRooFit::Division      )
 ClassImp(Ostap::MoreRooFit::Fraction      )
 ClassImp(Ostap::MoreRooFit::Asymmetry     )
 ClassImp(Ostap::MoreRooFit::Power         )
+ClassImp(Ostap::MoreRooFit::Abs           )
 ClassImp(Ostap::MoreRooFit::Exp           )
 ClassImp(Ostap::MoreRooFit::Log           )
+ClassImp(Ostap::MoreRooFit::Log10         )
 ClassImp(Ostap::MoreRooFit::Erf           )
 ClassImp(Ostap::MoreRooFit::Sin           )
 ClassImp(Ostap::MoreRooFit::Cos           )
@@ -468,6 +470,38 @@ Double_t Ostap::MoreRooFit::Power::evaluate () const
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::Abs::Abs
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_   ( name , "abs" , a , b ) , 
+      title1_ ( name , "abs" , a , b ) , a , b )
+{}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::Abs* 
+Ostap::MoreRooFit::Abs::clone ( const char* newname ) const 
+{ return new Abs ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Abs::evaluate () const 
+{
+  const long double a = m_A ;
+  const long double b = m_B ;
+  //
+  return std::abs ( a * b ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::Exp::Exp
 ( const std::string& name  , 
   const std::string& title , 
@@ -494,6 +528,7 @@ Double_t Ostap::MoreRooFit::Exp::evaluate () const
   return s_zero ( a ) || s_zero ( b ) ? 0 : std::exp ( a * b ) ;
 }
 // ============================================================================
+
 
 // ============================================================================
 // constructor with two variables 
@@ -530,6 +565,43 @@ Double_t Ostap::MoreRooFit::Log::evaluate () const
 }
 // ============================================================================
 
+
+
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Log10::Log10
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : Division 
+    ( name_   ( name , "log10" , a , b ) , 
+      title1_ ( name , "log10" , a , b ) , a , b )
+{}
+// ============================================================================
+// cloning
+// ============================================================================
+Ostap::MoreRooFit::Log10* 
+Ostap::MoreRooFit::Log10::clone ( const char* newname ) const 
+{ return new Log10 ( *this , newname ) ; }
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Log10::evaluate () const 
+{
+  const long double a  = m_A ;
+  const long double b  = m_B ;
+  //
+  const long double ab = a * b ;
+  
+  static const std::string s_self { "Ostap::MoreRooFit::Log10" } ;
+  Ostap::Assert ( ab > 0 , s_negative_log , s_self ) ;
+  //
+  return std::log10 ( ab ) ;
+}
+// ============================================================================
 
 // ============================================================================
 // constructor with two variables 

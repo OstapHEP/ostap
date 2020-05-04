@@ -19,22 +19,26 @@ __all__     = (
     'ConvexPoly'     , ## monotonic convex/concave polynomial      (RooAbsReal)
     'ConvexOnlyPoly' , ## convex/concave polynomial                (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
+    'Abs'            , ## absolute value                           (RooAbsReal)
     'Exp'            , ## exponent                                 (RooAbsReal)
     'Log'            , ## logarithm                                (RooAbsReal)
+    'Log10'          , ## logarithm                                (RooAbsReal)
     'Sin'            , ## Sine                                     (RooAbsReal)
     'Cos'            , ## Cosine                                   (RooAbsReal)
     'Tan'            , ## Tangent                                  (RooAbsReal)
     'Tanh'           , ## hyperbolic tangent                       (RooAbsReal)
-    #
-    'var_sum'        , ## sum                         for RooAbsReal objects           
-    'var_mul'        , ## product                     for RooAbsReal objects           
-    'var_sub'        , ## subtraction                 for RooAbsReal objects           
-    'var_div'        , ## division                    for RooAbsReal objects           
-    'var_fraction'   , ## fraction                    for RooAbsReal objects           
-    'var_asymmetry'  , ## asymmetry                   for RooAbsReal objects           
+    ##
+    'var_sum'        , ## sum                          for RooAbsReal objects           
+    'var_mul'        , ## product                      for RooAbsReal objects           
+    'var_sub'        , ## subtraction                  for RooAbsReal objects           
+    'var_div'        , ## division                     for RooAbsReal objects           
+    'var_fraction'   , ## fraction                     for RooAbsReal objects           
+    'var_asymmetry'  , ## asymmetry                    for RooAbsReal objects           
     'var_pow'        , ## pow                 function for RooAbsReal objects           
+    'var_abs'        , ## absolutevalue       function for RooAbsReal objects           
     'var_exp'        , ## exponent            function for RooAbsReal objects           
     'var_log'        , ## logarithm           function for RooAbsReal objects           
+    'var_log10'      , ## logarithm           function for RooAbsReal objects           
     'var_erf'        , ## error               function for RooAbsReal objects           
     'var_sin'        , ## sine                function for RooAbsReal objects           
     'var_cos'        , ## cosine              function for RooAbsReal objects           
@@ -42,7 +46,7 @@ __all__     = (
     'var_tanh'       , ## hyperbolic tangent  function for RooAbsReal objects           
     'var_atan2'      , ## inverse tangent     function for RooAbsReal objects           
     'var_gamma'      , ## gamma               function for RooAbsReal objects           
-    'var_lgamma'     , ## logaruithm of gamma function for RooAbsReal objects           
+    'var_lgamma'     , ## logarithm of gamma  function for RooAbsReal objects           
     'var_igamma'     , ## 1/gamma             function for RooAbsReal objects
     'scale_var'      , ## var_mul
     'add_var'        , ## var_sum
@@ -50,7 +54,7 @@ __all__     = (
     'ratio_var'      , ## var_div
     'fraction_var'   , ## var_fraction
     'asymmetry_var'  , ## var_asymmetry
-    )
+   )
 # =============================================================================
 import ROOT, math
 # =============================================================================
@@ -482,6 +486,30 @@ class FAB(FUNC):
 
 
 # =============================================================================
+# @class Abs
+# \f[ f = abs{ab} \f] 
+# @see Ostap::MoreRooFit::Exp
+class Abs (FAB) :
+    """ Absolute value 
+    f = abs( ab ) 
+    - see Ostap.MoreRooFit.Abs
+    """
+    def __init__ ( self       ,
+                   a          ,   ## a 
+                   xvar       ,
+                   b    = 1.0 ,  ## b 
+                   name = ''  ) :
+        
+        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "abs_%s_%s" )
+        
+        self.fun  = Ostap.MoreRooFit.Abs (
+            "abs_%s"   % self.name ,
+            "Abs(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
+            self.a      ,
+            self.b  
+            )
+        
+# =============================================================================
 # @class Exp
 # \f[ f = \mathrm{e}^{ab} \f] 
 # @see Ostap::MoreRooFit::Exp
@@ -529,6 +557,30 @@ class Log (FAB) :
             self.b  
             )
 
+# =============================================================================
+# @class Log10
+# \f[ f = \log10 ab \f] 
+# @see Ostap::MoreRooFit::Log
+class Log10 (FAB) :
+    """Decimal Logarithm
+    f = log(ab) 
+    - see Ostap.MoreRooFit.Log10
+    """ 
+    def __init__ ( self       ,
+                   a          ,   ## a 
+                   xvar       ,
+                   b    = 1.0 ,  ## b 
+                   name = ''  ) :
+
+        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Log10_%s_%s" )
+            
+        self.fun  = Ostap.MoreRooFit.Log10 (
+            "log10_%s"        % self.name ,
+            "Log10(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
+            self.a      ,
+            self.b  
+            )
+        
 # =============================================================================
 # @class Sin
 # \f[ f = \sin ab \f] 
@@ -629,6 +681,33 @@ class Tanh ( FUNC ) :
 ## local storage of temporary variables 
 KEEPER = MakeVar()
 # ==============================================================================
+## absolute value   \f$ f = abs{ab}\f$
+#  @code
+#  var = ...
+#  e   = var_abs ( var ) 
+#  @endcode 
+def var_abs ( a , b = 1 , name = '' , title = '' ) :
+    """Absolute value: f(x) = abs(ab)
+    >>> var = ...
+    >>> e   = var_abs ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.abs ( float ( a ) * float ( b ) )
+        return ROOT.RooRealConstant.value ( ab )          ## RETURN
+    elif fa : a = ROOT.RooRealConstant.value ( a )
+    elif fb : b = ROOT.RooRealConstant.value ( b )
+    #
+    result    = Ostap.MoreRooFit.Abs( a, b , name , title )
+    #
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
+    #
+    return result
+
+# ==============================================================================
 ## exponent  \f$ f = \mathrm{e}^{ab}\f$
 #  @code
 #  var = ...
@@ -649,9 +728,9 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Exp ( a, b , name , title )
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -676,9 +755,36 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Log ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
+    #
+    return result
+
+# ==============================================================================
+## logarithm  \f$ f = \log10 ab \f$
+#  @code
+#  var = ...
+#  e   = var_log10 ( var ) 
+#  @endcode 
+def var_log10 ( a , b = 1 , name = '' , title = '' ) :
+    """logarithm f(x) = log10(ab)
+    >>> var = ...
+    >>> e   = var_log10 ( var ) 
+    """
+    fa = isinstance ( a , num_types )
+    fb = isinstance ( b , num_types )
+    if fa and fb :
+        ab = math.log10 ( float ( a ) * float ( b ) )       ## RETURN
+        return ROOT.RooRealConstant.value ( ab )
+    elif fa : a = ROOT.RooRealConstant.value ( a )
+    elif fb : b = ROOT.RooRealConstant.value ( b )
+    #
+    result    = Ostap.MoreRooFit.Log10 ( a, b , name , title ) 
+    #
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -703,9 +809,9 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Erf ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -731,9 +837,9 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Sin ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -759,9 +865,9 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Cos ( a, b , name , title )
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -786,9 +892,9 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Tan ( a, b , name , title )
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -814,9 +920,9 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Tanh ( a, b , name , title )
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -841,9 +947,9 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Atan2 ( a, b , name , title )
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -868,9 +974,9 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -895,9 +1001,9 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -922,9 +1028,9 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     #
     result    = Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
     #
-    KEEPER.aux_keep.add ( a )
-    KEEPER.aux_keep.add ( b )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( a )
+    KEEPER.aux_keep.append ( b )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -954,9 +1060,9 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -986,9 +1092,9 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -1019,9 +1125,9 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     # 
     result     = Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -1051,9 +1157,9 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -1084,9 +1190,9 @@ def var_fraction ( a , b , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -1117,9 +1223,9 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 
@@ -1151,9 +1257,9 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     #
     result     = Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
     #
-    KEEPER.aux_keep.add ( v1 )
-    KEEPER.aux_keep.add ( v2 )
-    KEEPEP.aux_keep.add ( result )
+    KEEPER.aux_keep.append ( v1 )
+    KEEPER.aux_keep.append ( v2 )
+    KEEPER.aux_keep.append ( result )
     #
     return result
 

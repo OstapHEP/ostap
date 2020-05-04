@@ -26,15 +26,14 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random 
-from   ostap.core.core      import dsID , VE , Ostap, hID , iszero, valid_pointer
-from   ostap.core.ostap_types     import integer_types 
-from   ostap.fitting.roofit import SETVAR
-from   ostap.logger.utils   import roo_silent, rooSilent, rootWarning 
-from   ostap.fitting.basic  import PDF , Flat1D 
-from   ostap.fitting.utils  import ( H2D_dset        ,
-                                     component_similar , component_clone )
-from   ostap.core.ostap_types     import num_types, list_types 
-from   builtins             import range
+from   builtins               import range
+from   ostap.core.core        import dsID , VE , Ostap, hID , iszero, valid_pointer
+from   ostap.core.ostap_types import integer_types, num_types, list_types  
+from   ostap.fitting.roofit   import SETVAR
+from   ostap.logger.utils     import roo_silent, rooSilent, rootWarning 
+from   ostap.fitting.basic    import PDF , Flat1D
+from   ostap.fitting.funbasic import FUNC2 
+from   ostap.fitting.utils    import H2D_dset , component_similar , component_clone 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.fit2d' )
@@ -44,32 +43,17 @@ else                       : logger = getLogger ( __name__              )
 # The helper base class for implementation of 2D-pdfs 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2014-08-21
-class PDF2 (PDF) :
+class PDF2 (PDF,FUNC2) :
     """ Useful helper base class for implementation of PDFs for 2D-fit
     """
-    def __init__ ( self , name , xvar = None , yvar = None , special = False ) : 
+    def __init__ ( self , name , xvar , yvar , special = False ) : 
         
-        PDF.__init__ ( self , name , xvar , special = special )
-        
-        self.__yvar       = None
-        
-        ## create the variable 
-        if isinstance ( yvar , tuple ) and 2 == len(yvar) :  
-            self.__yvar = self.make_var ( yvar         , ## var 
-                                    'y'          , ## name 
-                                    'y-variable' , ## title/comment
-                                    None         , ## fix?
-                                    *yvar        ) ## min/max 
-        elif isinstance ( yvar , ROOT.RooAbsReal ) :
-            self.__yvar = self.make_var ( yvar         , ## var 
-                                    'y'          , ## name 
-                                    'y-variable' , ## title/comment
-                                    fix = None   ) ## fix ? 
-        else :
-            self.warning('``y-variable''is not specified properly %s/%s' % ( yvar , type ( yvar ) ) )
-            self.__yvar = self.make_var( yvar , 'y' , 'y-variable' )
+        logger.error('I AM PDF2-init/0')
 
-        self.vars.add ( self.__yvar )
+        PDF  .__init__ ( self ,      name ,      xvar , special = special )
+        FUNC2.__init__ ( self , self.name , self.xvar , yvar  )
+            
+        logger.error('I AM PDF2-init/1')
         
         ## save the configuration
         self.config = {
@@ -78,20 +62,6 @@ class PDF2 (PDF) :
             'yvar' : self.yvar ,            
             }
         
-    def yminmax ( self ) :
-        """Min/max values for y-varibale"""
-        return self.__yvar.minmax()
-    
-    @property 
-    def yvar ( self ) :
-        """``y''-variable for the fit (same as ``y'')"""
-        return self.__yvar
-
-    @property 
-    def y    ( self ) :
-        """``y''-variable for the fit (same as ``yvar'')"""
-        return self.__yvar
-
     # =========================================================================
     ## make the actual fit (and optionally draw it!)
     #  @code

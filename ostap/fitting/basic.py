@@ -53,9 +53,11 @@ else                       : logger = getLogger ( __name__              )
 class PDF (FUNC) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
-    def __init__ ( self , name ,  xvar = None , special = False ) :
+    def __init__ ( self , name ,  xvar , special = False ) :
 
         FUNC.__init__  ( self , name , xvar = xvar ) 
+
+        logger.error('I AM PDF-init')
 
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
@@ -486,6 +488,7 @@ class PDF (FUNC) :
                nbins                 = 100  ,   ## Frame binning
                silent                = True ,   ## silent mode ?
                style                 = None ,   ## use another style ?
+               drawvar               = None ,   ## drawvar 
                args                  = ()   , 
                **kwargs                     ) :
         """  Visualize the fits results
@@ -545,7 +548,7 @@ class PDF (FUNC) :
         # 
         with roo_silent ( silent ) , useStyle ( style ) :
 
-            drawvar = self.draw_var if self.draw_var else self.xvar  
+            drawvar = drawvar if drawvar else ( self.draw_var if self.draw_var else self.xvar )  
 
             binned = dataset and isinstance ( dataset , ROOT.RooDataHist )
 
