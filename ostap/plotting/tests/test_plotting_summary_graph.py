@@ -54,7 +54,7 @@ def test_summary1 () :
         ROOT.gStyle.SetEndErrorSize (5    )
         ROOT.gStyle.SetTickLength   (0.008)
         
-    result = draw_summary ( data  , average  = ave , vmin = 3860 , vmax = 3877 )  
+    result = draw_summary ( data  , average  = ave , vmin = 3860 , vmax = 3877 , offset = 1.0 )  
 
     time.sleep (3)
 

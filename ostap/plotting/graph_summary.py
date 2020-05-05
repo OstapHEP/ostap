@@ -523,7 +523,10 @@ class Summary(object) :
 # average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
 # result = make_summary ( data + [ average ]  , average  = average , vmax = 5 )
 # @endcode
-def make_summary ( data  , average = None  , transpose = False  ) :  
+def make_summary ( data               ,
+                   average   = None   ,
+                   transpose = False  ,
+                   offset    = 0.5    ) :  
     """Prepare ``summary'' plot
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -557,7 +560,7 @@ def make_summary ( data  , average = None  , transpose = False  ) :
 
     for i , record in enumerate ( ldata ) :
 
-        iv = np - i - 0.5
+        iv = np - i - 1.0 + offset 
 
         if   isinstance ( record  , Record ) :
             
@@ -590,7 +593,7 @@ def make_summary ( data  , average = None  , transpose = False  ) :
     bands = () 
     if isinstance( average , VE ) : average  = Average ( average  )
     if average  : 
-        bands = average.bands ( np ) 
+        bands = average.bands ( np - 1.0 + 2 * offset ) 
 
     labels = tuple ( labels )  
     
@@ -658,7 +661,8 @@ def draw_summary ( data      = []     ,
                    transpose = False  ,
                    average   = None   , 
                    vmin      = None   ,
-                   vmax      = None   ) : 
+                   vmax      = None   ,
+                   offset    = 0.5    ) : 
     """Prepare and draw the ``summary'' plot
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ...          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -682,7 +686,10 @@ def draw_summary ( data      = []     ,
     >>> result = draw_summary ( data + [ average ]  , average  = average , vmax = 5 )
     """
     
-    summary = make_summary ( data , average  , transpose )
+    summary = make_summary ( data                  ,
+                             average   = average   ,
+                             transpose = transpose ,
+                             offset    = offset    )
 
     xmin, xmax = summary.xminmax()
     ymin, ymax = summary.xminmax()
@@ -692,7 +699,7 @@ def draw_summary ( data      = []     ,
         if vmin is None : vmin = ymin
         if vmax is None : vmax = ymax
 
-        histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( summary ) )
+        histo = ROOT.TH1F ( hID() , '' , 10 , 0 , len ( summary ) - 1 + 2 * offset )
 
         histo.GetXaxis().SetNdivisions(0)
         histo.SetMinimum ( vmin  )
@@ -707,7 +714,7 @@ def draw_summary ( data      = []     ,
 
         histo.GetYaxis().SetNdivisions(0)
         histo.SetMinimum ( 0  )
-        histo.SetMaximum ( len ( summary )  )
+        histo.SetMaximum ( len ( summary ) - 1 + 2 * offset  )
 
     summary.histo = histo
     summary.draw()

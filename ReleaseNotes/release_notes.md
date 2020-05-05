@@ -4,6 +4,7 @@
   1. add new method: derivatives and integration for FUNC/FUNC2/FUNC3 classes 
   1. add the test/example for `graph_summary`  
   1. small optimization for `linalg2'
+  1. polishing for `graph_summary` - add `offset` argument
   
 ## Backward incompatible changes
 
