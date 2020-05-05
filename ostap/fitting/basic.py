@@ -57,8 +57,6 @@ class PDF (FUNC) :
 
         FUNC.__init__  ( self , name , xvar = xvar ) 
 
-        logger.error('I AM PDF-init')
-
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
         self.__components            = ROOT.RooArgList ()
@@ -3331,7 +3329,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__signal_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3351,7 +3349,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__background_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
                 
     @property
@@ -3371,7 +3369,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__components_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3410,7 +3408,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
     
     @property
@@ -3448,7 +3446,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property
@@ -3486,7 +3484,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property 
@@ -3522,7 +3520,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property

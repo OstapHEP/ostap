@@ -22,7 +22,7 @@ __all__     = (
 # =============================================================================
 import ROOT, math, sys 
 from   sys                           import version_info as python_version 
-from   ostap.core.ostap_types        import list_types , num_types     
+from   ostap.core.ostap_types        import list_types , num_types, is_good_number     
 from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
 from   ostap.logger.utils            import roo_silent , rootWarning
@@ -50,7 +50,7 @@ class FUNC(XVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(FUNC, cls).__new__( cls )
         else                         : obj = super(FUNC, cls).__new__( cls , *args , **kwargs )
-        logger.error('FUNC-new')
+        ##
         obj.__func_init = False  
         return obj
         
@@ -69,11 +69,9 @@ class FUNC(XVar) :
         ## name is defined via base class MakeVar 
         self.name  = name ## name is defined via the base class MakeVar 
      
-        logger.error('I AM FUNC-init')
+        self.__vars      = ROOT.RooArgSet  ()
+        self.__variables = [] 
 
-        self.__vars = ROOT.RooArgSet  ()
-
-        
         self.__config       = {}
         self.__fun          = None
         
@@ -88,7 +86,8 @@ class FUNC(XVar) :
         self.__dfdx = None
         self.__intx = None
         
-        self.vars.add ( self.xvar )
+        self.vars.add         ( self.xvar )
+        self.variables.append ( self.xvar )
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar  }
 
@@ -112,7 +111,12 @@ class FUNC(XVar) :
     @property 
     def vars ( self ) :
         """``vars'' : variables/observables (as ROOT.RooArgSet)"""
-        return self.__vars    
+        return self.__vars
+
+    @property 
+    def variables ( self ) :
+        """``variables'' : variables/observables at list"""
+        return self.__variables
 
     @property
     def fun  ( self ) :
@@ -485,9 +489,10 @@ class FUNC(XVar) :
         >>> pdf = ...
         >>> print pdf.derivative ( 0 ) 
         """
-        ## check limits 
-        if hasattr ( self.xvar , 'getMin' ) and x < self.xvar.getMin() : return 0.
-        if hasattr ( self.xvar , 'getMax' ) and x > self.xvar.getMax() : return 0.
+        ## check limits
+        if self.xminmax() :
+            xmin , xmax = self.xminmax ()
+            if x < xmin or x > xmax : return 0
 
         ## make a try to use analytical derivatives 
         if self.tricks  and hasattr ( self , 'pdf' ) :
@@ -516,16 +521,19 @@ class FUNC(XVar) :
         >>> pdf = ...
         >>> x = pdf.minimum()
         """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax =  min ( xmax , self.xminmax()[1] )
+        if self.xminmax () :
+            xmn , xmx = self.xminmax() 
+            xmin = xmn if xmin is None else max ( xmin , xmn )
+            xmax = xmx if xmax is None else min ( xmax , xmx )
             
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
+        assert is_good_number ( xmin ) , 'xmin is not specified!'
+        assert is_good_number ( xmax ) , 'xmax is not specified!'
+        assert xmin < xmax             , 'Invalid xmin/xmax : %s/%s' % ( xmin , xmax )
+
+        if x0 is None  :  x0 = 0.5 * ( xmin + xmax )
         
         if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+            self.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
         
         from ostap.math.minimize import sp_minimum_1D
         return sp_minimum_1D (  self , xmin , xmax , x0 )
@@ -541,16 +549,20 @@ class FUNC(XVar) :
         >>> pdf = ...
         >>> x = pdf.maximum()
         """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax  = min ( xmax , self.xminmax()[1] )
+        
+        if self.xminmax () :
+            xmn , xmx = self.xminmax() 
+            xmin = xmn if xmin is None else max ( xmin , xmn )
+            xmax = xmx if xmax is None else min ( xmax , xmx )
             
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
+        assert is_good_number ( xmin ) , 'xmin is not specified!'
+        assert is_good_number ( xmax ) , 'xmax is not specified!'
+        assert xmin < xmax             , 'Invalid xmin/xmax : %s/%s' % ( xmin , xmax )
+
+        if x0 is None  :  x0 = 0.5 * ( xmin + xmax )
 
         if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+            self.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
         
         from ostap.math.minimize import sp_maximum_1D
         return sp_maximum_1D (  self , xmin , xmax , x0 )
@@ -689,7 +701,7 @@ class FUNC2(FUNC,YVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(FUNC2, cls).__new__( cls )
         else                         : obj = super(FUNC2, cls).__new__( cls , *args , **kwargs )
-        logger.error('FUNC2-new')
+        ##
         obj.__func2_init = False  
         return obj
     
@@ -698,17 +710,14 @@ class FUNC2(FUNC,YVar) :
         if self.__func2_init : return 
         else                 : self.__func2_init = True  
         
-        logger.error('I AM FUNC2-init/0')
-        
         FUNC .__init__ ( self , name , xvar )
         YVar .__init__ ( self , yvar )
         
-        logger.error('I AM FUNC2-init/1')
-
         self.__dfdy = None 
         self.__inty = None 
         
-        self.vars.add ( self.yvar )
+        self.vars     .add    ( self.yvar )
+        self.variables.append ( self.yvar )
         
         ## save the configuration
         self.config = {
@@ -892,7 +901,23 @@ class FUNC2(FUNC,YVar) :
                            silent   = silent    ,
                            in_range = in_range  ,
                            args     = args      , **kwargs )
+
+
+    # =========================================================================
+    ## disabled 
+    def __disabled ( self , name ) :
+        """Disabled method"""
+        self.error ('Method "%s" is disabled for FUNC2/DUNC3' % name )
+        raise NotImplementedError('Method "%s"is disabled for FUNC2/DUNC3' % name  )
     
+    # =========================================================================
+    def minimum    ( self , *args , **kwargs ) : return self.__disabled ( "minimum"    ) 
+    def maximum    ( self , *args , **kwargs ) : return self.__disabled ( "maximum"    ) 
+    def fwhm       ( self , *args , **kwargs ) : return self.__disabled ( "fwhm"       ) 
+    def mid_point  ( self , *args , **kwargs ) : return self.__disabled ( "mid_point"  ) 
+    def mode       ( self , *args , **kwargs ) : return self.__disabled ( "mode"       ) 
+    def derivative ( self , *args , **kwargs ) : return self.__disabled ( "derivative" ) 
+
 # =============================================================================
 ## @class Fun2D
 #  Simple wrapper for 2D-function
@@ -956,7 +981,7 @@ class FUNC3(FUNC2,ZVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(FUNC3, cls).__new__( cls )
         else                         : obj = super(FUNC3, cls).__new__( cls , *args , **kwargs )
-        logger.error('FUNC3-new')
+        ##
         obj.__func3_init = False  
         return obj
 
@@ -972,7 +997,8 @@ class FUNC3(FUNC2,ZVar) :
         self.__dfdz = None 
         self.__intz = None 
         
-        self.vars.add ( self.zvar )
+        self.vars     .add    ( self.zvar )
+        self.variables.append ( self.zvar )
         
         ## save the configuration
         self.config = {

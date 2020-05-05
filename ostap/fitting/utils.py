@@ -203,11 +203,9 @@ class MakeVar ( object ) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
-            
+        ##
         obj.__aux_keep = []                      ## ATTENTION!        
         obj.__name     = None                    ## ATTENTION!
-
-        logger.error('I AM MAKE VAR-new')
         return obj
     
     ##  produce ERROR    message using the local logger 
@@ -1586,7 +1584,7 @@ class XVar(MakeVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(XVar, cls).__new__( cls )
         else                         : obj = super(XVar, cls).__new__( cls , *args , **kwargs )
-        logger.error('XVAR-new')
+        ##
         obj.__xvar_init = False  
         return obj
 
@@ -1642,7 +1640,7 @@ class YVar(MakeVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(YVar, cls).__new__( cls )
         else                         : obj = super(YVar, cls).__new__( cls , *args , **kwargs )
-        logger.error('YVAR-new')
+        ##
         obj.__yvar_init = False  
         return obj
 
@@ -1699,7 +1697,7 @@ class ZVar(MakeVar) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(ZVar, cls).__new__( cls )
         else                         : obj = super(ZVar, cls).__new__( cls , *args , **kwargs )
-        logger.error('ZVAR-new')
+        ##
         obj.__zvar_init = False  
         return obj
         

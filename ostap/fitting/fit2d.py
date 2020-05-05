@@ -48,13 +48,9 @@ class PDF2 (PDF,FUNC2) :
     """
     def __init__ ( self , name , xvar , yvar , special = False ) : 
         
-        logger.error('I AM PDF2-init/0')
-
         PDF  .__init__ ( self ,      name ,      xvar , special = special )
         FUNC2.__init__ ( self , self.name , self.xvar , yvar  )
-            
-        logger.error('I AM PDF2-init/1')
-        
+                    
         ## save the configuration
         self.config = {
             'name' : self.name ,
@@ -612,10 +608,10 @@ class PDF2 (PDF,FUNC2) :
         if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax )
         
         if not xmin <= x0[0] <= xmax :
-            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+            self.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
 
         if not ymin <= x0[1] <= ymax : 
-            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+            self.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
         
         from ostap.math.minimize import sp_minimum_2D
         return sp_minimum_2D (  self ,
@@ -648,10 +644,10 @@ class PDF2 (PDF,FUNC2) :
         if not x0 : x0 = 0.5 * ( xmin + xmax ) , 0.5 * ( ymin + ymax )
 
         if not xmin <= x0[0] <= xmax :
-            logger.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
+            self.error("Wrong xmin/x0[0]/xmax: %s/%s/%s"   % ( xmin , x0[0] , xmax ) )
 
         if not ymin <= x0[1] <= ymax : 
-            logger.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
+            self.error("Wrong ymin/x0[1]/ymax: %s/%s/%s"   % ( ymin , x0[1] , ymax ) )
 
         from ostap.math.minimize import sp_maximum_2D
         return sp_maximum_2D (  self ,

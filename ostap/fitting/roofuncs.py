@@ -15,18 +15,10 @@ __date__    = "2020-03-08"
 # =============================================================================
 __all__     = (
     'BernsteinPoly'  , ## generic polynomial in Bernstein form     (RooAbsReal)
-    'MonotonicPoly'  , ## monitonic polynomial                     (RooAbsReal)
+    'MonotonicPoly'  , ## monotonic polynomial                     (RooAbsReal)
     'ConvexPoly'     , ## monotonic convex/concave polynomial      (RooAbsReal)
     'ConvexOnlyPoly' , ## convex/concave polynomial                (RooAbsReal)
     'ScaleAndShift'  , ## scale and shift                          (RooAbsReal)
-    'Abs'            , ## absolute value                           (RooAbsReal)
-    'Exp'            , ## exponent                                 (RooAbsReal)
-    'Log'            , ## logarithm                                (RooAbsReal)
-    'Log10'          , ## logarithm                                (RooAbsReal)
-    'Sin'            , ## Sine                                     (RooAbsReal)
-    'Cos'            , ## Cosine                                   (RooAbsReal)
-    'Tan'            , ## Tangent                                  (RooAbsReal)
-    'Tanh'           , ## hyperbolic tangent                       (RooAbsReal)
     ##
     'var_sum'        , ## sum                          for RooAbsReal objects           
     'var_mul'        , ## product                      for RooAbsReal objects           
@@ -65,7 +57,7 @@ else                       : logger = getLogger ( __name__                 )
 from ostap.core.core                import Ostap 
 from ostap.core.ostap_types         import num_types
 from ostap.fitting.utils            import ParamsPoly , ShiftScalePoly, MakeVar  
-from ostap.fitting.funbasic         import FUNC
+from ostap.fitting.funbasic         import FUNC, Fun1D, Fun2D, Fun3D
 # =============================================================================
 ## @class BernsteinPoly
 #  Polynomial in Bernstein form
@@ -429,26 +421,31 @@ class FAB(FUNC):
     """
     def __init__ ( self                  ,
                    a                     ,  ## a                   
-                   xvar                  ,
+                   xvar    = None        ,
                    b       = 1.0         ,  ## b 
                    name    = ''          ,
                    pattern = 'FAB_%s_%s' ) :
-                   
-        assert isinstance ( a , ( ROOT.RooAbsReal, FUNC ) ) ,\
-               "Invalid type of ``func'' %s/%s" % ( a , type ( a ) )
 
+
+        self.__a0 = a
+        self.__b0 = b
+        
+        if instance ( a , FUNC ) :
+            a    = a.fun
+            if not xvar : xvar = a.xvar
+            
         if not name :
             if hasattr ( b , 'name' ) : name = pattern % ( a.name , b.name  )
             else                      : name = pattern % ( a.name , b       )
-                    
+
         FUNC.__init__ ( self , name , xvar = xvar )
 
-        self.__func0 = a 
-
-        self.__a  = a.fun if isinstance ( a , FUNC ) else a 
+        if isinstance ( b , FUNC ) : b = b.fun
+                
+        self.__a  = a
         self.__b  = self.make_var ( b ,
-                                    "b_%s"              % self.name ,
-                                    "scale for %s"      % self.name , False , b ) 
+                                    "b_%s"      % self.name ,
+                                    "B for %s"  % self.name , False , b ) 
         
         if not self.xvar in self.a.getParameters ( 0 ) and \
            not self.xvar in self.b.getParameters ( 0 ) and \
@@ -466,220 +463,460 @@ class FAB(FUNC):
     def a ( self ) :
         """``a'' : f(x) = F(ab) """
         return self.__a
-    @a.setter
-    def a ( self , value ) :
-        vv = float ( value )
-        if self.__a.minmax () and not vv in self.__a  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
-        self.__a.setVal ( vv )
 
     @property
     def b ( self ) :
         """``b''  : f(x) = F(ab)"""
         return self.__b
-    @b.setter
-    def b ( self , value ) :
-        vv = float ( value )
-        if self.__b.minmax () and not vv in self.__b  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
-        self.__b.setVal ( vv )
 
 
 # =============================================================================
-# @class Abs
-# \f[ f = abs{ab} \f] 
-# @see Ostap::MoreRooFit::Exp
-class Abs (FAB) :
-    """ Absolute value 
-    f = abs( ab ) 
-    - see Ostap.MoreRooFit.Abs
+## Helper function to create the function
+def _make_fun_ ( fun , args , name ) :
+    """Helper function to create the function
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    
+    num = len ( args )
+    
+    if   1 == num : return Fun1D ( fun , name = name , *args )
+    elif 2 == num : return Fun2D ( fun , name = name , *args )
+    elif 3 == num : return Fun3D ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
+
+
+_b_types = num_types + ( FUNC , ROOT.RooAbsReal ) 
+# ===============================================================================
+def _fn_make_fun_ ( afun         ,
+                    b            ,
+                    cpptyp       ,
+                    namepat      ,
+                    swap = False ) :
+    
+    
+    assert isinstance  ( b , _b_types ) , 'Invalid argument type %s' % type ( b )
+    
+    vars = [ v for v in afun.variables ] 
+    
+    a = afun.fun
+    
+    if   isinstance ( b , num_types ) :
+        b = ROOT.RooRealConstant.value ( b )
+    elif insistance ( b , FUNC ) :
+        vars += [ v for v in b.variables if not v in vars ]
+        b = b.fun
+
         
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "abs_%s_%s" )
+    afun.aux_keep.append ( b )  
+
+    if swap :
+        a , b = b , a
         
-        self.fun  = Ostap.MoreRooFit.Abs (
-            "abs_%s"   % self.name ,
-            "Abs(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-        
-# =============================================================================
-# @class Exp
-# \f[ f = \mathrm{e}^{ab} \f] 
-# @see Ostap::MoreRooFit::Exp
-class Exp (FAB) :
-    """ Exponent   
-    f = exp( ab ) 
-    - see Ostap.MoreRooFit.Exp
+    ## construct the function
+    result = cpptyp ( a , b )
+
+    if namepat : name = namepat % ( a.name , b.name )
+    else       : name = result.name 
+
+    if 3 < len ( vars ) :
+        afun.warning ( "Skip extra variables: %s" % vars[3:] )
+        vars = vars[:3]
+
+    return _make_fun_ ( result , vars , name ) 
+
+
+# ==============================================================================
+## Absolute value for the function  \f$ f = \left| ab \right| \f$
+#  @code
+#  f =
+#  a = f.abs (   )
+#  a = f.abs ( b )
+#  a =   abs ( f )  
+#  @endcode 
+def  _fn_abs_ ( self , b = 1 ) :
+    """Absolute value for the function:: f = abs(ab)
+    >>> f =
+    >>> a = f.abs (   )
+    >>> a = f.abs ( b )
+    >>> a =   abs ( f )  
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Abs  , 
+                           'abs_%s_%s'           )
 
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Exp_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Exp (
-            "exp_%s"   % self.name ,
-            "Exp(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-        
-# =============================================================================
-# @class Log
-# \f[ f = \log ab \f] 
-# @see Ostap::MoreRooFit::Log
-class Log (FAB) :
-    """Logarithm
-    f = log(ab) 
-    - see Ostap.MoreRooFit.Log
-    """ 
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
-
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Log_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Log (
-            "log_%s"        % self.name ,
-            "Log(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-
-# =============================================================================
-# @class Log10
-# \f[ f = \log10 ab \f] 
-# @see Ostap::MoreRooFit::Log
-class Log10 (FAB) :
-    """Decimal Logarithm
-    f = log(ab) 
-    - see Ostap.MoreRooFit.Log10
-    """ 
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
-
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Log10_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Log10 (
-            "log10_%s"        % self.name ,
-            "Log10(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-        
-# =============================================================================
-# @class Sin
-# \f[ f = \sin ab \f] 
-# @see Ostap::MoreRooFit::Sin
-class Sin (FAB) :
-    """Sine
-    f = sin(ab) 
-    - see Ostap.MoreRooFit.Sin
+# ==============================================================================
+## Exponent \f$ f = {\mathrm{e}}^{ab} \f$
+#  @code
+#  f =
+#  a = f.exp (   )
+#  a = f.exp ( b )
+#  a =   exp ( f )  
+#  @endcode 
+def  _fn_exp_ ( self , b = 1 ) :
+    """ Exponent f = exp(ab)
+    >>> f =
+    >>> a = f.exp (   )
+    >>> a = f.exp ( b )
+    >>> a =   exp ( f )  
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Exp  , 
+                           'exp_%s_%s'           )
 
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Sin_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Sin (
-            "sin_%s"        % self.name ,
-            "Sin(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-
-# =============================================================================
-# @class Cos
-# \f[ f = \cos ab \f] 
-# @see Ostap::MoreRooFit::Cos
-class Cos (FAB) :
-    """Cosine
-    f = cos(ab) 
-    - see Ostap.MoreRooFit.Cos
+# ==============================================================================
+## Natural logarithm  \f$ f = \log ab  \f$
+#  @code
+#  f =
+#  a = f.log (   )
+#  a = f.log ( b )
+#  a =   log ( f )  
+#  @endcode 
+def  _fn_log_ ( self , b = 1 ) :
+    """ Natural logarithm  f = log(ab)
+    >>> f =
+    >>> a = f.log (   )
+    >>> a = f.log ( b )
+    >>> a =   log ( f )  
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Log  , 
+                           'log_%s_%s'           )
 
-        FAB.__init__ ( self ,  a = a , xvar = xvar , b = b , name = name , pattern = "Cos_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Cos (
-            "cos_%s"        % self.name ,
-            "Cos(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-
-# =============================================================================
-# @class Tan
-# \f[ f = \tan ab \f] 
-# @see Ostap::MoreRooFit::Tan
-class Tan (FAB) :
-    """Tangent
-    f = tan(ab) 
-    - see Ostap.MoreRooFit.Tan
+# ==============================================================================
+## Decimal logarithm  \f$ f = \log_{10} ab  \f$
+#  @code
+#  f =
+#  a = f.log10 (   )
+#  a = f.log10 ( b )
+#  a =   log10 ( f )  
+#  @endcode 
+def  _fn_log10_ ( self , b = 1 ) :
+    """ Decimal logarithm  f = log10(ab)
+    >>> f =
+    >>> a = f.log10 (   )
+    >>> a = f.log10 ( b )
+    >>> a =   log10 ( f )  
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    return _fn_make_fun_ ( self                    ,
+                           b                       ,
+                           Ostap.MoreRooFit.Log10  , 
+                           'log10_%s_%s'           )
 
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Tan_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Tan (
-            "tan_%s"        % self.name ,
-            "Tan(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
-
-# =============================================================================
-# @class Tanh
-# \f[ f = \tanh ab \f] 
-# @see Ostap::MoreRooFit::Tanh
-class Tanh ( FUNC ) :
-    """hyperbolic Tangent
-    f = tanh(ab) 
-    - see Ostap.MoreRooFit.Tanh
+# ==============================================================================
+## Error function \f$ f = erf (ab)  \f$
+#  @code
+#  f =
+#  a = f.erf (   )
+#  a = f.erf ( b )
+#  a =   erc ( f )  
+#  @endcode 
+def  _fn_erf_ ( self , b = 1 ) :
+    """ Error function f = erf(ab)
+    >>> f =
+    >>> a = f.erf (   )
+    >>> a = f.erf ( b )
+    >>> a =   erf ( f )  
     """
-    def __init__ ( self       ,
-                   a          ,   ## a 
-                   xvar       ,
-                   b    = 1.0 ,  ## b 
-                   name = ''  ) :
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Erf  , 
+                           'erf_%s_%s'           )
 
-        FAB.__init__ ( self , a = a , xvar = xvar , b = b , name = name , pattern = "Tanh_%s_%s" )
-            
-        self.fun  = Ostap.MoreRooFit.Tanh (
-            "tanh_%s"        % self.name ,
-            "Tanh(%s|%s,%s)" % ( self.name , self.a.name , self.b.name ) , 
-            self.a      ,
-            self.b  
-            )
+# ==============================================================================
+## Sine function: \f$ f = sin (ab)  \f$
+#  @code
+#  f =
+#  a = f.sin (   )
+#  a = f.sin ( b )
+#  a =   sin ( f )  
+#  @endcode 
+def  _fn_sin_ ( self , b = 1 ) :
+    """ Sine function: f = sin(ab)
+    >>> f =
+    >>> a = f.sin (   )
+    >>> a = f.sin ( b )
+    >>> a =   sin ( f )  
+    """
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Sin  , 
+                           'sin_%s_%s'           )
+
+# ==============================================================================
+## Cosine function: \f$ f = cos (ab)  \f$
+#  @code
+#  f =
+#  a = f.cos (   )
+#  a = f.cos ( b )
+#  a =   cos ( f )  
+#  @endcode 
+def  _fn_cos_ ( self , b = 1 ) :
+    """ Cosine function: f = cos(ab)
+    >>> f =
+    >>> a = f.cos (   )
+    >>> a = f.cos ( b )
+    >>> a =   cos ( f )  
+    """
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Cos  , 
+                           'cos_%s_%s'           )
+
+
+# ==============================================================================
+## Tagent function: \f$ f = tan (ab)  \f$
+#  @code
+#  f =
+#  a = f.tan (   )
+#  a = f.tan ( b )
+#  a =   tan ( f )  
+#  @endcode 
+def  _fn_tan_ ( self , b = 1 ) :
+    """ Tangent function: f = tan(ab)
+    >>> f =
+    >>> a = f.tan (   )
+    >>> a = f.tan ( b )
+    >>> a =   tan ( f )  
+    """
+    return _fn_make_fun_ ( self                  ,
+                           b                     ,
+                           Ostap.MoreRooFit.Tan  , 
+                           'tan_%s_%s'           )
+
+
+# ==============================================================================
+## Hyperbolic Tagent function: \f$ f = tanh (ab)  \f$
+#  @code
+#  f =
+#  a = f.tanh (   )
+#  a = f.tanh ( b )
+#  a =   tanh ( f )  
+#  @endcode 
+def  _fn_tanh_ ( self , b = 1 ) :
+    """ Hyperbolic tangent function: f = tan(ab)
+    >>> f =
+    >>> a = f.tanh (   )
+    >>> a = f.tanh ( b )
+    >>> a =   tanh ( f )  
+    """
+    return _fn_make_fun_ ( self                   ,
+                           b                      ,
+                           Ostap.MoreRooFit.Tanh  , 
+                           'tanh_%s_%s'           )
+
+
+# ==============================================================================
+## Inverse agent function: \f$ f = atan2 ( a , b)  \f$
+#  @code
+#  f =
+#  a = f.atan2 (   )
+#  a = f.atan2 ( b )
+#  a =   atan2 ( f )  
+#  @endcode 
+def  _fn_atan2_ ( self , b = 1 ) :
+    """ Inverse tangent function: f = atan2(a,b)
+    >>> f =
+    >>> a = f.atan2 (   )
+    >>> a = f.atan2 ( b )
+    >>> a =   atan2 ( f )  
+    """
+    return _fn_make_fun_ ( self                    ,
+                           b                       ,
+                           Ostap.MoreRooFit.Atan2  , 
+                           'atan2_%s_%s'           )
+
+# ==============================================================================
+## Gamma function: \f$ f = \Gamma  ( ab )  \f$
+#  @code
+#  f =
+#  a = f.tgamma (   )
+#  a = f.tgamma ( b )
+#  a =   tgamma ( f )  
+#  @endcode 
+def  _fn_tgamma_ ( self , b = 1 ) :
+    """ Gamma function: f = Gamma(a,b)
+    >>> f =
+    >>> a = f.tgamma (   )
+    >>> a = f.tgamma ( b )
+    >>> a =    gamma  ( f )  
+    """
+    return _fn_make_fun_ ( self                    ,
+                           b                       ,
+                           Ostap.MoreRooFit.Gamma  , 
+                           'gamma_%s_%s'           )
+
+
+# ==============================================================================
+## log-Gamma function: \f$ f = \log \Gamma  ( ab )  \f$
+#  @code
+#  f =
+#  a = f.lgamma (   )
+#  a = f.lgamma ( b )
+#  a =   lgamma ( f )  
+#  @endcode 
+def  _fn_lgamma_ ( self , b = 1 ) :
+    """ Gamma function: f = log(Gamma(ab))
+    >>> f =
+    >>> a = f.lgamma (   )
+    >>> a = f.lgamma ( b )
+    >>> a =   lgamma  ( f )  
+    """
+    return _fn_make_fun_ ( self                     ,
+                           b                        ,
+                           Ostap.MoreRooFit.LGamma  , 
+                           'lgamma_%s_%s'           )
+
+# ==============================================================================
+## 1/Gamma function: \f$ f = 1/\Gamma  ( ab )  \f$
+#  @code
+#  f =
+#  a = f.igamma (   )
+#  a = f.igamma ( b )
+#  a =   igamma ( f )  
+#  @endcode 
+def  _fn_igamma_ ( self , b = 1 ) :
+    """ 1/Gamma function: f = 1/Gamma(ab))
+    >>> f =
+    >>> a = f.igamma (   )
+    >>> a = f.igamma ( b )
+    >>> a =   igamma  ( f )  
+    """
+    return _fn_make_fun_ ( self                     ,
+                           b                        ,
+                           Ostap.MoreRooFit.IGamma  , 
+                           'igamma_%s_%s'           )
+
+
+# ==============================================================================
+## Power function: \f$ f = pow( a , b )  \f$
+#  @code
+#  f =
+#  a = f.pow ( b )
+#  a =  a ** b   
+#  @endcode 
+def  _fn_pow_ ( self , b ) :
+    """ Power function: f = pow( a, b )  )
+    >>> f =
+    >>> a = f.pow ( b )
+    >>> a =  f ** b 
+    """
+    return _fn_make_fun_ ( self                    ,
+                           b                       ,
+                           Ostap.MoreRooFit.Power  , 
+                           'pow_%s_%s'              )
+
+# ==============================================================================
+## Right power function: \f$ f = pow( b , a )  \f$
+#  @code
+#  f =
+#  a = f.rpow ( b )
+#  a =   b**f    
+#  @endcode 
+def  _fn_rpow_ ( self , b ) :
+    """ Righ power function: f = pow( b, a )  )
+    >>> f =
+    >>> a = f.rpow  ( b )
+    >>> a =   b ** f   
+    """
+    return _fn_make_fun_ ( self                    ,
+                           b                       ,
+                           Ostap.MoreRooFit.Power  , 
+                           'rpow_%s_%s'             , swap = True  )
+
+# ==============================================================================
+## Right power function: \f$ f = pow( b , a )  \f$
+#  @code
+#  f =
+#  a = f.rpow ( b )
+#  a =   b**f    
+#  @endcode 
+def  _fn_rpow2_ ( self , b  ) :
+    """ Righ power function: f = pow( b, a )  )
+    >>> f =
+    >>> a = f.rpow  ( b )
+    >>> a =   b ** f   
+    """
+
+    if not isinstance  ( b , _b_types ) : return NotImplemented 
+
+    return _fn_rpow_ ( self , b , name )
+
+
+# ==============================================================================
+## Fraction  \f$ f =  a / ( a + b ) \f$
+#  @code
+#  f =
+#  a = f.fraction ( b )
+#  @endcode 
+def  _fn_fraction_ ( self , b , swap = False ) :
+    """ Fraction : f = a / ( a+ b )   )
+    >>> f =
+    >>> a = f.fraction( b )
+    """
+    return _fn_make_fun_ ( self                      ,
+                           b                         ,
+                           Ostap.MoreRooFit.Fraction , 
+                           'frac_%s_%s'              , swap = swap )
+
+
+# ==============================================================================
+## Asymmetry  \f$ f =  ( a - b ) / ( a + b ) \f$
+#  @code
+#  f =
+#  a = f.asymmetry ( b )
+#  @endcode 
+def  _fn_asymmetry_ ( self , b , swap = False ) :
+    """ Asymmetry  : f = ( a - b ) / ( a+ b )   )
+    >>> f =
+    >>> a = f.fraction( b )
+    """
+    return _fn_make_fun_ ( self                       ,
+                           b                          ,
+                           Ostap.MoreRooFit.Asymmetry , 
+                           'asymm_%s_%s'              , swap = swap )
+
+
 
 # =============================================================================
-## local storage of temporary variables 
-KEEPER = MakeVar()
+FUNC.__abs__     = _fn_abs_
+FUNC.__exp__     = _fn_exp_
+FUNC.__log__     = _fn_log_
+FUNC.__log10__   = _fn_log10_
+FUNC.__erf__     = _fn_erf_
+FUNC.__sin__     = _fn_sin_
+FUNC.__cos__     = _fn_cos_
+FUNC.__tan__     = _fn_tan_
+FUNC.__tanh__    = _fn_tanh_
+FUNC.__atan2__   = _fn_atan2_
+FUNC.__tgamma__  = _fn_tgamma_
+FUNC.__lgamma__  = _fn_lgamma_
+FUNC.__igamma__  = _fn_igamma_
+FUNC.__pow__     = _fn_pow_
+FUNC.__rpow__    = _fn_rpow2_
+
+FUNC.  abs       = _fn_abs_
+FUNC.  exp       = _fn_exp_
+FUNC.  log       = _fn_log_
+FUNC.  log10     = _fn_log10_
+FUNC.  erf       = _fn_erf_
+FUNC.  sin       = _fn_sin_
+FUNC.  cos       = _fn_cos_
+FUNC.  tan       = _fn_tan_
+FUNC.  tanh      = _fn_tanh_
+FUNC.  atan2     = _fn_atan2_
+FUNC.  tgamma    = _fn_tgamma_
+FUNC.  lgamma    = _fn_lgamma_
+FUNC.  igamma    = _fn_igamma_
+FUNC.  pow       = _fn_pow_
+FUNC.  rpow      = _fn_rpow_
+
+FUNC.  fraction  = _fn_fraction_
+FUNC.  asymmetry = _fn_asymmetry_
+
+
 # ==============================================================================
 ## absolute value   \f$ f = abs{ab}\f$
 #  @code
@@ -695,17 +932,12 @@ def var_abs ( a , b = 1 , name = '' , title = '' ) :
     fb = isinstance ( b , num_types )
     if fa and fb :
         ab = math.abs ( float ( a ) * float ( b ) )
-        return ROOT.RooRealConstant.value ( ab )          ## RETURN
+        return ROOT.RooRealConstant.value ( ab )     
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Abs( a, b , name , title )
+    return Ostap.MoreRooFit.Abs( a, b , name , title )
     #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
 
 # ==============================================================================
 ## exponent  \f$ f = \mathrm{e}^{ab}\f$
@@ -726,13 +958,7 @@ def var_exp ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Exp ( a, b , name , title )
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Exp ( a, b , name , title )
 
 # ==============================================================================
 ## logarithm  \f$ f = \log ab \f$
@@ -753,13 +979,7 @@ def var_log ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Log ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Log ( a, b , name , title ) 
 
 # ==============================================================================
 ## logarithm  \f$ f = \log10 ab \f$
@@ -780,13 +1000,7 @@ def var_log10 ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Log10 ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Log10 ( a, b , name , title ) 
 
 # ==============================================================================
 ## error function \f$ f = erf ( ab) \f$
@@ -807,14 +1021,7 @@ def var_erf ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Erf ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Erf ( a, b , name , title ) 
 
 # ==============================================================================
 ## Sine \f$ f = \sin ab\f$
@@ -835,14 +1042,8 @@ def var_sin ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Sin ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Sin ( a, b , name , title ) 
+    
 
 # ==============================================================================
 ## Cosine \f$ f = \cos ab\f$
@@ -863,13 +1064,7 @@ def var_cos ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Cos ( a, b , name , title )
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Cos ( a, b , name , title )
 
 # ==============================================================================
 ## Tangent\f$ f = \tan ab\f$
@@ -890,14 +1085,7 @@ def var_tan ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Tan ( a, b , name , title )
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Tan ( a, b , name , title )
 
 # ==============================================================================
 ## Hyperboilic tangent\f$ f = \tanh ab\f$
@@ -918,13 +1106,7 @@ def var_tanh ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Tanh ( a, b , name , title )
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Tanh ( a, b , name , title )
 
 # ==============================================================================
 ## arctangent\f$ f = atan2 (a,b)\f$
@@ -945,13 +1127,7 @@ def var_atan2 ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Atan2 ( a, b , name , title )
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Atan2 ( a, b , name , title )
 
 # ==============================================================================
 ## Gamma function \f$ f =    \Gamma(ab) \f$
@@ -972,13 +1148,7 @@ def var_gamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Gamma ( a, b , name , title ) 
 
 # ==============================================================================
 ## logarithm of Gamma function \f$ f = \log \Gamma(ab) \f$
@@ -999,13 +1169,7 @@ def var_lgamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.LGamma ( a, b , name , title ) 
 
 # ==============================================================================
 ## 1/Gamma function \f$ f = \frac{1}{\Gamma(ab)} \f$
@@ -1026,13 +1190,7 @@ def var_igamma ( a , b = 1 , name = '' , title = '' ) :
     elif fa : a = ROOT.RooRealConstant.value ( a )
     elif fb : b = ROOT.RooRealConstant.value ( b )
     #
-    result    = Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
-    #
-    KEEPER.aux_keep.append ( a )
-    KEEPER.aux_keep.append ( b )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.IGamma ( a, b , name , title ) 
 
 # =============================================================================
 ## Sum of two RooAbsReal objects
@@ -1049,7 +1207,6 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     """
     f1 = isinstance ( v1 , num_types )
     f2 = isinstance ( v2 , num_types )
-
     
     if f1 and f2 :
         r = float ( v1 ) + float ( v2 ) 
@@ -1058,13 +1215,7 @@ def var_sum ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Addition ( v1 , v2 , name , title )
 
 # =============================================================================
 ## Product of two RooAbsReal objects
@@ -1090,14 +1241,7 @@ def var_mul ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Product ( v1 , v2 , name , title ) 
 
 # =============================================================================
 ## Subtraction of two RooAbsReal objects
@@ -1123,14 +1267,7 @@ def var_sub ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     # 
-    result     = Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Subtraction ( v1 , v2 , name , title ) 
 
 # =============================================================================
 ## Division of two RooAbsReal objects
@@ -1155,14 +1292,7 @@ def var_div ( v1 , v2 , name = '' , title = '' ) :
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Division ( v1 , v2 , name , title ) 
 
 # ==============================================================================
 ## "Fraction" of two RooAbsReal objects: f = a/(a+b)
@@ -1182,19 +1312,13 @@ def var_fraction ( a , b , name = '' , title = '' ) :
     f2 = isinstance ( v2 , num_types )
     
     if f1 and f2 :
-        r = float ( a ) / ( float ( a ) + float ( b ) )  
+        r = float ( v1) / ( float ( v1 ) + float ( v1 ) )  
         return ROOT.RooRealConstant.value ( r )                 ## RETURN
     
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Fraction ( v1 , v2 , name , title ) 
 
 
 # ==============================================================================
@@ -1215,20 +1339,13 @@ def var_asymmetry ( a , b , name = '' , title = '' ) :
     f2 = isinstance ( v2 , num_types )
     
     if f1 and f2 :
-        r = ( float ( a ) - float ( b ) ) / ( float ( a ) + float ( b ) )  ## 
+        r = ( float ( v1 ) - float ( v2 ) ) / ( float ( v1 ) + float ( v2 ) )  ## 
         return ROOT.RooRealConstant.value ( r )                 ## RETURN
     
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
-
+    return Ostap.MoreRooFit.Asymmetry ( v1 , v2 , name , title ) 
 
 
 # =============================================================================
@@ -1249,19 +1366,13 @@ def var_pow ( v1 , v2 , name = '' , title = '' ) :
     f2 = isinstance ( v2 , num_types )
     
     if f1 and f2 :
-        r = float ( a ) ** float ( b ) 
+        r = float ( v1 ) ** float ( v2 ) 
         return ROOT.RooRealConstant.value ( r )                 ## RETURN
     
     elif f1 : v1 = ROOT.RooRealConstant.value ( float ( v1 ) )        
     elif f2 : v2 = ROOT.RooRealConstant.value ( float ( v2 ) ) 
     #
-    result     = Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
-    #
-    KEEPER.aux_keep.append ( v1 )
-    KEEPER.aux_keep.append ( v2 )
-    KEEPER.aux_keep.append ( result )
-    #
-    return result
+    return Ostap.MoreRooFit.Power ( v1 , v2 , name , title ) 
 
 
 scale_var     = var_mul

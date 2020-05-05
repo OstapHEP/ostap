@@ -7,8 +7,8 @@
 ## Backward incompatible changes
 
 ## Bug fixes:  
-
-
+  1. fix bugs in `funbasic`, `roofuncs` methods
+  
 
 # v1.4.8.2
 
