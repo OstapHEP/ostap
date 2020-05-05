@@ -227,6 +227,10 @@ class LinAlg(object) :
     method_EIGEN  = Method  ( Ostap.Math.Ops.Eigen  )
     method_TM     = Method  ( Ostap.Math.Ops.TM     )
     method_EQ     = Method  ( Ostap.Math.Ops.Eq     )
+
+    known_ssymmatrices = {}
+    known_smatrices    = {}
+    known_svectors     = {}
     
     decorated_matrices = set ()
     decorated_vectors  = set ()
@@ -300,6 +304,10 @@ class LinAlg(object) :
         while LinAlg.decorated_vectors  :
             LinAlg.restore ( LinAlg.decorated_vectors .pop() ) 
         
+        while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices.popitem ()
+        while LinAlg.known_smatrices    : LinAlg.known_smatrices   .popitem ()
+        while LinAlg.known_svectors     : LinAlg.known_svectors    .popitem ()
+
         LinAlg.methods_ADD    = None 
         LinAlg.methods_RADD   = None 
         LinAlg.methods_IADD   = None
@@ -1438,8 +1446,15 @@ class LinAlg(object) :
         """
         assert isinstance  ( n , integer_types ) and 0 <= n,\
                'Invalid length of the vector %s/%s' % ( n , type ( l ) )
-        o = ROOT.ROOT.Math.SVector ( t , n )
-        return LinAlg.deco_vector ( o )
+
+        tt = n , t 
+        v = LinAlg.known_svectors.get ( tt , None )
+        if  v is None :
+            v = ROOT.ROOT.Math.SVector ( t , n )
+            LinAlg.known_svectors [ tt ] = v
+            LinAlg.deco_vector    ( v )  
+        ##
+        return v 
     
     # =========================================================================
     ## Pick up the matrix of corresponding size
@@ -1448,18 +1463,25 @@ class LinAlg(object) :
     #  matrix = M3x4 ()    
     #  @endcode 
     @staticmethod
-    def Matrix ( m , n  , t = 'double' ) :
+    def Matrix ( k , n  , t = 'double' ) :
         """Pick up the matrix of corresponding size
         >>> M3x4   = Ostap.Math.Matrix(3,4)
         >>> matrix = M3x4 ()    
         """
-        assert isinstance  ( m , integer_types ) and 0 <= m ,\
-               'Invalid matrix dimension %s/%s' % ( m , type ( m ) )
+        assert isinstance  ( k , integer_types ) and 0 <= k ,\
+               'Invalid matrix dimension %s/%s' % ( k , type ( k ) )
         assert isinstance  ( n , integer_types ) and 0 <= n ,\
                'Invalid matrix dimension %s/%s' % ( n , type ( n ) )
-        
-        o = ROOT.ROOT.Math.SMatrix ( t , m , n )
-        return LinAlg.deco_matrix ( o )
+
+        tt = k , n , t
+        m = LinAlg.known_smatrices.get ( tt , None )
+        if m is None :
+            m = ROOT.ROOT.Math.SMatrix ( t , k , n )
+            LinAlg.known_smatrices [ tt ] = m
+            LinAlg.deco_matrix ( m )
+            
+        return m 
+
 
     # =========================================================================
     ## Pick up the symmetric matrix of corresponding size
@@ -1476,9 +1498,15 @@ class LinAlg(object) :
         assert isinstance  ( n , integer_types ) and 0 <= n ,\
                'Invalid matrix dimension %s/%s' % ( n , type ( n ) )
 
-        o = ROOT.ROOT.Math.SMatrix('%s,%d,%d,ROOT::Math::MatRepSym<%s,%d>' %  ( t , n , n , t , n ) )
-        return LinAlg.deco_symmatrix  ( o ) 
+        tt = n , t
+        m = LinAlg.known_ssymmatrices.get ( tt , None )
+        if  m is None  : 
+            m = ROOT.ROOT.Math.SMatrix('%s,%d,%d,ROOT::Math::MatRepSym<%s,%d>' %  ( t , n , n , t , n ) )
+            LinAlg.known_ssymmatrices [ tt ] = m
+            LinAlg.deco_symmatrix  ( m )
 
+        return m
+    
     # =========================================================================
     ##  is this matrix/vector type decorated properly?
     @staticmethod
