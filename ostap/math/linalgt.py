@@ -141,17 +141,12 @@ class LinAlgT(LA.LinAlg) :
         """
 
         i , j = index
-        print ('SETITEM0:',i,j, mtrx(i,j) , mtrx(j,i) )
-        
         if not 0 <= i < mtrx.GetNrows() : raise IndexError ( 'Invalid row    index %s' % i  )
         if not 0 <= j < mtrx.GetNcols() : raise IndexError ( 'Invalid column index %s' % j  )
         
         mtrx._old_setitem_ ( ( i , j ) , value )
         if i != j :
             mtrx._old_setitem_ ( ( j , i ) , value )
-        
-        print ('SETITEM1:',i,j, mtrx(i,j) , mtrx(j,i) )
-
 
     # =========================================================================
     ## convert matrix/vector-like-object to TMatrixT/TVectorT

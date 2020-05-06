@@ -1626,7 +1626,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
     
-    logger.info('Test Linaear Algebra: ')
+    logger.info('Test Linear Algebra: ')
     
     LA3 = Ostap.Vector3
     l1  = LA3(0,1,2)
