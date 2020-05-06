@@ -22,7 +22,8 @@ __all__     = (
     'Flat1D'        , ## trivial 1D-pdf: constant 
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
     'Sum1D'         , ## wrapper for RooAddPdf 
-    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf 
+    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
+    'make_pdf'      , ## helper functionto make PDF 
     ##
     )
 # =============================================================================
@@ -2844,6 +2845,32 @@ class Sum1D(PDF) :
     def F ( self , value ) :
         self.fraction = value 
         
+# =============================================================================
+## Helper function to create the PDF
+#  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
+#  pa
+def make_pdf ( pdf , args , name = '' ) :
+    """Helper function to create the PDF
+    """
+    
+    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), 'make_pdf: Invalid type %s' % type ( pdf )
+
+    name = name if name else "PDF_from_%s" % pdf.name
+    
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) :
+        pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf ) 
+    
+    num = len ( args )
+    if   1 == num :
+        return Generic1D_pdf ( pdf , name = name , *args )
+    elif 2 == num :
+        from ostap.fitting.fit2d import Generic2D_pdf 
+        return Generic2D_pdf ( fun , name = name , *args )
+    elif 3 == num :
+        from ostap.fitting.fit3d import Generic3D_pdf 
+        return Generic3D_pdf ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
 
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF

@@ -9,6 +9,8 @@
 """Few utilities to simplify linear algebra manipulations 
 """
 # =============================================================================
+from   __future__  import print_function
+# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@nikhef.nl"
 __date__    = "2009-09-12"
 __version__ = ""
@@ -18,7 +20,7 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   builtins import range 
+from   builtins    import range 
 import ROOT, cppyy, re 
 # =============================================================================
 # logging 
@@ -133,7 +135,6 @@ class Method(object) :
             args  =        a   ,        b 
             targs = type ( a ) , type ( b ) 
 
-
         mm = self.__methods.get ( targs , None )
         if not mm : 
             try : 
@@ -147,6 +148,10 @@ class Method(object) :
     def __call__ ( self , a  , b = None ) :
         return self.method ( a , b )
 
+    def __nonzero__  ( self ) : return bool ( self.__methods ) ## or bool ( self.__factory )  
+    def __bool__     ( self ) : return bool ( self.__methods ) ## or bool ( self.__factory )
+    def clear        ( self ) :
+        while self.__methods : self.__methods.popitem () 
 # =============================================================================
 ## @class Method2
 #  access and keep two methods 
@@ -184,6 +189,12 @@ class Method2(object) :
     def __call__ ( self , a  , b = None ) :
         return self.methods ( a , b )
     
+    def __nonzero__  ( self ) : return bool ( self.__method1 ) or bool ( self.__method2 ) 
+    def __bool__     ( self ) : return bool ( self.__method1 ) or bool ( self.__method2 ) 
+    def clear        ( self ) :
+        self.__method1.clear() 
+        self.__method2.clear() 
+
 # ==============================================================================
 ## dummy function
 def dummy ( *a, **b ) : return NotImplemented
@@ -238,19 +249,22 @@ class LinAlg(object) :
     # =========================================================================
     ## Backup useful attributes
     @staticmethod 
-    def backup ( klass , attributes = ( '__add__'       , '__iadd__'     , '__radd__' ,
-                                        '__sub__'       , '__isub__'     , '__rsub__' ,
-                                        '__mul__'       , '__imul__'     , '__rmul__' ,
-                                        '__div__'       , '__idiv__'     , '__pow__'  ,
-                                        '__eq__'        , '__ne__'       , '__neg__'  ,  
+    def backup ( klass , attributes = ( '__add__'       , '__iadd__'     , '__radd__'    ,
+                                        '__sub__'       , '__isub__'     , '__rsub__'    ,
+                                        '__mul__'       , '__imul__'     , '__rmul__'    ,
+                                        '__div__'       , '__idiv__'     , '__pow__'     ,
+                                        '__eq__'        , '__ne__'       , '__neg__'     ,
                                         '__truediv__'   , '__itruediv__' ,
+                                        '__contais__'   , '__iter__'     , 
+                                        '__matmul__'    , '__rmatmul__'  , '__imatmul__' ,       
                                         '__str__'       , '__repr__'     ,
-                                        '__contains__'  , '__iter__'     , '__len__'  ,
+                                        '__contains__'  , '__iter__'     , '__len__'     ,
                                         'iteritems'     , 'items'        ,            
                                         'row'           , 'rows'         ,
-                                        'cross'         , 'dot'          ,
-                                        'sym'           , 'asym'         ,
                                         'column'        , 'columns'      ,
+                                        'cross'         , 'dot'          ,
+                                        'sym'           , 'asym'         , 'skew'         ,
+                                        'Sim'           ,   
                                         ) ) :
         """Backup useful attributes
         """
@@ -268,12 +282,18 @@ class LinAlg(object) :
     # =========================================================================
     ## restore useful attributes
     @staticmethod 
-    def restore ( klass , delete = ( 'to_numpy'      , 'tmatrix' , 'correlations'   ,
-                                     'eigenValues'   , 'eigen_values'  , 
+    def restore ( klass , delete = ( 'to_numpy'      , 'to_array'       ,
+                                     'tmatrix'       ,
+                                     'correlations'  , 'shape'          ,
+                                     'eigenValues'   , 'eigen_values'   , 
                                      'eigenVectors'  , 'eigen_vectors'  , 
-                                     'sim'           , 'Sim'  ,
-                                     'cross'         , 'dot'  , 
-                                     'simT'          , 'SimT' ) ) :
+                                     'sim'           , 'Sim'            ,
+                                     'simT'          , 'SimT'           ,
+                                     'iteritems'     , 'items'          ,                                                 
+                                     'row'           , 'rows'           ,                                     
+                                     'column'        , 'columns'        , 
+                                     'cross'         , 'dot'            , 
+                                     'sym'           , 'asym'           , 'skew'  ) ) :
         """restore useful attributesc
         """
         
@@ -297,47 +317,48 @@ class LinAlg(object) :
         """Cleanup LinAlg
         """
 
-        import ROOT 
+        print ('CLEANUP-START') 
 
         while LinAlg.decorated_matrices :
             LinAlg.restore ( LinAlg.decorated_matrices.pop() ) 
         while LinAlg.decorated_vectors  :
             LinAlg.restore ( LinAlg.decorated_vectors .pop() ) 
         
-        while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices.popitem ()
-        while LinAlg.known_smatrices    : LinAlg.known_smatrices   .popitem ()
-        while LinAlg.known_svectors     : LinAlg.known_svectors    .popitem ()
+        while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices . popitem ()
+        while LinAlg.known_smatrices    : LinAlg.known_smatrices    . popitem ()
+        while LinAlg.known_svectors     : LinAlg.known_svectors     . popitem ()
 
-        LinAlg.methods_ADD    = None 
-        LinAlg.methods_RADD   = None 
-        LinAlg.methods_IADD   = None
-        
-        LinAlg.methods_SUB    = None 
-        LinAlg.methods_RSUB   = None 
-        LinAlg.methods_ISUB   = None 
-        
-        LinAlg.methods_MUL    = None 
-        LinAlg.methods_RMUL   = None 
-        LinAlg.methods_IMUL   = None 
-        
-        LinAlg.methods_DIV    = None 
-        LinAlg.methods_IDIV   = None  
+        LinAlg.methods_ADD   . clear ()
+        LinAlg.methods_RADD  . clear ()
+        LinAlg.methods_IADD  . clear ()
 
-        LinAlg.methods_DOT    = None
-        LinAlg.methods_CROSS  = None
-        LinAlg.methods_SIM    = None
-        LinAlg.methods_SIMT   = None
+        LinAlg.methods_SUB   . clear ()
+        LinAlg.methods_RSUB  . clear ()
+        LinAlg.methods_ISUB  . clear ()        
 
-        
-        LinAlg.methods_POW    = None
-        LinAlg.methods_SYM    = None
-        LinAlg.methods_ASYM   = None
-        LinAlg.methods_EIGEN  = None
-        
-        LinAlg.method_TM      = None
-        LinAlg.method_EQ      = None
+        LinAlg.methods_MUL   . clear ()
+        LinAlg.methods_RMUL  . clear ()
+        LinAlg.methods_IMUL  . clear ()        
 
-        
+        LinAlg.methods_SIV   . clear ()
+        LinAlg.methods_IDIV  . clear ()        
+
+        LinAlg.methods_DOT   . clear ()        
+        LinAlg.methods_CROSS . clear ()        
+
+        LinAlg.methods_SIM   . clear ()        
+        LinAlg.methods_SIMT  . clear ()        
+
+        LinAlg.methods_POW   . clear ()        
+        LinAlg.methods_SYM   . clear ()        
+        LinAlg.methods_ASYM  . clear ()        
+
+        LinAlg.method_EIGEN  . clear ()        
+        LinAlg.method_TM     . clear ()        
+        LinAlg.method_EQ     . clear ()        
+
+        print ('CLEANUP-END') 
+
     mgetter = staticmethod ( mgetter  )
         
     # =========================================================================
@@ -869,11 +890,13 @@ class LinAlg(object) :
     ## Asymmetric part  frot square marix
     #  @code
     #  C = A.asym() 
+    #  C = A.skew() 
     #  @endcode 
     @staticmethod
     def M_ASYM ( a  ) :
         """ Asymmetric part of square matrices  
         >>>  C = A.asym() 
+        >>>  C = A.skew() 
         """
         
         oper , check  = LinAlg.methods_ASYM ( a  )
@@ -1392,6 +1415,7 @@ class LinAlg(object) :
         m.__pow__       = LinAlg.M_POW 
         m.sym           = LinAlg.M_SYM
         m.asym          = LinAlg.M_ASYM 
+        m.skew          = LinAlg.M_ASYM 
 
         s = remtx.search ( m.__name__ )
         if s :

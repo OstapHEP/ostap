@@ -57,7 +57,7 @@ else                       : logger = getLogger ( __name__                 )
 from ostap.core.core                import Ostap 
 from ostap.core.ostap_types         import num_types
 from ostap.fitting.utils            import ParamsPoly , ShiftScalePoly, MakeVar  
-from ostap.fitting.funbasic         import FUNC, Fun1D, Fun2D, Fun3D
+from ostap.fitting.funbasic         import FUNC, Fun1D, Fun2D, Fun3D, make_fun 
 # =============================================================================
 ## @class BernsteinPoly
 #  Polynomial in Bernstein form
@@ -470,21 +470,6 @@ class FAB(FUNC):
         return self.__b
 
 
-# =============================================================================
-## Helper function to create the function
-def _make_fun_ ( fun , args , name ) :
-    """Helper function to create the function
-    """
-    
-    num = len ( args )
-    
-    if   1 == num : return Fun1D ( fun , name = name , *args )
-    elif 2 == num : return Fun2D ( fun , name = name , *args )
-    elif 3 == num : return Fun3D ( fun , name = name , *args )
-    
-    raise TypeError ( "Invalid length of arguments %s " % num ) 
-
-
 _b_types = num_types + ( FUNC , ROOT.RooAbsReal ) 
 # ===============================================================================
 def _fn_make_fun_ ( afun         ,
@@ -522,8 +507,7 @@ def _fn_make_fun_ ( afun         ,
         afun.warning ( "Skip extra variables: %s" % vars[3:] )
         vars = vars[:3]
 
-    return _make_fun_ ( result , vars , name ) 
-
+    return make_fun ( result , vars , name ) 
 
 # ==============================================================================
 ## Absolute value for the function  \f$ f = \left| ab \right| \f$

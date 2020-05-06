@@ -18,6 +18,7 @@ __all__     = (
     'Fun1D'             , ## wrapper for 1D-function
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
+    'make_fun'          , ## helper functno to reate FUNC-objects 
     )
 # =============================================================================
 import ROOT, math, sys 
@@ -127,9 +128,9 @@ class FUNC(XVar) :
         if value is None :
             self.__fun = value
             return        
-        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
+        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf/fun'' is not ROOT.RooAbsReal"
         self.__fun = value
-        
+
     @property
     def fun_name ( self ) :
         """``fun_name'' : get the name of the underlying RooAbsReal"""
@@ -159,6 +160,39 @@ class FUNC(XVar) :
         conf.update ( value )
         self.__config = conf
 
+    # =========================================================================
+    ##  Does this function depend on this variable,
+    #   @code
+    #   fun = ...
+    #   var = ...
+    #   if var in fun :
+    #      ... 
+    #   @endcode  
+    def __contains__ ( self , var ) : 
+        """Does this function depend on this variable?
+        >>> fun = ...
+        >>> var = ...
+        >>> if var in fun :
+        ...      ... 
+        """
+        if not self.fun : return False
+        ##
+        if var and isinstance ( var , ROOT.RooAbsReal ) :
+            params = self.fun.getParameters( None ) 
+            if var in parsms  : return True
+            for v in var.getParameters( None ) :
+                if v in params : return True
+        ##
+        if isinstance ( var , FUNC ) :
+            params = self.fun.getParameters( None ) 
+            if var.fun in params : return True
+            for v in var.fun.getParameters( None ) :
+                if v in params : return True
+            for v in var.vars :
+                if v in params : return True
+                
+        return False 
+            
     @property
     def draw_var ( self ) :
         """``draw_var''  :  variable to be drawn if not specified explicitely"""
@@ -185,6 +219,30 @@ class FUNC(XVar) :
         """``checked keys'' : special keys for clone-method
         """
         return self.__checked_keys
+
+    # =========================================================================
+    ##  Convert function to PDF
+    #   @code
+    #   fun = ...
+    #   pdf = fun.as_PDF () 
+    #   @endcode
+    #   - for PDC, <code>self</code> is returned
+    #   - otherwise <code>RooWrappedPdf</code> is used
+    #   @see RooWrapperPdf 
+    def as_PDF ( self  , name ) :
+        """Convert function to PDF
+        >>> fun = ...
+        >>> pdf = fun.as_PDF () 
+        - for PDC, `self` is returned
+        - otherwise `RooWrappedPdf` is used
+        - see ROOT.RooWrapperPdf 
+        """
+        from ostap.fit.basic import PDF, make_pdf 
+        if    isinstance ( self     , PDF           ) : return self
+
+        name = name if name else "PDF_from_%s" % self.name
+        ##
+        return make_pdf  ( self.fun , name = name , *self.variables )
 
     # =========================================================================
     @property 
@@ -1293,6 +1351,21 @@ class Fun3D ( FUNC3 ) :
         self.checked_keys.add  ( 'xvar' ) 
         self.checked_keys.add  ( 'yvar' ) 
         self.checked_keys.add  ( 'zvar' ) 
+
+# =============================================================================
+## Helper function to create the function
+def make_fun ( fun , args , name ) :
+    """Helper function to create the function
+    """
+    
+    assert fun and isinstance ( fun , ROOT.RooAbsReal ), 'make_fun: Invalid type %s' % type ( fun ) 
+    
+    num = len ( args )
+    if   1 == num : return Fun1D ( fun , name = name , *args )
+    elif 2 == num : return Fun2D ( fun , name = name , *args )
+    elif 3 == num : return Fun3D ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
 
 
 # =============================================================================
