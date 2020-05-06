@@ -29,7 +29,7 @@ def test_linalg2() :
     
     logger.info('Test Linaear Algebra: ')
     
-    LA3 = Ostap.Vector3
+    LA3 = Ostap.Vector(3)
     l1  = LA3(0,1,2)
     l2  = LA3(3,4,5)
     

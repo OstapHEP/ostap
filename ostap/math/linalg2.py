@@ -328,34 +328,90 @@ class LinAlg(object) :
         while LinAlg.known_smatrices    : LinAlg.known_smatrices    . popitem ()
         while LinAlg.known_svectors     : LinAlg.known_svectors     . popitem ()
 
-        LinAlg.methods_ADD   . clear ()
-        LinAlg.methods_RADD  . clear ()
-        LinAlg.methods_IADD  . clear ()
+        if LinAlg.methods_ADD    :
+            LinAlg.methods_ADD   . clear ()
+            LinAlg.methods_ADD   = None 
 
-        LinAlg.methods_SUB   . clear ()
-        LinAlg.methods_RSUB  . clear ()
-        LinAlg.methods_ISUB  . clear ()        
+        if LinAlg.methods_RADD   :
+            LinAlg.methods_RADD  . clear ()
+            LinAlg.methods_RADD  = None 
+        
+        if  LinAlg.methods_IADD  :
+            LinAlg.methods_IADD  . clear ()
+            LinAlg.methods_IADD  = None 
 
-        LinAlg.methods_MUL   . clear ()
-        LinAlg.methods_RMUL  . clear ()
-        LinAlg.methods_IMUL  . clear ()        
+        if LinAlg.methods_SUB    :
+            LinAlg.methods_SUB   . clear ()
+            LinAlg.methods_SUB   = None 
 
-        LinAlg.methods_DIV   . clear ()
-        LinAlg.methods_IDIV  . clear ()        
+        if LinAlg.methods_RSUB   : 
+            LinAlg.methods_RSUB  . clear ()
+            LinAlg.methods_RSUB  = None 
 
-        LinAlg.methods_DOT   . clear ()        
-        LinAlg.methods_CROSS . clear ()        
+        if LinAlg.methods_ISUB   :
+            LinAlg.methods_ISUB  . clear ()        
+            LinAlg.methods_ISUB  = None         
 
-        LinAlg.methods_SIM   . clear ()        
-        LinAlg.methods_SIMT  . clear ()        
+        if LinAlg.methods_MUL    : 
+            LinAlg.methods_MUL   . clear ()
+            LinAlg.methods_MUL   = None
+            
+        if LinAlg.methods_RMUL   : 
+            LinAlg.methods_RMUL  . clear ()
+            LinAlg.methods_RMUL  = None 
 
-        LinAlg.methods_POW   . clear ()        
-        LinAlg.methods_SYM   . clear ()        
-        LinAlg.methods_ASYM  . clear ()        
+        if LinAlg.methods_IMUL   : 
+            LinAlg.methods_IMUL  . clear ()
+            LinAlg.methods_IMUL  = None 
 
-        LinAlg.method_EIGEN  . clear ()        
-        LinAlg.method_TM     . clear ()        
-        LinAlg.method_EQ     . clear ()        
+        if LinAlg.methods_DIV    : 
+            LinAlg.methods_DIV   . clear ()
+            LinAlg.methods_DIV    = None
+            
+        if LinAlg.methods_IDIV   : 
+            LinAlg.methods_IDIV  . clear ()
+            LinAlg.methods_IDIV   = None 
+
+        if LinAlg.methods_DOT    : 
+            LinAlg.methods_DOT   . clear ()
+            LinAlg.methods_DOT    = None 
+
+        if LinAlg.methods_CROSS  : 
+            LinAlg.methods_CROSS . clear ()
+            LinAlg.methods_CROSS  = None 
+
+        if LinAlg.methods_SIM    : 
+            LinAlg.methods_SIM   . clear ()
+            LinAlg.methods_SIM   = None 
+
+        if LinAlg.methods_SIMT   : 
+            LinAlg.methods_SIMT  . clear ()
+            LinAlg.methods_SIMT  = None 
+
+        if LinAlg.methods_POW    : 
+            LinAlg.methods_POW   . clear ()
+            LinAlg.methods_POW   = None 
+
+        if LinAlg.methods_SYM    : 
+            LinAlg.methods_SYM   . clear ()
+            LinAlg.methods_SYM   = None 
+
+
+        if LinAlg.methods_ASYM   : 
+            LinAlg.methods_ASYM  . clear ()
+            LinAlg.methods_ASYM  = None 
+
+        if LinAlg.method_EIGEN   : 
+            LinAlg.method_EIGEN  . clear ()
+            LinAlg.method_EIGEN  = None 
+
+        if LinAlg.method_TM      : 
+            LinAlg.method_TM     . clear ()
+            LinAlg.method_TM     = None 
+
+        if LinAlg.method_EQ      : 
+            LinAlg.method_EQ     . clear ()
+            LinAlg.method_EQ     = None 
 
         print ('CLEANUP-END') 
 
@@ -1476,8 +1532,12 @@ class LinAlg(object) :
         if  v is None :
             v = ROOT.ROOT.Math.SVector ( t , n )
             LinAlg.known_svectors [ tt ] = v
-            LinAlg.deco_vector    ( v )  
-        ##
+            LinAlg.deco_vector    ( v )
+            ##
+            if not tt  in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n ,     t )    
+            tt1 = n , n , t 
+            if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
+            
         return v 
     
     # =========================================================================
@@ -1503,6 +1563,14 @@ class LinAlg(object) :
             m = ROOT.ROOT.Math.SMatrix ( t , k , n )
             LinAlg.known_smatrices [ tt ] = m
             LinAlg.deco_matrix ( m )
+            ##
+            tt1 = k , t
+            if not tt1 in LinAlg.known_svectors     : LinAlg.   Vector ( k , t )
+            if not tt1 in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( k , t )    
+            tt2 = n , t
+            if not tt2 in LinAlg.known_svectors     : LinAlg.   Vector ( n , t )
+            if not tt2 in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n , t )    
+
             
         return m 
 
@@ -1528,6 +1596,10 @@ class LinAlg(object) :
             m = ROOT.ROOT.Math.SMatrix('%s,%d,%d,ROOT::Math::MatRepSym<%s,%d>' %  ( t , n , n , t , n ) )
             LinAlg.known_ssymmatrices [ tt ] = m
             LinAlg.deco_symmatrix  ( m )
+            ##
+            if not tt  in LinAlg.known_svectors  : LinAlg.Vector ( n ,     t )
+            tt1 = n , n , t 
+            if not tt1 in LinAlg.known_smatrices : LinAlg.Matrix ( n , n , t )
 
         return m
     
@@ -1550,54 +1622,53 @@ Ostap.Math.Matrix    =  staticmethod ( LinAlg.Matrix    )
 Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix ) 
 
 
+## Ostap.Vector2             = Ostap.Vector(2)
+## Ostap.Vector3             = Ostap.Vector(3)
+## Ostap.Vector4             = Ostap.Vector(4)
+## Ostap.Vector5             = Ostap.Vector(5)
+## Ostap.Vector6             = Ostap.Vector(6)
+## Ostap.Vector8             = Ostap.Vector(8)
 
-Ostap.Vector2             = Ostap.Vector(2)
-Ostap.Vector3             = Ostap.Vector(3)
-Ostap.Vector4             = Ostap.Vector(4)
-Ostap.Vector5             = Ostap.Vector(5)
-Ostap.Vector6             = Ostap.Vector(6)
-Ostap.Vector8             = Ostap.Vector(8)
+## Ostap.Math.Vector2        = Ostap.Vector2
+## Ostap.Math.Vector3        = Ostap.Vector3
+## Ostap.Math.Vector4        = Ostap.Vector4
+## Ostap.Math.Vector5        = Ostap.Vector5
+## Ostap.Math.Vector6        = Ostap.Vector6
+## Ostap.Math.Vector8        = Ostap.Vector8
 
-Ostap.Math.Vector2        = Ostap.Vector2
-Ostap.Math.Vector3        = Ostap.Vector3
-Ostap.Math.Vector4        = Ostap.Vector4
-Ostap.Math.Vector5        = Ostap.Vector5
-Ostap.Math.Vector6        = Ostap.Vector6
-Ostap.Math.Vector8        = Ostap.Vector8
-
-## vectors of vectors
-Ostap.Vectors2            = std.vector ( Ostap.Vector2 )
-Ostap.Vectors3            = std.vector ( Ostap.Vector3 )
-Ostap.Vectors4            = std.vector ( Ostap.Vector4 )
-Ostap.Math.Vectors2       = Ostap.Vectors2
-Ostap.Math.Vectors3       = Ostap.Vectors3
-Ostap.Math.Vectors4       = Ostap.Vectors4
-
-
-Ostap.SymMatrix2x2        = Ostap.SymMatrix(2)
-Ostap.SymMatrix3x3        = Ostap.SymMatrix(3)
-Ostap.SymMatrix4x4        = Ostap.SymMatrix(4)
-Ostap.SymMatrix5x5        = Ostap.SymMatrix(5)
-Ostap.SymMatrix6x6        = Ostap.SymMatrix(6)
-Ostap.SymMatrix7x7        = Ostap.SymMatrix(7)
-Ostap.SymMatrix8x8        = Ostap.SymMatrix(8)
-Ostap.SymMatrix9x9        = Ostap.SymMatrix(9)
+## ## vectors of vectors
+## Ostap.Vectors2            = std.vector ( Ostap.Vector2 )
+## Ostap.Vectors3            = std.vector ( Ostap.Vector3 )
+## Ostap.Vectors4            = std.vector ( Ostap.Vector4 )
+## Ostap.Math.Vectors2       = Ostap.Vectors2
+## Ostap.Math.Vectors3       = Ostap.Vectors3
+## Ostap.Math.Vectors4       = Ostap.Vectors4
 
 
-Ostap.Math.SymMatrix2x2   = Ostap.SymMatrix2x2
-Ostap.Math.SymMatrix3x3   = Ostap.SymMatrix3x3
-Ostap.Math.SymMatrix4x4   = Ostap.SymMatrix4x4
-Ostap.Math.SymMatrix5x5   = Ostap.SymMatrix5x5
-Ostap.Math.SymMatrix6x6   = Ostap.SymMatrix6x6
-Ostap.Math.SymMatrix7x7   = Ostap.SymMatrix7x7
-Ostap.Math.SymMatrix8x8   = Ostap.SymMatrix8x8
-Ostap.Math.SymMatrix9x9   = Ostap.SymMatrix9x9
+## Ostap.SymMatrix2x2        = Ostap.SymMatrix(2)
+## Ostap.SymMatrix3x3        = Ostap.SymMatrix(3)
+## Ostap.SymMatrix4x4        = Ostap.SymMatrix(4)
+## Ostap.SymMatrix5x5        = Ostap.SymMatrix(5)
+## Ostap.SymMatrix6x6        = Ostap.SymMatrix(6)
+## Ostap.SymMatrix7x7        = Ostap.SymMatrix(7)
+## Ostap.SymMatrix8x8        = Ostap.SymMatrix(8)
+## Ostap.SymMatrix9x9        = Ostap.SymMatrix(9)
 
-for i in range(11) :
-    
-    t0 = Ostap.Vector ( i )    
-    t1 = Ostap.SymMatrix(i)
-    for j in range(11) : t2 = Ostap.Matrix(i,j)
+
+## Ostap.Math.SymMatrix2x2   = Ostap.SymMatrix2x2
+## Ostap.Math.SymMatrix3x3   = Ostap.SymMatrix3x3
+## Ostap.Math.SymMatrix4x4   = Ostap.SymMatrix4x4
+## Ostap.Math.SymMatrix5x5   = Ostap.SymMatrix5x5
+## Ostap.Math.SymMatrix6x6   = Ostap.SymMatrix6x6
+## Ostap.Math.SymMatrix7x7   = Ostap.SymMatrix7x7
+## Ostap.Math.SymMatrix8x8   = Ostap.SymMatrix8x8
+## Ostap.Math.SymMatrix9x9   = Ostap.SymMatrix9x9
+
+## for i in range(11) :
+##     
+##    t0 = Ostap.Vector ( i )    
+##    t1 = Ostap.SymMatrix(i)
+##    for j in range(11) : t2 = Ostap.Matrix(i,j)
 
 # =============================================================================
 _decorated_classes_ = (
@@ -1628,7 +1699,7 @@ if '__main__' == __name__ :
     
     logger.info('Test Linear Algebra: ')
     
-    LA3 = Ostap.Vector3
+    LA3 = Ostap.Vector(3)
     l1  = LA3(0,1,2)
     l2  = LA3(3,4,5)
     

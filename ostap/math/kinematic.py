@@ -272,10 +272,10 @@ V4D.conj      = lambda s : V4D ( s )
 V4D.conjugate = lambda s : V4D ( s )  
 
 # =============================================================================
-if not hasattr ( Ostap.Math , 'Vector4' ) :
+if not hasattr ( Ostap.Math , 'Vector' ) :
     import ostap.math.linalg
     
-_V4 = Ostap.Math.Vector4
+_V4 = Ostap.Math.Vector(4)
 # =============================================================================
 ## convert LorentzVector into SVector
 #  @code

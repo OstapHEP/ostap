@@ -43,7 +43,7 @@ remtx = re.compile ( r'TMatrix[^<]*<(?P<TYPE>[^,>]+)' )
 class LinAlgT(LA.LinAlg) :
     """Collection of operations with TMatrixT/TVectorT
     """
-    
+
     # ========================================================================
     ## get number of rows for TMatrix
     #  @code
