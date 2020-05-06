@@ -5,7 +5,9 @@
   1. add the test/example for `graph_summary`  
   1. small optimization for `linalg2'
   1. polishing for `graph_summary` - add `offset` argument
-  
+  1. move certainmethdo from PDF to FUNC: `params`, `__contains__` , `parameter`, `parameters` , `load_parameters`
+  1. remove usage of `RooAbsReal::getParameter ( None )`
+  `
 ## Backward incompatible changes
 
 ## Bug fixes:  

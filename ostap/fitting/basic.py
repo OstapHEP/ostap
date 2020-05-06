@@ -36,7 +36,7 @@ from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, va
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
                                         integer_types  , num_types      ,
-                                        list_types     , dictlike_types ) 
+                                        list_types    ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
@@ -689,7 +689,7 @@ class PDF (FUNC) :
             ## calculate chi2/ndf
             frame.chi2dnf = None 
             if dataset and not silent :             
-                pars          = self.pdf.getParameters ( dataset )
+                pars          = self.params ( dataset )
                 frame.chi2ndf = frame.chiSquare ( len ( pars ) )
                 binw          = -1 
                 if nbins and isinstance ( nbins , integer_types ) and 1 < nbins :
@@ -894,7 +894,7 @@ class PDF (FUNC) :
             dataset = dataset.dset
             
         ## get all parametrs
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset )
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
@@ -1067,7 +1067,7 @@ class PDF (FUNC) :
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
@@ -1127,7 +1127,7 @@ class PDF (FUNC) :
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
 
@@ -1210,7 +1210,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
@@ -1312,7 +1312,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset )
+        pars = self.params ( dataset ) 
         
         assert var in pars , "Variable %s is not a parameter/1"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
@@ -2243,165 +2243,6 @@ class PDF (FUNC) :
                           xvar   = xvar        ,
                           logger = self.logger , **kwargs ) 
 
-    # =========================================================================
-    ## Load parameters from:
-    #    - external dictionary <code>{ name : value }</code>
-    #    - sequence of <code>RooAbsReal</code> object
-    #    - <code>ROOT.RooFitResult</code> object 
-    #  @code
-    #  pdf     = ...
-    #  dataset = ...
-    #  params  = { 'A' : 10 , 'B' : ... }
-    #  pdf.load_params ( dataset , params ) 
-    #  params  = ( A , B , C , ... )
-    #  pdf.load_params ( dataset , params )  
-    #  @endcode 
-    def load_params ( self , dataset = None , params = {} , silent = False  ) :
-        """Load parameters from
-        - external dictionary `{ name : value }`
-        - sequence of `RooAbsReal` objects
-        - `RooFitResult` object
-        
-        >>> pdf      = ...
-        >>> dataset = ... 
-        >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
-        >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
-        """
-        ## nothing to load 
-        if not params : return 
-
-        if isinstance ( params , ROOT.RooFitResult ) :
-            params = params.dct_params () 
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        table = [] 
-        if isinstance ( params , dictlike_types ) :
-            keys   = set () 
-            for key in params :
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' ) : continue
-                    if p.name != key                 : continue
-                    
-                    v  = params[key]
-                    vv = float ( v  )
-                    pv = p.getVal ()   
-                    if vv != pv : 
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add ( key )
-
-            not_used = set ( params.keys() ) - keys 
-
-        ## list of objects 
-        else :
-            
-            keys = set()        
-            for i , pp in enumerate ( params ) :  
-                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' )       : continue
-                    if p.name != pp.name                   : continue
-                    
-                    vv = float ( pp )
-                    pv = p.getVal () 
-                    if vv != pv :
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add  ( i )
-
-            not_used = []
-            for i , pp in enumerate ( params ) :  
-                if i in keys : continue
-                not_used.append ( pp )
-
-        if not silent :
-            
-            table.sort()
-            npars = len ( table )
-            
-            if npars :            
-                title = 'Parameters loaded: %s' % npars 
-                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
-                import ostap.logger.table
-                table = ostap.logger.table.table ( table , title , prefix = "# " )
-                
-            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
-            
-            not_used = list ( not_used )
-            not_used.sort() 
-            if not_used :
-                self.warning ("Following keys are unused %s" % not_used ) 
-        
-        return 
-
-    # =========================================================================
-    ## get all parameters/variables in form of dictionary
-    #  @code
-    #  pdf    = ...
-    #  params = pdf.parameters ( dataset ) 
-    #  @endcode
-    def parameters ( self , dataset = None ) :
-        """ Get all parameters/variables in form of dictionary
-        >>> pdf    = ...
-        >>> params = pdf.parameters ( dataset ) 
-        """
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        tmp    = {}
-        for p in pars :
-            if not isinstance ( p, ROOT.RooAbsCategory ) :
-                tmp [ p.name ] = p.value
-                
-        keys   = tmp.keys()
-        result = {} 
-        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
-            
-        return result 
-
-    # ========================================================================
-    ## get the parameter value by name
-    #  @code
-    #  pdf = ...
-    #  p   = pdf.parameter  ( 'A' )
-    #  @endcode
-    def parameter ( self , param , dataset = None ) :
-        """Get the parameter value by name
-        >>> pdf = ...
-        >>> p   = pdf.parameter  ( 'A' )
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        for p in pars :
-            if p.name == param : return p
-            
-        self.error ( "No parameter %s defined" % param )
-        raise KeyError ( "No parameter %s defined" % param )
-
-    # ==========================================================================
-    ## get parameter by name 
-    #  @code
-    #  pdf = ...
-    #  a   = pdf['A']
-    #  @endcode
-    def __getitem__ ( self , param ) :
-        """Get parameter by name 
-        >>> pdf = ...
-        >>> a   = pdf['A']
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( None )
-        for p in pars :
-            if p.name == param : return p
-        raise KeyError ( "No parameter %s defined" % param )
         
 # =============================================================================
 ##  helper utilities to imlement resolution models.
@@ -2713,7 +2554,7 @@ class Generic1D_pdf(PDF) :
         ## PDF itself 
         self.pdf  = pdf
 
-        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+        if not self.xvar in self.params () : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
             
         ## add it to the list of signal components ?

@@ -23,7 +23,9 @@ __all__     = (
 # =============================================================================
 import ROOT, math, sys 
 from   sys                           import version_info as python_version 
-from   ostap.core.ostap_types        import list_types , num_types, is_good_number     
+from   ostap.core.ostap_types        import ( integer_types  , num_types   ,
+                                              dictlike_types , list_types  ,
+                                              is_good_number )     
 from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
 from   ostap.logger.utils            import roo_silent , rootWarning
@@ -178,15 +180,15 @@ class FUNC(XVar) :
         if not self.fun : return False
         ##
         if var and isinstance ( var , ROOT.RooAbsReal ) :
-            params = self.fun.getParameters( None ) 
+            params = self.params () 
             if var in parsms  : return True
-            for v in var.getParameters( None ) :
+            for v in var.getParameters( 0 ) :
                 if v in params : return True
         ##
         if isinstance ( var , FUNC ) :
-            params = self.fun.getParameters( None ) 
+            params = self.params () 
             if var.fun in params : return True
-            for v in var.fun.getParameters( None ) :
+            for v in var.params () :
                 if v in params : return True
             for v in var.vars :
                 if v in params : return True
@@ -271,6 +273,196 @@ class FUNC(XVar) :
         """``draw_options'' : dictionary with predefined draw-options for this PDF
         """
         return self.__draw_options
+
+    # =========================================================================
+
+    # =========================================================================
+    ## Get the parameters
+    #  @code
+    #  fun = ...
+    #  parameters = funn.params ( )
+    #  @endcode
+    #  Or
+    #  @code  
+    #  pdf       = ...
+    #  dataset   = ...
+    #  parameters = pdf.params ( dataset)
+    #  @endcode
+    #  @see RooAbsReal::getParameters
+    def params ( self , dataset = None  ) :
+        """Get the parameters
+        >>>  fun = ...
+        >>> parameters = fun.params ( )
+        Or
+        >>>  pdf       = ...
+        >>> dataset   = ...
+        >>> parameters = pdf.params ( dataset)
+        - see RooAbsReal::getParameters
+        """
+        assert self.fun, "FUNC::params: Function is invalid!"        
+        return self.fun.getParameters ( 0 ) if dataset is None else self.fun.getParameters ( dataset )
+    
+    # =========================================================================
+    ## get the parameter value by name
+    #  @code
+    #  fun = ...
+    #  p   = fun.parameter  ( 'A' )
+    #  @endcode
+    def parameter ( self , param , dataset = None ) :
+        """Get the parameter value by name
+        >>> pdf = ...
+        >>> p   = pdf.parameter  ( 'A' )
+        """
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset )
+
+        for p in pars :
+            if p.name == param : return p
+            
+        self.error ( "No parameter %s defined" % param )
+        raise KeyError ( "No parameter %s defined" % param )
+
+    # =========================================================================
+    ## get all parameters/variables in form of dictionary
+    #  @code
+    #  fun    = ...
+    #  params = fun.parameters ( dataset ) 
+    #  @endcode
+    def parameters ( self , dataset = None ) :
+        """ Get all parameters/variables in form of dictionary
+        >>> fun    = ...
+        >>> params = fun.parameters ( dataset ) 
+        """
+        
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset ) 
+
+        tmp    = {}
+        for p in pars :
+            if not isinstance ( p, ROOT.RooAbsCategory ) :
+                tmp [ p.name ] = p.value
+                
+        keys   = tmp.keys()
+        result = {} 
+        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
+            
+        return result 
+
+    # ==========================================================================
+    ## get parameter by name 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  @endcode
+    def __getitem__ ( self , param ) :
+        """Get parameter by name 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        """
+        ## get the list of the actual parameters 
+        pars = self.params ( )
+        for p in pars :
+            if p.name == param : return p
+        raise KeyError ( "No parameter %s defined" % param )
+
+
+    # =========================================================================
+    ## Load parameters from:
+    #    - external dictionary <code>{ name : value }</code>
+    #    - sequence of <code>RooAbsReal</code> object
+    #    - <code>ROOT.RooFitResult</code> object 
+    #  @code
+    #  pdf     = ...
+    #  dataset = ...
+    #  params  = { 'A' : 10 , 'B' : ... }
+    #  pdf.load_params ( dataset , params ) 
+    #  params  = ( A , B , C , ... )
+    #  pdf.load_params ( dataset , params )  
+    #  @endcode 
+    def load_params ( self , dataset = None , params = {} , silent = False  ) :
+        """Load parameters from
+        - external dictionary `{ name : value }`
+        - sequence of `RooAbsReal` objects
+        - `RooFitResult` object
+        
+        >>> pdf      = ...
+        >>> dataset = ... 
+        >>> params = { 'A' : 10 , 'B' : ... }
+        >>> pdf.load_params ( dataset , params ) 
+        >>> params = ( A , B , C , ... )
+        >>> pdf.load_params ( dataset , params )  
+        """
+        ## nothing to load 
+        if not params : return 
+
+        if isinstance ( params , ROOT.RooFitResult ) :
+            params = params.dct_params () 
+        
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset ) 
+
+        table = [] 
+        if isinstance ( params , dictlike_types ) :
+            keys   = set () 
+            for key in params :
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' ) : continue
+                    if p.name != key                 : continue
+                    
+                    v  = params[key]
+                    vv = float ( v  )
+                    pv = p.getVal ()   
+                    if vv != pv : 
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add ( key )
+
+            not_used = set ( params.keys() ) - keys 
+
+        ## list of objects 
+        else :
+            
+            keys = set()        
+            for i , pp in enumerate ( params ) :  
+                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' )       : continue
+                    if p.name != pp.name                   : continue
+                    
+                    vv = float ( pp )
+                    pv = p.getVal () 
+                    if vv != pv :
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add  ( i )
+
+            not_used = []
+            for i , pp in enumerate ( params ) :  
+                if i in keys : continue
+                not_used.append ( pp )
+
+        if not silent :
+            
+            table.sort()
+            npars = len ( table )
+            
+            if npars :            
+                title = 'Parameters loaded: %s' % npars 
+                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
+                import ostap.logger.table
+                table = ostap.logger.table.table ( table , title , prefix = "# " )
+                
+            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
+            
+            not_used = list ( not_used )
+            not_used.sort() 
+            if not_used :
+                self.warning ("Following keys are unused %s" % not_used ) 
+        
+        return 
+    
 
     # =========================================================================
     ## get the certain predefined drawing option
