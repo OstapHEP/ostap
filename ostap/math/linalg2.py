@@ -319,6 +319,8 @@ class LinAlg(object) :
 
         print ('CLEANUP-START') 
 
+        return
+    
         while LinAlg.decorated_matrices :
             LinAlg.restore ( LinAlg.decorated_matrices.pop() ) 
         while LinAlg.decorated_vectors  :
