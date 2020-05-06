@@ -340,7 +340,7 @@ class LinAlg(object) :
         LinAlg.methods_RMUL  . clear ()
         LinAlg.methods_IMUL  . clear ()        
 
-        LinAlg.methods_SIV   . clear ()
+        LinAlg.methods_DIV   . clear ()
         LinAlg.methods_IDIV  . clear ()        
 
         LinAlg.methods_DOT   . clear ()        
