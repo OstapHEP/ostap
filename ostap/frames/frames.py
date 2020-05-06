@@ -177,7 +177,7 @@ def _fr_statCov_ ( frame       ,
     import ostap.math.linalg 
     stat1  = Ostap.WStatEntity       ()
     stat2  = Ostap.WStatEntity       ()
-    cov2   = Ostap.Math.SymMatrix2x2 ()
+    cov2   = Ostap.Math.SymMatrix(2) ()
 
     length = Ostap.StatVar.statCov ( frame       ,
                                      expression1 ,

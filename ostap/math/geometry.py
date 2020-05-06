@@ -185,7 +185,7 @@ _V3D. asP3 = _v3_as_p3_
 if not hasattr ( Ostap.Math , 'Vector3' ) :
     import ostap.math.linalg
     
-_V3 = Ostap.Math.Vector3
+_V3 = Ostap.Math.Vector(3)
 # =============================================================================
 ## convert 3D-Vector/3D-point into SVector
 #  @code

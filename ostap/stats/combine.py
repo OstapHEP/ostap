@@ -20,7 +20,7 @@
 #  @code
 #  x = VE ( 0.95 , 0.08**2 )        ## the first  measurement (with stat uncertainty)
 #  y = VE ( 1.08 , 0.08**2 )        ## the second measurement (with stat uncertainty)
-#  syst = Ostap.Math.SymMatrix2x2() ## systematic uncertainty (correlated and uncorrelated)
+#  syst = Ostap.Math.SymMatrix(2)() ## systematic uncertainty (correlated and uncorrelated)
 #  syst [0,0] = 0.10**2
 #  syst [0,1] = 0.08**2
 #  syst [1,1] = 0.10**2
@@ -41,7 +41,7 @@
 
 >>> x = VE ( 0.95 , 0.08**2 ) ## the first measurement   (with stat uncertainty)
 >>> y = VE ( 1.08 , 0.08**2 ) ## the second measurement  (with stat uncertainty)
->>> syst = Ostap.Math.SymMatrix2x2() ## syst uncertainty (correlated and uncorrelated)
+>>> syst = Ostap.Math.SymMatrix(2)() ## syst uncertainty (correlated and uncorrelated)
 >>> syst [0,0] = 0.10**2
 >>> syst [0,1] = 0.08**2
 >>> syst [1,1] = 0.10**2
@@ -78,7 +78,7 @@ else                       : logger = getLogger ( __name__              )
 #  x = VE ( 0.95 , 0.08**2 ) ## the first  measurement (with stat uncertainty)
 #  y = VE ( 1.08 , 0.08**2 ) ## the second measurement (with stat uncertainty)
 #  ## systematic uncertainty (correlated and uncorrelated)
-#  syst = Ostap.Math.SymMatrix2x2()
+#  syst = Ostap.Math.SymMatrix(2)()
 #  syst [0,0] = 0.10**2
 #  syst [0,1] = 0.08**2
 #  syst [1,1] = 0.10**2
@@ -96,7 +96,7 @@ class Combine(object) :
     
     >>> x = VE ( 0.95 , 0.08**2 ) ## the first measurement   (with stat uncertainty)
     >>> y = VE ( 1.08 , 0.08**2 ) ## the second measurement  (with stat uncertainty)
-    >>> syst = Ostap.Math.SymMatrix2x2() ## syst uncertainty (correlated and uncorrelated)
+    >>> syst = Ostap.Math.SymMatrix(2)() ## syst uncertainty (correlated and uncorrelated)
     >>> syst [0,0] = 0.10**2
     >>> syst [0,1] = 0.08**2
     >>> syst [1,1] = 0.10**2
@@ -232,11 +232,14 @@ if '__main__' == __name__ :
     x = VE ( 0.95 , 0.08**2 )
     y = VE ( 1.08 , 0.08**2 )
 
-    syst1 = Ostap.Math.SymMatrix2x2()
+
+    COV2 = Ostap.Math.SymMatrix(2)
+
+    syst1 = COV2 ()
     syst1[0,0] = 0.08**2
     syst1[1,1] = 0.08**2
 
-    syst2 = Ostap.Math.SymMatrix2x2()
+    syst2 = COV2 ()
     syst2[0,0] = 0.08**2
     syst2[0,1] = 0.08**2
     syst2[1,1] = 0.08**2
@@ -258,12 +261,12 @@ if '__main__' == __name__ :
     x = VE(5619.44 , 0.70**2 )
     y = VE(5619.44 , 0.13**2 )
 
-    syst1 = Ostap.Math.SymMatrix2x2()
+    syst1 = COV2 ()
     syst1[0,0] = 0.30**2
     syst1[1,1] = 0.45**2
     
     
-    syst2 = Ostap.Math.SymMatrix2x2()
+    syst2 = COV2 ()
     syst2[0,0] = 0.30**2
     syst2[1,1] = 0.45**2
     syst2[0,1] = 0.30*0.45

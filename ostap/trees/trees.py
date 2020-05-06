@@ -509,7 +509,7 @@ def _stat_cov_ ( tree        ,
     import ostap.math.linalg 
     stat1  = Ostap.WStatEntity       ()
     stat2  = Ostap.WStatEntity       ()
-    cov2   = Ostap.Math.SymMatrix2x2 ()
+    cov2   = Ostap.Math.SymMatrix(2) ()
 
     if cuts : 
         length = Ostap.StatVar.statCov ( tree        ,

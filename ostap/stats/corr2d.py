@@ -66,7 +66,7 @@ class Corr2D(object) :
         ##
         self.stat1 = WSE () 
         self.stat2 = WSE ()
-        self.cov2  = Ostap.SymMatrix2x2()
+        self.cov2  = Ostap.SymMatrix(2) ()
         ##
         self.var1 = var1
         self.var2 = var2
@@ -94,7 +94,7 @@ class Corr2D(object) :
                                       first      , last ) 
 
 
-        self.corr = Ostap.SymMatrix2x2()
+        self.corr = Ostap.SymMatrix(2)()
 
         rms1 = self.stat1.rms()
         rms2 = self.stat2.rms()
