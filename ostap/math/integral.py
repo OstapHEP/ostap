@@ -99,7 +99,7 @@ def romberg ( fun                ,
               limit    = 10      , # ignored, kept to mimic consistency with 
               args     = ()      ,
               nmax     = 8       , # steps in Richardson's extrapolation
-              maxdepth = 10        # the maxmal depth 
+              maxdepth = 20        # the maxmal depth 
               ) : 
     """Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
