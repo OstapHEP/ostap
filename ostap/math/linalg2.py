@@ -139,9 +139,11 @@ class Method(object) :
         if not mm : 
             try : 
                 mm = self.__factory ( *targs )
-                self.__methods[ targs ] = mm 
             except TypeError :
-                mm = None 
+                return None
+            
+            if mm :
+                self.__methods[ targs ] = mm 
             
         return mm
     
