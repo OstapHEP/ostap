@@ -367,18 +367,19 @@ def test_integration () :
     for i in b  : b[i] = random.uniform ( -10 , 10 ) 
 
     from ostap.math.integral import romberg 
-    
+
+    xmax = b.xmin() + 0.1 * ( b.xmax() - b.xmin() ) 
     for i in range ( 500 ) :
         
         ##  note:  x1 <  x2 
-        x1 = random.uniform ( b.xmin() , b.xmax() )
+        x1 = random.uniform ( b.xmin() ,   xmax   )
         x2 = random.uniform ( x1       , b.xmax() )
 
         i1 = b.integral (      x1 , x2 )
         i2 = romberg    ( b ,  x1 , x2 )
 
         dd = ( i1 - i2 )
-        ds = ( abs(i1) + abs ( i2 ) )
+        ds = ( abs ( i1 x) + abs ( i2 ) )
         if abs ( dd ) > ds * 1.e-6 :
             raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
