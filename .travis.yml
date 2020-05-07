@@ -10,10 +10,10 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
-  - conda create -q -n testenv python=2.7 root  cmake future nose
+  - conda create -q -n testenv python=2.7 root  cmake future nose ninja 
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
-  - pip install coverage coveralls nose hotshot
+  - pip install coverage coveralls nose
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j8  && make install && cd ../
 
 
