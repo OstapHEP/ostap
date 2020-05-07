@@ -100,7 +100,7 @@ def test_extended1 () :
         others           = [ narrow_1 , narrow_2 ] , 
         suffix           = '_a'
         )
- 
+
     with rooSilent() :
         
         ## signals

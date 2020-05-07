@@ -13,7 +13,9 @@
 
 ## Bug fixes:  
   1. fix bugs in `funbasic`, `roofuncs` methods
-  
+  1. fix bugs in `PyVAR2`
+  1. fix namings in `MakeVar.name`
+  `
 
 # v1.4.8.2
 

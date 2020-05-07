@@ -255,6 +255,7 @@ class MakeVar ( object ) :
     @name.setter
     def name ( self , value ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
+        if self.__name == value : return 
         if value in self.__pdf_names and not NameDuplicates.allowed() :
             self.warning ( 'The name "%s" for PDF already defined!' % value )
         self.__pdf_names.add ( value )     
