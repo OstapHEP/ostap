@@ -379,8 +379,8 @@ def test_integration () :
 
         dd = ( i1 - i2 )
         ds = ( abs(i1) + abs ( i2 ) )
-        if abs ( dd ) > ds * 1.e-7 :
-            raise ValueError ( 'Invalid Integrals!' )
+        if abs ( dd ) > ds * 1.e-6 :
+            raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
     logger.info ('Integration     is  OK' )
 
