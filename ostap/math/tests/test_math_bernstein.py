@@ -368,7 +368,7 @@ def test_integration () :
 
     from ostap.math.integral import romberg 
 
-    xmax = b.xmin() + 0.1 * ( b.xmax() - b.xmin() ) 
+    xmax = b.xmin() + 0.9 * ( b.xmax() - b.xmin() ) 
     for i in range ( 500 ) :
         
         ##  note:  x1 <  x2 
@@ -379,8 +379,8 @@ def test_integration () :
         i2 = romberg    ( b ,  x1 , x2 )
 
         dd = ( i1 - i2 )
-        ds = ( abs ( i1 x) + abs ( i2 ) )
-        if abs ( dd ) > ds * 1.e-6 :
+        ds = ( abs ( i1 ) + abs ( i2 ) )
+        if 0 < ds < abs ( dd ) * 10**6 :
             raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
     logger.info ('Integration     is  OK' )
