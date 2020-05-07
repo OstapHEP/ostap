@@ -175,7 +175,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 
         ## initialize the base
         self.__selection = str ( selection ).strip()  
-        Ostap.SelectorWithCuts.__init__ ( self , self.selection , None , self )
+        Ostap.SelectorWithCuts.__init__ ( self , self.selection , 0 , self )
         
         if self.cuts () and not self.silence :
             logger.info ( 'SelectorWithCuts: %s' % self.cuts() )

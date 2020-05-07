@@ -321,8 +321,7 @@ class LinAlg(object) :
         """
 
         ##  print ('CLEANUP-START') 
-
-        return
+        ##  return
     
         while LinAlg.decorated_matrices :
             LinAlg.restore ( LinAlg.decorated_matrices.pop() ) 

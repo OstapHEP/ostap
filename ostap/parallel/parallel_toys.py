@@ -346,7 +346,7 @@ def parallel_toys ( pdf                       ,
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
 
-    params = pdf.pdf.getParameters (  None ) 
+    params = pdf.params() 
     toy_data = [] 
     if  isinstance ( data , ROOT.RooAbsData ) :
         varset =   data.varset()
@@ -538,7 +538,7 @@ def parallel_toys2(
     import ostap.fitting.variables
     import ostap.fitting.roofitresult
 
-    params = gen_pdf.pdf.getParameters (  None ) 
+    params = gen_pdf.params () 
     toy_data = [] 
     if  isinstance ( data , ROOT.RooAbsData ) :
         varset =   data.varset()

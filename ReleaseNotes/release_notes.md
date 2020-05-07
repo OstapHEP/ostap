@@ -7,6 +7,7 @@
   1. polishing for `graph_summary` - add `offset` argument
   1. move certainmethdo from PDF to FUNC: `params`, `__contains__` , `parameter`, `parameters` , `load_parameters`
   1. remove usage of `RooAbsReal::getParameter ( None )`
+  1. remove usage of `None` as null-pointer
   `
 ## Backward incompatible changes
 
