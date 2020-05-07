@@ -364,7 +364,7 @@ def test_integration () :
     BP = Ostap.Math.Bernstein
     
     b = BP ( 5 , 0 , 2  )
-    for i in b  : b[i] = random.uniform ( -10 , 10 ) 
+    for i in b  : b[i] = random.uniform ( -1 , 50 ) 
 
     from ostap.math.integral import romberg 
 
