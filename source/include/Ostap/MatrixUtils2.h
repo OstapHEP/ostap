@@ -330,9 +330,6 @@ namespace Ostap
         typedef typename M::R R ;
         static R rmul ( const M1& m1 , const  M2& m2 ) { return M::mul ( m2 , m1 ) ; }
       } ;
-
-
-      
       
       // ======================================================================
       // scaling
@@ -341,42 +338,36 @@ namespace Ostap
       struct IMul<M1,double>
       {
         typedef M1 R ;
-        static R& imul ( M1& m1 , const double m2 )
-        {  m1 *= m2 ; return m1 ; }
+        static R& imul ( M1& m1 , const double m2 ) {  m1 *= m2 ; return m1 ; }
       } ;
       // ======================================================================
       template <class M1>
       struct IDiv<M1,double>
       {
         typedef M1 R ;
-        static R& idiv ( M1& m1 , const double m2 )
-        {  return IMul<M1,double>::imul ( m1 , 1 / m2 ) ; }
+        static R& idiv ( M1& m1 , const double m2 ) { return IMul<M1,double>::imul ( m1 , 1 / m2 ) ; }
       } ;
       // ======================================================================
       template <class M1>
       struct Mul<M1,double>
       {
         typedef M1 R ;
-        static R mul ( const M1& m1 , const double m2 )
-        { return m1 * m2  ; }
-      } ;
-      // ======================================================================
-      template <class M1>
-      struct Div<M1,double>
-      {
-        typedef M1 R ;
-        static R div ( const M1& m1 , const double m2 )
-        { return Mul<M1,double>::mul ( m1 , 1 / m2 ) ; }
+        static R mul ( const M1& m1 , const double m2 ) { return m1 * m2  ; }
       } ;
       // ======================================================================
       template <class M1>
       struct RMul<M1,double>
       {
         typedef M1 R ;
-        static R rmul ( const M1& m1 , const double m2 )
-        { return m1 * m2  ; }
+        static R rmul ( const M1& m1 , const double m2 ) { return Mul<M1,double>::mul ( m1 , m2 ) ; }
       } ;
-      
+      // ======================================================================
+      template <class M1>
+      struct Div<M1,double>
+      {
+        typedef M1 R ;
+        static R div ( const M1& m1 , const double m2 ) { return Mul<M1,double>::mul ( m1 , 1 / m2 ) ; }
+      } ;
       // ======================================================================
       template <class M>
       struct IAdd<M,M>

@@ -17,7 +17,7 @@ install:
   - pip install coverage coveralls
 
 
-script: source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap
+script: source build/INSTALL/thisostap.sh && nosetests --exe  --with-coverage  --cover-package=ostap
 
 after_success:
   - time coveralls

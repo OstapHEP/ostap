@@ -671,7 +671,7 @@ class LinAlg(object) :
         if isinstance ( b , num_types ) : b = float( b )
         
         oper , check  = LinAlg.methods_IMUL ( a , b )
-        
+
         if oper and check and check.ok ( a, b ) :
             result = oper.imul ( a, b )
             return result
@@ -1367,7 +1367,8 @@ class LinAlg(object) :
         t.__rmul__      = LinAlg.RMUL 
         t.__imul__      = LinAlg.IMUL 
         
-        if ( 3 , 5 ) <= python_version : 
+        if ( 3 , 5 ) <= python_version :
+            
             t. __matmul__   = LinAlg. MUL ## Py3
             t.__rmatmul__   = LinAlg.RMUL ## Py3 
             t.__imatmul__   = LinAlg.IMUL ## Py3 
