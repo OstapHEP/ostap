@@ -58,7 +58,7 @@ namespace std
     {
       std::size_t seed =  0 ;
       char c;
-      while ( c = *str++) { _hash_combine ( seed , c ) ; }
+      while ( ( c = *str++ ) ) { _hash_combine ( seed , c ) ; }
       return seed ;
     }
   } ;
