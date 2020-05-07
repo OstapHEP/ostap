@@ -19,6 +19,7 @@ __all__     = ( )
 # =============================================================================
 from   builtins import range 
 import ROOT, re 
+from   sys      import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -206,9 +207,10 @@ class LinAlgT(LA.LinAlg) :
         t.__rmul__      = LinAlgT.RMUL 
         t.__imul__      = LinAlgT.IMUL 
 
-        t. __matmul__   = LinAlgT. MUL ## Py3
-        t.__rmatmul__   = LinAlgT.RMUL ## Py3 
-        t.__imatmul__   = LinAlgT.IMUL ## Py3 
+        if ( 3 , 5 ) <= python_version : 
+            t. __matmul__   = LinAlgT. MUL ## Py3
+            t.__rmatmul__   = LinAlgT.RMUL ## Py3 
+            t.__imatmul__   = LinAlgT.IMUL ## Py3 
 
         t. __div__      = LinAlgT. DIV 
         t.__idiv__      = LinAlgT.IDIV 
@@ -283,10 +285,11 @@ class LinAlgT(LA.LinAlg) :
         m.__rmul__      = LinAlgT.RMUL 
         m.__imul__      = LinAlgT.IMUL 
 
-        m. __matmul__   = LinAlgT. MUL ## Py3
-        m.__rmatmul__   = LinAlgT.RMUL ## Py3 
-        m.__imatmul__   = LinAlgT.IMUL ## Py3 
-
+        if ( 3 , 5 ) <= python_version : 
+            m. __matmul__   = LinAlgT. MUL ## Py3
+            m.__rmatmul__   = LinAlgT.RMUL ## Py3 
+            m.__imatmul__   = LinAlgT.IMUL ## Py3 
+            
         m. __div__      = LinAlgT. DIV 
         m.__idiv__      = LinAlgT.IDIV 
         m. __truediv__  = LinAlgT. DIV 

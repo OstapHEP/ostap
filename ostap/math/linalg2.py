@@ -20,8 +20,9 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   builtins    import range 
-import ROOT, cppyy, re 
+from   builtins  import range 
+import ROOT, re
+from   sys       import version_info as python_version
 # =============================================================================
 # logging 
 # =============================================================================
@@ -319,7 +320,7 @@ class LinAlg(object) :
         """Cleanup LinAlg
         """
 
-        print ('CLEANUP-START') 
+        ##  print ('CLEANUP-START') 
 
         return
     
@@ -416,8 +417,6 @@ class LinAlg(object) :
         if LinAlg.method_EQ      : 
             LinAlg.method_EQ     . clear ()
             LinAlg.method_EQ     = None 
-
-        print ('CLEANUP-END') 
 
     mgetter = staticmethod ( mgetter  )
         
@@ -646,7 +645,6 @@ class LinAlg(object) :
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
             sa = a.shape            
             sb = b.shape
-            print('MUL SHAPES:', sa, sb ) 
             if sa[-1] != sb[0] :
                 ##  return NotImplemented
                 raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
@@ -691,17 +689,19 @@ class LinAlg(object) :
         """Right-multiplication of matrix/vector objects
         >>> C = B * A 
         """
-        
+
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+
+            return NotImplemented
+        
             sa = a.shape            
             sb = b.shape
-            print('RMUL SHAPES:', sa, sb )
             if sb[-1] != sa[0] :
                 ## return NotImplemented
                 raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
             return np.matmul ( b , a.to_numpy() )  
-        
+
         oper , check  = LinAlg.methods_RMUL ( a , b )
         
         if oper and check and check.ok ( a, b ) :
@@ -1367,10 +1367,11 @@ class LinAlg(object) :
         t. __mul__      = LinAlg. MUL 
         t.__rmul__      = LinAlg.RMUL 
         t.__imul__      = LinAlg.IMUL 
-
-        t. __matmul__   = LinAlg. MUL ## Py3
-        t.__rmatmul__   = LinAlg.RMUL ## Py3 
-        t.__imatmul__   = LinAlg.IMUL ## Py3 
+        
+        if ( 3 , 5 ) <= python_version : 
+            t. __matmul__   = LinAlg. MUL ## Py3
+            t.__rmatmul__   = LinAlg.RMUL ## Py3 
+            t.__imatmul__   = LinAlg.IMUL ## Py3 
 
         t. __div__      = LinAlg. DIV 
         t.__idiv__      = LinAlg.IDIV 
@@ -1443,10 +1444,11 @@ class LinAlg(object) :
         m.__rmul__      = LinAlg.RMUL 
         m.__imul__      = LinAlg.IMUL 
 
-        m. __matmul__   = LinAlg. MUL ## Py3
-        m.__rmatmul__   = LinAlg.RMUL ## Py3 
-        m.__imatmul__   = LinAlg.IMUL ## Py3 
-
+        if ( 3 , 5 ) <= python_version : 
+            m. __matmul__   = LinAlg. MUL ## Py3
+            m.__rmatmul__   = LinAlg.RMUL ## Py3 
+            m.__imatmul__   = LinAlg.IMUL ## Py3 
+            
         m. __div__      = LinAlg. DIV 
         m.__idiv__      = LinAlg.IDIV 
         m. __truediv__  = LinAlg. DIV 
@@ -1693,7 +1695,6 @@ _new_methods_ = (
 
 import atexit
 atexit.register ( LinAlg.CLEANUP ) 
-
 
 # =============================================================================
 if '__main__' == __name__ :
