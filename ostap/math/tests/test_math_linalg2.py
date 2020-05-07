@@ -54,7 +54,7 @@ def test_linalg2() :
     logger.info ( 'l1 *= 2 : %s    '  % l1 )
 
 
-    if ( 3 , 5 ) <= python_version :
+    if ( 3 , 7 ) <= python_version :
         
         logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
         logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
@@ -123,7 +123,7 @@ def test_linalg2() :
     logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
 
     
-    if ( 3 , 5 ) <= python_version : 
+    if ( 3 , 7 ) <= python_version : 
         logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
         logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
         logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
