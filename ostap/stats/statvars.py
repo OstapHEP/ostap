@@ -50,6 +50,8 @@ __all__     = (
     'data_decorate'       , ## technical function to decorate the class
     )
 # =============================================================================
+from   builtins             import range
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -248,7 +250,7 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , *args ) :
         quantiles = [ quantiles ]
     elif isinstance ( quantiles , int   ) and 1 < quantiles     :
         N         = quantiles 
-        quantiles =  ( float ( i ) / N for i in xrange ( 1 , N ) )
+        quantiles =  ( float ( i ) / N for i in range ( 1 , N ) )
 
     qq = [] 
     for q in quantiles :
