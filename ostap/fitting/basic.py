@@ -303,7 +303,9 @@ class PDF (FUNC) :
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None
+            print ("fitTo-2")
             result          = self.pdf.fitTo ( dataset , *opts ) 
+            print ("fitTo-3")
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -362,7 +364,7 @@ class PDF (FUNC) :
                 if 2 <= len ( self.yields ) : sums.append ( result.sum ( *self.yields ) )
 
                 for ss in sums :
-                    if 0 >= ss.cov2() : continue 
+                    if 0 >= ss.cov2() : continue
                     nl = ss.value() - 0.50 * ss.error() 
                     nr = ss.value() + 0.50 * ss.error()
                     if not nl <= len ( dataset ) <= nr :

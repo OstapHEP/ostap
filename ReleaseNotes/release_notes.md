@@ -8,7 +8,8 @@
   1. move certainmethdo from PDF to FUNC: `params`, `__contains__` , `parameter`, `parameters` , `load_parameters`
   1. remove usage of `RooAbsReal::getParameter ( None )`
   1. remove usage of `None` as null-pointer
-  `
+  1. adjust a bit `RooArgList.__contains__`  to use `RooCollection::find` insntead of `RooArgList::index`
+
 ## Backward incompatible changes
 
 ## Bug fixes:  

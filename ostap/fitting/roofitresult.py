@@ -140,6 +140,7 @@ def _rfr_corr_  ( self , var1 , var2 ) :
     if var1 in self.constPars() : return 0.0
     if var2 in self.constPars() : return 0.0
     #
+    print ('asking for', var1, var2) 
     return self.correlation ( var1 , var2 ) 
 
 # =============================================================================
@@ -316,7 +317,7 @@ def _rfr_sum_ ( self , var1 , var2 , *vars ) :
         for j in range ( i ) :
             vj  = allvars [ j ]
             if isinstance ( vj , str ) : vj = self.param ( vj ) [1]
-            if vj in self.constPars()  : continue        
+            if vj in self.constPars() : continue        
             c2 += 2 * self.covariance ( vi , vj ) 
             
     return VE ( s , c2 ) 

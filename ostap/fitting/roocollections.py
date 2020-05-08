@@ -59,7 +59,9 @@ def _ral_contains_ ( self , i ) :
     """Check the presence of element or index in the list
     """
     if isinstance ( i , int ) : return 0<= i < len(self)
-    return  0 <= self.index ( i )
+    obj = self.find ( i )
+    return True if obj else False  
+    ## return  0 <= self.index ( i )
 
 # =============================================================================
 ##  get item form the list 
