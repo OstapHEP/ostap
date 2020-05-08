@@ -43,12 +43,6 @@ import ostap.io.rootshelve   as     rootshelve
 
 # =============================================================================
  
-db_sql_name  = CU.CleanUp.tempfile ( suffix = '.sqldb'  )  
-db_zip_name  = CU.CleanUp.tempfile ( suffix = '.zipdb'  ) 
-db_bz2_name  = CU.CleanUp.tempfile ( suffix = '.bz2db'  )
-db_root_name = CU.CleanUp.tempfile ( suffix = '.root'   )
-db_lz_name   = CU.CleanUp.tempfile ( suffix = '.lzmadb' )
-
 bins    = 1000
 data    = {}
 h1      = ROOT.TH1D('h1','1D-histogram',bins,-5,5) ; h1.Sumw2() 
@@ -68,10 +62,17 @@ for i in range ( 5000 ) :
     hh = ROOT.TH1D ( ht , '' , 500 , 0 , 100 )
     for j in range ( 200 ) :
         hh.Fill ( random.gauss ( 50 , 10) )
-    data['histos'][ht] = hh 
+data['histos'][ht] = hh 
 
+        
 def test_shelves():
     
+    db_sql_name  = CU.CleanUp.tempfile ( suffix = '.sqldb'  )  
+    db_zip_name  = CU.CleanUp.tempfile ( suffix = '.zipdb'  ) 
+    db_bz2_name  = CU.CleanUp.tempfile ( suffix = '.bz2db'  )
+    db_root_name = CU.CleanUp.tempfile ( suffix = '.root'   )
+    db_lz_name   = CU.CleanUp.tempfile ( suffix = '.lzmadb' )
+
     db_sql  = sqliteshelve.open ( db_sql_name  , 'c' )
     db_zip  = zipshelve.open    ( db_zip_name  , 'c' )
     db_bz2  = bz2shelve.open    ( db_bz2_name  , 'c' )
@@ -226,11 +227,10 @@ def test_shelves():
                 db.ls()
     
 # =============================================================================
-if '__main__' == __name__ :    
+if '__main__' == __name__ :
+    
     test_shelves()
 
-    del h1 , h2
-
 # =============================================================================
-# The END
+##                                                                      The END
 # =============================================================================

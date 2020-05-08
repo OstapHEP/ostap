@@ -243,26 +243,6 @@ def test_convexonly_spline_3 () :
 
 
 # =============================================================================
-def test_convex_only_spline () :
-    
-    with timing ('Convex/Concave-spline[2,2]' , logger ) :
-        
-        rC1 = h1.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC2 = h2.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC3 = h3.concaveSpline ( degree = 2 , knots = 2 ) 
-        rC4 = h4.concaveSpline ( degree = 2 , knots = 2 ) 
-        rC5 = h1.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC6 = h1.concaveSpline ( degree = 2 , knots = 2 ) 
-        
-        logger.info ( 'Convex/Concave-spline[2,2]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                                (rC2 , h2) ,
-                                                                                (rC3 , h3) ,
-                                                                                (rC4 , h4) ,
-                                                                                (rC5 , h5) ,
-                                                                                (rC6 , h6) ] ] )
-
-
-# =============================================================================
 if '__main__' == __name__ :
     
     logger.info ( 100*'*')
