@@ -16,7 +16,9 @@ install:
   - pip install coverage coveralls terminaltables nose numpy scipy pathos ppft multiprocess dill 
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
 
-script: source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap
+script:
+  - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/ostap/math 
+  - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/ostap/stats 
 
 after_success:
   - time coveralls
