@@ -528,7 +528,8 @@ class LinAlg(object) :
 
         if oper and check and check.ok ( a, b ) :
             result = oper.iadd ( a, b )
-            return result
+            ## return result
+            return a 
         
         return NotImplemented 
                 
@@ -600,7 +601,8 @@ class LinAlg(object) :
         
         if oper and check and check.ok ( a, b ) :
             result = oper.isub ( a, b )
-            return result
+            ##  return result
+            return a 
         
         return NotImplemented 
                 
@@ -674,7 +676,8 @@ class LinAlg(object) :
 
         if oper and check and check.ok ( a, b ) :
             result = oper.imul ( a, b )
-            return result
+            ##  return result
+            return a 
         
         return NotImplemented 
                 

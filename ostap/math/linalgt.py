@@ -349,26 +349,21 @@ class LinAlgT(LA.LinAlg) :
         return m
     
 Ostap.TVector          = ROOT.TVectorT    ( 'double'  )
-Ostap.TVectorF         = ROOT.TVectorT    ( 'float'   )
 Ostap.TVectorD         = ROOT.TVectorT    ( 'double'  )
 Ostap.TMatrix          = ROOT.TMatrixT    ( 'double'  )
-Ostap.TMatrixF         = ROOT.TMatrixT    ( 'float'   )
 Ostap.TMatrixD         = ROOT.TMatrixT    ( 'double'  )
 Ostap.TMatrixSym       = ROOT.TMatrixTSym ( 'double'  )
-Ostap.TMatrixSymF      = ROOT.TMatrixTSym ( 'float'   )
 Ostap.TMatrixSymD      = ROOT.TMatrixTSym ( 'double'  )
 Ostap.Math.TVector     = ROOT.TVectorT    ( 'double'  )
-Ostap.Math.TVectorF    = ROOT.TVectorT    ( 'float'   )
 Ostap.Math.TVectorD    = ROOT.TVectorT    ( 'double'  )
 Ostap.Math.TMatrix     = ROOT.TMatrixT    ( 'double'  )
-Ostap.Math.TMatrixF    = ROOT.TMatrixT    ( 'float'   )
 Ostap.Math.TMatrixD    = ROOT.TMatrixT    ( 'double'  )
 Ostap.Math.TMatrixSym  = ROOT.TMatrixTSym ( 'double'  )
-Ostap.Math.TMatrixSymF = ROOT.TMatrixTSym ( 'float'   )
 Ostap.Math.TMatrixSymD = ROOT.TMatrixTSym ( 'double'  )
 
 
-for t in ( 'float' , 'double' , 'long double' ) :
+##  for t in ( 'float' , 'double' , 'long double' ) :
+for t in ( 'double' ,) :
 
     m1 = ROOT.TMatrixT      ( t  )
     LinAlgT.deco_tmatrix    ( m1 ) 

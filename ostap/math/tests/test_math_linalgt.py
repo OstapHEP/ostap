@@ -144,7 +144,16 @@ def test_linalgt() :
     logger.info ( ' m22 == s22*1.0 : %s ' % ( m22 == s22 * 1.0 ) )
     logger.info ( ' m22 != s22*1.1 : %s ' % ( m22 != s22 * 1.1 ) )
 
+    m22 += m22*2
+    m22 -= m22*1
 
+    m22 += s22*2
+    m22 -= s22*1
+
+    s22 += s22*2
+    s22 -= s22*1
+    
+    
     if np :
         logger.info ( 'Operations with numpy objects')
         

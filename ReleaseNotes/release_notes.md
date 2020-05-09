@@ -17,7 +17,6 @@
   1. fix bugs in `PyVAR2`
   1. fix namings in `MakeVar.name`
   `
-
 # v1.4.8.2
 
 ## New features

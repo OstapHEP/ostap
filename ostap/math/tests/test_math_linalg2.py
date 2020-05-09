@@ -142,6 +142,16 @@ def test_linalg2() :
     logger.info ( ' m22 != s22*1.1 : %s ' % ( m22 != s22 * 1.1 ) )
 
 
+    m22 += m22
+    m22 -= m22*2
+
+    m22 += s22*0
+    m22 -= s22*2
+
+    s22 += s22*2
+    s22 -= s22*1
+    
+
     if np :
         logger.info ( 'Operations with numpy objects')
         
@@ -153,11 +163,6 @@ def test_linalg2() :
         logger.info ( 's22 * v2  : %s' % ( s22 * v2  ) )
         logger.info ( 'm22 * v2  : %s' % ( m22 * v2  ) )
         logger.info ( 'm23 * v3  : %s' % ( m23 * v3  ) )
-        
-
-        n22_m = m22.to_numpy ()
-        n22_s = s22.to_numpy ()
-        n23   = m23.to_numpy ()
         
         logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy() ) )
         logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy() ) )

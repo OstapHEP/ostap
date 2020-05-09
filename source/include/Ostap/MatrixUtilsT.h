@@ -383,12 +383,12 @@ namespace Ostap
       // ======================================================================
       // CHECKERS 
       // ======================================================================
-      template <class T1,class T2>
-      struct CanAdd<TMatrixT<T1>,TMatrixT<T2> >
+      template <class T>
+      struct CanAdd<TMatrixT<T>,TMatrixT<T> >
       {
         static bool ok
-        ( const TMatrixT<T1>& m1 , 
-          const TMatrixT<T2>& m2 )
+        ( const TMatrixT<T>& m1 , 
+          const TMatrixT<T>& m2 )
         {
           return
             m1.IsValid  () && m2.IsValid  () &&
@@ -397,12 +397,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,class T2>
-      struct CanAdd<TMatrixT<T1>,TMatrixTSym<T2> >
+      template <class T>
+      struct CanAdd<TMatrixT<T>,TMatrixTSym<T> >
       {
         static bool ok
-        ( const TMatrixT<T1>&    m1 , 
-          const TMatrixTSym<T2>& m2 )
+        ( const TMatrixT<T>&    m1 , 
+          const TMatrixTSym<T>& m2 )
         {
           return
             m1.IsValid  () && m2.IsValid  () &&
@@ -411,12 +411,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,class T2>
-      struct CanAdd<TMatrixTSym<T1>,TMatrixT<T2> >
+      template <class T>
+      struct CanAdd<TMatrixTSym<T>,TMatrixT<T> >
       {
         static bool ok
-        ( const TMatrixTSym<T1>& m1 , 
-          const TMatrixT<T2>&    m2 )
+        ( const TMatrixTSym<T>& m1 , 
+          const TMatrixT<T>&    m2 )
         {
           return
             m1.IsValid  () && m2.IsValid  () &&
@@ -425,12 +425,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,class T2>
-      struct CanAdd<TMatrixTSym<T1>,TMatrixTSym<T2> >
+      template <class T>
+      struct CanAdd<TMatrixTSym<T>,TMatrixTSym<T> >
       {
         static bool ok
-        ( const TMatrixTSym<T1>& m1 , 
-          const TMatrixTSym<T2>& m2 )
+        ( const TMatrixTSym<T>& m1 , 
+          const TMatrixTSym<T>& m2 )
         {
           return
             m1.IsValid  () && m2.IsValid  () &&
@@ -439,12 +439,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================      
-      template <class T1,unsigned int D1, unsigned int D2, class R, class T2>
-      struct CanAdd<ROOT::Math::SMatrix<T1,D1,D2,R>,TMatrixT<T2> >
+      template <class T,unsigned int D1, unsigned int D2, class R>
+      struct CanAdd<ROOT::Math::SMatrix<T,D1,D2,R>,TMatrixT<T> >
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2,R>& m1 , 
-          const TMatrixT<T2>&                    m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
+          const TMatrixT<T>&                    m2 )
         {
           return
             m2.IsValid        () &&
@@ -453,12 +453,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R, class T2>
-      struct CanAdd<TMatrixT<T2>,ROOT::Math::SMatrix<T1,D1,D2,R> >
+      template <class T,unsigned int D1, unsigned int D2, class R>
+      struct CanAdd<TMatrixT<T>,ROOT::Math::SMatrix<T,D1,D2,R> >
       {
         static bool ok
-        ( const TMatrixT<T2>&                    m2 ,          
-          const ROOT::Math::SMatrix<T1,D1,D2,R>& m1 ) 
+        ( const TMatrixT<T>&                    m2 ,          
+          const ROOT::Math::SMatrix<T,D1,D2,R>& m1 ) 
         {
           return
             m2.IsValid        () &&
@@ -467,12 +467,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R, class T2>
-      struct CanAdd<ROOT::Math::SMatrix<T1,D1,D2,R>,TMatrixTSym<T2> >
+      template <class T,unsigned int D1, unsigned int D2, class R>
+      struct CanAdd<ROOT::Math::SMatrix<T,D1,D2,R>,TMatrixTSym<T> >
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2,R>& m1 , 
-          const TMatrixTSym<T2>&                 m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R>& m1 , 
+          const TMatrixTSym<T>&                 m2 )
         {
           return
             m2.IsValid        () &&
@@ -481,12 +481,12 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R, class T2>
-      struct CanAdd<TMatrixTSym<T2>,ROOT::Math::SMatrix<T1,D1,D2,R> >
+      template <class T,unsigned int D1, unsigned int D2, class R>
+      struct CanAdd<TMatrixTSym<T>,ROOT::Math::SMatrix<T,D1,D2,R> >
       {
         static bool ok
-        ( const TMatrixTSym<T2>&                 m2 ,          
-          const ROOT::Math::SMatrix<T1,D1,D2,R>& m1 ) 
+        ( const TMatrixTSym<T>&                 m2 ,          
+          const ROOT::Math::SMatrix<T,D1,D2,R>& m1 ) 
         {
           return
             m2.IsValid        () &&
@@ -495,30 +495,30 @@ namespace Ostap
         }  
       } ;
       // ======================================================================
-      template <class T1,class T2>
-      struct CanAdd<TVectorT<T1>,TVectorT<T2> >
+      template <class T>
+      struct CanAdd<TVectorT<T>,TVectorT<T> >
       {
         static bool ok
-        ( const TVectorT<T1>& m1 ,  
-          const TVectorT<T2>& m2 ) 
+        ( const TVectorT<T>& m1 ,  
+          const TVectorT<T>& m2 ) 
         { return m1.IsValid() && m2.IsValid () && m1.GetNrows()== m2.GetNrows () ; }
       };
       // ======================================================================
-      template <class T1,unsigned int D,class T2>
-      struct CanAdd<ROOT::Math::SVector<T1,D>,TVectorT<T2> >
+      template <class T,unsigned int D>
+      struct CanAdd<ROOT::Math::SVector<T,D>,TVectorT<T> >
       {
         static bool ok
-        ( const ROOT::Math::SVector<T1,D> & /* m1 */ ,  
-          const TVectorT<T2>&               m2        ) 
+        ( const ROOT::Math::SVector<T,D> & /* m1 */ ,  
+          const TVectorT<T>&                  m2        ) 
         { return m2.IsValid () && D == m2.GetNrows () ; }
       };
       // ======================================================================
-      template <class T1,unsigned int D,class T2>
-      struct CanAdd<TVectorT<T2>,ROOT::Math::SVector<T1,D> >
+      template <class T,unsigned int D>
+      struct CanAdd<TVectorT<T>,ROOT::Math::SVector<T,D> >
       {
         static bool ok
-        ( const TVectorT<T2>&                  m2     ,
-          const ROOT::Math::SVector<T1,D> & /* m1 */  )
+        ( const TVectorT<T>&                  m2     ,
+          const ROOT::Math::SVector<T,D> & /* m1 */  )
         { return m2.IsValid () && D == m2.GetNrows () ; }
       };
       // ======================================================================
@@ -526,219 +526,207 @@ namespace Ostap
 
       
       // ======================================================================
-      template <class T1,class T2>
-      struct CanMul<TMatrixT<T1>,TMatrixT<T2>>
+      template <class T>
+      struct CanMul<TMatrixT<T>,TMatrixT<T>>
       {
         static bool ok
-        ( const TMatrixT<T1>& m1 ,
-          const TMatrixT<T2>& m2 )
+        ( const TMatrixT<T>& m1 ,
+          const TMatrixT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       };
       // ======================================================================
-      template <class T1,class T2>
-      struct CanMul<TMatrixT<T1>,TMatrixTSym<T2>>
+      template <class T>
+      struct CanMul<TMatrixT<T>,TMatrixTSym<T>>
       {
         static bool ok
-        ( const TMatrixT<T1>   & m1 ,
-          const TMatrixTSym<T2>& m2 )
+        ( const TMatrixT<T>   & m1 ,
+          const TMatrixTSym<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       };
       // ======================================================================      
-      template <class T1,class T2>
-      struct CanMul<TMatrixTSym<T1>,TMatrixT<T2>>
+      template <class T>
+      struct CanMul<TMatrixTSym<T>,TMatrixT<T>>
       {
         static bool ok
-        ( const TMatrixTSym<T1> & m1 ,
-          const TMatrixT<T2>    & m2 )
+        ( const TMatrixTSym<T> & m1 ,
+          const TMatrixT<T>    & m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       };
       // ======================================================================      
-      template <class T1,class T2>
-      struct CanMul<TMatrixTSym<T1>,TMatrixTSym<T2>>
+      template <class T>
+      struct CanMul<TMatrixTSym<T>,TMatrixTSym<T>>
       {
         static bool ok
-        ( const TMatrixTSym<T1> & m1 ,
-          const TMatrixTSym<T2> & m2 )
+        ( const TMatrixTSym<T> & m1 ,
+          const TMatrixTSym<T> & m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       };
       // ======================================================================      
-      template <class T1,class T2>
-      struct CanMul<TMatrixT<T1>,TVectorT<T2>>
+      template <class T>
+      struct CanMul<TMatrixT<T>,TVectorT<T>>
       {
         static bool ok
-        ( const TMatrixT<T1>& m1 ,
-          const TVectorT<T2>& m2 )
+        ( const TMatrixT<T>& m1 ,
+          const TVectorT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       };
       // ======================================================================
-      template <class T1,class T2>
-      struct CanMul<TMatrixTSym<T1>,TVectorT<T2>>
+      template <class T>
+      struct CanMul<TMatrixTSym<T>,TVectorT<T>>
       {
         static bool ok
-        ( const TMatrixTSym<T1>& m1 ,
-          const TVectorT<T2>&    m2 )
+        ( const TMatrixTSym<T>& m1 ,
+          const TVectorT<T>&    m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols() == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,class T2>
-      struct CanMul<TVectorT<T2>,TMatrixT<T1>>
+      template <class T>
+      struct CanMul<TVectorT<T>,TMatrixT<T>>
       {
         static bool ok
-        ( const TVectorT<T2>& m1 ,
-          const TMatrixT<T1>& m2 )
+        ( const TVectorT<T>& m1 ,
+          const TMatrixT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNrows () == m2.GetNrows() ; }
       };
       // ======================================================================
-      template <class T1,class T2>
-      struct CanMul<TVectorT<T2>,TMatrixTSym<T1>>
+      template <class T>
+      struct CanMul<TVectorT<T>,TMatrixTSym<T>>
       {
         static bool ok
-        ( const TVectorT<T2>& m1 ,
-          const TMatrixT<T1>& m2 )
+        ( const TVectorT<T>& m1 ,
+          const TMatrixT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNrows () == m2.GetNrows() ; }
       };
       // ======================================================================
       
-      template <class T1,class T2>
-      struct CanMul<TVectorT<T2>,TVectorT<T1>>
+      template <class T>
+      struct CanMul<TVectorT<T>,TVectorT<T>>
       {
         static bool ok
-        ( const TVectorT<T2>& m1 ,
-          const TVectorT<T1>& m2 )
+        ( const TVectorT<T>& m1 ,
+          const TVectorT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNrows () == m2.GetNrows() ; }
       };
       // ======================================================================
 
       
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<ROOT::Math::SMatrix<T1,D1,D2,R1>,TMatrixT<T2>>
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixT<T>>
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ ,
-          const TMatrixT<T2>&                         m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ ,
+          const TMatrixT<T>&                         m2 )
         { return m2.IsValid() &&  D2 == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<ROOT::Math::SMatrix<T1,D1,D2,R1>,TMatrixTSym<T2>>
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixTSym<T>>
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ ,
-          const TMatrixTSym<T2>&                      m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ ,
+          const TMatrixTSym<T>&                      m2 )
         { return m2.IsValid() &&  D2 == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<ROOT::Math::SMatrix<T1,D1,D2,R1>,TVectorT<T2>>
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<ROOT::Math::SMatrix<T,D1,D2,R1>,TVectorT<T>>
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ ,
-          const TVectorT<T2>&                         m2 )
+        ( const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ ,
+          const TVectorT<T>&                         m2 )
         { return m2.IsValid() &&  D2 == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul<ROOT::Math::SVector<T1,D>,
-                    TVectorT<T2>>
+      template <class T,unsigned int D>
+      struct CanMul<ROOT::Math::SVector<T,D>,
+                    TVectorT<T>>
       {
         static bool ok
-        ( const ROOT::Math::SVector<T1,D>& /*  m1 */ ,
-          const TVectorT<T2>&                 m2 )
+        ( const ROOT::Math::SVector<T,D>& /*  m1 */ ,
+          const TVectorT<T>&                 m2 )
         { return m2.IsValid() &&  D == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul<ROOT::Math::SVector<T1,D>,
-                    TMatrixT<T2>>
+      template <class T,unsigned int D>
+      struct CanMul<ROOT::Math::SVector<T,D>,
+                    TMatrixT<T>>
       {
         static bool ok
-        ( const ROOT::Math::SVector<T1,D>& /*  m1 */ ,
-          const TMatrixT<T2>&                  m2 )
+        ( const ROOT::Math::SVector<T,D>& /*  m1 */ ,
+          const TMatrixT<T>&                  m2 )
         { return m2.IsValid() &&  D == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul<ROOT::Math::SVector<T1,D>,
-                    TMatrixTSym<T2>>
+      template <class T,unsigned int D>
+      struct CanMul<ROOT::Math::SVector<T,D>,
+                    TMatrixTSym<T>>
       {
         static bool ok
-        ( const ROOT::Math::SVector<T1,D>& /*  m1 */ ,
-          const TMatrixTSym<T2>&               m2 )
+        ( const ROOT::Math::SVector<T,D>& /*  m1 */ ,
+          const TMatrixTSym<T>&               m2 )
         { return m2.IsValid() &&  D == m2.GetNrows() ; }
       } ;
 
       
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<TMatrixT<T2>,
-                    ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<TMatrixT<T>,
+                    ROOT::Math::SMatrix<T,D1,D2,R1> >
       {
         static bool ok
-        ( const TMatrixT<T2>&                         m2    ,
-          const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ )
+        ( const TMatrixT<T>&                         m2    ,
+          const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
         { return m2.IsValid() &&  m2.GetNcols == D1  ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<TMatrixTSym<T2>,
-                    ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<TMatrixTSym<T>,
+                    ROOT::Math::SMatrix<T,D1,D2,R1> >
       {
         static bool ok
-        ( const TMatrixTSym<T2>&                      m2    ,
-          const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ )
+        ( const TMatrixTSym<T>&                      m2    ,
+          const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
         { return m2.IsValid() &&  m2.GetNcols == D1  ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct CanMul<TVectorT<T2>,
-                    ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      template <class T,unsigned int D1, unsigned int D2, class R1>
+      struct CanMul<TVectorT<T>,
+                    ROOT::Math::SMatrix<T,D1,D2,R1> >
       {
         static bool ok
-        ( const TVectorT<T2>&                      m2    ,
-          const ROOT::Math::SMatrix<T1,D1,D2,R1>& /*  m1 */ )
+        ( const TVectorT<T>&                         m2    ,
+          const ROOT::Math::SMatrix<T,D1,D2,R1>& /*  m1 */ )
         { return m2.IsValid() &&  m2.GetNrows == D1  ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul<TVectorT<T2>,
-                    ROOT::Math::SVector<T1,D> >
+      template <class T,unsigned int D>
+      struct CanMul<TVectorT<T>,
+                    ROOT::Math::SVector<T,D> >
       {
         static bool ok
-        ( const TVectorT<T2>&                  m2 , 
-          const ROOT::Math::SVector<T1,D>& /*  m1 */ ) 
+        ( const TVectorT<T>&                  m2 , 
+          const ROOT::Math::SVector<T,D>& /*  m1 */ ) 
         { return m2.IsValid() &&  m2.GetNrows() == D ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul<TMatrixT<T2>,
-                    ROOT::Math::SVector<T1,D> >
+      template <class T,unsigned int D>
+      struct CanMul<TMatrixT<T>,
+                    ROOT::Math::SVector<T,D> >
       {
         static bool ok
-        ( const TMatrixT<T2>&                  m2    ,
-          const ROOT::Math::SVector<T1,D>& /*  m1 */ )
+        ( const TMatrixT<T>&                  m2    ,
+          const ROOT::Math::SVector<T,D>& /*  m1 */ )
         { return m2.IsValid() && m2.GetNcols() == D ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,
-                class T2>
-      struct CanMul< TMatrixTSym<T2>, 
-                     ROOT::Math::SVector<T1,D> > 
+      template <class T,unsigned int D>
+      struct CanMul< TMatrixTSym<T>, 
+                     ROOT::Math::SVector<T,D> > 
               {
         static bool ok
-        ( const TMatrixTSym<T2>&               m2    , 
-          const ROOT::Math::SVector<T1,D>& /*  m1 */ )
+        ( const TMatrixTSym<T>&               m2    , 
+          const ROOT::Math::SVector<T,D>& /*  m1 */ )
         { return m2.IsValid() && m2.GetNcols() == D ; }
       } ;
 
@@ -746,45 +734,43 @@ namespace Ostap
       
       
       // ======================================================================
-      template <class T1, class T2>
-      struct CanIMul<TMatrixT<T1>, TMatrixT<T2> >
+      template <class T>
+      struct CanIMul<TMatrixT<T>, TMatrixT<T> >
       {
         static bool ok
-        ( const TMatrixT<T1>& m1 ,
-          const TMatrixT<T2>& m2 )
+        ( const TMatrixT<T>& m1 ,
+          const TMatrixT<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid()
             && m1.GetNcols () == m2.GetNrows()
             && m2.GetNcols () == m2.GetNrows() ; }
       } ;      
       // ======================================================================
-      template <class T1, class T2>
-      struct CanIMul<TMatrixT<T1>, TMatrixTSym<T2> >
+      template <class T>
+      struct CanIMul<TMatrixT<T>, TMatrixTSym<T> >
       {
         static bool ok
-        ( const TMatrixT<T1>&    m1 ,
-          const TMatrixTSym<T2>& m2 )
+        ( const TMatrixT<T>&    m1 ,
+          const TMatrixTSym<T>& m2 )
         { return m1.IsValid() &&  m2.IsValid() && m1.GetNcols () == m2.GetNrows() ; }
       } ;
       // ======================================================================
-      template <class T1, unsigned int D, class R1,
-                class T2>
-      struct CanIMul<TMatrixT<T2>,
-                     ROOT::Math::SMatrix<T1,D,D,R1> >
+      template <class T, unsigned int D, class R1>
+      struct CanIMul<TMatrixT<T>,
+                     ROOT::Math::SMatrix<T,D,D,R1> >
       {
         static bool ok
-        ( const TMatrixT<T2>&                      m1    ,
-          const ROOT::Math::SMatrix<T1,D,D,R1>& /* m2 */ )
+        ( const TMatrixT<T>&                      m1    ,
+          const ROOT::Math::SMatrix<T,D,D,R1>& /* m2 */ )
         { return m1.IsValid() && m1.GetNcols () == D ; }
       } ;
       // ======================================================================
-      template <class T1, unsigned int D1, unsigned D2,
-                class T2>
-      struct CanIMul<ROOT::Math::SMatrix<T1,D1,D2>, 
-                     TMatrixT<T2> >
+      template <class T, unsigned int D1, unsigned D2>
+      struct CanIMul<ROOT::Math::SMatrix<T,D1,D2>, 
+                     TMatrixT<T> >
       {
         static bool ok
-        ( const ROOT::Math::SMatrix<T1,D1,D2>& /* m2 */ ,
-          const TMatrixT<T2>&                     m1    )
+        ( const ROOT::Math::SMatrix<T,D1,D2>& /* m2 */ ,
+          const TMatrixT<T>&                     m1    )
         { return m1.IsValid() && D2 == m1.GeNrows () ; }
       } ;
 
@@ -915,23 +901,23 @@ namespace Ostap
         static TVectorT<T> add ( const M& m1 , const M& m2 ) { return m1 + m2 ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D, class T2>
-      struct Add<ROOT::Math::SVector<T1,D>, TVectorT<T2> > 
+      template <class T,unsigned int D>
+      struct Add<ROOT::Math::SVector<T,D>, TVectorT<T> > 
       {
-        typedef ROOT::Math::SVector<T1,D>   M1 ;
-        typedef TVectorT<T2>                M2 ;
-        typedef SM<M1>                      C1 ;
-        typedef M1                          R  ;
+        typedef ROOT::Math::SVector<T,D>   M1 ;
+        typedef TVectorT<T>                M2 ;
+        typedef SM<M1>                     C1 ;
+        typedef M1                         R  ;
         //
         static R add ( const M1& m1 , const M2& m2 )
         { return Add<M1,M1>::add ( m1 , C1::transform ( m2 ) ) ; }
       } ;
       // ======================================================================
-      template <class T1,unsigned int D,class T2>
-      struct Add<TVectorT<T2>,ROOT::Math::SVector<T1,D> >
+      template <class T,unsigned int D>
+      struct Add<TVectorT<T>,ROOT::Math::SVector<T,D> >
       {
-        typedef ROOT::Math::SVector<T1,D>    M1 ;
-        typedef TVectorT<T2>                 M2 ;
+        typedef ROOT::Math::SVector<T,D>    M1 ;
+        typedef TVectorT<T>                 M2 ;
         typedef SM<M1>                       C1 ;
         typedef M1                           R  ;
         //
@@ -943,7 +929,36 @@ namespace Ostap
       
       // ======================================================================
       // iadd
-      // ======================================================================      
+      // ======================================================================
+
+      template <class T>
+      struct IAdd<TMatrixT<T> , TMatrixT<T> >
+      {
+        typedef TMatrixT<T>                     M1 ;
+        typedef TMatrixT<T>                     M2 ;
+        // addition
+        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+      } ;
+
+      template <class T>
+      struct IAdd<TMatrixT<T> , TMatrixTSym<T> >
+      {
+        typedef TMatrixT<T>                     M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        // addition
+        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+      } ;
+      
+      template <class T>
+      struct IAdd<TMatrixTSym<T> , TMatrixTSym<T> >
+      {
+        typedef TMatrixTSym<T>                 M1 ;
+        typedef TMatrixTSym<T>                 M2 ;
+        // addition
+        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+      } ;
+
+      
       template <class T,unsigned int D1,unsigned int D2, class R2>
       struct IAdd<TMatrixT<T>                     ,
                   ROOT::Math::SMatrix<T,D1,D2,R2> >
@@ -1189,6 +1204,39 @@ namespace Ostap
       // ======================================================================
       // isub
       // ======================================================================
+
+
+      template <class T>
+      struct ISub<TMatrixT<T> , TMatrixT<T> >
+      {
+        typedef TMatrixT<T>                     M1 ;
+        typedef TMatrixT<T>                     M2 ;
+        // addition
+        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+      } ;
+
+      template <class T>
+      struct ISub<TMatrixT<T> , TMatrixTSym<T> >
+      {
+        typedef TMatrixT<T>                     M1 ;
+        typedef TMatrixTSym<T>                  M2 ;
+        // addition
+        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+      } ;
+      
+      template <class T>
+      struct ISub<TMatrixTSym<T> , TMatrixTSym<T> >
+      {
+        typedef TMatrixTSym<T>                 M1 ;
+        typedef TMatrixTSym<T>                 M2 ;
+        // addition
+        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+      } ;
+
+      
+
+
+      
       template <class T,unsigned int D1,unsigned int D2, class R2>
       struct ISub<TMatrixT<T>                     ,
                   ROOT::Math::SMatrix<T,D1,D2,R2> >
@@ -1601,12 +1649,12 @@ namespace Ostap
       // ======================================================================
       // EQUALITY
       // ======================================================================
-      template <class T1, class T2>
-      struct Eq <TVectorT<T1> ,
-                 TVectorT<T2> >
+      template <class T>
+      struct Eq <TVectorT<T> ,
+                 TVectorT<T> >
       {
-        typedef TVectorT<T1>  M1 ;
-        typedef TVectorT<T2>  M2 ;
+        typedef TVectorT<T>  M1 ;
+        typedef TVectorT<T>  M2 ;
         typedef bool          R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
@@ -1616,12 +1664,12 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D,class T2>
-      struct Eq <TVectorT<T2>,
-                 ROOT::Math::SVector<T1,D> >
+      template <class T, unsigned int D>
+      struct Eq <TVectorT<T>,
+                 ROOT::Math::SVector<T,D> >
       {
-        typedef TVectorT<T2>               M1 ;
-        typedef ROOT::Math::SVector<T1,D>  M2 ;
+        typedef TVectorT<T>               M1 ;
+        typedef ROOT::Math::SVector<T,D>  M2 ;
         typedef bool                       R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
@@ -1631,13 +1679,13 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D,class T2>
-      struct Eq <ROOT::Math::SVector<T1,D>,
-                 TVectorT<T2> >
+      template <class T, unsigned int D>
+      struct Eq <ROOT::Math::SVector<T,D>,
+                 TVectorT<T> >
       {
-        typedef ROOT::Math::SVector<T1,D>  M1 ;
-        typedef TVectorT<T1>               M2 ;
-        typedef bool                       R  ;
+        typedef ROOT::Math::SVector<T,D>  M1 ;
+        typedef TVectorT<T>               M2 ;
+        typedef bool                      R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
         {
@@ -1706,13 +1754,12 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct Eq <ROOT::Math::SMatrix<T1,D1,D2,R1>,TMatrixT<T2> >
+      template <class T, unsigned int D1, unsigned int D2, class R1>
+      struct Eq <ROOT::Math::SMatrix<T,D1,D2,R1>,TMatrixT<T> >
       {
-        typedef ROOT::Math::SMatrix<T1,D1,D2,R1>  M1 ;
-        typedef TMatrixT<T2>                      M2 ;
-        typedef bool                              R  ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1>  M1 ;
+        typedef TMatrixT<T>                      M2 ;
+        typedef bool                             R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
         {
@@ -1721,13 +1768,12 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D, class R1,
-                class T2>
-      struct Eq <ROOT::Math::SMatrix<T1,D,D,R1>,TMatrixTSym<T2> >
+      template <class T, unsigned int D, class R1>
+      struct Eq <ROOT::Math::SMatrix<T,D,D,R1>,TMatrixTSym<T> >
       {
-        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M1 ;
-        typedef TMatrixTSym<T2>                 M2 ;
-        typedef bool                            R  ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1>  M1 ;
+        typedef TMatrixTSym<T>                 M2 ;
+        typedef bool                           R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
         {
@@ -1736,14 +1782,13 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D1, unsigned int D2, class R1,
-                class T2>
-      struct Eq <TMatrixT<T2> ,
-                 ROOT::Math::SMatrix<T1,D1,D2,R1> >
+      template <class T, unsigned int D1, unsigned int D2, class R1>
+      struct Eq <TMatrixT<T> ,
+                 ROOT::Math::SMatrix<T,D1,D2,R1> >
       {
-        typedef ROOT::Math::SMatrix<T1,D1,D2,R1>  M2 ;
-        typedef TMatrixT<T2>                      M1 ;
-        typedef bool                              R  ;
+        typedef ROOT::Math::SMatrix<T,D1,D2,R1>  M2 ;
+        typedef TMatrixT<T>                      M1 ;
+        typedef bool                             R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
         {
@@ -1752,14 +1797,13 @@ namespace Ostap
         }
       };
       // ======================================================================
-      template <class T1, unsigned int D, class R1,
-                class T2>
-      struct Eq <TMatrixTSym<T2>,
-                 ROOT::Math::SMatrix<T1,D,D,R1> >
+      template <class T, unsigned int D, class R1>
+      struct Eq <TMatrixTSym<T>,
+                 ROOT::Math::SMatrix<T,D,D,R1> >
       {
-        typedef ROOT::Math::SMatrix<T1,D,D,R1>  M2 ;
-        typedef TMatrixTSym<T2>                 M1 ;
-        typedef bool                            R  ;
+        typedef ROOT::Math::SMatrix<T,D,D,R1>  M2 ;
+        typedef TMatrixTSym<T>                 M1 ;
+        typedef bool                           R  ;
         // addition
         static R eq  ( const M1& m1 , const M2& m2 )
         {
