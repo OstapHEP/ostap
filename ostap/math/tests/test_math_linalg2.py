@@ -143,13 +143,22 @@ def test_linalg2() :
 
 
     m22 += m22
+    logger.info ( ' m22 += m22  :\n%s ' % m22 )
+
     m22 -= m22*2
+    logger.info ( ' m22 += m22*2 :\n%s ' % m22 )
 
     m22 += s22*0
+    logger.info ( ' m22 += s22*0 :\n%s ' % m22 )
+
     m22 -= s22*2
+    logger.info ( ' m22 -= s22*2 :\n%s ' % m22 )
 
     s22 += s22*2
-    s22 -= s22*1
+    logger.info ( ' s22 += s22*2 :\n%s ' % s22 )
+
+    s22 -= s22*2
+    logger.info ( ' s22 -= s22*2 :\n%s ' % s22 )
     
 
     if np :
