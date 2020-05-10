@@ -331,17 +331,11 @@ namespace Ostap
       // ======================================================================
       template <class M1>
       struct IMul<M1,double>
-      {
-        typedef M1 R ;
-        static R& imul ( M1& m1 , const double m2 ) {  m1 *= m2 ; return m1 ; }
-      } ;
+      { static void imul ( M1& m1 , const double m2 ) {  m1 *= m2 ; } } ;
       // ======================================================================
       template <class M1>
       struct IDiv<M1,double>
-      {
-        typedef M1 R ;
-        static R& idiv ( M1& m1 , const double m2 ) { return IMul<M1,double>::imul ( m1 , 1 / m2 ) ; }
-      } ;
+      { static void  idiv ( M1& m1 , const double m2 ) { IMul<M1,double>::imul ( m1 , 1 / m2 ) ; } } ;
       // ======================================================================
       template <class M1>
       struct Mul<M1,double>
@@ -365,18 +359,12 @@ namespace Ostap
       } ;
       // ======================================================================
       template <class M>
-      struct IAdd<M,M>
-      {
-        typedef M R ;
-        static R iadd ( const M& m1 , const M& m2 ) { m1 += m2 ; return m1 ; }
-      } ;
+      struct IAdd<M,M>     
+      { static void iadd ( const M& m1 , const M& m2 ) { m1 += m2 ; } } ;
       // ======================================================================
       template <class M>
       struct ISub<M,M>
-      {
-        typedef M R ;
-        static R isub ( const M& m1 , const M& m2 ) { m1 -= m2 ; return m1 ; }
-      } ;
+      { static void isub ( const M& m1 , const M& m2 ) { m1 -= m2 ; } } ;
       
       
       // ======================================================================
@@ -429,7 +417,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2>    M1 ;
         typedef ROOT::Math::SMatrix<T,D1,D2,R2> M2 ;
         // addition
-        static M1& iadd ( M1 & m1 , const M2 & m2 ) { m1 += m2 ; return m1 ; }
+        static void iadd ( M1 & m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
       // ======================================================================
       
@@ -440,7 +428,7 @@ namespace Ostap
        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
        typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M2 ;
        // addition
-        static M1& iadd ( M1 & m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+        static void iadd ( M1 & m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
       // ======================================================================
       
@@ -492,7 +480,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2>    M1 ;
         typedef ROOT::Math::SMatrix<T,D1,D2,R2> M2 ;
         // subtraction
-        static M1& isub ( M1 & m1 , const M2 & m2 ) { m1 -= m2 ; return m1 ; }
+        static void isub ( M1 & m1 , const M2 & m2 ) { m1 -= m2 ; }
       } ;
       // ======================================================================
 
@@ -503,7 +491,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M2 ;
         // addition
-        static M1& isub ( M1 & m1 , const M2 & m2 ) { m1 -= m2 ; return m1 ; }
+        static void isub ( M1 & m1 , const M2 & m2 ) { m1 -= m2 ; }
       } ;
       // ======================================================================
       
@@ -605,7 +593,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2>    M1 ;
         typedef ROOT::Math::SMatrix<T,D2,D2,R2> M2 ;
         // in-place multiplication
-        static M1& imul ( M1& m1 , const M2&m2 ) { m1 *= m2 ; return m1 ; }
+        static void imul ( M1& m1 , const M2&m2 ) { m1 *= m2 ; }
       } ;
       // ======================================================================
 

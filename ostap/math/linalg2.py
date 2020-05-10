@@ -527,8 +527,7 @@ class LinAlg(object) :
         oper , check  = LinAlg.methods_IADD ( a , b )
 
         if oper and check and check.ok ( a, b ) :
-            result = oper.iadd ( a, b )
-            ## return result
+            oper.iadd ( a, b )
             return a 
         
         return NotImplemented 
@@ -600,8 +599,7 @@ class LinAlg(object) :
         oper , check  = LinAlg.methods_ISUB ( a , b )
         
         if oper and check and check.ok ( a, b ) :
-            result = oper.isub ( a, b )
-            ##  return result
+            oper.isub ( a, b )
             return a 
         
         return NotImplemented 
@@ -675,8 +673,7 @@ class LinAlg(object) :
         oper , check  = LinAlg.methods_IMUL ( a , b )
 
         if oper and check and check.ok ( a, b ) :
-            result = oper.imul ( a, b )
-            ##  return result
+            oper.imul ( a, b )
             return a 
         
         return NotImplemented 
@@ -749,8 +746,8 @@ class LinAlg(object) :
         oper , check  = LinAlg.methods_IDIV ( a , b )
         
         if oper and check and check.ok ( a, b ) :
-            result = oper.idiv ( a, b )
-            return result
+            oper.idiv ( a, b )
+            return a 
         
         return NotImplemented 
                 

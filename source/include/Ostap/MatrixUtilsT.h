@@ -937,7 +937,7 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef TMatrixT<T>                     M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+        static void iadd ( M1& m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
 
       template <class T>
@@ -946,7 +946,7 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef TMatrixTSym<T>                  M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+        static void iadd ( M1& m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
       
       template <class T>
@@ -955,7 +955,7 @@ namespace Ostap
         typedef TMatrixTSym<T>                 M1 ;
         typedef TMatrixTSym<T>                 M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 ) { m1 += m2  ; return m1 ; }
+        static void iadd ( M1& m1 , const M2 & m2 ) { m1 += m2 ; }
       } ;
 
       
@@ -966,13 +966,11 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef ROOT::Math::SMatrix<T,D1,D2,R2> M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
+        static void iadd ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) += m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -983,13 +981,11 @@ namespace Ostap
         typedef TMatrixTSym<T>                                          M1 ;
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
+        static void iadd ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D ; ++i )
           { for ( unsigned int j = i ; j < D ; ++j )
             { m1 ( i , j ) += m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1000,13 +996,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2> M1 ;
         typedef TMatrixT<T>                  M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
+        static void iadd ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) += m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1017,13 +1011,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2> M1 ;
         typedef TMatrixTSym<T>               M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
+        static void iadd ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) += m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1034,13 +1026,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
         typedef TMatrixTSym<T>                                         M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
+        static void iadd ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D ; ++i )
-          { for ( unsigned int j = i ; j < D ; ++j )
+          { for ( unsigned int j = 0 ; j < D ; ++j )
             { m1 ( i , j ) += m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1051,14 +1041,8 @@ namespace Ostap
         typedef ROOT::Math::SVector<T,D> M1 ;
         typedef TVectorT<T>              M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
-        {
-          //
-          for ( unsigned int j = 0 ; j < D ; ++j )
-          { m1 ( j ) += m2 ( j ) ; }
-          //
-          return m1 ;
-        } 
+        static void iadd ( M1& m1 , const M2 & m2 )
+        { for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) += m2 ( j ) ; } } 
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1068,14 +1052,8 @@ namespace Ostap
         typedef TVectorT<T>              M1 ;
         typedef ROOT::Math::SVector<T,D> M2 ;
         // addition
-        static M1& iadd ( M1& m1 , const M2 & m2 )
-        {
-          //
-          for ( unsigned int j = 0 ; j < D ; ++j )
-          { m1 ( j ) += m2 ( j ) ; }
-          //
-          return m1 ;
-        } 
+        static void iadd ( M1& m1 , const M2 & m2 )
+        { for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) += m2 ( j ) ; } } 
       } ;
       // ======================================================================
       
@@ -1212,7 +1190,7 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef TMatrixT<T>                     M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+        static void isub ( M1& m1 , const M2 & m2 ) { m1 -= m2 ; }
       } ;
 
       template <class T>
@@ -1221,7 +1199,7 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef TMatrixTSym<T>                  M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+        static void isub ( M1& m1 , const M2 & m2 ) { m1 -= m2 ; }
       } ;
       
       template <class T>
@@ -1230,11 +1208,8 @@ namespace Ostap
         typedef TMatrixTSym<T>                 M1 ;
         typedef TMatrixTSym<T>                 M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 ) { m1 -= m2  ; return m1 ; }
+        static void isub ( M1& m1 , const M2 & m2 ) { m1 -= m2; }
       } ;
-
-      
-
 
       
       template <class T,unsigned int D1,unsigned int D2, class R2>
@@ -1244,13 +1219,11 @@ namespace Ostap
         typedef TMatrixT<T>                     M1 ;
         typedef ROOT::Math::SMatrix<T,D1,D2,R2> M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
+        static void isub ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) -= m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1261,13 +1234,11 @@ namespace Ostap
         typedef TMatrixTSym<T>                                          M1 ;
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >  M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
+        static void isub ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D ; ++i )
           { for ( unsigned int j = i ; j < D ; ++j )
             { m1 ( i , j ) -= m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1278,13 +1249,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2> M1 ;
         typedef TMatrixT<T>                  M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
+        static void isub ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) -= m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1295,13 +1264,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D1,D2> M1 ;
         typedef TMatrixTSym<T>               M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
+        static void isub ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D1 ; ++i )
           { for ( unsigned int j = 0 ; j < D2 ; ++j )
             { m1 ( i , j ) -= m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1312,13 +1279,11 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> > M1 ;
         typedef TMatrixTSym<T>                                         M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
+        static void isub ( M1& m1 , const M2 & m2 )
         {
           for ( unsigned int i = 0 ; i < D ; ++i )
           { for ( unsigned int j = i ; j < D ; ++j )
             { m1 ( i , j ) -= m2 ( i , j ) ; } }
-          //
-          return m1 ;
         } 
       } ;
       // ======================================================================
@@ -1329,13 +1294,8 @@ namespace Ostap
         typedef ROOT::Math::SVector<T,D> M1 ;
         typedef TVectorT<T>              M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
-        {
-          //
-          for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) -= m2 ( j ) ; }
-          //
-          return m1 ;
-        } 
+        static void  isub ( M1& m1 , const M2 & m2 )
+        { for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) -= m2 ( j ) ; } } 
       } ;
       // ======================================================================
       template <class T,unsigned int D>
@@ -1345,13 +1305,8 @@ namespace Ostap
         typedef TVectorT<T>              M1 ;
         typedef ROOT::Math::SVector<T,D> M2 ;
         // addition
-        static M1& isub ( M1& m1 , const M2 & m2 )
-        {
-          //
-          for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) -= m2 ( j ) ; }
-          //
-          return m1 ;
-        } 
+        static void isub ( M1& m1 , const M2 & m2 )
+        { for ( unsigned int j = 0 ; j < D ; ++j ) { m1 ( j ) -= m2 ( j ) ; } } 
       } ;
       // ======================================================================
       
@@ -1595,7 +1550,7 @@ namespace Ostap
         typedef TMatrixT<T> M1 ;
         typedef TMatrixT<T> M2 ;
         //
-        static M1& imult ( M1& m1 , const M2& m2 ) { m1 *= m2  ; return m1 ; }
+        static void imult ( M1& m1 , const M2& m2 ) { m1 *= m2 ; }
       } ;      
       // ======================================================================
       template <class T>
@@ -1604,7 +1559,7 @@ namespace Ostap
         typedef TMatrixT<T>    M1 ;
         typedef TMatrixTSym<T> M2 ;
         //
-        static M1& imult ( M1& m1 , const M2& m2 ) { m1 *= m2  ; return m1 ; }
+        static void imult ( M1& m1 , const M2& m2 ) { m1 *= m2 ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D, class R1>
@@ -1616,7 +1571,7 @@ namespace Ostap
         typedef ROOT::Math::SMatrix<T,D,D,R1> M2 ;
         typedef TM<M2>                        C  ;
         //
-        static M1& imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; return m1 ; }
+        static void imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned D2>
@@ -1628,7 +1583,7 @@ namespace Ostap
         typedef TMatrixT<T>                  M2 ;
         typedef SM<M1>                        C  ;
         //
-        static M1& imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; return m1 ; }
+        static void imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
       } ;
       // ======================================================================
       template <class T, unsigned int D1, unsigned D2>
@@ -1640,7 +1595,7 @@ namespace Ostap
         typedef TMatrixTSym<T>               M2 ;
         typedef SM<M1>                        C  ;
         //
-        static M1& imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; return m1 ; }
+        static void imult ( M1& m1 , const M2& m2 ) { m1 *= C::transform ( m2 ) ; }
       } ;
       // ======================================================================
 
