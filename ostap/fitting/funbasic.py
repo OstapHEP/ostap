@@ -181,7 +181,7 @@ class FUNC(XVar) :
         ##
         if var and isinstance ( var , ROOT.RooAbsReal ) :
             params = self.params () 
-            if var in parsms  : return True
+            if var in params  : return True
             for v in var.getParameters( 0 ) :
                 if v in params : return True
         ##
@@ -244,7 +244,7 @@ class FUNC(XVar) :
 
         name = name if name else "PDF_from_%s" % self.name
         ##
-        return make_pdf  ( self.fun , name = name , *self.variables )
+        return make_pdf ( self.fun , name = name , *self.variables )
 
     # =========================================================================
     @property 

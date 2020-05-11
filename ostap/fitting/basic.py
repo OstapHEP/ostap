@@ -23,7 +23,7 @@ __all__     = (
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
     'Sum1D'         , ## wrapper for RooAddPdf 
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
-    'make_pdf'      , ## helper functionto make PDF 
+    'make_pdf'      , ## helper function to make PDF 
     ##
     )
 # =============================================================================
@@ -2687,22 +2687,30 @@ class Sum1D(PDF) :
     @F.setter
     def F ( self , value ) :
         self.fraction = value 
-        
+
+
+
 # =============================================================================
-## Helper function to create the PDF
+_ROOT_VERSION = ROOT.gROOT.GetVersionInt() 
+    
+# =============================================================================
+## Helper function to create the PDF/PDF2/PDF3
 #  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
 #  pa
 def make_pdf ( pdf , args , name = '' ) :
-    """Helper function to create the PDF
+    """Helper function to create the PDF/PDF2/PDF3
     """
     
     assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), 'make_pdf: Invalid type %s' % type ( pdf )
-
+    
     name = name if name else "PDF_from_%s" % pdf.name
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) :
-        pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf ) 
-    
+        if 62000 <= _ROOT_VERSION : 
+            pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
+        else :
+            raise TypeError("RooWrapperPdf is not available for ROOT %s" % _ROOT_VERSION )
+        
     num = len ( args )
     if   1 == num :
         return Generic1D_pdf ( pdf , name = name , *args )
@@ -2714,6 +2722,7 @@ def make_pdf ( pdf , args , name = '' ) :
         return Generic3D_pdf ( fun , name = name , *args )
     
     raise TypeError ( "Invalid length of arguments %s " % num ) 
+
 
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF

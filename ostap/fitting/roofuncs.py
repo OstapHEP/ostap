@@ -826,7 +826,7 @@ def  _fn_rpow2_ ( self , b  ) :
 
     if not isinstance  ( b , _b_types ) : return NotImplemented 
 
-    return _fn_rpow_ ( self , b , name )
+    return _fn_rpow_ ( self , b  )
 
 
 # ==============================================================================

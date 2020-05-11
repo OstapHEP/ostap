@@ -18,6 +18,7 @@
   1. fix bugs in `PyVAR2`
   1. fix namings in `MakeVar.name`
   1. more fixes in `linalg2/MatrixUtils2/MAtrixUtilsT`
+  1. few minor fixes as preparatory for "transform-PDF"
   
 # v1.4.8.2
 
