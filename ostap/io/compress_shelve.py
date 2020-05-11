@@ -66,7 +66,7 @@ from  sys import version_info as python_version
 try                : import anydbm  as     dbm
 except ImportError : import                dbm
 try                : from   whichdb import whichdb
-except ImportErorr : whichdb = dbm.whichdb
+except ImportError : whichdb = dbm.whichdb
 # =============================================================================
 ## get file/directory  size 
 def fsize ( start ) :
