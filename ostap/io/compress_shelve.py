@@ -63,8 +63,27 @@ ENCODING = 'utf-8'
 # ==============================================================================
 import os, sys, abc, shelve, shutil , time 
 from  sys import version_info as python_version
-try                : import anydbm as dbm
-except ImportError : import           dbm
+try                : import anydbm  as     dbm
+except ImportError : import                dbm
+try                : from   whichdb import whichdb
+except ImportErorr : whichdb = dbm.whichdb
+# =============================================================================
+## get file/directory  size 
+def fsize ( start ) :
+    """Get file/directory  size 
+    """
+    
+    size  = 0 
+    if   not os.path.exists ( start ) : return 0
+    elif     os.path.isfile ( start ) : return os.path.getsize ( start )
+    elif     os.path.isdir  ( start ) :
+        for dirpath , dirnames , filenames in os.walk ( start ):
+            for f in filenames:
+                fp = os.path.join ( dirpath , f )
+                if not os.path.islink ( fp ):
+                    size += os.path.getsize ( fp )
+    return size
+
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -161,9 +180,9 @@ class CompressShelf(shelve.Shelf,object):
                 filename_ = self.uncompress_file ( filename ) 
                 if not os.path.exists ( filename_ ) :
                     raise TypeError ( "Unable to uncompress properly: %s" % filename )
-                if not self.__silent : 
-                    size1 = os.path.getsize ( filename  ) 
-                    size2 = os.path.getsize ( filename_ )
+                if not self.__silent :
+                    size1 = fsize ( filename  )
+                    size2 = fsize ( filename_ )
                     logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) )
                 filename        = filename_ 
                 self.__filename = filename_
@@ -175,14 +194,14 @@ class CompressShelf(shelve.Shelf,object):
                 filename_     = fname  
                 # remove existing file (if needed) 
                 if os.path.exists ( filename_ ) : os.remove ( filename_ )
-                size1 = os.path.getsize    ( filename ) 
+                size1 = fsize ( filename ) 
                 # gunzip in place 
                 self.__in_place_uncompress ( filename ) 
                 ##
                 if not os.path.exists ( filename_ ) :
                     raise TypeError ( "Unable to uncompress properly: %s" % filename )
                 if not self.__silent : 
-                    size2 = os.path.getsize ( filename_ )
+                    size2 = fsize ( filename_ )
                     logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) ) 
                 filename        = filename_ 
                 self.__compress = True 
@@ -308,7 +327,7 @@ class CompressShelf(shelve.Shelf,object):
         ap = os.path.abspath  ( self.filename ) 
         
         try :
-            fs = os.path.getsize ( self.filename )
+            fs = fsize ( self.filename )
         except :
             fs = -1
             
@@ -363,7 +382,9 @@ class CompressShelf(shelve.Shelf,object):
 
         table = T.table ( table , title = title , prefix = '# ' )
         ll    = getLogger ( n )
-        line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
+        dbt   = whichdb ( self.filename )
+        dbt   = '/' + dbt if dbt else ''
+        line  = 'Database %s:%s%s #keys: %d size: %s' % ( t , ap , dbt , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
         
         
@@ -451,10 +472,15 @@ class CompressShelf(shelve.Shelf,object):
             kname = '%s.%s' % (  kls.__module__ , kls.__name__ ) 
         
         if   self and len ( self ) :
-            return "%s('%s'): %d object(s)" % ( kname , self.filename , len(self) ) 
+            t   = whichdb ( self.filename )
+            t   = '/' + t if t else ''
+            return "%s('%s')%s: %d object(s)" % ( kname , self.filename , t , len(self) ) 
         elif self :
-            return "%s('%s'): empty"        % ( kname , self.filename ) 
-        return "Invalid/Closed %s('%s')"    % ( kname , self.filename )
+            t   = whichdb ( self.filename )
+            t   = '/' + t if t else ''
+            t = whichdb ( self.filename ) 
+            return "%s('%s')%s: empty"        % ( kname , self.filename , t )
+        return "Invalid/Closed %s('%s')"       % ( kname , self.filename )
     
     __str__ = __repr__
 

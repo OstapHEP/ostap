@@ -9,14 +9,16 @@
   1. remove usage of `RooAbsReal::getParameter ( None )`
   1. remove usage of `None` as null-pointer
   1. adjust a bit `RooArgList.__contains__`  to use `RooCollection::find` insntead of `RooArgList::index`
-
+  1. add the actual daatbase type to the printut of `compressed_shelve`
+  
 ## Backward incompatible changes
 
 ## Bug fixes:  
   1. fix bugs in `funbasic`, `roofuncs` methods
   1. fix bugs in `PyVAR2`
   1. fix namings in `MakeVar.name`
-  `
+  1. more fixes in `linalg2/MatrixUtils2/MAtrixUtilsT`
+  
 # v1.4.8.2
 
 ## New features
