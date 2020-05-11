@@ -62,6 +62,7 @@
 #include "Ostap/Models2D.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
+#include "Ostap/MoreRooFit2.h"
 #include "Ostap/MoreVars.h"
 #include "Ostap/Mute.h"
 #include "Ostap/Notifier.h"

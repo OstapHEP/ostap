@@ -2418,7 +2418,7 @@ FUNC2.__rpow__     = _f2_rpow_
 ## Operator for `1D-function (op) other`:
 def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
     """ Operator for `1D-function (op) other`:"""
-    
+
     xvar, yvar, zvar  = fun1.xvar , None , None 
     
     if   isinstance ( fun2 , FUNC3 ) :

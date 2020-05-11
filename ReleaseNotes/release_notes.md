@@ -9,7 +9,8 @@
   1. remove usage of `RooAbsReal::getParameter ( None )`
   1. remove usage of `None` as null-pointer
   1. adjust a bit `RooArgList.__contains__`  to use `RooCollection::find` insntead of `RooArgList::index`
-  1. add the actual daatbase type to the printut of `compressed_shelve`
+  1. add the actual database type to the printut of `compressed_shelve`
+  1. add `M2Q` and `Q2M` transfomoration variables/function
   
 ## Backward incompatible changes
 

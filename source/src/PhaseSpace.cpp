@@ -114,6 +114,19 @@ bool Ostap::Math::PhaseSpace2::setM2 ( const double value )
   return true ;
 }
 // ============================================================================a
+/* get the mass for the given momentum
+ *  \f$ m = \sqrt{m_1^2+q^2} + \sqrt{m_2^2+q^2}\f$
+ */
+// ============================================================================a
+double Ostap::Math::PhaseSpace2::m_ ( const double q ) const
+{
+  if ( q <=-0 ) { return 0 ; }
+  const  double q2 = q * q ;
+  return
+    m_m1 == m_m2 ? 2 * std::sqrt ( m_m1 * m_m1 + q2 ) :
+    std::sqrt ( m_m1 * m_m1 + q2 ) + std::sqrt ( m_m2 * m_m2 + q2) ;  
+}
+// ============================================================================a
 // get the momentum at center of mass 
 // ============================================================================a
 double Ostap::Math::PhaseSpace2::q_  ( const double x ) const 

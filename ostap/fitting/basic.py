@@ -303,9 +303,7 @@ class PDF (FUNC) :
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None
-            print ("fitTo-2")
             result          = self.pdf.fitTo ( dataset , *opts ) 
-            print ("fitTo-3")
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -3430,5 +3428,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
