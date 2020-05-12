@@ -11,10 +11,9 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
   - conda config --add channels anaconda
-  - conda create -q -n testenv python=2.7 root cmake future nose ninja numpy scipy pathos ppft multiprocess dill gdbm
+  - conda create -q -n testenv python=2.7 root cmake future nose ninja numpy scipy pathos ppft multiprocess dill gdbm python-gdbm
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
-  - conda install -n testenv -c anaconda python-gdbm
   - pip install coverage coveralls terminaltables nose numpy scipy pathos ppft multiprocess dill 
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
 
