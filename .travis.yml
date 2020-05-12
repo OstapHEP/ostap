@@ -11,7 +11,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
   - conda config --add channels anaconda
-  - conda create -q -n testenv python=2.7 root cmake future nose ninja numpy scipy pathos ppft multiprocess dill gdbm python-gdbm
+  - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake gdbm
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - pip install coverage coveralls terminaltables nose numpy scipy pathos ppft multiprocess dill 
@@ -21,7 +21,7 @@ script:
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core 
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/fitting
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/histos
-  - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/io
+ # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/io
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/logger
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/math
   - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/plotting 
