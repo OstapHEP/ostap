@@ -19,10 +19,10 @@ After setting the enviroments clone and build ostap package:
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
     
-On lxplus/7 you can do it with several LCG versions (95,96), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 95 and  x86_64-centos7-gcc8-opt:
+On lxplus/7 you can do it with several LCG versions (95,96,97), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 97 and  x86_64-centos7-gcc8-opt:
 
     LbLogin -c x86_64-centos7-gcc8-opt
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_95/${CMTCONFIG}/setup.sh
+    source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh
     source ./scripts/setup.sh
     source LCG_$LCG_VERSION/INSTALL/thisostap.sh
 
