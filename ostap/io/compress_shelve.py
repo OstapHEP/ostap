@@ -84,25 +84,6 @@ def fsize ( start ) :
                     size += os.path.getsize ( fp )
     return size
 # =============================================================================
-try :
-    # =========================================================================
-    import bdsdb3 as bdsdb 
-    # =========================================================================
-    ##  Open Berkeley DB-3
-    #   @see https://www.jcea.es/programacion/pybsddb.htm
-    def db_open ( file , flag = 'r' , mode = 0666 ) :
-        """Open Berkeley DB-3
-        -see https://www.jcea.es/programacion/pybsddb.htm
-        """
-        return bsddb.hasopen ( file , flag , mode )
-    # =========================================================================
-except importError :    
-    try : 
-        from dbhash import open as db_open
-    except ImportError :
-        def db_open ( file , flag = 'r' , mode=438 ) :
-            return dbase.open ( file , flag = flag  , mode = mode ) 
-# =============================================================================
 _modes_ = {
     # =========================================================================
     # 'r'	Open existing database for reading only
@@ -237,7 +218,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                              ,
-                dbm.open ( self.filename , mode ) ,
+                dbase.open ( self.filename , mode ) ,
                 protocol                          ,
                 writeback                         ,
                 keyencoding                       )
@@ -245,7 +226,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                              ,
-                dbm.open ( self.filename , mode ) ,
+                dbase.open ( self.filename , mode ) ,
                 protocol                          ,
                 writeback                         ) 
             self.keyencoding = keyencoding
