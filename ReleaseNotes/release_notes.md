@@ -1,7 +1,7 @@
 ## New features
   1. improvea bot the printout for `compressed_shelve`  
-  1. add enw module `ostap.math.covtransform` for transformation  of covariance matrices
-  1. add tests for `contransform`
+  1. add new module `ostap.math.covtransform` for transformation  of covariance matrices
+  1. add tests for `contransfrmm`
   
 ## Backward incompatible changes
 

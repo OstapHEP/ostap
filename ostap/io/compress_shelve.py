@@ -63,10 +63,10 @@ ENCODING = 'utf-8'
 # ==============================================================================
 import os, sys, abc, shelve, shutil , time 
 from  sys import version_info as python_version
-try                : import anydbm  as     dbm
-except ImportError : import                dbm
+try                : import anydbm  as dbase
+except ImportError : import    dbm  as dbase
 try                : from   whichdb import whichdb
-except ImportError : whichdb = dbm.whichdb
+except ImportError : whichdb = dbase.whichdb
 # =============================================================================
 ## get file/directory  size 
 def fsize ( start ) :
@@ -83,7 +83,25 @@ def fsize ( start ) :
                 if not os.path.islink ( fp ):
                     size += os.path.getsize ( fp )
     return size
-
+# =============================================================================
+try :
+    # =========================================================================
+    import bdsdb3 as bdsdb 
+    # =========================================================================
+    ##  Open Berkeley DB-3
+    #   @see https://www.jcea.es/programacion/pybsddb.htm
+    def db_open ( file , flag = 'r' , mode = 0666 ) :
+        """Open Berkeley DB-3
+        -see https://www.jcea.es/programacion/pybsddb.htm
+        """
+        return bsddb.hasopen ( file , flag , mode )
+    # =========================================================================
+except importError :    
+    try : 
+        from dbhash import open as db_open
+    except ImportError :
+        def db_open ( file , flag = 'r' , mode=438 ) :
+            return dbase.open ( file , flag = flag  , mode = mode ) 
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -383,7 +401,7 @@ class CompressShelf(shelve.Shelf,object):
         table = T.table ( table , title = title , prefix = '# ' )
         ll    = getLogger ( n )
         dbt   = whichdb ( self.filename )
-        dbt   = '/' + dbt if dbt else ''
+        dbt   = '|' + dbt if dbt else ''
         line  = 'Database %s:%s%s #keys: %d size: %s' % ( t , ap , dbt , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
         
@@ -473,11 +491,11 @@ class CompressShelf(shelve.Shelf,object):
         
         if   self and len ( self ) :
             t   = whichdb ( self.filename )
-            t   = '/' + t if t else ''
+            t   = '|' + t if t else ''
             return "%s('%s')%s: %d object(s)" % ( kname , self.filename , t , len(self) ) 
         elif self :
             t   = whichdb ( self.filename )
-            t   = '/' + t if t else ''
+            t   = '|' + t if t else ''
             t = whichdb ( self.filename ) 
             return "%s('%s')%s: empty"        % ( kname , self.filename , t )
         return "Invalid/Closed %s('%s')"       % ( kname , self.filename )
