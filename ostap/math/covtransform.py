@@ -21,7 +21,7 @@ __date__    = "2009-09-12"
 __version__ = ""
 # =============================================================================
 __all__     = (
-    'transfrm'    , ## transfrom covarinance matrix 
+    'transform'  , ## transfrom covarinance matrix 
     )
 # =============================================================================
 from   builtins  import range 
