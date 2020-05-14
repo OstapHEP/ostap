@@ -712,7 +712,7 @@ class FUNC(XVar) :
                 v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
 
                 e = -1 
-                if   error and isinstance ( error , ROOT.TFitResult ) : 
+                if   error and isinstance ( error , ROOT.RooFitResult ) : 
                     e = self.fun.getPropagatedError ( error           )
                 elif error and self.fit_result : 
                     e = self.fun.getPropagatedError ( self.fit_result )

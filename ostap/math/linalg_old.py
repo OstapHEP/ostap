@@ -568,7 +568,7 @@ def _ms_corr_ ( self ) :
             if  1 < abs ( eij ) : _ok2 = False  
             _c [ i , j ] = eij 
             
-    if not _ok1 : logger.error ( "correlations: zero or negative diagonal element" ) 
+    if not _ok1 : ilogger.error ( "correlations: zero or negative diagonal element" ) 
     if not _ok2 : logger.error ( "correlations: invalid non-diagonal element"      ) 
         
     return _c

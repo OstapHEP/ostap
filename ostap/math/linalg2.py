@@ -1171,13 +1171,14 @@ class LinAlg(object) :
             sii = sqrt ( ii )
             _c[ i , i ] = 1
             
-            for j in range ( i + 1 ,_rows ) :            
+            for j in range ( i + 1 , rows ) :            
                 jj  = mtrx ( j , j ) 
                 sjj = sqrt ( jj    )
                 ij  = mtrx ( i , j )
                 eij = ij / ( sii * sjj )
                 if  1 < abs ( eij ) : ok2 = False  
                 _c [ i , j ] = eij 
+                _c [ j , i ] = eij 
             
         if not ok1 : logger.error ( "correlations: zero or negative diagonal element" ) 
         if not ok2 : logger.error ( "correlations: invalid non-diagonal element"      ) 

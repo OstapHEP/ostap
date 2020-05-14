@@ -1,3 +1,14 @@
+## New features
+  1. improvea bot the printout for `compressed_shelve`  
+  1. add enw module `ostap.math.covtransform` for transformation  of covariance matrices
+  1. add tests for `contransform`
+  
+## Backward incompatible changes
+
+## Bug fixes:
+  1. fix bug for `PDF`/`FUNC` evalaution with uncertainty 
+
+
 # v1.4.8.3
 
 ## New features
