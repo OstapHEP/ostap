@@ -11,6 +11,7 @@
 # ============================================================================= 
 from __future__ import print_function
 from   sys      import version_info as python_version
+import math 
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -177,7 +178,30 @@ def test_linalg2() :
         logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy() ) )
         logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy() ) )        
         logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy() ) )
+
         
+    logger.info ( 'SVector with errors')
+
+    v2  = Ostap.Math.VectorE (2)()
+
+    v2 [ 0 ] = 3
+    v2 [ 1 ] = 4
+    
+    v2 . cov2 () [ 0 , 0 ] = 0.10
+    v2 . cov2 () [ 0 , 1 ] = 0.05
+    v2 . cov2 () [ 1 , 1 ] = 0.20
+
+    rho = lambda x,y : ( x * x + y * y ) **  0.5
+    phi = lambda x,y : math.atan2 ( y , x ) 
+    
+
+    r1 = v2.transform ( rho , phi )
+    logger.info ( " -> rho, phi %s " % r1 )
+
+    r2 = v2.transform ( rho  )
+    logger.info ( " -> rho      %s " % r2 )
+    
+
     
 # =============================================================================
 if '__main__' == __name__ :

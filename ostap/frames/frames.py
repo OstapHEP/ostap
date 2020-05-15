@@ -112,7 +112,7 @@ def _fr_progress_bar_ ( self          ,
     
     if width < 16 : width = 16 
     nchunks = width - 14
-    csize   = length / nchunks 
+    csize   = int ( length / nchunks ) 
 
     left   = "[ "
     right  = " ]"

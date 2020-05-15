@@ -245,6 +245,7 @@ class LinAlg(object) :
     known_ssymmatrices = {}
     known_smatrices    = {}
     known_svectors     = {}
+    known_svectorse    = {}
     
     decorated_matrices = set ()
     decorated_vectors  = set ()
@@ -331,6 +332,7 @@ class LinAlg(object) :
         while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices . popitem ()
         while LinAlg.known_smatrices    : LinAlg.known_smatrices    . popitem ()
         while LinAlg.known_svectors     : LinAlg.known_svectors     . popitem ()
+        while LinAlg.known_svectorse    : LinAlg.known_svectorse    . popitem ()
 
         if LinAlg.methods_ADD    :
             LinAlg.methods_ADD   . clear ()
@@ -993,7 +995,6 @@ class LinAlg(object) :
         """
         return mtrx.kSize,
 
-
     # =============================================================================
     ## iterator for SVector
     #  @code
@@ -1006,7 +1007,7 @@ class LinAlg(object) :
         >>> vct = ...
         >>> for i in vct : print i 
         """
-        s = vct.kSize 
+        s = len ( vct )
         for i in range ( s ) : yield vct ( i )
             
     # =============================================================================
@@ -1042,6 +1043,87 @@ class LinAlg(object) :
             result += fmt % v 
         return result + ')'
 
+    # =============================================================================
+    ## self-printout of S-vectors-with-errors
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date 2020-05-15
+    @staticmethod
+    def VE_STR ( vct , fmt = ' %g' ) :
+        """Self-printout of SVectorsWithError: (...)
+        """
+
+        v = vct.value      ()
+        c = vct.covariance ()
+        return "%s\n%s" % ( v , c )
+
+    # =============================================================================
+    ## Transform vector-with-errors to another variable
+    #  for \f[ y = y ( x ) , C(y) = J C(x) J^T, \f]
+    #  where  \f$ J = \left( \frac{\partial y}{\partial x }\right) \f$.
+    #
+    #  Transofrm to (r,phi)-varibales: 
+    #  @code
+    #  vct = ...  ##
+    #  r   = lambda x,y : (x*x+y*y)**0.5
+    #  phi = lambda x,y : math.atan2  ( y , x )
+    #  result = vct.tranform  ( r  , phi ) 
+    #  @endcode    
+    #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    #  @date 2020-05-15
+    @staticmethod
+    def VE_TRANSFORM ( vct , *Y ) :
+        """Transform vector-with-errors to another variable
+         - y = y ( x )
+         - C(y) = J C(x) J^T
+         where J = dy/dx
+         - Transofrm to (r,phi)-varibales: 
+         >>> vct = ...  ##
+         >>> r   = lambda x,y : (x*x+y*y)**0.5
+         >>> phi = lambda x,y : math.atan2  ( y , x )
+         >>> result = vct.tranform  ( r  , phi ) 
+        """
+        assert Y , 'Tranform: At least one function need to be specified!'
+
+        ## variables in form of tuple 
+        x = tuple ( [ v for v in vct ] )  ## values in form of tuple 
+        
+        y = []        
+        for i , f in enumerate ( Y ) :
+            assert callable ( f ) , 'Y(%d) is not calllable!' % i  
+            try :
+                _ = f ( *x )
+            except :
+                logger.error("Transform: Y(%s) can not be called with %s" % ( i , str ( x ) ) ) 
+                raise
+            y.append ( f )
+            
+        y = tuple  ( y ) 
+
+        nx = len ( x )
+        ny = len ( y )
+        
+        from ostap.math.derivative  import Partial
+        from ostap.math.ve          import VE 
+
+        ## Jacobi matrix  
+        J  = LinAlg.Matrix ( ny , nx ) ()
+        for j , f  in enumerate ( y ) : 
+            for i in range ( nx ) :
+                P = Partial ( i , f  )            
+                J [ j , i ] = P ( *x )
+
+        ##  result 
+        res = Ostap.Vector ( ny ) () 
+        for i , f in enumerate ( y ) : res [ i ] = f ( *x  ) 
+
+        ## calcaulte covariance  
+        c2old = vct.covariance()
+        c2new = c2old.Sim ( J )
+        
+        if 1 == ny : return VE ( res[0] , c2new ( 0 , 0 ) )
+        
+        return Ostap.VectorE ( ny ) ( res , c2new )
+        
     # =============================================================================
     ## convert vector to plain array:
     #  @code
@@ -1520,6 +1602,31 @@ class LinAlg(object) :
         return m
 
     # =========================================================================
+    ## Decorate SVectorWithError 
+    @staticmethod
+    def deco_vectore ( t ) :
+        """ Decorate SVectorWithError
+        """
+        
+        if t in LinAlg.decorated_vectors : return t 
+
+        LinAlg.decorated_vectors.add ( t )
+
+        LinAlg.backup ( t )
+        
+        t. __str__      = LinAlg.VE_STR
+        t. __repr__     = LinAlg.VE_STR
+
+        t. __len__      = lambda s : s.kSize 
+        t. __contains__ = lambda s, i : 0 <= i < s.kSize
+
+        t. __iter__     = LinAlg.V_ITER      
+        t.transform     = LinAlg.VE_TRANSFORM
+        
+        return t
+
+
+    # =========================================================================
     ##  Pick up the vector of corresponding size
     #   @code
     #   V3   = Ostap.Math.Vector(3)
@@ -1542,6 +1649,7 @@ class LinAlg(object) :
             LinAlg.deco_vector    ( v )
             ##
             if not tt  in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n ,     t )    
+            if not tt  in LinAlg.known_svectorse    : LinAlg.  VectorE ( n ,     t )    
             tt1 = n , n , t 
             if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
             
@@ -1611,6 +1719,36 @@ class LinAlg(object) :
         return m
     
     # =========================================================================
+    ##  Pick up the vector-with-errors
+    #   @code
+    #   VE3  = Ostap.Math.VectorE(3)
+    #   vctE = VE3 ()
+    #   @endcode
+    #   @see Ostap::Math::SVrctorWithError
+    @staticmethod
+    def VectorE ( n , t = 'double' ) :
+        """Pick up the vector-with-error  of corresponding size
+        >>> VE3  = Ostap.Math.VectorE(3)
+        >>> vctE = VE3 ()
+        """
+        assert isinstance  ( n , integer_types ) and 0 <= n,\
+               'Invalid length of the vector %s/%s' % ( n , type ( l ) )
+
+        tt = n , t
+        v = LinAlg.known_svectorse.get ( tt , None )
+        if  v is None :
+            v = Ostap.Math.SVectorWithError ( n , t )
+            LinAlg.known_svectorse [ tt ] = v
+            LinAlg.deco_vectore    ( v )
+            ##
+            if not tt  in LinAlg.known_svectors     : LinAlg.   Vector ( n ,     t )    
+            if not tt  in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n ,     t )    
+            tt1 = n , n , t 
+            if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
+
+        return v 
+
+    # =========================================================================
     ##  is this matrix/vector type decorated properly?
     @staticmethod
     def decorated ( t ) :
@@ -1622,75 +1760,30 @@ class LinAlg(object) :
 # =======================================================================
 
 Ostap.Vector         =  staticmethod ( LinAlg.Vector    )
+Ostap.VectorE        =  staticmethod ( LinAlg.VectorE   )
 Ostap.Matrix         =  staticmethod ( LinAlg.Matrix    )
 Ostap.SymMatrix      =  staticmethod ( LinAlg.SymMatrix ) 
 Ostap.Math.Vector    =  staticmethod ( LinAlg.Vector    )
+Ostap.Math.VectorE   =  staticmethod ( LinAlg.VectorE   ) 
 Ostap.Math.Matrix    =  staticmethod ( LinAlg.Matrix    )
 Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix ) 
 
-
-## Ostap.Vector2             = Ostap.Vector(2)
-## Ostap.Vector3             = Ostap.Vector(3)
-## Ostap.Vector4             = Ostap.Vector(4)
-## Ostap.Vector5             = Ostap.Vector(5)
-## Ostap.Vector6             = Ostap.Vector(6)
-## Ostap.Vector8             = Ostap.Vector(8)
-
-## Ostap.Math.Vector2        = Ostap.Vector2
-## Ostap.Math.Vector3        = Ostap.Vector3
-## Ostap.Math.Vector4        = Ostap.Vector4
-## Ostap.Math.Vector5        = Ostap.Vector5
-## Ostap.Math.Vector6        = Ostap.Vector6
-## Ostap.Math.Vector8        = Ostap.Vector8
-
-## ## vectors of vectors
-## Ostap.Vectors2            = std.vector ( Ostap.Vector2 )
-## Ostap.Vectors3            = std.vector ( Ostap.Vector3 )
-## Ostap.Vectors4            = std.vector ( Ostap.Vector4 )
-## Ostap.Math.Vectors2       = Ostap.Vectors2
-## Ostap.Math.Vectors3       = Ostap.Vectors3
-## Ostap.Math.Vectors4       = Ostap.Vectors4
-
-
-## Ostap.SymMatrix2x2        = Ostap.SymMatrix(2)
-## Ostap.SymMatrix3x3        = Ostap.SymMatrix(3)
-## Ostap.SymMatrix4x4        = Ostap.SymMatrix(4)
-## Ostap.SymMatrix5x5        = Ostap.SymMatrix(5)
-## Ostap.SymMatrix6x6        = Ostap.SymMatrix(6)
-## Ostap.SymMatrix7x7        = Ostap.SymMatrix(7)
-## Ostap.SymMatrix8x8        = Ostap.SymMatrix(8)
-## Ostap.SymMatrix9x9        = Ostap.SymMatrix(9)
-
-
-## Ostap.Math.SymMatrix2x2   = Ostap.SymMatrix2x2
-## Ostap.Math.SymMatrix3x3   = Ostap.SymMatrix3x3
-## Ostap.Math.SymMatrix4x4   = Ostap.SymMatrix4x4
-## Ostap.Math.SymMatrix5x5   = Ostap.SymMatrix5x5
-## Ostap.Math.SymMatrix6x6   = Ostap.SymMatrix6x6
-## Ostap.Math.SymMatrix7x7   = Ostap.SymMatrix7x7
-## Ostap.Math.SymMatrix8x8   = Ostap.SymMatrix8x8
-## Ostap.Math.SymMatrix9x9   = Ostap.SymMatrix9x9
-
-## for i in range(11) :
-##     
-##    t0 = Ostap.Vector ( i )    
-##    t1 = Ostap.SymMatrix(i)
-##    for j in range(11) : t2 = Ostap.Matrix(i,j)
-
 # =============================================================================
 _decorated_classes_ = (
-    Ostap.Vector(2)     ,
-    Ostap.Matrix(2,3)   , 
-    Ostap.SymMatrix(2)  , 
     )
 
 _decorated_classes_ = _decorated_classes_ + tuple ( LinAlg.decorated_vectors  )
 _decorated_classes_ = _decorated_classes_ + tuple ( LinAlg.decorated_matrices )
 
 _new_methods_ = (
-    Ostap.Vector    , 
-    Ostap.Matrix    , 
-    Ostap.SymMatrix , 
+    Ostap.Vector         , 
+    Ostap.VectorE        , 
+    Ostap.Matrix         , 
+    Ostap.SymMatrix      , 
+    Ostap.Math.Vector    , 
+    Ostap.Math.VectorE   , 
+    Ostap.Math.Matrix    , 
+    Ostap.Math.SymMatrix , 
     )
 
 

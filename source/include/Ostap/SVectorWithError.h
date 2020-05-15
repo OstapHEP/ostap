@@ -43,6 +43,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      enum {
+            /// vector size
+            kSize = N // vector size 
+      } ;  
+      // ======================================================================
+    public:
+      // ======================================================================
       /// full constructor from vector and covariance matrix 
       SVectorWithError 
       ( const Value&      value = Value()       , 
@@ -98,11 +105,11 @@ namespace Ostap
       // ======================================================================
       const  Value&      value       () const { return m_value      ; }
       const  Covariance& cov2        () const { return m_cov2       ; }
-      const  Covariance& covarinace  () const { return this->cov2() ; }
+      const  Covariance& covariance  () const { return this->cov2() ; }
       // ======================================================================
       inline Value&      value       ()       { return m_value      ; }
       inline Covariance& cov2        ()       { return m_cov2       ; }      
-      inline Covariance& covarinace  ()       { return this->cov2() ; }
+      inline Covariance& covariance  ()       { return this->cov2() ; }
       // ======================================================================
       const  SCALAR& value ( unsigned int i ) const  { return m_value ( i )     ; }
       const  SCALAR& cov2  ( unsigned int i , 
@@ -203,13 +210,16 @@ namespace Ostap
       Self  __sub__     ( const Value& right ) const ;      
       Self  __radd__    ( const Value& right ) const ;
       Self  __rsub__    ( const Value& right ) const ;
-      // ======================================================================      
-      Self& __imul__    ( const double v     )       { return (*this) *= v ; }
-      Self& __idiv__    ( const double v     )       { return (*this) *= v ; }
+      // ======================================================================
       Self  __mul__     ( const double v     ) const { return (*this) *  v ; }
       Self  __truediv__ ( const double v     ) const { return (*this) /  v ; }
       Self  __div__     ( const double v     ) const { return (*this) /  v ; }
       Self  __rmul__    ( const double v     ) const { return (*this) *  v ; }
+      // ======================================================================
+      Self& __imul__    ( const double v     )       { return (*this) *= v ; }
+      Self& __idiv__    ( const double v     )       { return (*this) /= v ; }
+      Self& __iadd__    ( const double v     )       { return (*this) += v ; }
+      Self& __isub__    ( const double v     )       { return (*this) -= v ; }
       // ======================================================================
     public: //  printout 
       // ======================================================================

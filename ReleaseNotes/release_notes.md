@@ -2,12 +2,14 @@
   1. improvea bot the printout for `compressed_shelve`  
   1. add new module `ostap.math.covtransform` for transformation  of covariance matrices
   1. add tests for `contransfrmm`
-  
+  1. extend (part of) linear algebra for `SVectorWithError`
+  `
 ## Backward incompatible changes
 
 ## Bug fixes:
   1. fix bug for `PDF`/`FUNC` evalaution with uncertainty 
-
+  1. fix bug for `Ostap::Math::SMatrixWithError`
+  
 
 # v1.4.8.3
 

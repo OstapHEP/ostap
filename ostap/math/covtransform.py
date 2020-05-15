@@ -57,7 +57,7 @@ import ostap.math.linalg
 #  @param C  "old" covatiance matrix
 #  @param X  "old" varibales  (arary iof values)
 #  @param Y  "new" variables  (array of callables)
-#  @return new covarinance matrix for variables Y  
+#  @return covarinance matrix for variables Y  
 def transform ( C , X , *Y ) :
     """ Transform the covariance nmatrix C at point X to the variables Y(X)
     >>> X = 1 , 2
@@ -69,40 +69,38 @@ def transform ( C , X , *Y ) :
     >>> phi = lambda x , y : math.atan2 ( y , x )
     >>> C_polar = transform ( C , X , r , phi ) 
     """
-    
-    assert 1 <= len ( Y )                           , 'Invalid size of Y!'
 
-    if C is None and 1 <= len  ( X ) : 
-        C = Ostap.SymMatrix( len ( X ) ) ()
+    ny = len ( Y ) 
+    assert 1 <= ny , 'Invalid size of Y!'
+
+    nx = len ( X ) 
+    if C is None and 1 <= nx : 
+        C = Ostap.SymMatrix ( nx ) ()
         for i , x  in enumerate ( X ) :
             xx = VE ( x ) 
             C [ i, i ] = xx.cov2 ()
+
+    shape = C.shape
+    assert shape [ 0 ] == shape[1] and shape[0] == nx  , 'Invalid shape of matrix C!' 
+
+
+    CC  = Ostap.SymMatrix  ( nx ) ()
+    for i in range  ( CC.kRows ) :
+        CC [ i , i ] = C  ( i , i ) 
+        for j in range  ( i + 1  , CC.kCols ) :
+            v = 0.5 * ( C ( i , j ) + C ( j , i ) )
+            CC [ i , j ]  = v
             
-    assert C.kRows == C.kCols and C.kRows == len ( X ) , 'Invalid shape of matrix C!' 
+    XX = Ostap.Vector ( nx  ) ()
+    for i , x  in enumerate ( X ) : 
+        XX [ i ] = float ( x )
 
-    ## get X-variables 
-    x = tuple ( [ float(v) for v in X ] ) 
+    ## get vector-with-errors 
+    XX = Ostap.VectorE ( nx ) ( XX , CC )
 
-    y = []
-    for i , f in enumerate ( Y ) :
-        assert callable ( f ), 'Y(%d) is not calllable!' % i  
-        try :
-            r = f ( *x )
-        except :
-            logger.error("Y(%s) can not be called with %s" % ( i , str(x) ) ) 
-            raise
-        y.append ( f )
-        
+    R  = XX.transform ( *Y )
     
-    nx = len ( x )
-    J = Ostap.Matrix ( len ( y ) , nx )()
-    
-    for j , f  in enumerate ( y ) : 
-        for i in range ( nx ) :
-            P = Partial ( i , f  )            
-            J [ j , i ] = P ( *x )
-
-    return C.Sim( J )
+    return R.cov2()  
 
 # =============================================================================
 if '__main__' == __name__ :
