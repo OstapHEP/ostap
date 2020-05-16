@@ -4,6 +4,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get -y install libdb-dev
 
+
 install:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     -O miniconda.sh; fi
