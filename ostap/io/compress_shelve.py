@@ -56,17 +56,16 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
 # =============================================================================
-logger.debug ( "Absract class for  (c)Pickle-based ``compressed''-database")
-# =============================================================================
 PROTOCOL = -1 
 ENCODING = 'utf-8'
 # ==============================================================================
-import os, sys, abc, shelve, shutil , time 
+import os, sys, abc, shelve, shutil , time
 from  sys import version_info as python_version
-try                : import anydbm  as dbase
-except ImportError : import    dbm  as dbase
-try                : from   whichdb import whichdb
-except ImportError : whichdb = dbase.whichdb
+from  ostap.io.dbase  import dbopen, whichdb
+# try                : import anydbm  as dbase
+# except ImportError : import    dbm  as dbase
+# try                : from   whichdb import whichdb
+# except ImportError : whichdb = dbase.whichdb
 # =============================================================================
 ## get file/directory  size 
 def fsize ( start ) :
@@ -218,7 +217,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                              ,
-                dbase.open ( self.filename , mode ) ,
+                dbopen ( self.filename , mode )   ,
                 protocol                          ,
                 writeback                         ,
                 keyencoding                       )
@@ -226,7 +225,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                              ,
-                dbase.open ( self.filename , mode ) ,
+                dbopen ( self.filename , mode )   ,
                 protocol                          ,
                 writeback                         ) 
             self.keyencoding = keyencoding
