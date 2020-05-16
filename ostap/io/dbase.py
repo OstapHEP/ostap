@@ -168,9 +168,9 @@ else :                              ## PYTHON3
                 
                 raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
-            elif result in ( 'bdsdb' , 'dbhash' , 'bdsdb3' , 'dbddb185' ) :
+            elif result in ( 'bdsdb' , 'dbhash' , 'bdsdb3' , 'bsddb185' ) :
                 
-                return bsddb3.hasopen ( file , flag , mode ) 
+                return bsddb3.hashopen ( file , flag , mode ) 
             
             return dbm.open ( file , flag , mode )  
 
