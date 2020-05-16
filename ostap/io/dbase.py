@@ -81,7 +81,7 @@ else :                              ## PYTHON3
             tst = dbm.whichdb ( filename  )
             
             ## identified or non-existing DB  ? 
-            if tst or tsts is None : return tst
+            if tst or tst is None : return tst
 
             ## non-identified DB  
             
