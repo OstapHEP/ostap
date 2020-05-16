@@ -30,8 +30,9 @@ else                       : logger = getLogger ( __name__          )
 from   ostap.math.base       import iszero
 from   ostap.core.pyrouts    import VE
 from   ostap.utils.timing    import timing 
-from   sys                   import version_info as python_version 
-import ostap.utils.cleanup   as     CU 
+from   sys                   import version_info as python_version
+from   ostap.io.dbase        import dbsize 
+import ostap.utils.cleanup   as     CU
 import ostap.io.zipshelve    as     zipshelve
 import ostap.io.bz2shelve    as     bz2shelve
 if  2 < python_version.major :
@@ -115,12 +116,12 @@ def test_shelves():
     names = [ i for i in glob.iglob ( db_lz_name   + '*' ) ]
     logger.info ( 'LZNAMES: %s' % names   )
     
-    ## logger.info('SQLiteShelve size: %d ' % os.path.getsize ( db_sql_name  ) )
-    ## logger.info('ZipShelve    size: %d ' % os.path.getsize ( db_zip_name  ) )    
-    ## logger.info('Bz2Shelve    size: %d ' % os.path.getsize ( db_bz2_name  ) )    
-    ## logger.info('RootShelve   size: %d ' % os.path.getsize ( db_root_name ) )
-    ##  if lzshelve :
-    ##    logger.info('LzShelve     size: %d ' % os.path.getsize ( db_lz_name    ) )    
+    logger.info('SQLiteShelve size: %s ' % str ( dbsize ( db_sql_name  ) ) ) 
+    logger.info('ZipShelve    size: %s ' % str ( dbsize ( db_zip_name  ) ) )   
+    logger.info('Bz2Shelve    size: %s ' % str ( dbsize ( db_bz2_name  ) ) ) 
+    logger.info('RootShelve   size: %s ' % str ( dbsize ( db_root_name ) ) )  
+    if lzshelve :
+        logger.info('LzShelve     size: %s ' % str ( dbsize ( db_lz_name    ) ) )
     
     db_sql  = sqliteshelve.open    ( db_sql_name  , 'r' )
     db_zip  = zipshelve.open       ( db_zip_name  , 'r' )

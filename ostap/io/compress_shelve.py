@@ -61,28 +61,8 @@ ENCODING = 'utf-8'
 # ==============================================================================
 import os, sys, abc, shelve, shutil , time
 from  sys import version_info as python_version
-from  ostap.io.dbase  import dbopen, whichdb
-# try                : import anydbm  as dbase
-# except ImportError : import    dbm  as dbase
-# try                : from   whichdb import whichdb
-# except ImportError : whichdb = dbase.whichdb
-# =============================================================================
-## get file/directory  size 
-def fsize ( start ) :
-    """Get file/directory  size 
-    """
-    
-    size  = 0 
-    if   not os.path.exists ( start ) : return 0
-    elif     os.path.isfile ( start ) : return os.path.getsize ( start )
-    elif     os.path.isdir  ( start ) :
-        for dirpath , dirnames , filenames in os.walk ( start ):
-            for f in filenames:
-                fp = os.path.join ( dirpath , f )
-                if not os.path.islink ( fp ):
-                    size += os.path.getsize ( fp )
-    return size
-# =============================================================================
+from  ostap.io.dbase  import dbopen, whichdb, dbsize
+#  =============================================================================
 _modes_ = {
     # =========================================================================
     # 'r'	Open existing database for reading only
@@ -179,9 +159,9 @@ class CompressShelf(shelve.Shelf,object):
                 if not os.path.exists ( filename_ ) :
                     raise TypeError ( "Unable to uncompress properly: %s" % filename )
                 if not self.__silent :
-                    size1 = fsize ( filename  )
-                    size2 = fsize ( filename_ )
-                    logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) )
+                    _ , size1 = dbsize ( filename  )
+                    _ , size2 = dbsize ( filename_ )
+                    if size1 : logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) )
                 filename        = filename_ 
                 self.__filename = filename_
                 self.__remove   = True
@@ -192,15 +172,15 @@ class CompressShelf(shelve.Shelf,object):
                 filename_     = fname  
                 # remove existing file (if needed) 
                 if os.path.exists ( filename_ ) : os.remove ( filename_ )
-                size1 = fsize ( filename ) 
+                _ , size1 = dbsize ( filename ) 
                 # gunzip in place 
                 self.__in_place_uncompress ( filename ) 
                 ##
                 if not os.path.exists ( filename_ ) :
                     raise TypeError ( "Unable to uncompress properly: %s" % filename )
                 if not self.__silent : 
-                    size2 = fsize ( filename_ )
-                    logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) ) 
+                    _ , size2 = dbsize ( filename_ )
+                    if size1 : logger.info ( "Uncompression %s: %.1f%%" %  ( filename , ( size2 * 100.0 ) / size1 ) ) 
                 filename        = filename_ 
                 self.__compress = True 
                 self.__filename = filename_
@@ -325,7 +305,7 @@ class CompressShelf(shelve.Shelf,object):
         ap = os.path.abspath  ( self.filename ) 
         
         try :
-            fs = fsize ( self.filename )
+            _ , fs = dbsize ( self.filename )
         except :
             fs = -1
             
@@ -348,7 +328,11 @@ class CompressShelf(shelve.Shelf,object):
 
         table = [ ( 'Key' , 'type',  '   size   ' ) ] 
         for k in keys :
-            ss = len ( self.dict [ k ] ) ##  compressed size 
+
+            ## kk = key.encode ( self.keyencoding ) ] )            
+            ## ss = len ( self.dict [ k ] ) ##  compressed size 
+            ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
+            
             if    ss < 1024 : size = '%7d   ' % ss 
             elif  ss < 1024 * 1024 :
                 size = '%7.2f kB' %  ( float ( ss ) / 1024 )

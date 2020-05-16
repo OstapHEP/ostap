@@ -17,13 +17,39 @@ __version__ = "$Revision:$"
 # =============================================================================
 __all__ = (
     'whichdb'  , ## guess database type  
-    'dbopen'   , ## open database 
+    'dbopen'   , ## open database
+    'dbsize'   , ## disk size of the data-base object  
     )
 # =============================================================================
-import sys
+import sys, os 
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
+# =============================================================================
+## get disk size of data-base=like object
+#  @code
+#  num , ssize = dbsize ( 'mydb' ) 
+#  @endcode  
+def dbsize  ( filename  ) :
+    """Get dist size of data-base=like object 
+    """
+    size = 0
+    num  = 0
+
+    tst = whicdb
+    if os.path.exist ( filename  ) and os.path.isfile ( filename   ) :        
+        size += os.path.getsize ( filename  )
+        num  += 1
+        
+    for suffix in ( '.db'  ,
+                    '.dir' , '.pag' ,
+                    '.bak' , '.dir' , '.dat' ) :
+        nfile = filename + suffix 
+        if os.path.exist (  nfile ) and os.path.isfile ( nfile ) :
+            size += os.path.getsize ( nfile  )
+            num  += 1
+            
+    return size 
 # =============================================================================
 if  sys.version_info.major < 3 :   ## PYTHON2 
 
@@ -179,7 +205,34 @@ else :                              ## PYTHON3
         
         from dbm import open     as dbopen
         from dbm import whichdb
+
+
+# =============================================================================
+## get disk size of data-base=like object
+#  @code
+#  num, size = dbsize ( 'mydb' ) 
+#  @endcode  
+def dbsize  ( filename  ) :
+    """Get disk  size of data-base=like object
+    >>> num, size = dbsize ( 'mydb' ) 
+    """
+    size = 0
+    num  = 0
+
+    if os.path.exists ( filename  ) and os.path.isfile ( filename   ) :        
+        size += os.path.getsize ( filename  )
+        num  += 1
         
+    for suffix in ( '.db'  ,
+                    '.dir' , '.pag' ,
+                    '.bak' , '.dir' , '.dat' ) :
+        nfile = filename + suffix 
+        if os.path.exists (  nfile ) and os.path.isfile ( nfile ) :
+            size += os.path.getsize ( nfile  )
+            num  += 1
+            
+    return num, size 
+
 # =============================================================================
 if '__main__' == __name__ :
     
