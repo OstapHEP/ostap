@@ -78,7 +78,7 @@ else :                              ## PYTHON3
             """
             
             ## use the standard function 
-            tst = dbm.wichdb ( filename  )
+            tst = dbm.whichdb ( filename  )
             
             ## identified or non-existing DB  ? 
             if tst or tsts is None : return tst
