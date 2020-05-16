@@ -17,7 +17,6 @@ install:
   - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables ipython cmake gdbm bsddb3
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
- # - pip install bsddb3
   - pip install coverage coveralls  
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
 
@@ -25,7 +24,8 @@ script:
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core 
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/fitting
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/histos
- - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/io
+ # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/io
+ - source build/INSTALL/thisostap.sh && python ostap/io/tests/test_io_shelves.py 
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/logger
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/math
  # - source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/plotting 
