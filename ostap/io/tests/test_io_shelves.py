@@ -103,6 +103,7 @@ def test_shelves():
     db_root .close()
     if lzshelve : db_lz .close()
 
+    import glob 
     names = [ i for i in glob.iglob ( db_sql_name + '*' ) ]
     logger.info ( 'SQLNAMES : %s' % names )
     names = [ i for i in glob.iglob ( db_zip_name + '*' ) ]
