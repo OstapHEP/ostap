@@ -14,10 +14,10 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
   - conda config --add channels anaconda
-  - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables ipython cmake gdbm
+  - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables ipython cmake gdbm bsddb3
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
-  - pip install bsddb3 
+ # - pip install bsddb3 
   - pip install coverage coveralls  
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
 
