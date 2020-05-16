@@ -102,6 +102,17 @@ def test_shelves():
     db_bz2  .close()
     db_root .close()
     if lzshelve : db_lz .close()
+
+    names = [ i for i in glob.iglob ( db_sql_name + '*' ) ]
+    logger.info ( 'SQLNAMES : %s' % names )
+    names = [ i for i in glob.iglob ( db_zip_name + '*' ) ]
+    logger.info ( 'ZIPNAMES : %s' % names )
+    names = [ i for i in glob.iglob ( db_bz2_name + '*' ) ]
+    logger.info ( 'BZ2NAMES : %s' % names )
+    names = [ i for i in glob.iglob ( db_root_name + '*' ) ]
+    logger.info ( 'ROOTNAMES: %s' % names )
+    names = [ i for i in glob.iglob ( db_lz_name   + '*' ) ]
+    logger.info ( 'LZNAMES: %s' % names   )
     
     ## logger.info('SQLiteShelve size: %d ' % os.path.getsize ( db_sql_name  ) )
     ## logger.info('ZipShelve    size: %d ' % os.path.getsize ( db_zip_name  ) )    
