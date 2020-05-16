@@ -274,7 +274,13 @@ class CompressShelf(shelve.Shelf,object):
         if self.opened : self.close ()  
 
     # =========================================================================
-    ## iterator over good keys 
+    ##  Iterator over avilable keys (patterns included).
+    #   Pattern matching is performed accoriding to
+    #   fnmatch/glob/shell rules [it is not regex!] 
+    #   @code  
+    #   db = ...
+    #   for k in db.ikeys('*MC*') : print(k)
+    #   @endcode  
     def ikeys ( self , pattern = '' ) :
         """Iterator over avilable keys (patterns included).
         Pattern matching is performed accoriding to
@@ -296,10 +302,17 @@ class CompressShelf(shelve.Shelf,object):
             if good ( k , pattern ) : yield k
 
     # =========================================================================
-    ## list the avilable keys 
+    ## List the available keys (patterns included).
+    #   Pattern matching is performed according to
+    #  fnmatch/glob/shell rules [it is not regex!] 
+    #  @code  
+    #  db = ...
+    #  db.ls() ## all keys
+    #  db.ls ('*MC*')        
+    #  @endcode 
     def ls    ( self , pattern = '' , load = True ) :
         """List the available keys (patterns included).
-        Pattern matching is performed accoriding to
+        Pattern matching is performed according to
         fnmatch/glob/shell rules [it is not regex!] 
 
         >>> db = ...

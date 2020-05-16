@@ -3,13 +3,16 @@
   1. add new module `ostap.math.covtransform` for transformation  of covariance matrices
   1. add tests for `contransfrmm`
   1. extend (part of) linear algebra for `SVectorWithError`
+  1. add `io.dbase` module allowing to use `bdsdb3` if available
   `
 ## Backward incompatible changes
 
 ## Bug fixes:
+
   1. fix bug for `PDF`/`FUNC` evalaution with uncertainty 
   1. fix bug for `Ostap::Math::SMatrixWithError`
-  
+  1. fix travis-CI tests   
+
 
 # v1.4.8.3
 
