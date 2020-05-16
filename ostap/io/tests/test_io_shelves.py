@@ -103,12 +103,12 @@ def test_shelves():
     db_root .close()
     if lzshelve : db_lz .close()
     
-    logger.info('SQLiteShelve size: %d ' % os.path.getsize ( db_sql_name  ) )
-    logger.info('ZipShelve    size: %d ' % os.path.getsize ( db_zip_name  ) )    
-    logger.info('Bz2Shelve    size: %d ' % os.path.getsize ( db_bz2_name  ) )    
-    logger.info('RootShelve   size: %d ' % os.path.getsize ( db_root_name ) )
-    if lzshelve :
-        logger.info('LzShelve     size: %d ' % os.path.getsize ( db_lz_name    ) )    
+    ## logger.info('SQLiteShelve size: %d ' % os.path.getsize ( db_sql_name  ) )
+    ## logger.info('ZipShelve    size: %d ' % os.path.getsize ( db_zip_name  ) )    
+    ## logger.info('Bz2Shelve    size: %d ' % os.path.getsize ( db_bz2_name  ) )    
+    ## logger.info('RootShelve   size: %d ' % os.path.getsize ( db_root_name ) )
+    ##  if lzshelve :
+    ##    logger.info('LzShelve     size: %d ' % os.path.getsize ( db_lz_name    ) )    
     
     db_sql  = sqliteshelve.open    ( db_sql_name  , 'r' )
     db_zip  = zipshelve.open       ( db_zip_name  , 'r' )
