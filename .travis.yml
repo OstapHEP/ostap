@@ -4,7 +4,9 @@ before_install:
   - sudo apt-get update
   - sudo apt-get -y install libdb-dev
   - apt-cache search gdbm
+- sudo apt-get -y install libgdbm-dev
   - apt-cache search ndbm
+  - apt-cache search  dbm
   
 install:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -15,7 +17,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
   - conda config --add channels anaconda
-  - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables ipython cmake gdbm ndbm bsddb3
+  - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables ipython cmake gdbm bsddb3
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - pip install coverage coveralls  
