@@ -14,7 +14,7 @@ install:
   - conda create -q -n testenv python=3.7  nose ninja root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake gdbm
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
-  - pip install coverage coveralls terminaltables nose numpy scipy pathos ppft multiprocess dill bdsdb3
+  - pip install coverage coveralls bdsdb3
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
 
 script:
