@@ -39,11 +39,11 @@ else :                              ## PYTHON3
     
     
     try :
-        import bdsdb3
+        import bsddb3
     except ImportError :
         bsddb3 = None
 
-    if bdsdb3 :
+    if bsddb3 :
         ## <code>bdsdb3</code> is available, try to use it as a defauld database 
 
         import dbm, io, struct 
@@ -164,13 +164,13 @@ else :                              ## PYTHON3
                     
                     # file doesn't exist and the new flag was used so use bdsdb3 
                     
-                    return bdsdb3.hasopen ( flag , mode ) 
+                    return bsddb3.hasopen ( flag , mode ) 
                 
                 raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
             elif result in ( 'bdsdb' , 'dbhash' , 'bdsdb3' , 'dbddb185' ) :
                 
-                return bdsdb3.hasopen ( flag , mode ) 
+                return bsddb3.hasopen ( flag , mode ) 
             
             return dbm.open ( file , flag , mode )  
 
