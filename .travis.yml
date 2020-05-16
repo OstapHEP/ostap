@@ -15,7 +15,7 @@ install:
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - apt-cache search  libdb
-  - apt-get   install libdb.0-dev
+  - apt-get   install libd-dev
   - pip install bsddb3 
   - pip install coverage coveralls  
   - mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
