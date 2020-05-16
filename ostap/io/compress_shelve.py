@@ -211,7 +211,13 @@ class CompressShelf(shelve.Shelf,object):
             self.keyencoding = keyencoding
                     
         self.__opened        = True
-        self.__mode          = mode
+        self.__mode          = mode        
+        self.__dbtype        = whichdb ( self.filename ) 
+        
+    @property
+    def dbtype   ( self ) :
+        """``dbtype''  : the underlying type of database"""
+        return self.__dbtype
         
     @property
     def protocol ( self ) :
@@ -304,16 +310,17 @@ class CompressShelf(shelve.Shelf,object):
         n  = os.path.basename ( self.filename )
         ap = os.path.abspath  ( self.filename ) 
         
+        self.sync() 
         try :
             _ , fs = dbsize ( self.filename )
         except :
             fs = -1
             
-        if    fs < 0            : size = "???"
-        elif  fs < 1024         : size = str(fs)
-        elif  fs < 1024  * 1024 :
+        if    fs <= 0            : size = "???"
+        elif  fs <  1024         : size = str ( fs ) 
+        elif  fs <  1024  * 1024 :
             size = '%.2fkB' % ( float ( fs ) / 1024 )
-        elif  fs < 1024  * 1024 * 1024 :
+        elif  fs <  1024  * 1024 * 1024 :
             size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
         else :
             size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
@@ -364,9 +371,7 @@ class CompressShelf(shelve.Shelf,object):
 
         table = T.table ( table , title = title , prefix = '# ' )
         ll    = getLogger ( n )
-        dbt   = whichdb ( self.filename )
-        dbt   = '|' + dbt if dbt else ''
-        line  = 'Database %s:%s%s #keys: %d size: %s' % ( t , ap , dbt , len ( self ) , size )
+        line  = 'Database %s:%s|%s #keys: %d size: %s' % ( t , ap , self.dbtype , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
         
         
@@ -387,16 +392,16 @@ class CompressShelf(shelve.Shelf,object):
         ##
         if self.__compress and os.path.exists ( self.__filename ) :
             # get the initial size 
-            size1 = os.path.getsize  ( self.__filename )
+            _ , size1 = dbsize ( self.__filename )
             # compress the file
             self.__in_place_compress ( self.__filename ) 
             #
             cname = self.__filename + self.__extension 
             if not os.path.exists ( cname ) :
-                logger.warning( 'Unable to compress the file %s ' % self.__filename  )
-            size2 = os.path.getsize ( cname )
-            if not self.__silent : 
-                logger.info( 'Compression %s: %.1f%%' % ( self.__filename, ( size2 * 100.0 ) / size1 ) )
+                logger.error ( 'Unable to compress the file %s ' % self.__filename  )
+            _ , size2 = dbsize ( cname )
+            if not self.__silent and size1 : 
+                logger.info ( 'Compression %s: %.1f%%' % ( self.__filename, ( size2 * 100.0 ) / size1 ) )
 
     # =========================================================================
     ## compress the file (``in-place'') 
@@ -454,14 +459,9 @@ class CompressShelf(shelve.Shelf,object):
             kname = '%s.%s' % (  kls.__module__ , kls.__name__ ) 
         
         if   self and len ( self ) :
-            t   = whichdb ( self.filename )
-            t   = '|' + t if t else ''
-            return "%s('%s')%s: %d object(s)" % ( kname , self.filename , t , len(self) ) 
+            return "%s('%s')|%s: %d object(s)" % ( kname , self.filename , self.dbtype  , len ( self ) ) 
         elif self :
-            t   = whichdb ( self.filename )
-            t   = '|' + t if t else ''
-            t = whichdb ( self.filename ) 
-            return "%s('%s')%s: empty"        % ( kname , self.filename , t )
+            return "%s('%s')|%s: empty"        % ( kname , self.filename , self.dbtype  )
         return "Invalid/Closed %s('%s')"       % ( kname , self.filename )
     
     __str__ = __repr__

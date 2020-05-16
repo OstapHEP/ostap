@@ -148,7 +148,7 @@ else :                              ## PYTHON3
             
             # Check for BSD hash
             if magic in (0x00061561, 0x61150600):
-                return "dbhash"
+                return "bdsdb3"
             
             # Unknown
             return ""

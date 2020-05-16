@@ -104,24 +104,12 @@ def test_shelves():
     db_root .close()
     if lzshelve : db_lz .close()
 
-    import glob 
-    names = [ i for i in glob.iglob ( db_sql_name + '*' ) ]
-    logger.info ( 'SQLNAMES : %s' % names )
-    names = [ i for i in glob.iglob ( db_zip_name + '*' ) ]
-    logger.info ( 'ZIPNAMES : %s' % names )
-    names = [ i for i in glob.iglob ( db_bz2_name + '*' ) ]
-    logger.info ( 'BZ2NAMES : %s' % names )
-    names = [ i for i in glob.iglob ( db_root_name + '*' ) ]
-    logger.info ( 'ROOTNAMES: %s' % names )
-    names = [ i for i in glob.iglob ( db_lz_name   + '*' ) ]
-    logger.info ( 'LZNAMES: %s' % names   )
-    
-    logger.info('SQLiteShelve size: %s ' % str ( dbsize ( db_sql_name  ) ) ) 
-    logger.info('ZipShelve    size: %s ' % str ( dbsize ( db_zip_name  ) ) )   
-    logger.info('Bz2Shelve    size: %s ' % str ( dbsize ( db_bz2_name  ) ) ) 
-    logger.info('RootShelve   size: %s ' % str ( dbsize ( db_root_name ) ) )  
+    logger.info('SQLiteShelve size: %d|%d ' % dbsize ( db_sql_name  ) ) 
+    logger.info('ZipShelve    size: %d|%d ' % dbsize ( db_zip_name  ) )   
+    logger.info('Bz2Shelve    size: %d|%d ' % dbsize ( db_bz2_name  ) ) 
+    logger.info('RootShelve   size: %d|%d'  % dbsize ( db_root_name ) )  
     if lzshelve :
-        logger.info('LzShelve     size: %s ' % str ( dbsize ( db_lz_name    ) ) )
+        logger.info('LzShelve     size: %d|%d ' % dbsize ( db_lz_name    ) ) 
     
     db_sql  = sqliteshelve.open    ( db_sql_name  , 'r' )
     db_zip  = zipshelve.open       ( db_zip_name  , 'r' )
