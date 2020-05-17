@@ -39,7 +39,9 @@ Dependencies
    - nice format of tables 
          - in particular for nice printout for `TTree`, `TChain`, `RooDataSet`, ... ;
    - `ostap` offers a home-made replacement with a bit reduced functionalty.  
-
+- _optional_ (fro python3) : [bsddb3]
+   - python interface to Berkeley DB (`libdb` needs to be installed!)
+   
 Setup
 -----
 
@@ -57,4 +59,4 @@ The possible  setup options are described  [here](INSTALL.md)
 [ppt]: https://github.com/uqfoundation/ppft
 [multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
 [terminaltables]: https://pypi.org/project/terminaltables
-
+[bsddb3]: https://pypi.org/project/bsddb3/
