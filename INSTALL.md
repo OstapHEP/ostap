@@ -89,9 +89,11 @@ Set conda environments:
 Add conda-forge to your channels:
 
     conda config --add channels conda-forge
-Create an environment with requarement dependancies:
+Create an environment with required dependancies:
 
     conda create -n ostap-req-env root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
+
+IF you computer has insntalled Berkeley DB (`libdb`) and you are tung pytho3, it is desirabel to add `bsddb3` in the list
 
 Activate the  environment  with requirement packages:
 
