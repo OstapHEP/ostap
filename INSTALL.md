@@ -21,7 +21,7 @@ After setting the enviroments clone and build ostap package:
     
 On lxplus/7 you can do it with several LCG versions (95,96,97), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 97 and  x86_64-centos7-gcc8-opt:
 
-    LbLogin -c x86_64-centos7-gcc8-opt
+    lb-set-platform x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh
     source ./scripts/setup.sh
     source LCG_$LCG_VERSION/INSTALL/thisostap.sh
@@ -93,7 +93,7 @@ Create an environment with requarement dependancies:
 
     conda create -n ostap-req-env root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
 
-Activate the  environment  with requarement packages:
+Activate the  environment  with requirement packages:
 
     conda activate ostap-req-env 
 
