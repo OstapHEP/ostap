@@ -186,7 +186,7 @@ class ZipShelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.gz' , 
+    extensions = '.zip' , '.tgz' , '.zdb' , '.zipdb' , '.gz'  
     ## 
     def __init__(
         self                                   ,
@@ -234,29 +234,62 @@ class ZipShelf(CompressShelf):
         pass
     
     # =========================================================================
-    ## compress (gzip) the file into temporary location, keep original
-    def compress_file   ( self , filein ) :
-        """Compress (gzip) the file into temporary location, keep original
+    ## compress the file into temporary location, keep original
+    def compress_files   ( self , files ) :
+        """Compress the files into the temporary location, keep original
         """
-        import tempfile , gzip , io 
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.gz' )
-        with io.open ( filein , 'rb' ) as fin :
-            with gzip.open ( fileout , 'wb') as fout : 
-                shutil.copyfileobj ( fin , fout )                
-                return fileout 
+        output = self.tempfile ()
+        
+        import zipfile 
+        with zipfile.ZipFile( output , 'w' , allowZip64 = True ) as zfile :
+            for file in files :
+                _ , name = os.path.split ( file )
+                zfile.write ( file  , name  )
+                
+        return output 
 
     # =========================================================================
     ## uncompress (gunzip) the file into temporary location, keep original
+    #  @code
+    #  db    = ...
+    #  files = db.uncompress_file ( input_cmpressed_file )   
+    #  @endcode 
     def uncompress_file ( self , filein ) :
         """Uncompress (gunzip) the file into temporary location, keep original
+        >>> db    = ...
+        >>> files = db.uncompress_file ( input_cmpressed_file )   
         """
-        import tempfile, gzip , io   
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 1) try zipfile 
+        import zipfile
+        if zipfile.is_zipfile ( filein ) :
+            with zipfile.ZipFile ( filein , 'r' , allowZip64 = True ) as zfile :
+                for item in zfile.filelist :
+                    zfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.filename ) )
+            items.sort() 
+            return tuple  ( items ) 
+                    
+        ## 2) try compressed-tarfile 
+        import tarfile
+        if tarfile.is_tarfile ( filein ) :
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+            items.sort() 
+            return tuple ( items ) 
+
+        ## 3) try old good gzipped (single) file
+        import gzip , io, tempfile
         fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
         with gzip.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )            
-                return fileout
-    
+                return fileout , 
+            
     # ==========================================================================
     ## compress (zip)  the item  using <code>zlib.compress</code>
     def compress_item ( self , value ) :
@@ -369,8 +402,8 @@ class TmpZipShelf(ZipShelf):
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename 
         ZipShelf.close ( self )
+        fname = self.nominal_dbname 
         ## delete the file 
         if os.path.exists ( fname ) :
             try :
@@ -403,6 +436,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

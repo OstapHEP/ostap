@@ -1,3 +1,13 @@
+## New features
+
+  1. improve `compress_shelve` for better treatment of "other' databases, in parcilar those with several on-disk files 
+
+
+## Backward incompatible changes
+
+## Bug fixes:
+
+
 # v1.4.8.4
 
 ## New features

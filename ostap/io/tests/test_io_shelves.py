@@ -18,6 +18,13 @@
   - ostap/io/lzshelve.py  (python3 only)
 """
 # =============================================================================
+## import sys
+## sys.modules['dbhash'] = None
+## sys.modules['bsddb' ] = None
+## sys.modules['gdbm'  ] = None
+## ##  sys.modules['dbm'   ] = None
+
+
 import os, random
 import ROOT
 # =============================================================================
