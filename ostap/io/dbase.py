@@ -74,7 +74,7 @@ else :                              ## PYTHON3
             database using that module may still fail.
             
             - Actually it is a bit extended  form of `dbm.whichdb`
-            that accounts for `bdsdb3`
+            that accounts for `bsddb3`
             """
             
             ## use the standard function 
@@ -122,7 +122,7 @@ else :                              ## PYTHON3
             
             # Check for BSD hash
             if magic in (0x00061561, 0x61150600):
-                return "bdsdb3"
+                return "bsddb3"
             
             # Unknown
             return ""
@@ -151,7 +151,7 @@ else :                              ## PYTHON3
             Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
             only if it doesn't exist; and 'n' always creates a new database.
             
-            - Actually it is a bit extended  form of `dbm.open` that  accounts for `bdsdb3`
+            - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3`
             """
             
             result = whichdb ( file  ) if 'n' not in flag  else None
@@ -162,13 +162,13 @@ else :                              ## PYTHON3
                 
                 if 'c' in flag or 'n' in flag:
                     
-                    # file doesn't exist and the new flag was used so use bdsdb3 
+                    # file doesn't exist and the new flag was used so use bsddb3 
                     
                     return bsddb3.hashopen ( file , flag , mode ) 
                 
                 raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
-            elif result in ( 'bdsdb' , 'dbhash' , 'bdsdb3' , 'bsddb185' ) :
+            elif result in ( 'bsddb' , 'dbhash' , 'bsddb3' , 'bsddb185' ) :
                 
                 return bsddb3.hashopen ( file , flag , mode ) 
             

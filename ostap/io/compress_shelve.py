@@ -183,8 +183,9 @@ class CompressShelf(shelve.Shelf,object):
                 self.__remove        = ()
                 self.__actual_dbname = filename
 
-        afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )                   
+        afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
+
 
         if  3 <= python_version.major  :
             
@@ -207,43 +208,53 @@ class CompressShelf(shelve.Shelf,object):
         self.__mode          = mode        
 
         self.sync  ()
-        nfiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) - ofiles 
 
         self.__dbtype        = whichdb ( self.dbname )
+        nfiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) - ofiles 
 
         if not self.__files :
             
             files = []
             f     = self.dbname
-            if os.path.exists ( f ) and os.path.isfile ( f ) : files.append  ( f )
-            else :
-                if     f + '.db'  in nfiles                           :
-                    files.append  ( f + '.db'  )
-                elif   f + '.pag' in nfiles and f  + '.dir' in nfiles :
-                    files.append  ( f + '.pag' )
-                    files.append  ( f + '.dir' )
-                elif   f + '.dat' in nfiles and f  + '.dir' in nfiles :
-                    files.append  ( f + '.dat' )
-                    files.append  ( f + '.dir' )
-                elif   f + '.db'  in ofiles                           :
-                    files.append  ( f + '.db'  )
-                elif   f + '.pag' in ofiles and f  + '.dir' in ofiles :
-                    files.append  ( f + '.pag' )
-                    files.append  ( f + '.dir' )
-                elif   f + '.dat' in ofiles and f  + '.dir' in ofiles :
-                    files.append  ( f + '.dat' )
-                    files.append  ( f + '.dir' )
-                    
-                files.sort () 
-                self.__files = tuple  ( files  )
+            db    = self.dbtype            
+            if os.path.exists ( f ) and os.path.isfile ( f ) and \
+                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' ) :  
+                files.append  ( f )
+            elif   f + '.db'  in nfiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
+                files.append  ( f + '.db'  )
+            elif   f + '.pag' in nfiles and f  + '.dir' in nfiles and db in ( 'dbm.ndbm' , 'dbm'     ) :
+                files.append  ( f + '.pag' )
+                files.append  ( f + '.dir' )
+            elif   f + '.dat' in nfiles and f  + '.dir' in nfiles and db in ( 'dbm.dumb' , 'dumbdbm' ) :
+                files.append  ( f + '.dat' )
+                files.append  ( f + '.dir' )
+            elif   f + '.pag' in nfiles                           and db in ( 'dbm.ndbm' , 'dbm'     ) :
+                files.append  ( f + '.pag' )
+            elif   f + '.db'  in ofiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
+                files.append  ( f + '.db'  )
+            elif   f + '.pag' in ofiles and f  + '.dir' in ofiles and db in ( 'dbm.ndbm' , 'dbm'     ) :
+                files.append  ( f + '.pag' )
+                files.append  ( f + '.dir' )
+            elif   f + '.dat' in ofiles and f  + '.dir' in ofiles and db in ( 'dbm.dumb' , 'dumbdbm' ) :
+                files.append  ( f + '.dat' )
+                files.append  ( f + '.dir' )                
+            elif   f + '.pag' in ofiles                           and db in ( 'dbm.dumb' , 'dumbdbm' ) :
+                files.append  ( f + '.pag' )
+            else  :
+                logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
 
+            files.sort ()
+            self.__files = tuple  ( files  )
+        
         if  self.__compress is True :
             self.__compress = self.files 
             self.__remove   = self.files 
         
-        ff = self.files[0] if 1 == len ( self.files  ) else str ( self.files ) 
-        logger.info ( 'DB files are %s  |%s' % ( ff, self.dbtype ) )
-                                 
+        if not self.__silent :
+            ff = [ os.path.basename ( f ) for f in self.files ]
+            ff = ff [0] if 1 == len ( ff ) else ff              
+            logger.info ( 'DB files are %s|%s' % ( ff, self.dbtype ) )
+        
     @property
     def dbtype   ( self ) :
         """``dbtype''  : the underlying type of database"""
