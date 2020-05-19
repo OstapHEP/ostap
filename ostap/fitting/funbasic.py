@@ -30,7 +30,7 @@ from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
 from   ostap.logger.utils            import roo_silent , rootWarning
 from   ostap.fitting.roofit          import PDF_fun 
-from   ostap.fitting.utils           import MakeVar, XVar, YVar, ZVar 
+from   ostap.fitting.utils           import MakeVar, XVar, YVar, ZVar, NameDuplicates  
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 # =============================================================================
@@ -43,7 +43,8 @@ py2 = 2 >= sys.version_info.major
 ## helper factory function
 def func_factory ( klass , config ) :
     """Helper factory function, used for unpickling"""
-    return klass ( **config ) 
+    with NameDuplicates ( True ) : 
+        return klass ( **config ) 
 # =============================================================================
 ## @class FUNC
 #  Helper base class for impolementation of various (Roo)Function-wrappers
@@ -68,10 +69,6 @@ class FUNC(XVar) :
         ##  super(FUNC,self).__init__ ( xvar )
         XVar .__init__ ( self , xvar )
 
-        
-        ## name is defined via base class MakeVar 
-        self.name  = name ## name is defined via the base class MakeVar 
-     
         self.__vars      = ROOT.RooArgSet  ()
         self.__variables = [] 
 
@@ -103,8 +100,9 @@ class FUNC(XVar) :
     ## factory method 
     @classmethod
     def factory ( klass , config ) :
-         """Factory method, used for unpickling"""
-         return klass ( **config ) 
+        """Factory method, used for unpickling"""
+        with NameDuplicates ( True ) : 
+            return klass ( **config ) 
         
     ## conversion to string 
     def __str__ (  self ) :

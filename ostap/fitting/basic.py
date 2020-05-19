@@ -334,7 +334,7 @@ class PDF (FUNC) :
             self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
-        ## check the integrals (when possible)
+        ## check the integrals (if/when possible)
         #
         if hasattr ( self , 'yields' ) and self.yields  :
             
@@ -401,7 +401,12 @@ class PDF (FUNC) :
         for s in self.signals     : 
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
-        ## 
+        ## ##
+        ## if   not silent and result and 0 == result.status() :
+        ##     logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        ## elif not silent and result :
+        ##     logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+                         
         return result, frame 
 
     ## helper method to draw set of components 
@@ -2896,7 +2901,7 @@ class Fit1D (PDF) :
             raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
         
         if not name :
-            name = '%s' % self.__signal.name 
+            name = 'Fit%s' % self.__signal.name 
             if suffix : name += '_' + suffix 
 
         ## Init base class

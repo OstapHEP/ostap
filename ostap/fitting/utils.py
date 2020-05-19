@@ -180,7 +180,19 @@ class NameDuplicates(object) :
     def allowed ( cls ) : return cls.__allowed
     @classmethod
     def allow   ( cls , allowed ) :
-        cls.__allowed = True if allowed else False 
+        cls.__allowed = True if allowed else False
+    # =========================================================================
+    def __init__   ( self , allow  ) :
+        self.__allow  = True if allow else False
+        self.__backup = self.allowed()
+    def __enter__  ( self ) :        
+        self.__backup = self.allowed()
+        self.allow ( self.__allow )
+        return self
+    def __exit__   ( self , *_     ) :
+        self.allow ( self.__backup )
+# =============================================================================
+
 # =============================================================================
 ## keep the list of local loggers  
 _loggers  = {}           
@@ -204,8 +216,9 @@ class MakeVar ( object ) :
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
         ##
-        obj.__aux_keep = []                      ## ATTENTION!        
-        obj.__name     = None                    ## ATTENTION!
+        obj.__aux_keep     = []                      ## ATTENTION!        
+        obj.__name        = None                    ## ATTENTION!
+        obj.__local_names = set()
         return obj
     
     ##  produce ERROR    message using the local logger 
@@ -336,9 +349,27 @@ class MakeVar ( object ) :
         if name in self.__var_names and not NameDuplicates.allowed() :
             self.warning ( 'The variable name "%s" is already defined!' % name )
             
-        self.__var_names.add ( name )
+        self.__var_names.add   ( name )
+        self.__local_names.add ( name )
         return name
-    
+
+    # =========================================================================
+    ## delete the obejct
+    #  - remove the registered names in storages
+    #  - clear the local storage of names 
+    def __del__ ( self ) :
+        """Delete the obejct
+        - remove the registered names in storages
+        - clear the local storage of names 
+        """
+        
+        if self.name and self.name in self.__pdf_names :
+            self.__pdf_names.remove ( self.name ) 
+            while self.__local_names :
+                a = self.__local_names.pop ()
+                if a in self.__var_names :
+                    self.__var_names.remove  ( a ) 
+        
     # =========================================================================
     ## create ROOT.RooFit.Binning from TAxis
     #  @see RooFit::Binning

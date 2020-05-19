@@ -1,8 +1,12 @@
+# v1.4.8.6
+
 ## New features
 
-  1. improve `compress_shelve` for better treatment of "other' databases, in parcilar those with several on-disk files 
-
-
+  1. improve `compress_shelve` for (much) better treatment of "other' databases, in particular those with several on-disk files 
+  1. fix unesessary complains/warnings on redefined varibales 
+  1. allow implicit name duplicationn for cloning&copy of `FUNC`/`PDF` objects  (Is it a good idea???)
+  1. update `test_fitting_models` 
+ 
 ## Backward incompatible changes
 
 ## Bug fixes:
@@ -16,7 +20,7 @@
   1. add new module `ostap.math.covtransform` for transformation  of covariance matrices
   1. add tests for `contransfrmm`
   1. extend (part of) linear algebra for `SVectorWithError`
-  1. add `io.dbase` module allowing to use `bdsdb3` if available
+  1. add `io.dbase` module allowing to use `bsddb3` if/when available (for python3)
   `
 ## Backward incompatible changes
 

@@ -60,6 +60,15 @@ signal_gauss = Models.Gauss_pdf ( name  = 'Gauss'    , ## the name
                                   mean  = m.value () , ## mean value (fixed)
                                   sigma = m.error () ) ## sigma      (fixed)
 
+    ## construct composite model: signal + background 
+model_gauss = Models.Fit1D(
+    signal     = signal_gauss ,
+    background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) ,
+    )
+
+S = model_gauss.S
+B = model_gauss.B
+
 # =============================================================================
 ## gauss PDF
 # =============================================================================
@@ -73,11 +82,6 @@ def test_gauss() :
     ## simple fit with gaussian only 
     result = signal_gauss . fitTo ( dataset0 , silent = True )
     
-    ## construct composite model: signal + background 
-    model_gauss = Models.Fit1D(
-        signal     = signal_gauss ,
-        background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) ,
-        )
     model_gauss.background.tau.fix(0)
     
     with rooSilent() : 
@@ -85,14 +89,11 @@ def test_gauss() :
         result, frame = model_gauss . fitTo ( dataset0 )
         
         model_gauss.draw (  dataset0 )
-        
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :     
-        logger.info( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) )
-        logger.info( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info( 'Simple Gaussian model\n%s' % result.table ( prefix = "# " ) )
+
+    logger.info( 'Simple Gaussian model\n%s' % result.table ( prefix = "# " ) )
         
     models.add ( model_gauss )
     signal_gauss.mean.fix ( m.value() )
@@ -113,6 +114,7 @@ def test_crystalball () :
                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
                                               mean  = signal_gauss.mean  ) , ## reuse mean  from gauss 
         background = Models.Bkg_pdf ('BkgCB', xvar = mass , power = 0 ) ,
+        S = S , B = B 
         )
     
     model_cb.signal.n.fix(8) 
@@ -126,12 +128,8 @@ def test_crystalball () :
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Alpha  & n          are: %-28s & %-28s ' % ( result ( model_cb.signal.alpha ) [ 0 ] , result ( model_cb.signal.n ) [ 0 ] ) )
-        logger.info ( 'Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_cb )
                       
@@ -149,6 +147,7 @@ def test_crystalball_RS () :
                                             n     = (5,1,10)           , 
                                             mean  = signal_gauss.mean  ) ,
         background = Models.Bkg_pdf ('BkgCBRS', xvar = mass , power = 0 ) , 
+        S = S , B = B 
         )
     
     model_cbrs.S.value  = 5000
@@ -164,11 +163,8 @@ def test_crystalball_RS () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'right-side Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    logger.info ( 'right-side Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_cbrs  )
 
@@ -187,7 +183,8 @@ def test_crystalball_DS () :
                                   alphaR = (1.4,0.5,3)        , 
                                   sigma  = signal_gauss.sigma ,  
                                   mean   = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 )
+        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 ) , 
+        S = S , B = B 
         )
 
     model_cbds.S.value  = 5000
@@ -206,11 +203,8 @@ def test_crystalball_DS () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'double-sided Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'double-sided Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_cbds  )
 
@@ -225,7 +219,8 @@ def test_needham() :
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
                                       mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 )
+        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 ) , 
+        S = S , B = B 
         )
     
     with rooSilent() : 
@@ -237,11 +232,8 @@ def test_needham() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Needham function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Needham function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_matt  )
 
@@ -260,7 +252,8 @@ def test_apollonios () :
                                         b     =  1 ,
                                         n     = 10 ,
                                         alpha =  3 ) ,
-        background = Models.Bkg_pdf ('BkgAPO', xvar = mass , power = 0 )
+        background = Models.Bkg_pdf ('BkgAPO', xvar = mass , power = 0 ),
+        S = S , B = B 
         )
     
     model_apollonios.S.setVal(5000)
@@ -273,12 +266,8 @@ def test_apollonios () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Apollonios function\n%s' % result.table ( prefix = "# " ) ) 
 
+    logger.info ( 'Apollonios function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_apollonios )
 
@@ -295,7 +284,8 @@ def test_apollonios2() :
                                          sigma     = signal_gauss.sigma ,
                                          beta      =  ( 0.5 , 2 )       ,
                                          asymmetry = 0 ) ,
-        background = Models.Bkg_pdf ('BkgAPO2', xvar = mass , power = 0 )
+        background = Models.Bkg_pdf ('BkgAPO2', xvar = mass , power = 0 ) , 
+        S = S , B = B 
         )
     
     model_apollonios2.signal.mean.fix( m.value() )    
@@ -311,12 +301,8 @@ def test_apollonios2() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Apollonios2 function\n%s' % result.table ( prefix = "# " ) ) 
 
+    logger.info ( 'Apollonios2 function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_apollonios2 )
 
@@ -336,7 +322,9 @@ def test_bifurcated () :
     
     model_bifurcated = Models.Fit1D(
         signal     = signal_bifurcated       ,
-        background = Models.Bkg_pdf ('BkgBFG', xvar  = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgBFG', xvar  = mass , power = 0 ) , 
+        S = S , B = B 
+        ) 
     
     model_bifurcated.B.setVal (  500 )
     model_bifurcated.S.setVal ( 6000 )
@@ -347,11 +335,8 @@ def test_bifurcated () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'Bifurcated Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Bifurcated Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bifurcated  )
 
@@ -372,7 +357,9 @@ def test_2gauss () :
     
     model_2gauss = Models.Fit1D(
         signal     = signal_2gauss      ,
-        background = Models.Bkg_pdf ('Bkg22G', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('Bkg22G', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     model_2gauss.B.setVal (  500 )
     model_2gauss.S.setVal ( 6000 )
@@ -384,11 +371,8 @@ def test_2gauss () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'double Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'double Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_2gauss  )
 
@@ -402,7 +386,9 @@ def test_gengauss_v1 () :
         signal = Models.GenGaussV1_pdf ( name = 'Gv1' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV1', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgGGV1', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        ) 
     
     model_gauss_gv1.signal.beta .fix(2)
     model_gauss_gv1.signal.mean .fix( m.value() ) 
@@ -419,12 +405,9 @@ def test_gengauss_v1 () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'generalized Gaussian(v1) function\n%s' % result.table ( prefix = "# " ) ) 
-        
 
+    logger.info ( 'generalized Gaussian(v1) function\n%s' % result.table ( prefix = "# " ) ) 
+        
     models.add ( model_gauss_gv1  )
 
 # =============================================================================
@@ -436,7 +419,9 @@ def test_gengauss_v2 () :
         signal = Models.GenGaussV2_pdf ( name = 'Gv2' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV2', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgGGV2', xvar = mass , power = 0 ) ,
+        S = S , B = B 
+        ) 
     
     model_gauss_gv2.signal.kappa.fix(0)
     
@@ -459,10 +444,8 @@ def test_gengauss_v2 () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'generalized Gaussian(v2) function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'generalized Gaussian(v2) function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_gauss_gv2  )
 
@@ -475,7 +458,9 @@ def test_skewgauss() :
     model_gauss_skew = Models.Fit1D (
         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
                                         xvar = mass  , mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSkG', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgSkG', xvar = mass , power = 0 ) ,
+        S = S , B = B 
+        ) 
     
     model_gauss_skew.signal.alpha.fix(0)
     model_gauss_skew.S.setVal(5000)
@@ -488,10 +473,8 @@ def test_skewgauss() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'skew Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'skew Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_gauss_skew  )
 
@@ -506,7 +489,9 @@ def test_qgauss () :
                                         q    = (1,0.7,1.2), 
                                         mean = signal_gauss.mean   ,
                                         scale = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgQG', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgQG', xvar = mass , power = 0 )  ,
+        S = S , B = B 
+        ) 
     
     s = model_qgauss.signal
     s.scale = 0.015
@@ -520,11 +505,8 @@ def test_qgauss () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Scale  & Q          are: %-28s & %-28s ' % ( result ( s.scale     )[0] , result( s.q           )[0] ) ) 
-        
+
+    logger.info ( 'Q-Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_qgauss )
 
@@ -543,7 +525,9 @@ def test_bukin() :
                                     rhoR  = 0    , 
                                     mean  = signal_gauss.mean  , 
                                     sigma = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgBK', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgBK', xvar = mass , power = 0 ), 
+        S = S , B = B 
+        )
     
     model_bukin.signal.mean .fix  ( m.value() )
     model_bukin.signal.sigma.fix  ( m.error() )
@@ -566,11 +550,8 @@ def test_bukin() :
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'Bukin function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Bukin function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bukin  )
 
@@ -584,7 +565,9 @@ def test_studentT () :
         signal = Models.StudentT_pdf ( name = 'ST' , 
                                        xvar = mass ,
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgST', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgST', xvar = mass , power = 0 ), 
+        S = S , B = B 
+        ) 
     
     model_student.signal.n    .setVal(20)
     model_student.signal.sigma.setVal(0.013)
@@ -598,11 +581,9 @@ def test_studentT () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                is : %-28s '         %   result ( 'mean_Gauss')[0]  )
         
+    logger.info ( "Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
+
     models.add ( model_student  )
 
 # =============================================================================
@@ -617,7 +598,9 @@ def test_bifstudentT():
                                                  nR    = 25     ,                                                 
                                                  mean  = signal_gauss.mean   , 
                                                  sigma = signal_gauss.sigma  ) ,
-        background = Models.Bkg_pdf ('BkgST2', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgST2', xvar = mass , power = 0 ) ,
+        S = S , B = B 
+        ) 
     
     signal = model.signal 
     model.S.setVal(5000)
@@ -634,15 +617,8 @@ def test_bifstudentT():
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
-        logger.info ( 'n(L)                 is: %-28s ' %  result ( signal.nL    )[0] )
-        logger.info ( 'n(R)                 is: %-28s ' %  result ( signal.nR    )[0] )
-        logger.info ( "Bifurkated Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "Bifurkated Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
         
     models.add ( model )
 
@@ -656,7 +632,9 @@ def test_sinhasinh() :
         signal = Models.SinhAsinh_pdf( 'SASH'                   ,
                                        xvar = mass              , 
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSAS', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgSAS', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     
@@ -680,14 +658,8 @@ def test_sinhasinh() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mu                   is: %-28s ' %  result ( signal.mu      )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma   )[0] )
-        logger.info ( 'Epsilon              is: %-28s ' %  result ( signal.epsilon )[0] )
-        logger.info ( 'delta                is: %-28s ' %  result ( signal.delta   )[0] )
-        logger.info ( "SinhAsinh function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "SinhAsinh function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -702,7 +674,9 @@ def test_johnsonSU () :
         signal = Models.JohnsonSU_pdf( 'JSU'                    ,
                                        xvar = mass              , 
                                        xi   = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgJSU', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgJSU', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     
@@ -720,14 +694,8 @@ def test_johnsonSU () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Xi                   is: %-28s ' %  result ( signal.xi     )[0] )
-        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lambd  )[0] )
-        logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  )[0] )
-        logger.info ( "Johnson-SU function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "Johnson-SU function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -741,7 +709,9 @@ def test_atlas () :
         signal = Models.Atlas_pdf( 'ATLAS'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgATLAS', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgATLAS', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -758,12 +728,8 @@ def test_atlas () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "ATLAS function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "ATLAS function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -777,7 +743,9 @@ def test_sech() :
         signal = Models.Sech_pdf( 'SECH'                    ,
                                   xvar = mass              , 
                                   mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSECH', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgSECH', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -794,12 +762,8 @@ def test_sech() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "Hyperbolic secant/sech function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Hyperbolic secant/sech function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -813,7 +777,9 @@ def test_losev() :
         signal = Models.Losev_pdf( 'LOSEV'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOSEV', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgLOSEV', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        ) 
     
     signal = model.signal
     model.S.setVal(5000)
@@ -831,13 +797,8 @@ def test_losev() :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Alpha                is: %-28s ' %  result ( signal.alpha )[0] )
-        logger.info ( 'Beta                 is: %-28s ' %  result ( signal.beta  )[0] )
-        logger.info ( "Asymmetric hyperbolic secant/Losev distribution\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Asymmetric hyperbolic secant/Losev distribution\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -852,7 +813,9 @@ def test_logistic () :
         signal = Models.Logistic_pdf( 'LOGI'                    ,
                                       xvar = mass              , 
                                       mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOGI', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgLOGI', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -869,12 +832,8 @@ def test_logistic () :
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
     
@@ -889,7 +848,9 @@ def test_voigt () :
                                     xvar  = mass                ,
                                     mean  = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.sigma.fix ( m.error() )
@@ -908,13 +869,8 @@ def test_voigt () :
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Voigt function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -930,7 +886,9 @@ def test_pvoigt () :
                                           xvar  = mass                ,
                                           mean  = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.mean .fix() 
@@ -949,13 +907,8 @@ def test_pvoigt () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "pseudo-Voigt function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "pseudo-Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -983,7 +936,9 @@ def test_bw () :
           breitwigner = bw                ,     
           xvar        = mass              ,
           mean        = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 )) 
+        background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
 
     signal = model.signal 
     model.S.setVal(5000)
@@ -1000,12 +955,8 @@ def test_bw () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -1021,7 +972,9 @@ def test_slash():
                                     xvar  = mass   ,
                                     mean  = signal_gauss.mean   , 
                                     scale = signal_gauss.sigma  ) ,
-        background = None  )   
+        background = None , 
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.scale.release() 
@@ -1037,12 +990,8 @@ def test_slash():
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
-        logger.info ( "Slash function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Slash function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -1057,7 +1006,9 @@ def test_laplace():
                                                 xvar  = mass   ,
                                                 mean  = signal_gauss.mean   , 
                                                 slope = signal_gauss.sigma  ) ,
-        background = None  )
+        background = None ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.slope.release() 
@@ -1073,13 +1024,8 @@ def test_laplace():
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Slope                is: %-28s ' %  result ( signal.slope )[0] )
-        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
-        logger.info ( "asymmetric Laplace function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "asymmetric Laplace function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -1093,7 +1039,9 @@ def test_rasingcosine () :
         signal = Models.RaisingCosine_pdf( 'RC'                     ,
                                            xvar = mass              , 
                                            mean = signal_gauss.mean ) ,
-        background = 1 ) 
+        background = 1 ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -1109,12 +1057,8 @@ def test_rasingcosine () :
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
-        logger.info ( "Raising cosine function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Raising cosine function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -1144,7 +1088,8 @@ def test_bwi () :
           mean        = signal_gauss.mean ,
           bkg         = -1                ) ,
         suffix     = '_a' , 
-        background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 )) 
+        background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 ) ,
+        )
     
     signal = model.signal 
     model.S.setVal(5000)
@@ -1161,17 +1106,10 @@ def test_bwi () :
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
-
-
-import pickle 
 
 # =============================================================================
 ## check that everything is serializable
