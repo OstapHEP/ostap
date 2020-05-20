@@ -5,7 +5,6 @@
 
 ## Bug fixes:
   1. couple of minor fixes in `compressed_shelve` and `dbase`
-  
    
 # v1.4.8.6
 
