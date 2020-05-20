@@ -585,7 +585,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the temporary directory
     #  The directory will be cleaned-up and deleted at-exit.
     @classmethod
-    def tempdir ( cls , suffix = '' , prefix = 'compress-shelve-dir-' , date = True  ) :
+    def tempdir ( cls , suffix = '=db-dir' , prefix = 'compress-shelve-dir-' , date = True  ) :
         """Create the temporary directory
         The directory will be cleaned-up and deleted at-exit.
         """
@@ -596,7 +596,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the name for the temproary file 
     #  The file will be deleted at-axit 
     @classmethod
-    def tempfile ( cls , suffix = '' , prefix = 'compress-shelve-' , dir = None , date = True  ) :
+    def tempfile ( cls , suffix = '-db' , prefix = 'compress-shelve-' , dir = None , date = True  ) :
         """Ccreate the name for the temproary file 
         The file will be deleted at-axit
         """
@@ -607,7 +607,7 @@ class CompressShelf(shelve.Shelf,object):
     ## guess the name of the database from the list of (incmpressed files)
     @classmethod
     def dbase_name ( cls , files  ) :
-        """ Guess the name of the database from the list of (incmpressed files)
+        """ Guess the name of the database from the list of (uncompressed files)
         """
         
         exts = set ( [ os.path.splitext ( f )[1] for f in files ] )
@@ -617,6 +617,9 @@ class CompressShelf(shelve.Shelf,object):
             f , _ = os.path.splitext ( files [0] )
             if whichdb ( f  ) : return f
         elif 2 <= len ( files  ) and  '.dir' in exts and '.pag' in exts :
+            f , _ = os.path.splitext ( files [0] )
+            if whichdb ( f  ) : return f
+        elif 1 <= len ( files  )                     and '.pag' in exts :
             f , _ = os.path.splitext ( files [0] )
             if whichdb ( f  ) : return f
         elif 2 <= len ( files  ) and  '.dir' in exts and '.dat' in exts :

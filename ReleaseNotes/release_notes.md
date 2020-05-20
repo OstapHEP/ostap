@@ -2,6 +2,7 @@
 
 ## New features
   1. implement true `read-only mode for `sqldict` (and therefore for `sqlliteshelve`
+  1. tune the names of temporary files/directories for `compress_shelve`
   
 ## Backward incompatible changes
 
