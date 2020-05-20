@@ -1,3 +1,5 @@
+# v1.4.8.7
+
 ## New features
   1. implement true `read-only mode for `sqldict` (and therefore for `sqlliteshelve`
   
