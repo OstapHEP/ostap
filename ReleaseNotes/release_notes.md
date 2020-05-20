@@ -1,5 +1,6 @@
 ## New features
-
+  1. implement true `read-only mode for `sqldict` (and therefore for `sqlliteshelve`
+  
 ## Backward incompatible changes
 
 ## Bug fixes:

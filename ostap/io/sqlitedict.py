@@ -95,6 +95,65 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+
+
+# =============================================================================
+## @class Connect
+#  Helper class to implement "read-only" access to database 
+class Connect ( object ) :
+    """Helper class to implement ``read-only'' access to database 
+    """
+    def __init__ ( self , filename , flag , *args , **kwargs ) :
+
+        self.__filename = filename
+        self.__flag     = flag
+        self.__args     = args
+        self.__kwargs   = kwargs
+        self.__connect  = None
+        self.__fd       = None
+
+    # =========================================================================
+    def __enter__ ( self ) :
+
+        if (3,4) <= sys.version_info and 'r' in self.flag :
+            filename  = 'file:%s?mode=ro' % self.filename 
+            self.__connect = sqlite3.connect ( filename , uri = True , *self.__args , **self.__kwargs )
+        elif 'r' in self.flag :            
+            self.__fd = os.open( self.__filename, os.O_RDONLY)
+            filename  = '/dev/fd/%d' % self.__fd 
+            self.__connect = sqlite3.connect ( filename        , *self.__args , **self.__kwargs )
+        else :
+            self.__connect = sqlite3.connect ( self.__filename , *self.__args , **self.__kwargs )
+            
+        return self.connect
+
+    # ========================================================================
+    def __exit__ ( self , *_ ) :
+
+        print 'EXIT,', _
+        if self.connect :
+            self.__connect.close()
+            self.__connect = None
+        if not self.__fd is None  :
+            os.close ( self.__fd )
+            
+    @property
+    def filename ( self ) :
+        """``filename'' : the original filename"""
+        return self.__filename
+
+    @property
+    def flag ( self ) :
+        """``flag'' : the access flag"""
+        return self.__flag
+
+    @property
+    def connect ( self ) :
+        """``connect'' : the actual connection"""
+        return self.__connect
+# =============================================================================
+
+
 def open(*args, **kwargs):
     """See documentation of the SqliteDict class."""
     return SqliteDict(*args, **kwargs)
@@ -177,6 +236,9 @@ class SqliteDict(DictClass):
         self.encode = encode
         self.decode = decode
 
+        with Connect ( self.filename , self.flag ) :
+            pass  
+        
         logger.debug ("opening Sqlite table %r in %s" % (tablename, filename))
         MAKE_TABLE = 'CREATE TABLE IF NOT EXISTS "%s" (key TEXT PRIMARY KEY, value BLOB)' % self.tablename
         self.conn = self._new_conn()
@@ -186,7 +248,7 @@ class SqliteDict(DictClass):
             self.clear()
 
     def _new_conn(self):
-        return SqliteMultithread(self.filename, autocommit=self.autocommit, journal_mode=self.journal_mode)
+        return SqliteMultithread(self.filename, self.flag , autocommit=self.autocommit, journal_mode=self.journal_mode)
 
     def __enter__(self):
         if not hasattr(self, 'conn') or self.conn is None:
@@ -303,9 +365,14 @@ class SqliteDict(DictClass):
         if not os.path.isfile(filename):
             raise IOError('file %s does not exist' % (filename))
         GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'
-        with sqlite3.connect(filename) as conn:
+        
+        #with sqlite3.connect(filename) as conn:
+        #    cursor = conn.execute(GET_TABLENAMES)
+        #    res = cursor.fetchall()
+
+        with Connect ( filename, 'r' ) as conn:
             cursor = conn.execute(GET_TABLENAMES)
-            res = cursor.fetchall()
+            res    = cursor.fetchall()
 
         return [name[0] for name in res]
 
@@ -380,9 +447,10 @@ class SqliteMultithread(Thread):
     in a separate thread (in the same order they arrived).
 
     """
-    def __init__(self, filename, autocommit, journal_mode):
+    def __init__(self, filename, flag , autocommit, journal_mode):
         super(SqliteMultithread, self).__init__()
         self.filename = filename
+        self.flag     = flag 
         self.autocommit = autocommit
         self.journal_mode = journal_mode
         # use request queue of unlimited size
@@ -393,6 +461,16 @@ class SqliteMultithread(Thread):
         self.start()
 
     def run(self):
+        
+        if self.autocommit:
+            connect  = Connect(self.filename, self.flag , isolation_level=None, check_same_thread=False)
+        else:
+            connnect = Connect(self.filename, self.flag , check_same_thread=False)
+
+        with connect as conn :
+            return self.run__ (  conn )
+
+    def run__( self, conn ):
         if self.autocommit:
             conn = sqlite3.connect(self.filename, isolation_level=None, check_same_thread=False)
         else:
@@ -552,6 +630,7 @@ class SqliteMultithread(Thread):
             self.join()
 #endclass SqliteMultithread
 
+        
 # =============================================================================
 #                                                                       The END 
 # =============================================================================
