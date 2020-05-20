@@ -130,7 +130,6 @@ class Connect ( object ) :
     # ========================================================================
     def __exit__ ( self , *_ ) :
 
-        print 'EXIT,', _
         if self.connect :
             self.__connect.close()
             self.__connect = None
