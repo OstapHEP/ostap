@@ -6,7 +6,6 @@ Ostap Project
 [![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/ostaphep/badges/version.svg)](https://anaconda.org/conda-forge/ostaphep)
 <!--[![build status](https://gitlab.cern.ch/amazurov/ostap/badges/master/build.svg)](https://gitlab.cern.ch/amazurov/ostap/commits/master)-->
 
 Nowadays [ROOT](http://root.cern.ch/) and [PyROOT](http://root.cern.ch/drupal/content/pyroot) are de-facto standard tools for performing physics analysis. The Ostap project is a community-driven initiative aiming to provide more user friendly and more intuitive interface to [ROOT](http://root.cern.ch/) and [PyROOT](http://root.cern.ch/drupal/content/pyroot) and extending the existing functionality.
