@@ -95,6 +95,7 @@ add_library(ostap SHARED src/format.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
                          src/OstapDataFrame.cpp
+                         src/P2Quantile.cpp
                          src/Parameterization.cpp
                          src/Params.cpp
                          src/Peaks.cpp

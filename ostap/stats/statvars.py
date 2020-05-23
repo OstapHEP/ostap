@@ -61,6 +61,10 @@ else                       : logger = getLogger ( __name__               )
 from ostap.core.core import Ostap 
 StatVar = Ostap.StatVar 
 # =============================================================================
+## @var QEXACT
+#  use it as threshold for exact/slow vs approximate/fast quanitle calcualtion 
+QEXACT = 10000
+# =============================================================================
 ## get the moment of order 'order' relative to 'center'
 #  @code
 #  data =  ...
@@ -172,15 +176,34 @@ def data_kurtosis ( data , expression , cuts  = '' , *args ) :
 #  print data.quantile (        0.10 , 'mass' , 'pt>1' ) ## ditto
 #  @endcode
 #  @see Ostap::StatVar::quantile
-def  data_quantile ( data , q , expression , cuts  = '' , *args ) :
+#  @see Ostap::StatVar::p2quantile
+def  data_quantile ( data , q , expression , cuts  = '' , exact = QEXACT , *args ) :
     """Get the quantile
     >>> data =  ...
     >>> print data_quantile ( data , 0.1 , 'mass' , 'pt>1' ) 
     >>> print data.quantile (        0.1 , 'mass' , 'pt>1' ) ## ditto
-    - see Ostap::StatVar::quantile
+    - see Ostap.StatVar.quantile
+    - see Ostap.StatVar.p2quantile
     """
-    assert isinstance ( q , float ) and 0 < q < 1 , 'Invalid quantile:%s' % q 
-    return StatVar.quantile ( data , q , expression , cuts , *args )
+    assert isinstance ( q , float ) and 0 < q < 1 , 'Invalid quantile:%s' % q
+
+    if   exact is True  :
+        ##  exact slow algorithm 
+        qn = StatVar.  quantile ( data , q , expression , cuts , *args )
+
+    elif exact is False :
+        ## approximate fast formula 
+        qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
+
+    elif isinstance ( exact , int ) and len ( data ) <= exact  :
+        ## exact slow algorithm 
+        qn = StatVar.  quantile ( data , q , expression , cuts , *args )
+
+    else :
+        ## approximate fast algorithm 
+        qn = StatVar.p2quantile ( data , q , expression , cuts , *args )
+
+    return qn
 
 # =============================================================================
 ## get the interval
@@ -190,7 +213,8 @@ def  data_quantile ( data , q , expression , cuts  = '' , *args ) :
 #  print data.interval (        0.05, 0.95 , 'mass' , 'pt>1' ) ##   get 90% interval
 #  @endcode
 #  @see Ostap::StatVar::interval
-def data_interval ( data , qmin ,  qmax , expression , cuts = '' , *args ) :
+#  @see Ostap::StatVar::p2interval
+def data_interval ( data , qmin ,  qmax , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the interval 
     >>> data =  ...
     >>> print data_interval ( data , 0.05 , 0.95 , 'mass' , 'pt>1' ) ## get 90% interval
@@ -199,12 +223,27 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , *args ) :
     """
     assert isinstance ( qmin , float ) and 0 < qmin < 1 , 'Invalid quantile-1:%s' % qmin 
     assert isinstance ( qmax , float ) and 0 < qmax < 1 , 'Invalid quantile-2:%s' % qmax
-    r =  StatVar.interval ( data ,
-                            min ( qmin , qmax ) , 
-                            max ( qmin , qmax ) , 
-                            expression ,
-                            cuts       , *args )
-    return  r.first , r.second
+
+    qmin, qmax = min ( qmin ,  qmax ) , max  ( qmin, qmax  )
+    
+    if   exact is True  :
+        ##  exact slow algorithm 
+        rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
+
+    elif exact is False :
+        ## approximate fast formula 
+        rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
+
+    elif isinstance ( exact , int ) and len ( data ) <= exact  :
+        ## exact slow algorithm 
+        rn = StatVar.  interval ( data , qmin , qmax  , expression , cuts , *args )
+
+    else :
+        ## approximate fast formula 
+        rn = StatVar.p2interval ( data , qmin , qmax , expression , cuts , *args )
+
+    ## x
+    return rn
 
 # =============================================================================
 ## Get the median
@@ -214,14 +253,14 @@ def data_interval ( data , qmin ,  qmax , expression , cuts = '' , *args ) :
 #  print data.median (        'mass' , 'pt>1' ) ## ditto
 #  @endcode 
 #  @see Ostap::StatVar::quantile
-def data_median ( data , expression , cuts = '' , *args ) :
+def data_median ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the median
     >>> data =  ...
     >>> print data_median ( data , 'mass' , 'pt>1' ) 
     >>> print data.median (        'mass' , 'pt>1' ) ##  ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantile ( data , 0.5 , expression , cuts  , *args ) 
+    return data_quantile ( data , 0.5 , expression , cuts  , exact , *args ) 
 
 # =============================================================================
 ## get the  quantiles 
@@ -235,7 +274,7 @@ def data_median ( data , expression , cuts = '' , *args ) :
 #  print data.quantiles (        20    , 'mass' , 'pt>1' ) 
 #  @endcode
 #  @see Ostap::StatVar::quantile
-def data_quantiles ( data , quantiles , expression , cuts  = '' , *args ) :
+def data_quantiles ( data , quantiles , expression , cuts  = '' , exact = QEXACT , *args ) :
     """Get the quantiles
     >>> data =  ...
     >>> print data_quantiles ( data , 0.1       , 'mass' , 'pt>1' ) ## quantile 
@@ -259,9 +298,25 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , *args ) :
     qq.sort ()
 
     from ostap.math.base import doubles
-    rr = StatVar.quantiles ( data , doubles ( qq )  , expression , cuts , *args )
-    rr = [ r for r in rr ] 
-    return tuple ( rr ) 
+    qqq = doubles ( qq )
+
+    if   exact is True  :
+        ##  exact slow algorithm 
+        qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
+
+    elif exact is False :
+        ## approximate fast formula 
+        qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
+
+    elif isinstance ( exact , int ) and len ( data ) <= exact  :
+        ## exact slow algorithm 
+        qn = StatVar.  quantiles ( data , qqq , expression , cuts , *args )
+
+    else :
+        ## approximate fast algorithm 
+        qn = StatVar.p2quantiles ( data , qqq , expression , cuts , *args )
+
+    return qn 
 
 # =============================================================================
 ## Get the terciles 
@@ -271,14 +326,14 @@ def data_quantiles ( data , quantiles , expression , cuts  = '' , *args ) :
 #  print data.terciles(        'mass' , 'pt>1' )   ##  ditto
 #  @endcode 
 #  @see Ostap::StatVar::quantile
-def data_terciles ( data , expression , cuts = '' , *args ) :
+def data_terciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the terciles
     >>> data =  ...
     >>> print data_terciles ( data , 'mass' , 'pt>1' ) 
     >>> print data.terciles (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantiles ( data  , 3 , expression  , cuts , *args ) 
+    return data_quantiles ( data  , 3 , expression  , cuts , exact , *args ) 
 
 # =============================================================================
 ## Get the quartiles 
@@ -288,14 +343,14 @@ def data_terciles ( data , expression , cuts = '' , *args ) :
 #  print data.quartiles(        'mass' , 'pt>1' ) ##  ditto
 #  @endcode 
 #  @see Ostap::StatVar::quantile
-def data_quartiles ( data , expression , cuts = '' , *args ) :
+def data_quartiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the quartiles
     >>> data =  ...
     >>> print data_quartiles ( data , 'mass' , 'pt>1' ) 
     >>> print data.quartiles (        'mass' , 'pt>1' ) ##  ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantiles ( data  , 4 , expression  , cuts , *args ) 
+    return data_quantiles ( data  , 4 , expression  , cuts , exact , *args ) 
 
 # =============================================================================
 ## Get the quintiles
@@ -305,14 +360,14 @@ def data_quartiles ( data , expression , cuts = '' , *args ) :
 #  print data.quintiles(        'mass' , 'pt>1' ) ## ditto
 #  @endcode 
 #  @see Ostap::StatVar::quantile
-def data_quintiles ( data , expression , cuts = '' , *args ) :
+def data_quintiles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the quartiles
     >>> data =  ...
     >>> print data.quintiles ( 'mass' , 'pt>1' ) 
     >>> print data.quintiles ( 'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantiles ( data  , 5 , expression  , cuts , *args ) 
+    return data_quantiles ( data  , 5 , expression  , cuts , exact , *args ) 
 
 # =============================================================================
 ## Get the deciles 
@@ -322,14 +377,14 @@ def data_quintiles ( data , expression , cuts = '' , *args ) :
 #  print data.deciles(        'mass' , 'pt>1' ) ## ditto
 #  @endcode 
 #  @see Ostap::StatVar::quantile
-def data_deciles ( data , expression , cuts = '' , *args ) :
+def data_deciles ( data , expression , cuts = '' , exact = QEXACT , *args ) :
     """Get the deciles
     >>> data =  ...
     >>> print data_deciles ( data , 'mass' , 'pt>1' ) 
     >>> print data.deciles (        'mass' , 'pt>1' ) ## ditto
     - see Ostap::StatVar::quantile
     """
-    return data_quantiles ( data  , 10 , expression  , cuts , *args ) 
+    return data_quantiles ( data  , 10 , expression  , cuts , exact , *args ) 
 
 # =============================================================================
 ## Get the mean (with uncertainty):
@@ -446,6 +501,29 @@ def data_decorate ( klass ) :
     klass.quintiles       = data_quintiles
     klass.deciles         = data_deciles
 
+
+# =============================================================================
+
+Quantile  = StatVar.Quantile
+Quantiles = StatVar.Quantiles
+Interval  = StatVar.Interval 
+QInterval = StatVar.QInterval 
+
+def _q_str_  ( o ) : return "Quantile(%.5g,n=%d)"         % ( o.quantile  , o.nevents )
+def _qs_str_ ( o ) : return "Quantiles(%d,n=%d)"          % ( o.quantiles , o.nevents )
+def _i_str_  ( o ) : return "Interval([%.5g,%.5g])"       % ( o.low       , o.high    )
+def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%d)" % ( o.interval.low  ,
+                                                              o.interval.high , o.nevents )
+Quantile  .__str__  = _q_str_
+Quantile  .__repr__ = _q_str_
+Quantiles .__str__  = _qs_str_
+Quantiles .__repr__ = _qs_str_
+Interval  .__str__  = _i_str_
+Interval  .__repr__ = _i_str_
+QInterval .__str__  = _qi_str_
+QInterval .__repr__ = _qi_str_
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -453,5 +531,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

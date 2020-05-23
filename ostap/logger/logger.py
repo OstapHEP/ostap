@@ -24,6 +24,7 @@ __all__ = (
     'logColor'       , ## context manager to switch on  color logging locally  
     'logNoColor'     , ## context manager to switch off color logging locally  
     'noColor'        , ## context manager to switch off color logging locally  
+    'keepColor'      , ## context manager preserve to preserve coloring
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
     ##

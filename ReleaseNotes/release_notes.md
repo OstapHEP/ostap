@@ -1,3 +1,16 @@
+## New features 
+  1. add new cass `P2Quantile` that interfaces P^2 algortuhm from GSL for running quatile (approximate)
+  1. Add methods `Ostap::Statvar::p2quantile`, `Ostap::StatVar::p2quantiles` and  `Ostap::StatVar::p2interval`. These are much faster (but approximate) versions of `Ostap::StatVar::quantile`, `Ostap::StatVar::quantiles` and `Ostap::StatVar::interval`, using P^2 algorithm. 
+  1. update `ostap.stat.statvar` for modified `Ostap::StatVar` methods
+  
+## Backward incompatible changes
+  1. change return type from `Ostap::StatVar::quantile` , `Ostap::StatVar::quantiles` and  `Ostap::StatVar::intrval`  method, adding  also number fo events used for quantile/interval estimation.  It allows to judge abotu the precision  
+  
+## Bug fixes:
+  1. fix really stupid bug in `ValueWithError`
+  1. Tiny fix in `Ostap.DataFrame.ProgressBar`
+  
+
 # v1.4.8.7
 
 ## New features
