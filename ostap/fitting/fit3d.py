@@ -152,12 +152,18 @@ class PDF3 (PDF2,FUNC3) :
         """
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
             range_name = 'aux3_rng12_%s' % self.name
-            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) :
+                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+                if dataset:
+                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
             in_range2  = range_name 
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
             range_name = 'aux3_rng13_%s' % self.name
-            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : 
+                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                if dataset:
+                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
             in_range3  = range_name 
 
         in_range = []
@@ -207,12 +213,20 @@ class PDF3 (PDF2,FUNC3) :
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             range_name = 'aux3_rng21_%s' % self.name
-            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )  
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+
             in_range1  = range_name
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
             range_name = 'aux3_rng23_%s' % self.name
-            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : 
+                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                if dataset:
+                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
+
             in_range3  = range_name 
 
         in_range = []
@@ -261,12 +275,20 @@ class PDF3 (PDF2,FUNC3) :
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             range_name = 'aux3_rng31_%s' % self.name
-            with rooSilent ( 3 ) : self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )       
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+
             in_range1  = range_name 
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
             range_name = 'aux3_rng32_%s' % self.name
-            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) : 
+                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )    
+                if dataset:
+                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
+
             in_range2  = range_name 
 
         in_range = []
