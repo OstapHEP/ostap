@@ -162,7 +162,11 @@ class PDF2 (PDF,FUNC2) :
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
             range_name = 'aux2_rng2_%s' % self.name 
-            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
+            with rooSilent ( 3 ) : 
+              self.yvar.setRange ( range_name , in_range[0] , in_range[1] )
+              if dataset:
+                dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range[0] , in_range[1] )
+
             in_range = range_name 
 
         return self.draw ( drawvar  = self.xvar , 
@@ -206,7 +210,11 @@ class PDF2 (PDF,FUNC2) :
         """
         if in_range and isinstance ( in_range , tuple ) and 2 == len ( in_range ) :
             range_name = 'aux2_rng1_%s' % self.name 
-            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range[0] , in_range[1] )
+            with rooSilent ( 3 ) : 
+              self.xvar.setRange ( range_name , in_range[0] , in_range[1] )
+              if dataset:
+                dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range[0] , in_range[1] )
+
             in_range = range_name
 
         return self.draw ( drawvar  = self.yvar ,
@@ -277,7 +285,9 @@ class PDF2 (PDF,FUNC2) :
             high = in_range [ 1 ]
             if isinstance ( low , num_types ) and isinstance ( high , num_types ) and low < high :
                 range_name = 'aux2_range_%s' % self.name 
-                with rooSilent ( 3 ) : drawvar.setRange ( range_name , low , high )
+                with rooSilent ( 3 ) : 
+                  drawvar.setRange ( range_name , low , high )
+                  dataset.get_var(drawvar.GetName()).setRange ( range_name , low , high )
                 in_range = range_name
     
         if in_range and not isinstance ( in_range , list_types ) :
