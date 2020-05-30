@@ -12,7 +12,7 @@
 ## Bug fixes:
   1. fix really stupid bug in `ValueWithError`
   1. Tiny fix in `Ostap.DataFrame.ProgressBar`
-  
+  2. fixed in_range option for the case when fit variables are defined as  RooRealVar
 
 # v1.4.8.7
 

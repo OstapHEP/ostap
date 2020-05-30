@@ -654,6 +654,12 @@ def _ds_getattr_ ( dataset , aname ) :
     """
     _vars = dataset.get()
     return getattr ( _vars , aname )  
+## get the attibute for RooDataSet
+# =============================================================================
+
+def get_var( self, aname ) :
+    _vars = self.get()
+    return getattr ( _vars , aname )  
 
 # =============================================================================
 ## Get min/max for the certain variable in dataset
@@ -710,11 +716,14 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
 ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
 ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
 ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+ROOT.RooDataSet.get_var       = get_var
 
 _new_methods_ += [
     ROOT.RooDataSet .clear ,
     ROOT.RooDataSet .erase ,
     ROOT.RooDataSet .Reset ,
+
+    ROOT.RooDataSet .get_var ,
     ]
 
 # =============================================================================
