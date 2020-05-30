@@ -30,9 +30,14 @@ If you don't use autocommit (default is no autocommit for performance), then
 don't forget to call `mydict.commit()` when done with a transaction.
 
 """
-
+# =============================================================================
+__all__ = (
+    'SqliteDict' , ## sqlite3-persisten disctionary
+    'issqlite3'  , ##  is is sqlite3- file?
+    )
+# =============================================================================
 import sqlite3
-import os
+import os, io 
 import sys
 import tempfile
 import random
@@ -95,6 +100,28 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+# =============================================================================
+## Is it a sqlite3 file?
+#  @code
+#  ok = issqlite3 ( 'mydbase' ) 
+#  @endcode
+#  @see https://stackoverflow.com/questions/12932607/how-to-check-if-a-sqlite3-database-exists-in-python
+
+def issqlite3 ( filename ) :
+    """  Is it a sqlite3 file?
+    >>> ok = issqlite3 ( 'mydbase' ) 
+    - see https://stackoverflow.com/questions/12932607/how-to-check-if-a-sqlite3-database-exists-in-python
+    """
+    
+    if not   os.path.exists  ( filename ) : return False
+    if not   os.path.isfile  ( filename ) : return False
+    if 100 > os.path.getsize ( filename ) : return False
+    
+    with io.open ( filename  , 'rb' ) as f :
+        hdr = f.read(100)
+        return hdr[:16] == 'SQLite format 3\x00'
+    
+    return False 
 
 
 # =============================================================================
@@ -115,12 +142,12 @@ class Connect ( object ) :
     # =========================================================================
     def __enter__ ( self ) :
 
-        if (3,4) <= sys.version_info and 'r' in self.flag :
+        if  ( 3 , 4 ) <= sys.version_info and 'r' in self.flag :
             filename  = 'file:%s?mode=ro' % self.filename 
             self.__connect = sqlite3.connect ( filename , uri = True , *self.__args , **self.__kwargs )
-        elif 'r' in self.flag :            
+        elif 'r' in self.flag :
             self.__fd = os.open( self.__filename, os.O_RDONLY)
-            filename  = '/dev/fd/%d' % self.__fd 
+            filename  = '/dev/fd/%d' % self.__fd
             self.__connect = sqlite3.connect ( filename        , *self.__args , **self.__kwargs )
         else :
             self.__connect = sqlite3.connect ( self.__filename , *self.__args , **self.__kwargs )
@@ -171,7 +198,11 @@ def decode(obj):
 class SqliteDict(DictClass):
     VALID_FLAGS = ['c', 'r', 'w', 'n']
 
-    def __init__(self, filename=None, tablename='unnamed', flag='c',
+    def __init__(self,
+                 filename=None,
+                 ## tablename='unnamed',
+                 tablename='ostap',
+                 flag='c',
                  autocommit=False, journal_mode="DELETE", encode=encode, decode=decode):
         """
         Initialize a thread-safe sqlite-backed dictionary. The dictionary will
@@ -280,6 +311,14 @@ class SqliteDict(DictClass):
         # Explicit better than implicit and bla bla
         return True if m is not None else False
 
+    def tables ( self ) :
+        """ get list of tables in DBASE"""
+        GET_TABLES = "SELECT name FROM sqlite_master WHERE type='table';"
+        tables = [] 
+        for table in self.conn.select ( GET_TABLES ) :
+            tables.append ( table  ) 
+        return tuple ( tables )
+        
     def iterkeys(self):
         GET_KEYS = 'SELECT key FROM "%s" ORDER BY rowid' % self.tablename
         for key in self.conn.select(GET_KEYS):
@@ -313,6 +352,7 @@ class SqliteDict(DictClass):
         item = self.conn.select_one(GET_ITEM, (key,))
         if item is None:
             raise KeyError(key)
+        
         return self.decode(item[0])
 
     def __setitem__(self, key, value):
@@ -320,7 +360,9 @@ class SqliteDict(DictClass):
             raise RuntimeError('Refusing to write to read-only SqliteDict')
 
         ADD_ITEM = 'REPLACE INTO "%s" (key, value) VALUES (?,?)' % self.tablename
+        
         self.conn.execute(ADD_ITEM, (key, self.encode(value)))
+        
 
     def __delitem__(self, key):
         if self.flag == 'r':
@@ -462,9 +504,9 @@ class SqliteMultithread(Thread):
     def run(self):
         
         if self.autocommit:
-            connect  = Connect(self.filename, self.flag , isolation_level=None, check_same_thread=False)
+            connect = Connect(self.filename, self.flag , isolation_level=None, check_same_thread=False)
         else:
-            connnect = Connect(self.filename, self.flag , check_same_thread=False)
+            connect = Connect(self.filename, self.flag , check_same_thread=False)
 
         with connect as conn :
             return self.run__ (  conn )

@@ -23,8 +23,8 @@
 # 
 # =============================================================================
 __all__ = (
-    'banner',
-    'version'
+    'banner'   ,
+    'version'  ,
     )
 # =============================================================================
 ## the  actual version of Ostap 
@@ -51,6 +51,29 @@ banner = r"""
  - https://ostaphep.github.io/ostap-tutorials
  - https://github.com/OstapHEP/ostap-tutorials
 """
+# =============================================================================
+## get some meta-info for ostap
+#  @code
+#  info = meta_info ()  
+#  @endcode
+def meta_info ( ) :
+   """"Get some meta-info for ostap
+   >>> info = meta_info ()  
+   """
+   import sys, datetime 
+   import getpass            
+   import socket
+   import ROOT 
+   info = {
+   'Now'            : datetime.datetime.now () . 
+   'User'           : getpass.getuser()        , 
+   'Hostname'       : socket.getfqdn ()        ,
+   'Ostap version'  : version                  ,
+   'Python version' : sys.version_info         ,
+   'ROOT version'   : ROOT.gROOT.GetVersion () ,
+   }
+   return info
+   
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

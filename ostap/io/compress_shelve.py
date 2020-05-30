@@ -57,9 +57,10 @@ else                      : logger = getLogger ( __name__                   )
 PROTOCOL = -1 
 ENCODING = 'utf-8'
 # ==============================================================================
-import os, sys, abc, shelve, shutil ,  glob 
-from  sys import version_info as python_version
-from  ostap.io.dbase  import dbopen, whichdb
+import os, sys, abc, shelve, shutil , glob, datetime, collections  
+from   sys import version_info as     python_version
+from   ostap.io.dbase          import dbopen, whichdb, Item 
+from   ostap.core.meta_info    import meta_info 
 #  =============================================================================
 _modes_ = {
     # =========================================================================
@@ -114,7 +115,7 @@ class CompressShelf(shelve.Shelf,object):
         protocol    = PROTOCOL ,
         compress    = 0        , 
         writeback   = False    ,
-        silent      = False    ,
+        silent      = True     ,
         keyencoding = 'utf-8'  ) :
 
 
@@ -191,7 +192,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                           ,
-                dbopen ( self.dbname , mode )  ,
+                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
                 protocol                      ,
                 writeback                         ,
                 keyencoding                       )
@@ -199,7 +200,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                              ,
-                dbopen ( self.dbname , mode )     ,
+                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
                 protocol                          ,
                 writeback                         ) 
             self.keyencoding = keyencoding
@@ -218,7 +219,7 @@ class CompressShelf(shelve.Shelf,object):
             f     = self.dbname
             db    = self.dbtype            
             if os.path.exists ( f ) and os.path.isfile ( f ) and \
-                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' ) :  
+                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' ) :  
                 files.append  ( f )
             elif   f + '.db'  in nfiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
                 files.append  ( f + '.db'  )
@@ -250,11 +251,28 @@ class CompressShelf(shelve.Shelf,object):
             self.__compress = self.files 
             self.__remove   = self.files 
         
-        if not self.__silent :
+
+        if    'sqlite3' == self.dbtype and self.mode in ( 'w' , 'n' ) : write = True
+        elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
+        else                                                          : write = False 
+        if write :
+            meta = meta_info()
+            dct  = collections.OrderedDict() 
+            dct  [ 'Created by'                  ] = meta.User
+            dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
+            dct  [ 'Created with Ostap version'  ] = meta.Ostap
+            dct  [ 'Created with Python version' ] = meta.Python
+            dct  [ 'Created with ROOT version'   ] = meta.ROOT 
+            dct  [ 'Pickle protocol'             ] = protocol 
+            dct  [ 'Compress level'              ] = self.__compresslevel 
+            self [ '__metainfo__' ] = dct
+            
+        if not self.silent :
+            self.ls ()
             ff = [ os.path.basename ( f ) for f in self.files ]
             ff = ff [0] if 1 == len ( ff ) else ff              
             logger.info ( 'DB files are %s|%s' % ( ff, self.dbtype ) )
-        
+            
     @property
     def dbtype   ( self ) :
         """``dbtype''  : the underlying type of database"""
@@ -264,6 +282,11 @@ class CompressShelf(shelve.Shelf,object):
     def protocol ( self ) :
         """``protocol'' : pickling protocol used in the shelve"""
         return self._protocol
+    
+    @property
+    def compression ( self ) :
+        "``compression'' : compression level"
+        return self.__compresslevel
     
     @property
     def compresslevel ( self ) :
@@ -394,7 +417,13 @@ class CompressShelf(shelve.Shelf,object):
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
 
-        table = [ ( 'Key' , 'type',  '   size   ' ) ] 
+        table = [ ( 'Key' , 'type',  '   size   ' , ' created/modified') ]
+
+        meta = self.get( '__metainfo__' , {} )
+        for k in meta :
+            row = "META:%s" % k , '' , '' , str ( meta[k] )
+            table.append ( row  ) 
+        
         for k in keys :
 
             ## kk = key.encode ( self.keyencoding ) ] )            
@@ -416,9 +445,15 @@ class CompressShelf(shelve.Shelf,object):
                 otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
             except KeyError :
                 pass
-            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  
+
+            rawitem = self.__get_raw_item__ ( k )
+            if isinstance ( rawitem , Item ) : timetag = rawitem.time
+            else                             : timetag = '' 
+            
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
 
+        
         import ostap.logger.table as T
         t      = type( self ).__name__
         title  = '%s:%s' % ( t  , n )
@@ -443,6 +478,21 @@ class CompressShelf(shelve.Shelf,object):
         """
         if not self.opened : return 
         ##
+        if    'sqlite3' == self.dbtype and 'c' == self.mode : write = True
+        elif  'sqlite3' != self.dbtype and 'e' == self.mode : write = True
+        else                                                : write = False 
+        if write : 
+            meta = meta_info () 
+            dct = self.get ( '__metainfo__' , {} )
+            dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
+            dct  [ 'Updated by'                  ] = meta.User 
+            dct  [ 'Updated with Ostap version'  ] = meta.Ostap 
+            dct  [ 'Updated with Python version' ] = meta.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta.ROOT   
+            self [ '__metainfo__' ] = dct
+
+        if not self.silent : self.ls ()
+        
         shelve.Shelf.close ( self )
         self.__opened = False  
         ##
@@ -529,13 +579,30 @@ class CompressShelf(shelve.Shelf,object):
             kname = '%s.%s' % (  kls.__module__ , kls.__name__ ) 
         
         if   self and len ( self ) :
-            return "%s('%s')|%s: %d object(s)" % ( kname , self.filename , self.dbtype  , len ( self ) ) 
+            return "%s('%s')|%s: %d object(s)" % ( kname , self.dbname , self.dbtype  , len ( self ) ) 
         elif self :
-            return "%s('%s')|%s: empty"        % ( kname , self.filename , self.dbtype  )
-        return "Invalid/Closed %s('%s')"       % ( kname , self.filename )
+            return "%s('%s')|%s: empty"        % ( kname , self.dbname , self.dbtype  )
+        return "Invalid/Closed %s('%s')"       % ( kname , self.dbname )
     
     __str__ = __repr__
 
+    # =========================================================================
+    ## ``get-and-uncompress-item'' from dbase
+    #  @code
+    #  value =   dbase ['item']
+    #  @endcode 
+    def __get_raw_item__ ( self , key ) : 
+        """ ``get-and-uncompress-item'' from dbase
+        >>> value = dbase['item'] 
+        """
+        try:            
+            value = self.cache [ key ]
+        except KeyError:            
+            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
+            if self.writeback : self.cache [ key ] = value
+            
+        return value
+    
     # =========================================================================
     ## ``get-and-uncompress-item'' from dbase
     #  @code
@@ -545,11 +612,8 @@ class CompressShelf(shelve.Shelf,object):
         """ ``get-and-uncompress-item'' from dbase
         >>> value = dbase['item'] 
         """
-        try:            
-            value = self.cache [ key ]            
-        except KeyError:            
-            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
-            if self.writeback : self.cache [ key ] = value            
+        value = self.__get_raw_item__ ( key )        
+        if isinstance ( value , Item ) : value = value.payload 
         return value
     
     # =========================================================================
@@ -561,8 +625,14 @@ class CompressShelf(shelve.Shelf,object):
         """ ``get-and-uncompress-item'' from dbase 
         >>> dbase['item'] = value 
         """
-        if self.writeback : self.cache [ key ] = value
-        self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( value ) 
+        
+        ## if self.writeback : self.cache [ key ] = value
+        ## self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( value )
+        
+        item = Item ( datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' ) , value )
+        
+        if self.writeback : self.cache [ key ] = item
+        self.dict [ key.encode ( self.keyencoding ) ] = self.compress_item ( item ) 
 
     # =========================================================================
     ##  get the disk size of the db
