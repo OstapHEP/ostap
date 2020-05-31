@@ -1,3 +1,5 @@
+# v1.4.9.0
+
 ## New features 
   1. add new cass `P2Quantile` that interfaces P^2 algortuhm from GSL for running quatile (approximate)
   1. Add methods `Ostap::Statvar::p2quantile`, `Ostap::StatVar::p2quantiles` and  `Ostap::StatVar::p2interval`. These are much faster (but approximate) versions of `Ostap::StatVar::quantile`, `Ostap::StatVar::quantiles` and `Ostap::StatVar::interval`, using P^2 algorithm. 
@@ -5,6 +7,7 @@
   1. allow uisng sqlite3 dbase for compresed shelves
   1. extend compressed shelves to keep some metainformation on database (creating/modification date, versions of ostap, ROOT and python versions
   1. add creation/modification date for the items in compressed shelves   
+  1. add new test for splot `test_fitting_splot`
   
 ## Backward incompatible changes
   1. change return type from `Ostap::StatVar::quantile` , `Ostap::StatVar::quantiles` and  `Ostap::StatVar::intrval`  method, adding  also number fo events used for quantile/interval estimation.  It allows to judge abotu the precision  
