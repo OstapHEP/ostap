@@ -1,3 +1,5 @@
+# v1.4.9.1
+
 ## New features 
   1. improve banner
   1. extend `ostap/__init__.py.in`
@@ -17,7 +19,7 @@
 # v1.4.9.0
 
 ## New features 
-  1. add new cass `P2Quantile` that interfaces P^2 algortuhm from GSL for running quatile (approximate)
+  1. add new cass `P2Quantile` that interfaces P^2 algorithm from GSL for running quatile (approximate)
   1. Add methods `Ostap::Statvar::p2quantile`, `Ostap::StatVar::p2quantiles` and  `Ostap::StatVar::p2interval`. These are much faster (but approximate) versions of `Ostap::StatVar::quantile`, `Ostap::StatVar::quantiles` and `Ostap::StatVar::interval`, using P^2 algorithm. 
   1. update `ostap.stat.statvar` for modified `Ostap::StatVar` methods
   1. allow uisng sqlite3 dbase for compresed shelves
