@@ -1,3 +1,6 @@
+string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
+string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
 execute_process(

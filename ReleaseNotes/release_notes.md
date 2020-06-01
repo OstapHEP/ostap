@@ -1,3 +1,11 @@
+## New features 
+  1. improve banner
+  1. extend `ostap/__init__.py.in`
+  
+## Backward incompatible changes
+  
+## Bug fixes:
+
 # v1.4.9.0
 
 ## New features 
@@ -15,7 +23,7 @@
 ## Bug fixes:
   1. fix really stupid bug in `ValueWithError`
   1. Tiny fix in `Ostap.DataFrame.ProgressBar`
-  2. fixed in_range option for the case when fit variables are defined as  RooRealVar
+  1. fixed in_range option for the case when fit variables are defined as  RooRealVar
 
 # v1.4.8.7
 
