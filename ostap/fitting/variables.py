@@ -418,6 +418,10 @@ ROOT.RooRealVar . __iadd__  = _rrv_iadd_
 ROOT.RooRealVar . __isub__  = _rrv_isub_
 ROOT.RooRealVar . __idiv__  = _rrv_idiv_
 
+ROOT.RooRealVar . __truediv__ = ROOT.RooRealVar . __div__
+ROOT.RooRealVar .__rtruediv__ = ROOT.RooRealVar .__rdiv__
+ROOT.RooRealVar .__itruediv__ = ROOT.RooRealVar .__idiv__
+
 
 _new_methods_ += [
     ROOT.RooRealVar.__add__   , 
@@ -433,7 +437,11 @@ _new_methods_ += [
     #
     ROOT.RooRealVar.__iadd__  , 
     ROOT.RooRealVar.__isub__  , 
-    ROOT.RooRealVar.__idiv__  , 
+    ROOT.RooRealVar.__idiv__  ,
+    #
+    ROOT.RooRealVar . __truediv__ ,
+    ROOT.RooRealVar .__rtruediv__ , 
+    ROOT.RooRealVar .__itruediv__ ,
     ]
 
 # =============================================================================

@@ -10,11 +10,12 @@
   model.fitTo ( ....   , minos = ('S','B') , ... )
   ```
   1. add new test/example `test_fitting_components2.py`
-  `
-  
+  `  
 ## Backward incompatible changes
   
 ## Bug fixes:
+  1. fix `truediv` for python3 in several files 
+
 
 # v1.4.9.0
 

@@ -538,22 +538,24 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
         
     CMPLX.__complex__ = _cmplx_to_complex_
     
-    CMPLX.__add__     = _cmplx_add_
-    CMPLX.__mul__     = _cmplx_mul_
-    CMPLX.__div__     = _cmplx_div_
-    CMPLX.__sub__     = _cmplx_sub_
+    CMPLX.__add__      = _cmplx_add_
+    CMPLX.__mul__      = _cmplx_mul_
+    CMPLX.__div__      = _cmplx_div_
+    CMPLX.__sub__      = _cmplx_sub_
+    CMPLX.__truediv__  = _cmplx_div_
     
-    CMPLX.__radd__    = _cmplx_add_
-    CMPLX.__rmul__    = _cmplx_mul_
-    CMPLX.__rdiv__    = _cmplx_rdiv_
-    CMPLX.__rsub__    = _cmplx_rsub_
+    CMPLX.__radd__     = _cmplx_add_
+    CMPLX.__rmul__     = _cmplx_mul_
+    CMPLX.__rdiv__     = _cmplx_rdiv_
+    CMPLX.__rsub__     = _cmplx_rsub_
+    CMPLX.__rtruediv__ = _cmplx_rdiv_
     
-    CMPLX.__iadd__    = _cmplx_iadd_
-    CMPLX.__imul__    = _cmplx_imul_
-    CMPLX.__idiv__    = _cmplx_idiv_
-    CMPLX.__isub__    = _cmplx_isub_
+    CMPLX.__iadd__     = _cmplx_iadd_
+    CMPLX.__imul__     = _cmplx_imul_
+    CMPLX.__idiv__     = _cmplx_idiv_
+    CMPLX.__isub__     = _cmplx_isub_
+    CMPLX.__itruediv__ = _cmplx_idiv_
 
-    
     CMPLX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
     CMPLX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
     CMPLX.__abs__     = _cmplx_abs_

@@ -373,9 +373,9 @@ ROOT.RooDataSet . __iadd__      = _rad_iadd_
 ROOT.RooAbsData . __mul__       = _rad_mul_
 ROOT.RooAbsData . __rmul__      = _rad_mul_
 ROOT.RooAbsData . __imul__      = _rad_imul_
-ROOT.RooAbsData . __div__       = _rad_div_
 ROOT.RooAbsData . __mod__       = _rad_mod_
-
+ROOT.RooAbsData . __div__       = _rad_div_
+ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
@@ -409,6 +409,7 @@ _new_methods_ += [
    ROOT.RooAbsData . __imul__      ,
    ROOT.RooAbsData . __div__       ,
    ROOT.RooAbsData . __mod__       ,
+   ROOT.RooAbsData . __truediv__   ,
    #
    ROOT.RooAbsData . sample        ,
    ROOT.RooAbsData . shuffle       ,
