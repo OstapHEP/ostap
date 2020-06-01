@@ -1,6 +1,14 @@
 ## New features 
   1. improve banner
   1. extend `ostap/__init__.py.in`
+  1. add new test for splot `test_fitting_splot
+  1. extent option `minos`, allow to specify variable name or sequence of names
+  ```
+  model.fitTo ( ....   , minos = 'S', ...)
+  model.fitTo ( ....   , minos = ('S','B') , ... )
+  ```
+  1. add new test/example `test_fitting_components2.py`
+  `
   
 ## Backward incompatible changes
   
@@ -15,7 +23,6 @@
   1. allow uisng sqlite3 dbase for compresed shelves
   1. extend compressed shelves to keep some metainformation on database (creating/modification date, versions of ostap, ROOT and python versions
   1. add creation/modification date for the items in compressed shelves   
-  1. add new test for splot `test_fitting_splot`
   
 ## Backward incompatible changes
   1. change return type from `Ostap::StatVar::quantile` , `Ostap::StatVar::quantiles` and  `Ostap::StatVar::intrval`  method, adding  also number fo events used for quantile/interval estimation.  It allows to judge abotu the precision  

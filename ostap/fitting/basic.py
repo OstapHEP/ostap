@@ -356,9 +356,10 @@ class PDF (FUNC) :
                         self.debug   ( "fitTo: variable ``%s'' == %s [very close (< 1%%) to minimum %s]"
                                        % ( i.GetName() , i.value , imn ) )
                         
-            if not dataset.isWeighted () :
+            if hasattr ( self , 'natural' ) and self.natural and not dataset.isWeighted () :
 
                 sums = [ nsum ]
+                    
                 if 2 <= len ( self.yields ) : sums.append ( result.sum ( *self.yields ) )
 
                 for ss in sums :
@@ -3409,14 +3410,23 @@ class Fit1D (PDF) :
     def  yields    ( self ) :
         """The list/tuple of the yields of all numeric components (empty for non-extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if     self.extended else ()
-    
+
+    @property
+    def natural ( self ) :
+        """Are all yileds natural? """
+        if not self.yeilds : return False
+        for y in self.yields :
+            if not isinstance  ( y , ROOT.RooRealVar ) : return False 
+        return True 
+        
     def total_yield ( self ) :
-        """``total_yield''' : get the total yield"""
+        """``total_yield''' : get the total yield if/when possible"""
         if not self.extended    : return None 
         if not self.fit_result                                 : return None
         if not valid_pointer ( self.fit_result )               : return None
         yields = self.yields
         if not yields                                          : return None
+        if not self.natural                                    : return None 
         if 1 ==  len ( yields )                                : return yields[0].value  
         return self.fit_result.sum ( *yields ) 
  

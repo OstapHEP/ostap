@@ -278,7 +278,7 @@ class FUNC(XVar) :
     ## Get the parameters
     #  @code
     #  fun = ...
-    #  parameters = funn.params ( )
+    #  parameters = fun.params ( )
     #  @endcode
     #  Or
     #  @code  

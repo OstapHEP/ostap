@@ -202,7 +202,7 @@ _loggers  = {}
 #   - creation of <code>ROOT.RooRealVar objects</code>
 #   - store newly created RooFit objects
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2018-07-14  
+#  @date 2018-07-14
 class MakeVar ( object ) :
     """Helper class that allows implement several purely  technical methods:
     - creation of <code>ROOT.RooRealVar objects</code>
@@ -583,6 +583,28 @@ class MakeVar ( object ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , string_types   ) \
+                     and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :                
+                _v = self.params()[ a ]
+                _s = ROOT.RooArgSet ( _v )
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos        ( _s )  )                
+            elif kup in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
+
+                _s     = ROOT.RooArgSet()
+                _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
+                for v in a :
+                    if   v in _pars and isinstance ( v , string_types ):
+                        _v = _pars [ v ] 
+                        _s.add ( _v )
+                    elif v in _pars and isinstance ( v , ROOT.RooAbsArg  ) :
+                        _s.add (  v )
+                    else :
+                        self.error ( "Can not find %s in parameetrs" % v )
+
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos ( _s )  )
+                                
             elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
             elif kup in ( 'CLONE'            ,
