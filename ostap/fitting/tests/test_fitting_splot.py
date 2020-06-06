@@ -120,10 +120,9 @@ def test_splot () :
     logger.info ( "Tau/bkg fit : fit results\n%s" % rB.table ( title = 'Tau bkg fit' , prefix = '# ' ) )
 
     
-    logger.info ( "Tau/signal : %28s vs %s" % ( abs ( 1 / rS.tau_TS ) , taus ) ) 
-    logger.info ( "Tau/bkg    : %28s vs %s" % ( abs ( 1 / rB.tau_TB ) , taub ) ) 
-    
-    
+    logger.info ( "Tau/signal : %28s vs %s" % ( abs ( 1.0 / rS.tau_TS ) , taus ) ) 
+    logger.info ( "Tau/bkg    : %28s vs %s" % ( abs ( 1.0 / rB.tau_TB ) , taub ) ) 
+        
 # =============================================================================
 
 if '__main__' == __name__ :

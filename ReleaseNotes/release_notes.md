@@ -1,3 +1,13 @@
+
+## New features 
+  1. Make `Ostap::Math::Choose` a bit  more  efficient
+  1. add  `Ostap::Math::choose_array` to get array of binomialcoefficients (compile time)
+  `  
+## Backward incompatible changes
+  
+## Bug fixes:
+
+
 # v1.4.9.1
 
 ## New features 
