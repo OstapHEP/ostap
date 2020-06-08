@@ -58,7 +58,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.statvars' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from ostap.core.core import Ostap 
+from   ostap.core.core import Ostap
+import ostap.stats.moment 
+# =============================================================================
 StatVar = Ostap.StatVar 
 # =============================================================================
 ## @var QEXACT

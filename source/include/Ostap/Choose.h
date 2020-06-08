@@ -141,7 +141,7 @@ namespace Ostap
     { return std::array<unsigned long long,N+1>{{Choose<N,i>::value...}}; }
     template<unsigned short N>
     constexpr auto choose_array() 
-    { return choose_array<unsigned long long,N>(std::make_index_sequence<N+1>{}); }
+    { return choose_array<N>(std::make_index_sequence<N+1>{}); }
     // ========================================================================
     /** @class Stirling1
      *  unsigned Stirling numbers of 1st kind 

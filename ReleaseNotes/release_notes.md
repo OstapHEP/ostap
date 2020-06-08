@@ -2,7 +2,9 @@
 ## New features 
   1. Make `Ostap::Math::Choose` a bit  more  efficient
   1. add  `Ostap::Math::choose_array` to get array of binomialcoefficients (compile time)
-  `  
+  1. add  tmplated central moments `Ostap::Math::Moment_<N>`
+  1. add their python decorators `ostap.stats.moment`
+  
 ## Backward incompatible changes
   
 ## Bug fixes:

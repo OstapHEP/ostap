@@ -111,6 +111,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moments' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 from ostap.core.ostap_types import integer_types, num_types 
+from ostap.core.core import Ostap 
 # =============================================================================
 ## @class Moment
 #  Calculate the N-th moment for the distribution 
@@ -1274,6 +1275,7 @@ def cl_asymm ( func , prob , xmin = None , xmax = None ) :
     return sp_action ( func , actor , xmin , xmax )
 
 
+                                
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -1281,5 +1283,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

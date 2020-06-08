@@ -112,6 +112,7 @@ add_library(ostap SHARED src/format.cpp
                          src/MatrixUtils.cpp
                          src/Models.cpp
                          src/Models2D.cpp
+                         src/Moments.cpp
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
                          src/MoreRooFit2.cpp
@@ -119,6 +120,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
+                         src/Ostap.cpp
                          src/OstapDataFrame.cpp
                          src/P2Quantile.cpp
                          src/Parameterization.cpp
