@@ -25,6 +25,7 @@
 #include "Ostap/StatVar.h"
 #include "Ostap/FormulaVar.h"
 #include "Ostap/P2Quantile.h"
+#include "Ostap/Moments.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -806,6 +807,98 @@ namespace
     }
     //
     return Ostap::StatVar::Quantiles ( std::vector<double>( qs.begin (), qs.end () )  , num ) ;
+  }
+  // ==========================================================================
+  /** calculate the moment of order "order" relative to the center "center"
+   *  @param  tree   (INPUT) input tree 
+   *  @param  expr   (INPUT) expression  (must  be valid TFormula!)
+   *  @param  cuts   (INPUT) cuts 
+   *  @param  order  (INPUT) the order 
+   *  @param  center (INPUT) the center 
+   *  @param  first  (INPUT) the first  event to process 
+   *  @param  last   (INPUT) the last event to  process
+   *  @return the moment 
+   */
+  void _moment_
+  ( TTree&               tree    ,
+    Ostap::Math::Moment& counter ,
+    Ostap::Formula&      var     ,
+    Ostap::Formula*      cuts    , 
+    const unsigned long  first   , 
+    const unsigned long  last    )
+  {
+    // 
+    // the loop
+    const unsigned long nEntries = std::min ( last , (unsigned long) tree.GetEntries() ) ;
+    if ( last <= first  ) { return ; } // RETURN ???    
+    //
+    Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
+    const bool with_cuts = nullptr != cuts ? true : false ;
+    //
+    std::vector<double> results {} ;
+    for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+    {      
+      long ievent = tree.GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree.LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      const long double w = with_cuts ? cuts->evaluate() : 1.0L ;
+      //
+      if  ( !w ) { continue ; }                            // ATTENTION!
+      //
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) { counter.update ( r ) ; } 
+    }
+    //
+  }
+  // ==========================================================================
+  /** calculate the moment of order "order" relative to the center "center"
+   *  @param  tree   (INPUT) input tree 
+   *  @param  expr   (INPUT) expression  (must  be valid TFormula!)
+   *  @param  cuts   (INPUT) cuts 
+   *  @param  order  (INPUT) the order 
+   *  @param  center (INPUT) the center 
+   *  @param  first  (INPUT) the first  event to process 
+   *  @param  last   (INPUT) the last event to  process
+   *  @return the moment 
+   */
+  void _moment_
+  ( TTree&                tree    ,
+    Ostap::Math::WMoment& counter ,
+    Ostap::Formula&       var     ,
+    Ostap::Formula*       weight  ,
+    Ostap::Formula*       cuts    , 
+    const unsigned long   first   , 
+    const unsigned long   last    )
+  {
+    // 
+    // the loop
+    const unsigned long nEntries = std::min ( last , (unsigned long) tree.GetEntries() ) ;
+    if ( last <= first  ) { return ; } // RETURN ???    
+    //
+    Ostap::Utils::Notifier notify ( &tree , &var , weight , cuts ) ;
+    const bool with_cuts   = nullptr != cuts   ? true : false ;
+    const bool with_weight = nullptr != weight ? true : false ;
+    //
+    std::vector<double> results {} ;
+    for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+    {      
+      long ievent = tree.GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree.LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      const double c = with_cuts   ? cuts  ->evaluate() : 1.0 ;
+      if  ( !c ) { continue ; }                            // ATTENTION!
+      //
+      const double w = with_weight ? weight->evaluate() : 1.0 ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) { counter.update ( r , w  ) ; } 
+    }
+    //
   }
   // ==========================================================================
 } //                                                 end of anonymous namespace

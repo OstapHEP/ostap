@@ -22,7 +22,8 @@ namespace  Ostap
   {
     // ========================================================================
     /** @struct Moment
-     *  Helper empty base class
+     *  Helper (empty) base class for moment-counters 
+     *  - it is not really neeeded for C++, but it simplifies python decorations 
      */
     class Moment
     {
@@ -43,8 +44,8 @@ namespace  Ostap
     // ========================================================================
     /** @class Moment_  Ostap/Moments.h 
      *  Simple class to keep/calculate 
-     *  the  high-order central momentts
-     *  \f[  \mu_n \equiv \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
+     *  the suubable high-order central momentts
+     *  \f[  \mu_n \equiv \frac{1}{N} \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
      *  It implements the (single-pass) algorithm 
      *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
      *        "Numerically stable, scalable formulas for parallel and online 
@@ -405,12 +406,11 @@ namespace  Ostap
     // ========================================================================
     // Weighted moments 
     // ========================================================================
-
-
-
+    
     // ========================================================================
     /** @struct WMoment
-     *  Helper empty base class for weighted moments 
+     *  Helper (empty) base class for weighted moment-counters 
+     *  - it is not really neeeded for C++, but it simplifies python decorations 
      */
     class WMoment
     {
@@ -431,8 +431,8 @@ namespace  Ostap
     // ========================================================================
     /** @class WMoment_  Ostap/Moments.h 
      *  Simple class to keep/calculate 
-     *  the  high-order central momentts
-     *  \f[  \mu_n \equiv \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
+     *  the summable  high-order weighted central momentts
+     *  \f[  \mu_n \equiv \frac{1}{\sum w_i} \sum_{i}  w_i \left( x_i - \bar{x} \right)^n \f] 
      *  It implements the (single-pass) algorithm 
      *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
      *        "Numerically stable, scalable formulas for parallel and online 
@@ -819,7 +819,7 @@ namespace  Ostap
       static inline double unbiased_3rd ( const Moment_<N>& m )
       {
         const unsigned long long n = m.size() ;
-        return  n < 3 ? s_INVALID_MOMENT : m.M ( 3 ) * n / ( ( n - 1.0 ) * (  n - 2.0  ) ) ;  
+        return  n < 3 ? s_INVALID_MOMENT : m.M ( 3 ) * n / ( ( n - 1.0L ) * (  n - 2.0L  ) ) ;  
       }    
       // ======================================================================
       /** get the unbiased estimator for the 4th  order moment:
@@ -841,9 +841,8 @@ namespace  Ostap
         const long double m4 = m.M ( 4 ) / n ;
         const long double m2 = m.M ( 2 ) / n ;
         //
-        return n < 4 ? s_INVALID_MOMENT  :
-          ( n * m4  * ( 1.0L * n * n - 2.0L * n + 3 ) - 3.0L * n * ( 2.0L * n - 3 ) * m2 * m2 )
-                   / ( ( n - 1.0L ) * ( n - 2.0L  ) * ( n - 3.0L  ) ) ;
+        return ( n * m4  * ( 1.0L * n * n - 2.0L * n + 3 ) - 3.0L * n * ( 2.0L * n - 3 ) * m2 * m2 )
+                / ( ( n - 1.0L ) * ( n - 2.0L  ) * ( n - 3.0L  ) ) ;
       }
       // ======================================================================
       /** get the unbiased estimator for the 5th  order moment:
@@ -853,7 +852,7 @@ namespace  Ostap
        *  @return the unbiased estimate and 
        *   <code>s_INVALID_MOMENT</code> otherwise
        */
-      template <unsigned short N, typename std::enable_if<(4<N),int>::type = 0 >
+        template <unsigned short N, typename std::enable_if<(4<N),int>::type = 0 >
       static inline double unbiased_5th ( const Moment_<N>& m )
       {
         const unsigned long long n =  m.size() ;
@@ -863,12 +862,12 @@ namespace  Ostap
         const long double m3 = m.M ( 3 ) / n ;
         const auto n4 = std::pow ( n * 1.0L , 4 ) ;
         //
-        return n < 5 ? s_INVALID_MOMENT  :
+        return 
           ( n - 1.0L  ) * ( n - 2.0L  ) / n4 *
                    ( 10 * ( n - 2.0L ) * m2 * m3 + ( 1.0L * n * n - 2.0L * n +2 ) * m5 ) ;
       }
       // ======================================================================
-      /// get the mean 
+      /// get the mean
       static inline double mean ( const Moment_<1>& m ) { return m.mu () ; }
       /// get the mean      
       template <unsigned short N, typename std::enable_if<(1<N),int>::type = 0 >
@@ -893,17 +892,15 @@ namespace  Ostap
         const unsigned long long n = m.size () ;
         if ( n  < 2  ) { return VE ( s_INVALID_MOMENT , -1 ) ; } // RETURN
         //
-        typedef Ostap::Math::ValueWithError VE    ;
-        //
         const double m2 = unbiased_2nd ( m ) ;
         if ( 0 > m2  ) { return VE ( s_INVALID_MOMENT , -1 ) ; } // RETURN
         if ( 0 == m2 ) { return VE ( 0 , 0 )     ; } // ?
         //      
         const double m4 = m.moment ( 4 ) ;
         //
-        const double cov2 = ( m4 - m2 * m2 * ( n - 3 ) / ( n -1 ) ) / n ;
+        const double cov2 = ( m4 - m2 * m2 * ( n - 3.0L ) / ( n - 1.0L ) ) / n ;
         //
-        return VE ( m2 , m2 * cov2 ) ;
+        return VE ( m2 , cov2 ) ;
       }
       // ======================================================================
       /// get the estimate for the sample skewness  \f$ \frac{m_3}{\sigma^{3/2}}\f$
@@ -1026,7 +1023,7 @@ namespace  Ostap
         //
         const double cov2 = ( m4 - m2 * m2 * ( n - 3 ) / ( n - 1 ) ) / n ;
         //
-        return VE ( m2 , m2 * cov2 ) ;
+        return VE ( m2 , cov2 ) ;
       }
       // ======================================================================
       /// get the estimate for the sample skewness  \f$ \frac{m_3}{\sigma^{3/2}}\f$
