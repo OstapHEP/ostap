@@ -320,11 +320,11 @@ WM1 = Ostap.Math.Moment_(1)
 for m in ( M0 , M1 , WM0 , WM1 ) :
     m.mean  = _om_mean
     m.table = _om_table
-    
-M0.order = 0
-M1.order = 1
-WM0.order = 0
-WM1.order = 1
+
+if not hasattr ( M0  , 'order' ) : M0 .order = 0
+if not hasattr ( M1  , 'order' ) : M1 .order = 1
+if not hasattr ( WM0 , 'order' ) : WM0.order = 0
+if not hasattr ( WM1 , 'order' ) : WM1.order = 1
 
 _decorated_classes = (
     Ostap.Math.Moment  ,
