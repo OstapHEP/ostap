@@ -4,6 +4,9 @@
   1. add  `Ostap::Math::choose_array` to get array of binomialcoefficients (compile time)
   1. add  tmplated central moments `Ostap::Math::Moment_<N>`
   1. add their python decorators `ostap.stats.moment`
+  1. add test for moment-counters `test_stats_moment.py`
+  1. add templated weighted moment counters  `Ostap::Math::WMoment_<N>`
+  
   
 ## Backward incompatible changes
   

@@ -29,17 +29,34 @@ from   ostap.core.core        import Ostap, VE
 # =============================================================================
 # new stuff: Ostap::Math::Moment_<N> 
 # =============================================================================
+## get a mean for the moment-counter
+#  @code
+#  m = ...
+#  v = m.mean() 
+#  @encode
+#  If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
+def _om_mean ( obj ) :
+    """Get a mean for the moment-counter
+    >>> m = ...
+    >>> v = m.mean() 
+    - If order of the moment-counter exceeds 1, the uncertainty is also evaluated 
+    """
+    o = obj.order
+    assert 1 <= o , 'mean: the order must be >=1!'
+    return Ostap.Math.Moments.mean ( obj )  
+
+# =============================================================================
 ## get a variance for the moment-counter
 #  @code
 #  m = ...
 #  v = m.varinace() 
 #  @encode
-#  If order of the moment-counter exceeds 4, the uncertainty is also evaluated 
+#  If order of the moment-counter exceeds 3, the uncertainty is also evaluated 
 def _om_variance ( obj ) :
     """Get a variance for the moment-counter
     >>> m = ...
-    >>> v = m.varinace() 
-    - If order of the moment-counter exceeds 4, the uncertainty is also evaluated 
+    >>> v = m.variance() 
+    - If order of the moment-counter exceeds 3, the uncertainty is also evaluated 
     """
     o = obj.order
     assert 2 <= o , 'variance: the order must be >=2!'
@@ -133,10 +150,11 @@ def _om_u5th ( obj ) :
 ## get central moment 
 #  @code
 #  m = ...
-#  v = m.unbiased_5th() 
+#  v = m.central_moment() 
+#  v = m.moment() 
 #  @encode
-def _om_cm ( obj , order  ) :
-    """Get an unbiased 5th order moment fro the moment-counter 
+def _om_cm2 ( obj , order  ) :
+    """Get a central moment fro the moment-counter 
     >>> m = ...
     >>> v = m.central_moment ( 3 ) ## ditto 
     >>> v = m.cmoment        ( 3 ) ## ditto 
@@ -152,23 +170,27 @@ def _om_cm ( obj , order  ) :
     return obj.moment ( order ) 
 
 # =============================================================================
-## get a mean 
+## get central moment 
 #  @code
 #  m = ...
-#  v = m.mean () 
+#  v = m.central_moment() 
+#  v = m.moment() 
 #  @encode
-def _om_mean ( obj ) :
-    """Get a mean value for the moment-counter
+def _om_cm3 ( obj , order  ) :
+    """Get a central moment fro the moment-counter 
     >>> m = ...
-    >>> v = m.mean () 
-    """    
-    assert 1 <= obj.order  , 'mean: the order must be >=1!'
-    ##
-    if  1 == obj.order or obj.size() < 2 : return obj.mu()
-    ##   
-    cov2 = float ( obj.variance() ) / obj.size() 
-    ##
-    return VE ( obj.mu () , cov2 ) 
+    >>> v = m.central_moment ( 3 ) ## ditto 
+    >>> v = m.cmoment        ( 3 ) ## ditto 
+    """
+    assert isinstance  ( order , integer_types ) and 2<= order , 'Invalid order %s'% order
+    assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
+
+    if order * 2  <= obj.order :
+        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        M = Ostap.Math.Moments()
+        return T ( M , obj )
+
+    return obj.moment ( order ) 
 
 # =============================================================================
 ## get a RMS 
@@ -208,8 +230,18 @@ def _om_table ( obj , title = '' , prefix = '' ) :
         moment = item.moment()  
         
         if   0 == order :
-            row = "#"        , "%d" % item.size() 
+            if hasattr  ( obj , 'w2' ) :
+                row = "sum(w^2)" , "%d" % obj.w2 () 
+                rows.append ( row )
+            if hasattr  ( obj , 'w' ) :
+                row = "sum(w)" , "%d" % obj.w () 
+                rows.append ( row )
+            if hasattr  ( obj , 'nEff' ) :
+                row = "nEff" , "%d" % obj.nEff () 
+                rows.append ( row )
+            row = "#"        , "%d" % obj.size() 
             rows.append ( row )
+                
         elif 1 == order :
             v = obj.mean()
             if  isinstance ( v , VE ) : field = v.toString( "%.6g +/- %.6g" )
@@ -257,7 +289,7 @@ def _om_table ( obj , title = '' , prefix = '' ) :
         
     return T.table ( rows  , title = title , prefix = prefix )
 
-  
+
 Ostap.Math.Moment.unbiased_2nd   = _om_u2nd 
 Ostap.Math.Moment.unbiased_3rd   = _om_u3rd
 Ostap.Math.Moment.unbiased_4th   = _om_u4th 
@@ -268,19 +300,35 @@ Ostap.Math.Moment.rms            = _om_rms
 Ostap.Math.Moment.variance       = _om_variance
 Ostap.Math.Moment.skewness       = _om_skewness
 Ostap.Math.Moment.kurtosis       = _om_kurtosis
-Ostap.Math.Moment.cmoment        = _om_cm
-Ostap.Math.Moment.central_moment = _om_cm
+Ostap.Math.Moment.cmoment        = _om_cm2
+Ostap.Math.Moment.central_moment = _om_cm2
 Ostap.Math.Moment.table          = _om_table
 
-M0 = Ostap.Math.Moment_(0)
-M1 = Ostap.Math.Moment_(1)
-for m in ( M0 , M1 ) :
-    m.mean = _om_mean
+Ostap.Math.WMoment.mean           = _om_mean    
+Ostap.Math.WMoment.rms            = _om_rms 
+Ostap.Math.WMoment.variance       = _om_variance
+Ostap.Math.WMoment.skewness       = _om_skewness
+Ostap.Math.WMoment.kurtosis       = _om_kurtosis
+Ostap.Math.WMoment.cmoment        = _om_cm3
+Ostap.Math.WMoment.central_moment = _om_cm3
+Ostap.Math.WMoment.table          = _om_table
+
+M0  = Ostap.Math.Moment_(0)
+M1  = Ostap.Math.Moment_(1)
+WM0 = Ostap.Math.Moment_(0)
+WM1 = Ostap.Math.Moment_(1)
+for m in ( M0 , M1 , WM0 , WM1 ) :
+    m.mean  = _om_mean
+    m.table = _om_table
+    
 M0.order = 0
 M1.order = 1
+WM0.order = 0
+WM1.order = 1
 
 _decorated_classes = (
-    Ostap.Math.Moment ,
+    Ostap.Math.Moment  ,
+    Ostap.Math.WMoment ,
     )
 
 _new_methods_ = (
@@ -298,6 +346,15 @@ _new_methods_ = (
     Ostap.Math.Moment.cmoment        ,
     Ostap.Math.Moment.central_moment , 
     Ostap.Math.Moment.table          ,
+    ##
+    Ostap.Math.WMoment.mean           ,
+    Ostap.Math.WMoment.rms            ,
+    Ostap.Math.WMoment.variance       ,  
+    Ostap.Math.WMoment.skewness       ,
+    Ostap.Math.WMoment.kurtosis       ,
+    Ostap.Math.WMoment.cmoment        ,
+    Ostap.Math.WMoment.central_moment , 
+    Ostap.Math.WMoment.table          ,
     ##
     )
                           
