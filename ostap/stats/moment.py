@@ -2,21 +2,37 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file  moment.py
-#  Decorate moment0-counters
+#  Decorate moment-counters
 #  @see Ostap::Math::Moment
 #  @see Ostap::Math::Moment_
+#  @see Ostap::Math::WMoment
+#  @see Ostap::Math::WMoment_
+#  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
+#        "Numerically stable, scalable formulas for parallel and online 
+#        computation of higher-order multivariate central moments with 
+#        arbitrary weights". Comput Stat 31, 1305–1325 (2016). 
+#  @see https://doi.org/10.1007/s00180-015-0637-z
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2020-06-08  
 # =============================================================================
-"""Decorate moment0-counters
+"""Decorate moment--counters
 - see Ostap::Math::Moment
 - see Ostap::Math::Moment_
+- see Ostap::Math::WMoment
+- see Ostap::Math::WMoment_
+- see  Pebay, P., Terriberry, T.B., Kolla, H. et al.
+   ``Numerically stable, scalable formulas for parallel and online
+     computation of higher-order multivariate central moments with 
+     arbitrary weights''. Comput Stat 31, 1305–1325 (2016). 
+- see https://doi.org/10.1007/s00180-015-0637-z
 """
 # =============================================================================
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2020-06-08"
 __all__     = ()
+# =============================================================================
+import ROOT 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -26,6 +42,8 @@ else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types 
 from   ostap.core.core        import Ostap, VE 
+# =============================================================================
+root_version = ROOT.gROOT.GetVersionInt() 
 # =============================================================================
 # new stuff: Ostap::Math::Moment_<N> 
 # =============================================================================
@@ -163,7 +181,10 @@ def _om_cm2 ( obj , order  ) :
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
     if order * 2  <= obj.order :
-        T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        ##
+        if root_version >= 62000 : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        else                     : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        ## 
         M = Ostap.Math.Moments()
         return T ( M , obj )
 
@@ -186,7 +207,10 @@ def _om_cm3 ( obj , order  ) :
     assert order <= obj.order , 'central_moment: invalid order cmbiarions %s/%s' % ( order , obj.order )
 
     if order * 2  <= obj.order :
-        T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        ##
+        if root_version >= 62000 : T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        else                     : T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
+        ##
         M = Ostap.Math.Moments()
         return T ( M , obj )
 
@@ -321,14 +345,18 @@ for m in ( M0 , M1 , WM0 , WM1 ) :
     m.mean  = _om_mean
     m.table = _om_table
 
-if not hasattr ( M0  , 'order' ) : M0 .order = 0
-if not hasattr ( M1  , 'order' ) : M1 .order = 1
+if not hasattr (  M0 , 'order' ) :  M0.order = 0
+if not hasattr (  M1 , 'order' ) :  M1.order = 1
 if not hasattr ( WM0 , 'order' ) : WM0.order = 0
 if not hasattr ( WM1 , 'order' ) : WM1.order = 1
 
 _decorated_classes = (
-    Ostap.Math.Moment  ,
-    Ostap.Math.WMoment ,
+    Ostap.Math.Moment     ,
+    Ostap.Math.WMoment    ,
+    Ostap.Math.Moment_(0) , 
+    Ostap.Math.Moment_(1) ,
+    Ostap.Math.Moment_(0) , 
+    Ostap.Math.Moment_(1) , 
     )
 
 _new_methods_ = (
