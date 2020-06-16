@@ -45,7 +45,7 @@ gen_gauss.sigma = 0.1
 # ==============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
 #  - generate <code>nToys</code> pseudoexperiments with some PDF <code>pdf</code>
-#  - fit teach experiment with the same PDF
+#  - fit each experiment with the same PDF
 #  - store  fit results
 #  - calculate staistics of pulls
 #  - fill distributions for fit results
