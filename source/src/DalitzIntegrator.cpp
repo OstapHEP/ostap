@@ -10,15 +10,12 @@
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
 // ============================================================================
-// ROOT 
-// ============================================================================
-#include "Math/Integrator.h"
-#include "Math/GSLIntegrator.h"
-// ============================================================================
 // Local
 // ============================================================================
+#include "Integrator1D.h"
 #include "Integrator2D.h"
 #include "local_math.h"
+#include "local_hash.h"
 #include "local_gsl.h"
 // ============================================================================
 /** @file
@@ -28,66 +25,360 @@
  *  @date   2019-11-02
  */
 // ============================================================================
-namespace 
-{
-  // =========================================================================
-  ROOT::Math::GSLIntegrator s_integrator_1D_1 
-  ( ROOT::Math::Integration::kADAPTIVE ,
-    ROOT::Math::Integration::kGAUSS51  , 1.e-6 , 1.e-6 , 20000 ) ; 
-  // =========================================================================
-  ROOT::Math::GSLIntegrator s_integrator_1D_2 
-  ( ROOT::Math::Integration::kADAPTIVE ,
-    ROOT::Math::Integration::kGAUSS51  , 1.e-6 , 1.e-6 , 20000 ) ; 
-  // =========================================================================
-  typedef std::tuple<Ostap::Math::DalitzIntegrator::function2*,
-                     const Ostap::Kinematics::Dalitz*,double> DATA2 ;
-  // =========================================================================
-  double inner_function  ( const double s2 , void* param ) 
-  {
-    const DATA2* data     = static_cast<DATA2*> ( param ) ;
-    auto*        function = std::get<0>(*data) ;
-    const auto*  dalitz   = std::get<1>(*data) ;
-    const double s1       = std::get<2>(*data) ;
-    //
-    if ( !dalitz->inside ( s1 , s2 ) ) { return 0 ; }
-    //
-    return (*function) ( s1 , s2 ) ;
-  }
-  // 
-  double inner_integral  ( const double s1 , void* param ) 
-  {
-    DATA2*       data     = static_cast<DATA2*> ( param ) ;
-    auto*        function = std::get<0>(*data) ;
-    const auto*  dalitz   = std::get<1>(*data) ;
-    //
-    double s2min, s2max ;
-    std::tie ( s2min , s2max ) = dalitz -> s2_minmax_for_s1 ( s1 ) ;
-    if ( s2max <= s2min ) { return 0 ; }
-    //
-    std::get<2> ( *data ) = s1 ;
-    // =========================================================================
-    return s_integrator_1D_1.Integral ( &inner_function , 
-                                        param           , 
-                                        s2min           ,
-                                        s2max           ) ;
-  }
-  // ==========================================================================
-}
-// ============================================================================
 namespace  
 {
   // ==========================================================================
-  /** @var s_CUBATURE 
-   *  The actual cubatire-integrator 
+  /** @var s_DI2
+   *  The actual 2D-integrator 
    */
-  const Ostap::Math::GSL::Integrator2D<Ostap::Math::DalitzIntegrator::function2> s_DI ;
+  const Ostap::Math::GSL::Integrator2D<Ostap::Math::DalitzIntegrator::function2> s_DI2 ;
+  // ==========================================================================
+  /** @var s_DI1
+   *  The actual 1D-integrator 
+   */
+  const Ostap::Math::GSL::Integrator1D<Ostap::Math::DalitzIntegrator::function1> s_DI1 ;
   // ==========================================================================  
-  /** @var s_MESSAGE  
-   *  Error message fromm cubature 
+  /** @var s_MESSAGE1  
+   *  Error message from integration
    */
-  const char s_MESSAGE[]  = "Integrate(Dalitz)" ;
+  const char s_MESSAGE1[]  = "Integrate1(Dalitz)" ;
+  // ==========================================================================  
+  /** @var s_MESSAGE2
+   *  Error message from cubature 
+   */
+  const char s_MESSAGE2[]  = "Integrate2(Dalitz)" ;
   // ==========================================================================  
 }
+// ============================================================================
+
+// ============================================================================
+// 1D-integration
+// ============================================================================
+
+// ============================================================================
+/*  evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
+ *  \f[ F(s_1,s_2)  = \int_{s_{mim}}^{s_{max}} ds f(s,s_1,s_2) \f]
+ *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
+ *  @param s1    value of \f$ s_1\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param smax  upper inntegration limit for  \f$s\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s
+( Ostap::Math::DalitzIntegrator::function3 f3 ,
+  const double                             s1   ,
+  const double                             s2   ,
+  const double                             smax , 
+  const Ostap::Kinematics::Dalitz0&        d    ,
+  const Ostap::Math::WorkSpace&            ws   )
+{
+  if  ( s1 <= d.s1_min (      ) ||
+        s2 <= d.s1_min (      ) ||
+        s1 >= d.s1_max ( smax ) ||
+        s2 >= d.s2_max ( smax ) ) { return 0 ; }
+  
+  const double smin = s1 + s2 + d.s3_min() - d.summ2 () ;
+  if ( smax  <= smin ) { return 0 ; }
+  //
+  auto ff = std::cref ( f3 ) ;
+  function1 fun = [&ff,s1,s2,&d] ( const double s ) -> double
+                  {
+                    return d.inside ( s , s1 , s2 ) ? ff ( s , s1 , s2 ) : 0.0 ;
+                  } ;
+  
+  /// get integrator
+  const auto F = s_DI1.make_function ( &fun ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) =
+    s_DI1.gaq_integrate 
+    ( &F                , 
+      smin              ,   // lower integration edge  
+      smax              ,   // upper integration edge
+      workspace ( ws )  ,   // workspace 
+      s_PRECISION       ,   // absolute precision 
+      s_PRECISION       ,   // relative precision 
+      -1                ,   // limit 
+      s_MESSAGE1        ,   // reason of failure 
+      __FILE__          ,   // the file 
+      __LINE__          ) ; // the line 
+  //
+  return result ;  
+}
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(a,s_1,s_2) \f$
+ *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
+ *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
+ *  @param s     value of \f$ s\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function3 f3 ,
+  const double                             s  ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz0&        d  ,
+  const Ostap::Math::WorkSpace&            ws )
+{
+  if ( s < d.sqsumm () || s2 <= d.s2_min() || s2 >= d.s2_max ( s ) ) { return 0 ; }
+  //
+  auto ff = std::cref ( f3 ) ;
+  function2 fun = [&ff,s,&d] ( const double s_1  , const double s_2 ) -> double
+                  {
+                    return d.inside ( s , s_1 , s_2 ) ? ff ( s , s_1 , s_2 ) : 0.0 ;
+                  } ;
+  //
+  return integrate_s1 ( std::cref ( fun ) , s , s2 , d , ws ) ;
+}
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function2 f2 ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz&         d  ,
+  const Ostap::Math::WorkSpace&            ws )
+{ return integrate_s1  ( std::cref  ( f2 ) , d.s() , s2  , d  , ws  ) ; }
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param f2    the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s     value of \f$ s \f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function2 f2 ,
+  const double                             s  ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz0&        d  ,
+  const Ostap::Math::WorkSpace&            ws )
+{
+  if ( s < d.sqsumm () || s2 <= d.s2_min() || s2 >= d.s2_max ( s ) ) { return 0 ; }
+  //
+  auto ff = std::cref ( f2 ) ;
+  function1 fun = [&ff,s,s2,&d] ( const double s1 ) -> double
+                  {
+                    return d.inside ( s , s1 , s2 ) ? ff ( s1 , s2 ) : 0.0 ;
+                   } ;
+  
+  double s1mn , s1mx ;
+  std::tie ( s1mn , s1mx ) = d.s1_minmax_for_s_s2 ( s , s2 ) ;
+  if ( s1mx  <= s1mn ) { return 0 ; }
+  //
+  
+  /// get integrator
+  const auto F = s_DI1.make_function ( &fun ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) =
+    s_DI1.gaq_integrate 
+    ( &F                , 
+      s1mn              ,   // lower integration edge  
+      s1mx              ,   // upper integration edge
+      workspace ( ws )  ,   // workspace 
+      s_PRECISION       ,   // absolute precision 
+      s_PRECISION       ,   // relative precision 
+      -1                ,   // limit 
+      s_MESSAGE1        ,   // reason of failure 
+      __FILE__          ,   // the file 
+      __LINE__          ) ; // the line 
+  //
+  return result ;
+}
+// ============================================================================
+
+// ============================================================================
+// 1D-integration with cache 
+// ============================================================================
+
+
+// ============================================================================
+/*  evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
+ *  \f[ F(s_1,s_2)  = \int_{s_{mim}}^{s_{max}} ds f(s,s_1,s_2) \f]
+ *  @param tag tag that indicate the uniquness of function
+ *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
+ *  @param s1    value of \f$ s_1\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param smax  upper inntegration limit for  \f$s\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s
+( const std::size_t                        tag  ,
+  Ostap::Math::DalitzIntegrator::function3 f3   ,
+  const double                             s1   ,
+  const double                             s2   ,
+  const double                             smax , 
+  const Ostap::Kinematics::Dalitz0&        d    ,
+  const Ostap::Math::WorkSpace&            ws   )
+{
+  if  ( s1 <= d.s1_min (      ) ||
+        s2 <= d.s1_min (      ) ||
+        s1 >= d.s1_max ( smax ) ||
+        s2 >= d.s2_max ( smax ) ) { return 0 ; }
+  
+  const double smin = s1 + s2 + d.s3_min() - d.summ2 () ;
+  if ( smax  <= smin ) { return 0 ; }
+  //
+  auto ff = std::cref ( f3 ) ;
+  function1 fun = [&ff,s1,s2,&d] ( const double s ) -> double
+                  {
+                    return d.inside ( s , s1 , s2 ) ? ff ( s , s1 , s2 ) : 0.0 ;
+                  } ;
+  
+  /// get integrator
+  const auto F = s_DI1.make_function ( &fun ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  //
+  std::tie ( ierror , result , error ) =
+    s_DI1.gaq_integrate_with_cache  
+    ( tag               ,
+      &F                , 
+      smin              ,   // lower integration edge  
+      smax              ,   // upper integration edge
+      workspace ( ws )  ,   // workspace 
+      s_PRECISION       ,   // absolute precision 
+      s_PRECISION       ,   // relative precision 
+      -1                ,   // limit 
+      s_MESSAGE1        ,   // reason of failure 
+      __FILE__          ,   // the file 
+      __LINE__          ) ; // the line 
+  //
+  return result ;  
+}
+// ============================================================================
+
+
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(a,s_1,s_2) \f$
+ *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
+ *  @param tag tag that indicate the uniquness of function
+ *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
+ *  @param s     value of \f$ s\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( const std::size_t                        tag ,
+  Ostap::Math::DalitzIntegrator::function3 f3  ,
+  const double                             s   ,
+  const double                             s2  ,
+  const Ostap::Kinematics::Dalitz0&        d   ,
+  const Ostap::Math::WorkSpace&            ws  )
+{
+  if ( s < d.sqsumm () || s2 <= d.s2_min() || s2 >= d.s2_max ( s ) ) { return 0 ; }
+  //
+  auto ff = std::cref ( f3 ) ;
+  function2 fun = [&ff,s,&d] ( const double s_1  , const double s_2 ) -> double
+                  {
+                    return d.inside ( s , s_1 , s_2 ) ? ff ( s , s_1 , s_2 ) : 0.0 ;
+                  } ;
+  //
+  return integrate_s1 ( tag , std::cref ( fun ) , s , s2 , d , ws ) ;
+}
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param tag tag that indicate the uniquness of function
+ *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( const std::size_t                        tag ,
+  Ostap::Math::DalitzIntegrator::function2 f2  ,
+  const double                             s2  ,
+  const Ostap::Kinematics::Dalitz&         d   ,
+  const Ostap::Math::WorkSpace&            ws  )
+{ return integrate_s1  ( tag , std::cref  ( f2 ) , d.s() , s2  , d  , ws  ) ; }
+// ============================================================================
+/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param tag tag that indicate the uniquness of function
+ *  @param f2    the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s     value of \f$ s \f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ *  @param ws    integration workspace  
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( const std::size_t                        tag ,
+  Ostap::Math::DalitzIntegrator::function2 f2  ,
+  const double                             s   ,
+  const double                             s2  ,
+  const Ostap::Kinematics::Dalitz0&        d   ,
+  const Ostap::Math::WorkSpace&            ws  )
+{
+  if ( s < d.sqsumm () || s2 <= d.s2_min() || s2 >= d.s2_max ( s ) ) { return 0 ; }
+  //
+  auto ff = std::cref ( f2 ) ;
+  function1 fun = [&ff,s,s2,&d] ( const double s1 ) -> double
+                  {
+                    return d.inside ( s , s1 , s2 ) ? ff ( s1 , s2 ) : 0.0 ;
+                   } ;
+  
+  double s1mn , s1mx ;
+  std::tie ( s1mn , s1mx ) = d.s1_minmax_for_s_s2 ( s , s2 ) ;
+  if ( s1mx  <= s1mn ) { return 0 ; }
+  //
+  
+  /// get integrator
+  const auto F = s_DI1.make_function ( &fun ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) =
+    s_DI1.gaq_integrate_with_cache  
+    ( tag               ,
+      &F                , 
+      s1mn              ,   // lower integration edge  
+      s1mx              ,   // upper integration edge
+      workspace ( ws )  ,   // workspace 
+      s_PRECISION       ,   // absolute precision 
+      s_PRECISION       ,   // relative precision 
+      -1                ,   // limit 
+      s_MESSAGE1        ,   // reason of failure 
+      __FILE__          ,   // the file 
+      __LINE__          ) ; // the line 
+  //
+  return result ;
+}
+// ============================================================================
+
+
+
+
+// ============================================================================
+// 2D-integration
+// ============================================================================
+
 // ============================================================================
 /*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
  *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) \f] 
@@ -146,7 +437,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
   //                  };  
   // //
   // /// get integrator
-  // const auto F = s_DI.make_function
+  // const auto F = s_DI2.make_function
   //   ( &fun ,
   //     d.s1_min () , d.s1_max ( M ) ,
   //     d.s2_min () , d.s2_max ( M ) ) ;
@@ -160,14 +451,14 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
                    };  
   //
   /// get integrator
-  const auto F = s_DI.make_function
+  const auto F = s_DI2.make_function
     ( &fun , -1  , 1 , d.s2_min () , d.s2_max ( M ) ) ;
   //
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_DI.cubature
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_DI2.cubature
+    ( &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -203,13 +494,13 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
                    };
   
   /// get the  integrator
-  const auto F = s_DI.make_function ( &fun , smin , smax  , -1  , 1 ) ;
+  const auto F = s_DI2.make_function ( &fun , smin , smax  , -1  , 1 ) ;
   //
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_DI.cubature
-    ( &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_DI2.cubature
+    ( &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -279,15 +570,15 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
                    };  
   //
   /// get integrator
-  const auto F = s_DI.make_function
+  const auto F = s_DI2.make_function
     ( &fun , -1  , 1 , d.s2_min () , d.s2_max ( M ) ) ;
   //
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
   const std::size_t key = std::hash_combine ( tag ,  s , d.tag() ) ;
-  std::tie ( ierror , result , error ) = s_DI.cubature_with_cache 
-    ( key , &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_DI2.cubature_with_cache 
+    ( key , &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }
@@ -301,6 +592,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
  *  @param d  helper Dalitz-object 
  *  @return integral over \f$ s, s_1\f$
  */
+// ============================================================================
 double Ostap::Math::DalitzIntegrator::integrate_ss1
 ( const std::size_t                tag ,
   function3                         f3   ,
@@ -324,15 +616,15 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
                    };
   
   /// get the  integrator
-  const auto F = s_DI.make_function ( &fun , smin , smax  , -1  , 1 ) ;
+  const auto F = s_DI2.make_function ( &fun , smin , smax  , -1  , 1 ) ;
   //
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
   //
   const std::size_t key = std::hash_combine ( tag , s2 , smax , d.tag() ) ;
-  std::tie ( ierror , result , error ) = s_DI.cubature_with_cache 
-    ( key , &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE , __FILE__ , __LINE__ ) ;
+  std::tie ( ierror , result , error ) = s_DI2.cubature_with_cache 
+    ( key , &F , 20000 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result ;
 }

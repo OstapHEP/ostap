@@ -13,7 +13,8 @@
   1. Remove `sigma`(`gamma`) from `Flatte_pdf`
   1. extend interface for `ostap.fitting.simfit.SimFit`, allowinng usage of it for toys
   1. add test `test_fitting_toys_simfit.py`
-  
+  1. further extend `Ostap::Math::DaltzIntegrator`
+  `  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`
