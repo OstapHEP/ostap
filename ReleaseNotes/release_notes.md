@@ -1,17 +1,27 @@
 
 ## New features 
-  1. Make `Ostap::Math::Choose` a bit  more  efficient
-  1. add  `Ostap::Math::choose_array` to get array of binomialcoefficients (compile time)
-  1. add  tmplated central moments `Ostap::Math::Moment_<N>`
+  1. Make`Ostap::Math::Choose` a bit  more  efficient
+  1. add `Ostap::Math::choose_array` to get array of binomial coefficients (compile time)
+  1. add tmplated central moments `Ostap::Math::Moment_<N>`
   1. add their python decorators `ostap.stats.moment`
   1. add test for moment-counters `test_stats_moment.py`
   1. add templated weighted moment counters  `Ostap::Math::WMoment_<N>`
-  
-  
-## Backward incompatible changes
-  
-## Bug fixes:
+  1. large modificatons in `Ostap::Kinematics::Dalitz`
+  1. `fitting.basic` : add intermediate mase class `MASSMEAN` that does not hold `sigma`
+  1. add `mean_name`, `mena_title` , `sigma_name` and `sigma_title` for `MASSMEAN` and `MASS` base classes : it allows to remove many ugly lines with post-fix for the  variable names
+  1. make use of `mean_name`, `meean_title`, `sigma_name`, `sigma_title` for many `PDFs` 
+  1. Remove `sigma`(`gamma`) from `Flatte_pdf`
 
+## Backward incompatible changes
+  1. rewrite `Ostap::Math::DalitzIntegrator`
+  1. rewrite `Ostap::Math::Integrator`
+  1.`Flatte_pdf`: rename arguments and attributes
+  1. rename  `ostap.fitting.basic.Resoluton` to `ostap.fitting.basic.CheckMean` and invert its argument 
+
+
+## Bug fixes:
+  1. fix missing `hID` in `ostap/fittin/variables.py` (thanks to Alexander Berezhnoy)
+  
 
 # v1.4.9.1
 

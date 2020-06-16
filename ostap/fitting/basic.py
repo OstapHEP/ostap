@@ -14,6 +14,7 @@ __date__    = "2011-07-25"
 __all__     = (
     ##
     'PDF'           , ## useful base class for 1D-models
+    'MASSMEAN'      , ## useful base class to create "signal" PDFs for mass-fits
     'MASS'          , ## useful base class to create "signal" PDFs for mass-fits
     'RESOLUTION'    , ## useful base class to create "resolution" PDFs
     ##
@@ -2257,29 +2258,45 @@ class _CHECKMEAN(object) :
     check = True
 def checkMean() :
     return True if  _CHECKMEAN.check else False
-class Resolution(object) :    
-    def __init__  ( self , resolution = True ) :
-        self.check = False if resolution else True 
-    def __enter__ ( self ) :
-        self.old         = _CHECKMEAN.check 
-        _CHECKMEAN.check =  self.check
-    def __exit__  ( self , *_ ) :
-        _CHECKMEAN.check =  self.old 
 # =============================================================================
-## helper base class for implementation  of various helper pdfs 
+## @class CheckMean 
+#  Helper contex manager to enable/disable check for the mean/location-values
+class CheckMean(object) :
+    """Helper contex manager to enable/disable check for the mean/location-values
+    """
+    def __init__  ( self , check ) :
+        self.__check = True if check else False 
+    def __enter__ ( self ) :
+        self.__old       = _CHECKMEAN.check 
+        _CHECKMEAN.check =  self.__check
+    def __exit__  ( self , *_ ) :
+        _CHECKMEAN.check =  self.__old
+    @property
+    def check ( self ) :
+        """``check''  : check the mean/location?"""
+        return self.__check
+    
+# =============================================================================
+## helper base class for implementation  of various helper pdfs
+#  - it defines alias <code>mass</code> for <code>xvar</code>
+#  - it defiens a variable <code>mean</code> alias <code>location</code>
+#  - optionally it checks that this variable is withing the specified range  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class MASS(PDF) :
+class MASSMEAN(PDF) :
     """Helper base class for implementation of various pdfs
     It is useful for ``peak-like'' distributions, where one can talk about
     - ``mean/location''
-    - ``sigma/width/scale'' 
+    - it defines alias `mass` for `xvar`
+    - it defiens a variable `mean` (alias `location`)
+    - optionally it checks that this variable is withing the specified range  
     """
-    def __init__ ( self            ,
-                   name            ,
-                   xvar            ,
-                   mean     = None ,
-                   sigma    = None ) : 
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,
+                   mean      = None  ,
+                   mean_name  = ''   , 
+                   mean_title = ''   ) : 
         
         m_name  = "m_%s"     % name
         m_title = "mass(%s)" % name
@@ -2303,54 +2320,46 @@ class MASS(PDF) :
                                    m_title    , ## title/comment
                                    fix = None ) ## fix ? 
         else :
-            raise AttributeError("MASS: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+            raise AttributeError("MASSMEAN: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
         ## intialize the base 
         PDF.__init__ ( self , name , xvar = xvar )
-        
 
-        limits_mean  = ()
-        limits_sigma = ()
+        ## check mean/location values ? 
+        self.__check_mean = self.xminmax () and checkMean () 
         
-        if   self.xminmax() :            
+        self.__limits_mean  = ()
+        if  self.check_mean and self.xminmax () :    
             mn , mx = self.xminmax()
             dm      =  mx - mn
-            limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
-            sigma_max    =  2 * dm / math.sqrt(12)  
-            limits_sigma = 1.e-3 * sigma_max , sigma_max 
-        #
+            self.__limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
+
         ## mean-value
-        #
-        self.__mean = self.make_var ( mean              ,
-                                      "mean_%s"  % name ,
-                                      "mean(%s)" % name , mean , *limits_mean )
-        ## 
-        if checkMean () and self.xminmax() : 
-            mn , mx = self.xminmax() 
+        m_name  = mean_name  if mean_name  else "mean_%s"  % name
+        m_title = mean_title if mean_title else "mean(%s)" % name
+        self.__mean = self.make_var ( mean , m_name , m_title , mean , *self.limits_mean )
+        
+        ##
+        if self.limits_mean :  
+            mn , mx = self.limits_mean  
             dm      =  mx - mn
             if   self.mean.isConstant() :
                 if not mn <= self.mean.getVal() <= mx : 
-                    raise AttributeError ( 'MASS(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
+                    self.error ( 'MASSMEAN(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
             elif self.mean.minmax() :
                 mmn , mmx = self.mean.minmax()
-                self.mean.setMin ( max ( mmn , mn - 0.1 * dm ) )
-                self.mean.setMax ( min ( mmx , mx + 0.1 * dm ) )
-                self.debug ( 'mean range is redefined to be %s' % list( self.mean.minmax() ) )
-        #
-        ## sigma
-        #
-        self.__sigma = self.make_var ( sigma               ,
-                                       "sigma_%s"   % name ,
-                                       "#sigma(%s)" % name , sigma , *limits_sigma )
-        
+                self.mean.setMin ( max ( mmn , mn ) )
+                self.mean.setMax ( min ( mmx , mx ) )
+                self.debug ( 'mean range is adjusted  to be %s' % list ( self.mean.minmax() ) )
+
         ## save the configuration
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'mean'  : self.mean  ,
-            'sigma' : self.sigma
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  ,
+            'mean'        : self.mean  ,
+            'mean_name'   : mean_name  ,
+            'mean_title'  : mean_title ,
             }
-            
 
     @property 
     def mass ( self ) :
@@ -2364,13 +2373,10 @@ class MASS(PDF) :
     @mean.setter
     def mean ( self , value ) :
         value =  float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            m1 = mn - 1.0 * dm
-            m2 = mx + 1.0 * dm
-            if not m1 <= value <= m2 :
-                self.warning ("``mean'' %s is outside the interval  %s,%s"  % ( value , m1 , m2 ) )                
+        if self.check_mean and self.limits_mean  :  
+            mn , mx = self.limits_mean 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval  %s,%s"  % ( self.mean.name , value , mn , mx ) )                
         self.mean.setVal ( value )
         
     @property
@@ -2379,24 +2385,86 @@ class MASS(PDF) :
         return self.mean
     @location.setter
     def location ( self , value ) :
-        self.mean =  value 
+        self.mean =  value
+
+    @property
+    def check_mean ( self ) :
+        """``check_mean'' : Is mean/location -value to be checked?"""
+        return self.__check_mean
+
+    @property
+    def limits_mean ( self ) :
+        """``limits_mean'' : reasonable limits for mean/location"""
+        return self.__limits_mean
     
+# =============================================================================
+## @class MASS
+#  helper base class for implementation  of various helper pdfs 
+#  - mean/location
+#  - sigma/width/scale
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class MASS(MASSMEAN) :
+    """Helper base class for implementation of various pdfs
+    It is useful for ``peak-like'' distributions, where one can talk about
+    - ``mean/location''
+    - ``sigma/width/scale'' 
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   sigma       = None , 
+                   mean_name   = ''   , 
+                   mean_title  = ''   ,
+                   sigma_name  = ''   , 
+                   sigma_title = ''   ) : 
+            
+        ## base class 
+        MASSMEAN.__init__ ( self , name , xvar , mean )
+
+        self.__limits_sigma = ()        
+        if   self.xminmax() :            
+            mn , mx = self.xminmax()
+            dm      =  mx - mn
+            sigma_max    =  2 * dm / math.sqrt(12)  
+            self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
+
+        ## sigma
+        s_name  = sigma_name  if sigma_name  else "sigma_%s"   % name
+        s_title = sigma_title if sigma_title else "#sigma(%s)" % name
+        #
+        self.__sigma = self.make_var ( sigma  , s_name , s_title , sigma , *self.limits_sigma )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name   ,
+            'xvar'        : self.xvar   ,
+            'mean'        : self.mean   ,
+            'sigma'       : self.sigma  ,
+            'mean_name'   : mean_name   ,
+            'mean_title'  : mean_title  ,
+            'sigma_name'  : sigma_name  ,
+            'sigma_title' : sigma_title ,
+            }
+            
     @property
     def sigma ( self ):
-        """``sigma/width/scale''-variable"""
+        """``sigma/width/scale/spread''-variable"""
         return self.__sigma
     @sigma.setter
     def sigma ( self , value ) :
         value =   float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            smax = 2 * dm / math.sqrt ( 12 ) 
-            smin = 2.e-5 * smax  
-            if not smin <= value <= smax :
-                self.warning ("``sigma'' %s is outside the interval (%s,%s)" % ( value , smin , smax ) )
+        if self.limits_sigma  : 
+            mn , mx = self.limits_sigma 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval (%s,%s)" % ( self.sigma.name , value , mn , mx ) )
         self.sigma.setVal ( value )
 
+    @property
+    def limits_sigma ( self ) :
+        """``limits_sigma'' : reasonable limits for sigma/width"""
+        return self.__limits_sigma
 
 # =============================================================================
 ## @class RESOLUTION
@@ -2425,7 +2493,7 @@ class RESOLUTION(MASS) :
                    mean     = None ,
                    fudge    = 1.0  ) :
         
-        with Resolution() :
+        with CheckMean ( False ) :
             super(RESOLUTION,self).__init__ ( name  = name  ,
                                               xvar  = xvar  ,
                                               sigma = sigma ,

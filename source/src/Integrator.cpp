@@ -34,7 +34,7 @@ double Ostap::Math::Integrator::integrate
 ( Ostap::Math::Integrator::function1 f1   , 
   const double                       xmin , 
   const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -74,11 +74,11 @@ double Ostap::Math::Integrator::integrateX
   const double                       y    , 
   const double                       xmin ,
   const double                       xmax ,
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , std::placeholders::_1 , y ) ;
-  return integrate ( f1 , xmin , xmax , ws ) ;
+  return integrate ( std::cref ( f1 ) , xmin , xmax , ws ) ;
 } 
 // ============================================================================
 /** calculate the integral 
@@ -95,11 +95,11 @@ double Ostap::Math::Integrator::integrateY
   const double                       x    , 
   const double                       ymin ,
   const double                       ymax ,
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   )
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
-  return integrate ( f1 , ymin , ymax , ws ) ;
+  return integrate ( std::cref ( f1 ) , ymin , ymax , ws ) ;
 }
 // ==========================================================================
 /** calculate the integral 
@@ -119,7 +119,7 @@ double Ostap::Math::Integrator::integrate
   const double                       xmax ,
   const double                       ymin , 
   const double                       ymax , 
-  const Ostap::Math::WorkSpace&     /* ws */ ) const 
+  const Ostap::Math::WorkSpace&     /* ws */ )  
 { return integrate ( std::cref ( f2 ) , xmin , xmax , ymin , ymax ) ; }
 // ==========================================================================
 /** calculate the integral 
@@ -137,7 +137,7 @@ double Ostap::Math::Integrator::integrate
   const double                       xmin , 
   const double                       xmax ,
   const double                       ymin , 
-  const double                       ymax ) const 
+  const double                       ymax ) 
 { 
   //
   static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;
@@ -178,12 +178,12 @@ double Ostap::Math::Integrator::integrate
  *  @return the value of the integral 
  */
 // =============================================================================
-double Ostap::Math::Integrator::integrate_with_cache
+double Ostap::Math::Integrator::integrate
 ( const std::size_t                  tag  , 
   Ostap::Math::Integrator::function1 f1   , 
   const double                       xmin , 
   const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -218,17 +218,17 @@ double Ostap::Math::Integrator::integrate_with_cache
  *  @return the value of the integral 
  */
 // ============================================================================
-double Ostap::Math::Integrator::integrateX_with_cache
+double Ostap::Math::Integrator::integrateX
 ( const std::size_t                  tag  , 
   Ostap::Math::Integrator::function2 f2   , 
   const double                       y    , 
   const double                       xmin ,
   const double                       xmax ,
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , std::placeholders::_1 , y ) ;
-  return integrate_with_cache ( std::hash_combine ( tag , 'X' , y )  , f1 , xmin , xmax , ws ) ;
+  return integrate ( std::hash_combine ( tag , 'X' , y )  , std::cref ( f1 ) , xmin , xmax , ws ) ;
 } 
 // ============================================================================
 /** calculate the integral 
@@ -240,17 +240,17 @@ double Ostap::Math::Integrator::integrateX_with_cache
  *  @return the value of the integral 
  */
 // ============================================================================
-double Ostap::Math::Integrator::integrateY_with_cache
+double Ostap::Math::Integrator::integrateY
 ( const std::size_t                  tag  , 
   Ostap::Math::Integrator::function2 f2   , 
   const double                       x    , 
   const double                       ymin ,
   const double                       ymax ,
-  const Ostap::Math::WorkSpace&      ws   ) const 
+  const Ostap::Math::WorkSpace&      ws   ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
-  return integrate_with_cache ( std::hash_combine ( tag , 'Y' , x ) , f1 , ymin , ymax , ws ) ;
+  return integrate ( std::hash_combine ( tag , 'Y' , x ) , std::cref ( f1 ), ymin , ymax , ws ) ;
 }
 // ==========================================================================
 /** calculate the integral 
@@ -264,15 +264,15 @@ double Ostap::Math::Integrator::integrateY_with_cache
  *  @return the value of the integral 
  */
 // ==========================================================================
-double Ostap::Math::Integrator::integrate_with_cache
+double Ostap::Math::Integrator::integrate
 ( const std::size_t                  tag  , 
   Ostap::Math::Integrator::function2 f2   , 
   const double                       xmin , 
   const double                       xmax ,
   const double                       ymin , 
   const double                       ymax , 
-  const Ostap::Math::WorkSpace&     /* ws */ ) const 
-{ return integrate_with_cache ( tag , std::cref ( f2 ) , xmin , xmax , ymin , ymax ) ; }
+  const Ostap::Math::WorkSpace&     /* ws */ ) 
+{ return integrate ( tag , std::cref ( f2 ) , xmin , xmax , ymin , ymax ) ; }
 // ==========================================================================
 /** calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -284,13 +284,13 @@ double Ostap::Math::Integrator::integrate_with_cache
  *  @return the value of the integral 
  */
 // ==========================================================================
-double Ostap::Math::Integrator::integrate_with_cache
+double Ostap::Math::Integrator::integrate
 ( const std::size_t                  tag  , 
   Ostap::Math::Integrator::function2 f2   , 
   const double                       xmin , 
   const double                       xmax ,
   const double                       ymin , 
-  const double                       ymax ) const 
+  const double                       ymax ) 
 { 
   //
   static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;

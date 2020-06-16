@@ -37,11 +37,11 @@ namespace Ostap
        *  @param integration workspace 
        *  @return the value of the integral 
        */
-      double integrate
+      static double integrate
       ( function1        f1   , 
         const double     xmin , 
         const double     xmax , 
-        const WorkSpace& ws   ) const ;
+        const WorkSpace& ws   ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -53,13 +53,13 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrate
+      static double integrate
       ( function2        f2   , 
         const double     xmin , 
         const double     xmax ,
         const double     ymin , 
         const double     ymax ,
-        const WorkSpace& /* ws */ ) const ;
+        const WorkSpace& /* ws */ ) ;
       // =======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -70,12 +70,12 @@ namespace Ostap
        *  @param ymax upper integration edge in y 
        *  @return the value of the integral 
        */
-      double integrate
+      static double integrate
       ( function2        f2   , 
         const double     xmin , 
         const double     xmax ,
         const double     ymin , 
-        const double     ymax ) const ;
+        const double     ymax ) ;
       // =======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
@@ -86,12 +86,12 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrateX
+      static double integrateX
       ( function2        f2   , 
         const double     y    , 
         const double     xmin ,
         const double     xmax ,
-        const WorkSpace& ws   ) const ;
+        const WorkSpace& ws   ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
@@ -102,12 +102,12 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrateY
+      static double integrateY
       ( function2        f2   , 
         const double     y    , 
         const double     xmin ,
         const double     xmax ,
-        const WorkSpace& ws   ) const ;
+        const WorkSpace& ws   ) ;
       // ======================================================================
     public: // integration with cache 
       // ======================================================================      
@@ -120,12 +120,12 @@ namespace Ostap
        *  @param integration workspace 
        *  @return the value of the integral 
        */
-      double integrate_with_cache
+      static double  integrate
       ( const std::size_t tag  , 
         function1         f1   , 
         const double      xmin , 
         const double      xmax , 
-        const WorkSpace&  ws   ) const ;
+        const WorkSpace&  ws   ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -138,14 +138,14 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrate_with_cache
+      static double integrate
       ( const std::size_t tag  , 
         function2         f2   , 
         const double      xmin , 
         const double      xmax ,
         const double      ymin , 
         const double      ymax ,
-        const WorkSpace& /* ws */ ) const ;
+        const WorkSpace& /* ws */ ) ;
       // =======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -156,13 +156,13 @@ namespace Ostap
        *  @param ymax upper integration edge in y 
        *  @return the value of the integral 
        */
-      double integrate_with_cache
+      static double  integrate
       ( const std::size_t tag  , 
         function2         f2   , 
         const double      xmin , 
         const double      xmax ,
         const double      ymin , 
-        const double      ymax ) const ;
+        const double      ymax ) ;
       // =======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
@@ -174,13 +174,13 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrateX_with_cache
+      static double integrateX
       ( const std::size_t tag  , 
         function2         f2   , 
         const double      y    , 
         const double      xmin ,
         const double      xmax ,
-        const WorkSpace&  ws   ) const ;
+        const WorkSpace&  ws   ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
@@ -192,13 +192,13 @@ namespace Ostap
        *  @param integration workspace (not used)
        *  @return the value of the integral 
        */
-      double integrateY_with_cache
+      static double  integrateY
       ( const std::size_t tag  , 
         function2         f2   , 
-        const double      y    , 
-        const double      xmin ,
-        const double      xmax ,
-        const WorkSpace&  ws   ) const ;
+        const double      x    , 
+        const double      ymin ,
+        const double      ymax ,
+        const WorkSpace&  ws   ) ;
       // ======================================================================
     };
     // ========================================================================

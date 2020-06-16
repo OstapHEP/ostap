@@ -898,9 +898,11 @@ class Data2(Data):
     def treatFile ( self, the_file ) :
         """Add the file to TChain
         """
+        
         ## suppress Warning/Error messages from ROOT 
         from ostap.logger.utils import rootError
         with rootError() :
+            
             tmp1 = ROOT.TChain ( self.chain .GetName() )
             tmp1.Add ( the_file )            
             tmp2 = ROOT.TChain ( self.chain2.GetName() )

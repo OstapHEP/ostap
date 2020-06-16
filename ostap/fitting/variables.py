@@ -27,7 +27,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random
-from   ostap.core.core  import VE
+from   ostap.core.core  import VE, hID 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types )   
 # =============================================================================

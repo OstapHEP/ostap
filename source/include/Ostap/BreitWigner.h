@@ -404,7 +404,7 @@ namespace Ostap
      *  \f$ \rho^{0} \rightarrow \pi^+ \pi^- \f$
      *  J.D.Jackson,
      *  "Remarks on the Phenomenological Analysis of Resonances",
-     *  In Nuovo Cimento, Vol. XXXIV, N.6
+     *   Nuovo Cimento, Vol. XXXIV, N.6
      *  @see Ostap::Math::BreitWigner::Jackson_A7
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
@@ -666,6 +666,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// unique tag
+      virtual std::size_t tag() const ; // unique tag
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the curve for pipi-channel
       double flatte  ( const double x ) const ;
       /// get the curve for   KK-channel
@@ -804,6 +809,11 @@ namespace Ostap
       virtual ~Flatte2 () ;
       /// clone it!
       Flatte2* clone() const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag() const  override ; // unique tag
       // ======================================================================
     public:
       // ======================================================================

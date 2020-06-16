@@ -19,7 +19,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_math_dalitz'   )
 else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
-import ROOT, random 
+import ROOT, random, time  
 from   ostap.core.core import Ostap
 import ostap.math.kinematic
 import ostap.math.dalitz
@@ -41,6 +41,17 @@ s  = ( p1 + p2 + p3 ).M2()
 
 d  = Ostap.Kinematics.Dalitz ( D.M () , p1.M () , p2.M () , p3.M () )
 
+
+d0 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0   , 0   )
+d1 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0   , 0   )
+d2 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0.2 , 0   )
+d3 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0   , 0.2 )
+d4 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0   )
+d5 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0   , 0.2 )
+d6 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0.2 , 0.2 )
+d7 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0.2 )
+
+plots = d0 , d1 , d2 , d3 , d4 , d5 , d6 , d7 
 
 def test_dalitz1 () : 
     
@@ -136,12 +147,29 @@ def test_dalitz2 () :
     gr21m.draw ( 'alc' )
     gr31m.draw ( 'alc' )
     gr32m.draw ( 'alc' )
-    
+
+
+def test_dalitz3 () :
+
+
+    for i , p  in enumerate ( plots ) : 
+
+        
+        if   i == 0 : logger.info ( "All masses are     zero" )
+        elif i <  4 : logger.info ( "Two masses are     zero" )
+        elif i <  7 : logger.info ( "One mass   is      zero" )
+        else        : logger.info ( "All masses are non-zero" )
+        
+        gr  = p.graph21 ( masses = False ) 
+        gr.draw  ( 'al' )
+        time.sleep ( 1 ) 
+        
 # =============================================================================
 if '__main__' == __name__ :
 
     test_dalitz1 ()
     test_dalitz2 ()
+    test_dalitz3 ()
 
 # =============================================================================
 ##                                                                      The END 

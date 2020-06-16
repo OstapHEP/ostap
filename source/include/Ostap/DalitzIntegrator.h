@@ -1,7 +1,28 @@
-// ===========================================================================
+// ============================================================================
 #ifndef OSTAP_DALITZINTEGRAL_H 
 #define OSTAP_DALITZINTEGRAL_H 1
-// ===========================================================================
+// ============================================================================
+// Include files 
+// ============================================================================
+//  STD&STL
+// ============================================================================
+#include  <functional>
+// ============================================================================
+// forward declaratinos 
+// ============================================================================
+namespace  Ostap
+{
+  // ==========================================================================
+  namespace  Kinematics
+  {
+    // ========================================================================
+    class Dalitz0 ;
+    class Dalitz  ;
+    // ========================================================================
+  }
+  // ==========================================================================
+}
+// ============================================================================
 namespace Ostap
 {
   // =========================================================================
@@ -25,61 +46,150 @@ namespace Ostap
       /// the actual type of 3D-function to integrate 
       typedef std::function<double(double,double,double)> function3 ;
       // ======================================================================
-    public: 
-      // ======================================================================
-      /// Constructor
-      DalitzIntegrator ( const double m1 , 
-                         const double m2 , 
-                         const double m3 ) ;
-      // ======================================================================
-    public : 
+    public : // 2D integrations
       // ======================================================================
       /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
        *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) = 
        *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
        *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
-       *  @param M the overall mass of the system \f$\sqrt{s} \f$
-       *  @param fs the function \f$ f(s, s_1,s_2)\f$ 
-       *  @return the integral over dalitz plot
+       *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
        */
-      double integrate_s1s2 ( const double M , function3 f ) const ;
+      static double integrate_s1s2
+      ( function3                        f3 ,
+        const Ostap::Kinematics::Dalitz& d  ) ;
+      // ======================================================================
+      /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
+       *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) = 
+       *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
+       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
+       *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
+       */
+      static double integrate_s1s2
+      ( function3                        f3 ,
+        const double                      s ,
+        const Ostap::Kinematics::Dalitz0& d ) ;
+      // ======================================================================
+      /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
+       *  \f[ \int\int ds_1 ds_2 f( s_1,s_2) = 
+       *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
+       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
+       *  @param f2 the function \f$ f(s_1,s_2)\f$ 
+       *  @param s  the \f$s=M^2\f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
+       */
+      static double integrate_s1s2
+      ( function2                         f2 ,
+        const double                      s  ,
+        const Ostap::Kinematics::Dalitz0& d  ) ;
+      // =======================================================================      
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smax upper-edge fo inntegrato ove \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      static double integrate_ss1
+      ( function3                         f3   ,
+        const double                      s2   ,
+        const double                      smax ,
+        const Ostap::Kinematics::Dalitz0& d    ) ;
+      // =======================================================================
+    public: // integrations with cache
       // =======================================================================
       /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
        *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) = 
        *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
-       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s_1,s_2)  \f] 
-       *  @param M the overall mass of the system \f$ \sqrt{s} \f$
-       *  @param fs the function \f$ f(s_1,s_2)\f$ 
-       *  @return the integral over dalitz plot
+       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
+       *  @param tag tag that indicate theuniquness of function
+       *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
        */
-      double integrate_s1s2 ( const double M , function2 f ) const ;
+      static double integrate_s1s2
+      ( const std::size_t                tag ,
+        function3                        f3  ,
+        const Ostap::Kinematics::Dalitz& d   ) ;
+      // ======================================================================
+      /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
+       *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) = 
+       *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
+       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
+       *  @param tag tag that indicate theuniquness of function
+       *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
+       */
+      static double integrate_s1s2
+      ( const std::size_t                tag ,
+        function3                        f3 ,
+        const double                      s ,
+        const Ostap::Kinematics::Dalitz0& d ) ;
+      // ======================================================================
+      /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
+       *  \f[ \int\int ds_1 ds_2 f( s_1,s_2) = 
+       *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
+       *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
+       *  @param tag tag that indicate theuniquness of function
+       *  @param f2 the function \f$ f(s_1,s_2)\f$ 
+       *  @param s  the \f$s=M^2\f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over Dalitz plot
+       */
+      static double integrate_s1s2
+      ( const std::size_t                tag ,
+        function2                         f2 ,
+        const double                      s  ,
+        const Ostap::Kinematics::Dalitz0& d  ) ;
+      // =======================================================================
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param tag tag that indicate theuniquness of function
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smax upper-edge fo inntegrato ove \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      static double integrate_ss1
+      ( const std::size_t                tag ,
+        function3                         f3   ,
+        const double                      s2   ,
+        const double                      smax ,
+        const Ostap::Kinematics::Dalitz0& d    ) ;
+      // =======================================================================
+    public: // as functions of energy 
       // =======================================================================
       /** evaluate the integral over \f$e_2\f$ , \f$e_3\f$ variables 
-       *  \f[ \int\int de_2 de_3 f(s,e_2,e_3) = 
+       *  \f[ \int\int de_2 de_3 f ( M ,e_2,e_3) = 
        *  \int_{e_2^{min}}^{e_2^{max}} de_2 
-       *  \int_{e_3^{min}(e_2)}^{e_3^{max}(e_2)} de_3 f(s,e_2,e_3)  \f] 
-       *  @param  M the overall mass of the system \f$ \sqrt{s} \f$
-       *  @param  f the function \f$ f(e_2,e_3)\f$ 
-       *  @return the integral over dalitz plot
+       *  \int_{e_3^{min}(e_2)}^{e_3^{max}(e_2)} de_3 f(M,e_2,e_3)  \f] 
+       *  @param  f the function \f$ f(M,e_2,e_3)\f$ 
+       *  @param d  helper Dalitz-object 
+       *  @return the integral over Dalitz plot
        */
-      double integrate_e2e3 ( const double M , function3 f ) const ;
+      static double integrate_e2e3
+      ( function3                        f3 ,
+        const Ostap::Kinematics::Dalitz& d  ) ;
       // =======================================================================
       /** evaluate the integral over \f$e_2\f$ , \f$e_3\f$ variables 
        *  \f[ \int\int de_2 de_3 f(e_2,e_3) = 
        *  \int_{e_2^{min}}^{e_2^{max}} de_2 
        *  \int_{e_3^{min}(e_2)}^{e_3^{max}(e_2)} de_3 f(e_2,e_3)  \f] 
-       *  @param  M the overall mass of the system \f$ \sqrt{s} \f$
        *  @param  f the function \f$ f(e_2,e_3)\f$ 
+       *  @param d  helper Dalitz-object 
        *  @return the integral over dalitz plot
        */
-      double integrate_e2e3 ( const double M , function2 f ) const ;
+      static double integrate_e2e3
+      ( function2                        f2 ,
+        const Ostap::Kinematics::Dalitz& d  ) ;
       // =======================================================================
-    private :
-      // ======================================================================
-      double m_m1 { 0.0 } ;
-      double m_m2 { 0.0 } ;
-      double m_m3 { 0.0 } ;
-      // ======================================================================
     };
     // ========================================================================
   } //                                         The end of namespace Ostap::Math 

@@ -1231,6 +1231,15 @@ Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; 
 double Ostap::Math::Flatte::operator() ( const double x ) const
 { return flatte ( x ) ; }
 // ============================================================================
+// unique tag
+// ============================================================================
+std::size_t Ostap::Math::Flatte::tag () const
+{
+  return std::hash_combine ( m_m0 , m_m0g1 , m_g2og1 ,
+                             m_A1 , m_A2   ,
+                             m_B1 , m_B2   , m_g0    ) ;
+}
+// ============================================================================
 /// get the running width (complex!)
 // ============================================================================
 std::complex<double> Ostap::Math::Flatte::gamma ( const double x ) const 
@@ -1467,6 +1476,11 @@ Ostap::Math::Flatte2::clone() const { return new Ostap::Math::Flatte2 ( *this ) 
 double Ostap::Math::Flatte2::operator() ( const double x ) const
 { return flatte2 ( x ) ; }
 // ============================================================================
+// unique tag
+// ============================================================================
+std::size_t Ostap::Math::Flatte2::tag () const
+{ return std::hash_combine ( 0.0 , Ostap::Math::Flatte::tag () )  ; }
+   // ============================================================================
 
 // ============================================================================
 // LASS: Kpi S-wave 

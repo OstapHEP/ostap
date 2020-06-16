@@ -8,12 +8,233 @@
 // ============================================================================
 #include <cmath>
 #include <array>
+#include <utility>
 // ============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace Kinematics 
   {
+    // ========================================================================
+    /** @class Dalitz0 Ostap/Dalitz.h 
+     *  Simple Kinematics of Dalitz plot 
+     *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)     
+     *  @see Section V.1
+     *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
+     */
+    class Dalitz0
+    {
+    public :
+      // ======================================================================
+      /** constructor from three masses 
+       *  - m1 : the mass of the first particle  \f$ m_1 \f$;
+       *  - m2 : the mass of the second particle  \f$ m_2 \f$;
+       *  - m3 : the mass of the third particle  \f$ m_3 \f$;
+       */
+      Dalitz0
+      ( const double m1 = 0 , 
+        const double m2 = 0 , 
+        const double m3 = 0 ) ;
+      // ======================================================================
+    public:  // trivial getters 
+      // ====================================================================== 
+      ///   the first mass 
+      double m1     () const  { return m_m1  ; }
+      ///   the second mass 
+      double m2     () const  { return m_m2  ; }
+      ///   the third  mass 
+      double m3     () const  { return m_m3  ; }
+      // ======================================================================
+      /// minimal value of s1: \f$ \left. s_1\right|_{min} =  (m_1+m_2)^2 \f$
+      double s1_min () const { return m_cache [ 0 ] ; }
+      /// minimal value of s2: \f$ \left. s_2\right|_{min} =  (m_2+m_3)^2 \f$
+      double s2_min () const { return m_cache [ 1 ] ; }
+      /// minimal value of s3: \f$ \left. s_3\right|_{min} =  (m_3+m_1)^2 \f$
+      double s3_min () const { return m_cache [ 2 ] ; }
+      // ======================================================================
+      /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
+      double s1_max ( const double M ) const { const double d = M - m3 () ; return d * d ; }
+      /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
+      double s2_max ( const double M ) const { const double d = M - m1 () ; return d * d ; }
+      /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
+      double s3_max ( const double M ) const { const double d = M - m2 () ; return d * d ; }
+      // ======================================================================
+      /// \f$ m_1^2\f$  precalculated 
+      double m1sq   () const { return m_cache [ 3 ] ; }
+      /// \f$ m_2^2\f$  precalculated 
+      double m2sq   () const { return m_cache [ 4 ] ; }
+      /// \f$ m_3^2\f$ precalculated 
+      double m3sq   () const { return m_cache [ 5 ] ; }
+      /// sum of squared masses  \f$  m_1^2+m_2^1+m_3^3\f$ 
+      double summ2  () const { return m_cache [ 6 ] ; }
+      /// sum of masses  \f$  m_1 + m_2 + m_3 \f$ 
+      double summ   () const { return m_cache [ 7 ] ; }
+      /// squared sum of masses  \f$  (m_1 + m_2 + m_3)^2 \f$ 
+      double sqsumm () const { return m_cache [ 8 ] ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Is m1 equal to zero ? 
+      bool m1_zero () const { return m_cacheb [ 0 ] ; }
+      /// Is m1 equal to zero ? 
+      bool m2_zero () const { return m_cacheb [ 1 ] ; }
+      /// Is m1 equal to zero ? 
+      bool m3_zero () const { return m_cacheb [ 2 ] ; }
+      // ======================================================================
+    public:  // limits for E1 , E2 and E3
+      // ======================================================================
+      double E1_min () const { return m_m1          ; }
+      double E2_min () const { return m_m2          ; }
+      double E3_min () const { return m_m3          ; }
+      // ======================================================================
+    public:  // only two s_i are independent 
+      // ======================================================================
+      /** get s_1 for given s_2 and s_3 are defined 
+       *  \f$ s_1 = s_{12} = \sum s -   s_2 - s_3  \f$ 
+       */
+      inline double s1 ( const double s , const double s2 , const double s3 ) const 
+      { return s  + summ2 () - s2 - s3 ; }
+      // ======================================================================
+      /** get s_2 for given s_1 and s_3 are defined 
+       *  \f$ s_2 = s_{23} = \sum s -   s_1 - s_3  \f$ 
+       */
+      inline double s2 ( const double s , const double s1 , const double s3 ) const 
+      { return s + summ2 () - s1 - s3 ; }
+      // ======================================================================
+      /** get s_3 for given s_1 and s_2 are defined 
+       *  \f$ s_3 = s_{31} = \sum s -   s_1 - s_2  \f$ 
+       */
+      inline double s3 ( const double s , const double s1 , const double s2 ) const 
+      { return s + summ2  () - s1 - s2 ; }
+      // ======================================================================
+    public :  // geometry of Dalitz plot 
+      // ======================================================================
+      /** Is the point \f$ (s, s_1,s_2)\f$ "inside" the Dalitz plot?
+       *  Get the sign of G-function 
+       *  \f$ g(s_1,s_2) = G ( s_1, s_2 , s , m_2^2, m_1^2, m_3^2) \f$
+       *  @see Ostap::Kinematics::G
+       *  Physical region corresponds to \f$ g\le0 \f$  
+       */
+      bool   inside   ( const double s  ,
+                        const double s1 ,
+                        const double s2 ) const ;
+      // =======================================================================
+      /** get the measure of the distance form the point to the boundary of Dalitz plot. 
+       *  Distance is defined as 
+       *  \f$ d \equiv = \lambda ( P_1^2 , P_2^2 , P_3^2 ) \f$ 
+       */
+      double distance ( const double s ,
+                        const double s1 ,
+                        const double s2 ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
+      // ======================================================================
+      /// the first x-varible is just \f$ x_1 = \cos_{R23}(12) \f$ 
+      double x1 ( const double    s    , const double    s1    , const double s2 ) const ;
+      /// the second x-variable is  \f$  x_2 = s_2 \f$ 
+      double x2 ( const double /* s */ , const double /* s1 */ , const double s2 ) const
+      { return s2 ;}
+      // ======================================================================
+      /** (inverse) variable transformation  
+       *   \f[ \begin{array{l} 
+       *        s_1 = f_1 ( x_1 ,x_2  )  \\ 
+       *        s_2 = f_2 ( x_1 ,x_2  )
+       *       \end{array}\f]
+       *   where 
+       *   \f[ \begin{array{l} 
+       *        x_1 = \cos_{R23)(12)  \\ 
+       *        x_2 = s_2 
+       *       \end{array} \f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double x1 = 0.1  ;
+       *  const double x2 = 14.5 ;
+       *  double s1, s2 ;
+       *   std::tie ( s1, s2 ) = d.x2s ( s , x1 , x2 ) ; 
+       *  @endcode  
+       */
+      std::pair<double,double> x2s
+      ( const double s  ,
+        const double x1 ,
+        const double x2 ) const ;
+      // =======================================================================
+      /**  absolute value of the jacobian  
+       *   \f$ J( s,s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
+       */
+      double J
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const ;
+      // ======================================================================
+      /// variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s_2,y_1,y_2) \f$
+      // ======================================================================
+      /// the first  y-varible is just \f$ y_1 = s \f$ 
+      double y1 ( const double s , const double /* s1 */ , const double /* s2 */ ) const
+      { return s ; }
+      /// the second y-varible is just \f$ y_2 = \cos_{R23}(12) \f$ 
+      double y2 ( const double s  , const double   s1    , const double s2 ) const
+      { return x1 ( s , s1  , s2 ) ; }
+      // =======================================================================
+      /** (inverse) variable transformation  
+       *   \f[ \begin{array{l} 
+       *        s   = f_1 ( y_1 ,y_2  )  \\ 
+       *        s_1 = f_2 ( y_1 ,y_2  )
+       *       \end{array}\f]
+       *   where 
+       *   \f[ \begin{array{l} 
+       *        y_1 = s \\  
+       *        y_2 = \cos_{R23)(12) 
+       *       \end{array} \f]
+       *  @code
+       *  Dalitz d = ... ;
+       *  const double y1 = 0.1  ;
+       *  const double y2 = 0.5 ;
+       *  double s, s1 ;
+       *   std::tie ( s , s1 ) = d.y2s ( s2 , y1 , y2 ) ; 
+       *  @endcode  
+       */
+      std::pair<double,double> y2s
+      ( const double s2 ,
+        const double y1 ,
+        const double y2 ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// Dalitz plot boundaries \f$ s_1^{min/max} ( s, s_2 ) \f$ 
+      std::pair<double,double>  s1_minmax_for_s_s2
+      ( const double s  ,
+        const double s2 ) const ;
+      // ======================================================================
+      /// Dalitz plot boundaries \f$ s_2^{min/max} ( s, s_1 ) \f$ 
+      std::pair<double,double>  s2_minmax_for_s_s1
+      ( const double s  ,
+        const double s1 ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag/hash value  
+      std::size_t tag () const { return m_tag  ; }
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// the first mass 
+      double m_m1 ;                                      //      the first mass 
+      /// the second mass 
+      double m_m2 ;                                      //     the second mass 
+      /// the third mass 
+      double m_m3 ;                                      //      the third mass 
+      /// tag/hash value 
+      std::size_t          m_tag    ;                         // tag/hash value 
+      /// the precalculated quantities 
+      // std::array<double,9> m_cache  ;            // the precalculated quantities 
+      // std::array<int,7>    m_cacheb ;            // the precalculated quantities
+      double m_cache  [9] ;            // the precalculated quantities 
+      bool   m_cacheb [7] ;            // the precalculated quantities
+      // ======================================================================      
+    } ;
     // ========================================================================
     /** @class Dalitz Ostap/Dalitz.h 
      *  Simple Kinematics of Dalitz plot 
@@ -22,7 +243,7 @@ namespace Ostap
      *  @see Section V.1
      *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf     
      */
-    class Dalitz
+    class Dalitz : public Dalitz0
     {
     public :
       // ======================================================================
@@ -35,50 +256,50 @@ namespace Ostap
       Dalitz ( const double M  = 1 , 
                const double m1 = 0 , 
                const double m2 = 0 , 
-               const double m3 = 0 ) ;
+               const double m3 = 0 ) : Dalitz ( M , Dalitz0 ( m1 , m2 , m3 ) ) {}
+      // ======================================================================
+      /** constructor from all masses 
+       *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+       *  @param b individual masses 
+       */
+      Dalitz ( const double   M ,
+               const Dalitz0& b ) ;
+      // ======================================================================
+      /** constructor from all masses 
+       *  @param b individual masses 
+       *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
+       */
+      Dalitz ( const Dalitz& b , 
+               const double  M ) : Dalitz ( M , b ) {}
       // ======================================================================
     public:  // trivial getters 
       // ====================================================================== 
       /// \f$ s =  (p_1 + p^2 + p^3)^2 \f$
-      double s    () const  { return S ()  ; }
-      double sqs  () const  { return m_M   ; }
+      double s      () const  { return S ()  ; }
+      double sqs    () const  { return m_M   ; }
       ///   total mass 
-      double M    () const  { return m_M   ; }
-      ///   the first mass 
-      double m1   () const  { return m_m1  ; }
-      ///   the second mass 
-      double m2   () const  { return m_m2  ; }
-      ///   the third  mass 
-      double m3   () const  { return m_m3  ; }
+      double M      () const  { return m_M   ; }
       // ======================================================================
-      /// minimal value of s1: \f$ \left. s_1\right|_{min} =  (m_1+m_2)^2 \f$
-      double s1_min () const { return m_cache[0] ; }
+      using Dalitz0::s1_max ;
+      using Dalitz0::s2_max ;
+      using Dalitz0::s3_max ;
+      // ======================================================================
       /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
-      double s1_max () const { return m_cache[1] ; }
-      /// minimal value of s2: \f$ \left. s_2\right|_{min} =  (m_2+m_3)^2 \f$
-      double s2_min () const { return m_cache[2] ; }
+      double s1_max () const { return m_cache2 [ 0 ] ; }
       /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
-      double s2_max () const { return m_cache[3] ; }
-      /// minimal value of s3: \f$ \left. s_3\right|_{min} =  (m_3+m_1)^2 \f$
-      double s3_min () const { return m_cache[4] ; }
+      double s2_max () const { return m_cache2 [ 1 ] ; }
       /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
-      double s3_max () const { return m_cache[5] ; }
+      double s3_max () const { return m_cache2 [ 2 ] ; }
       // ======================================================================
       /** Get the sum of all invariants 
        *    \f$ s_1 +  s_2 + s_3 = s_{12} + s_{23} + s_{31} = 
        *           s + m_1^2 + m_2^2 + m_3^2 \f$ 
        *  - The sum is precalculated 
        */
-      double sums   () const { return m_cache[6] ; }
+      double sums   () const { return m_cache2 [ 3 ] ; }
       // ======================================================================
-      /// \f$ m_1^2\f$  precalculated 
-      double m1sq   () const { return m_cache[7]  ; }
-      /// \f$ m_2^2\f$  precalculated 
-      double m2sq   () const { return m_cache[8]  ; }
-      /// \f$ m_3^2\f$ precalculated 
-      double m3sq   () const { return m_cache[9]  ; }
       /// \f$ M^2\f$   precalculated 
-      double Msq    () const { return m_cache[10] ; }
+      double Msq    () const { return m_cache2 [ 4 ] ; }
       /// \f$ s \f$    precalculated 
       double S      () const { return Msq ()      ; }
       // ======================================================================
@@ -129,22 +350,19 @@ namespace Ostap
       // ======================================================================
       /// kinetic energy of 1st particle 
       inline double T1 ( const double s1 , const double s2        ) const 
-      { return E1 ( s1 , s2 ) -  m_m1 ; }
+      { return E1 ( s1 , s2 ) -  m1 () ; }
       /// kinetic energy of 2nd particle 
       inline double T2 ( const double s1 , const double s2        ) const 
-      { return E2 ( s1 , s2 ) -  m_m2 ; }
+      { return E2 ( s1 , s2 ) -  m2 () ; }
       /// kinetic energy of 3rd particle 
       inline double T3 ( const double s1 , const double s2        ) const 
-      { return E3 ( s1 , s2 ) -  m_m3 ; }          
+      { return E3 ( s1 , s2 ) -  m3 () ; }          
       // ======================================================================
     public:  // limits for E1 , E2 and E3
       // ======================================================================
-      double E1_min () const { return m_m1        ; }
-      double E2_min () const { return m_m2        ; }
-      double E3_min () const { return m_m3        ; }
-      double E1_max () const { return m_cache[11] ; }
-      double E2_max () const { return m_cache[12] ; }
-      double E3_max () const { return m_cache[13] ; }
+      double E1_max () const { return m_cache2 [ 5 ] ; }
+      double E2_max () const { return m_cache2 [ 6 ] ; }
+      double E3_max () const { return m_cache2 [ 7 ] ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -332,8 +550,8 @@ namespace Ostap
        */
       double density_mass  ( const double m12 , const double m23 ) const 
       { return 
-          m12 < ( m_m1 + m_m2 ) ? 0 : m12 > ( m_M  - m_m3 ) ? 0 :
-          m23 < ( m_m2 + m_m3 ) ? 0 : m23 > ( m_M  - m_m1 ) ? 0 : 
+          m12 < ( m1 () + m2 () ) ? 0 : m12 > ( m_M  - m3 () ) ? 0 :
+          m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 : 
           4 * m12 * m23 * density ( m12 * m12 , m23 * m23 ) ;
       }
       // ======================================================================
@@ -371,20 +589,23 @@ namespace Ostap
       /// Dalitz density as function of \f$ m_12 = \sqrt{s_1}\f$ 
       inline double dRdm12 ( const double m12 ) const
       { return
-          m12 < ( m_m1 + m_m2 ) ? 0 : m12 > ( m_M  - m_m3 ) ? 0 : 
+          m12 < ( m1 () + m2 () ) ? 0 : m12 > ( m_M  - m3 () ) ? 0 : 
           2 * m12 * dRds1 ( m12 * m12 ) ; }
       /// Dalitz density as function of \f$ m_23 = \sqrt{s_2}\f$ 
       inline double dRdm23 ( const double m23 ) const
       { return 
-          m23 < ( m_m2 + m_m3 ) ? 0 : m23 > ( m_M  - m_m1 ) ? 0 :
+          m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 :
           2 * m23 * dRds2 ( m23 * m23 ) ; }
       /// Dalitz density as function of \f$ m_31 = \sqrt{s_3}\f$ 
       inline double dRdm31 ( const double m31 ) const
       { return 
-          m31 < ( m_m3 + m_m1 ) ? 0 : m31 > ( m_M  - m_m2 ) ? 0 : 
+          m31 < ( m3 () + m1 () ) ? 0 : m31 > ( m_M  - m2 () ) ? 0 : 
           2 * m31 * dRds3 ( m31 * m31 ) ; }      
       // ======================================================================
     public :  // geometry of Dalitz plot 
+      // ======================================================================
+      using Dalitz0::inside   ;
+      using Dalitz0::distance ;
       // ======================================================================
       /** Is the point \f$ (s_1,s_2)\f$ "inside" the Dalitz plot?
        *  Get the sign of G-function 
@@ -401,23 +622,27 @@ namespace Ostap
       double distance ( const double s1 , const double s2 ) const ;
       // ======================================================================
       /// Dalitz plot boundaries \f$ s_1^{min/max} ( s_2 ) \f$ 
-      std::pair<double,double>  s1_minmax_for_s2 ( const double s2 ) const ;
+      std::pair<double,double>  s1_minmax_for_s2 ( const double s2 ) const
+      { return s1_minmax_for_s_s2 ( s () , s2 ) ; }
       // ======================================================================
       /// Dalitz plot boundaries \f$ s_2^{min/max} ( s_1 ) \f$ 
-      std::pair<double,double>  s2_minmax_for_s1 ( const double s1 ) const ;
+      std::pair<double,double>  s2_minmax_for_s1 ( const double s1 ) const 
+      { return s2_minmax_for_s_s1 ( s () , s1 ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag/hash value  
+      std::size_t tag () const { return m_tag2 ; }
       // ======================================================================
     private :
       // ======================================================================
       /// the total mass 
       double m_M ;                                       //      the total mass
-      /// the first mass 
-      double m_m1 ;                                      //      the first mass 
-      /// the second mass 
-      double m_m2 ;                                      //     the second mass 
-      /// the third mass 
-      double m_m3 ;                                      //      the third mass 
       /// the precalcualted quantities 
-      std::array<double,14> m_cache ;           // the precalcualted quantities 
+      // std::array<double,8> m_cache2 ;           // the precalcualted quantities
+      double m_cache2 [8] ;                     // the precalcualted quantities
+      /// tag/hash value
+      std::size_t          m_tag2   ;                         // tag/hash value
       // ======================================================================      
     } ;
     // ========================================================================

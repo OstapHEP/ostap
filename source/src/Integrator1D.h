@@ -348,7 +348,7 @@ namespace Ostap
       Integrator1D<FUNCTION>::s_cache = Integrator1D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 5000 ;
+      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 10000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL
     // ========================================================================

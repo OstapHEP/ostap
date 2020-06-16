@@ -62,7 +62,7 @@ models = []
 #  It suits nicely for fits of multiplicity and/or chi2 distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class GammaDist_pdf(PDF) :
     """Gamma-distribution with shape/scale parameters
@@ -365,9 +365,9 @@ models.append ( Amoroso_pdf )
 #  It suits nicely for fits of log(multiplicity) and/or log(chi2) distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::LogGammaDist 
+#  @see Ostap::Models::LogGammaDist 
 #  @see Ostap::Math::LogGammaDist 
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class LogGammaDist_pdf(PDF) :
     """Distribution for log(x), where x follows Gamma distribution
@@ -431,11 +431,11 @@ models.append ( LogGammaDist_pdf )
 #  It suits nicely for fits of log10(multiplicity) and/or log10(chi2) distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::Log10GammaDist 
+#  @see Ostap::Models::Log10GammaDist 
 #  @see Ostap::Math::Log10GammaDist 
-#  @see AnalysisModels::LogGammaDist 
+#  @see Ostap::Models::LogGammaDist 
 #  @see Ostap::Math::LogGammaDist 
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class Log10GammaDist_pdf(PDF) :
     """Distribution for log10(x), where x follows Gamma distribution
@@ -505,7 +505,7 @@ models.append ( Log10GammaDist_pdf )
 #                 J. Roy. Statist. Soc. Suppl. 8, 1, 128.
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::LogGamma
+#  @see Ostap::Models::LogGamma
 #  @see Ostap::Math::LogGamma
 class LogGamma_pdf(PDF) :
     """ Log-Gamma distribution
