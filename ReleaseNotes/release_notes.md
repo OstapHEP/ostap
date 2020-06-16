@@ -11,7 +11,9 @@
   1. add `mean_name`, `mena_title` , `sigma_name` and `sigma_title` for `MASSMEAN` and `MASS` base classes : it allows to remove many ugly lines with post-fix for the  variable names
   1. make use of `mean_name`, `meean_title`, `sigma_name`, `sigma_title` for many `PDFs` 
   1. Remove `sigma`(`gamma`) from `Flatte_pdf`
-
+  1. extend interface for `ostap.fitting.simfit.SimFit`, allowinng usage of it for toys
+  1. add test `test_fitting_toys_simfit.py`
+  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`

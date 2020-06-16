@@ -50,7 +50,9 @@ def vars_transform ( vars ) :
         for p in vars : result [ p ] = float ( vars [ p ] ) 
     else :
         for p in vars :
-            result [ p.GetName()  ] = float ( p )
+            if not isinstance ( p , ROOT.RooAbsCategory ) :
+                print p, type(p) 
+                result [ p.GetName()  ] = float ( p )
             
     return result
 # =============================================================================
