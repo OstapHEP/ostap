@@ -6,16 +6,20 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <cmath>
+#include <complex>
 #include <memory>
+#include <functional>
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/Dalitz.h"
 // ============================================================================
 /** @file Ostap/BreitWigner.h
  *
- *  set of useful models for describing signal peaks with the natural width \
+ * Set of useful models for describing signal peaks with the natural width:
  *  - Breit-Wigner
  *  - Flatte 
  *  - LASS  (kappa) 
@@ -308,6 +312,7 @@ namespace Ostap
       double               m_m0       ; // the mass
       // ======================================================================
     protected:
+      // ======================================================================
       ///  the channel(s) 
       mutable std::vector<Channel> m_channels ; // the channel(s)
       // ======================================================================
@@ -326,7 +331,7 @@ namespace Ostap
      *
      *  http://www.springerlink.com/content/q773737260425652/
      *
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
     class  BreitWigner : public BreitWignerBase 
@@ -570,7 +575,7 @@ namespace Ostap
       // ======================================================================
       /// get number of channels 
       unsigned int nChannels() const { return channels().size()  ; }
-      /// get the nominam total width 
+      /// get the nominal total width 
       double gamma0 () const { return BreitWignerBase::gamma0 () ; }
       /// get the  gamma for the certain channel 
       double gamma0 ( unsigned int i ) const 
@@ -597,7 +602,7 @@ namespace Ostap
      *  http://www.sciencedirect.com/science/article/pii/0370269376906547
      *
      *  \f$\pi\pi\f$-channel
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
     class  Flatte
@@ -2268,6 +2273,59 @@ namespace Ostap
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class GammaBW3 
+     *  Running width for 3-body decays 
+     * \f[ \Gamma(s) \propto  \frac{1}{s^{3/2}}
+     *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
+     *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
+     */
+    class GammaBW3
+    {
+    public :
+      // ======================================================================
+      /** @typedef MatrixElement2
+       *  Squared module of amplitude, averaged over initial and 
+       *  summed over the final spin states
+       *  \f[ \frac{1}{2J_i+1}\sum_i \sum_f 
+       *   \left|\mathcal{A}\left(s,s_1,s_2\right)\right|^2 \f] 
+       */
+      typedef std::function<double(double,double,double)> MatrixElement2 ;
+      // ======================================================================      
+    public :
+      // ======================================================================
+      /// constructor from the matrix element and Dalitz' configuration
+      GammaBW3 ( const Ostap::Kinematics::Dalitz0& dalitz  , 
+                 const MatrixElement2&             me2     , 
+                 const std::size_t                 tag = 0 ) ;
+      ///  constructor from the matrix element and Dalitz configuration
+      GammaBW3 ( const MatrixElement2&             me2     ,
+                 const Ostap::Kinematics::Dalitz0& dalitz  , 
+                 const std::size_t                 tag = 0 ) 
+        : GammaBW3 ( dalitz , me2 , tag ) {} ;
+      // ======================================================================      
+    public: // the main method 
+      // ======================================================================      
+      /// the main method 
+      double operator ()  ( const double s ) const ;
+      // ======================================================================      
+    public: //  accessors 
+      // ======================================================================      
+      /// matrix element 
+      const MatrixElement2&             me2    () const { return m_me2    ; }
+      /// Dalitz configurtaion 
+      const Ostap::Kinematics::Dalitz0& dalitz () const { return m_dalitz ; }
+      // ======================================================================      
+    private:
+      // ======================================================================
+      /// Matrix element 
+      MatrixElement2             m_me2    ; // Matrix element 
+      /// Dalitz configuration 
+      Ostap::Kinematics::Dalitz0 m_dalitz ; // Dalitz configuration       
+      /// unique tag/key/label (if specified)
+      std::size_t                m_tag    ;
       // ======================================================================
     } ;
     // ========================================================================

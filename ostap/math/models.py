@@ -893,8 +893,11 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Neville     ,
                Ostap.Math.Lagrange    ,
                Ostap.Math.Barycentric ,
+               ##
+               Ostap.Math.GammaBW3    , 
                ## helper stufff
                Ostap.Functions.PyCallable        , 
+               Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
                ) :
     model.tf1          =  tf1 
@@ -926,7 +929,8 @@ for model in ( Ostap.Math.Chebyshev              ,
     if sp_minimum_1D and not hasattr ( model , 'minimum' ) : model.minimum = sp_minimum_1D
     if sp_maximum_1D and not hasattr ( model , 'maximum' ) : model.maximum = sp_maximum_1D
     if sp_solve      and not hasattr ( model , 'solve'   ) : model.solve   = sp_solve
-    
+
+
 # =======================================================================================
 ## Special ``getattr'' for Bernstein dual basis functions: delegate the stuff to
 #  the underlying bernstein polynomial
@@ -1459,31 +1463,35 @@ Ostap.Math.BreitWigner  .__str__  = _bw_str_
 Ostap.Math.BreitWigner  .__repr__ = _bw_str_
 Ostap.Math.BreitWignerMC.__str__  = _bwmc_str_
 Ostap.Math.BreitWignerMC.__repr__ = _bwmc_str_
+
+
+## trick ...
+Ostap.Math.GammaBW3.xmin =  lambda s : s.dalitz().s_min() 
     
 # =============================================================================
 _decorated_classes_ = set( [
     ##
-    Ostap.Math.Positive          ,
-    Ostap.Math.PositiveEven      , 
-    Ostap.Math.Monotonic        , 
-    Ostap.Math.Convex            , 
-    Ostap.Math.ConvexOnly        , 
-    Ostap.Math.PositiveSpline    , 
-    Ostap.Math.MonotonicSpline  , 
-    Ostap.Math.ConvexSpline      ,
-    Ostap.Math.ConvexOnlySpline  ,
-    Ostap.Math.ExpoPositive      ,
-    Ostap.Math.TwoExpoPositive   ,
-    Ostap.Math.LASS              , 
-    Ostap.Math.LASS23L           , 
-    Ostap.Math.Bugg23L           , 
-    Ostap.Math.Flatte            , 
-    Ostap.Math.Flatte2           , 
-    Ostap.Math.Flatte23L         ,
-    Ostap.Math.BreitWigner       ,
-    Ostap.Math.BreitWignerBase   ,
-    Ostap.Math.BreitWignerMC     ,
-    Ostap.Math.Swanson           ,
+    Ostap.Math.Positive               ,
+    Ostap.Math.PositiveEven           , 
+    Ostap.Math.Monotonic              , 
+    Ostap.Math.Convex                 , 
+    Ostap.Math.ConvexOnly             , 
+    Ostap.Math.PositiveSpline         , 
+    Ostap.Math.MonotonicSpline        , 
+    Ostap.Math.ConvexSpline           ,
+    Ostap.Math.ConvexOnlySpline       ,
+    Ostap.Math.ExpoPositive           ,
+    Ostap.Math.TwoExpoPositive        ,
+    Ostap.Math.LASS                   , 
+    Ostap.Math.LASS23L                , 
+    Ostap.Math.Bugg23L                , 
+    Ostap.Math.Flatte                 , 
+    Ostap.Math.Flatte2                , 
+    Ostap.Math.Flatte23L              ,
+    Ostap.Math.BreitWigner            ,
+    Ostap.Math.BreitWignerBase        ,
+    Ostap.Math.BreitWignerMC          ,
+    Ostap.Math.Swanson                ,
     ##
     Ostap.Math.Chebyshev              ,
     Ostap.Math.ChebyshevU             ,
@@ -1745,6 +1753,9 @@ _decorated_classes_ = set( [
     Ostap.Math.Positive3DSym  ,
     Ostap.Math.Positive3DMix  ,
     ##
+    Ostap.Functions.PyCallable        , 
+    Ostap.Math.Piecewise              , 
+    Ostap.Math.ChebyshevApproximation ,
     ])
 
 # ============================================================================

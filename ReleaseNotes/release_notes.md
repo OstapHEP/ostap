@@ -14,7 +14,10 @@
   1. extend interface for `ostap.fitting.simfit.SimFit`, allowinng usage of it for toys
   1. add test `test_fitting_toys_simfit.py`
   1. further extend `Ostap::Math::DaltzIntegrator`
-  `  
+  1. further extend `Ostap::Kinematics::Daltz0` and `Ostap::Kinematics::Daltz` (add more invariants)
+  1. extend `Ostap::Math::ChebyshevApproximation` (add scale and bias operators)
+  1. add `Ostap::Math::Piecewise` function 
+  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`

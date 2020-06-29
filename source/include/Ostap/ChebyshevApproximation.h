@@ -107,7 +107,7 @@ namespace Ostap
       double xmin () const { return m_a ; }
       double xmax () const { return m_b ; }
       // ======================================================================
-    public: // derivatives and integrals 
+    public: // with uncertainty
       // ======================================================================
       /** the main method: evaluate the approximation sum 
        *  @return the approximation with the error estimate 
@@ -122,12 +122,26 @@ namespace Ostap
       eval_err ( const double         x , 
                  const unsigned short n ) const ;
       // ======================================================================
-    public:
+    public: // derivatives and integrals 
       // ======================================================================
       /// get a derivative  
       ChebyshevApproximation derivative () const ;
       /// get an integral: \f$ F(x) \equiv \int_a^{z} f(t) \deriv t  + C \f$ 
       ChebyshevApproximation integral   ( const double C = 0 ) const ;
+      // ======================================================================
+    public: // very simple operations 
+      // ======================================================================
+      /// shift by a constant 
+      ChebyshevApproximation& operator+= ( const double a ) ;
+      /// shift by a constant 
+      ChebyshevApproximation& operator-= ( const double a )
+      { (*this) += -a ; return *this ; }
+      // ======================================================================
+      /// scale by a constant 
+      ChebyshevApproximation& operator*= ( const double a ) ;
+      /// scale by a constant 
+      ChebyshevApproximation& operator/= ( const double a )
+      { (*this) *= (1/a ) ; return *this ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -157,6 +171,33 @@ namespace Ostap
     /// swap two objects 
     inline void swap ( ChebyshevApproximation& a , 
                        ChebyshevApproximation& b ) { a.swap ( b ) ;}
+    // ========================================================================
+    /// add a constant 
+    inline ChebyshevApproximation operator+
+    ( const ChebyshevApproximation& a ,
+      const double                  b )
+    { ChebyshevApproximation r ( a ) ; r += b ; return r ; }
+    /// add a constant 
+    inline ChebyshevApproximation operator+
+    ( const double                  b ,
+      const ChebyshevApproximation& a ) { return a + b ; }
+    /// scale by a constant 
+    inline ChebyshevApproximation operator*
+    ( const ChebyshevApproximation& a ,
+      const double                  b )
+    { ChebyshevApproximation r ( a ) ; r *= b ; return r ; }
+    /// scale by a constant 
+    inline ChebyshevApproximation operator*
+    ( const double                  b ,
+      const ChebyshevApproximation& a ) { return a * b ; }
+    /// subtract a constant    
+    inline ChebyshevApproximation operator-
+    ( const ChebyshevApproximation& a ,
+      const double                  b ) { return a + ( -b ) ; }
+    /// scale by a constant    
+    inline ChebyshevApproximation operator/
+    ( const ChebyshevApproximation& a ,
+      const double                  b ) { return a * ( 1/ b ) ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

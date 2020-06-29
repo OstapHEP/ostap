@@ -76,6 +76,7 @@
 #include "Ostap/PDFs2D.h"
 #include "Ostap/PDFs3D.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/Piecewise.h"
 #include "Ostap/Plane3DTypes.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"

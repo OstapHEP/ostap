@@ -13,6 +13,7 @@
 #include "Ostap/Clenshaw.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/Kinematics.h"
+#include "Ostap/DalitzIntegrator.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -3335,6 +3336,31 @@ double  Ostap::Math::Bugg23L::integral () const
 
 
 
+
+// ============================================================================
+// constructor from the matrix element and Dalitz' configuration
+// ============================================================================
+Ostap::Math::GammaBW3::GammaBW3 
+( const Ostap::Kinematics::Dalitz0&            dalitz , 
+  const Ostap::Math::GammaBW3::MatrixElement2& me2    ,
+  const std::size_t                            tag    ) 
+  : m_me2    ( me2    ) 
+  , m_dalitz ( dalitz )
+  , m_tag    ( tag    ) 
+{}
+// ============================================================================
+// the main method 
+// ============================================================================
+double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const 
+{
+  if ( s <= m_dalitz.s_min () ) { return 0 ; }
+  return 
+    0 == m_tag ? 
+    Ostap::Math::DalitzIntegrator::integrate_s1s2 
+    (         std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) :
+    Ostap::Math::DalitzIntegrator::integrate_s1s2 
+    ( m_tag , std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) ;
+}
 
 
 // ============================================================================

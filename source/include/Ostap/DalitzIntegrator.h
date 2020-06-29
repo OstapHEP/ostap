@@ -36,7 +36,6 @@ namespace Ostap
   namespace Math
   {
     // =======================================================================
-    // =======================================================================
     /** @class DalitzIntegrator DalitzIntegrtor.h Ostap/DalitzIntegrator.h
      *  Helper class to make the integration over Dalitz plane easy 
      *

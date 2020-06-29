@@ -130,6 +130,7 @@ add_library(ostap SHARED src/format.cpp
                          src/PDFs2D.cpp
                          src/PDFs3D.cpp
                          src/PhaseSpace.cpp
+                         src/Piecewise.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
                          src/Printable.cpp

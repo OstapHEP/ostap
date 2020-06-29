@@ -9,6 +9,7 @@
 #include <cmath>
 #include <array>
 #include <utility>
+#include <functional>
 // ============================================================================
 namespace Ostap
 {
@@ -72,6 +73,8 @@ namespace Ostap
       double summ   () const { return m_cache [ 7 ] ; }
       /// squared sum of masses  \f$  (m_1 + m_2 + m_3)^2 \f$ 
       double sqsumm () const { return m_cache [ 8 ] ; }
+      ///  minimal value of s: \f$ s_{min} = \left(  m_1 +m_2+ m_3 \right)^2\f$
+      double s_min  () const { return sqsumm () ; }      
       // ======================================================================
     public:
       // ======================================================================
@@ -127,6 +130,56 @@ namespace Ostap
       double distance ( const double s ,
                         const double s1 ,
                         const double s2 ) const ;
+      // ======================================================================
+    public:  // more invariants  
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_1p_2\right) = \frac{1}{2}\left( s_{12} - m_1^2 - m_2^2 \right) \f$
+       */
+      inline double p1p2 ( const double /* s  */ ,
+                           const double    s1    ,
+                           const double /* s2 */ )  const
+      { return 0.5 * ( s1 - m1sq () - m2sq () ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_2p_3\right) = \frac{1}{2}\left( s_{23} - m_2^2 - m_3^2 \right) \f$      
+       */
+      inline double p2p3 ( const double /* s  */ ,
+                           const double /* s1 */ ,
+                           const double    s2    ) const
+      { return 0.5 * ( s2 - m2sq () -  m3sq () ) ; }      
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_1p_3\right) = \frac{1}{2}\left( s_{13} - m_1^2 - m_3^2 \right) \f$      
+       */
+      inline double p1p3 ( const double    s     ,
+                           const double    s1    ,
+                           const double    s2    ) const
+      { return 0.5 * ( s3  ( s , s1 , s2 ) - m1sq () -  m3sq () ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} + m_1^2 \right) \f$
+       */
+      inline double pp1 ( const double    s     ,
+                          const double /* s1 */ ,
+                          const double    s2    ) const
+      { return 0.5 * ( s - s2 + m1sq () ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp2\right) = \frac{1}{2}\left( s - s_{13} + m_2^2 \right) \f$
+       */
+      inline double pp2 ( const double s  ,
+                          const double s1 ,
+                          const double s2 ) const
+      { return 0.5 * ( s - s3  ( s , s1 , s2 )  + m2sq () ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp3\right) = \frac{1}{2}\left( s - s_{12} + m_3^2 \right) \f$
+       */
+      inline double pp3 ( const double    s     ,
+                          const double    s1    ,
+                          const double /* s2 */ ) const
+      { return 0.5 * ( s - s1 + m3sq () ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -231,8 +284,8 @@ namespace Ostap
       /// the precalculated quantities 
       // std::array<double,9> m_cache  ;            // the precalculated quantities 
       // std::array<int,7>    m_cacheb ;            // the precalculated quantities
-      double m_cache  [9] ;            // the precalculated quantities 
-      bool   m_cacheb [7] ;            // the precalculated quantities
+      double m_cache  [9] ;                     // the precalculated quantities 
+      bool   m_cacheb [7] ;                     // the precalculated quantities
       // ======================================================================      
     } ;
     // ========================================================================
@@ -269,8 +322,8 @@ namespace Ostap
        *  @param b individual masses 
        *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
        */
-      Dalitz ( const Dalitz& b , 
-               const double  M ) : Dalitz ( M , b ) {}
+      Dalitz ( const Dalitz0& b , 
+               const double   M ) : Dalitz ( M , b ) {}
       // ======================================================================
     public:  // trivial getters 
       // ====================================================================== 
@@ -322,6 +375,57 @@ namespace Ostap
        */
       inline double s3 ( const double s1 , const double s2 ) const 
       { return sums () - s1 - s2 ; }
+      // ======================================================================
+    public: //invariants 
+      // ======================================================================
+      using Dalitz0::p1p2 ;
+      using Dalitz0::p2p3 ;
+      using Dalitz0::p1p3 ;
+      using Dalitz0::pp1  ;
+      using Dalitz0::pp2  ;
+      using Dalitz0::pp3  ;
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_1p_2\right) = \frac{1}{2}\left( s_{12} - m_1^2 - m_2^2 \right) \f$
+       */
+      inline double p1p2 ( const double s1 ,
+                           const double s2 )  const
+      { return p1p2 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_2p_3\right) = \frac{1}{2}\left( s_{23} - m_2^2 - m_3^2 \right) \f$      
+       */
+      inline double p2p3 ( const double s1 ,
+                           const double s2 ) const
+      { return p2p3 ( s () , s1 , s2  ) ; }      
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(p_1p_3\right) = \frac{1}{2}\left( s_{13} - m_1^2 - m_3^2 \right) \f$      
+       */
+      inline double p1p3 ( const double s1 ,
+                           const double s2 ) const
+      { return p1p3 ( s() , s1  , s2 ) ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} + m_1^2 \right) \f$
+       */
+      inline double pp1 ( const double s1 ,
+                          const double s2 ) const
+      { return pp1 ( s () , s1 , s2 )  ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp2\right) = \frac{1}{2}\left( s - s_{13} + m_2^2 \right) \f$
+       */
+      inline double pp2 ( const double s1 ,
+                          const double s2 ) const
+      { return pp2 ( s () , s1 , s2 )  ; }
+      // ======================================================================
+      /** get the product of 4-momenta
+       *  \f$ \left(pp3\right) = \frac{1}{2}\left( s - s_{12} + m_3^2 \right) \f$
+       */
+      inline double pp3 ( const double s1 ,
+                          const double s2 ) const
+      { return pp3 ( s () , s1 , s2 )  ; }
       // ======================================================================
     public: 
       // ======================================================================

@@ -1,6 +1,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <algorithm>
+// ============================================================================
 // GSL
 // ============================================================================
 #include "gsl/gsl_math.h"
@@ -29,10 +33,12 @@ namespace
 {
   // ==========================================================================
   const char s_ERROR   [] = "Invalid gsl_cheb_series object!"                 ;
-  const char s_METHOD1 [] = "Ostap::Math::ChebyshevApproximation::evaluiate"  ;
+  const char s_METHOD1 [] = "Ostap::Math::ChebyshevApproximation::evaluate"   ;
   const char s_METHOD2 [] = "Ostap::Math::ChebyshevApproximation::derivative" ;
   const char s_METHOD3 [] = "Ostap::Math::ChebyshevApproximation::integral"   ;
-  const Ostap::StatusCode s_SC =  Ostap::StatusCode::FAILURE              ;
+  const char s_METHOD4 [] = "Ostap::Math::ChebyshevApproximation::operator+"  ;
+  const char s_METHOD5 [] = "Ostap::Math::ChebyshevApproximation::operator*"  ;
+  const Ostap::StatusCode s_SC =  Ostap::StatusCode::FAILURE                  ;
   // ==========================================================================
 }
 // ============================================================================
@@ -257,7 +263,36 @@ Ostap::Math::ChebyshevApproximation::integral
   //
   return integ ;
 }
-
+// ============================================================================
+// shift by a constant 
+// ============================================================================
+Ostap::Math::ChebyshevApproximation&
+Ostap::Math::ChebyshevApproximation::operator+= ( const double a )
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD4 , s_SC ) ;
+  //
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  //
+  cs -> c[0] += 2 * a ;
+  //
+  return *this ;
+}
+// ============================================================================
+// scale by a constant 
+// ============================================================================
+Ostap::Math::ChebyshevApproximation&
+Ostap::Math::ChebyshevApproximation::operator*= ( const double a )
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD5 , s_SC ) ;
+  //
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  std::transform ( cs->c                 ,
+                   cs->c + cs->order + 1 ,
+                   cs->c                 ,
+                   [a]( double v ) -> double { return v * a ; } );
+  //
+  return *this ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
