@@ -43,7 +43,7 @@ namespace Ostap
        *  @param N the approximation order 
        */
       ChebyshevApproximation 
-      ( const std::function<double(double)>& func , 
+      ( std::function<double(double)>        func , 
         const double                         a    , 
         const double                         b    , 
         const unsigned short                 N    ) ;
@@ -59,6 +59,16 @@ namespace Ostap
         const double             a    , 
         const double             b    , 
         const unsigned short     N    ) ;
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION>
+      ChebyshevApproximation 
+      ( FUNCTION             func , 
+        const double         a    , 
+        const double         b    , 
+        const unsigned short N    ) 
+        : ChebyshevApproximation ( std::function<double(double)> ( func ) , a , b , N ) 
+      {}
       // ======================================================================
       /// copy constructor 
       ChebyshevApproximation ( const ChebyshevApproximation&  right ) ;
@@ -77,11 +87,11 @@ namespace Ostap
       // ======================================================================
       ///  the main method: evaluate the approximation sum 
       double operator () ( const double         x ) const { return evaluate ( x ) ; }
-      /** the main method: evaluate the approximation sum 
-       *  using at most <code>n</code> terms 
-       */
-      double operator () ( const double         x , 
-                           const unsigned short n ) const { return evaluate ( x , n ) ; }
+      // /** the main method: evaluate the approximation sum 
+      //  *  using at most <code>n</code> terms 
+      //  */
+      // double operator () ( const double         x , 
+      //                     const unsigned short n ) const { return evaluate ( x , n ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -104,7 +114,9 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get low edge 
       double xmin () const { return m_a ; }
+      /// get high edge 
       double xmax () const { return m_b ; }
       // ======================================================================
     public: // with uncertainty
@@ -145,6 +157,22 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** Build chebyshev approximation for the function 
+       *  @param f the function 
+       *  @param a low   edge 
+       *  @param b high edge 
+       *  @param N the order of approximation 
+       */
+      template <class FUNCTION>
+      static inline ChebyshevApproximation
+      create ( FUNCTION             f ,  
+               const double         a , 
+               const double         b , 
+               const unsigned short N ) 
+      { return ChebyshevApproximation ( f ,  a , b , N ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// swap two objects 
       void swap ( ChebyshevApproximation&  right ) ;
       // ======================================================================
@@ -169,8 +197,9 @@ namespace Ostap
     };
     // ========================================================================
     /// swap two objects 
-    inline void swap ( ChebyshevApproximation& a , 
-                       ChebyshevApproximation& b ) { a.swap ( b ) ;}
+    inline void swap 
+    ( ChebyshevApproximation& a , 
+      ChebyshevApproximation& b ) { a.swap ( b ) ;}
     // ========================================================================
     /// add a constant 
     inline ChebyshevApproximation operator+

@@ -1,8 +1,11 @@
 
+# v1.5.0.0
+
+
 ## New features 
   1. Make`Ostap::Math::Choose` a bit  more  efficient
   1. add `Ostap::Math::choose_array` to get array of binomial coefficients (compile time)
-  1. add tmplated central moments `Ostap::Math::Moment_<N>`
+  1. add templated central moments `Ostap::Math::Moment_<N>`
   1. add their python decorators `ostap.stats.moment`
   1. add test for moment-counters `test_stats_moment.py`
   1. add templated weighted moment counters  `Ostap::Math::WMoment_<N>`
@@ -17,13 +20,14 @@
   1. further extend `Ostap::Kinematics::Daltz0` and `Ostap::Kinematics::Daltz` (add more invariants)
   1. extend `Ostap::Math::ChebyshevApproximation` (add scale and bias operators)
   1. add `Ostap::Math::Piecewise` function 
+  1. Improve `Ostap::Math::ChebyshevApproximation`
   
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`
   1.`Flatte_pdf`: rename arguments and attributes
   1. rename  `ostap.fitting.basic.Resoluton` to `ostap.fitting.basic.CheckMean` and invert its argument 
-
+  1. total re-write of all Breit-Wigner related stuff and in particular temporarily remove all beast like LASS, Bugg, etc...   
 
 ## Bug fixes:
   1. fix missing `hID` in `ostap/fittin/variables.py` (thanks to Alexander Berezhnoy)

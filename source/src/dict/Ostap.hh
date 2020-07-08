@@ -63,7 +63,6 @@
 #include "Ostap/Moments.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
-#include "Ostap/MoreRooFit2.h"
 #include "Ostap/MoreVars.h"
 #include "Ostap/Mute.h"
 #include "Ostap/Notifier.h"
@@ -109,6 +108,7 @@
 #include "Ostap/Vector3DTypes.h"
 #include "Ostap/Vector3DWithError.h"
 #include "Ostap/Vector4DTypes.h"
+#include "Ostap/Voigt.h"
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
@@ -316,6 +316,10 @@ namespace
     Ostap::Math::LessOrEqual<double>     __eq_7 ;
     Ostap::Math::GreaterOrEqual<double>  __eq_8 ;
     //
+    std::function<std::complex<double>(double)>               __ff0 ;
+    std::function<std::complex<double>(double,double)>        __ff1 ;
+    std::function<std::complex<double>(double,double,double)> __ff2 ;
+    
   };
   // ==========================================================================
 } //                                             The end of anonymous namespace 

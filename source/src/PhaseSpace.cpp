@@ -36,16 +36,14 @@ Ostap::Math::PhaseSpace2::PhaseSpace2
   const double m2 )
   : m_m1 ( std::abs ( m1 ) )
   , m_m2 ( std::abs ( m2 ) )
-{}
+{
+  if ( s_zero ( m_m1 ) ) { m_m1 = 0 ; }
+  if ( s_zero ( m_m2 ) ) { m_m2 = 0 ; }
+}
 // ============================================================================
 // desctructor
 // ============================================================================
 Ostap::Math::PhaseSpace2::~PhaseSpace2(){}
-// ============================================================================
-// evaluate 2-body phase space
-// ============================================================================
-double Ostap::Math::PhaseSpace2::operator () ( const double x ) const
-{ return phasespace ( x , m_m1 , m_m2 ) ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
@@ -101,6 +99,7 @@ bool Ostap::Math::PhaseSpace2::setM1 ( const double value )
   const double a = std::abs ( value ) ;
   if ( s_equal ( a , m_m1 ) ) { return false ; }
   m_m1 = a ;
+  if ( s_zero ( m_m1 ) ) { m_m1 = 0 ; }
   return true ;
 }
 // ============================================================================a
@@ -111,6 +110,7 @@ bool Ostap::Math::PhaseSpace2::setM2 ( const double value )
   const double a = std::abs ( value ) ;
   if ( s_equal ( a , m_m2 ) ) { return false ; }
   m_m2 = a ;
+  if ( s_zero ( m_m2 ) ) { m_m2 = 0 ; }
   return true ;
 }
 // ============================================================================a
@@ -118,52 +118,61 @@ bool Ostap::Math::PhaseSpace2::setM2 ( const double value )
  *  \f$ m = \sqrt{m_1^2+q^2} + \sqrt{m_2^2+q^2}\f$
  */
 // ============================================================================a
-double Ostap::Math::PhaseSpace2::m_ ( const double q ) const
+double Ostap::Math::PhaseSpace2::q2m ( const double q ) const
 {
-  if ( q <=-0 ) { return 0 ; }
-  const  double q2 = q * q ;
+  if ( q <= 0 || s_zero ( q ) ) { return m_m1 + m_m2  ; }
+  const double q2 = q * q ;
   return
     m_m1 == m_m2 ? 2 * std::sqrt ( m_m1 * m_m1 + q2 ) :
     std::sqrt ( m_m1 * m_m1 + q2 ) + std::sqrt ( m_m2 * m_m2 + q2) ;  
 }
 // ============================================================================a
-// get the momentum at center of mass 
-// ============================================================================a
-double Ostap::Math::PhaseSpace2::q_  ( const double x ) const 
-{ return q ( x , m1() , m2() ) ; }
-// ============================================================================a
-// get the momentum at center of mass 
-// ============================================================================a
-std::complex<double>
-Ostap::Math::PhaseSpace2::q1_ ( const double x ) const 
-{ return q1 ( x , m1() , m2() ) ; }
-// ============================================================================
 std::size_t Ostap::Math::PhaseSpace2::tag() const 
 { return std::hash_combine ( m_m1 , m_m2 ) ; }
+// ============================================================================
+/*  get (a complex) phase space 
+ *  real for x > threhsold, imaginnnnaryu for x< threshold 
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::PhaseSpace2::rho1_s ( const double s ) const 
+{
+  if ( s <= 0 ) { return 0 ; }
+  //
+  const double lam = Ostap::Kinematics::triangle ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ;
+  //
+  static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
+  //
+  return 0 < lam ?
+    s_inv8pi * std::complex<double>(     std::sqrt (  lam ) / s , 0 ) :
+    s_inv8pi * std::complex<double>( 0 , std::sqrt ( -lam ) / s     ) ;
+}
 // ============================================================================
 /*  calculate the phase space for   m -> m1 + m2
  *  \f$ \Phi = \frac{1}{8\pi} \frac{ \lambda^{\frac{1}{2}} 
  *  \left( m^2 , m_1^2, m_2_2 \right) }{ m^2 }\f$,
  *  where \f$\lambda\f$ is a triangle function
+ *  @param s    the squared mass
+ *  @param m2_1 the squared mass of the first particle
+ *  @param m2_1 the squared mass of the second particle
+ *  @return two-body phase space
  */
 // ============================================================================
-double Ostap::Math::PhaseSpace2::phasespace
-( const double         m  ,
-  const double         m1 ,
-  const double         m2 ,
-  const unsigned short L  )
+double Ostap::Math::PhaseSpace2::phasespace_s
+( const double         s    ,
+  const double         m2_1 ,
+  const double         m2_2 ,
+  const unsigned short L    ) 
 {
   //
-  if ( 0 >= m || 0 > m1 || 0 > m2 ) { return 0 ; } // RETURN
-  if ( m <= m1 + m2               ) { return 0 ; } // RETURN
-  //
-  const double msq = m * m ;
-  const double lam = Ostap::Kinematics::triangle ( msq  , m1 * m1 , m2 * m2 ) ;
+  if ( s < 0 || m2_1 < 0 || m2_1 < 0 ) { return 0 ; }
   //
   static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
   //
+  const double lam = Ostap::Kinematics::triangle ( s , m2_1 , m2_2 ) ;
+  //
   return 0 < lam ?
-    s_inv8pi * Ostap::Math::POW ( std::sqrt ( lam ) / msq , 2 * L + 1 ) : 0.0 ;
+    s_inv8pi * Ostap::Math::POW ( std::sqrt ( lam ) / s , 2 * L + 1 ) : 0.0 ;
 }
 // ============================================================================
 /*  calculate the particle momentum in rest frame
@@ -179,6 +188,19 @@ double Ostap::Math::PhaseSpace2::q
   const double m2 )
 { return Ostap::Kinematics::q ( m , m1 , m2 ) ; }
 // ============================================================================
+/*  calculate the particle momentum in rest frame
+ *  @param s    the squared mass
+ *  @param m2^1 the squared mass of the first particle
+ *  @param m2^2 the squared mass of the second particle
+ *  @return the momentum in rest frame (physical values only)
+ */
+// ============================================================================
+double Ostap::Math::PhaseSpace2::q_s
+( const double s    ,
+  const double m2_1 ,
+  const double m2_2 )
+{ return Ostap::Kinematics::q_s ( s , m2_1 , m2_2 ) ; }
+// =============================================================================
 /*  calculate the particle momentum in rest frame
  *  @param m the mass
  *  @param m1 the mass of the first particle
@@ -200,6 +222,42 @@ Ostap::Math::PhaseSpace2::q1
     0 <= lam ?
     std::complex<double> (     0.5  * std::sqrt (  lam ) / m , 0 ) :
     std::complex<double> ( 0 , 0.5  * std::sqrt ( -lam ) / m     ) ;
+}
+// ============================================================================
+/*  calculate the particle momentum in the rest frame
+ *  - real for physical case 
+ *  - imaginary for non-physical case (below the threshold)
+ *  @param s    the squared mass
+ *  @param m2_1 the squared  mass of the first particle
+ *  @param m2_2 the squared mass of the second particle
+ *  @return the momentum in rest frame  (imaginary for non-physical branch)
+ */
+// ============================================================================
+std::complex<double>
+Ostap::Math::PhaseSpace2::q1_s
+( const double s    ,
+  const double m2_1 ,
+  const double m2_2 ) 
+{
+  //
+  const double lam = Ostap::Kinematics::triangle ( s , m2_1 , m2_2 ) ;
+  //
+  return
+    0 <= lam ?
+    std::complex<double> (     0.5  * std::sqrt (  lam / s ) , 0 ) :
+    std::complex<double> ( 0 , 0.5  * std::sqrt ( -lam / s )     ) ;
+}
+// ============================================================================
+// constructor from two masses
+// ============================================================================
+Ostap::Math::sPhaseSpace2::sPhaseSpace2
+( const double m1 ,
+  const double m2 )
+  : m_m2_1 ( m1 * m1 )
+  , m_m2_2 ( m2 * m2 )
+{
+  if ( s_zero ( m_m2_1 ) || s_zero ( m1 ) ) { m_m2_1 = 0 ; }
+  if ( s_zero ( m_m2_2 ) || s_zero ( m2 ) ) { m_m2_2 = 0 ; }
 }
 // ============================================================================
 /*  constructor from three masses
@@ -1044,6 +1102,33 @@ std::size_t Ostap::Math::PhaseSpace23L::tag () const  // get the tag
 double Ostap::Kinematics::phase_space 
 ( const Ostap::Kinematics::Dalitz& dalitz )  
 { return Ostap::Math::PSDalitz ( dalitz ).phasespace () ; }
+// ============================================================================
+
+// ============================================================================
+// Small helpers 
+// ============================================================================
+Ostap::Math::M2Q::M2Q 
+( const double m1 , 
+  const double m2 )
+  : m_m2_1 ( m1 * m1 )
+  , m_m2_2 ( m2 * m2 )
+{
+  if ( m1 <= 0 || s_zero ( m1 ) || s_zero ( m_m2_1 ) ) { m_m2_1 = 0 ; }
+  if ( m2 <= 0 || s_zero ( m2 ) || s_zero ( m_m2_2 ) ) { m_m2_2 = 0 ; }
+}
+// ============================================================================
+Ostap::Math::S2Q::S2Q 
+( const double m1 , 
+  const double m2 )
+  : m_m2_1 ( m1 * m1 )
+  , m_m2_2 ( m2 * m2 )
+{
+  if ( m1 <= 0 || s_zero ( m1 ) || s_zero ( m_m2_1 ) ) { m_m2_1 = 0 ; }
+  if ( m2 <= 0 || s_zero ( m2 ) || s_zero ( m_m2_2 ) ) { m_m2_2 = 0 ; }
+}
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

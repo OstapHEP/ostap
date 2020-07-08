@@ -2561,62 +2561,61 @@ def _f1_rop_ ( fun1 , fun2 , ftype , fname ) :
     """ Operator for `1D-function (op) other`:"""
     
     xvar, yvar, zvar  = fun1.xvar , None , None 
-    
+
     if isinstance ( fun2 , num_types ) :
-        
+         
         fun2   = ROOT.RooRealConstant.value ( float ( fun2 )  ) 
         s      = ftype ( fun2 ,  fun1.fun )
-        result = Fun1D ( s ,
+        result = Fun1D ( s            ,
                          xvar = xvar  ,
                          name = fname % ( fun2.name , fun1.name ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
         return result
-
 
     elif isinstance ( fun2 , ROOT.RooAbsReal ) :
         
         s      = ftype ( fun2 , fun1.fun )
-        result = Fun1D ( s ,
+        result = Fun1D ( s            ,
                          xvar = xvar  ,
                          name = fname % ( fun2.name , fun1.name ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
         return result
-
+    
     return NotImplemented 
 
 
 # =============================================================================
-## operator for "1D-function + other"
+## operator for "other + 1D-function"
 def _f1_radd_ ( self , other ) :
-    """Operator for ``1D-function + other''"""
+    """Operator for ``other + 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
 
 # =============================================================================
-## operator for "1D-function - other"
+## operator for "other - 1D-function"
 def _f1_rsub_ ( self , other ) :
-    """Operator for ``2D-function - other''"""
+    """Operator for ``other - 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
 
 # =============================================================================
-## operator for "1D-function * other"
+## operator for "other * 1D-function"
 def _f1_rmul_ ( self , other ) :
-    """Operator for ``2D-function * other''"""
+    """Operator for ``other * 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
 
 # =============================================================================
-## operator for "1D-function / other"
+## operator for "other/1D-function"
 def _f1_rdiv_ ( self , other ) :
-    """Operator for ``1D-function / other''"""
+    """Operator for ``other / 1D-function ''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
         
 # =============================================================================
-## operator for "1D-function ** other"
+## operator for "other ** 1D-function"
 def _f1_rpow_ ( self , other ) :
-    """Operator for ``1D-function **  other''"""
+    """Operator for ``other ** 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
         
 

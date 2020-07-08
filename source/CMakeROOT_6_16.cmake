@@ -90,7 +90,6 @@ add_library(ostap SHARED src/format.cpp
                          src/Moments.cpp
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
-                         src/MoreRooFit2.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
@@ -129,6 +128,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp
                          src/Vector3DWithError.cpp
+                         src/Voigt.cpp
                          src/Workspace.cpp    
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      

@@ -50,10 +50,10 @@ namespace
  */
 // ============================================================================
 Ostap::Math::ChebyshevApproximation::ChebyshevApproximation
-( const std::function<double(double)>& func , 
-  const double                         a    , 
-  const double                         b    , 
-  const unsigned short                 N    ) 
+( std::function<double(double)> func , 
+  const double                  a    , 
+  const double                  b    , 
+  const unsigned short          N    ) 
   : m_a ( std::min ( a , b ) )
   , m_b ( std::max ( a , b ) )
   , m_N ( N )
@@ -158,7 +158,7 @@ double Ostap::Math::ChebyshevApproximation::evaluate
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
-  return gsl_cheb_eval ( cs , x ) ;
+  return x < m_a ? 0.0 : x > m_b ? 0.0 : gsl_cheb_eval ( cs , x ) ;
 }
 // ============================================================================
 /*  the main method: evaluate the approximation sum, 
@@ -172,7 +172,7 @@ double Ostap::Math::ChebyshevApproximation::evaluate
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
-  return gsl_cheb_eval_n ( cs , n , x ) ;
+  return x < m_a ? 0.0 : x > m_b ? 0.0 : gsl_cheb_eval_n ( cs , n , x ) ;
 }
 // ============================================================================
 /*  the main method: evaluate the approximation sum 
@@ -184,6 +184,8 @@ Ostap::Math::ChebyshevApproximation::eval_err
 ( const double         x ) const 
 {
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  if ( x < m_a || x > m_b ) { return 0 ; }
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   //
@@ -206,6 +208,8 @@ Ostap::Math::ChebyshevApproximation::eval_err
   const unsigned short n ) const 
 {
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  if ( x < m_a || x > m_b ) { return 0 ; }
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   //

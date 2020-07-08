@@ -97,6 +97,33 @@ double Ostap::Kinematics::Dalitz0::distance
   return Ostap::Kinematics::triangle ( scale * p1 , scale * p2 , scale * p3 );
 }
 // ============================================================================
+// maximal value of momenta of the first  particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p1_max 
+( const double s ) const
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m1sq () , s2_min () ) / s ) ;
+}
+// ============================================================================
+// maximal value of momenta of the second particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p2_max 
+( const double s ) const 
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m2sq () , s3_min () ) / s ) ;
+}
+// ============================================================================
+// maximal value of momenta of the third  particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p3_max 
+( const double s ) const 
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m3sq () , s1_min () ) / s ) ;
+}
+// ============================================================================
 // Dalitz plot boundaries \f$ s_1^{min/max} ( s, s_2 ) \f$ 
 // ============================================================================
 std::pair<double,double>  

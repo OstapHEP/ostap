@@ -53,26 +53,26 @@ def  test_transform () :
     dataset.lx.setMax ( 5 )
     
     ## original PDF 
-    g = Models.Gauss_pdf ( 'G' , xvar = x ,
+    gauss = Models.Gauss_pdf ( 'G' , xvar = x ,
                            mean  = ( mean  , mean  / 2 , mean  * 2 ) , 
                            sigma = ( sigma , sigma / 2 , sigma * 2 ) )
     
     
-    r1 , f1  = g.fitTo  ( dataset , draw = True  , silent = True )
+    r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
     logger.info ( 'Fit x:\%s' % r1.table() ) 
-
+    
     if not 62000 <= ROOT.gROOT.GetVersionInt() :
-        logger.warning("Not for tihs version of ROOT")
-        return
+        logger.warning("Not for this version of ROOT")
+        ## return
     
     lx = dataset.lx
     LX = Fun1D (  lx , lx )
     NX = 10 ** LX
     
     ## transformed PDF 
-    t  = TrPDF ( pdf = g , new_var = NX )
+    tgauss  = TrPDF ( pdf = gauss , new_var = NX )
     
-    r2 , f2 = t.fitTo  ( dataset , draw = True  , silent = True )
+    r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
     logger.info ( 'Fit log10(x):\%s' % r2.table() ) 
 
     

@@ -2698,7 +2698,7 @@ class BreitWigner_pdf(MASS) :
                          sigma_name  = 'gamma_%s'   % name ,
                          sigma_title = '#Gamma(%s)' % name )
 
-        bw = breitwigner 
+        bw = breitwigner
         assert isinstance ( bw , Ostap.Math.BreitWigner ), \
                'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
         #
@@ -3223,7 +3223,7 @@ class Flatte_pdf(MASSMEAN) :
         elif g2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
         else :
             
-            self.__g1 =  self.make_var  ( ga1                ,
+            self.__g1 =  self.make_var  ( g1                 ,
                                           'g1_%s'     % name ,
                                           'g_{1}(%s)' % name ,
                                           g1                 , g1 )
@@ -3231,8 +3231,8 @@ class Flatte_pdf(MASSMEAN) :
                                           'g2_%s'     % name ,
                                           'g_{2}(%s)' % name , g2 )
             
-            self.__m0g1  = self.vars_multiply ( self.m0     , self.gamma1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
-            self.__g2og1 = self.vars_divide   ( self.gamma2 , self.gamma1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
+            self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
+            self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
                 
         ## create PDF 
         self.pdf = Ostap.Models.Flatte ( 
@@ -3240,8 +3240,8 @@ class Flatte_pdf(MASSMEAN) :
             "Flatte(%s)" % name ,
             self.xvar    ,
             self.m0      ,
-            self.m0g1    ,
-            self.g2og1   ,
+            self.g1      ,
+            self.g2      ,
             self.gamma0  ,
             self.flatte  )
 
@@ -3275,7 +3275,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
-        assert not isinstance ( self.__m0g1 , ROOT.RooFormulaVar ),\
+        assert gasattr ( self.__m0g1 , 'setVal' ),\
                "``m0g1''-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
@@ -3286,7 +3286,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
-        assert not isinstance ( self.__g2og1 , ROOT.RooFormulaVar ),\
+        assert hasattr ( self.__g2og1 , 'setVal'),\
                "``g2og1''-parameter can't be set!"        
         value = float ( value )
         assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
@@ -3298,8 +3298,8 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g1
     @g1.setter
     def g1 ( self , value ) :
-        assert not isinstance ( self.__g1 , ROOT.RooFormulaVar ),\
-               "``g11''-parameter can't be set!"
+        assert hasattr ( self.__g1 , 'setVal' ),\
+               "``g1''-parameter can't be set!"
         value = float ( value )
         self.__g1.setVal ( value ) 
 
@@ -3309,7 +3309,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g2
     @g2.setter
     def g2 ( self , value ) :
-        assert not isinstance ( self.__g2 , ROOT.RooFormulaVar ),\
+        assert hasattr ( self.__g2 , 'setVal' ),\
                "``g2''-parameter can't be set!"
         value = float ( value )
         self.__g2.setVal ( value ) 

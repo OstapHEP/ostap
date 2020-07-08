@@ -11,6 +11,10 @@
 #include <utility>
 #include <functional>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Kinematics.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -91,6 +95,15 @@ namespace Ostap
       double E2_min () const { return m_m2          ; }
       double E3_min () const { return m_m3          ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      /// maximal value of momenta of the first  particle for the given s 
+      double p1_max ( const double s ) const ;
+      /// maximal value of momenta of the second particle for the given s 
+      double p2_max ( const double s ) const ;
+      /// maximal value of momenta of the third  particle for the given s 
+      double p3_max ( const double s ) const ;
+      // ======================================================================
     public:  // only two s_i are independent 
       // ======================================================================
       /** get s_1 for given s_2 and s_3 are defined 
@@ -136,50 +149,83 @@ namespace Ostap
       /** get the product of 4-momenta
        *  \f$ \left(p_1p_2\right) = \frac{1}{2}\left( s_{12} - m_1^2 - m_2^2 \right) \f$
        */
-      inline double p1p2 ( const double /* s  */ ,
-                           const double    s1    ,
-                           const double /* s2 */ )  const
+      inline double p1p2
+      ( const double /* s  */ ,
+        const double    s1    ,
+        const double /* s2 */ )  const 
       { return 0.5 * ( s1 - m1sq () - m2sq () ) ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(p_2p_3\right) = \frac{1}{2}\left( s_{23} - m_2^2 - m_3^2 \right) \f$      
        */
-      inline double p2p3 ( const double /* s  */ ,
-                           const double /* s1 */ ,
-                           const double    s2    ) const
+      inline double p2p3
+      ( const double /* s  */ ,
+        const double /* s1 */ ,
+        const double    s2    ) const
       { return 0.5 * ( s2 - m2sq () -  m3sq () ) ; }      
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(p_1p_3\right) = \frac{1}{2}\left( s_{13} - m_1^2 - m_3^2 \right) \f$      
        */
-      inline double p1p3 ( const double    s     ,
-                           const double    s1    ,
-                           const double    s2    ) const
+      inline double p1p3
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
       { return 0.5 * ( s3  ( s , s1 , s2 ) - m1sq () -  m3sq () ) ; }
       // ======================================================================
       /** get the product of 4-momenta
-       *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} + m_1^2 \right) \f$
+       *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} +  m_1^2 \right) \f$
        */
-      inline double pp1 ( const double    s     ,
-                          const double /* s1 */ ,
-                          const double    s2    ) const
+      inline double pp1
+      ( const double    s     ,
+        const double /* s1 */ ,
+        const double    s2    ) const
       { return 0.5 * ( s - s2 + m1sq () ) ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp2\right) = \frac{1}{2}\left( s - s_{13} + m_2^2 \right) \f$
        */
-      inline double pp2 ( const double s  ,
-                          const double s1 ,
-                          const double s2 ) const
+      inline double pp2
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const
       { return 0.5 * ( s - s3  ( s , s1 , s2 )  + m2sq () ) ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp3\right) = \frac{1}{2}\left( s - s_{12} + m_3^2 \right) \f$
        */
-      inline double pp3 ( const double    s     ,
-                          const double    s1    ,
-                          const double /* s2 */ ) const
+      inline double pp3 
+      ( const double    s     ,
+        const double    s1    ,
+        const double /* s2 */ ) const
       { return 0.5 * ( s - s1 + m3sq () ) ; }
+      // ======================================================================
+      /** get product of 4-momenta 
+       *  \f$ pp_{12} = \frac{1}{2}\left(s + s_{12} - m^2_3\right)\f$
+       */
+      inline double pp12 
+      ( const double    s     ,
+        const double    s1    ,
+        const double /* s2 */ ) const
+      { return 0.5 * ( s + s1 - m1sq () ) ; }
+      // ======================================================================
+      /** get product of 4-momenta 
+       *  \f$ pp_{23} = \frac{1}{2}\left(s + s_{23} - m^2_1\right)\f$
+       */
+      inline double pp23
+      ( const double    s     ,
+        const double /* s1 */ ,
+        const double    s2    ) const
+      { return 0.5 * ( s + s2 - m1sq () ) ; }
+      // ======================================================================
+      /** get product of 4-momenta 
+       *  \f$ pp_{13} = \frac{1}{2}\left(s + s_{13} - m^2_2\right)\f$
+       */
+      inline double pp13
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return 0.5 * ( s + s3 ( s , s1 , s2 )  - m2sq () ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -301,7 +347,7 @@ namespace Ostap
     public :
       // ======================================================================
       /** constructor from all masses 
-       *  - M  : overlal mass of the system, \f$\sqrt{s}\f$;
+       *  - M  : overall mass of the system, \f$\sqrt{s}\f$;
        *  - m1 : the mass of the first particle  \f$ m_1 \f$;
        *  - m2 : the mass of the second particle  \f$ m_2 \f$;
        *  - m3 : the mass of the third particle  \f$ m_3 \f$;

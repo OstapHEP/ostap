@@ -14,6 +14,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Kinematics.h"
 #include "Ostap/DalitzIntegrator.h"
+// #include "Ostap/Decay.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -29,7 +30,6 @@
  *  - LASS  (kappa) 
  *  - Bugg  (sigma-pole)
  *  - Gounaris-Sakurai
- *  - Voight &Co 
  *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
@@ -38,96 +38,8 @@
 namespace 
 {
   // ==========================================================================
-  // Breit-Wigner & Co 
-  // ==========================================================================
-  /// get the complex Breit amplitude
-  std::complex<double> breit_amp
-  ( const std::complex<double> x     ,
-    const double               m0    ,
-    const std::complex<double> gamma )
-  {
-    //
-    static const std::complex<double> s_j ( 0 , 1 ) ;
-    //
-    // const std::complex<double> v = m0 * m0 - x * x - s_j * m0 * gamma ;
-    const std::complex<double> v = m0 * m0 - x * x - s_j * x * gamma ;
-    //
-    // attention: normalization factors and phase space are here!
-    //
-    // const double d = 2 / M_PI ;
-    // const double d = 2 * std::abs ( m0 * gamma  * x ) / M_PI ;
-    //
-    return  1.0 / v ;
-  }
-  // ==========================================================================
-  //// calculate the current width
-  double gamma_run 
-  ( const double                   gam0  ,
-    const double                   x     ,
-    const double                   m1    ,
-    const double                   m2    ,
-    const double                   m0    ,
-    const unsigned int             L     ,
-    const Ostap::Math::FormFactor* F = 0 )
-  {
-    //
-    if ( m1 + m2 >= x ) { return 0 ; }   // RETURN
-    //
-    if ( s_equal ( x , m0 ) ) { return gam0 ; }
-    //
-    const double q  = Ostap::Math::PhaseSpace2::q ( x  , m1 , m2 ) ;
-    const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
-    //
-    if ( 0 >= q || 0 >= q0 ) { return 0 ; }  // RETURN
-    //
-    const double r  = nullptr != F ? (*F) ( x  , m0 , m1 , m2 ) : 1.0 ;
-    const double r0 = nullptr != F ? (*F) ( m0 , m0 , m1 , m2 ) : 1.0 ;
-    //
-    if ( 0 >= r0 )           { return 0 ; }  // RETURN
-    //
-    return gam0 * ( m0 / x ) * Ostap::Math::POW ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
-  }
-  // ==========================================================================
-  std::complex<double> gamma_run_complex
-  ( const double                   gam0  ,
-    const double                   x     ,
-    const double                   m1    ,
-    const double                   m2    ,
-    const double                   m0    ,
-    const unsigned int             L     ,
-    const Ostap::Math::FormFactor* F = 0 )
-  {
-    //
-    if  ( m0 <= m1 + m2 ) { return 0 ; }
-    //
-    if ( x >= m1 + m2 && m0 >= m1 + m2 ) { return gamma_run ( gam0  , 
-                                                              x     , 
-                                                              m1    , 
-                                                              m2    , 
-                                                              m0    , 
-                                                              L     , 
-                                                              F     ) ; }
-    //
-    if ( s_equal ( x , m0 ) ) { return gam0 ; }
-    //
-    const std::complex<double> q  = Ostap::Math::PhaseSpace2::q1 ( x  , m1 , m2 ) ;
-    const std::complex<double> q0 = Ostap::Math::PhaseSpace2::q1 ( m0 , m1 , m2 ) ;
-    //
-    const double r  = nullptr != F ? (*F) ( x  , m0 , m1 , m2 ) : 1.0 ;
-    const double r0 = nullptr != F ? (*F) ( m0 , m0 , m1 , m2 ) : 1.0 ;
-    //
-    if ( 0 >= r0 )           { return 0 ; }  // RETURN
-    //
-    // return gam0 * ( m0 / x ) * Ostap::Math::POW ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
-    return gam0 * ( m0 / x ) * std::pow ( q / q0 , 2 * L + 1 ) * ( r / r0 ) ;
-  }
-  // ==========================================================================
-  /** @var s_BUKIN
-   *  useful constant (needed for pseudo-Vogt)
-   *  \f$ \sqrt{ 2 \log 2 } \f$
-   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
-   *  @date 2010-04-19
-   */
+  /// imaginary unit 
+  const std::complex<double> s_j { 0.0 , 1.0 } ;
   // ==========================================================================
 } //                                            The end of  anonymous namespace 
 // ============================================================================
@@ -181,7 +93,7 @@ double Ostap::Math::Jackson::jackson_A3
  *  @see Ostap::Math::BreitWigner::rho_fun
  *  @param m the invariant mass
  *  @param m1 the invariant mass of the first  (spinor) particle
- *  @param m2 the invariant mass of the secodn (scalar) particle
+ *  @param m2 the invariant mass of the second (scalar) particle
  *  @return the value of rho-function
  *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
  *  @date 2011-11-30
@@ -305,6 +217,11 @@ Ostap::Math::FormFactors::Jackson::Jackson
   //
 }
 // ============================================================================
+// unique tag/label
+// ============================================================================
+std::size_t Ostap::Math::FormFactors::Jackson::tag      () const
+{ return std::hash<std::string>{} ( m_what ) ; }
+// ============================================================================
 // constructor from function itself 
 // ============================================================================
 Ostap::Math::FormFactors::Jackson::Jackson
@@ -330,7 +247,9 @@ double Ostap::Math::FormFactors::Jackson::operator()
   ( const double m  , const double m0 ,
     const double m1 , const double m2 ) const
 { 
-  return nullptr == m_rho ? 1.0 : (*m_rho)( m , m0 , m1 , m2 ) ; 
+  return nullptr == m_rho ? 1.0 : ( m / m0 ) * 
+    ( (*m_rho) ( m  , m0 , m1 , m2 ) / 
+      (*m_rho) ( m0 , m0 , m1 , m2 ) ) ; 
 }
 // ============================================================================
 // Blatt-Weisskopf formfactors 
@@ -423,11 +342,12 @@ double Ostap::Math::FormFactors::BlattWeisskopf::b
     //
     1.0L ;
   //
-  // return std::sqrt ( r2 ) ;
   return r2 ;
 }
 // ============================================================================
-// the only important method 
+/*  the only important method the squared ratio 
+ *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+ */
 // ============================================================================
 double Ostap::Math::FormFactors::BlattWeisskopf::operator() 
   ( const double m  , const double m0 ,
@@ -436,22 +356,319 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
   //
   if ( s_equal ( m , m0 ) ) { return    1   ; }
   if ( s_zero  ( m_b    ) ) { return m0 / m ; }
-  //
   /// get the momenta 
   const double q  = Ostap::Math::PhaseSpace2::q ( m  , m1 , m2 ) ;
   const double q0 = Ostap::Math::PhaseSpace2::q ( m0 , m1 , m2 ) ;
   ///
-  const double _z  = q  * m_b ;
-  const double _z0 = q0 * m_b ;
+  const double z  = q  * m_b ;
+  const double z0 = q0 * m_b ;
   //
-  return ( m0 / m ) * b ( _z * _z , _z0 * _z0 ) ;
+  return b ( z * z , z0 * z0 ) ;
 }
 // ============================================================================
+// unique tag/label
+// ============================================================================
+std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
+{ return std::hash_combine ( m_what , m_L , m_b ) ; }
+// ============================================================================
+/* constructor from the generic object, unique tag and desription
+ *  @param ff  the formfactor 
+ *  @param tag the unique tag 
+ *  @param description  description 
+ */
+// ============================================================================
+Ostap::Math::FormFactors::GenericFF::GenericFF
+( const Ostap::Math::FormFactors::GenericFF::formfactor& ff          ,
+  const std::size_t                                      tag         , 
+  const std::string&                                     description ) 
+  : Ostap::Math::FormFactor() 
+  , m_ff  ( ff )
+  , m_tag ( std::hash_combine ( description , tag , std::string ( "GenericFF" ) ) ) 
+  , m_description ( description ) 
+{}
+// ============================================================================
+// clone operation 
+// ============================================================================
+Ostap::Math::FormFactors::GenericFF*
+Ostap::Math::FormFactors::GenericFF::clone() const 
+{ return new Ostap::Math::FormFactors::GenericFF ( *this ) ; }
+// ============================================================================
+
+
+            
+
+
+
 
 
 // ============================================================================
 // Breit-Wigner Channel 
 // ============================================================================
+// constructor from the partial width 
+// ============================================================================
+Ostap::Math::ChannelBW::ChannelBW
+( const double gamma0 ) 
+  : m_gamma0 ( 0 ) { setGamma0  ( gamma0 ) ; }
+// ============================================================================
+// virtual destructor 
+// ============================================================================
+Ostap::Math::ChannelBW::~ChannelBW (){}
+// ============================================================================
+// set new width 
+// ============================================================================
+bool Ostap::Math::ChannelBW::setGamma0 ( const double value ) 
+{
+  const double v = std::abs ( value ) ;
+  if ( s_equal ( v , m_gamma0 ) ) { return false ; } // RETURN
+  m_gamma0 = v ;
+  //
+  if ( s_zero ( m_gamma0 ) ) { m_gamma0 = 0 ; }
+  //
+  return true ;
+}
+// ============================================================================
+
+// // ============================================================================
+// // Generic Breit-Wigner channel 
+// // ============================================================================
+// Ostap::Math::ChannelGeneric::ChannelGeneric
+// ( const double                                 gamma       , 
+//   const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
+//   const Ostap::Math::ChannelGeneric::Fun_D&    fD          , 
+//   const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
+//   const double                                 sthreshold  , 
+//   const std::size_t                            tag         ,
+//   const std::string&                           description )
+//   : ChannelBW     ( gamma       ) 
+//   , m_fN2         ( fN2         ) 
+//   , m_fD          ( fD          ) 
+//   , m_frho        ( frho        ) 
+//   , m_sthreshold  ( sthreshold  ) 
+//   , m_tag         ( tag         )
+//   , m_description ( description )
+// {}
+// // ============================================================================
+// // Generic Breit-Wigner channel 
+// // ============================================================================
+// Ostap::Math::ChannelGeneric::ChannelGeneric
+// ( const double                                 gamma       , 
+//   const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
+//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
+//   const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
+//   const double                                 sthreshold  , 
+//   const std::size_t                            tag         ,
+//   const std::string&                           description ) 
+//   : ChannelBW     ( gamma       ) 
+//   , m_fN2         ( fN2         ) 
+//   , m_fD          () 
+//   , m_frho        ( frho        ) 
+//   , m_sthreshold  ( sthreshold  ) 
+//   , m_tag         ( tag         )
+//   , m_description ( description )
+// {
+//   m_fD = [fD]( const double s , const double m0 ) -> std::complex<double>
+//     { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
+// }
+// // ============================================================================
+// // Generic Breit-Wigner channel 
+// // ============================================================================
+// Ostap::Math::ChannelGeneric::ChannelGeneric
+// ( const double                                 gamma       , 
+//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
+//   const double                                 sthreshold  , 
+//   const std::size_t                            tag         ,
+//   const std::string&                           description )
+//   : ChannelBW     ( gamma       ) 
+//   , m_fN2         () 
+//   , m_fD          () 
+//   , m_frho        () 
+//   , m_sthreshold  ( sthreshold  ) 
+//   , m_tag         ( tag         )
+//   , m_description ( description )
+// {
+//   m_fN2  = [fD]          ( const double s , const double    m0    ) -> double
+//     { return                        fD ( s , m0 )          ; } ;
+//   m_fD   = [fD]          ( const double s , const double m0 ) -> std::complex<double>
+//     { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
+//   m_frho = [sthreshold]  ( const double s , const double /* mn */ ) -> double 
+//     { return s <= sthreshold ? 0.0 : 1.0 ; }                 ;  
+// }
+// // ============================================================================
+// // clone method 
+// // ============================================================================
+// Ostap::Math::ChannelGeneric*
+// Ostap::Math::ChannelGeneric::clone () const
+// { return new Ostap::Math::ChannelGeneric ( *this ) ; }
+// // ============================================================================
+// // unique tag for this lineshape 
+// // ============================================================================
+// std::size_t Ostap::Math::ChannelGeneric::tag () const
+// { return std::hash_combine  ( std::string ( "ChannelGeneric" ) ,
+//                               gamma0      () , 
+//                               m_sthreshold   , 
+//                               m_description  , 
+//                               m_tag          ) ; }
+// // ===========================================================================
+// // describe the channel 
+// // ============================================================================
+// std::string Ostap::Math::ChannelGeneric::describe() const
+// { return m_description ; }
+// // ============================================================================
+
+
+
+
+
+// ============================================================================
+// Breit-Wigner channel with mass-depedent width 
+// ============================================================================
+// full constructor with all functions specified 
+// ============================================================================
+Ostap::Math::ChannelWidth::ChannelWidth 
+( const double       gamma       ,
+  Width              width       ,  
+  const double       sthreshold  , 
+  const std::size_t  tag         ,
+  const std::string& description ) 
+  : ChannelBW     ( gamma ) 
+  , m_w           ( width ) 
+  , m_sthreshold  ( std::abs ( sthreshold ) ) 
+  , m_tag         ( tag   ) 
+  , m_description ( description ) 
+{}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelWidth*
+Ostap::Math::ChannelWidth::clone () const
+{ return new Ostap::Math::ChannelWidth ( *this ) ; }
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelWidth::tag () const
+{ return std::hash_combine  ( std::string ( "ChannelWidth" ) ,
+                              gamma0      () , 
+                              m_sthreshold   , 
+                              m_description  , 
+                              m_tag          ) ; }
+// ============================================================================
+
+
+// ============================================================================
+// Breit-Wigner channel with mass-depedent width 
+// ============================================================================
+// full constructor with all functions specified 
+// ============================================================================
+Ostap::Math::ChannelGamma::ChannelGamma
+( const double       gamma       ,
+  Width              width       ,  
+  const double       sthreshold  , 
+  const std::size_t  tag         ,
+  const std::string& description ) 
+  : ChannelBW     ( gamma ) 
+  , m_gamma       ( width ) 
+  , m_sthreshold  ( std::abs ( sthreshold ) ) 
+  , m_tag         ( tag   ) 
+  , m_description ( description ) 
+{}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelGamma*
+Ostap::Math::ChannelGamma::clone () const
+{ return new Ostap::Math::ChannelGamma ( *this ) ; }
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelGamma::tag () const
+{ return std::hash_combine  ( std::string ( "ChannelGamma" ) ,
+                              gamma0      () , 
+                              m_sthreshold   , 
+                              m_description  , 
+                              m_tag          ) ; }
+// ============================================================================
+
+
+
+
+
+
+// ============================================================================
+// Breit-Wigner constant width channel 
+// ============================================================================
+/*  constructor from all parameters and *NO* formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ */
+// ============================================================================
+Ostap::Math::ChannelCW::ChannelCW 
+( const double                  gamma , 
+  const double                  m1    , 
+  const double                  m2    ) 
+  : ChannelBW ( gamma   ) 
+  , m_ps2     ( m1 , m2 ) 
+{}
+// ============================================================================
+// clone the channel 
+// ============================================================================
+Ostap::Math::ChannelCW*
+Ostap::Math::ChannelCW::clone() const 
+{ return new Ostap::Math::ChannelCW ( *this ) ; }
+// ============================================================================
+// get the phase space factor  \f$ \varrho(s) \f$
+// ============================================================================
+double Ostap::Math::ChannelCW::rho_s 
+( const double s  , 
+  const double mn ) const
+{ 
+  const double a = m_ps2.rho_s ( s ) ;
+  return mn <= m_ps2.threshold () ? a : a / m_ps2.rho ( mn ) ;
+} 
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelCW::tag () const
+{ return std::hash_combine  ( std::string ( "ChannelCW" ) ,
+                              ps2 () . tag () , gamma0 () ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelCW::describe() const 
+{
+  return 
+    "ChannelCW(" + std::to_string ( gamma0 () ) + 
+    ","          + std::to_string ( m1     () ) + 
+    ","          + std::to_string ( m2     () ) + ")" ;
+}
+// ============================================================================
+// the first main method: numerator
+// ============================================================================
+double Ostap::Math::ChannelCW::N2 
+( const double s  , 
+  const double m0 ) const 
+{
+  return s <= m_ps2.s_threshold() ? 0.0 : m0 * gamma0 () ;
+}
+// ============================================================================
+// the second main method: (constant) term to the denominator 
+// ============================================================================
+std::complex<double> 
+Ostap::Math::ChannelCW::D
+( const double s  , 
+  const double m0 ) const { return m0 * gamma0 () ; }
+// ============================================================================
+// get the opening threshold for the channel 
+// ============================================================================
+double Ostap::Math::ChannelCW::s_threshold () const 
+{ return m_ps2.s_threshold () ; }
+
+
+// ============================================================================
+// Ostap::Math::Channel
+// ============================================================================
+
+// ============================================================================
 /*  constructor from all parameters and no formfactor
  *  @param gamma the width 
  *  @param m1    the mass of the 1st daughter
@@ -459,16 +676,14 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
  *  @param L     the oribital momentum
  */
 // ============================================================================
-Ostap::Math::Channel::Channel 
+Ostap::Math::Channel::Channel
 ( const double                  gamma , 
   const double                  m1    , 
   const double                  m2    , 
   const unsigned short          L     )
-  : m_gamma0 ( std::abs ( gamma ) ) 
-  , m_m1     ( std::abs ( m1    ) )
-  , m_m2     ( std::abs ( m2    ) )
-  , m_L      (            L       )
-  , m_formfactor ( nullptr ) 
+  : ChannelCW    ( gamma , m1 , m2 ) 
+  , m_L          ( L        )
+  , m_formfactor ( nullptr  ) 
 {}
 // ============================================================================
 /*  constructor from all parameters and no formfactor
@@ -479,251 +694,414 @@ Ostap::Math::Channel::Channel
  *  @param r     the Jackson's formfactor 
  */
 // ============================================================================
-Ostap::Math::Channel::Channel 
+Ostap::Math::Channel::Channel
 ( const double                                gamma , 
   const double                                m1    , 
   const double                                m2    , 
   const unsigned short                        L     ,
   const Ostap::Math::FormFactors::JacksonRho  r     )
-  : m_gamma0 ( std::abs ( gamma ) ) 
-  , m_m1     ( std::abs ( m1    ) )
-  , m_m2     ( std::abs ( m2    ) )
-  , m_L      (            L       )
+  : ChannelCW    ( gamma , m1 , m2 )
+  , m_L          ( L )
   , m_formfactor ( new Ostap::Math::FormFactors::Jackson ( r ) )  
 {}
 // ============================================================================
-/*  constructor from all parameters and no formfactor
+/*  constructor from all parameters and generic formfactor 
  *  @param gamma the width 
  *  @param m1    the mass of the 1st daughter
  *  @param m2    the mass of the 2nd daughter
  *  @param L     the oribital momentum
- *  @param r     the Jackson's formfactor 
+ *  @param f     the formfactor 
+ *  @param qs    the scale momentum 
  */
 // ============================================================================
-Ostap::Math::Channel::Channel 
-( const double                                gamma , 
-  const double                                m1    , 
-  const double                                m2    , 
-  const unsigned short                        L     ,
-  const Ostap::Math::FormFactor&              ff    )
-  : m_gamma0 ( std::abs ( gamma ) ) 
-  , m_m1     ( std::abs ( m1    ) )
-  , m_m2     ( std::abs ( m2    ) )
-  , m_L      (            L       )
-  , m_formfactor ( ff.clone() )  
+Ostap::Math::Channel::Channel
+( const double                   gamma , 
+  const double                   m1    , 
+  const double                   m2    , 
+  const unsigned short           L     ,
+  const Ostap::Math::FormFactor& f     )
+  : ChannelCW    ( gamma , m1 ,  m2  )
+  , m_L          ( L         )
+  , m_formfactor ( f.clone() )  
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Math::Channel::Channel 
-( const Ostap::Math::Channel&  right ) 
-  : m_gamma0 ( right.m_gamma0 )
-  , m_m1     ( right.m_m1     ) 
-  , m_m2     ( right.m_m2     ) 
-  , m_L      ( right.m_L      ) 
+( const Ostap::Math::Channel& right ) 
+  : ChannelCW    ( right       ) 
+  , m_L          ( right.m_L   ) 
   , m_formfactor ( right.m_formfactor ? right.m_formfactor->clone() : nullptr ) 
 {}
 // ============================================================================
-// set new width 
+// clone the channel 
 // ============================================================================
-bool Ostap::Math::Channel::setGamma0 ( const double value ) 
+Ostap::Math::Channel*
+Ostap::Math::Channel::clone () const 
+{ return new Ostap::Math::Channel(*this) ; }
+// ============================================================================
+// the first main method: numerator 
+// ============================================================================
+double Ostap::Math::Channel::N2 
+( const double s  , 
+  const double m0 ) const 
 {
-  const double v = std::abs ( value ) ;
-  if ( s_equal ( v , m_gamma0 ) ) { return false ; } // RETURN
-  m_gamma0  = v ;
-  return true ;
+  if ( s <= ps2().s_threshold () ) { return 0 ; }   // RETURN 
+  //
+  // (1) trivial factor
+  double result  = m0 * gamma0 () ;  
+  //
+  // (2) formfactor 
+  const FormFactor* F   = formfactor () ;
+  if ( nullptr != F ) 
+  {
+    const double x = std::sqrt ( s ) ;
+    result *= (*F)( x , m0 , m1 () , m2 () ) ; 
+  }
+  //
+  // (3) orbital barrier 
+  if ( 0 != m_L ) 
+  {
+    const double q  = ps2 () . q_s ( s       ) ;
+    const double q0 = ps2 () . q_s ( m0 * m0 ) ;
+    if (  0 < q0 ) { result *= std::pow ( q / q0 , 2 * m_L ) ; }
+  }
+  //
+  return result ;
 }
 // ============================================================================
-// set new m1 
+// the second main method: term to the denominator 
 // ============================================================================
-bool Ostap::Math::Channel::setM1 ( const double value ) 
+std::complex<double> 
+Ostap::Math::Channel::D 
+( const double s  , 
+  const double m0 ) const
 {
-  const double v = std::abs ( value ) ;
-  if ( s_equal ( v , m_m1 ) ) { return false ; } // RETURN
-  m_m1  = v ;
-  return true ;
-}
-// ============================================================================
-// set new m2 
-// ============================================================================
-bool Ostap::Math::Channel::setM2 ( const double value ) 
-{
-  const double v = std::abs ( value ) ;
-  if ( s_equal ( v , m_m2 ) ) { return false ; } // RETURN
-  m_m2  = v ;
-  return true ;
+  //
+  if ( s <= ps2().s_threshold () ) { return 0 ; }  
+  //
+  double result = m0 * gamma0 () ;
+  //
+  // (1) phase space factors 
+  const double rho  = ps2 () . rho_s ( s       ) ;
+  const double rho0 = ps2 () . rho_s ( m0 * m0 ) ;
+  //
+  if ( 0 < rho0 ) { result *= rho / rho0 ; }                         // NB!!
+  //
+  // (2) formfactor 
+  const FormFactor* F   = formfactor () ;
+  if ( nullptr != F ) 
+  {
+    const double x = std::sqrt ( s ) ;
+    result *= (*F)( x , m0 , m1 () , m2 () ) ; 
+  } 
+  //
+  // (3) orbital barrier 
+  if ( 0 != m_L )
+  {
+    const double q  = ps2() . q_s ( s       ) ;
+    const double q0 = ps2() . q_s ( m0 * m0 ) ;
+    if ( 0 < q0 ) { result *=  std::pow ( q / q0  , 2 * m_L ) ; }    // NB!
+  }
+  //
+  return result ;
 }
 // ============================================================================
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::Channel::tag() const
 { 
-  //
-  std::size_t seed =   0 ;
-  std::hash_combine ( seed , m_gamma0 ) ;
-  std::hash_combine ( seed , m_m1     ) ;
-  std::hash_combine ( seed , m_m2     ) ;
-  std::hash_combine ( seed , m_L      ) ;
-  //
-  return seed ;
+  return std::hash_combine ( std::string ( "Channel")      , 
+                             Ostap::Math::ChannelCW::tag() , 
+                             m_L       , 
+                             m_formfactor  ? m_formfactor->tag() : 0 ) ;
 }
-// ============================================================================
-/* get the mass-dependent width 
- *  \f[ \Gamma(m) \equiv \Gamma_0 
- *     \left( \frac{q(m)}{q(m_0)} \right)^2L+1}
- *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)}\right)}
- *   \f]
- *  where 
- *   - \f$ q(m) \f$ is momentum of daughter particle in the rest frame of mother particle
- *   - \f$ f( m, m_0, m_1, m_2)\f$ if a formfactor
- *  @see Ostap::Math::PhaseSpace2::q
- *  @see Ostap::Math::FormFactor
- *  @see Ostap::Math::BreitWigner::Channel::gamma 
- *  @param mass the running mass
- *  @param m0   the pole posiiton 
- *  @return mass-dependent width 
- */
-// ============================================================================
-//double Ostap::Math::Channel::gamma
-//( const double mass , 
-//  const double m0   ) const  // get the running width  
-//{ return gamma_run         ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
-// ============================================================================
-// get the  mass-dependent (complex) widths for Flatte'-like formula
-std::complex<double> 
-Ostap::Math::Channel::gamma 
-( const double mass , 
-  const double m0   ) const 
-{ return gamma_run_complex ( m_gamma0 , mass , m_m1 , m_m2 , m0 , m_L , formfactor() ) ; }
-// ============================================================================
-/*  get the value of formfactor for the given mass and pole position
- *  @param mass running mass 
- *  @param m0   pole position 
- *  @return the value of formfactor for  given mass and pole position
- */
-// ============================================================================
-double Ostap::Math::Channel::formfactor 
-( const double mass ,  
-  const double m0   ) const 
-{ return m_formfactor ? (*m_formfactor)( mass , m0 , m_m1 , m_m2 ) : 1.0 ; }
 // ============================================================================
 // describe the channel 
 // ============================================================================
 std::string Ostap::Math::Channel::describe() const 
 {
   return 
-    "Channel(" + std::to_string ( m_gamma0 ) + 
-    ","        + std::to_string ( m_m1     ) + 
-    ","        + std::to_string ( m_m2     ) + 
-    ","        + std::to_string ( m_L      ) +
-    ( m_formfactor ? ( "," + m_formfactor->describe() ) : "" ) + ")";
+    "Channel(" + std::to_string ( gamma0 () ) + 
+    ","         + std::to_string ( m1     () ) + 
+    ","         + std::to_string ( m2     () ) + 
+    ( m_formfactor ? ( "," + m_formfactor->describe() ) : "" )  
+    + ")";
 }
 // ============================================================================
-// Breit-Wigner Base 
+
+
+// ============================================================================
+// Ostap:::Math::Channel0 
 // ============================================================================
 
 // ============================================================================
-// constructor
+/*  constructor from all parameters and no formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ *  @param qs    the scale momentum 
+ */
 // ============================================================================
-Ostap::Math::BreitWignerBase::BreitWignerBase
-( const double         m0   ,
-  const Ostap::Math::Channel& channel ) 
-  : m_m0         ( std::abs ( m0 ) ) 
-  , m_channels   ( 1  , channel    )
-  , m_workspace  ( 10000 )
-    //
+Ostap::Math::Channel0::Channel0
+( const double                  gamma , 
+  const double                  m1    , 
+  const double                  m2    , 
+  const unsigned short          L     , 
+  const double                  qs    )
+  : Channel ( gamma , m1 , m2 , L ) 
+  , m_qs    ( s_zero ( qs ) ? 0.0 : std::abs ( qs ) )
 {}
 // ============================================================================
-Ostap::Math::BreitWignerBase*
-Ostap::Math::BreitWignerBase::clone() const
-{ return new BreitWignerBase ( *this ) ; }  
+/*  constructor from all parameters and no formfactor
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ *  @param r     the Jackson's formfactor 
+ *  @param qs    the scale momentum 
+ */
 // ============================================================================
-//  calculate the Breit-Wigner amplitude
+Ostap::Math::Channel0::Channel0
+( const double                                gamma , 
+  const double                                m1    , 
+  const double                                m2    , 
+  const unsigned short                        L     ,
+  const Ostap::Math::FormFactors::JacksonRho  r     ,
+  const double                                qs    ) 
+  : Channel ( gamma , m1 , m2 , L , r )
+  , m_qs    ( s_zero ( qs ) ? 0.0 : std::abs ( qs ) )
+{}
 // ============================================================================
-std::complex<double>
-Ostap::Math::BreitWignerBase::amplitude ( const double x ) const
+/*  constructor from all parameters and generic formfactor 
+ *  @param gamma the width 
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ *  @param L     the oribital momentum
+ *  @param f     the formfactor 
+ *  @param qs    the scale momentum 
+ */
+// ============================================================================
+Ostap::Math::Channel0::Channel0
+( const double                   gamma , 
+  const double                   m1    , 
+  const double                   m2    , 
+  const unsigned short           L     ,
+  const Ostap::Math::FormFactor& f     ,
+  const double                   qs    ) 
+  : Channel ( gamma , m1 , m2 , L , f ) 
+  , m_qs    ( s_zero ( qs ) ? 0.0 : std::abs ( qs ) )
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Math::Channel0::Channel0 
+( const Ostap::Math::Channel0&  right ) 
+  : Channel ( right      )
+  , m_qs    ( right.m_qs )
+{}
+// ============================================================================
+// clone the channel 
+// ============================================================================
+Ostap::Math::Channel0*
+Ostap::Math::Channel0::clone () const 
+{ return new Ostap::Math::Channel0(*this) ; }
+// ============================================================================
+// the first main method: numerator 
+// ============================================================================
+double Ostap::Math::Channel0::N2 
+( const double s  , 
+  const double m0 ) const 
 {
-  const std::complex<double> g  = gamma ( x ) ;
-  return amplitude ( x , g ) ;  
+  //
+  // (1) coupling
+  double result  = g2 () ;
+  //
+  // (2) formfactor 
+  const FormFactor* F   = formfactor () ;
+  if ( nullptr != F ) 
+  { 
+    const double x = std::sqrt ( s ) ;
+    result *= (*F)( x , m0 , m1 () , m2 () ) ; 
+  }
+  //
+  // (3) orbital barrier 
+  if ( 0 != L () )
+  {
+    const double q = std::abs ( m_ps2.q1_s ( s ) ) ;
+    result *= 0 < m_qs ? std::pow ( q / m_qs  , 2 * L () ) : std::pow ( q , 2 * L () ) ;
+  }
+  //
+  return result ;
 }
 // ============================================================================
-//  calculate the Breit-Wigner amplitude
+// the second main method: term to the denominator 
 // ============================================================================
-std::complex<double>
-Ostap::Math::BreitWignerBase::amplitude 
-( const std::complex<double> x , 
-  const std::complex<double> g ) const
+std::complex<double> 
+Ostap::Math::Channel0::D 
+( const double s  , 
+  const double m0 ) const
 {
-  return std::sqrt ( m0 () * gamma0 () ) * breit_amp ( x , m0() , g ) ;
+  //
+  std::complex<double> result = g2 () ;
+  //
+  // (1) phase space factor 
+  result *= m_ps2.rho1_s ( s ) ;
+  //
+  // (2) formfactor 
+  const FormFactor* F   = formfactor () ;
+  if ( nullptr != F ) 
+  { 
+    const double x = std::sqrt ( s ) ;
+    result *= (*F)( x , m0 , m1 () , m2 () ) ; 
+  }
+  //
+  // (3) orbital barrier 
+  if ( 0 != L () )
+  {
+    const double q = std::abs ( m_ps2.q1_s ( s ) ) ;
+    result *= 0 < m_qs ? std::pow ( q / m_qs  , 2 * L() ) : std::pow ( q , 2 *  L () ) ;
+  }
+  //
+  return result ;
+}
+// ============================================================================
+/*  get the phase space factor  \f$ \varrho(s) \f$
+ *  - optionally normalized at the point \f$ m_n \f$ 
+ *  - optionally nomalized  at \f$ m_q = m(q_s) \f$
+ */
+// ============================================================================
+double Ostap::Math::Channel0::rho_s 
+( const double s  , 
+  const double mn ) const
+{ 
+  const double r = m_ps2.rho_s ( s ) ;
+  return 
+    mn > ps2().threshold () ? r / ps2 ().rho ( mn                 ) :
+    0  < m_qs               ? r / ps2 ().rho ( ps2().q2m ( m_qs ) ) : r ;
 }
 // ============================================================================
 // unique tag for this lineshape 
 // ============================================================================
-std::size_t Ostap::Math::BreitWignerBase::tag() const
+std::size_t Ostap::Math::Channel0::tag() const
+{ return std::hash_combine ( std::string ("Channel0") , 
+                             Ostap::Math::Channel::tag() , qs () ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::Channel0::describe() const 
+{
+  return 
+    "Channel0(" + std::to_string ( gamma0 () ) + 
+    ","         + std::to_string ( m1     () ) + 
+    ","         + std::to_string ( m2     () ) + 
+    ( formfactor () ? ( "," + formfactor()->describe() ) : "" )  + 
+    ","         + std::to_string ( qs     () ) + ")";
+}
+// ============================================================================
+
+
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Math::BW::BW
+( const double                  m0       ,
+  const Ostap::Math::ChannelBW& channel ) 
+  : m_m0         ( std::abs ( m0 )       )
+  , m_threshold  ( std::sqrt ( channel.s_threshold  () ) )  //  cache it! 
+  , m_channels   ( ) 
+  , m_workspace  ( 10000 )
+{
+  add ( channel ) ;
+} 
+// ============================================================================
+// default (empty) constructor 
+// ============================================================================
+Ostap::Math::BW::BW
+( const double  m0 )
+  : m_m0         ( std::abs ( m0 ) )
+  , m_threshold  ( 0 )  //  cache it! 
+  , m_channels   (   ) 
+  , m_workspace  ( 10000 )
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Math::BW::BW
+( const Ostap::Math::BW& bw ) 
+  : m_m0         ( bw.m_m0        ) 
+  , m_threshold  ( bw.m_threshold )
+  , m_channels   ( ) 
+  , m_workspace  ( 10000 )
+{
+  for ( const auto& c : bw.m_channels ) { add ( *c ) ; }
+}
+// ============================================================================
+//  calculate the Breit-Wigner amplitude
+// ============================================================================
+std::complex<double>
+Ostap::Math::BW::amplitude ( const double x ) const
+{
+  const double s   = x * x ;
+  const double m_0 = m0 () ;
+  std::complex<double> d = m_0 * m_0 - s ;
+  for ( const auto& c : m_channels ) { d -= s_j * c->D ( s , m_0 ) ; }
+  //
+  return 1.0 / d ;
+}
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::BW::tag() const
 { 
-  std::size_t seed =   0 ;
-  for ( const auto&c : m_channels ) { std::hash_combine ( seed , c.tag() ) ; }
-  std::hash_combine ( seed , m_m0 ) ;
+  std::size_t seed = std::hash_combine ( std::string ( "BW" ) , m0 () ) ;
+  for ( const auto&c : m_channels ) { std::hash_combine ( seed , c->tag() ) ; }
   return seed ;
 }
 // ============================================================================
-/*  calculate the Breit-Wigner shape
- *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
- *     { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
+/*  Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+ *  \f[ F_a(m) = 2m \varrho(s) N_a(s,m_0) 
+ *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
+ *  @param x the mass point 
+ *  @param A the amplitide at this point 
  */
 // ============================================================================
-double Ostap::Math::BreitWignerBase::breit_wigner 
-( const double x ) const
+double Ostap::Math::BW::breit_wigner 
+( const double                x ,
+  const std::complex<double>& A ) const 
 {
   if ( x <= threshold () ) { return 0 ; }
-  // get the partial width  for the first channel 
-  const double g0 = m_channels.front().gamma0 () ;
-  
-  // choose normalization point:
-  const double mm = threshold () + g0 ;
-  
-  // actually it is real (both values are above threshold) 
-  const double g  = m_channels.front().gamma ( x , mm ).real() ;
-  if ( 0 >= g ) { return 0 ; }
   //
-  // get the full Breit-Wigner amplitude 
-  std::complex<double> a = amplitude ( x ) ;
+  const double s =  x * x ;
+  /// get the main/first channel 
+  const ChannelBW* c    = channel () ;
   //
-  const double gamma_scale = 1.0 / g0 ;
-  // 
-  return 2 * x * std::norm ( a ) * g * gamma_scale / M_PI  ;
+  /// normalization point 
+  const double mn = threshold () <= m0 () ? m0 () : 1.2 * threshold () ;
+  //  
+  const double     rhos = c -> rho_s ( s , mn  ) ;
+  if ( rhos <= 0 ) { return 0 ; }
+  //
+  const double     n2   = c -> N2 ( s , m0 () ) ;
+  if ( n2   <= 0 ) { return 0 ; }
+  //
+  const double gs = 1 < m_channels.size () ? gamma () / c->gamma0 () : 1.0 ;
+  //
+  return 2 * x * n2 * std::norm ( A ) * rhos * gs / M_PI ;
   //
 }
-// ============================================================================
-/*  calculate the Breit-Wigner shape
- *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
- *      { (\omega_0^2-\omega^2)^2-\omega_0^2\Gammma^2(\omega)-}\f$
- */
-// ============================================================================
-double Ostap::Math::BreitWignerBase::operator() ( const double x ) const
-{ return breit_wigner ( x ) ; }
 // ============================================================================
 // get the nominal total width at the pole 
 // ============================================================================
-double Ostap::Math::BreitWignerBase::gamma0 () const
+double Ostap::Math::BW::gamma () const
 {
   double gamtot = 0 ;
-  for ( const auto& c : m_channels ) { gamtot += c.gamma0 () ; }
+  for ( const auto& c : m_channels ) { gamtot += c->gamma0 () ; }
   return gamtot ;
 }
 // ============================================================================
-// calculate the current width
-// ============================================================================
-std::complex<double> 
-Ostap::Math::BreitWignerBase::gamma ( const double x ) const
-{
-  // if ( x < threshold() ) { return 0 ; }
-  std::complex<double> gamtot = 0 ;
-  for ( const auto& c : m_channels ) { gamtot += c.gamma ( x , m_m0 ) ; }
-  return gamtot ;
-}
-// ============================================================================
-bool Ostap::Math::BreitWignerBase::setM0     ( const double x )
+bool Ostap::Math::BW::setM0     ( const double x )
 {
   const double v       = std::abs ( x ) ;
   if ( s_equal ( v , m_m0 ) ) { return false ; } // RETURN
@@ -731,19 +1109,20 @@ bool Ostap::Math::BreitWignerBase::setM0     ( const double x )
   return true ;
 }
 // ============================================================================
-bool Ostap::Math::BreitWignerBase::setGamma0 ( const double x )
+bool Ostap::Math::BW::setGamma ( const double value )
 {
-  const double v = std::abs ( x ) ;
-  const double g = gamma0 () ;
+  const double v = std::abs ( value ) ;
+  const double g = gamma  () ;
   if ( s_equal ( v , g  ) ) { return false ; } // RETURN
   const double scale = v / g ;
-  for ( auto& c : m_channels ) { c.setGamma0 ( c.gamma0 () *  scale ) ; }
+  for ( auto& c : m_channels ) { c->setGamma0 ( c->gamma0 () *  scale ) ; }
   return true ;
 }
+
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
-double  Ostap::Math::BreitWignerBase::integral
+double  Ostap::Math::BW::integral
 ( const double low  ,
   const double high ) const
 {
@@ -757,7 +1136,7 @@ double  Ostap::Math::BreitWignerBase::integral
   //
   // split into reasonable sub intervals
   //
-  const double g0 = gamma0 () ;
+  const double g0 = gamma () ;
   if ( 0 < g0 ) 
   {
     //
@@ -798,8 +1177,8 @@ double  Ostap::Math::BreitWignerBase::integral
   
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<BreitWignerBase> s_integrator {} ;
-  static char s_message[] = "Integral(BreitWignerBase)" ;
+  static const Ostap::Math::GSL::Integrator1D<BW> s_integrator {} ;
+  static char s_message[] = "Integral(BW)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -824,13 +1203,13 @@ double  Ostap::Math::BreitWignerBase::integral
 // ============================================================================
 // get the integral b
 // ============================================================================
-double  Ostap::Math::BreitWignerBase::integral () const
+double  Ostap::Math::BW::integral () const
 {
   //
   // split into reasonable sub intervals
   //
   const double t      = threshold () ;
-  const double g0     = gamma0 () ;
+  const double g0     = gamma     () ;
   //
   const double x1     = std::max ( t , m_m0 - 10 * g0 ) ;
   const double x2     = std::max ( t , m_m0 + 10 * g0 ) ;
@@ -838,8 +1217,8 @@ double  Ostap::Math::BreitWignerBase::integral () const
   //
   // use GSL to evaluate the integral
   //
-  static const Ostap::Math::GSL::Integrator1D<BreitWignerBase> s_integrator {} ;
-  static char s_message[] = "Integral(BreitWignerBase/tail)" ;
+  static const Ostap::Math::GSL::Integrator1D<BW> s_integrator {} ;
+  static char s_message[] = "Integral(BW/tail)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
@@ -858,6 +1237,14 @@ double  Ostap::Math::BreitWignerBase::integral () const
   //
   return result + integral ( t  , x_high );
 }
+// ============================================================================
+void Ostap::Math::BW::add 
+( const Ostap::Math::ChannelBW& c ) 
+{ 
+  if ( m_channels.empty() ) { m_threshold = std::sqrt ( c.s_threshold() ) ; }
+  m_channels.push_back ( std::unique_ptr<ChannelBW> (  c.clone() ) ) ;
+}
+// ============================================================================
 
 
 // ============================================================================
@@ -877,7 +1264,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double         m1     ,
   const double         m2     ,
   const unsigned short L      ) 
-  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L ) )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L ) )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -896,7 +1283,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double                               m2   ,
   const unsigned short                       L    ,
   const Ostap::Math::FormFactors::JacksonRho F    )  
-  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -915,7 +1302,7 @@ Ostap::Math::BreitWigner::BreitWigner
   const double                               m2   ,
   const unsigned short                       L    ,
   const Ostap::Math::FormFactor&             F    )  
-  : BreitWignerBase ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
+  : BW ( m0 , Ostap::Math::Channel ( gam0 , m1 , m2 , L , F ) )
 {}
 // ============================================================================
 /*  constructor from all parameters
@@ -924,9 +1311,9 @@ Ostap::Math::BreitWigner::BreitWigner
  */
 // ============================================================================
 Ostap::Math::BreitWigner::BreitWigner
-( const double                m0 , 
-  const Ostap::Math::Channel& c  )  
-  : BreitWignerBase ( m0 , c )
+( const double                  m0 , 
+  const Ostap::Math::ChannelBW& c  )  
+  : BW ( m0 , c )
 {}
 // ============================================================================
 // clone it 
@@ -934,11 +1321,6 @@ Ostap::Math::BreitWigner::BreitWigner
 Ostap::Math::BreitWigner*
 Ostap::Math::BreitWigner::clone() const 
 { return new Ostap::Math::BreitWigner ( *this ) ; }
-// ============================================================================
-// get the value of formfactor ratio
-// ============================================================================
-double Ostap::Math::BreitWigner::formfactor ( const double m ) const 
-{ return   channel().formfactor ( m , m0() ) ; }
 // ============================================================================
 
 
@@ -951,9 +1333,9 @@ double Ostap::Math::BreitWigner::formfactor ( const double m ) const
  */
 // ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                m0 ,
-  const Ostap::Math::Channel& c1 )
-  : BreitWignerBase ( m0 , c1 )
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 )
+  : BW ( m0 , c1 )
 {}
 // ===========================================================================
 /*  constructor from two channels 
@@ -963,12 +1345,12 @@ Ostap::Math::BreitWignerMC::BreitWignerMC
  */
 // ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                m0 ,
-  const Ostap::Math::Channel& c1 , 
-  const Ostap::Math::Channel& c2 ) 
-  : BreitWignerBase ( m0 , c1 )
-{ 
-  m_channels.push_back ( c2 ) ; 
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 , 
+  const Ostap::Math::ChannelBW& c2 ) 
+  : BW ( m0 , c1 )
+{
+  add ( c2 ) ; 
 }
 // ===========================================================================
 /*  constructor from three channels 
@@ -979,14 +1361,14 @@ Ostap::Math::BreitWignerMC::BreitWignerMC
  */
 // ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                m0 ,
-  const Ostap::Math::Channel& c1 , 
-  const Ostap::Math::Channel& c2 ,
-  const Ostap::Math::Channel& c3 ) 
-  : BreitWignerBase ( m0 , c1 )
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 , 
+  const Ostap::Math::ChannelBW& c2 ,
+  const Ostap::Math::ChannelBW& c3 ) 
+  : BW ( m0 , c1 )
 { 
-  m_channels.push_back ( c2 ) ; 
-  m_channels.push_back ( c3 ) ; 
+  add ( c2 ) ; 
+  add ( c3 ) ;
 }
 // ===========================================================================
 /*  constructor from four channels 
@@ -998,33 +1380,67 @@ Ostap::Math::BreitWignerMC::BreitWignerMC
  */
 // ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                m0 ,
-  const Ostap::Math::Channel& c1 , 
-  const Ostap::Math::Channel& c2 ,
-  const Ostap::Math::Channel& c3 , 
-  const Ostap::Math::Channel& c4 ) 
-  : BreitWignerBase ( m0 , c1 )
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 , 
+  const Ostap::Math::ChannelBW& c2 ,
+  const Ostap::Math::ChannelBW& c3 , 
+  const Ostap::Math::ChannelBW& c4 ) 
+  : BW ( m0 , c1 )
 { 
-  m_channels.push_back ( c2 ) ; 
-  m_channels.push_back ( c3 ) ; 
-  m_channels.push_back ( c4 ) ; 
+  add ( c2 ) ; 
+  add ( c3 ) ; 
+  add ( c4 ) ; 
 }
-// ============================================================================
-/*  constructor from the list of channels  
+// ===========================================================================
+/*  constructor from five channels 
  *  @param m0   the pole position 
- *  @param cs   list of channels 
+ *  @param c1   the 1st channel 
+ *  @param c2   the 2nd channel 
+ *  @param c3   the 3rd channel 
+ *  @param c4   the 4th channel 
+ *  @param c5   the 5th channel 
  */
-// ============================================================================
+// ===========================================================================
 Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                             m0 ,
-  const std::vector<Ostap::Math::Channel>& cs )
-  : BreitWignerBase ( m0 )
-{
-  Ostap::Assert ( !cs.empty() ,
-                  "BreitWignedMC:empty list of channels!" ,
-                  "Ostap::Math::BReitWignerMC" );
-  m_channels.clear() ;
-  for ( const auto& c : cs ) { m_channels.push_back ( c ) ; }
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 , 
+  const Ostap::Math::ChannelBW& c2 ,
+  const Ostap::Math::ChannelBW& c3 , 
+  const Ostap::Math::ChannelBW& c4 , 
+  const Ostap::Math::ChannelBW& c5 ) 
+  : BW ( m0 , c1 )
+{ 
+  add ( c2 ) ; 
+  add ( c3 ) ; 
+  add ( c4 ) ; 
+  add ( c5 ) ; 
+}
+// ===========================================================================
+/*  constructor from six channels 
+ *  @param m0   the pole position 
+ *  @param c1   the 1st channel 
+ *  @param c2   the 2nd channel 
+ *  @param c3   the 3rd channel 
+ *  @param c4   the 4th channel 
+ *  @param c5   the 5th channel 
+ *  @param c6   the 6th channel 
+ */
+// ===========================================================================
+Ostap::Math::BreitWignerMC::BreitWignerMC 
+( const double                  m0 ,
+  const Ostap::Math::ChannelBW& c1 , 
+  const Ostap::Math::ChannelBW& c2 ,
+  const Ostap::Math::ChannelBW& c3 , 
+  const Ostap::Math::ChannelBW& c4 ,
+  const Ostap::Math::ChannelBW& c5 , 
+  const Ostap::Math::ChannelBW& c6 ) 
+  : BW ( m0 , c1 )
+{ 
+  add ( c2 ) ; 
+  add ( c3 ) ; 
+  add ( c4 ) ; 
+  add ( c5 ) ; 
+  add ( c6 ) ; 
 }
 // ============================================================================
 // clone it 
@@ -1098,54 +1514,87 @@ Ostap::Math::Phi0::Phi0
 // ============================================================================
 Ostap::Math::Phi0::~Phi0(){}
 
+
+// // calculate the function
+// // ============================================================================
+// double Ostap::Math::Rho0FromEtaPrime::operator() ( const double x ) const
+// {
+//   //
+//   if ( m_eta_prime <= x ) { return 0 ; }
+//   //
+//   const double k_gamma = Ostap::Math::PhaseSpace2::q ( m_eta_prime , x , 0 ) ;
+//   if ( 0 >= k_gamma     ) { return 0 ; }
+//   //
+//   const double rho     = breit_wigner ( x ) ;
+//   if ( 0 >= rho         ) { return 0 ; }
+//   //
+//   return rho * Ostap::Math::POW ( 2 * k_gamma / m_eta_prime , 3 ) * 20 ;
+//   //
+// }
+// // ============================================================================
+
 // ============================================================================
-// constructor from all parameters
+// Channel-Flatte
 // ============================================================================
-Ostap::Math::Rho0FromEtaPrime::Rho0FromEtaPrime
-( const double m0        ,
-  const double gam0      ,
-  const double pi_mass   ,
-  const double eta_prime )
-  : Ostap::Math::Rho0 ( m0 , gam0 , pi_mass )
-  , m_eta_prime ( std::abs ( eta_prime ) )
+/** constructor from all parameters 
+ *  @param g2    thew squared coupling constantt  
+ *  @param m1    the mass of the 1st daughter
+ *  @param m2    the mass of the 2nd daughter
+ */
+// ============================================================================
+Ostap::Math::ChannelFlatte::ChannelFlatte
+( const double g2 , 
+  const double m1 , 
+  const double m2 )
+  : ChannelCW ( g2 , m1 , m2 ) 
 {}
 // ============================================================================
-// constructor from all parameters
+// clone it!
 // ============================================================================
-Ostap::Math::Rho0FromEtaPrime::Rho0FromEtaPrime
-( const Ostap::Math::Rho0& rho       ,
-  const double             eta_prime )
-  : Ostap::Math::Rho0 ( rho )
-  , m_eta_prime ( std::abs ( eta_prime ) )
-{}
+Ostap::Math::ChannelFlatte*
+Ostap::Math::ChannelFlatte::clone() const 
+{ return new Ostap::Math::ChannelFlatte ( *this ) ; }
 // ============================================================================
-// clone 
+/*  the first main method: numerator
+ * \f[ N(s,m_0) = \frac{1}{\pi}m_0 g \f] 
+ */
 // ============================================================================
-Ostap::Math::Rho0FromEtaPrime*
-Ostap::Math::Rho0FromEtaPrime::clone() const
-{ return new Rho0FromEtaPrime ( *this ) ; }  
+double Ostap::Math::ChannelFlatte::N2
+( const double /* s */ , 
+  const double    m0   ) const { return m0 * g2 () ; }
 // ============================================================================
-// destructor
+// the second main method: term to the denominator 
 // ============================================================================
-Ostap::Math::Rho0FromEtaPrime::~Rho0FromEtaPrime(){}
-// ============================================================================
-// calculate the function
-// ============================================================================
-double Ostap::Math::Rho0FromEtaPrime::operator() ( const double x ) const
+std::complex<double> 
+Ostap::Math::ChannelFlatte::D   
+( const double s  , 
+  const double m0 ) const 
 {
-  //
-  if ( m_eta_prime <= x ) { return 0 ; }
-  //
-  const double k_gamma = Ostap::Math::PhaseSpace2::q ( m_eta_prime , x , 0 ) ;
-  if ( 0 >= k_gamma     ) { return 0 ; }
-  //
-  const double rho     = breit_wigner ( x ) ;
-  if ( 0 >= rho         ) { return 0 ; }
-  //
-  return rho * Ostap::Math::POW ( 2 * k_gamma / m_eta_prime , 3 ) * 20 ;
-  //
+  return m0 * g2 () * ps2().q1_s ( s )  ;
 }
 // ============================================================================
+// get unique tag/label 
+// ============================================================================
+std::size_t Ostap::Math::ChannelFlatte::tag() const
+{ return std::hash_combine ( std::string ( "ChannelFlatte" ) , 
+                             Ostap::Math::ChannelCW::tag () ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelFlatte::describe() const 
+{
+  return 
+    "ChannelFlatte(" + std::to_string ( gamma0 () ) + 
+    ","          + std::to_string ( m1     () ) + 
+    ","          + std::to_string ( m2     () ) + ")" ;
+}
+// ============================================================================
+
+
+
+
+
+
 
 
 // ============================================================================
@@ -1166,58 +1615,18 @@ Ostap::Math::Flatte::Flatte
   const double mB1   ,
   const double mB2   ,
   const double g0    )
-  : m_m0    ( std::abs ( m0    ) )
-  , m_m0g1  ( std::abs ( m0g1  ) )
-  , m_g2og1 ( std::abs ( g2og1 ) )
-  , m_A1    ( std::abs ( mA1   ) )
-  , m_A2    ( std::abs ( mA2   ) )
-  , m_B1    ( std::abs ( mB1   ) )
-  , m_B2    ( std::abs ( mB2   ) )
-  , m_g0    ( std::abs ( g0    ) )
-    //
-  , m_workspace ()
-{}
-// ============================================================================
-/**  a bit more intuitive ``a'la BreitWigner'' constructor 
- *   @param flag  the flag 
- *   @param m0    the mass 
- *   @param gtot  width parameter     \f$ \Gamma_1 + \Gamma_2 + \Gamma_0 \f$ 
- *   @param mA1   mass of A1
- *   @param mA2   mass of A2
- *   @param mB1   mass of B1
- *   @param mB2   mass of B2
- *   @param g2og1 the width ratio     \f$ \Gamma_2 / \Gamma_1 \f$ 
- *   @param br0   the width fraction  \f$ \frac{\Gamma_0}{\Gamma_1+\Gamma_2+\Gamma_0}\f$ 
- */
-// ============================================================================
-Ostap::Math::Flatte::Flatte
-( const char* /* flag */   ,
-  const double  m0         ,  // m0 
-  const double  gtot       ,  // gamma1 + gamma2 + gamma_0  
-  const double  mA1        ,
-  const double  mA2        ,
-  const double  mB1        ,
-  const double  mB2        ,               
-  const double  g2og1      ,  // gamma2 /   gamma1 
-  const double  br0        )  // gamma0 / ( gamma0 + gamma1 + gamma2)
-  : Flatte ( m0                                      , 
-             m0 * ( 1 - br0 ) * gtot / ( 1 + g2og1 ) , 
-             g2og1                                   ,
-             mA1                                     , 
-             mA2                                     , 
-             mB1                                     , 
-             mB2                                     , 
-             br0 * gtot                              ) 
+  : BW ( m0 , ChannelFlatte ( 1 , mA1 , mA2 ) ) 
 {
-  Ostap::Assert ( 0 <= br0 && br0 < 1.0 , 
-                  "Invalid value for ``br0''-parameter , must be [0,1)"     , 
-                  "Ostap::Math::Flatte" ) ; 
-  Ostap::Assert ( 0 < gtot   , 
-                  "Invalid value for ``gtot''-parameter, must be positive"  , 
-                  "Ostap::Math::Flatte" ) ; 
-  Ostap::Assert ( 0 < g2og1   , 
-                  "Invalid value for ``g2og1''-parameter, must be positive" , 
-                  "Ostap::Math::Flatte" ) ; 
+  add ( ChannelFlatte ( 1  , mB1 , mB2 ) ) ;
+  add ( ChannelCW     ( g0 , mA1 , mA1 ) ) ;
+  //
+  const double g1 = std::abs ( m0g1  / m0   ) ;
+  const double g2 = std::abs ( g2og1 ) * g1   ;
+  //
+  m_channels[0] -> setGamma0 ( g1 ) ;
+  m_channels[1] -> setGamma0 ( g2 ) ;
+  m_channels[2] -> setGamma0 ( g0 ) ;
+  //
 }
 // ============================================================================
 // destructor
@@ -1227,2127 +1636,874 @@ Ostap::Math::Flatte::~Flatte(){}
 Ostap::Math::Flatte*
 Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; }
 // ============================================================================
-// get the value of Flatte function
-// ============================================================================
-double Ostap::Math::Flatte::operator() ( const double x ) const
-{ return flatte ( x ) ; }
-// ============================================================================
 // unique tag
 // ============================================================================
 std::size_t Ostap::Math::Flatte::tag () const
-{
-  return std::hash_combine ( m_m0 , m_m0g1 , m_g2og1 ,
-                             m_A1 , m_A2   ,
-                             m_B1 , m_B2   , m_g0    ) ;
-}
-// ============================================================================
-/// get the running width (complex!)
-// ============================================================================
-std::complex<double> Ostap::Math::Flatte::gamma ( const double x ) const 
-{
-  //
-  const std::complex<double> rho_AA =
-    Ostap::Math::PhaseSpace2::q1 ( x , mA1 () , mA2 () )  ;
-  const std::complex<double> rho_BB =
-    Ostap::Math::PhaseSpace2::q1 ( x , mB1 () , mB2  () )  ;
-  //
-  return m0g1 () * ( rho_AA + g2og1 () * rho_BB ) / m0 () + g0 () ;
-}
-// ======================================================================
-
-// ============================================================================
-// get the complex Flatte amplitude
-// ============================================================================
-std::complex<double> Ostap::Math::Flatte::flatte_amp
-( const double x     )  const
-{
-  //
-  static const std::complex<double> s_j ( 0 , 1 ) ;
-  //
-  const double mm = m0() ;
-  const std::complex<double> v =
-    mm * mm - x * x - s_j * mm * gamma ( x ) ;
-  //
-  return  1.0 / v ;
-}
-// ===========================================================================
-// get the function for pipi-channel
-// ===========================================================================
-double Ostap::Math::Flatte::flatte ( const double x ) const
-{
-  //
-  if ( thresholdA () >= x ) { return 0 ; }
-  //
-  // get the amplitude...
-  const std::complex<double> amp = flatte_amp ( x ) ;
-  //
-  const double ps = Ostap::Math::PhaseSpace2::phasespace ( x ,  mA1() , mA2() ) ;
-  //
-  return x * ps * std::norm ( amp ) * 2 / M_PI * m0g1() ;
-}
-// ===========================================================================
-// get the function for KK-channel
-// ===========================================================================
-double Ostap::Math::Flatte::flatte2 ( const double x ) const
-{
-  //
-  if ( thresholdB () >= x ) { return 0 ; }
-  //
-  // get the amplitude...
-  std::complex<double> amp = flatte_amp ( x ) ;
-  //
-  const double ps = Ostap::Math::PhaseSpace2::phasespace ( x ,  mB1() , mB2() ) ;
-  //
-  return x * ps * std::norm ( amp ) * 2 / M_PI * m0g1 () * g2og1 () ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Flatte::integral
-( const double low  ,
-  const double high ) const
-{
-  //
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  const double a = threshold() ;
-  if ( a >= high ) { return                     0 ; }
-  if ( a >  low  ) { return integral ( a , high ) ; }
-  //
-  const double b = std::max ( thresholdA () , thresholdB () ) ;
-  if ( low < b     && b    < high ) 
-  { return integral ( low , b ) + integral ( b , high ) ; }
-  //
-  if ( low < m_m0  && m_m0 < high ) 
-  { return integral ( low , m_m0 ) + integral ( m_m0 , high ) ; }
-  //
-  const double width =
-    0 > m_m0 ? 0.0 :
-    std::abs ( m_m0g1 / m_m0           ) +
-    std::abs ( m_m0g1 / m_m0 * m_g2og1 ) ;
-  //
-  for ( unsigned int i = 0 ; ( i < 5 ) && ( 0 < width ) ; ++ i ) 
-  {
-    const double x1 = m_m0 + i * width ;
-    if ( low < x1  && x1 < high ) { return integral ( low , x1 ) + integral ( x1 , high ) ; }
-    const double x2 = m_m0 - i * width ;
-    if ( low < x2  && x2 < high ) { return integral ( low , x2 ) + integral ( x2 , high ) ; }
-  }
-  //
-  const double x_low  = 0 < width ? m_m0 - 20 * width : low  ;
-  const double x_high = 0 < width ? m_m0 + 20 * width : high ;
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Flatte> s_integrator {} ;
-  static char s_message[] = "Integral(Flatte)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      ( high   <= x_low  ) ? s_PRECISION_TAIL :
-      ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral b
-// ============================================================================
-double  Ostap::Math::Flatte::integral () const
-{
-  //
-  // split into reasonable sub intervals
-  //
-  const double x_low  = threshold () ;
-  const double x_high = m_m0
-    + 15 * std::abs ( m_m0g1 / m_m0           )
-    + 15 * std::abs ( m_m0g1 / m_m0 * m_g2og1 ) ;
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Flatte> s_integrator {} ;
-  static char s_message[] = "Integral(Flatte/tail)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
-    ( &F , 
-      x_high   ,                     // high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION_TAIL    ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result + integral ( x_low , x_high );
-}
-// ============================================================================
-// set mass
-// ============================================================================
-bool Ostap::Math::Flatte::setM0     ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_m0 ) ) { return false ; }
-  m_m0 = v ;
-  return true ;
-}
-// ============================================================================
-// set mass times G1
-// ============================================================================
-bool Ostap::Math::Flatte::setM0G1   ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_m0g1 ) ) { return false ; }
-  m_m0g1 = v ;
-  return true ;
-}
-// ============================================================================
-// set G2 over G1
-// ============================================================================
-bool Ostap::Math::Flatte::setG2oG1  ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_g2og1 ) ) { return false ; }
-  m_g2og1 = v ;
-  return true ;
-}
-// ============================================================================
-// set G0
-// ============================================================================
-bool Ostap::Math::Flatte::setG0  ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_g0 ) ) { return false ; }
-  m_g0 = v ;
-  return true ;
-}
-// ============================================================================
-
-// ============================================================================
-//               Flatte-2
-// ============================================================================
-/* constructor  from three parameters
- *  @param m0    the mass
- *  @param m0g1  parameter \f$ m_0\times g_1\f$
- *  @param g2og2 parameter \f$ g2/g_1       \f$
- */
-// ============================================================================
-Ostap::Math::Flatte2::Flatte2
-( const double m0    ,
-  const double m0g1  ,
-  const double g2og1 ,
-  const double mA1   ,
-  const double mA2   ,
-  const double mB1   ,
-  const double mB2   )
-  : Ostap::Math::Flatte ( m0 , m0g1 , g2og1 , mA1 , mA2 , mB1 , mB2 )
-{}
-// ============================================================================
-// constructor  from Flatte
-// ============================================================================
-Ostap::Math::Flatte2::Flatte2
-( const Ostap::Math::Flatte& flatte )
-  : Ostap::Math::Flatte ( flatte ) 
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Flatte2::~Flatte2(){}
-// ============================================================================
-Ostap::Math::Flatte2*
-Ostap::Math::Flatte2::clone() const { return new Ostap::Math::Flatte2 ( *this ) ; }
-// ============================================================================
-// get the value of Flatte function
-// ============================================================================
-double Ostap::Math::Flatte2::operator() ( const double x ) const
-{ return flatte2 ( x ) ; }
-// ============================================================================
-// unique tag
-// ============================================================================
-std::size_t Ostap::Math::Flatte2::tag () const
-{ return std::hash_combine ( 0.0 , Ostap::Math::Flatte::tag () )  ; }
-   // ============================================================================
-
-// ============================================================================
-// LASS: Kpi S-wave 
-// ============================================================================
-/*  constructor from all masses and angular momenta
- *  @param m1 the mass of the first  particle
- *  @param m2 the mass of the second particle
- *  @param a  the LASS parameter
- *  @param r  the LASS parameter
- *  @param e  the LASS parameter
- */
-// ============================================================================
-Ostap::Math::LASS::LASS
-( const double         m1 ,
-  const double         m2 ,
-  const double         m0 ,
-  const double         g0 ,
-  const double         a  ,
-  const double         r  ,
-  const double         e  )
-  : m_m0  ( std::abs ( m0 ) )
-  , m_g0  ( std::abs ( g0 ) )
-  , m_a   ( std::abs ( a  ) )
-  , m_r   ( std::abs ( r  ) )
-  , m_e   ( std::abs ( e  ) )
-// phase space
-  , m_ps2 ( m1 , m2 )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::LASS::~LASS(){}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::LASS::setM0 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_m0 ) ) { return false ; }
-  //
-  m_m0 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::LASS::setG0 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_g0 ) ) { return false ; }
-  //
-  m_g0 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::LASS::setA ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_a ) ) { return false ; }
-  //
-  m_a = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::LASS::setR ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_r ) ) { return false ; }
-  //
-  m_r = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::LASS::setE ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_e ) ) { return false ; }
-  //
-  m_e = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// get the (complex) LASS amplitude
-// ============================================================================
-std::complex<double>
-Ostap::Math::LASS::amplitude ( const double x ) const
-{
-  //
-  const double q  = m_ps2.q_ ( x ) ;
-  if ( 0 >= q                ) { return 0 ; }  // RETURN
-  //
-  // get the width:
-  const double gs = gamma_run ( m_g0        ,
-                                x           ,
-                                m_ps2.m1 () ,
-                                m_ps2.m2 () ,
-                                m_m0        ,
-                                // K*(1430) is a scalar! 
-                                0           ) * m_m0 / x  ;
-  //
-  // phase shift:
-  const double cotB = 1.0 / ( m_a * q ) + 0.5 * m_r * q  ;
-  // phase shift:
-  const double cotR = ( m_m0 * m_m0 - x * x )  / m_m0 / gs ;
-  //
-  // const double sinB =  1.0 / std::sqrt ( 1 + cotB*cotB ) ;
-  const double sinB =  1.0 / std::hypot ( 1.0 ,  cotB ) ;
-  const double cosB = cotB * sinB ;
-  //
-  // exp( i*pi/2 )
-  static const std::complex<double> i = std::complex<double>( 0 , 1 );
-  //
-  // exp( i*Delta_B )
-  std::complex<double> deltaB ( cosB , sinB ) ;
-  //
-  // the amplitude
-  std::complex<double> A =
-    1.0 / ( cotB - i ) + m_e * deltaB * deltaB / ( cotR - i ) ;
-  //
-  // scale it!
-  std::complex<double> T = A * ( x / q ) ;
-  //
-  return T ;
-}
-// ============================================================================
-// get the phase space factor
-// ============================================================================
-double Ostap::Math::LASS::phaseSpace ( const double x ) const
-{ return std::max ( 0.0 , m_ps2 ( x ) ) ; }
-// ============================================================================
-// evaluate LASS
-// ============================================================================
-double Ostap::Math::LASS::operator () ( const double x ) const
-{
-  const double result = phaseSpace  ( x ) ;
-  if ( 0 >= result ) { return 0 ; }
-  //
-  return result * std::norm ( amplitude( x ) ) ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::LASS::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= m_ps2.lowEdge  () ) { return 0 ; }
-  //
-  if ( low  <  m_ps2.lowEdge  () )
-  { return integral ( m_ps2.lowEdge() , high ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<LASS> s_integrator {} ;
-  static char s_message[] = "Integral(LASS)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-
-// ============================================================================
-// Bugg
-// ============================================================================
-/*  constructor from all masses and angular momenta
- *  @param M  mass of sigma (very different from the pole positon!)
- *  @param g2 width parameter g2 (4pi width)
- *  @param b1 width parameter b1  (2pi coupling)
- *  @param b2 width parameter b2  (2pi coupling)
- *  @param s1 width parameter s1  (cut-off for 4pi coupling)
- *  @param s2 width parameter s2  (cut-off for 4pi coupling)
- *  @param a  parameter a (the exponential cut-off)
- *  @param m1 the mass of the first  particle
- */
-// ============================================================================
-Ostap::Math::Bugg::Bugg
-( const double         M  ,
-  const double         g2 ,
-  const double         b1 ,
-  const double         b2 ,
-  const double         a  ,
-  const double         s1 ,
-  const double         s2 ,
-  const double         m1 )
-//
-  : m_M  ( std::abs ( M  ) )
-  , m_g2 ( std::abs ( g2 ) )
-  , m_b1 ( std::abs ( b1 ) )
-  , m_b2 ( std::abs ( b2 ) )
-  , m_s1 ( std::abs ( s1 ) )
-  , m_s2 ( std::abs ( s2 ) )
-  , m_a  ( std::abs ( a  ) )
-// phase space
-  , m_ps ( m1 , m1 )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Bugg::~Bugg(){}
-// ============================================================================
-double Ostap::Math::Bugg::rho2_ratio ( const double x ) const
-{
-  if ( lowEdge() >= x ) { return 0 ; }
-  //
-  return
-    Ostap::Math::PhaseSpace2::phasespace ( x    , m1() , m2 () ) /
-    Ostap::Math::PhaseSpace2::phasespace ( M () , m1() , m2 () ) ;
-}
-// ============================================================================
-std::complex<double>
-Ostap::Math::Bugg::rho4_ratio ( const double x ) const
-{
-  //
-  if ( 2 * m1() >= x ) { return 0 ; }
-  //
-  return rho4 ( x ) / rho4 ( M() ) ;
-}
-// ============================================================================
-std::complex<double>
-Ostap::Math::Bugg::rho4 ( const double x ) const
-{
-  const double s  = x * x ;
-  //
-  const double r2 = 1 - 16 * m1() * m1() / s ;
-  //
-  const double r  =
-    std::sqrt ( std::abs ( r2 ) ) *
-    ( 1 + std::exp ( ( s1 () - s )  / s2 () ) ) ;
-  //
-  return 0 <= r2 ?
-    std::complex<double> ( r , 0 ) :
-    std::complex<double> ( 0 , r ) ;
-}
-// ============================================================================
-// Adler's pole
-// ============================================================================
-double Ostap::Math::Bugg::adler ( const double x ) const
-{
-  if ( lowEdge() >= x ) { return 0 ; }
-  //
-  const double pole = 0.5 * m1 () * m1 ()  ;
-  //
-  return ( x * x - pole ) / ( M2 () - pole ) ;
-}
-// ============================================================================
-// get the running width by Bugg
-// ============================================================================
-std::complex<double>
-Ostap::Math::Bugg::gamma ( const double x ) const
-{
-  //
-  if ( lowEdge() >= x ) { return 0 ; }
-  //
-  const double s = x * x ;
-  //
-  const double g1 =
-    b     ( x ) *
-    adler ( x ) * std::exp ( -1 * ( s - M2() )  / a() ) ;
-  //
-  return g1 * rho2_ratio ( x ) + g2 () * rho4_ratio ( x ) ;
-}
-// ============================================================================
-// get the amlitude  (not normalized!)
-// ============================================================================
-std::complex<double>
-Ostap::Math::Bugg::amplitude (  const double x ) const
-{
-  if ( lowEdge() >= x ) { return 0 ; }
-  //
-  static const std::complex<double> j ( 0 , 1 ) ;
-  //
-  std::complex<double> d = M2() - x * x  - j * M() * gamma ( x ) ;
-  //
-  return 1.0 / d ;
-}
-// ============================================================================
-// evaluate Bugg
-// ============================================================================
-double Ostap::Math::Bugg::pdf ( const double x ) const
-{
-  //
-  if ( lowEdge() >= x ) { return 0 ; }
-  //
-  const double result = phaseSpace  ( x ) ;
-  if ( 0 >= result ) { return 0 ; }
-  //
-  return result * std::norm ( amplitude ( x ) ) ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setM ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_M ) ) { return false ; }
-  //
-  m_M = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setG2 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_g2 ) ) { return false ; }
-  //
-  m_g2 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setB1 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_b1 ) ) { return false ; }
-  //
-  m_b1 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setB2 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_b2 ) ) { return false ; }
-  //
-  m_b2 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setS1 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_s1 ) ) { return false ; }
-  //
-  m_s1 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setS2 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_s2 ) ) { return false ; }
-  //
-  m_s2 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Bugg::setA ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_a ) ) { return false ; }
-  //
-  m_a = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Bugg::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  //
-  if ( low  <  lowEdge  () )
-  { return integral ( lowEdge() , high        ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Bugg> s_integrator {} ;
-  static char s_message[] = "Integral(Bugg)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
+{ return std::hash_combine ( std::string ( "Flatte")  ,
+                             Ostap::Math::BW::tag () ) ; }
 
 
-// ============================================================================
-// SWANSON CUSP 
-// ============================================================================
-// constructor
-// ============================================================================
-Ostap::Math::Swanson::Swanson
-( const double         m1     ,   // the first  real particle 
-  const double         m2     ,   // the second real particle                
-  const double         m1_0   ,   // the first  particle for cusp
-  const double         m2_0   ,   // the second particle for cusp 
-  const double         beta_0 ,   // beta_0 parameter
-  const unsigned short L      )   // orbital momentum for real particles 
-  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
-           ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
-           std::abs ( m1 ) , 
-           std::abs ( m2 ) ,  
-           L               ) 
-  , m_m1         ( std::abs (   m1_0 ) )
-  , m_m2         ( std::abs (   m2_0 ) )
-  , m_beta0      ( std::abs ( beta_0 ) )
-    //
-  , m_workspace  ()
-    //
-{}
-// ============================================================================
-// constructor
-// ============================================================================
-Ostap::Math::Swanson::Swanson
-( const double         m1             ,   // the first  real particle 
-  const double         m2             ,   // the second real particle                
-  const double         m1_0           ,   // the first  particle for cusp
-  const double         m2_0           ,   // the second particle for cusp 
-  const double         beta_0         ,   // beta_0 parameter
-  const unsigned short L              ,   // orbital momentum for real particles 
-  const Ostap::Math::FormFactors::JacksonRho  r )  //  formfactor
-  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
-           ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
-           std::abs ( m1 ) , 
-           std::abs ( m2 ) ,  
-           L  , r          )            
-  , m_m1         ( std::abs (   m1_0 ) )
-  , m_m2         ( std::abs (   m2_0 ) )
-  , m_beta0      ( std::abs ( beta_0 ) )
-    //
-  , m_workspace  ()
-    //
-{}
 
-// ============================================================================
-// constructor
-// ============================================================================
-Ostap::Math::Swanson::Swanson
-( const double         m1             ,   // the first  real particle 
-  const double         m2             ,   // the second real particle                
-  const double         m1_0           ,   // the first  particle for cusp
-  const double         m2_0           ,   // the second particle for cusp 
-  const double         beta_0         ,   // beta_0 parameter
-  const unsigned short L              ,   // orbital momentum for real particles 
-  const Ostap::Math::FormFactor&   f  )  //  formfactor
-  : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
-           ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
-           std::abs ( m1 ) , 
-           std::abs ( m2 ) ,  
-           L  , f          )            
-  , m_m1         ( std::abs (   m1_0 ) )
-  , m_m2         ( std::abs (   m2_0 ) )
-  , m_beta0      ( std::abs ( beta_0 ) )
-    //
-  , m_workspace  ()
-    //
-{}
+// // ============================================================================
+// // LASS: Kpi S-wave 
+// // ============================================================================
+// /*  constructor from all masses and angular momenta
+//  *  @param m1 the mass of the first  particle
+//  *  @param m2 the mass of the second particle
+//  *  @param a  the LASS parameter
+//  *  @param r  the LASS parameter
+//  *  @param e  the LASS parameter
+//  */
+// // ============================================================================
+// Ostap::Math::LASS::LASS
+// ( const double         m1 ,
+//   const double         m2 ,
+//   const double         m0 ,
+//   const double         g0 ,
+//   const double         a  ,
+//   const double         r  ,
+//   const double         e  )
+//   : m_m0  ( std::abs ( m0 ) )
+//   , m_g0  ( std::abs ( g0 ) )
+//   , m_a   ( std::abs ( a  ) )
+//   , m_r   ( std::abs ( r  ) )
+//   , m_e   ( std::abs ( e  ) )
+// // phase space
+//   , m_ps2 ( m1 , m2 )
+// //
+//   , m_workspace ()
+// {}
+// // ============================================================================
+// // destructor
+// // ============================================================================
+// Ostap::Math::LASS::~LASS(){}
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::LASS::setM0 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_m0 ) ) { return false ; }
+//   //
+//   m_m0 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::LASS::setG0 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_g0 ) ) { return false ; }
+//   //
+//   m_g0 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::LASS::setA ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_a ) ) { return false ; }
+//   //
+//   m_a = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::LASS::setR ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_r ) ) { return false ; }
+//   //
+//   m_r = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::LASS::setE ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_e ) ) { return false ; }
+//   //
+//   m_e = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // get the (complex) LASS amplitude
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::LASS::amplitude ( const double x ) const
+// {
+//   //
+//   const double q  = m_ps2.q ( x ) ;
+//   if ( 0 >= q                ) { return 0 ; }  // RETURN
+//   //
+//   // get the width:
+//   const double gs = gamma_run ( m_g0        ,
+//                                 x           ,
+//                                 m_ps2.m1 () ,
+//                                 m_ps2.m2 () ,
+//                                 m_m0        ,
+//                                 // K*(1430) is a scalar! 
+//                                 0           ) * m_m0 / x  ;
+//   //
+//   // phase shift:
+//   const double cotB = 1.0 / ( m_a * q ) + 0.5 * m_r * q  ;
+//   // phase shift:
+//   const double cotR = ( m_m0 * m_m0 - x * x )  / m_m0 / gs ;
+//   //
+//   // const double sinB =  1.0 / std::sqrt ( 1 + cotB*cotB ) ;
+//   const double sinB =  1.0 / std::hypot ( 1.0 ,  cotB ) ;
+//   const double cosB = cotB * sinB ;
+//   //
+//   // exp( i*pi/2 )
+//   static const std::complex<double> i = std::complex<double>( 0 , 1 );
+//   //
+//   // exp( i*Delta_B )
+//   std::complex<double> deltaB ( cosB , sinB ) ;
+//   //
+//   // the amplitude
+//   std::complex<double> A =
+//     1.0 / ( cotB - i ) + m_e * deltaB * deltaB / ( cotR - i ) ;
+//   //
+//   // scale it!
+//   std::complex<double> T = A * ( x / q ) ;
+//   //
+//   return T ;
+// }
+// // ============================================================================
+// // get the phase space factor
+// // ============================================================================
+// double Ostap::Math::LASS::phaseSpace ( const double x ) const
+// { return std::max ( 0.0 , m_ps2 ( x ) ) ; }
+// // ============================================================================
+// // evaluate LASS
+// // ============================================================================
+// double Ostap::Math::LASS::operator () ( const double x ) const
+// {
+//   const double result = phaseSpace  ( x ) ;
+//   if ( 0 >= result ) { return 0 ; }
+//   //
+//   return result * std::norm ( amplitude( x ) ) ;
+// }
+// // ============================================================================
+// // get the integral between low and high limits
+// // ============================================================================
+// double  Ostap::Math::LASS::integral
+// ( const double low  ,
+//   const double high ) const
+// {
+//   if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
+//   if (           low > high   ) { return - integral ( high ,
+//                                                       low  ) ; } // RETURN
+//   //
+//   if ( high <= m_ps2.lowEdge  () ) { return 0 ; }
+//   //
+//   if ( low  <  m_ps2.lowEdge  () )
+//   { return integral ( m_ps2.lowEdge() , high ) ; }
+//   //
+//   // use GSL to evaluate the integral
+//   //
+//   static const Ostap::Math::GSL::Integrator1D<LASS> s_integrator {} ;
+//   static char s_message[] = "Integral(LASS)" ;
+//   //
+//   const auto F = s_integrator.make_function ( this ) ;
+//   int    ierror   =  0 ;
+//   double result   =  1 ;
+//   double error    = -1 ;
+//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+//     ( &F , 
+//       low , high          ,          // low & high edges
+//       workspace ( m_workspace ) ,    // workspace      
+//       s_PRECISION         ,          // absolute precision
+//       s_PRECISION         ,          // relative precision
+//       m_workspace.size () ,          // size of workspace
+//       s_message           , 
+//       __FILE__ , __LINE__ ) ;
+//   //
+//   return result ;
+// }
+// // ============================================================================
+
+// // ============================================================================
+// // Bugg
+// // ============================================================================
+// /*  constructor from all masses and angular momenta
+//  *  @param M  mass of sigma (very different from the pole positon!)
+//  *  @param g2 width parameter g2 (4pi width)
+//  *  @param b1 width parameter b1  (2pi coupling)
+//  *  @param b2 width parameter b2  (2pi coupling)
+//  *  @param s1 width parameter s1  (cut-off for 4pi coupling)
+//  *  @param s2 width parameter s2  (cut-off for 4pi coupling)
+//  *  @param a  parameter a (the exponential cut-off)
+//  *  @param m1 the mass of the first  particle
+//  */
+// // ============================================================================
+// Ostap::Math::Bugg::Bugg
+// ( const double         M  ,
+//   const double         g2 ,
+//   const double         b1 ,
+//   const double         b2 ,
+//   const double         a  ,
+//   const double         s1 ,
+//   const double         s2 ,
+//   const double         m1 )
+// //
+//   : m_M  ( std::abs ( M  ) )
+//   , m_g2 ( std::abs ( g2 ) )
+//   , m_b1 ( std::abs ( b1 ) )
+//   , m_b2 ( std::abs ( b2 ) )
+//   , m_s1 ( std::abs ( s1 ) )
+//   , m_s2 ( std::abs ( s2 ) )
+//   , m_a  ( std::abs ( a  ) )
+// // phase space
+//   , m_ps ( m1 , m1 )
+// //
+//   , m_workspace ()
+// {}
+// // ============================================================================
+// // destructor
+// // ============================================================================
+// Ostap::Math::Bugg::~Bugg(){}
+// // ============================================================================
+// double Ostap::Math::Bugg::rho2_ratio ( const double x ) const
+// {
+//   if ( lowEdge() >= x ) { return 0 ; }
+//   //
+//   return
+//     Ostap::Math::PhaseSpace2::phasespace ( x    , m1() , m2 () ) /
+//     Ostap::Math::PhaseSpace2::phasespace ( M () , m1() , m2 () ) ;
+// }
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::Bugg::rho4_ratio ( const double x ) const
+// {
+//   //
+//   if ( 2 * m1() >= x ) { return 0 ; }
+//   //
+//   return rho4 ( x ) / rho4 ( M() ) ;
+// }
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::Bugg::rho4 ( const double x ) const
+// {
+//   const double s  = x * x ;
+//   //
+//   const double r2 = 1 - 16 * m1() * m1() / s ;
+//   //
+//   const double r  =
+//     std::sqrt ( std::abs ( r2 ) ) *
+//     ( 1 + std::exp ( ( s1 () - s )  / s2 () ) ) ;
+//   //
+//   return 0 <= r2 ?
+//     std::complex<double> ( r , 0 ) :
+//     std::complex<double> ( 0 , r ) ;
+// }
+// // ============================================================================
+// // Adler's pole
+// // ============================================================================
+// double Ostap::Math::Bugg::adler ( const double x ) const
+// {
+//   if ( lowEdge() >= x ) { return 0 ; }
+//   //
+//   const double pole = 0.5 * m1 () * m1 ()  ;
+//   //
+//   return ( x * x - pole ) / ( M2 () - pole ) ;
+// }
+// // ============================================================================
+// // get the running width by Bugg
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::Bugg::gamma ( const double x ) const
+// {
+//   //
+//   if ( lowEdge() >= x ) { return 0 ; }
+//   //
+//   const double s = x * x ;
+//   //
+//   const double g1 =
+//     b     ( x ) *
+//     adler ( x ) * std::exp ( -1 * ( s - M2() )  / a() ) ;
+//   //
+//   return g1 * rho2_ratio ( x ) + g2 () * rho4_ratio ( x ) ;
+// }
+// // ============================================================================
+// // get the amlitude  (not normalized!)
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::Bugg::amplitude (  const double x ) const
+// {
+//   if ( lowEdge() >= x ) { return 0 ; }
+//   //
+//   static const std::complex<double> j ( 0 , 1 ) ;
+//   //
+//   std::complex<double> d = M2() - x * x  - j * M() * gamma ( x ) ;
+//   //
+//   return 1.0 / d ;
+// }
+// // ============================================================================
+// // evaluate Bugg
+// // ============================================================================
+// double Ostap::Math::Bugg::pdf ( const double x ) const
+// {
+//   //
+//   if ( lowEdge() >= x ) { return 0 ; }
+//   //
+//   const double result = phaseSpace  ( x ) ;
+//   if ( 0 >= result ) { return 0 ; }
+//   //
+//   return result * std::norm ( amplitude ( x ) ) ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setM ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_M ) ) { return false ; }
+//   //
+//   m_M = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setG2 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_g2 ) ) { return false ; }
+//   //
+//   m_g2 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setB1 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_b1 ) ) { return false ; }
+//   //
+//   m_b1 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setB2 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_b2 ) ) { return false ; }
+//   //
+//   m_b2 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setS1 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_s1 ) ) { return false ; }
+//   //
+//   m_s1 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setS2 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_s2 ) ) { return false ; }
+//   //
+//   m_s2 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Bugg::setA ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_a ) ) { return false ; }
+//   //
+//   m_a = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// // get the integral between low and high limits
+// // ============================================================================
+// double  Ostap::Math::Bugg::integral
+// ( const double low  ,
+//   const double high ) const
+// {
+//   if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
+//   if (           low > high   ) { return - integral ( high ,
+//                                                       low  ) ; } // RETURN
+//   //
+//   if ( high <= lowEdge  () ) { return 0 ; }
+//   //
+//   if ( low  <  lowEdge  () )
+//   { return integral ( lowEdge() , high        ) ; }
+//   //
+//   // use GSL to evaluate the integral
+//   //
+//   static const Ostap::Math::GSL::Integrator1D<Bugg> s_integrator {} ;
+//   static char s_message[] = "Integral(Bugg)" ;
+//   //
+//   const auto F = s_integrator.make_function ( this ) ;
+//   int    ierror   =  0 ;
+//   double result   =  1 ;
+//   double error    = -1 ;
+//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+//     ( &F , 
+//       low , high          ,          // low & high edges
+//       workspace ( m_workspace ) ,    // workspace      
+//       s_PRECISION         ,          // absolute precision
+//       s_PRECISION         ,          // relative precision
+//       m_workspace.size () ,          // size of workspace
+//       s_message           , 
+//       __FILE__ , __LINE__ ) ;
+//   //
+//   return result ;
+// }
+// // ============================================================================
 
 
-// ============================================================================
-// constructor
-// ============================================================================
-Ostap::Math::Swanson::Swanson
-( const Ostap::Math::BreitWigner&   bw             ,   // breit-wigner 
-  const double         m1_0   ,   // the first  particle for cusp
-  const double         m2_0   ,   // the second particle for cusp 
-  const double         beta_0 )   // beta_0 parameter
-  : m_bw     ( bw ) 
-  , m_m1     ( std::abs (   m1_0 ) )
-  , m_m2     ( std::abs (   m2_0 ) )
-  , m_beta0  ( std::abs ( beta_0 ) )
-    //
-  , m_workspace  ()
-    //
-{}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Math::Swanson::Swanson
-( const Ostap::Math::Swanson& sw ) 
-  : m_bw    ( sw.m_bw    )
-  , m_m1    ( sw.m_m1    )
-  , m_m2    ( sw.m_m2    )
-  , m_beta0 ( sw.m_beta0 )
-    //
-  , m_workspace  ()
-    //
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Swanson::~Swanson (){}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Swanson::setM1_0 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_m1 ) ) { return false ; }
-  //
-  m_m1 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Swanson::setM2_0 ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_m2 ) ) { return false ; }
-  //
-  m_m2 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-bool Ostap::Math::Swanson::setBeta0( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_beta0 ) ) { return false ; }
-  //
-  m_beta0 = v ;
-  //
-  return true ;
-}
-// ============================================================================
-//  calculate the Swanson amplitude
-// ============================================================================
-std::complex<double>
-Ostap::Math::Swanson::amplitude ( const double x ) const
-{
-  //
-  const double  f = - s_SQRT2PISQUAREDi*m_beta0/(1/m_m1+1/m_m2) ;
-  //
-  const double zf = 4 * m_m1 * m_m2 / ( m_beta0 * m_beta0 * ( m_m1 + m_m2 ) ) ;
-  const double z  = zf * ( m_m1 + m_m2 - x ) ;
-  //
-  // above threshold, Z is negative 
-  std::complex<double> iZ = 
-    0 <= z ? 
-    std::complex<double>(     std::sqrt (            z   ) , 0 ) :
-    std::complex<double>( 0 , std::sqrt ( std::abs ( z ) )     ) ;
-  //
-  return f * 0.5 * s_SQRTPIHALF * ( 1.0 - s_SQRTPI * iZ * Ostap::Math::erfcx ( iZ ) ) ;
-}
-// ============================================================================
-//  calculate the Swanson shape 
-// ============================================================================
-double Ostap::Math::Swanson::swanson ( const double x ) const
-{
-  if ( m_bw.m1() + m_bw.m2() >= x ) { return 0 ; }
-  //
-  const double               g = m_bw.gamma ( x ).real()  ;
-  if ( 0 >= g                     ) { return 0 ; }  
-  //
-  const std::complex<double> a = amplitude ( x ) ;
-  //
-  return 2 * x * std::norm ( a ) * g / m_bw.gamma0() / M_PI ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Swanson::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  const double x_min  = m_bw.channel().m1() + m_bw.channel().m2() ;
-  if ( x_min >= high ) { return                        0   ; }
-  if ( x_min >  low  ) { return integral  ( x_min , high ) ; }
-  //
-  // split into reasonable sub intervals
-  //
-  const double x1   = x_min +  1 * ( m_m1 + m_m2 ) ;
-  const double x2   = x_min +  2 * ( m_m1 + m_m2 ) ;
-  const double x5   = x_min +  5 * ( m_m1 + m_m2 ) ;
-  const double x10  = x_min + 10 * ( m_m1 + m_m2 ) ;
-  //
-  if ( low <  x1 &&  x1 < high ) { return integral ( low ,  x1 ) + integral (  x1 , high ) ; }
-  if ( low <  x2 &&  x2 < high ) { return integral ( low ,  x2 ) + integral (  x2 , high ) ; }
-  if ( low <  x5 &&  x5 < high ) { return integral ( low ,  x5 ) + integral (  x5 , high ) ; }
-  if ( low < x10 && x10 < high ) { return integral ( low , x10 ) + integral ( x10 , high ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Swanson> s_integrator {} ;
-  static char s_message[] = "Integral(Swanson)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      ( x10  <= low  ) ? s_PRECISION_TAIL :
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
+// // ============================================================================
+// // SWANSON CUSP 
+// // ============================================================================
+// // constructor
+// // ============================================================================
+// Ostap::Math::Swanson::Swanson
+// ( const double         m1     ,   // the first  real particle 
+//   const double         m2     ,   // the second real particle                
+//   const double         m1_0   ,   // the first  particle for cusp
+//   const double         m2_0   ,   // the second particle for cusp 
+//   const double         beta_0 ,   // beta_0 parameter
+//   const unsigned short L      )   // orbital momentum for real particles 
+//   : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+//            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
+//            std::abs ( m1 ) , 
+//            std::abs ( m2 ) ,  
+//            L               ) 
+//   , m_m1         ( std::abs (   m1_0 ) )
+//   , m_m2         ( std::abs (   m2_0 ) )
+//   , m_beta0      ( std::abs ( beta_0 ) )
+//     //
+//   , m_workspace  ()
+//     //
+// {}
+// // ============================================================================
+// // constructor
+// // ============================================================================
+// Ostap::Math::Swanson::Swanson
+// ( const double         m1             ,   // the first  real particle 
+//   const double         m2             ,   // the second real particle                
+//   const double         m1_0           ,   // the first  particle for cusp
+//   const double         m2_0           ,   // the second particle for cusp 
+//   const double         beta_0         ,   // beta_0 parameter
+//   const unsigned short L              ,   // orbital momentum for real particles 
+//   const Ostap::Math::FormFactors::JacksonRho  r )  //  formfactor
+//   : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+//            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
+//            std::abs ( m1 ) , 
+//            std::abs ( m2 ) ,  
+//            L  , r          )            
+//   , m_m1         ( std::abs (   m1_0 ) )
+//   , m_m2         ( std::abs (   m2_0 ) )
+//   , m_beta0      ( std::abs ( beta_0 ) )
+//     //
+//   , m_workspace  ()
+//     //
+// {}
+
+// // ============================================================================
+// // constructor
+// // ============================================================================
+// Ostap::Math::Swanson::Swanson
+// ( const double         m1             ,   // the first  real particle 
+//   const double         m2             ,   // the second real particle                
+//   const double         m1_0           ,   // the first  particle for cusp
+//   const double         m2_0           ,   // the second particle for cusp 
+//   const double         beta_0         ,   // beta_0 parameter
+//   const unsigned short L              ,   // orbital momentum for real particles 
+//   const Ostap::Math::FormFactor&   f  )  //  formfactor
+//   : m_bw ( ( std::abs ( m1 )  + std::abs ( m2 ) ) * 2.1 , // almost arbitrary 
+//            ( std::abs ( m1 )  + std::abs ( m2 ) ) * 0.5 , // almost arbitrary  
+//            std::abs ( m1 ) , 
+//            std::abs ( m2 ) ,  
+//            L  , f          )            
+//   , m_m1         ( std::abs (   m1_0 ) )
+//   , m_m2         ( std::abs (   m2_0 ) )
+//   , m_beta0      ( std::abs ( beta_0 ) )
+//     //
+//   , m_workspace  ()
+//     //
+// {}
+
+
+// // ============================================================================
+// // constructor
+// // ============================================================================
+// Ostap::Math::Swanson::Swanson
+// ( const Ostap::Math::BreitWigner&   bw             ,   // breit-wigner 
+//   const double         m1_0   ,   // the first  particle for cusp
+//   const double         m2_0   ,   // the second particle for cusp 
+//   const double         beta_0 )   // beta_0 parameter
+//   : m_bw     ( bw ) 
+//   , m_m1     ( std::abs (   m1_0 ) )
+//   , m_m2     ( std::abs (   m2_0 ) )
+//   , m_beta0  ( std::abs ( beta_0 ) )
+//     //
+//   , m_workspace  ()
+//     //
+// {}
+// // ============================================================================
+// // copy constructor 
+// // ============================================================================
+// Ostap::Math::Swanson::Swanson
+// ( const Ostap::Math::Swanson& sw ) 
+//   : m_bw    ( sw.m_bw    )
+//   , m_m1    ( sw.m_m1    )
+//   , m_m2    ( sw.m_m2    )
+//   , m_beta0 ( sw.m_beta0 )
+//     //
+//   , m_workspace  ()
+//     //
+// {}
+// // ============================================================================
+// // destructor
+// // ============================================================================
+// Ostap::Math::Swanson::~Swanson (){}
+// // ============================================================================
+// // set the proper parameters
+// // ============================================================================
+// bool Ostap::Math::Swanson::setM1_0 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_m1 ) ) { return false ; }
+//   //
+//   m_m1 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// bool Ostap::Math::Swanson::setM2_0 ( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_m2 ) ) { return false ; }
+//   //
+//   m_m2 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// bool Ostap::Math::Swanson::setBeta0( const double x )
+// {
+//   //
+//   const double v = std::abs ( x ) ;
+//   if ( s_equal ( v , m_beta0 ) ) { return false ; }
+//   //
+//   m_beta0 = v ;
+//   //
+//   return true ;
+// }
+// // ============================================================================
+// //  calculate the Swanson amplitude
+// // ============================================================================
+// std::complex<double>
+// Ostap::Math::Swanson::amplitude ( const double x ) const
+// {
+//   //
+//   const double  f = - s_SQRT2PISQUAREDi*m_beta0/(1/m_m1+1/m_m2) ;
+//   //
+//   const double zf = 4 * m_m1 * m_m2 / ( m_beta0 * m_beta0 * ( m_m1 + m_m2 ) ) ;
+//   const double z  = zf * ( m_m1 + m_m2 - x ) ;
+//   //
+//   // above threshold, Z is negative 
+//   std::complex<double> iZ = 
+//     0 <= z ? 
+//     std::complex<double>(     std::sqrt (            z   ) , 0 ) :
+//     std::complex<double>( 0 , std::sqrt ( std::abs ( z ) )     ) ;
+//   //
+//   return f * 0.5 * s_SQRTPIHALF * ( 1.0 - s_SQRTPI * iZ * Ostap::Math::erfcx ( iZ ) ) ;
+// }
+// // ============================================================================
+// //  calculate the Swanson shape 
+// // ============================================================================
+// double Ostap::Math::Swanson::swanson ( const double x ) const
+// {
+//   if ( m_bw.m1() + m_bw.m2() >= x ) { return 0 ; }
+//   //
+//   const double               g = m_bw.gamma ( x ).real()  ;
+//   if ( 0 >= g                     ) { return 0 ; }  
+//   //
+//   const std::complex<double> a = amplitude ( x ) ;
+//   //
+//   return 2 * x * std::norm ( a ) * g / m_bw.gamma0() / M_PI ;
+// }
+// // ============================================================================
+// // get the integral between low and high limits
+// // ============================================================================
+// double  Ostap::Math::Swanson::integral
+// ( const double low  ,
+//   const double high ) const
+// {
+//   if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
+//   if (           low > high   ) { return - integral ( high ,
+//                                                       low  ) ; } // RETURN
+//   //
+//   const double x_min  = m_bw.channel().m1() + m_bw.channel().m2() ;
+//   if ( x_min >= high ) { return                        0   ; }
+//   if ( x_min >  low  ) { return integral  ( x_min , high ) ; }
+//   //
+//   // split into reasonable sub intervals
+//   //
+//   const double x1   = x_min +  1 * ( m_m1 + m_m2 ) ;
+//   const double x2   = x_min +  2 * ( m_m1 + m_m2 ) ;
+//   const double x5   = x_min +  5 * ( m_m1 + m_m2 ) ;
+//   const double x10  = x_min + 10 * ( m_m1 + m_m2 ) ;
+//   //
+//   if ( low <  x1 &&  x1 < high ) { return integral ( low ,  x1 ) + integral (  x1 , high ) ; }
+//   if ( low <  x2 &&  x2 < high ) { return integral ( low ,  x2 ) + integral (  x2 , high ) ; }
+//   if ( low <  x5 &&  x5 < high ) { return integral ( low ,  x5 ) + integral (  x5 , high ) ; }
+//   if ( low < x10 && x10 < high ) { return integral ( low , x10 ) + integral ( x10 , high ) ; }
+//   //
+//   // use GSL to evaluate the integral
+//   //
+//   static const Ostap::Math::GSL::Integrator1D<Swanson> s_integrator {} ;
+//   static char s_message[] = "Integral(Swanson)" ;
+//   //
+//   const auto F = s_integrator.make_function ( this ) ;
+//   int    ierror   =  0 ;
+//   double result   =  1 ;
+//   double error    = -1 ;
+//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+//     ( &F , 
+//       low , high          ,          // low & high edges
+//       workspace ( m_workspace ) ,    // workspace      
+//       s_PRECISION         ,          // absolute precision
+//       ( x10  <= low  ) ? s_PRECISION_TAIL :
+//       s_PRECISION         ,          // relative precision
+//       m_workspace.size () ,          // size of workspace
+//       s_message           , 
+//       __FILE__ , __LINE__ ) ;
+//   //
+//   return result ;
+// }
+// // ============================================================================
 
 
 
 
-
-// ============================================================================
-// Voigtian
-// ============================================================================
-// constructor  from all parameters
-// ============================================================================
-Ostap::Math::Voigt::Voigt
-( const double m0    ,
-  const double gamma ,
-  const double sigma )
-  : m_m0        ( m0 )
-  , m_gamma     ( std::abs ( gamma ) )
-  , m_sigma     ( std::abs ( sigma ) )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Voigt::~Voigt(){}
-// ============================================================================
-// get the value of Voigt function
-// ============================================================================
-double Ostap::Math::Voigt::operator() ( const double x ) const
-{
-  //
-  const double s1 = 1 / ( m_sigma * s_SQRT2   ) ;
-  const double s2 = 1 / ( m_sigma * s_SQRT2PI ) ;
-  //
-  return Ostap::Math::faddeeva_w
-    ( std::complex<double> ( x - m_m0 , m_gamma ) * s1 ).real() * s2 ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Voigt::integral
-( const double low  ,
-  const double high ) const
-{
-  //
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  const double width = std::max ( m_sigma , m_gamma ) ;
-  //
-  // split into reasonable sub intervals
-  //
-  const double x_low   = m_m0 - 4 * width ;
-  const double x_high  = m_m0 + 4 * width ;
-  //
-  if      ( low <  x_low  && x_low  < high )
-  {
-    return
-      integral (   low  , x_low   ) +
-      integral ( x_low  ,   high  ) ;
-  }
-  else if ( low <  x_high && x_high < high )
-  {
-    return
-      integral (   low  , x_high  ) +
-      integral ( x_high ,   high  ) ;
-  }
-  //
-  // split, if interval too large
-  //
-  if ( 0 < width && 10 * width < high - low  )
-  {
-    return
-      integral ( low                   , 0.5 *  ( high + low ) ) +
-      integral ( 0.5 *  ( high + low ) ,          high         ) ;
-  }
-  //
-  const bool in_tail = 
-    ( low  > m_m0 + 10 * width ) || ( high < m_m0 + 10 * width ) ;
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Voigt> s_integrator {} ;
-  static char s_message[] = "Integral(Voigt)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      m_workspace.size()  ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Voigt::integral () const { return 1 ; }
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Voigt::setM0 ( const double x )
-{
-  //
-  if ( s_equal ( x , m_m0 ) ) { return false ; }
-  //
-  m_m0 = x ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Voigt::setGamma ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_gamma ) ) { return false ; }
-  //
-  m_gamma = v ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Voigt::setSigma ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_sigma ) ) { return false ; }
-  //
-  m_sigma = v ;
-  //
-  return true ;
-}
-// ============================================================================
-/*  full width at half maximum 
- *  @see http://en.wikipedia.org/wiki/Voigt_profile
- */
-// ============================================================================
-double Ostap::Math::Voigt::fwhm   () const 
-{
-  const double fg = 2 * m_sigma * s_Bukin ;
-  return 0.5346 * m_gamma + std::sqrt ( 0.2166 * m_gamma * m_gamma + fg * fg ) ;
-}
-// ============================================================================
-
-
-// ============================================================================
-// PseudoVoigtian
-// T. Ida, M. Ando and H. Toraya
-// "Extended pseudo-Voigt function for approximating the Voigt profile"
-// J. Appl. Cryst. (2000). 33, 1311-1316
-// doi:10.1107/S0021889800010219
-// https://doi.org/10.1107/S0021889800010219
-// ============================================================================
-// constructor  from all parameters
-// ============================================================================
-Ostap::Math::PseudoVoigt::PseudoVoigt
-( const double m0    ,
-  const double gamma ,
-  const double sigma )
-  : m_m0        ( m0 )
-  , m_gamma     ( std::abs ( gamma ) )
-  , m_sigma     ( std::abs ( sigma ) )
-    //
-  , m_w         ( 4 , 0 ) 
-  , m_eta       ( 4 , 0 )
-  , m_workspace ()
-{
-  update() ;  
-}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::PseudoVoigt::~PseudoVoigt(){}
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  /// gaussian profile 
-  inline double f_gauss       ( const double dx , const double gamma ) 
-  { return my_exp ( - dx * dx / ( gamma * gamma) ) / ( gamma * s_SQRTPI ) ; }
-  // ==========================================================================
-  /// lorenzian profile 
-  inline double f_lorentzian  ( const double dx , const double gamma ) 
-  { return gamma / ( ( dx*dx + gamma * gamma)  * M_PI ) ; }
-  // ==========================================================================
-  /// irrational profile 
-  inline double f_irrational  ( const double dx , const double gamma ) 
-  { return std::pow ( 1.0 +  dx*dx/(gamma*gamma) , -1.5 ) / ( 2 * gamma ) ; }
-  // ==========================================================================
-  /// squared sech profile 
-  inline double f_sech2       ( const double dx , const double gamma ) 
-  { 
-    const double s = Ostap::Math::sech ( dx / gamma ) ;
-    return s * s / ( 2 * gamma )  ; 
-  }
-  // ==========================================================================
-  // parametrization data
-  // ==========================================================================
-  const std::array<double,7> s_Ai = {{   0.66000  ,  
-                                         0.15021  ,  
-                                         -1.24984 , 
-                                         4.74052  , 
-                                         -9.48291 ,  
-                                         8.48252  , 
-                                         -2.95553 }} ;
-  const std::array<double,7> s_Bi = {{ -0.42179   , 
-                                       -1.25693   , 
-                                       10.30003   , 
-                                       -23.45651  , 
-                                       29.14158   , 
-                                       -16.60453  ,  
-                                       3.19974    }} ;
-  const std::array<double,7> s_Ci = {{  1.19913   , 
-                                        1.43021   , 
-                                        -15.36331 , 
-                                        47.06071  , 
-                                        -73.61822 ,  
-                                        57.92559  , 
-                                        -17.80614 }} ;
-  const std::array<double,7> s_Di = {{   1.10186  , 
-                                         -0.47745 , 
-                                         -0.68688 , 
-                                         2.76622  ,
-                                         -4.55466 ,
-                                         4.05475  , 
-                                         -1.26571 }} ;
-  const std::array<double,7> s_Fi = {{ -0.30165   , 
-                                       -1.38927   ,
-                                       9.31550    , 
-                                       -24.10743  , 
-                                       34.96491   , 
-                                       -21.18862  ,
-                                       3.70290    }} ;
-  const std::array<double,7> s_Gi = {{ 0.25437    , 
-                                       -0.14107   , 
-                                       3.23653    ,
-                                       -11.09215  , 
-                                       22.10544   , 
-                                       -24.12407  ,  
-                                       9.76947    }} ;
-  const std::array<double,7> s_Hi = {{ 1.01579    , 
-                                       1.50429    , 
-                                       -9.21815   ,
-                                       23.59717   , 
-                                       -39.71134  , 
-                                       32.83023   , 
-                                       -10.02142  }} ;
-  // ==========================================================================
-  inline double w_G ( const double rho ) 
-  { return 1 - rho    *Ostap::Math::Clenshaw::monomial_sum ( s_Ai.rbegin() , 
-                                                             s_Ai.rend()   , rho ).first ; }
-  inline double w_L ( const double rho ) 
-  { return 1 - (1-rho)*Ostap::Math::Clenshaw::monomial_sum ( s_Bi.rbegin() , 
-                                                             s_Bi.rend()   , rho ).first ; }
-  inline double w_I ( const double rho ) 
-  { return             Ostap::Math::Clenshaw::monomial_sum ( s_Ci.rbegin() , 
-                                                             s_Ci.rend()   , rho ).first ; }
-  
-  inline double w_P ( const double rho ) 
-  { return             Ostap::Math::Clenshaw::monomial_sum ( s_Di.rbegin() ,
-                                                             s_Di.rend()   , rho ).first ; }
-  
-  inline double eta_L ( const double rho ) 
-  { return rho * ( 1 + ( 1 - rho ) * Ostap::Math::Clenshaw::monomial_sum ( s_Fi.rbegin() , 
-                                                                           s_Fi.rend()   , rho ).first ) ; } 
-  inline double eta_I ( const double rho ) 
-  { return rho * ( 1 - rho ) * Ostap::Math::Clenshaw::monomial_sum ( s_Gi.rbegin() , 
-                                                                     s_Gi.rend()   , rho ).first  ; }
-  inline double eta_P ( const double rho ) 
-  { return rho * ( 1 - rho ) * Ostap::Math::Clenshaw::monomial_sum ( s_Hi.rbegin() , 
-                                                                     s_Hi.rend()   , rho ).first  ; }  
-  // ==========================================================================
-  // constants 
-  // ==========================================================================
-  // W_G <--> gamma_G 
-  const double s_PV_cG = 1.0 / ( 2*std::sqrt ( std::log ( 2.0 ) ) ) ;
-  // W_L <--> gamma_L 
-  const double s_PV_cL = 0.5  ;
-  // W_I <--> gamma_I 
-  const double s_PV_cI = 1/(2.0*std::sqrt(std::pow(2.0,2.0/3)-1)) ;
-  // W_P <--> gamma_P 
-  const double s_PV_cP = 1/(2.0*std::acosh(std::sqrt(2.0))) ;
-  // ==========================================================================
-}
-// ============================================================================
-double Ostap::Math::PseudoVoigt::fwhm_gauss()  const 
-{ return 2 * m_sigma * s_Bukin ; }
-// ============================================================================
-void Ostap::Math::PseudoVoigt::update() 
-{
-  const double _rho = rho() ;
-  //
-  m_w  [0] =   w_G ( _rho ) * s_PV_cG ;
-  m_w  [1] =   w_L ( _rho ) * s_PV_cL ;
-  m_w  [2] =   w_I ( _rho ) * s_PV_cI ;
-  m_w  [3] =   w_P ( _rho ) * s_PV_cP ;
-  //
-  m_eta[1] = eta_L ( _rho )           ;
-  m_eta[2] = eta_I ( _rho )           ;
-  m_eta[3] = eta_P ( _rho )           ;
-  //
-  m_eta[0] = 1 - m_eta[1] - m_eta[2] - m_eta[3] ;
-}
-// ============================================================================
-// get the value of PseudoVoigt function
-// ============================================================================
-double Ostap::Math::PseudoVoigt::operator() ( const double x ) const
-{
-  //
-  const double gamma_sum = fwhm_gauss() + fwhm_lorentzian() ;
-  //
-  const double dx =  ( x - m_m0 ) / gamma_sum ;
-  //
-  return 
-    ( f_gauss      ( dx , m_w[0] ) * m_eta[0] + 
-      f_lorentzian ( dx , m_w[1] ) * m_eta[1] +             
-      f_irrational ( dx , m_w[2] ) * m_eta[2] + 
-      f_sech2      ( dx , m_w[3] ) * m_eta[3]   ) / gamma_sum ;
-}
-// ============================================================================
-// get the Gaussian component 
-// ============================================================================
-double Ostap::Math::PseudoVoigt::gaussian   ( const double x ) const 
-{
-  const double gamma_sum = fwhm_gauss() + fwhm_lorentzian() ;
-  const double dx =  ( x - m_m0 ) / gamma_sum ;
-  //
-  return f_gauss ( dx , m_w[0] ) * m_eta[0] / gamma_sum ;
-}
-// ============================================================================
-// get the Lorentzian component 
-// ============================================================================
-double Ostap::Math::PseudoVoigt::lorentzian   ( const double x ) const 
-{
-  const double gamma_sum = fwhm_gauss() + fwhm_lorentzian() ;
-  const double dx =  ( x - m_m0 ) / gamma_sum ;
-  //
-  return f_lorentzian ( dx , m_w[1] ) * m_eta[1] / gamma_sum ;
-}
-// ============================================================================
-// get the Irrational component 
-// ============================================================================
-double Ostap::Math::PseudoVoigt::irrational  ( const double x ) const 
-{
-  const double gamma_sum = fwhm_gauss() + fwhm_lorentzian() ;
-  const double dx =  ( x - m_m0 ) / gamma_sum ;
-  //
-  return f_irrational ( dx , m_w[2] ) * m_eta[2] / gamma_sum ;
-}
-// ============================================================================
-// get the Sech2 component 
-// ============================================================================
-double Ostap::Math::PseudoVoigt::sech2  ( const double x ) const 
-{
-  const double gamma_sum = fwhm_gauss() + fwhm_lorentzian() ;
-  const double dx =  ( x - m_m0 ) / gamma_sum ;
-  //
-  return f_sech2 ( dx , m_w[3] ) * m_eta[3] / gamma_sum ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::PseudoVoigt::integral
-( const double low  ,
-  const double high ) const
-{
-  //
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  const double width = std::max ( m_sigma , m_gamma ) ;
-  //
-  // split into reasonable sub intervals
-  //
-  const double x_low   = m_m0 - 4 * width ;
-  const double x_high  = m_m0 + 4 * width ;
-  //
-  if      ( low <  x_low  && x_low  < high )
-  {
-    return
-      integral (   low  , x_low   ) +
-      integral ( x_low  ,   high  ) ;
-  }
-  else if ( low <  x_high && x_high < high )
-  {
-    return
-      integral (   low  , x_high  ) +
-      integral ( x_high ,   high  ) ;
-  }
-  //
-  // split, if interval too large
-  //
-  if ( 0 < width && 10 * width < high - low  )
-  {
-    return
-      integral ( low                   , 0.5 *  ( high + low ) ) +
-      integral ( 0.5 *  ( high + low ) ,          high         ) ;
-  }
-  //
-  const bool in_tail = 
-    ( low  > m_m0 + 10 * width ) || ( high < m_m0 + 10 * width ) ;
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<PseudoVoigt> s_integrator {} ;
-  static char s_message[] = "Integral(PseudoVoigt)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::PseudoVoigt::integral () const { return 1 ; }
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::PseudoVoigt::setM0 ( const double x )
-{
-  //
-  if ( s_equal ( x , m_m0 ) ) { return false ; }
-  //
-  m_m0 = x ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::PseudoVoigt::setGamma ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_gamma ) ) { return false ; }
-  //
-  m_gamma = v ;
-  //
-  // recalculate data 
-  update() ;
-  //
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::PseudoVoigt::setSigma ( const double x )
-{
-  //
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_sigma ) ) { return false ; }
-  //
-  m_sigma = v ;
-  //
-  // recalculate data 
-  update() ;
-  //
-  return true ;
-}
-// ============================================================================
 
 // ============================================================================
 // "2-from-3" shapes 
 // ============================================================================
- 
-
-// ============================================================================
-// constructor from all parameters
-// ============================================================================
-Ostap::Math::BW23L::BW23L
-( const double         m0   ,
-  const double         gam0 ,
-  const double         m1   ,
-  const double         m2   ,
-  const double         m3   ,
-  const double         m    ,
-  const unsigned short L1   ,
-  const unsigned short L2   )
-  //
-  : m_bw ( std::make_unique<BreitWigner> ( m0 , gam0 , m1  , m2 , L1 ) )
-  , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
-    //
-  , m_workspace ()
+Ostap::Math::Channel23L::Channel23L
+( const Ostap::Math::ChannelBW&     ch , 
+  const Ostap::Math::PhaseSpace23L& ps ) 
+  : ChannelBW ( ch ) 
+  , m_channel ( ch.clone() ) 
+  , m_ps      ( ps ) 
+    
 {}
 // ============================================================================
-// constructor from all parameters
+// constructor from the channel and dalitz configuration 
 // ============================================================================
-Ostap::Math::BW23L::BW23L
-( const double                               m0   ,
-  const double                               gam0 ,
-  const double                               m1   ,
-  const double                               m2   ,
-  const double                               m3   ,
-  const double                               m    ,
-  const unsigned short                       L1   ,
-  const unsigned short                       L2   ,
-  const Ostap::Math::FormFactors::JacksonRho r    )
-  //
-  : m_bw ( std::make_unique<BreitWigner> ( m0 , gam0 , m1  , m2 , L1 , r ) )
-  , m_ps ( m1 , m2   , m3  , m  , L2 , L1 )
-//
-  , m_workspace ()
+Ostap::Math::Channel23L::Channel23L
+( const Ostap::Math::ChannelBW&     ch , 
+  const Ostap::Kinematics::Dalitz&  dp , 
+  const unsigned short              L2 ) 
+  : ChannelBW ( ch ) 
+  , m_channel ( ch.clone() ) 
+  , m_ps ( dp.m1() , dp.m2() , dp.m3() , dp.M() , L2 , 0 )
 {}
 // ============================================================================
-// constructor from BreitWigner
+// constructor from the channel and configuration 
 // ============================================================================
-Ostap::Math::BW23L::BW23L
-( const Ostap::Math::BreitWigner& bw ,
-  const double                    m3 ,
-  const double                    m  ,
-  const unsigned short            L2 )
-  //
-  : m_bw ( bw.clone () ) 
-  , m_ps ( bw.channel().m1() , bw.channel().m2() , m3  , m  , L2 , bw.channel(). L() )
-    //
-  , m_workspace ()
+Ostap::Math::Channel23L::Channel23L
+( const Ostap::Math::ChannelCW&     ch , 
+  const double                      m3 ,  
+  const double                      M  ,
+  const unsigned short              L2 )      
+  : ChannelBW ( ch ) 
+  , m_ps ( ch.m1() , ch.m2() , m3 , M , L2 , 0 )
 {}
 // ============================================================================
-// COPY
+// copy constructor 
 // ============================================================================
-Ostap::Math::BW23L::BW23L ( const Ostap::Math::BW23L& right ) 
-  : m_bw ( right.m_bw->clone() ) 
-  , m_ps ( right.m_ps )
+Ostap::Math::Channel23L::Channel23L
+( const Ostap::Math::Channel23L& right ) 
+  : ChannelBW ( right      ) 
+  , m_channel ( right.m_channel->clone() )
+  , m_ps      ( right.m_ps ) 
 {}
 // ============================================================================
-// destructor
+// clone method 
 // ============================================================================
-Ostap::Math::BW23L::~BW23L (){}
+Ostap::Math::Channel23L*
+Ostap::Math::Channel23L::clone () const 
+{ return new Ostap::Math::Channel23L(*this) ; }
 // ============================================================================
-// calculate the shape
+// unique tag for this lineshape 
 // ============================================================================
-double Ostap::Math::BW23L::operator() ( const double x ) const
-{
-  if (  lowEdge() >= x || highEdge()  <= x ) { return 0 ; }
-  //
-  const double bw = std::norm ( m_bw->amplitude ( x ) )   ;
-  //
-  // // get the incomplete phase space factor
-  // const double ps  =                   // get the incomplete phase space factor
-  //   x / M_PI *
-  //   // =======================================================================
-  //   // the second factor is already in our BW !!!
-  //   Ostap::Math::PhaseSpace2::phasespace ( x          , 
-  //                                          m_bw.m1 () , 
-  //                                          m_bw.m2 () , 
-  //                                          m_bw.L  () ) *
-  //   // =======================================================================
-  //   Ostap::Math::PhaseSpace2::phasespace ( m_ps.m  () ,
-  //                                          x          ,
-  //                                          m_ps.m3 () ,
-  //                                          m_ps.L  () ) ;
-  //
-  return bw * m_ps ( x ) ;
-}
+std::size_t Ostap::Math::Channel23L::tag () const
+{ return std::hash_combine ( std::string ( "Channel23L" ) , 
+                             m_channel->tag () , 
+                             m_ps.tag       () ) ; }
 // ============================================================================
-// get the integral between low and high limits
+// describe the channel 
 // ============================================================================
-double  Ostap::Math::BW23L::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  if ( low  >= highEdge () ) { return 0 ; }
-  //
-  if ( low  <  lowEdge  () )
-  { return integral ( lowEdge() , high        ) ; }
-  //
-  if ( high >  highEdge () )
-  { return integral ( low       , highEdge () ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<BW23L> s_integrator {} ;
-  static char s_message[] = "Integral(BW23L)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size()  ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
+std::string Ostap::Math::Channel23L::describe() const 
+{ return "Channel23L(" + m_channel->describe()  + ")" ; }
 // ============================================================================
-// get the integral
-// ============================================================================
-double  Ostap::Math::BW23L::integral () const
-{ return integral ( lowEdge () , highEdge() ) ; }
-// ============================================================================
-
-
-// ============================================================================
-// Flatte23L
-// ============================================================================
-/*  constructor  from all parameters
- *  @param m0    the mass
- *  @param m0g1  parameter \f$ m_0\times g_1\f$
- *  @param g2og2 parameter \f$ g2/g_1       \f$
- *  @param mK    kaon mass
- *  @param mPi   pion mass
- *  @param m3    the mass of the third particle
- *  @param m     the mass of mother particle
- *  @param L     the orbital momentum between the pair and the third particle
+/*  get the phase space factor  \f$ \varrho \f$
+ *  optionally normalized at point \f$ m_n \f$
  */
 // ============================================================================
-Ostap::Math::Flatte23L::Flatte23L
-( const double         m0    ,     // MeV
-  const double         m0g1  ,     // MeV^2
-  const double         g2og1 ,     // dimensionless
-  const double         mA    ,     // MeV
-  const double         mB    ,     // MeV
-  const double         m3    ,     // MeV
-  const double         m     ,     // MeV
-  const unsigned short L     )
-  //
-  : m_flatte ( std::make_unique<Flatte> ( m0  , m0g1 , g2og1 , mA , mA , mB , mB ) )
-  , m_ps        ( mA  , mA  , m3    , m  , L    )
-    //
-  , m_workspace ()
-{}
+double Ostap::Math::Channel23L::rho_s 
+( const double s  , 
+  const double mn ) const 
+{ 
+  const double a = m_ps ( std::sqrt ( s ) ) ;
+  return 
+    mn <= m_ps.lowEdge  () ? a :
+    mn >= m_ps.highEdge () ? a : a / m_ps ( mn )  ;
+}
+
 // ============================================================================
-/* constructor  from flatte function
- *  @param m3    the mass of the third particle
- *  @param m     the mass of mother particle
- *  @param L     the orbital momentum between the pair and the third particle
+// 3-body decays 
+// ============================================================================
+// constructor from (partial) width and three masses 
+// ============================================================================
+Ostap::Math::ChannelNR::ChannelNR
+( const double gamma ,  
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+  : ChannelBW ( gamma ) 
+  , m_m1 ( s_zero ( m1 ) ? 0.0 : std::abs ( m1 ) ) 
+  , m_m2 ( s_zero ( m2 ) ? 0.0 : std::abs ( m2 ) ) 
+  , m_m3 ( s_zero ( m3 ) ? 0.0 : std::abs ( m3 ) )
+  , m_sthreshold ( 0 ) 
+{
+  const double m = m_m1 + m_m2 + m_m3 ;
+  m_sthreshold = m * m ;
+}
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Math::ChannelNR*
+Ostap::Math::ChannelNR::clone () const 
+{ return new Ostap::Math::ChannelNR ( *this ) ; }
+// ============================================================================ 
+/*  squared  numerator for the amplitude 
+ * \f$ N^2(s,m_0) =  m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$ 
+ */
+// ============================================================================ 
+double Ostap::Math::ChannelNR::N2
+( const double s  , 
+  const double m0 ) const 
+{
+  return 
+    s <= m_sthreshold ? 0.0 : 
+    m0 * gamma0 () *
+    Ostap::Kinematics::phasespace3 ( std::sqrt ( s ) , m_m1 , m_m2 , m_m3 ) / 
+    Ostap::Kinematics::phasespace3 (             m0  , m_m1 , m_m2 , m_m3 ) ;
+}
+// ============================================================================
+/*  term in the denominator for the amplitide
+ *  \f$ D(s,m_0) = m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$
  */
 // ============================================================================
-Ostap::Math::Flatte23L::Flatte23L
-( const Ostap::Math::Flatte& fun ,     // MeV
-  const double               m3  ,     // MeV
-  const double               m   ,     // MeV
-  const unsigned short       L   )
-//
-  : m_flatte    ( fun.clone() ) 
-  , m_ps        ( fun.mA1() , fun.mA2()  , m3    , m  , L    )
-    //
-  , m_workspace ()
-{}
-// ============================================================================
-// copy
-// ============================================================================
-Ostap::Math::Flatte23L::Flatte23L
-( const Ostap::Math::Flatte23L& right ) 
-  : m_flatte ( right.m_flatte->clone() )
-  , m_ps     ( right.m_ps )
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Flatte23L::~Flatte23L (){}
-// ============================================================================
-// get the value of Flatte function
-// ============================================================================
-double Ostap::Math::Flatte23L::operator() ( const double x ) const
+std::complex<double> 
+Ostap::Math::ChannelNR::D    
+( const double s  , 
+  const double m0 ) const
 {
-  //
-  if ( lowEdge () >= x || highEdge() <= x ) { return 0 ; } // RETURN
-  //
-  // get the amplitude...
-  std::complex<double> amp = m_flatte->flatte_amp ( x ) ;
-  //
-  return m_ps ( x ) * std::norm ( amp ) * 2 / M_PI * m0g1() ;
+  return 
+    s <= m_sthreshold ? 0.0 : 
+    m0 * gamma0 () *
+    Ostap::Kinematics::phasespace3 ( std::sqrt ( s ) , m_m1 , m_m2 , m_m3 ) / 
+    Ostap::Kinematics::phasespace3 (             m0  , m_m1 , m_m2 , m_m3 ) ;
 }
 // ============================================================================
-// get the integral between low and high limits
+// unique tag for this lineshape 
 // ============================================================================
-double  Ostap::Math::Flatte23L::integral
-( const double low  ,
-  const double high ) const
+std::size_t Ostap::Math::ChannelNR::tag () const
+{ return std::hash_combine ( std::string ( "ChannelNR" ) , 
+                             gamma0 () ,
+                             m_m1 , m_m2 , m_m3 ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelNR::describe() const 
 {
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  if ( low  >= highEdge () ) { return 0 ; }
-  //
-  if ( low  <  lowEdge  () )
-  { return integral ( lowEdge() , high        ) ; }
-  //
-  if ( high >  highEdge () )
-  { return integral ( low       , highEdge () ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Flatte23L> s_integrator {} ;
-  static char s_message[] = "Integral(Flatte23L)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size()  ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
+  return 
+    "ChannelNR(" + std::to_string ( gamma0 () ) + 
+    ","          + std::to_string ( m_m1       ) + 
+    ","          + std::to_string ( m_m2       ) + 
+    ","          + std::to_string ( m_m3       ) + ")" ;
 }
 // ============================================================================
-// get the integral
-// ============================================================================
-double  Ostap::Math::Flatte23L::integral () const
-{ return integral ( lowEdge () , highEdge() ) ; }
-// ============================================================================
-
 
 // ============================================================================
-// Gounaris & Sakurai shape
+// GammaBW3
 // ============================================================================
-/* constructor from all masses and angular momenta
- *  @param M  mass of rho
- *  @param g0 width parameter
- *  @param m1 the mass of the first  particle (the same as the second)
- *  @param m3 the mass of the third  particle
- *  @param m  the mass of the mother particle (m>m1+m2+m3)
- *  @param L  the angular momentum between the first pair and the third
+/* constructor from the Dalitz configuration and 
+ *  the squared matrix element
+ *  @param dalitz Dalizt configriation
+ *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
  */
-// ============================================================================
-Ostap::Math::Gounaris23L::Gounaris23L
-( const double         M  ,  // GeV
-  const double         g0 ,  // GeV
-  const double         m1 ,  // MeV
-  const double         m3 ,  // MeV
-  const double         m  ,  // MeV
-  const unsigned short L  )
-//
-  : m_M  ( std::abs ( M  ) )
-  , m_g0 ( std::abs ( g0 ) )
-//
-  , m_ps ( m1 , m1 , m3 , m , L , 1 )
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Gounaris23L::~Gounaris23L(){}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Gounaris23L::setM ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_M ) ) { return false ; }
-  m_M = v ;
-  return true ;
-}
-// ============================================================================
-// set the proper parameters
-// ============================================================================
-bool Ostap::Math::Gounaris23L::setG0 ( const double x )
-{
-  const double v = std::abs ( x ) ;
-  if ( s_equal ( v , m_g0 ) ) { return false ; }
-  m_g0 = v ;
-  return true ;
-}
-// ============================================================================
-// get h-factor
-// ============================================================================
-double Ostap::Math::Gounaris23L::h ( const double x ,
-                                     const double k ) const
-{
-  if ( lowEdge() > x || highEdge() < x ) { return 0 ; }
-  return 2 * k  / M_PI / x * std::log ( ( x + 2 * k ) / 2 / m1() ) ;
-}
-// ============================================================================
-// get h-factor
-// ============================================================================
-double Ostap::Math::Gounaris23L::h ( const double x ) const
-{
-  if ( lowEdge() > x ) { return 0 ; }
-  const double k = PhaseSpace2::q ( x , m1 () , m1() ) ;
-  return h ( x , k ) ;
-}
-// ============================================================================
-// get h'-factor
-// ============================================================================
-double Ostap::Math::Gounaris23L::h_prime ( const double x ) const
-{
-  if ( lowEdge() > x ) { return 0 ; }
-  const double k = PhaseSpace2::q ( x , m1 () , m1() ) ;
-  return h_prime ( x , k ) ;
-}
-// ============================================================================
-// get h'-factor
-// ============================================================================
-double Ostap::Math::Gounaris23L::h_prime ( const double x ,
-                                           const double k ) const
-{
-  //
-  if ( lowEdge() > x ) { return 0 ; }
-  //
-  const double f =  ( x + 2 * k ) / ( 2  * m1 () ) ;
-  //
-  return k / M_PI / x / x * ( - std::log ( f ) / x  + 0.5 / m1() / f ) ;
-}
-// ============================================================================
-// get the amlitude  (not normalized!)
-// ============================================================================
-std::complex<double>
-Ostap::Math::Gounaris23L::amplitude (  const double x ) const
-{
-  //
-  if ( x <= lowEdge() ) { return 0 ; }
-  //
-  const double k    = PhaseSpace2::q ( x    , m1 () , m1 () ) ;
-  const double k0   = PhaseSpace2::q ( M () , m1 () , m1 () ) ;
-  const double k03  = k0 * k0 * k0 ;
-  //
-  const double m0_2 = M() * M() ;
-  //
-  const double v1   = m0_2 - x * x ;
-  //
-  const double dh   = h ( x , k ) - h ( M() , k0 ) ;
-  const double hp   = h_prime ( m() , k0 ) ;
-  //
-  const double v2 = k * k * dh + k0 * k0 * hp * ( m0_2 - x * x ) ;
-  const double v3 = Ostap::Math::POW ( k/k0 , 3 ) * m0() / x ;
-  //
-  return
-    std::sqrt ( g0 () * m0 () ) /
-    std::complex<double> ( v1 + v2 * g0() * m0_2 / k03 ,
-                           v3      * g0() * m0 ()      ) ;
-}
-// ============================================================================
-// calculate the Gounaris-Sakurai shape
-// ============================================================================
-double Ostap::Math::Gounaris23L::operator() ( const double x ) const
-{
-  //
-  if ( lowEdge() >= x || highEdge() <= x ) { return 0 ; }
-  //
-  std::complex<double> amp = amplitude ( x ) ;
-  const double  ps = m_ps( x ) ;
-  //
-  return x * ps * std::norm ( amp ) * 2 / M_PI  ;
-}
-
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Gounaris23L::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  if ( low  >= highEdge () ) { return 0 ; }
-  //
-  if ( low  <  lowEdge  () )
-  { return integral ( lowEdge() , high        ) ; }
-  //
-  if ( high >  highEdge () )
-  { return integral ( low       , highEdge () ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Gounaris23L> s_integrator {} ;
-  static char s_message[] = "Integral(Gounaris23L)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral
-// ============================================================================
-double  Ostap::Math::Gounaris23L::integral () const
-{ return integral ( lowEdge () , highEdge() ) ; }
-// ============================================================================
-
-
-// ============================================================================
-// LASS: Kpi S-wave for  X -> (K pi) Y decays..
-// ============================================================================
-/*  constructor from all masses and angular momenta
- *  @param m1 the mass of the first  particle
- *  @param m2 the mass of the second particle
- *  @param m3 the mass of the third  particle
- *  @param m  the mass of the mother particle (m>m1+m2+m3)
- *  @param L  the angular momentum between the first pair and the third
- *  @param a  the LASS parameter
- *  @param r  the LASS parameter
- */
-// ============================================================================
-Ostap::Math::LASS23L::LASS23L
-( const double         m1 ,
-  const double         m2 ,
-  const double         m3 ,
-  const double         m  ,
-  const double         m0 ,
-  const double         g0 ,
-  const unsigned short L  ,
-  const double         a  ,
-  const double         r  ,
-  const double         e  )
-// LASS-function 
-  : m_lass ( m1 , m2 , m0 , g0  , a , r , e )
-// phase space
-  , m_ps   ( m1 , m2 , m3 , m   , L , 0 )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-/*  constructor from LASS and 3-rd particle 
- *  @param lass the actual lass shape 
- *  @param m3   the mass of third particle (Y)
- *  @param m    the mass of mother particle (X)
- *  @param L    the orbital momentum between Y and (Kpi) 
- */
-// ============================================================================
-Ostap::Math::LASS23L::LASS23L
-( const Ostap::Math::LASS& lass   , 
-  const double             m3     ,
-  const double             m      ,
-  const unsigned short     L      ) 
-// LASS-function 
-  : m_lass ( lass ) 
-// phase space
-  , m_ps   ( lass.m1 ()  , lass.m2 () , m3 , m   , L , 0 )
-//
-  , m_workspace ()
-{}  
-// ============================================================================
-
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::LASS23L::~LASS23L(){}
-// ============================================================================
-// get the (complex) LASS amplitude
-// ============================================================================
-std::complex<double>
-Ostap::Math::LASS23L::amplitude ( const double x ) const
-{ return m_lass.amplitude ( x )  ; }  
-// ============================================================================
-// get the phase space factor
-// ============================================================================
-double Ostap::Math::LASS23L::phaseSpace ( const double x ) const
-{ return std::max ( 0.0 , m_ps ( x ) ) ; }
-// ============================================================================
-// evaluate LASS
-// ============================================================================
-double Ostap::Math::LASS23L::operator () ( const double x ) const
-{
-  const double result = phaseSpace  ( x ) ;
-  if ( 0 >= result ) { return 0 ; }
-  //
-  return result * std::norm ( amplitude( x ) ) ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::LASS23L::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= m_ps.lowEdge  () ) { return 0 ; }
-  if ( low  >= m_ps.highEdge () ) { return 0 ; }
-  //
-  if ( low  <  m_ps.lowEdge  () )
-  { return integral ( m_ps.lowEdge() , high             ) ; }
-  if ( high >  m_ps.highEdge () )
-  { return integral ( low            , m_ps.highEdge () ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<LASS23L> s_integrator {} ;
-  static char s_message[] = "Integral(LASS23L)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           , 
-      __FILE__ , __LINE__ ) ;
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral
-// ============================================================================
-double  Ostap::Math::LASS23L::integral () const
-{ return integral ( m_ps.lowEdge () , m_ps.highEdge() ) ; }
-// ============================================================================
-
-// ============================================================================
-// Bugg23L
-// ============================================================================
-/*  constructor from all masses and angular momenta
- *  @param M  mass of sigma (very different from the pole positon!)
- *  @param g2 width parameter g2 (4pi width)
- *  @param b1 width parameter b1  (2pi coupling)
- *  @param b2 width parameter b2  (2pi coupling)
- *  @param s1 width parameter s1  (cut-off for 4pi coupling)
- *  @param s2 width parameter s2  (cut-off for 4pi coupling)
- *  @param a  parameter a (the exponential cut-off)
- *  @param m1 the mass of the first  particle
- *  @param m3 the mass of the third  particle
- *  @param m  the mass of the mother particle (m>m1+m2+m3)
- *  @param L  the angular momentum between the first pair and the third
- */
-// ============================================================================
-Ostap::Math::Bugg23L::Bugg23L
-( const double         M  ,
-  const double         g2 ,
-  const double         b1 ,
-  const double         b2 ,
-  const double         a  ,
-  const double         s1 ,
-  const double         s2 ,
-  const double         m1 ,
-  const double         m3 ,
-  const double         m  ,
-  const unsigned short L  )
-//
-  : m_bugg ( M  , g2 , b1 , b2 , a , s1 , s2 , m1 ) 
-  , m_ps   ( m1 , m1 , m3 , m  , L , 0 )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-/*  constructor from bugg & phase space parameters 
- *  @param m3 the mass of the third  particle
- *  @param m  the mass of the mother particle (m>m1+m2+m3)
- *  @param L  the angular momentum between the first pair and the third
- */
-// ============================================================================
-Ostap::Math::Bugg23L::Bugg23L
-( const Ostap::Math::Bugg& bugg ,
-  const double             m3   ,  // MeV
-  const double             m    ,  // MeV
-  const unsigned short     L    ) 
-//
-  : m_bugg ( bugg ) 
-  , m_ps   ( bugg.m1 () , bugg.m1 ()  , m3 , m  , L , 0 )
-//
-  , m_workspace ()
-{}
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Bugg23L::~Bugg23L(){}
-// ============================================================================
-// evaluate Bugg
-// ============================================================================
-double Ostap::Math::Bugg23L::pdf ( const double x ) const
-{
-  //
-  if ( lowEdge() >= x || highEdge() <= x ) { return 0 ; }
-  //
-  const double result = phaseSpace  ( x ) ;
-  if ( 0 >= result ) { return 0 ; }
-  //
-  return result * std::norm ( amplitude ( x ) ) ;
-}
-// ============================================================================
-// get the integral between low and high limits
-// ============================================================================
-double  Ostap::Math::Bugg23L::integral
-( const double low  ,
-  const double high ) const
-{
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
-  //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  if ( low  >= highEdge () ) { return 0 ; }
-  //
-  if ( low  <  lowEdge  () )
-  { return integral ( lowEdge() , high        ) ; }
-  //
-  if ( high >  highEdge () )
-  { return integral ( low       , highEdge () ) ; }
-  //
-  // use GSL to evaluate the integral
-  //
-  static const Ostap::Math::GSL::Integrator1D<Bugg23L> s_integrator {} ;
-  static char s_message[] = "Integral(Bugg23L)" ;
-  //
-  const auto F = s_integrator.make_function ( this ) ;
-  int    ierror   =  0 ;
-  double result   =  1 ;
-  double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-    ( &F , 
-      low , high          ,          // low & high edges
-      workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
-      m_workspace.size () ,          // size of workspace
-      s_message           ,          // message 
-      __FILE__ , __LINE__ ) ;        // file and line  
-  //
-  return result ;
-}
-// ============================================================================
-// get the integral
-// ============================================================================
-double  Ostap::Math::Bugg23L::integral () const
-{ return integral ( lowEdge () , highEdge() ) ; }
-// ============================================================================
-
-
-
-
-// ============================================================================
-// constructor from the matrix element and Dalitz' configuration
 // ============================================================================
 Ostap::Math::GammaBW3::GammaBW3 
-( const Ostap::Kinematics::Dalitz0&            dalitz , 
-  const Ostap::Math::GammaBW3::MatrixElement2& me2    ,
-  const std::size_t                            tag    ) 
+( const Ostap::Kinematics::Dalitz0&     dalitz , 
+  Ostap::Math::GammaBW3::MatrixElement2 me2    , 
+  const std::size_t                     tag    ) 
   : m_me2    ( me2    ) 
   , m_dalitz ( dalitz )
-  , m_tag    ( tag    ) 
+  , m_tag    ( tag    )
 {}
+// ============================================================================
+// Ostap::Math::GammaBW3::GammaBW3 
+// ( const Ostap::Kinematics::Dalitz0& dalitz , 
+//   const Ostap::Decays::IDecay&      decay  , 
+//   const std::size_t                 tag    ) 
+//   : GammaBW3 ( dalitz , MatrixElement2 ( Ostap::Decays::Decay ( decay ) ) , tag )
+// {}
 // ============================================================================
 // the main method 
 // ============================================================================
@@ -3361,6 +2517,29 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
     Ostap::Math::DalitzIntegrator::integrate_s1s2 
     ( m_tag , std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) ;
 }
+
+// ============================================================================
+// constructor from (partial) width
+// ============================================================================
+Ostap::Math::ChannelDalitz::ChannelDalitz 
+( const double                                 gamma       , 
+  const Ostap::Kinematics::Dalitz0&            dalitz      , 
+  Ostap::Math::GammaBW3::MatrixElement2        me2         ,
+  const std::size_t                            tag         , 
+  const std::string&                           description )
+  : ChannelWidth ( gamma                           , 
+                   Ostap::Math::GammaBW3 ( dalitz , me2 , tag ) , 
+                   dalitz.s_min()                  , 
+                   tag                             , 
+                   description                     ) 
+{}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelDalitz*
+Ostap::Math::ChannelDalitz::clone() const 
+{ return new Ostap::Math::ChannelDalitz ( *this ) ; }
+// ============================================================================
 
 
 // ============================================================================

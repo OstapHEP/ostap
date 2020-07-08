@@ -17,6 +17,10 @@
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Dalitz.h"
 // ============================================================================
+// forward declarations 
+// ============================================================================
+// namespace Ostap { namespace Decays { class IDecay ; } }
+// ============================================================================
 /** @file Ostap/BreitWigner.h
  *
  * Set of useful models for describing signal peaks with the natural width:
@@ -25,7 +29,6 @@
  *  - LASS  (kappa) 
  *  - Bugg  (sigma-pole)
  *  - Gounaris-Sakurai
- *  - Voight &Co 
  *  - ...
  *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -65,37 +68,541 @@ namespace Ostap
        *  In Nuovo Cimento, Vol. XXXIV, N.6
        */
       enum JacksonRho {
-        Jackson_0  = 0 ,/// \f$\rho(\omega) = 1 \f$
-        Jackson_A2 ,/// \f$ 1^- \rightarrow 0^- 0^- \f$ , l = 1
-        Jackson_A3 ,/// \f$          1^- \rightarrow 0^- 1^- \f$ , l = 1
-        Jackson_A4 ,/// \f$ \frac{3}{2}+ \rightarrow 0^- \frac{1}{2}^+ \f$ , l = 1
-        Jackson_A5 ,/// \f$ \frac{3}{2}- \rightarrow 0^- \frac{1}{2}^+ \f$ , l = 2
-        Jackson_A7 /// recommended for rho0 -> pi+ pi-
+        Jackson_0  = 0 , /// \f$\rho(\omega) = 1 \f$
+        Jackson_A2     , /// \f$ 1^- \rightarrow 0^- 0^- \f$ , l = 1
+        Jackson_A3     , /// \f$          1^- \rightarrow 0^- 1^- \f$ , l = 1
+        Jackson_A4     , /// \f$ \frac{3}{2}+ \rightarrow 0^- \frac{1}{2}^+ \f$ , l = 1
+        Jackson_A5     , /// \f$ \frac{3}{2}- \rightarrow 0^- \frac{1}{2}^+ \f$ , l = 2
+        Jackson_A7       /// recommended for rho0 -> pi+ pi-
       } ;
       // ======================================================================
     } //                          the end of namespace Ostap::Math::FormFactors
     // ========================================================================
-    /** @class Channel
-     *  simple definition fo the decay channel 
-     *  - width 
-     *  - massed of  daughet particles
-     *  - orbital momentum 
-     *  - form factor
+    /** @class ChannelBW
+     *  Simple definition of the decay channel for the Breit-Wigner function 
+     *  It defines three function 
+     *  - \f$ N^2_a(s)     \f$  
+     *  - \f$ D_a(s)       \f$
+     *  - \f$ \varrho_a(s) \f$
+     *  
+     *  With these factors for the channel \f$ a \f$ the BW-amplitude is 
+     *  \f[ \mathcal{A}_a (s) \propto \frac{1} { m_0^2 - s - iD_a(s,m_0) } \f] 
+     *  The amplitude can be scaled with \f$ N_a(s,m_0)\f$, if needed.  
+     *
+     *  The final mass distribution is 
+     *  \f[ F(m) \propto \frac{2 m}{\pi} \varrho ( m^2 ) N^2 ( m^2 , m_0 ) \left| \mathcal{A}(m^2) \right|^2 \f$ 
+     * 
+     *  For many simple cases one has \f$ \varrho (s ) N^2(s,m_0) = D(s,m_0) \$.  
+     *
+     *  For multi-channel case the amplitude in the channel \f$ a \f$ is 
+     *  \f[ \mathcal{A}_a (s) = \frac{1}{ m_0^2 - s - i\sum_b D_b(s,m_0) } \f] 
+     *  
      */ 
-    class Channel
+    class ChannelBW
+    {
+      // =======================================================================
+    public:
+      // =======================================================================
+      /** constructor from the partial width (or squared coupling constant).
+       *  - For above threshold channels \f$ m^2_0 >s_{threshold} \f$ 
+       *  it it partial width 
+       *  - For sub threshold channels \f$ m^2_0 < s_{threshold} \f$ 
+       *  it is proportional to the squared coupling constant 
+       */ 
+      ChannelBW ( const double gamma  ) ; 
+      ChannelBW ( const ChannelBW&    ) = default ;
+      ChannelBW (       ChannelBW&&   ) = default ;      
+      /// virtual destructor 
+      virtual ~ChannelBW () ; // virtual destructor 
+      /// clone-method 
+      virtual  ChannelBW*           clone () const = 0 ;
+      // =======================================================================
+    public:  // the main methods 
+      // =======================================================================
+      /// squared  numerator for the amplitude 
+      virtual double               N2
+      ( const double s  , 
+        const double m0 ) const = 0 ;      
+      /// term in the denominator for the amplitide
+      virtual std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const = 0 ;      
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       */
+      virtual double rho_s 
+      ( const double s  , 
+        const double mn ) const = 0 ;
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      virtual double s_threshold () const = 0 ;
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      virtual std::size_t tag         () const = 0 ;
+      /// describe the channel 
+      virtual std::string describe  () const = 0 ;
+      // =======================================================================
+    public: // interpret it as (a partial) width 
+      // =======================================================================
+      /// get the partial width for the channel 
+      virtual double  gamma0 () const { return m_gamma0 ; } // get the partial width
+      /// set the partial width for this channel 
+      virtual bool setGamma0 ( const double value ) ;       // set the partial width 
+      // =======================================================================
+    public: // interpret it as (a squared) coupling constant 
+      // =======================================================================
+      /// squared coupling constant 
+      inline double g2    () const { return gamma0 () ; } // squared coupling constant 
+      /// set a squared coupling constant 
+      inline bool   setG2 ( const double value ) { return setGamma0 ( value ) ; }
+      // =======================================================================
+    private : 
+      // =======================================================================
+      /// the decay width for this channel 
+      double m_gamma0 { 0 } ; // the decay width for this channel 
+      // =======================================================================      
+    } ;
+    // =========================================================================
+    /** @class ChannelGeneric
+     *  Generic description of the channel. 
+     *  \f[ \beginP{array}{lcl}
+     *   N^2(s,m_0) & = & m_0 \Gamma0 f_{N^2}(s,m_0)\ \
+     *   D (s,m_0)  & = & m_0 \Gamma0 f_{D}(s,m_0)  \                   \
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)
+     *  \end{array}\,,\f]
+     *  where \f$ f_{N^2}]\f$,  \f$ f_{D}]\f$ and 
+     *  \f$ f_{\varrho}]\f$ are provdied externally
+     */
+    // class ChannelGeneric : public ChannelBW 
+    // {
+    // public:
+    //   // =======================================================================
+    //   /** @typedef Fun_N2 
+    //    *  the function type for \f$ N^2(s,m_0)\f$
+    //    */
+    //   typedef std::function<double(double,double)>                 Fun_N2  ;
+    //   // =======================================================================
+    //   /** @typedef Fun_D 
+    //    *  the function type for \f$ D(s,m_0)\f$
+    //    */
+    //   typedef std::function<std::complex<double>(double,double)>   Fun_D   ;
+    //   // =======================================================================
+    //   /** @typedef Fun_Dr 
+    //    *  the (real-valued) type function type for \f$ D(s,m_0)\f$
+    //    */
+    //   typedef std::function<double(double,double)>                 Fun_Dr  ;
+    //   // ======================================================================
+    //   /** @typedef Fun_rho 
+    //    *  the function type for \f$ \varrho(s,m_n)\f$
+    //    */
+    //   typedef std::function<double(double,double)>                 Fun_rho ;
+    //   // ======================================================================
+    // public : 
+    //   // ======================================================================
+    //   /// full constructor with all fucntions specifie
+    //   ChannelGeneric ( const double       gamma                          , 
+    //                    const Fun_N2&      fN2                            , 
+    //                    const Fun_D&       fD                             , 
+    //                    const Fun_rho&     frho                           , 
+    //                    const double       sthreshold                     , 
+    //                    const std::size_t  tag                            ,
+    //                    const std::string& description = "GenericChannel" ) ;
+    
+    //   // ======================================================================= 
+    //   /// Constructor  with only real-valued functions 
+    //   ChannelGeneric ( const double       gamma                          , 
+    //                    const Fun_N2&      fN2                            , 
+    //                    Fun_Dr             fDr                            , 
+    //                    const Fun_rho&     frho                           , 
+    //                    const double       sthreshold                     , 
+    //                    const std::size_t  tag                            ,
+    //                    const std::string& description = "GenericChannel" ) ;
+    //   // =======================================================================
+    //   /// short constructor  with real-valued functions 
+    //   ChannelGeneric ( const double       gamma                          ,
+    //                    Fun_Dr             fDr                            , 
+    //                    const double       sthreshold                     , 
+    //                    const std::size_t  tag                            ,
+    //                    const std::string& description = "GenericChannel" ) ;
+    //   // =======================================================================
+    //   ///  copy constructor
+    //   ChannelGeneric ( const ChannelGeneric& right ) = default ;
+    //   // =======================================================================
+    //   /// clone method
+    //   ChannelGeneric*  clone() const override ; // clone method
+    //   // =======================================================================
+    // public:
+    //   // =======================================================================
+    //   /** squared  numerator for the amplitude 
+    //    * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s,m_0)\f]
+    //    */
+    //   double               N2
+    //   ( const double s  , 
+    //     const double m0 ) const override { return m0 * gamma0 () * m_fN2 ( s , m0 ) ; }      
+    //   // ======================================================================
+    //   /** term in the denominator for the amplitide
+    //    * \f[ D (s,m_0) = m_0 \Gamma0 f_{D}(s,m_0)\f]
+    //    */
+    //   // ======================================================================
+    //   std::complex<double> D    
+    //   ( const double s  , 
+    //     const double m0 ) const override { return m0 * gamma0 () * m_fD  ( s , m0 ) ; }
+    //   // ======================================================================
+    //   /** get the phase space factor  \f$ \varrho(s) \f$
+    //    *  optionally normalized at the point \f$ m_n \f$ 
+    //    * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)\f] 
+    //    */
+    //   double rho_s 
+    //   ( const double s  , 
+    //     const double mn ) const override 
+    //   { return s <= m_sthreshold ? 0.0 : m_frho ( s , mn ) ; }
+    //   /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+    //   double s_threshold () const override { return m_sthreshold ; }
+    //   // =======================================================================
+    // public: //  helper methods 
+    //   // =======================================================================
+    //   /// unique tag/label  
+    //   std::size_t tag       () const override ;
+    //   /// describe the channel 
+    //   std::string describe  () const override ;
+    //   // =======================================================================
+    // private :
+    //   // =======================================================================
+    //   /// function N2 
+    //   Fun_N2  m_fN2             ; // function N2 
+    //   /// function D
+    //   Fun_D   m_fD              ; // function D
+    //   /// function rho
+    //   Fun_rho m_frho            ; // function rho
+    //   /// s-threhold 
+    //   double  m_sthreshold      ; // s-threhold 
+    //   /// unique tag 
+    //   std::size_t m_tag         ; // unique tag 
+    //   /// description 
+    //   std::string m_description ; // description 
+    //   // ======================================================================
+    // } ;
+
+    
+    // =========================================================================
+    /** @class ChannelCW
+     *  Trivial "constant-width" channel 
+     *  \f[ \begin{array}{ncl}
+     *  N & = & m_0 \Gamma_0 \\ 
+     *  D & = & m_0 \Gamma_0 
+     *  \end{array} \f]
+     *  - the constant width  
+     *  - masses of daughter particles
+     */ 
+    class ChannelCW : public ChannelBW 
     {
     public:
       // ======================================================================
-      /** constructor from all parameters and no formfactor
+      /** constructor from all parameters and *NO* formfactor
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       */
+      ChannelCW ( const double                  gamma = 0.150 , 
+                  const double                  m1    = 0.139 , 
+                  const double                  m2    = 0.139 ) ;
+      // ======================================================================
+      /// clone the channel 
+      ChannelCW* clone () const override ;
+      // ======================================================================
+    public: // trivial accessors  
+      // ======================================================================
+      /// get the mass of the 1st daughter 
+      double            m1         () const { return m_ps2.m1 ()         ; }
+      /// get the mass of the 2nd daughter  
+      double            m2         () const { return m_ps2.m2 ()         ; }
+      /// phase space function 
+      const Ostap::Math::PhaseSpace2& ps2 () const { return m_ps2 ; }
+      // ======================================================================
+    public: // two main methods
+      // ======================================================================
+      /** the first main method: numerator
+       *   \f[ N^2(s,m_0) = m_0\Gamma_0\f]
+       */
+      double N2 
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** the second main method: term to the denominator 
+       *  \f[ D(s,m_0) = m_0\Gamma_0 \f] 
+       */
+      std::complex<double> D 
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho \f$, 
+       *  (optionally normalized at point \f$ m_n \f$)
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override ;
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override ;
+      // =======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag      () const override ; // unique tag
+      // ======================================================================
+      /// describe the channel 
+      std::string describe () const override ;
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      /// two body phase space 
+      Ostap::Math::PhaseSpace2                 m_ps2 ; // two body phase space 
+      // ======================================================================
+    };
+    // =========================================================================
+    /** @class ChannelWidth
+     *  Description of the channel with generic mass-dependent width 
+     *  \f[ \beginP{array}{lcl}
+     *   N^2(s,m_0)      & = & m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \\
+     *   D (s,m_0)       & = & m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \\
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
+     *  \end{array}\,,\f]
+     */
+    class ChannelWidth : public ChannelBW 
+    {
+    public:
+      // =======================================================================
+      /** @typedef Width 
+       *  the function type for the mass-dependent width
+       */
+      typedef std::function<double(double)> Width ;
+      // =======================================================================
+    public : 
+      // ======================================================================
+      /// full constructor with all functions specified 
+      ChannelWidth ( const double       gamma                        ,
+                     Width              width                        ,  
+                     const double       sthreshold                   , 
+                     const std::size_t  tag                          ,
+                     const std::string& description = "ChannelWidth" ) ;
+      // =======================================================================
+      /// templated constructor
+      template <class WIDTH>
+      ChannelWidth 
+      ( const double       gamma                        ,
+        WIDTH              width                        ,  
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelWidth" ) 
+        : ChannelBW     ( gamma ) 
+        , m_w           ( width ) 
+        , m_sthreshold  ( std::abs ( sthreshold ) ) 
+        , m_tag         ( tag   ) 
+        , m_description ( description ) 
+      {}
+      /// clone the channel 
+      ChannelWidth* clone () const override ;
+      // ======================================================================
+    public:
+      // =======================================================================
+      template <class WIDTH>
+      static inline ChannelWidth 
+      create ( const double       gamma                        , 
+               WIDTH              width                        , 
+               const double       sthreshold                   , 
+               const std::size_t  tag                          ,
+               const std::string& description = "ChannelWidth" ) 
+      { return ChannelWidth ( gamma , width , sthreshold , tag , description ) ; }
+      // ======================================================================
+    public:
+      // =======================================================================
+      /** squared  numerator for the amplitude 
+       * \f[ N^2(s,m_0) = m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \f] 
+       */
+      double N2
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_sthreshold ? 0.0 : m0 * gamma0 () * m_w ( s ) / m_w ( m0 * m0 ) ; }      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       * \f[ D (s,m_0) = m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \f] 
+       */
+      // ======================================================================
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_sthreshold ? 0.0 : m0 * gamma0 () * m_w ( s ) / m_w ( m0 * m0 ) ; }      
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override 
+      { return s <= m_sthreshold ? 0.0 : 1 ; }
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override { return m_description ; }
+      // =======================================================================
+    private :
+      // =======================================================================
+      /// mass-dependent width 
+      Width       m_w           ; // mass-dependent width 
+      /// s-threshold 
+      double      m_sthreshold  ; // s-threshold 
+      /// unique tag/lable 
+      std::size_t m_tag         ; // unique tag/lable 
+      /// description 
+      std::string m_description ;
+      // ======================================================================
+    } ;
+
+   
+    // =========================================================================
+    /** @class ChannelGamma
+     *  Description of the channel with generic mass-dependent width 
+     *  \f[ \beginP{array}{lcl}
+     *   N^2(s,m_0)      & = & \Gamma0 \gamma(s) } \\
+     *   D (s,m_0)       & = & \Gamma0 \gamma(s) } \\
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
+     *  \end{array}\,,\f]
+     */
+    class ChannelGamma : public ChannelBW 
+    {
+    public:
+      // =======================================================================
+      /** @typedef Width 
+       *  the function type for the mass-dependent width
+       */
+      typedef std::function<double(double)> Width ;
+      // =======================================================================
+    public : 
+      // ======================================================================
+      /// full constructor with all functions specified 
+      ChannelGamma ( const double       gamma                        ,
+                     Width              width                        ,  
+                     const double       sthreshold                   , 
+                     const std::size_t  tag                          ,
+                     const std::string& description = "ChannelGamma" ) ;
+      // =======================================================================
+      /// templated constructor
+      template <class WIDTH>
+      ChannelGamma 
+      ( const double       gamma                        ,
+        WIDTH              width                        ,  
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelGamma" ) 
+        : ChannelBW     ( gamma ) 
+        , m_gamma       ( width ) 
+        , m_sthreshold  ( std::abs ( sthreshold ) ) 
+        , m_tag         ( tag   ) 
+        , m_description ( description ) 
+      {}
+      /// clone the channel 
+      ChannelGamma* clone () const override ;
+      // ======================================================================
+    public:
+      // =======================================================================
+      template <class WIDTH>
+      static inline ChannelGamma 
+      create ( const double       gamma                        , 
+               WIDTH              width                        , 
+               const double       sthreshold                   , 
+               const std::size_t  tag                          ,
+               const std::string& description = "ChannelGamma" ) 
+      { return ChannelGamma ( gamma , width , sthreshold , tag , description ) ; }
+      // ======================================================================
+    public:
+      // =======================================================================
+      /** squared  numerator for the amplitude 
+       * \f[ N^2(s,m_0) = \Gamma0 \gamma(s) \f] 
+       */
+      double N2
+      ( const double    s     , 
+        const double /* m0 */ ) const override 
+      { return s <= m_sthreshold ? 0.0 : gamma0 () * m_gamma ( s ) ; }      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       * \f[ D (s,m_0) = \Gamma0 \gamma (s) \f] 
+       */
+      // ======================================================================
+      std::complex<double> D    
+      ( const double    s     , 
+        const double /* m0 */ ) const override 
+      { return s <= m_sthreshold ? 0.0 : gamma0 () * m_gamma ( s ) ; }      
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override 
+      { return s <= m_sthreshold ? 0.0 : 1 ; }
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override { return m_description ; }
+      // =======================================================================
+    private :
+      // =======================================================================
+      /// mass-dependent width 
+      Width       m_gamma           ; // mass-dependent width 
+      /// s-threshold 
+      double      m_sthreshold  ; // s-threshold 
+      /// unique tag/lable 
+      std::size_t m_tag         ; // unique tag/lable 
+      /// description 
+      std::string m_description ;
+      // ======================================================================
+    } ;
+
+
+    // =========================================================================
+    /** @class Channel
+     *  Simple definition for the open decay channel, \f$ m_0 > m_1 + m_2 \f$) 
+     *  @see Ostap::Math::ChannelBW 
+     *  \f[ \begin{array}{ncl}
+     *  N & = &  \phantom{i} g \left( \frac{q}/{q_s} \right)^L \frac{F_L(q)}{F_L(q_0)} \\ 
+     *  D & = &  i m_0 \Gamma_0 \frac{\varrho(m)}{\varrho(m_0)}  
+     *  \left( \frac{q}{q_s}\right)^{2L} \frac{F^2_L(q)}{F^2_L(q_0)}\,,  
+     *  \end{array} \f]
+     * where
+     *  - \f$ \varrho\f$  is two-body phase space
+     *  - \f$ F_Lf\f$     is a phenomenological formfactor, e.g. Blatt-Weisskopf factors 
+     *  
+     *  - the (partial) width constant 
+     *  - masses of daughter particles
+     *  - orbital momentum 
+     *  - form factor
+     */ 
+    class Channel : public ChannelCW 
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters and *NO* formfactor
        *  @param gamma the width 
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
        *  @param L     the oribital momentum
        */
-      Channel  ( const double                  gamma = 0.150 , 
-                 const double                  m1    = 0.139 , 
-                 const double                  m2    = 0.139 , 
-                 const unsigned short          L     = 0     );
+      Channel ( const double                  gamma = 0.150 , 
+                const double                  m1    = 0.139 , 
+                const double                  m2    = 0.139 , 
+                const unsigned short          L     = 0     ) ;
       // ======================================================================
       /** constructor from all parameters and Jackson's formfactor 
        *  @param gamma the width 
@@ -104,11 +611,11 @@ namespace Ostap
        *  @param L     the oribital momentum
        *  @param r     the Jackson's formfactor 
        */
-      Channel  ( const double                  gamma         , 
-                 const double                  m1            , 
-                 const double                  m2            , 
-                 const unsigned short          L             ,
-                 const FormFactors::JacksonRho r             ) ;
+      Channel ( const double                  gamma         , 
+                const double                  m1            , 
+                const double                  m2            , 
+                const unsigned short          L             ,
+                const FormFactors::JacksonRho r             ) ;
       // ======================================================================
       /** constructor from all parameters and generic formfactor 
        *  @param gamma the width 
@@ -117,94 +624,188 @@ namespace Ostap
        *  @param L     the oribital momentum
        *  @param f     the formfactor 
        */
-      Channel  ( const double                  gamma         , 
-                 const double                  m1            , 
-                 const double                  m2            , 
-                 const unsigned short          L             ,
-                 const FormFactor&             f             ) ;
+      Channel ( const double                  gamma , 
+                const double                  m1    , 
+                const double                  m2    , 
+                const unsigned short          L     ,
+                const FormFactor&             f     ) ;
       /// copy constructor 
       Channel ( const Channel&  right )           ;
       /// move constructor 
       Channel (       Channel&& right ) = default ;
       // ======================================================================
+      /// clone the channel 
+      Channel* clone () const override ;
+      // ======================================================================
     public: // trivial accessors  
       // ======================================================================
-      /// get the gamma 
-      double            gamma0     () const { return m_gamma0           ; }
-      /// get the mass of the 1st daughter 
-      double            m1         () const { return m_m1               ; }
-      /// get the mass of the 2nd daughter 
-      double            m2         () const { return m_m2               ; }
-      /// get the oribital momentum 
-      unsigned short    L          () const { return m_L                ; }        
+      /// get the orbital momentum 
+      inline unsigned short    L          () const { return m_L                 ; }        
       /// get the formfactor 
-      const FormFactor* formfactor () const { return m_formfactor.get() ; }
-      //// get the threshold 
-      double            threshold  () const { return m_m1 + m_m2        ; }
+      inline const FormFactor* formfactor () const { return m_formfactor.get () ; }
       // ======================================================================
-    public: // setters 
+    public: // two main methods
       // ======================================================================
-      /// set new width 
-      bool  setGamma0 ( const double value ) ;
-      /// set new m1 
-      bool  setM1     ( const double value ) ;
-      /// set new m2 
-      bool  setM2     ( const double value ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** get the mass-dependent complex width 
-       *  \f[ \Gamma(m) \equiv \Gamma_0 
-       *     \left( \frac{q(m)}{q(m_0)} \right)^{2L+1}
-       *     \left( \frac{f(m,m_0,m_1,m_2)}{f(m_0,m_0,m_1,m_2)} \right)
-       *   \f]
-       *  where 
-       *   - \f$ q(m) \f$ is momentum of daughter particle in the rest frame of mother particle
-       *   - \f$ f( m, m_0, m_1, m_2)\f$ if a formfactor
-       *  @see Ostap::Math::PhaseSpace2::q
-       *  @see Ostap::Math::FormFactor
-       *  @see Ostap::Math::BreitWigner::Channel::gamma 
-       *  @param mass the running mass
-       *  @param m0   the pole position 
-       *  @return mass-dependent width 
+      /** the first main method: numerator
+       *  \f[ N^2(s,m_0) = \frac{1}{\pi} m_0 \Gamma_0 
+       *      \left( \frac{q}{q_0}\right)^{2L}        
+       *      \frac{F^2_L(q)}{F^2(q_0)} \f] 
        */
-      std::complex<double> gamma ( const double mass , 
-                                   const double m0   ) const ;
+      double N2   
+      ( const double s  , 
+        const double m0 ) const override ;
       // ======================================================================
-      /** get the value of formfactor for  given mass and pole position
-       *  @param mass rinning mass 
-       *  @param m0   pole position 
-       *  @return the value of formfactor for  given mass and pole position
+      /** the second main method: term to the denominator 
+       *  \f[ D( s , m_0 ) =  m_0 \Gamma_0        \
+       *     \frac{\varrho(m^2)}{\varrho(m_0^2)} 
+       *     \left( \frac{q}{q_0}\right)^{2L}        
+       *     \frac{F^2_L(q)}{F^2(q_0)} \f] 
        */
-      double formfactor ( const double mass ,  
-                          const double m0   ) const ;
+      std::complex<double> D
+      ( const double s  , 
+        const double m0 ) const override ;
       // ======================================================================
     public:
       // ======================================================================
       // unique tag
-      std::size_t tag() const ; // unique tag
+      std::size_t tag      () const override ; // unique tag
+      // ======================================================================
+      /// describe the channel 
+      std::string describe () const override ;
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// orbital momentum 
+      unsigned short                           m_L   { 0 } ; 
+      /// the formfactor
+      std::unique_ptr<Ostap::Math::FormFactor> m_formfactor { nullptr } ;
+      // ======================================================================
+    };
+    // =========================================================================
+    /** @class Channel0
+     *  Simple definition for the decay channel, 
+     *  that can be also applicable for \f$ m_0 < m_1 + m_2 \f$ 
+     *
+     *  @see Ostap::Math::ChannelBW 
+     *  @see Ostap::Math::Channe 
+     * 
+     *  \f[ \begin{array}{ncl}
+     *  N^2(s,m_0) & = &  \phantom{i} g \left( \frac{q}/{q_s} \right)^L F_L(q) \\ 
+     *  D  (s,m_0) & = &  i\Gamma_0 \varrho(m)  
+     *  \left( \frac{q}{q_s}\right)^{2L} F^2_L(q)\,,  
+     *  \end{array} \f]
+     * where
+     *  - \f$ \varrho\f$ is two-body phase space (can be complex!)
+     *  - \f$ F_Lf\f$    is a phenomenological formfactor, e.g. Blatt-Weisskopf factors 
+     *  - \f$ q_s\f$     is a momentum scale \f$q_s>0\f$
+     *  
+     *  If  \f$q_s\f$ is not specified the formulae are:
+     *  \f[ \begin{array}{ncl}
+     *  N^2 (s,m_0)& = &  \phantom{i} g \left( q \right)^L F_L(q) \\ 
+     *  D (s,m_0) & = &  i\Gamma_0 \varrho(m)  
+     *  \left( q\right)^{2L} F^2_L(q)\,, \end{array} \f] 
+     *
+     *  - the squared coupling constant  
+     *  - masses of daughter particles
+     *  - orbital momentum 
+     *  - form factor
+     */ 
+    class Channel0 : public Channel
+    {
+    public:
+      // ======================================================================
+      /** constructor from all parameters and *NO* formfactor
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       *  @param qs    the scale momentum 
+       */
+      Channel0 ( const double                  gamma = 0.150 , 
+                 const double                  m1    = 0.139 , 
+                 const double                  m2    = 0.139 , 
+                 const unsigned short          L     = 0     , 
+                 const double                  qs    = 0     ) ;
+      // ======================================================================
+      /** constructor from all parameters and Jackson's formfactor 
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       *  @param r     the Jackson's formfactor 
+       *  @param qs    the scale momentum 
+       */
+      Channel0 ( const double                  gamma         , 
+                 const double                  m1            , 
+                 const double                  m2            , 
+                 const unsigned short          L             ,
+                 const FormFactors::JacksonRho r             ,
+                 const double                  qs    = 0     ) ;
+      // ======================================================================
+      /** constructor from all parameters and generic formfactor 
+       *  @param gamma the width 
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       *  @param L     the oribital momentum
+       *  @param f     the formfactor 
+       *  @param qs    the scale momentum 
+       */
+      Channel0 ( const double                  gamma         , 
+                 const double                  m1            , 
+                 const double                  m2            , 
+                 const unsigned short          L             ,
+                 const FormFactor&             f             ,
+                 const double                  qs    = 0     ) ;
+      /// copy constructor 
+      Channel0 ( const Channel0&  right )           ;
+      /// move constructor 
+      Channel0 (       Channel0&& right ) = default ;
+      /// clone the channel 
+      Channel0* clone () const override ;
+      // ======================================================================
+    public: // trivial accessors  
+      // ======================================================================
+      /// get the momentum 
+      double qs() const { return m_qs ; }
+      // ======================================================================
+    public: // two main methods
+      // ======================================================================
+      /// the first main method: numerator
+      double               N2
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /// the second main method: term to the denominator 
+      std::complex<double> D 
+      ( const double s  , 
+        const double m0 ) const override ;
+      // =======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  - optionally normalized at the point \f$ m_n \f$ 
+       *  - optionally nomalized  at \f$ m_q = m(q_s) \f$
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override  ;
+      // =======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag() const override ; // unique tag
       // ======================================================================
     public: // print it 
       // ======================================================================
       ///  describe the channel 
-      std::string describe () const ;
+      std::string describe () const override ;
       // ======================================================================
     private :
       // ======================================================================
-      // the decay width 
-      double                                   m_gamma0     { 0.150   } ; 
-      // mass of the 1st daughter
-      double                                   m_m1         { 0.139   } ; 
-      // mass of the 2nd daughter 
-      double                                   m_m2         { 0.139   } ; 
-      // orbital momentum 
-      unsigned short                           m_L          { 0       } ; 
-      // the formfactor
-      std::unique_ptr<Ostap::Math::FormFactor> m_formfactor { nullptr } ;
+      /// momentum   scale 
+      double m_qs { 0 } ; // momentum  scale
       // ======================================================================
-    };  
+    };
     // ========================================================================
-    /** @class BreitWignerBase
+    /** @class BW
      *
      *  J.D.Jackson,
      *  "Remarks on the Phenomenological Analysis of Resonances",
@@ -214,23 +815,32 @@ namespace Ostap
      *  
      *  @see also http://pdg.lbl.gov/2019/reviews/rpp2018-rev-resonances.pdf
      *
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  BreitWignerBase
+    class BW
     {
     public:
       // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
-      BreitWignerBase ( const double   m0      = 1         ,
-                        const Channel& channel = Channel() ) ;
-      /// copy constructor
-      BreitWignerBase ( const BreitWignerBase&  bw ) = default ;
+      BW ( const double     m0 , 
+           const ChannelBW& channel = Channel() ) ;     
+      ///    copy construtor
+      BW ( const BW& bw ) ;
+      /// move construtor
+      BW (       BW&&   ) = default ;
+      // ======================================================================
+    protected :
+      // ======================================================================
+      /// default (empty) constructor 
+      BW ( const double m0 = 1 ) ;
+      // ======================================================================
+    public: 
       // ======================================================================
       /// clone it 
-      virtual BreitWignerBase* clone() const ;
+      virtual BW* clone() const = 0 ;
       // ======================================================================
     public:
       // ======================================================================
@@ -238,41 +848,53 @@ namespace Ostap
        *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
        *   { (\omega_0^2-\omega^2)^2-\omega_0^2\Gamma^2(\omega)-}\f$
        */
-      virtual double operator() ( const double x ) const ;
+      virtual double operator() ( const double x ) const 
+      { return breit_wigner ( x ) ; }
+      // ======================================================================
+    public:  // amplitude 
+      // ======================================================================
+      /** Get Breit-Wigner amplitude
+       *  \f[ A(m) = \frac{1}{m^2_0 - m^2 - \sum_a D_a ( m^2 ) } \f]
+       */
+      virtual std::complex<double> amplitude ( const double x ) const ;
+      // ======================================================================      
+      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+       *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
+       *   \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A} \right|^2 \f] 
+       */
+      double breit_wigner ( const double x ) const 
+      { return x <= threshold() ? 0.0 : breit_wigner ( x , amplitude ( x ) ) ; }
+      // ======================================================================
+      /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
+       *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
+       *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
+       *  @param x the mass point 
+       *  @param A the amplitide at this point 
+       */
+      double breit_wigner 
+      ( const double                x , 
+        const std::complex<double>& A ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get Breit-Wigner amplitude
-      std::complex<double> amplitude ( const double x ) const ;
-      /// get Breit-Wigner amplitude with given gamma 
-      std::complex<double> amplitude ( const std::complex<double> x ,
-                                       const std::complex<double> g ) const ;
-      // ======================================================================
-      double breit_wigner  ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
       /// pole position 
-      double         m0        () const { return m_m0      ; }
+      double         m0     () const { return m_m0    ; }
       /// pole position 
-      double         mass      () const { return   m0   () ; }
+      double         mass   () const { return   m0 () ; }
       /// pole position 
-      double         peak      () const { return   m0     () ; }
+      double         peak   () const { return   m0 () ; }
       /// the width at the pole 
-      double         gamma0    () const ;
-      /// the width at the pole 
-      double         gamma     () const { return   gamma0 () ; }
-      /// the width at the pole 
-      double         width     () const { return   gamma0 () ; }
+      double         gamma  () const ;
       // =====================================================================
     public:
       // =====================================================================
-      /// get the decay channel 
-      const Channel&              channel   () const { return m_channels.front()    ; }
-      /// get all the channels 
-      const std::vector<Channel>& channels  () const { return m_channels ; }
-      /// get the threshold for the channel 
-      double                      threshold () const { return channel().threshold() ; }
+      /// get the main decay channel
+      const ChannelBW* channel  () const { return m_channels.front().get() ; }
+      /// get the decay channel with index \f$ i\f$: 
+      const ChannelBW* channel  ( const unsigned short i ) const
+      { return i < m_channels.size() ? m_channels[i].get() : nullptr ; }
+      /// get the threshold value (cached in constructor)
+      double           threshold () const { return m_threshold ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -283,16 +905,7 @@ namespace Ostap
       /// set pole position 
       bool setPeak   ( const double x ) { return setM0     ( x ) ; }
       // set total width at pole 
-      bool setGamma0 ( const double x ) ;
-      // set ttoal width at pole 
-      bool setGamma  ( const double x ) { return setGamma0 ( x ) ; }
-      // set width at pole 
-      bool setWidth  ( const double x ) { return setGamma0 ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the current width
-      std::complex<double> gamma ( const double x ) const ;
+      bool setGamma  ( const double x ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -306,15 +919,22 @@ namespace Ostap
       // ======================================================================
       std::size_t tag() const ;
       // ======================================================================
+    protected :
+      // ======================================================================
+      /// add one more channel 
+      void add ( const ChannelBW& ) ;
+      // ======================================================================
     private:
       // ======================================================================
       /// the mass
-      double               m_m0       ; // the mass
+      double m_m0              ; // the mass
+      /// the threshold 
+      double m_threshold { 0 } ; // the threshold 
       // ======================================================================
     protected:
       // ======================================================================
-      ///  the channel(s) 
-      mutable std::vector<Channel> m_channels ; // the channel(s)
+      /// the channel(s) 
+      mutable std::vector<std::unique_ptr<ChannelBW> > m_channels ; // the channel(s)
       // ======================================================================
     private:
       // ======================================================================
@@ -334,7 +954,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  BreitWigner : public BreitWignerBase 
+    class  BreitWigner : public BW
     {
       // ======================================================================
     public:
@@ -351,6 +971,7 @@ namespace Ostap
                     const double         m1     = 0.139 ,
                     const double         m2     = 0.139 ,
                     const unsigned short L      = 0     ) ;
+      // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
        *  @param gam0 the nominal width at the pole 
@@ -359,12 +980,14 @@ namespace Ostap
        *  @param L    the orbital momentum 
        *  @param F    the Jackson's formfactor 
        */
+      // ======================================================================
       BreitWigner ( const double         m0         ,
                     const double         gam0       ,
                     const double         m1         ,
                     const double         m2         ,
                     const unsigned short L          ,
                     const FormFactors::JacksonRho F ) ;
+      // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
        *  @param gam0 the nominal width at the pole 
@@ -379,30 +1002,16 @@ namespace Ostap
                     const double         m2    ,
                     const unsigned short L     ,
                     const FormFactor&    F     ) ;
+      // ======================================================================
       /// constructor from the channel 
       BreitWigner ( const double         m0       ,
-                    const Channel&       channel ) ;
+                    const ChannelBW&     channel ) ;
       /// copy constructor
       BreitWigner ( const BreitWigner&  bw ) = default ;
       // ======================================================================
       /// clone it 
-      virtual BreitWigner* clone() const ;
+      BreitWigner* clone() const override ;
       // ======================================================================
-    public:
-      // ======================================================================
-      /// get the mass of the 1st daughter particle 
-      double         m1 () const { return channel().m1() ; }
-      /// get the mass of the 2nd  daughter particle 
-      double         m2 () const { return channel().m2() ; }
-      /// get the oribital momentum 
-      unsigned short L  () const { return channel().L () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // get the value of formfactor ratio
-      // ======================================================================
-      double formfactor ( const double m ) const ;
-      // ======================================================================      
     } ;
     // ========================================================================
     /** @class Rho0
@@ -472,40 +1081,6 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class Rho0FromEtaPrime
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class Rho0FromEtaPrime : public Ostap::Math::Rho0
-    {
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Rho0FromEtaPrime  ( const double m0        = 770   ,    // MeV
-                          const double gam0      = 150   ,    // MeV
-                          const double pi_mass   = 139.6 ,    // MeV
-                          const double eta_prime = 957.7 ) ;  // MeV
-      /// constructor from all parameters
-      Rho0FromEtaPrime  ( const Ostap::Math::Rho0& rho   ,
-                          const double eta_prime = 957.7 ) ;  // MeV
-      /// destructor
-      virtual ~Rho0FromEtaPrime () ;
-      // ======================================================================
-      /// clone it! 
-      Rho0FromEtaPrime* clone() const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the function
-      double operator() ( const double x ) const  override;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the mass of eta'
-      double m_eta_prime ;
-      // ======================================================================
-    } ;
-    // ========================================================================
     /** @class BreitWignerMC
      *  function to describe Breit-Wigner signal with several channels,
      *  including Flatte's behaviour 
@@ -513,7 +1088,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2018-11-30
      */
-    class  BreitWignerMC : public BreitWignerBase 
+    class  BreitWignerMC : public BW 
     {
       // ======================================================================
     public:
@@ -523,17 +1098,19 @@ namespace Ostap
        *  @param c1   the 1st channel 
        */
       BreitWignerMC 
-      ( const double   m0 = 0.770       ,
-        const Channel& c1 = Channel ( ) ) ;
+      ( const double     m0 = 0.770       ,
+        const ChannelBW& c1 = Channel ( ) ) ;
+      // ======================================================================
       /** constructor from two channels 
        *  @param m0   the pole position 
        *  @param c1   the 1st channel 
        *  @param c2   the 2nd channel 
        */
       BreitWignerMC 
-      ( const double   m0 ,
-        const Channel& c1 , 
-        const Channel& c2 ) ;
+      ( const double     m0 ,
+        const ChannelBW& c1 , 
+        const ChannelBW& c2 ) ;
+      // ======================================================================
       /** constructor from three channels 
        *  @param m0   the pole position 
        *  @param c1   the 1st channel 
@@ -541,10 +1118,11 @@ namespace Ostap
        *  @param c3   the 3rd channel 
        */
       BreitWignerMC 
-      ( const double   m0 ,
-        const Channel& c1 , 
-        const Channel& c2 ,
-        const Channel& c3 ) ;
+      ( const double     m0 ,
+        const ChannelBW& c1 , 
+        const ChannelBW& c2 ,
+        const ChannelBW& c3 ) ;
+      // ======================================================================
       /** constructor from four channels 
        *  @param m0   the pole position 
        *  @param c1   the 1st channel 
@@ -552,45 +1130,133 @@ namespace Ostap
        *  @param c3   the 3rd channel 
        *  @param c4   the 4th channel 
        */
+      // ======================================================================
       BreitWignerMC 
-      ( const double   m0 ,
-        const Channel& c1 , 
-        const Channel& c2 ,
-        const Channel& c3 ,
-        const Channel& c4 ) ;
-      /** constructor from the list of channels  
+      ( const double     m0 ,
+        const ChannelBW& c1 , 
+        const ChannelBW& c2 ,
+        const ChannelBW& c3 ,
+        const ChannelBW& c4 ) ;
+      // ======================================================================
+      /** constructor from four channels 
        *  @param m0   the pole position 
-       *  @param cs   list of channels 
+       *  @param c1   the 1st channel 
+       *  @param c2   the 2nd channel 
+       *  @param c3   the 3rd channel 
+       *  @param c4   the 4th channel 
+       *  @param c5   the 5th channel 
+       */
+      // ======================================================================
+      BreitWignerMC 
+      ( const double     m0 ,
+        const ChannelBW& c1 , 
+        const ChannelBW& c2 ,
+        const ChannelBW& c3 ,
+        const ChannelBW& c4 ,
+        const ChannelBW& c5 ) ;
+      // ======================================================================
+      /** constructor from four channels 
+       *  @param m0   the pole position 
+       *  @param c1   the 1st channel 
+       *  @param c2   the 2nd channel 
+       *  @param c3   the 3rd channel 
+       *  @param c4   the 4th channel 
+       *  @param c5   the 5rd channel 
+       *  @param c6   the 6th channel 
        */
       BreitWignerMC 
-      ( const double                m0 ,
-        const std::vector<Channel>& cs ) ;
+      ( const double     m0 ,
+        const ChannelBW& c1 , 
+        const ChannelBW& c2 ,
+        const ChannelBW& c3 ,
+        const ChannelBW& c4 ,
+        const ChannelBW& c5 ,
+        const ChannelBW& c6 ) ;
+      // ======================================================================
       /// copy constructor
       BreitWignerMC ( const BreitWignerMC&  bw ) = default ;
       // ======================================================================
       /// clone it 
-      virtual BreitWignerMC* clone() const ;
+      BreitWignerMC* clone() const override ;
       // ======================================================================
     public:
       // ======================================================================
       /// get number of channels 
-      unsigned int nChannels() const { return channels().size()  ; }
-      /// get the nominal total width 
-      double gamma0 () const { return BreitWignerBase::gamma0 () ; }
+      inline unsigned int nChannels() const { return m_channels.size()  ; }
+      // ======================================================================
+      /// set total gamma 
+      
+      using BW::channel  ;
+      // ======================================================================
       /// get the  gamma for the certain channel 
-      double gamma0 ( unsigned int i ) const 
-      { return i < m_channels.size() ? m_channels[i].gamma0()            : 0.0   ; }
-      /// set the nominal total width 
-      bool   setGamma0 ( const double value ) 
-      { return BreitWignerBase::setGamma0 ( value ) ; }
+      double gamma     ( const unsigned short i ) const 
+      { return i < nChannels() ? m_channels[i] -> gamma0()            : 0.0   ; }
       /// set the gamma for the certain decay
-      bool   setGamma0 ( unsigned int i , const double value ) 
-      { return i < m_channels.size() ? m_channels[i].setGamma0 ( value ) : false ; }
-      /// set the gamma for the certain decay
-      bool   setGamma  ( unsigned int i , const double value ) 
-      { return setGamma0 ( i , value ) ; }
+      bool   setGamma  ( const unsigned short i , const double value ) 
+      { return i < nChannels() ? m_channels[i] -> setGamma0 ( value ) : false ; }
+      // ======================================================================
+      /// get the decay channel with the index \f$ i\f$: 
+      const ChannelBW* channel  ( const unsigned short i ) const
+      { return i < nChannels () ? m_channels[i].get () : nullptr ; }
+      // ======================================================================
+      /// get the total gamma 
+      double    gamma     () const { return BW::gamma ( ) ; }
+      /// get the total gamma 
+      bool   setGamma     ( const double value ) { return BW::setGamma ( value ) ; }
+      /// get the mani/firtst decay channel: 
+      const ChannelBW* channel () const { return BW::channel ( ) ; }
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class  ChannelFlatte
+     *  Describe Flatte-like channel 
+     *  @see Ostap::Math::ChannelBW 
+     *  \f[ \begin{array}{ncl}
+     *  N^2(s,m_0)& = & m_0 * g * 16\pi \\ 
+     *  D  (s,m_0)& = & m_0 * g \frac{2q}{\sqrt{s}}  
+     *  \end{array} \f]
+     */
+    class ChannelFlatte : public ChannelCW
+    {
+    public :
+      // =====================================================================
+      /** constructor from all parameters 
+       *  @param g     the coupling constant  (dimensionless)
+       *  @param m1    the mass of the 1st daughter
+       *  @param m2    the mass of the 2nd daughter
+       */
+      ChannelFlatte ( const double g  = 0.1   , 
+                      const double m1 = 0.139 , 
+                      const double m2 = 0.139 );
+      /// clone method 
+      ChannelFlatte* clone() const override ;
+      // ======================================================================
+    public: // define/override base-class abstract methods 
+      // ======================================================================
+      /** the first main method: numerator
+       * \f[ N^2(s,m_0) = m_0 g \f] 
+       */
+      double               N2
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** the second main method: term to the denominator 
+       *  \f[ D(s,m_0) =  m_0 g \frac{2q}{\sqrt{s}} \f], 
+       *  @attention it is purely imaginary below threshold!
+       */
+      std::complex<double> D   
+      ( const double s  , 
+        const double m0 ) const override ;
+      // =======================================================================
+    public:
+      // ======================================================================
+      // unique tag
+      std::size_t tag      () const override ; // unique tag
+      // ======================================================================
+      /// describe the channel 
+      std::string describe () const override ;
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class Flatte
      *
@@ -601,11 +1267,10 @@ namespace Ostap
      *
      *  http://www.sciencedirect.com/science/article/pii/0370269376906547
      *
-     *  \f$\pi\pi\f$-channel
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  Flatte
+    class  Flatte : public BW 
     {
     public:
       // ======================================================================
@@ -627,47 +1292,13 @@ namespace Ostap
                const double mB1   = 493.7 ,
                const double mB2   = 493.7 , 
                const double g0    = 0     ) ; // the constant width for "other" decays
-      // ======================================================================
-      /**  a bit more intuitive ``a'la BreitWigner'' constructor 
-       *   @param flag  the flag 
-       *   @param m0    the mass 
-       *   @param gtot  width parameter \f$ \Gamma_1 + \Gamma_2 + \Gamma_0 \f$ 
-       *   @param mA1   mass of A1
-       *   @param mA2   mass of A2
-       *   @param mB1   mass of B1
-       *   @param mB2   mass of B2
-       *   @param g2og1 the width ratio \f$ \Gamma_2 / \Gamma_1 \f$ 
-       *   @param br0   the width fraction  \f$\frac{\Gamma_0}{\Gamma_1+\Gamma_2+\Gamma_0}\f$ 
-       */
-      Flatte ( const char* /* flag */   ,
-               const double  m0         ,   // m0 
-               const double  gtot       ,   // gamma1 + gamma2 + gamma_0  
-               const double  mA1        ,
-               const double  mA2        ,
-               const double  mB1        ,
-               const double  mB2        ,               
-               const double  g2og1 = 1  ,   // gamma2/ gamma1 
-               const double  br0   = 0  ) ; // gamma0 / (gamma0+gamma1+gamma2)
       /// copy constructor 
       Flatte ( const Flatte&  right ) = default ;
       /// destructor
       virtual ~Flatte () ;
       // ======================================================================
-      /// clone it! 
-      virtual Flatte* clone() const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of Flatte function
-      virtual double operator() ( const double x ) const ;
-      /// get the value of Flatte amplitude
-      std::complex<double> amplitude ( const double x ) const
-      { return flatte_amp ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude for pipi-channel
-      std::complex<double> flatte_amp  ( const double x ) const ;
+      /// clone it!
+      Flatte* clone() const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -676,342 +1307,25 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get the curve for pipi-channel
-      double flatte  ( const double x ) const ;
-      /// get the curve for   KK-channel
-      double flatte2 ( const double x ) const ;
+      /// coupling coinstant for the main channel 
+      double g1    () const { return m_channels [ 0 ] -> gamma0 () ; }
+      /// coupling coinstant for the coupled channel 
+      double g2    () const { return m_channels [ 1 ] -> gamma0 () ; }
+      /// additional constant width for "extra=channels"
+      double gam0  () const { return m_channels [ 2 ] -> gamma0 () ; }
       // ======================================================================
-    public:
+    public : 
       // ======================================================================
-      /// pole position
-      double m0     () const { return m_m0      ; }
-      /// pole position
-      double mass   () const { return   m0   () ; }
-      /// pole position
-      double peak   () const { return   m0   () ; }
       /// m*g1 
-      double m0g1   () const { return m_m0g1    ; }
+      double m0g1  () const { return m0 () * g1 () ; }
       /// g2/g1 
-      double g2og1  () const { return m_g2og1   ; }
-      /// mass of the first  daughter 
-      double mA1    () const { return m_A1      ; }
-      /// mass of the second daughter 
-      double mA2    () const { return m_A2      ; }
-      /// mass of the first  daughter in for the coupled channel
-      double mB1    () const { return m_B1      ; }
-      /// mass of the second daughter in for the coupled channel
-      double mB2    () const { return m_B2      ; }
-      /// the constant width for "other" decays 
-      double g0     () const { return m_g0      ; }
+      double g2og1 () const { return g2 () / g1 () ; }
       // ======================================================================
-    public:
+    public :
       // ======================================================================
-      /// get the total running width (complex!)
-      std::complex<double> gamma ( const double x ) const ;
-      /// get the value of total (complex!) width at the pole 
-      std::complex<double> gamma () const { return gamma ( m0 () ) ; }
-      // ======================================================================
-    public: // derived quantities
-      // ======================================================================
-      double gamma0      () const { return g0     ()                  ; }
-      double gamma1      () const { return m0g1   () / m0     ()      ; }
-      double gamma2      () const { return g2og1  () * gamma1 ()      ; }      
-      double gamma_total () const { return gamma1 () + gamma2 () + gamma0 () ; }
-      double br1         () const { return gamma1 () / gamma_total () ; }
-      double br2         () const { return gamma2 () / gamma_total () ; }
-      double br0         () const { return gamma0 () / gamma_total () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// the thereshold 
-      double thresholdA () const { return mA1 () + mA2 () ; }
-      /// the threshold for the coupled channel 
-      double thresholdB () const { return mB1 () + mB2 () ; }
-      /// minimal threshold 
-      double threshold  () const
-      { return std::min ( thresholdA () , thresholdB () ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set pole position
-      bool setM0     ( const double x ) ;
-      /// set pole position
-      bool setMass   ( const double x ) { return setM0 ( x ) ; }
-      /// set pole position
-      bool setPeak   ( const double x ) { return setM0 ( x ) ; }
-      /// set m*g1 
-      bool setM0G1   ( const double x ) ;
-      /// set g2/g1 
-      bool setG2oG1  ( const double x ) ;
-      /// set g0
-      bool setG0     ( const double x ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      virtual double integral () const ;
-      /// get the integral between low and high limits
-      virtual double integral  ( const double low  ,
-                                 const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      double m_m0     ;
-      double m_m0g1   ;
-      double m_g2og1  ;
-      double m_A1     ;
-      double m_A2     ;
-      double m_B1     ;
-      double m_B2     ;
-      double m_g0     ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Flatte2
-     *
-     *  S.M. Flatte
-     *  "Coupled-channel analysis of the \f$\pi\eta\f$ and \f$K\bar{K}\f$
-     *  systems near \f$K\bar{K}\f$threshold"
-     *  Physics Letters B, Volume 63, Issue 2, 19 July 1976, Pages 224-227
-     *
-     *  http://www.sciencedirect.com/science/article/pii/0370269376906547
-     *
-     *  KK-channel
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Flatte2 : public Ostap::Math::Flatte
-    {
-    public:
-      // ======================================================================
-      /** constructor  from all parameters
-       *  \f$ f \rightarrow B_1 + B_2\f$
-       *  @param m0    the mass
-       *  @param m0g1  parameter \f$ m_0\times g_1\f$
-       *  @param g2og1 parameter \f$ g2/g_1       \f$
-       *  @param mA1   mass of A1
-       *  @param mA2   mass of A2
-       *  @param mB1   mass of B1
-       *  @param mB2   mass of B2
-       */
-      Flatte2 ( const double m0    = 980   ,
-                const double m0g1  = 165   ,
-                const double g2og1 = 4.21  ,
-                const double mA1   = 139.6 ,
-                const double mA2   = 139.6 ,
-                const double mB1   = 493.7 ,
-                const double mB2   = 493.7 ) ;
-      /// constructor  from Flatte
-      Flatte2 ( const Flatte&  flatte ) ;
-      /// copy constructor 
-      Flatte2 ( const Flatte2& flatte ) = default ;
-      /// destructor
-      virtual ~Flatte2 () ;
-      /// clone it!
-      Flatte2* clone() const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // unique tag
-      std::size_t tag() const  override ; // unique tag
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of Flatte function (KK-channel)
-      double operator() ( const double x ) const  override;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Voigt
-     *  simple Voigtian function:
-     *  convolution of Lorenzian (non-relativistic Breit-Wigner function)
-     *  with Gaussian resoltuion
-     *  @see http://en.wikipedia.org/wiki/Voigt_profile
-     *  The implementation relied on Faddeeva function
-     *  @see http://en.wikipedia.org/wiki/Faddeeva_function
-     *  @see http://ab-initio.mit.edu/wiki/index.php/Faddeeva_Package
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  Voigt
-    {
-    public:
-      // ======================================================================
-      ///  constructor  from the three parameters
-      Voigt  ( const double m0     = 1      ,
-               const double gamma  = 0.004  ,
-               const double sigma  = 0.001  ) ;
-      /// destructor
-      virtual ~Voigt () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of Voigt function
-      // ======================================================================
-      virtual double operator() ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      double m0     () const { return m_m0      ; }
-      double mass   () const { return   m0   () ; }
-      double peak   () const { return   m0   () ; }
-      double gamma  () const { return m_gamma   ; }
-      double sigma  () const { return m_sigma   ; }
-      // ======================================================================
-      /** full width at half maximum
-       *  @see http://en.wikipedia.org/wiki/Voigt_profile
-       */
-      double fwhm   () const ;
-      // ======================================================================
-    public:
-      // ====================================================================== 
-      /// pole position 
-      bool setM0     ( const double x ) ;
-      /// pole position 
-      bool setMass   ( const double x ) { return setM0 ( x ) ; }
-      /// pole position 
-      bool setPeak   ( const double x ) { return setM0 ( x ) ; }
-      /// width at the pole 
-      bool setGamma  ( const double x ) ;
-      /// width at the pole 
-      bool setSigma  ( const double x ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      virtual double integral () const ;
-      /// get the integral between low and high limits
-      virtual double integral ( const double low  ,
-                                const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      double m_m0     ;
-      double m_gamma  ;
-      double m_sigma  ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class PseudoVoigt
-     *  Simplified version of Voigt profile
-     *  @see T. Ida, M. Ando and H. Toraya,
-     *       "Extended pseudo-Voigt function for approximating the Voigt profile"
-     *       J. Appl. Cryst. (2000). 33, 1311-1316
-     *  @see doi:10.1107/S0021889800010219
-     *  @see https://doi.org/10.1107/S0021889800010219
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2016-06-13
-     */
-    class  PseudoVoigt
-    {
-    public:
-      // ======================================================================
-      ///  constructor  from the three parameters
-      PseudoVoigt  ( const double m0     = 1      ,
-                     const double gamma  = 0.004  ,
-                     const double sigma  = 0.001  ) ;
-      /// destructor
-      virtual ~PseudoVoigt () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of Voigt function
-      // ======================================================================
-      virtual double operator() ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// pole position 
-      double m0     () const { return m_m0      ; }
-      /// pole position 
-      double mass   () const { return   m0   () ; }
-      /// pole position 
-      double peak   () const { return   m0   () ; }
-      /// width at the pole 
-      double gamma  () const { return m_gamma   ; }
-      /// resolution  
-      double sigma  () const { return m_sigma   ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set pole position
-      bool setM0     ( const double x ) ;
-      /// set pole position
-      bool setMass   ( const double x ) { return setM0 ( x ) ; }
-      /// set pole position
-      bool setPeak   ( const double x ) { return setM0 ( x ) ; }
-      /// set width at the pole 
-      bool setGamma  ( const double x ) ; 
-      /// set resolution 
-      bool setSigma  ( const double x ) ;
-      // ======================================================================
-    public: // helper constants
-      // ======================================================================
-      /// FWHM-gaussian
-      double fwhm_gauss      () const ;
-      /// FWHM-lorenzian
-      double fwhm_lorentzian () const { return 2 * m_gamma ; }
-      /// rho 
-      double rho             () const
-      { return fwhm_lorentzian() / ( fwhm_lorentzian() + fwhm_gauss() ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      virtual double integral () const ;
-      /// get the integral between low and high limits
-      virtual double integral ( const double low  ,
-                                const double high ) const ;
-      // ======================================================================
-    public: // get parameters of the four components
-      // ======================================================================
-      /// get widths of the components
-      double w   ( const unsigned short i ) const { return i < 4 ? m_w  [i] : 0.0 ; }
-      /// get stength of the components
-      double eta ( const unsigned short i ) const { return i < 4 ? m_eta[i] : 0.0 ; }
-      // ======================================================================
-    public: // get the separate components
-      // ======================================================================
-      /// get the Gaussian component
-      double gaussian   ( const double x ) const ;
-      /// get the Lorentzian component
-      double lorentzian ( const double x ) const ;
-      /// get the Irrational  component
-      double irrational ( const double x ) const ;
-      /// get the squared hyperbolic secant component
-      double sech2      ( const double x ) const ;
-      // ======================================================================
-    private:  // calculate internal data
-      // ======================================================================
-      void update () ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      double m_m0     ;
-      double m_gamma  ;
-      double m_sigma  ;
-      // ======================================================================
-    private: // some data
-      // ======================================================================
-      /// the widths/gammas of four components: Gaussian,Lorentzian,rIrational and Sech2
-      std::vector<double> m_w   ;
-      //// the strengths of four components
-      std::vector<double>  m_eta ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      bool setG1   ( const double value ) { return m_channels[0] -> setGamma0 ( value ) ; }
+      bool setG2   ( const double value ) { return m_channels[1] -> setGamma0 ( value ) ; }
+      bool setGam0 ( const double value ) { return m_channels[2] -> setGamma0 ( value ) ; }
       // ======================================================================
     } ;
     // ========================================================================  
@@ -1119,16 +1433,21 @@ namespace Ostap
     {
     public :
       // ======================================================================
-      /// the only important method
+      /** the only important method: the squared ratio 
+       *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+       */
       virtual double operator()
       ( const double m  , const double m0 ,
         const double m1 , const double m2 ) const  = 0 ;
+      // ======================================================================
       /// virtual destructor
       virtual ~FormFactor () ;
       /// clone method ("virtual constructor" )
-      virtual FormFactor* clone     () const = 0 ;
+      virtual FormFactor* clone    () const = 0 ;
       /// describe the formfactor
-      virtual std::string describe  () const = 0 ;
+      virtual std::string describe () const = 0 ;
+      /// some unuque tag/label 
+      virtual std::size_t tag      () const = 0 ;      
       // ======================================================================
     } ;
     // ========================================================================
@@ -1155,12 +1474,18 @@ namespace Ostap
         virtual ~Jackson  () ;
         /// clone method ("virtual constructor")
         Jackson* clone() const   override;
-        /// the only important method
+        // ====================================================================
+        /** the only important method the squared ratio 
+         *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+         */
         double operator() ( const double m  , const double m0 ,
                             const double m1 , const double m2 ) const override;
         // ====================================================================
         /// describe the formfactor 
         std::string describe () const override { return m_what ; }
+        // ====================================================================
+        // unique tag/label
+        std::size_t tag      () const override ;
         // ====================================================================
       private:
         // ====================================================================
@@ -1199,17 +1524,23 @@ namespace Ostap
         virtual ~BlattWeisskopf () ;
         /// clone method ("virtual constructor")
         BlattWeisskopf* clone() const   override;
-        /// the only important method
+        // ====================================================================
+        /** the only important method the squared ratio 
+         *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+         */
         double operator() ( const double m  , const double m0 ,
                             const double m1 , const double m2 ) const override;
         // ====================================================================
         /// describe the formfactor 
         std::string describe () const override { return m_what ; }
         // ====================================================================
+        // unique tag/label
+        std::size_t tag      () const override ;
+        // ====================================================================
       protected:
         // ====================================================================
-        /// get the barrier factor
-        double   b ( const double z , const double z0 ) const ;
+        /// get the sqyaured ratio of squared barrier factor
+        double b ( const double z , const double z0  ) const ;
         // ====================================================================
       private:
         // ====================================================================
@@ -1222,920 +1553,768 @@ namespace Ostap
         // ====================================================================
       } ;
       // ======================================================================
+      /** Generic formfactor for Breit-Wigner amplitude
+       */
+      class GenericFF : public Ostap::Math::FormFactor
+      {
+      public:
+        // ====================================================================
+        /** @typedef formfactor  
+         *  the actual type of the squared ratio of formfactors 
+         *   \f[ f ( m , m_0 , m_1  , m_2 ) = 
+         *   \frac{    F_L^2( q , q_s ) } { F_L^2 ( q_0 , q_s ) } \f] 
+         */
+        typedef std::function<double(double,double,double,double)> formfactor ;
+        // ====================================================================
+      public: 
+        // ====================================================================
+        /** constructor from the generic object, unique tag and desription
+         *  @param ff  the formfactor 
+         *  @param tag the unique tag 
+         *  @param description  description 
+         */
+        GenericFF ( const formfactor&  ff                        ,
+                    const std::size_t  tag                       , 
+                    const std::string& description = "GenericFF" ) ;
+        /// copy constrictor 
+        GenericFF ( const GenericFF&  f ) =  default ;
+        /// move constrictor 
+        GenericFF (       GenericFF&& f ) =  default ;
+        // ====================================================================
+        /// clone operaion
+        GenericFF* clone() const override ; // clone operaion
+        // ====================================================================
+      public:
+        // ====================================================================
+        /** the only important method the squared ratio 
+         *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+         */
+        double operator() 
+        ( const double m  , const double m0 ,
+          const double m1 , const double m2 ) const override
+        { return m_ff ( m , m0 , m1 , m2 ) ; }
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// describe the formfactor
+        std::string describe () const override { return m_description ; }
+        /// some unuque tag/label 
+        std::size_t tag      () const override { return m_tag ; }
+        // ====================================================================
+      private: 
+        // ====================================================================
+        /// the formfactor object itself 
+        formfactor  m_ff          ; // the formfactor object itself 
+        /// unique tag/label
+        std::size_t m_tag         ; // unique tag/label
+        /// description 
+        std::string m_description ;
+        // ====================================================================
+      } ;
+      // ======================================================================
     } // end of namespace Ostap:Math::FormFactors
+    // ========================================================================
+
+
     // ========================================================================
     // VARIOUS BEASTS 
     // ========================================================================
-    /** @class LASS
-     *  The LASS parameterization (Nucl. Phys. B296, 493 (1988))
-     *  describes the 0+ component of the Kpi spectrum.
-     *  It consists of the K*(1430) resonance together with an
-     *  effective range non-resonant component
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2013-10-05
-     */
-    class  LASS
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** constructor from all masses and angular momenta
-       *  @param m1 the mass of the first  particle
-       *  @param m2 the mass of the second particle
-       *  @param m0 the mass of K* 
-       *  @param g0 the width of  K*
-       *  @param a  the LASS parameter
-       *  @param r  the LASS parameter
-       *  @param e  the LASS parameter
-       */
-      LASS ( const double         m1 =  493.7  ,
-             const double         m2 =  139.6  ,
-             const double         m0 = 1435    , // K*(1450) mass
-             const double         g0 =  279    , // K*(1430) width
-             const double         a  = 1.94e-3 ,
-             const double         r  = 1.76e-3 ,
-             const double         e  = 1.0     ) ;
-      /// destructor
-      virtual ~LASS () ;                                          // destructor
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the (complex) LASS amplitude
-      std::complex<double> amplitude  ( const double x ) const ;
-      /// get the phase space factor
-      double               phaseSpace ( const double x ) const ;
-      /// evaluate LASS
-      double operator () ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// pole position
-      double m0  ( ) const { return m_m0 ; }
-      /// width at the pole 
-      double g0  ( ) const { return m_g0 ; }
-      /// a 
-      double a   ( ) const { return m_a  ; }
-      /// r 
-      double r   ( ) const { return m_r  ; }
-      /// elasticity 
-      double e   ( ) const { return m_e  ; }
-      // ======================================================================
-      /// the mass of the first daughter 
-      double m1  ( ) const { return m_ps2.m1 () ; }
-      /// the mass of the second daughter 
-      double m2  ( ) const { return m_ps2.m2 () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set pole posiiton 
-      bool setM0 ( const double value ) ;
-      /// set with 
-      bool setG0 ( const double value ) ;
-      /// a 
-      bool setA  ( const double value ) ;
-      /// r
-      bool setR  ( const double value ) ;
-      /// elatisicity 
-      bool setE  ( const double value ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the pole position for scalar meson
-      double   m_m0 ;
-      double   m_g0 ;
-      /// LASS-parameters
-      double   m_a  ;
-      double   m_r  ;
-      double   m_e  ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// phase space
-      Ostap::Math::PhaseSpace2 m_ps2     ;    // phase space
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Bugg
-     *  parametrisation of sigma-pole for
-     *  two pion mass distribution
-     *
-     *  The parameterization of sigma pole by
-     *  B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-01
-     */
-    class  Bugg
-    {
-    public:
-      // ======================================================================
-      /** constructor from all masses and angular momenta
-       *  @param M  mass of sigma (very different from the pole positon!)
-       *  @param g2 width parameter g2 (4pi width)
-       *  @param b1 width parameter b1  (2pi coupling)
-       *  @param b2 width parameter b2  (2pi coupling)
-       *  @param a  parameter a (the exponential cut-off)
-       *  @param s1 width parameter s1  (cut-off for 4pi coupling)
-       *  @param s2 width parameter s2  (cut-off for 4pi coupling)
-       *  @param m1 the mass of the first  particle
-       */
-      Bugg    ( const double         M  = 0.9264        ,  // GeV
-                const double         g2 = 0.0024        ,  // GeV
-                const double         b1 = 0.5848        ,  // GeV
-                const double         b2 = 1.6663        ,  // GeV-1
-                const double         a  = 1.082         ,  // GeV^2
-                const double         s1 = 2.8           ,  // GeV^2
-                const double         s2 = 3.5           ,
-                const double         m1 =  139.6 / 1000 ) ; // GeV
-      /// destructor
-      ~Bugg () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the Bugg shape
-      double operator() ( const double x ) const { return pdf ( x ) ; }
-      /// calculate the Bugg shape      
-      double pdf        ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amlitude  (not normalized!)
-      std::complex<double> amplitude (  const double x ) const ;
-      /// get the phase space factor (taking into account L)
-      double phaseSpace ( const double x ) const { return m_ps  ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // phase space variables
-      // ======================================================================
-      double m1        () const { return m_ps.m1 () ; }
-      double m2        () const { return m_ps.m2 () ; }
-      // ======================================================================
-      double lowEdge   () const { return m_ps. lowEdge() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the running width by Bugg
-      std::complex<double>
-      gamma ( const double x ) const ; // get the running width by Bugg
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// adler factor
-      double               adler       ( const double x ) const ; // adler factor
-      /// ratio of 2pi-phase spaces
-      double               rho2_ratio  ( const double x ) const ;
-      /// ratio of 4pi-phase spaces
-      std::complex<double> rho4_ratio  ( const double x ) const ;
-      /// b-factor for 2-pi coupling
-      double b ( const double x ) const { return  b1 () + x * x * b2 () ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// approximation for  4pi-phase space
-      std::complex<double> rho4        ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // sigma & Bugg variables
-      // ======================================================================
-      /// pole position  
-      double M     () const  { return m_M       ; }
-      /// m^2
-      double M2    () const  { return m_M * m_M ; }
-      /// pole positon  
-      double m0    () const  { return   M ()    ; }
-      /// pole positon      
-      double mass  () const  { return   M ()    ; }
-      /// pole positon
-      double peak  () const  { return   M ()    ; }
-      // ======================================================================
-      /// g2 
-      double g2    () const  { return m_g2   ; }
-      /// b1 
-      double b1    () const  { return m_b1   ; }
-      /// b2 
-      double b2    () const  { return m_b2   ; }
-      /// s1 
-      double s1    () const  { return m_s1   ; }
-      /// s2 
-      double s2    () const  { return m_s2   ; }
-      /// a 
-      double a     () const  { return m_a    ; }
-      // ======================================================================
-      /// set pole position
-      bool setM    ( const double value  ) ;
-      /// set pole position
-      bool setM0   ( const double value  ) { return setM ( value )  ; }
-      /// set pole position
-      bool setMass ( const double value  ) { return setM ( value )  ; }
-      /// set pole position
-      bool setPeak ( const double value  ) { return setM ( value )  ; }
-      // ======================================================================
-      /// g2
-      bool setG2   ( const double value  ) ;
-      /// b1 
-      bool setB1   ( const double value  ) ;
-      /// b2 
-      bool setB2   ( const double value  ) ;
-      /// s1 
-      bool setS1   ( const double value  ) ;
-      /// s2 
-      bool setS2   ( const double value  ) ;
-      /// a
-      bool setA    ( const double value  ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      /// double integral () const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      // sigma & Bugg varibales
-      // ======================================================================
-      /// mass of sigma (very different from the pole positon!)
-      double m_M  ; // mass of sigma (very different from the pole positon!)
-      /// width parameter g2 (4pi width)
-      double m_g2 ; // width parameter g2 (4-p width)
-      /// width parameter b1  (2pi coupling)
-      double m_b1 ; // width parameter b1  (2pi coupling)
-      /// width parameter b2  (2pi coupling)
-      double m_b2 ; // width parameter b2  (2pi coupling)
-      /// width parameter s1  (cut-off for 4pi coupling)
-      double m_s1 ; // width parameter b1  (cut-off for 4pi coupling)
-      /// width parameter s2  (cut-off for 4pi coupling)
-      double m_s2 ; // width parameter b2  (cut-off for 4pi coupling)
-      /// parameter a (the exponential cut-off)
-      double m_a  ; // parameter a (the exponential cut-off)
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// phase space
-      Ostap::Math::PhaseSpace2   m_ps         ; // phase space
-      // ======================================================================
-    private:
-      /// integration workspace
-      Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Swanson
-     *  Swanson's parameterization of S-wave cusp
-     *  @see LHCb-PAPER-2016-019 appendix D
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2016-06-11
-     */
-    class  Swanson
-    {
-    public:
-      // ======================================================================
-      /// constructor from all parameters (numbers are arbitrary...)
-      Swanson ( const double         m1     = 0.139 ,   // the first  real particle
-                const double         m2     = 0.139 ,   // the second real particle
-                const double         m1_0   = 0.135 ,   // the first  particle for cusp
-                const double         m2_0   = 0.135 ,   // the second particle for cusp
-                const double         beta_0 = 0.300 ,   // beta_0 parameter
-                const unsigned short L      = 0     ) ; // orbital momentum for real particles
-      /// constructor from all parameters
-      Swanson ( const double         m1             ,   // the first  real particle
-                const double         m2             ,   // the second real particle
-                const double         m1_0           ,   // the first  particle for cusp
-                const double         m2_0           ,   // the second particle for cusp
-                const double         beta_0         ,   // beta_0 parameter
-                const unsigned short L              ,   // orbital momentum for real particles
-                const Ostap::Math::FormFactors::JacksonRho  r ) ; //  formfactor
-      /// constructor from all parameters
-      Swanson ( const double         m1             ,   // the first  real particle
-                const double         m2             ,   // the second real particle
-                const double         m1_0           ,   // the first particle for cusp
-                const double         m2_0           ,   // the second particle for cusp
-                const double         beta_0         ,   // beta_0 parameter
-                const unsigned short L              ,   // orbital momentum for real particles
-                const Ostap::Math::FormFactor&    f ) ; // formfactor
-      /// constructor from all parameters
-      Swanson ( const BreitWigner&   bw             ,   // breit-wigner
-                const double         m1_0           ,   // the first  particle for cusp
-                const double         m2_0           ,   // the second particle for cusp
-                const double         beta_0         ) ; // beta_0 parameter
-      /// copy constructor
-      Swanson ( const Swanson&  sw ) ;
-      /// destructor
-      virtual ~Swanson() ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the Swanson shape
-      double operator () ( const double x ) const { return swanson ( x ) ; }
-      /// calculate the Swanson shape
-      double swanson     ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate complex amplitude
-      std::complex<double> amplitude ( const double x ) const ;
-      // ======================================================================
-    public: // getters
-      // ======================================================================
-      /// get beta_0 parameter
-      double  beta0 () const { return m_beta0 ; }  // get beta_0 parameter
-      /// mass of the first particle
-      double  m1    () const { return m_m1    ; }  // mass of first particle
-      /// mass of the second particle
-      double  m2    () const { return m_m2    ; }  // mass of the second particle
-      // ======================================================================
-    public: // derived getters
-      // ======================================================================
-      double mmin () const { return m_bw.m1() + m_bw.m2() ; }
-      double cusp () const { return    m_m1   +    m_m2   ; }
-      // ======================================================================
-    public: // setters
-      // ======================================================================
-      /// set new value for beta_0
-      bool setBeta0  ( const double value ) ;
-      /// set new value for beta_0
-      bool setBeta_0 ( const double value ) { return setBeta0 ( value ) ; }
-      /// set new valeu for m1
-      bool setM1_0   ( const double value ) ;
-      /// set new valeu for m2
-      bool setM2_0   ( const double value ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral between low and high limits
-      virtual double integral  ( const double low  ,
-                                 const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// assignement operator is disabled
-      Swanson& operator=( const Swanson& ) ; // no assignement
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// use Breit-Wigner to keep parameters of real particles
-      Ostap::Math::BreitWigner   m_bw ;
-      /// the mass of the first  particle
-      double            m_m1         ; // the mass of the first  particle
-      /// the mass of the second particle
-      double            m_m2         ; // the mass of the second particle
-      /// beta0 parameter
-      double            m_beta0      ; // beta0 parameter
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    
+
+
+
+    // /** @class LASS
+    //  *  The LASS parameterization (Nucl. Phys. B296, 493 (1988))
+    //  *  describes the 0+ component of the Kpi spectrum.
+    //  *  It consists of the K*(1430) resonance together with an
+    //  *  effective range non-resonant component
+    //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    //  *  @date 2013-10-05
+    //  */
+    // class  LASS
+    // {
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /** constructor from all masses and angular momenta
+    //    *  @param m1 the mass of the first  particle
+    //    *  @param m2 the mass of the second particle
+    //    *  @param m0 the mass of K* 
+    //    *  @param g0 the width of  K*
+    //    *  @param a  the LASS parameter
+    //    *  @param r  the LASS parameter
+    //    *  @param e  the LASS parameter
+    //    */
+    //   LASS ( const double         m1 =  493.7  ,
+    //          const double         m2 =  139.6  ,
+    //          const double         m0 = 1435    , // K*(1450) mass
+    //          const double         g0 =  279    , // K*(1430) width
+    //          const double         a  = 1.94e-3 ,
+    //          const double         r  = 1.76e-3 ,
+    //          const double         e  = 1.0     ) ;
+    //   /// destructor
+    //   virtual ~LASS () ;                                          // destructor
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the (complex) LASS amplitude
+    //   std::complex<double> amplitude  ( const double x ) const ;
+    //   /// get the phase space factor
+    //   double               phaseSpace ( const double x ) const ;
+    //   /// evaluate LASS
+    //   double operator () ( const double x ) const ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// pole position
+    //   double m0  ( ) const { return m_m0 ; }
+    //   /// width at the pole 
+    //   double g0  ( ) const { return m_g0 ; }
+    //   /// a 
+    //   double a   ( ) const { return m_a  ; }
+    //   /// r 
+    //   double r   ( ) const { return m_r  ; }
+    //   /// elasticity 
+    //   double e   ( ) const { return m_e  ; }
+    //   // ======================================================================
+    //   /// the mass of the first daughter 
+    //   double m1  ( ) const { return m_ps2.m1 () ; }
+    //   /// the mass of the second daughter 
+    //   double m2  ( ) const { return m_ps2.m2 () ; }
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// set pole posiiton 
+    //   bool setM0 ( const double value ) ;
+    //   /// set with 
+    //   bool setG0 ( const double value ) ;
+    //   /// a 
+    //   bool setA  ( const double value ) ;
+    //   /// r
+    //   bool setR  ( const double value ) ;
+    //   /// elatisicity 
+    //   bool setE  ( const double value ) ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the integral between low and high limits
+    //   double integral ( const double low  ,
+    //                     const double high ) const ;
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// the pole position for scalar meson
+    //   double   m_m0 ;
+    //   double   m_g0 ;
+    //   /// LASS-parameters
+    //   double   m_a  ;
+    //   double   m_r  ;
+    //   double   m_e  ;
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// phase space
+    //   Ostap::Math::PhaseSpace2 m_ps2     ;    // phase space
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// integration workspace
+    //   Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+    //   // ======================================================================
+    // } ;
+    // // ========================================================================
+    // /** @class Bugg
+    //  *  parametrisation of sigma-pole for
+    //  *  two pion mass distribution
+    //  *
+    //  *  The parameterization of sigma pole by
+    //  *  B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
+    //  *
+    //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    //  *  @date 2012-04-01
+    //  */
+    // class  Bugg
+    // {
+    // public:
+    //   // ======================================================================
+    //   /** constructor from all masses and angular momenta
+    //    *  @param M  mass of sigma (very different from the pole positon!)
+    //    *  @param g2 width parameter g2 (4pi width)
+    //    *  @param b1 width parameter b1  (2pi coupling)
+    //    *  @param b2 width parameter b2  (2pi coupling)
+    //    *  @param a  parameter a (the exponential cut-off)
+    //    *  @param s1 width parameter s1  (cut-off for 4pi coupling)
+    //    *  @param s2 width parameter s2  (cut-off for 4pi coupling)
+    //    *  @param m1 the mass of the first  particle
+    //    */
+    //   Bugg    ( const double         M  = 0.9264        ,  // GeV
+    //             const double         g2 = 0.0024        ,  // GeV
+    //             const double         b1 = 0.5848        ,  // GeV
+    //             const double         b2 = 1.6663        ,  // GeV-1
+    //             const double         a  = 1.082         ,  // GeV^2
+    //             const double         s1 = 2.8           ,  // GeV^2
+    //             const double         s2 = 3.5           ,
+    //             const double         m1 =  139.6 / 1000 ) ; // GeV
+    //   /// destructor
+    //   ~Bugg () ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// calculate the Bugg shape
+    //   double operator() ( const double x ) const { return pdf ( x ) ; }
+    //   /// calculate the Bugg shape      
+    //   double pdf        ( const double x ) const ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the amlitude  (not normalized!)
+    //   std::complex<double> amplitude (  const double x ) const ;
+    //   /// get the phase space factor (taking into account L)
+    //   double phaseSpace ( const double x ) const { return m_ps  ( x ) ; }
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   // phase space variables
+    //   // ======================================================================
+    //   double m1        () const { return m_ps.m1 () ; }
+    //   double m2        () const { return m_ps.m2 () ; }
+    //   // ======================================================================
+    //   double lowEdge   () const { return m_ps. lowEdge() ; }
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the running width by Bugg
+    //   std::complex<double>
+    //   gamma ( const double x ) const ; // get the running width by Bugg
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// adler factor
+    //   double               adler       ( const double x ) const ; // adler factor
+    //   /// ratio of 2pi-phase spaces
+    //   double               rho2_ratio  ( const double x ) const ;
+    //   /// ratio of 4pi-phase spaces
+    //   std::complex<double> rho4_ratio  ( const double x ) const ;
+    //   /// b-factor for 2-pi coupling
+    //   double b ( const double x ) const { return  b1 () + x * x * b2 () ; }
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// approximation for  4pi-phase space
+    //   std::complex<double> rho4        ( const double x ) const ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   // sigma & Bugg variables
+    //   // ======================================================================
+    //   /// pole position  
+    //   double M     () const  { return m_M       ; }
+    //   /// m^2
+    //   double M2    () const  { return m_M * m_M ; }
+    //   /// pole positon  
+    //   double m0    () const  { return   M ()    ; }
+    //   /// pole positon      
+    //   double mass  () const  { return   M ()    ; }
+    //   /// pole positon
+    //   double peak  () const  { return   M ()    ; }
+    //   // ======================================================================
+    //   /// g2 
+    //   double g2    () const  { return m_g2   ; }
+    //   /// b1 
+    //   double b1    () const  { return m_b1   ; }
+    //   /// b2 
+    //   double b2    () const  { return m_b2   ; }
+    //   /// s1 
+    //   double s1    () const  { return m_s1   ; }
+    //   /// s2 
+    //   double s2    () const  { return m_s2   ; }
+    //   /// a 
+    //   double a     () const  { return m_a    ; }
+    //   // ======================================================================
+    //   /// set pole position
+    //   bool setM    ( const double value  ) ;
+    //   /// set pole position
+    //   bool setM0   ( const double value  ) { return setM ( value )  ; }
+    //   /// set pole position
+    //   bool setMass ( const double value  ) { return setM ( value )  ; }
+    //   /// set pole position
+    //   bool setPeak ( const double value  ) { return setM ( value )  ; }
+    //   // ======================================================================
+    //   /// g2
+    //   bool setG2   ( const double value  ) ;
+    //   /// b1 
+    //   bool setB1   ( const double value  ) ;
+    //   /// b2 
+    //   bool setB2   ( const double value  ) ;
+    //   /// s1 
+    //   bool setS1   ( const double value  ) ;
+    //   /// s2 
+    //   bool setS2   ( const double value  ) ;
+    //   /// a
+    //   bool setA    ( const double value  ) ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the integral
+    //   /// double integral () const ;
+    //   /// get the integral between low and high limits
+    //   double integral ( const double low  ,
+    //                     const double high ) const ;
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   // sigma & Bugg variables
+    //   // ======================================================================
+    //   /// mass of sigma (very different from the pole positon!)
+    //   double m_M  ; // mass of sigma (very different from the pole positon!)
+    //   /// width parameter g2 (4pi width)
+    //   double m_g2 ; // width parameter g2 (4-p width)
+    //   /// width parameter b1  (2pi coupling)
+    //   double m_b1 ; // width parameter b1  (2pi coupling)
+    //   /// width parameter b2  (2pi coupling)
+    //   double m_b2 ; // width parameter b2  (2pi coupling)
+    //   /// width parameter s1  (cut-off for 4pi coupling)
+    //   double m_s1 ; // width parameter b1  (cut-off for 4pi coupling)
+    //   /// width parameter s2  (cut-off for 4pi coupling)
+    //   double m_s2 ; // width parameter b2  (cut-off for 4pi coupling)
+    //   /// parameter a (the exponential cut-off)
+    //   double m_a  ; // parameter a (the exponential cut-off)
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// phase space
+    //   Ostap::Math::PhaseSpace2   m_ps         ; // phase space
+    //   // ======================================================================
+    // private:
+    //   /// integration workspace
+    //   Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
+    //   // ======================================================================
+    // } ;
+    // // ========================================================================
+    // /** @class Swanson
+    //  *  Swanson's parameterization of S-wave cusp
+    //  *  @see LHCb-PAPER-2016-019 appendix D
+    //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+    //  *  @date 2016-06-11
+    //  */
+    // class  Swanson
+    // {
+    // public:
+    //   // ======================================================================
+    //   /// constructor from all parameters (numbers are arbitrary...)
+    //   Swanson ( const double         m1     = 0.139 ,   // the first  real particle
+    //             const double         m2     = 0.139 ,   // the second real particle
+    //             const double         m1_0   = 0.135 ,   // the first  particle for cusp
+    //             const double         m2_0   = 0.135 ,   // the second particle for cusp
+    //             const double         beta_0 = 0.300 ,   // beta_0 parameter
+    //             const unsigned short L      = 0     ) ; // orbital momentum for real particles
+    //   /// constructor from all parameters
+    //   Swanson ( const double         m1             ,   // the first  real particle
+    //             const double         m2             ,   // the second real particle
+    //             const double         m1_0           ,   // the first  particle for cusp
+    //             const double         m2_0           ,   // the second particle for cusp
+    //             const double         beta_0         ,   // beta_0 parameter
+    //             const unsigned short L              ,   // orbital momentum for real particles
+    //             const Ostap::Math::FormFactors::JacksonRho  r ) ; //  formfactor
+    //   /// constructor from all parameters
+    //   Swanson ( const double         m1             ,   // the first  real particle
+    //             const double         m2             ,   // the second real particle
+    //             const double         m1_0           ,   // the first particle for cusp
+    //             const double         m2_0           ,   // the second particle for cusp
+    //             const double         beta_0         ,   // beta_0 parameter
+    //             const unsigned short L              ,   // orbital momentum for real particles
+    //             const Ostap::Math::FormFactor&    f ) ; // formfactor
+    //   /// constructor from all parameters
+    //   Swanson ( const BreitWigner&   bw             ,   // breit-wigner
+    //             const double         m1_0           ,   // the first  particle for cusp
+    //             const double         m2_0           ,   // the second particle for cusp
+    //             const double         beta_0         ) ; // beta_0 parameter
+    //   /// copy constructor
+    //   Swanson ( const Swanson&  sw ) ;
+    //   /// destructor
+    //   virtual ~Swanson() ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// calculate the Swanson shape
+    //   double operator () ( const double x ) const { return swanson ( x ) ; }
+    //   /// calculate the Swanson shape
+    //   double swanson     ( const double x ) const ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// calculate complex amplitude
+    //   std::complex<double> amplitude ( const double x ) const ;
+    //   // ======================================================================
+    // public: // getters
+    //   // ======================================================================
+    //   /// get beta_0 parameter
+    //   double  beta0 () const { return m_beta0 ; }  // get beta_0 parameter
+    //   /// mass of the first particle
+    //   double  m1    () const { return m_m1    ; }  // mass of first particle
+    //   /// mass of the second particle
+    //   double  m2    () const { return m_m2    ; }  // mass of the second particle
+    //   // ======================================================================
+    // public: // derived getters
+    //   // ======================================================================
+    //   double mmin () const { return m_bw.m1() + m_bw.m2() ; }
+    //   double cusp () const { return    m_m1   +    m_m2   ; }
+    //   // ======================================================================
+    // public: // setters
+    //   // ======================================================================
+    //   /// set new value for beta_0
+    //   bool setBeta0  ( const double value ) ;
+    //   /// set new value for beta_0
+    //   bool setBeta_0 ( const double value ) { return setBeta0 ( value ) ; }
+    //   /// set new valeu for m1
+    //   bool setM1_0   ( const double value ) ;
+    //   /// set new valeu for m2
+    //   bool setM2_0   ( const double value ) ;
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   /// get the integral between low and high limits
+    //   virtual double integral  ( const double low  ,
+    //                              const double high ) const ;
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// assignement operator is disabled
+    //   Swanson& operator=( const Swanson& ) ; // no assignement
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// use Breit-Wigner to keep parameters of real particles
+    //   Ostap::Math::BreitWigner   m_bw ;
+    //   /// the mass of the first  particle
+    //   double            m_m1         ; // the mass of the first  particle
+    //   /// the mass of the second particle
+    //   double            m_m2         ; // the mass of the second particle
+    //   /// beta0 parameter
+    //   double            m_beta0      ; // beta0 parameter
+    //   // ======================================================================
+    // private:
+    //   // ======================================================================
+    //   /// integration workspace
+    //   Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+    //   // ======================================================================
+    // } ;
+    // // ========================================================================
+
 
     // ========================================================================
     // "2-from-3" variants 
     // ========================================================================
-
+    
     // ========================================================================
-    /** @class BW23L
-     *  @see Ostap::Math::BreitWigner
-     *  @see Ostap::Math::PhaseSpace23L
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2012-05-23
+    /** @class Channel23L 
+     *  helper class to represent resonances in (12) sysmem from M->1+2+3 decays
+     *  where the orbital momentum betwee (12)  and (2) is known. 
+     *(
+     *  - \f$ N_a(s)       \f$ delegated to original channel 
+     *  - \f$ D_a(s)       \f$ delegates to the original   channel 
+     *  - \f$ \varrho_a(s) \f$ phase space 23L 
      */
-    class  BW23L
+    class Channel23L: public ChannelBW 
     {
     public:
       // ======================================================================
-      // constructor from all parameters
-      BW23L ( const double         m0       = 0.770 ,
-              const double         gam0     = 0.150 ,
-              const double         m1       = 0.139 ,
-              const double         m2       = 0.139 ,
-              const double         m3       = 3.096 ,
-              const double         m        = 5.278 ,
-              const unsigned short L1       = 0     ,
-              const unsigned short L2       = 0     ) ;
-      // constructor from all parameters
-      BW23L ( const double         m0       ,
-              const double         gam0     ,
-              const double         m1       ,
-              const double         m2       ,
-              const double         m3       ,
-              const double         m        ,
-              const unsigned short L1       ,
-              const unsigned short L2       ,
-              const Ostap::Math::FormFactors::JacksonRho r ) ;
-      /// constructor from BreitWigner
-      BW23L ( const Ostap::Math::BreitWigner& bw ,
-              const double                    m3 ,
-              const double                    m  ,
-              const unsigned short            L2 ) ;
-      /// copy 
-      BW23L ( const Ostap::Math::BW23L& bw  ) ;
-      /// destructor
-      virtual ~BW23L () ;
+      /// constructor from the channel and phase-space 
+      Channel23L ( const ChannelBW&                  ch , 
+                   const Ostap::Math::PhaseSpace23L& ps ) ;
+      /// constructor from the channel and dalitz configuration 
+      Channel23L ( const ChannelBW&                  ch , 
+                   const Ostap::Kinematics::Dalitz&  dp , 
+                   const unsigned short              L2 ) ;
+      Channel23L ( const ChannelCW&                  ch , 
+                   const double                      m3 ,  
+                   const double                      M  ,
+                   const unsigned short              L2 ) ;
+      Channel23L ( const Channel23L& right ) ;
+      Channel23L* clone () const override ;
       // ======================================================================
     public:
       // ======================================================================
-      /// calculate the shape
-      double operator() ( const double x ) const ;
-      /// get the amplitude
-      std::complex<double>
-      amplitude ( const double x ) const { return m_bw->amplitude ( x ) ; }
+      /// the first main method: numerator.
+      double               N2 
+      ( const double s  , 
+        const double m0 ) const override { return m_channel -> N2 ( s , m0 ) ; }
+      // ======================================================================
+      /// the second main method: term to the denominator 
+      std::complex<double> D   
+      ( const double s  , 
+        const double m0 ) const override { return m_channel -> D ( s , m0 ) ; }
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho \f$
+       *  optionally normalized at point \f$ m_n \f$
+       */
+      double rho_s ( const double s  , 
+                     const double mn ) const override ;
+      // ======================================================================
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override 
+      { 
+        const double le = m_ps.lowEdge() ;
+        return std::max ( m_channel->s_threshold() , le * le ) ;
+      }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override ;
+      // ======================================================================
+    public: // access to the original channel 
+      // ======================================================================
+      /// get the original channel 
+      inline       ChannelBW* channel ()       { return m_channel.get() ; }
+      /// get the original channel 
+      inline const ChannelBW* channel () const { return m_channel.get() ; }
       // ======================================================================
     public:
       // ======================================================================
-      /// pole position 
-      double m0     () const { return m_bw-> m0     () ; }
-      /// pole position 
-      double mass   () const { return        m0     () ; }
-      /// pole position 
-      double peak   () const { return        m0     () ; }
-      /// width  at the pole 
-      double gamma0 () const { return m_bw-> gamma0 () ; }
-      /// width  at the pole 
-      double gamma  () const { return        gamma0 () ; }
-      /// width  at the pole 
-      double width  () const { return        gamma0 () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set pole position 
-      bool setM0     ( const double x ) { return m_bw->setM0     ( x ) ; }
-      /// set pole position 
-      bool setMass   ( const double x ) { return setM0           ( x ) ; }
-      /// set width
-      bool setPeak   ( const double x ) { return setM0           ( x ) ; }
-      /// set width
-      bool setGamma0 ( const double x ) { return m_bw->setGamma0 ( x ) ; }
-      /// set width
-      bool setGamma  ( const double x ) { return setGamma0       ( x ) ; }
-      /// set width
-      bool setWidth  ( const double x ) { return setGamma0       ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// low  edge of phasespace 
-      double lowEdge   () const { return m_ps. lowEdge() ; }
-      /// high edge of phasespace 
-      double highEdge  () const { return m_ps.highEdge() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the current width
-      std::complex<double> 
-      gamma ( const double x ) const { return m_bw->gamma ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the Breit-Wigner
-      const Ostap::Math::BreitWigner& breitwigner() const { return *m_bw ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double    gamma0 () const override 
+      { return m_channel->gamma0() ; }
+      bool   setGamma0 ( const double value ) override
+      { return m_channel->setGamma0 ( value ) ; }
       // ======================================================================
     private:
       // ======================================================================
-      /// the breit wigner
-      std::unique_ptr<Ostap::Math::BreitWigner> m_bw;    // the breit wigner
+      /// the original channel 
+      std::unique_ptr<ChannelBW> m_channel ;
       /// the phase space
-      Ostap::Math::PhaseSpace23L m_ps        ;    // the phase space
-      /// integration workspace
-      Ostap::Math::WorkSpace     m_workspace ;    // integration workspace
+      Ostap::Math::PhaseSpace23L m_ps      ;    // the phase space      
       // ======================================================================
+    };
+    // ========================================================================
+    /** @class ChannelNR 
+     *  Describe a non-resonant 3-body decay channel \f$ m \rigthtarrow m_1 m_2 m_3 \f$
+     *  The basic functions are : 
+     *  \f[\begin{array}{lcc} 
+     *   N^2(s,m_0)      & = & m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \\ 
+     *   D(s,m_0)        & = & m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \\ 
+     *   \varrho (s,m_0) & = & 1 
+     *   \end{array}\,,\f]
+     *  where \f$ \rho_3(s)\f$ is a threebody phase space      
+     */
+    class ChannelNR : public ChannelBW 
+    {
+    public: 
+      // =====================================================================
+      /// constructor from (partial) width and three masses 
+      ChannelNR ( const double gamma = 1 , 
+                  const double m1    = 1 , 
+                  const double m2    = 1 , 
+                  const double m3    = 1 ) ;
+      // =====================================================================
+      /// clone method
+      ChannelNR* clone() const override ;  
+      // =====================================================================
+    public:
+      // =====================================================================
+      /**  squared  numerator for the amplitude 
+       * \f$ N^2(s,m_0) =  m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$ 
+       */
+      double N2
+      ( const double s  , 
+        const double m0 ) const override ;      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       *  \f$ D(s,m_0) = m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$
+       */
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       */
+      double rho_s 
+      ( const double    s     , 
+        const double /* mn */ ) const override 
+      { return s <= m_sthreshold ? 0.0 : m_sthreshold ; }
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =====================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override ;
+      // ======================================================================
+    private: 
+      // =====================================================================
+      /// the first  mass 
+      double m_m1         ; // the first mass 
+      /// the second mass 
+      double m_m2         ; // the second mass 
+      /// the third  mass 
+      double m_m3         ; // the third mass
+      /// the s-threshold 
+      double m_sthreshold ; // the s-thrrshold 
+      // =====================================================================
     } ;
     // ========================================================================
-    /** @class Flatte23L
-     *  \f$\pi\pi\f$-channel
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
+    /** @class GammaBW3 
+     *  Running width for 3-body decays 
+     * \f[ \Gamma(s) \propto  \frac{1}{s^{3/2}}
+     *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
+     *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
      */
-    class  Flatte23L
+    class GammaBW3
     {
-    public:
+    public :
       // ======================================================================
-      /** constructor  from all parameters
-       *  @param m0    the mass
-       *  @param m0g1  parameter \f$ m_0\times g_1\f$
-       *  @param g2og1 parameter \f$ g2/g_1       \f$
-       *  @param mK    A mass
-       *  @param mPi    B mass
-       *  @param m3    the mass of the third particle
-       *  @param m     the mass of mother particle
-       *  @param L     the orbital momentum between the pair and the third particle
+      /** @typedef MatrixElement2
+       *  Squared module of amplitude, averaged over initial and 
+       *  summed over the final spin states
+       *  \f[ \frac{1}{2J_i+1}\sum_i \sum_f 
+       *   \left|\mathcal{A}\left(s,s_1,s_2\right)\right|^2 \f] 
        */
-      Flatte23L  ( const double         m0    =  980.0   ,     // MeV
-                   const double         m0g1  =  165     ,     // MeV^2
-                   const double         g2og1 =    4.21  ,     // dimensionless
-                   const double         mK    =  493.7   ,     // MeV
-                   const double         mPi   =  139.6   ,     // MeV
-                   const double         m3    = 3096.9   ,     // MeV
-                   const double         m     = 5366.0   ,     // MeV
-                   const unsigned short L     = 1        ) ;
+      typedef std::function<double(double,double,double)> MatrixElement2 ;
+      // ======================================================================      
+    public :
       // ======================================================================
-      /** constructor  from flatte function
-       *  @param fun preconfigured flatte function 
-       *  @param m3    the mass of the third particle
-       *  @param m     the mass of mother particle
-       *  @param L     the orbital momentum between the pair and the third particle
+      /** constructor from the Dalitz configuration and 
+       *  the squared matrix element
+       *  @param dalitz Dalizt configriation
+       *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
        */
-      Flatte23L  ( const Flatte&        fun              ,     // MeV
-                   const double         m3    = 3096.9   ,     // MeV
-                   const double         m     = 5366.0   ,     // MeV
-                   const unsigned short L     = 1        ) ;
-      /// copy 
-      Flatte23L  ( const Flatte23L& right ) ;
-      /// destructor
-      virtual ~Flatte23L () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the value of Flatte function
-      // ======================================================================
-      double operator() ( const double x ) const ;
-      // ======================================================================
-      /// get the value of complex Flatte amplitude (pipi-channel)
-      std::complex<double> amplitude ( const double x ) const
-      { return m_flatte->flatte_amp ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// pole position
-      double m0     () const { return m_flatte-> m0    () ; }
-      /// pole position
-      double mass   () const { return            m0    () ; }
-      /// pole position
-      double peak   () const { return            m0    () ; }
-      /// m*g1 
-      double m0g1   () const { return m_flatte-> m0g1  () ; }
-      /// g2/g1 
-      double g2og1  () const { return m_flatte-> g2og1 () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// ste pole   position 
-      bool setM0     ( const double x ) { return m_flatte-> setM0    ( x ) ; }
-      /// ste pole   position 
-      bool setMass   ( const double x ) { return            setM0    ( x ) ; }
-      /// ste pole   position 
-      bool setPeak   ( const double x ) { return            setM0    ( x ) ; }
-      /// m*g1 
-      bool setM0G1   ( const double x ) { return m_flatte-> setM0G1  ( x ) ; }
-      /// g2/g1
-      bool setG2oG1  ( const double x ) { return m_flatte-> setG2oG1 ( x ) ; }
+      GammaBW3 
+      ( const Ostap::Kinematics::Dalitz0& dalitz     , 
+        MatrixElement2                    me2        , 
+        const std::size_t                 tag    = 0 ) ;
+      // =====================================================================
+      /// templated constructor 
+      template <class ME2> 
+      GammaBW3 
+      ( const  Ostap::Kinematics::Dalitz0& dalitz , 
+        ME2                                me2    , 
+        const std::size_t                  tag    ) 
+        :  m_me2    ( me2    ) 
+        ,  m_dalitz ( dalitz ) 
+        ,  m_tag    ( tag    )
+      {}
+      // ======================================================================      
+      // /** constructor from Dalitz configuration and matrix element 
+      //  *  @see Ostap::Decays::IDecay
+      //  *  @param dalitz Dalizt configriation
+      //  *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
+      //  */
+      // GammaBW3 
+      // ( const Ostap::Kinematics::Dalitz0& dalitz     , 
+      //   const Ostap::Decays::IDecay&      me2        , 
+      //   const std::size_t                 tag    = 0 ) ;
+      // // ======================================================================      
+    public: // the main method 
+      // ======================================================================      
+      /// the main method 
+      double operator ()  ( const double s ) const ;
       // ======================================================================      
     public:
       // ======================================================================
-      /// low  edge of phase space 
-      double lowEdge   () const { return m_ps .  lowEdge () ; }
-      /// high edge of phase space 
-      double highEdge  () const { return m_ps . highEdge () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      virtual double integral () const ;
-      /// get the integral between low and high limits
-      virtual double integral ( const double low  ,
-                                const double high ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the Flatte
-      const Ostap::Math::Flatte& flatte () const { return *m_flatte ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual Flatte function
-      std::unique_ptr<Ostap::Math::Flatte> m_flatte ; // the actual Flatte function
-      /// phase space factor
-      Ostap::Math::PhaseSpace23L m_ps     ; // phase space factor
+      /** templated creator 
+       *  (PyROOT does not like templated constructors) 
+       */
+      template <class ME2> 
+      static inline GammaBW3 
+      create 
+      ( const Ostap::Kinematics::Dalitz0& dalitz     , 
+        ME2                               me2        , 
+        const std::size_t                 tag    = 0 ) 
+      { return GammaBW3 ( dalitz , me2 , tag ) ; }
+      // ======================================================================      
+    public: //  accessors 
+      // ======================================================================      
+      /// matrix element 
+      const MatrixElement2&             me2    () const { return m_me2    ; }
+      /// Dalitz configurtaion 
+      const Ostap::Kinematics::Dalitz0& dalitz () const { return m_dalitz ; }
+      // ======================================================================      
+      /// s-threshold 
+      inline double s_threshold () const { return m_dalitz.s_min () ; }
+      /// tag?
+      std::size_t  tag () const { return m_tag ; }
       // ======================================================================
     private:
       // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      /// Matrix element 
+      MatrixElement2             m_me2    {} ; // Matrix element 
+      /// Dalitz configuration 
+      Ostap::Kinematics::Dalitz0 m_dalitz {} ; // Dalitz configuration       
+      /// unique tag/key/label (if specified)
+      std::size_t                m_tag    {} ;
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class LASS23L
-     *
-     *  The LASS parameterization (Nucl. Phys. B296, 493 (1988))
-     *  describes the 0+ component of the Kpi spectrum.
-     *  It consists of the K*(1430) resonance together with an
-     *  effective range non-resonant component.
-     *
-     *  This function is suitable to describe the S-wave Kpi distribtion
-     *  from X -> K pi Y decay
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-01
+    /** @class ChannelDalitz
+     *  Describe a three-body decays with given matrix element  (squared absolute 
+     *  value of the amplitude averaged over the initial spin states 
+     *  The basic functions are : 
+     *  \f[\begin{array}{lcc} 
+     *   N^2(s,m_0)      & = & m_0 \Gamma_0 \frac{\varrho_D(s)}{\varrho_D(m_0^2)} \\ 
+     *   D(s,m_0)        & = & m_0 \Gamma_0 \frac{\varrho_D(s)}{\varrho_D(m_0^2)} \\ 
+     *   \varrho (s,m_0) & = & 1 
+     *   \end{array}\,,\f]
+     *  where \f[ 
+     *   \varrho_D(s) \equiv s^{-3/2} \int\int ds_1ds_2 M^2(s,s_1,s_2) \f]
      */
-    class  LASS23L 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** constructor from all masses and angular momenta
-       *  @param m1 the mass of the first  particle
-       *  @param m2 the mass of the second particle
-       *  @param m3 the mass of the third  particle
-       *  @param m  the mass of the mother particle (m>m1+m2+m3)
-       *  @param m0 the mass of K*
-       *  @param g0 the width of K* 
-       *  @param L  the angular momentum between the first pair and the third
-       *  @param a  the LASS parameter
-       *  @param r  the LASS parameter
-       *  @param e  the LASS parameter
-       */
-      LASS23L ( const double         m1 =  493.7  ,
-                const double         m2 =  139.6  ,
-                const double         m3 = 3097    ,
-                const double         m  = 5278    ,
-                const double         m0 = 1435    ,
-                const double         g0 =  279    ,
-                const unsigned short L  =    1    ,
-                const double         a  = 1.94e-3 ,
-                const double         r  = 1.76e-3 ,
-                const double         e  = 1.0     ) ;
-      /** constructor from LASS and 3-rd particle
-       *  @param lass the actual lass shape
-       *  @param m3   the mass of third particle (Y)
-       *  @param m    the mass of mother particle (X)
-       *  @param L    the orbital momentum between Y and (Kpi)
-       */
-      LASS23L ( const LASS&          lass   ,
-                const double         m3     , // the third particle, e.g. J/psi
-                const double         m      , // mother particle, e.g. B
-                const unsigned short L  = 1 ) ;
-      /// destructor
-      virtual ~LASS23L () ;                                     // destructor
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the (complex) LASS amplitude
-      std::complex<double> amplitude  ( const double x ) const ;
-      /// get the phase space factor
-      double               phaseSpace ( const double x ) const ;
-      /// evaluate LASS
-      double operator () ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// pole position 
-      double m0  () const { return m_lass . m0 () ; } // K*(1430) mass
-      /// width at the pole 
-      double g0  () const { return m_lass . g0 () ; } // K*(1430) width
-      /// a 
-      double a   () const { return m_lass . a  () ; }
-      /// r 
-      double r   () const { return m_lass . r  () ; }
-      ///  e 
-      double e   () const { return m_lass . e  () ; }
-      // ======================================================================
-      /// mass of the first daughter 
-      double m1  () const { return m_ps   . m1 () ; }
-      /// mass of the second daughter 
-      double m2  () const { return m_ps   . m2 () ; }
-      /// the tthird mass 
-      double m3  () const { return m_ps   . m3 () ; }
-      /// m 
-      double m   () const { return m_ps   . m  () ; }
-      /// l 
-      double l   () const { return m_ps   . l  () ; }
-      /// L 
-      double L   () const { return m_ps   . L  () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set pole position 
-      bool setM0 ( const double value ) { return m_lass . setM0 ( value ) ; }
-      /// set g0 
-      bool setG0 ( const double value ) { return m_lass . setG0 ( value ) ; }
-      /// a 
-      bool setA  ( const double value ) { return m_lass . setA  ( value ) ; }
-      /// r 
-      bool setR  ( const double value ) { return m_lass . setR  ( value ) ; }
-      ///  e 
-      bool setE  ( const double value ) { return m_lass . setE  ( value ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// Lass itself
-      Ostap::Math::LASS          m_lass  ;    // lass-function itself
-      /// phase space
-      Ostap::Math::PhaseSpace23L m_ps    ;    // phase space
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Bugg23L
-     *  parametrisation of sigma-pole for
-     *  two pion mass distribution from three body decays
-     *
-     *  The parameterization of sigma pole by
-     *  B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-01
-     */
-    class  Bugg23L
+    class ChannelDalitz : public ChannelWidth
     {
     public:
+      // =====================================================================
+      /// constructor from (partial) width
+      ChannelDalitz 
+      ( const double                                 gamma  , 
+        const Ostap::Kinematics::Dalitz0&            dalitz , 
+        Ostap::Math::GammaBW3::MatrixElement2        me2    ,
+        const std::size_t                            tag    , 
+        const std::string& description = "ChannelDalitz"    ) ;      
       // ======================================================================
-      /** constructor from all masses and angular momenta
-       *  @param M  mass of sigma (very different from the pole positon!)
-       *  @param g2 width parameter g2 (4pi width)
-       *  @param b1 width parameter b1  (2pi coupling)
-       *  @param b2 width parameter b2  (2pi coupling)
-       *  @param a  parameter a (the exponential cut-off)
-       *  @param s1 width parameter s1  (cut-off for 4pi coupling)
-       *  @param s2 width parameter s2  (cut-off for 4pi coupling)
-       *  @param m1 the mass of the first  particle
-       *  @param m3 the mass of the third  particle
-       *  @param m  the mass of the mother particle (m>m1+m2+m3)
-       *  @param L  the angular momentum between the first pair and the third
+      /** templated constructor from (partial) width and matrix element
+       *  @param gamma ( partial width) 
+       *  @param dalitz Dalitz configuration
+       *  @param me2   squared matrix element 
+       *  @param tag   unique tag/label 
+       *  @param description descrfiption 
        */
-      Bugg23L ( const double         M  = 0.9264        ,  // GeV
-                const double         g2 = 0.0024        ,  // GeV
-                const double         b1 = 0.5848        ,  // GeV
-                const double         b2 = 1.6663        ,  // GeV-1
-                const double         a  = 1.082         ,  // GeV^2
-                const double         s1 = 2.8           ,  // GeV^2
-                const double         s2 = 3.5           ,
-                const double         m1 =  139.6 / 1000 ,  // MeV
-                const double         m3 = 3097.0 / 1000 ,  // MeV
-                const double         m  = 5278.0 / 1000 ,  // MeV
-                const unsigned short L  =    1          ) ;
-      /** constructor from bugg & phase space parameters
-       *  @param bugg precofoigured bugg-function
-       *  @param m3 the mass of the third  particle
-       *  @param m  the mass of the mother particle (m>m1+m2+m3)
-       *  @param L  the angular momentum between the first pair and the third
+      template <class ME2> 
+      ChannelDalitz 
+      ( const double                                 gamma  , 
+        const Ostap::Kinematics::Dalitz0&            dalitz , 
+        ME2                                          me2    ,
+        const std::size_t                            tag    , 
+        const std::string& description = "ChannelDalitz"    ) 
+        : ChannelWidth ( gamma , GammaBW3 ( dalitz , me2 , tag ) , 
+                         dalitz.s_min () , tag , description )
+      {}
+      // =====================================================================
+      /// clone method 
+      // =====================================================================
+      ChannelDalitz* clone() const override ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      /** templated creator from (partial) width and matrix element
+       *  *(PyROOT does not like  templated construictors) 
+       *  @param gamma ( partial width) 
+       *  @param dalitz Dalitz configuration
+       *  @param me2   squared matrix element 
+       *  @param tag   unique tag/label 
+       *  @param description descrfiption 
        */
-      Bugg23L ( const Ostap::Math::Bugg& bugg               ,
-                const double             m3 = 3097.0 / 1000 ,  // MeV
-                const double             m  = 5278.0 / 1000 ,  // MeV
-                const unsigned short     L  =    1          ) ;
-
-
-      /// destructor
-      ~Bugg23L () ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// calculate the Bugg shape
-      double operator() ( const double x ) const { return pdf ( x ) ; }
-      /// calculate the Bugg shape
-      double pdf        ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amlitude  (not normalized!)
-      std::complex<double> amplitude (  const double x ) const
-      { return m_bugg.amplitude ( x ) ; }
-      /// get the phase space factor (taking into account L)
-      double phaseSpace ( const double x ) const { return m_ps  ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // phase space variables
-      // ======================================================================
-      /// the first mass 
-      double m1        () const { return m_ps.m1 () ; }
-      /// the second mass 
-      double m2        () const { return m_ps.m2 () ; }
-      /// the third mass 
-      double m3        () const { return m_ps.m3 () ; }
-      /// mass 
-      double m         () const { return m_ps.m  () ; }
-      // ======================================================================
-      /// low   edge of phase space 
-      double lowEdge   () const { return m_ps. lowEdge() ; }
-      /// high edge of phase space 
-      double highEdge  () const { return m_ps.highEdge() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the running width by Bugg
-      std::complex<double>
-      gamma ( const double x ) const { return m_bugg.gamma ( x )  ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// adler factor
-      double               adler       ( const double x ) const
-      { return m_bugg.adler      ( x ) ; } // adler factor
-      /// ratio of 2pi-phase spaces
-      double               rho2_ratio  ( const double x ) const
-      { return m_bugg.rho2_ratio ( x ) ; }
-      /// ratio of 4pi-phase spaces
-      std::complex<double> rho4_ratio  ( const double x ) const
-      { return m_bugg.rho4_ratio ( x ) ; }
-      /// b-factor for 2-pi coupling
-      double b ( const double x ) const { return m_bugg. b ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      // sigma & Bugg variables
-      // ======================================================================
-      /// M
-      double M     () const  { return m_bugg. M    () ; }
-      /// M2
-      double M2    () const  { return m_bugg. M2   () ; }
-      /// pole postition
-      double m0    () const  { return m_bugg. m0   () ; }
-      /// pole position 
-      double mass  () const  { return m_bugg. mass () ; }
-      /// pole position 
-      double peak  () const  { return m_bugg. peak () ; }
-      // ======================================================================
-      /// g2 
-      double g2    () const  { return m_bugg. g2   () ; }
-      /// b1 
-      double b1    () const  { return m_bugg. b1   () ; }
-      ///  b2 
-      double b2    () const  { return m_bugg. b2   () ; }
-      ///  s1 
-      double s1    () const  { return m_bugg. s1   () ; }
-      /// s2 
-      double s2    () const  { return m_bugg. s2   () ; }
-      /// a 
-      double a     () const  { return m_bugg. a    () ; }
-      // ======================================================================
-      /// set pole position
-      bool setM    ( const double value  ) { return m_bugg.setM    ( value ) ; }
-      /// set pole position
-      bool setM0   ( const double value  ) { return m_bugg.setM0   ( value ) ; }
-      /// set pole position
-      bool setMass ( const double value  ) { return m_bugg.setMass ( value ) ; }
-      /// set pole position
-      bool setPeak ( const double value  ) { return m_bugg.setPeak ( value ) ; }
-      // ======================================================================
-      /// g2 
-      bool setG2   ( const double value  ) { return m_bugg.setG2   ( value ) ; }
-      /// b1 
-      bool setB1   ( const double value  ) { return m_bugg.setB1   ( value ) ; }
-      ///  b2 
-      bool setB2   ( const double value  ) { return m_bugg.setB2   ( value ) ; }
-      /// s1 
-      bool setS1   ( const double value  ) { return m_bugg.setS1   ( value ) ; }
-      /// s2 
-      bool setS2   ( const double value  ) { return m_bugg.setS2   ( value ) ; }
-      /// a 
-      bool setA    ( const double value  ) { return m_bugg.setA    ( value ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// bugg function
-      Ostap::Math::Bugg          m_bugg       ; // bugg function
-      /// phase space
-      Ostap::Math::PhaseSpace23L m_ps         ; // phase space
-      // ======================================================================
-    private:
-      /// integration workspace
-      Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
-      // ======================================================================
-    } ;
+      template <class ME2> 
+      static inline ChannelDalitz
+      create 
+      ( const double                                 gamma  , 
+        const Ostap::Kinematics::Dalitz0&            dalitz , 
+        ME2                                          me2    ,
+        const std::size_t                            tag    , 
+        const std::string& description = "ChannelDalitz"    ) 
+      { return ChannelDalitz ( gamma , dalitz , me2 , tag ) ; }
+      // =====================================================================
+    };
     // ========================================================================
     /** @class Gounaris23L
      *  parametrisation of rho0 for
@@ -2273,59 +2452,6 @@ namespace Ostap
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class GammaBW3 
-     *  Running width for 3-body decays 
-     * \f[ \Gamma(s) \propto  \frac{1}{s^{3/2}}
-     *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
-     *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
-     */
-    class GammaBW3
-    {
-    public :
-      // ======================================================================
-      /** @typedef MatrixElement2
-       *  Squared module of amplitude, averaged over initial and 
-       *  summed over the final spin states
-       *  \f[ \frac{1}{2J_i+1}\sum_i \sum_f 
-       *   \left|\mathcal{A}\left(s,s_1,s_2\right)\right|^2 \f] 
-       */
-      typedef std::function<double(double,double,double)> MatrixElement2 ;
-      // ======================================================================      
-    public :
-      // ======================================================================
-      /// constructor from the matrix element and Dalitz' configuration
-      GammaBW3 ( const Ostap::Kinematics::Dalitz0& dalitz  , 
-                 const MatrixElement2&             me2     , 
-                 const std::size_t                 tag = 0 ) ;
-      ///  constructor from the matrix element and Dalitz configuration
-      GammaBW3 ( const MatrixElement2&             me2     ,
-                 const Ostap::Kinematics::Dalitz0& dalitz  , 
-                 const std::size_t                 tag = 0 ) 
-        : GammaBW3 ( dalitz , me2 , tag ) {} ;
-      // ======================================================================      
-    public: // the main method 
-      // ======================================================================      
-      /// the main method 
-      double operator ()  ( const double s ) const ;
-      // ======================================================================      
-    public: //  accessors 
-      // ======================================================================      
-      /// matrix element 
-      const MatrixElement2&             me2    () const { return m_me2    ; }
-      /// Dalitz configurtaion 
-      const Ostap::Kinematics::Dalitz0& dalitz () const { return m_dalitz ; }
-      // ======================================================================      
-    private:
-      // ======================================================================
-      /// Matrix element 
-      MatrixElement2             m_me2    ; // Matrix element 
-      /// Dalitz configuration 
-      Ostap::Kinematics::Dalitz0 m_dalitz ; // Dalitz configuration       
-      /// unique tag/key/label (if specified)
-      std::size_t                m_tag    ;
       // ======================================================================
     } ;
     // ========================================================================

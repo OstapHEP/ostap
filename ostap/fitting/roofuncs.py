@@ -878,8 +878,8 @@ FUNC.__atan2__   = _fn_atan2_
 FUNC.__tgamma__  = _fn_tgamma_
 FUNC.__lgamma__  = _fn_lgamma_
 FUNC.__igamma__  = _fn_igamma_
-FUNC.__pow__     = _fn_pow_
-FUNC.__rpow__    = _fn_rpow2_
+## FUNC.__pow__     = _fn_pow_
+## FUNC.__rpow__    = _fn_rpow2_
 
 FUNC.  abs       = _fn_abs_
 FUNC.  exp       = _fn_exp_
@@ -894,8 +894,8 @@ FUNC.  atan2     = _fn_atan2_
 FUNC.  tgamma    = _fn_tgamma_
 FUNC.  lgamma    = _fn_lgamma_
 FUNC.  igamma    = _fn_igamma_
-FUNC.  pow       = _fn_pow_
-FUNC.  rpow      = _fn_rpow_
+## FUNC.  pow       = _fn_pow_
+## FUNC.  rpow      = _fn_rpow_
 
 FUNC.  fraction  = _fn_fraction_
 FUNC.  asymmetry = _fn_asymmetry_

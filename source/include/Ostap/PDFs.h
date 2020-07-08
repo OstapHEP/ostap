@@ -12,6 +12,7 @@
 // ============================================================================
 #include "Ostap/Peaks.h"
 #include "Ostap/BreitWigner.h"
+#include "Ostap/Voigt.h"
 #include "Ostap/Models.h"
 #include "Ostap/BSpline.h"
 // ============================================================================
@@ -119,31 +120,31 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BreitWigner ( const char*          name      ,
-                    const char*          title     ,
-                    RooAbsReal&          x         ,
-                    RooAbsReal&          mass      ,
-                    RooAbsReal&          width     ,
-                    const double         m1        ,
-                    const double         m2        ,
-                    const unsigned short L     = 0 ) ;
+      BreitWigner ( const char*            name      ,
+                    const char*            title     ,
+                    RooAbsReal&            x         ,
+                    RooAbsReal&            mass      ,
+                    RooAbsReal&            width     ,
+                    const double           m1        ,
+                    const double           m2        ,
+                    const unsigned short   L     = 0 ) ;
       /// constructor from all parameters
-      BreitWigner ( const char*          name      ,
-                    const char*          title     ,
-                    RooAbsReal&          x         ,
-                    RooAbsReal&          mass      ,
-                    RooAbsReal&          width     ,
-                    const double         m1        ,
-                    const double         m2        ,
-                    const unsigned short L                         ,
+      BreitWigner ( const char*            name      ,
+                    const char*            title     ,
+                    RooAbsReal&            x         ,
+                    RooAbsReal&            mass      ,
+                    RooAbsReal&            width     ,
+                    const double           m1        ,
+                    const double           m2        ,
+                    const unsigned short   L                         ,
                     const Ostap::Math::FormFactors::JacksonRho rho ) ;
       /// constructor from main parameters and "shape"
-      BreitWigner ( const char*          name      ,
-                    const char*          title     ,
-                    RooAbsReal&          x         ,
-                    RooAbsReal&          mass      ,
-                    RooAbsReal&          width     ,
-                    const Ostap::Math::BreitWigner& bw ) ;
+      BreitWigner ( const char*            name      ,
+                    const char*            title     ,
+                    RooAbsReal&            x         ,
+                    RooAbsReal&            mass      ,
+                    RooAbsReal&            width     ,
+                    const Ostap::Math::BW& bw ) ;
       /// "copy" constructor
       BreitWigner ( const BreitWigner& , const char* name = 0 ) ;
       /// virtual destructor
@@ -179,9 +180,9 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the amplitude
-      std::complex<double>            amplitude () const  ;
+      std::complex<double>   amplitude () const  ;
       /// access to underlying function
-      const Ostap::Math::BreitWigner& function  () const { return *m_bw ; }
+      const Ostap::Math::BW& function  () const { return *m_bw ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -202,7 +203,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual function
-      std::unique_ptr<Ostap::Math::BreitWigner> m_bw{}  ; // the actual function
+      std::unique_ptr<Ostap::Math::BW> m_bw{}  ; // the actual function
       // ======================================================================
     } ;
     // ========================================================================
@@ -287,122 +288,6 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       std::unique_ptr<Ostap::Math::BreitWignerMC> m_bw{}  ; // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class BW23L
-     *
-     *  J.D.Jackson,
-     *  "Remarks on the Phenomenological Analysis of Resonances",
-     *  In Nuovo Cimento, Vol. XXXIV, N.6
-     *
-     *  http://www.springerlink.com/content/q773737260425652/
-     *
-     *  @see Ostap::Math::BreitWigner
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  BW23L : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::BW23L, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      BW23L ( const char*          name      ,
-              const char*          title     ,
-              RooAbsReal&          x         ,
-              RooAbsReal&          mass      ,
-              RooAbsReal&          width     ,
-              const double         m1        ,
-              const double         m2        ,
-              const unsigned short l         ,
-              //
-              const double         m3        ,
-              const double         m         ,
-              const double         L         ) ;
-      /// constructor from all parameters
-      BW23L ( const char*          name      ,
-              const char*          title     ,
-              RooAbsReal&          x         ,
-              RooAbsReal&          mass      ,
-              RooAbsReal&          width     ,
-              const double         m1        ,
-              const double         m2        ,
-              const unsigned short l                         ,
-              const Ostap::Math::FormFactors::JacksonRho rho ,
-              //
-              const double         m3        ,
-              const double         m         ,
-              const double         L         ) ;
-      /// constructor from main parameters and "shape"
-      BW23L ( const char*          name      ,
-              const char*          title     ,
-              RooAbsReal&          x         ,
-              RooAbsReal&          mass      ,
-              RooAbsReal&          width     ,
-              const Ostap::Math::BW23L& bw   ) ; // shape
-      /// "copy" constructor
-      BW23L ( const BW23L& , const char* name = 0 ) ;
-      /// virtual destructor
-      virtual ~BW23L() ;
-      /// clone
-      BW23L* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      BW23L () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t     evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      std::complex<double>      amplitude () const  ;
-      /// access to underlying function
-      const Ostap::Math::BW23L& function  () const { return m_bw ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x     ;
-      RooRealProxy m_mass  ;
-      RooRealProxy m_width ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::BW23L m_bw ;            // the actual function
       // ======================================================================
     } ;
     // ========================================================================
@@ -515,14 +400,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      Flatte ( const char*                name      ,
-               const char*                title     ,
-               RooAbsReal&                x         ,
-               RooAbsReal&                m0        ,
-               RooAbsReal&                m0g1      ,
-               RooAbsReal&                g2og1     ,
-               RooAbsReal&                g0        ,
-               const Ostap::Math::Flatte& flatte    ) ;
+      Flatte ( const char*                name   ,
+               const char*                title  ,
+               RooAbsReal&                x      ,
+               RooAbsReal&                m0     ,
+               RooAbsReal&                g1     ,
+               RooAbsReal&                g2     ,
+               RooAbsReal&                g0     ,
+               const Ostap::Math::Flatte& flatte ) ;
       /// "copy" constructor
       Flatte ( const Flatte& , const char* name = 0 ) ;
       /// virtual destructor
@@ -574,408 +459,16 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-      RooRealProxy m_x     ;
-      RooRealProxy m_m0    ;
-      RooRealProxy m_m0g1  ;
-      RooRealProxy m_g2og1 ;
-      RooRealProxy m_g0    ;
+      RooRealProxy m_x  ;
+      RooRealProxy m_m0 ;
+      RooRealProxy m_g1 ;
+      RooRealProxy m_g2 ;
+      RooRealProxy m_g0 ;
       // ======================================================================
     protected:
       // ======================================================================
       /// the actual function
       std::unique_ptr<Ostap::Math::Flatte> m_flatte ;  // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class LASS
-     *  S-wave Kpi amplitude for S-wave Kpi distribtion
-     *  @see Ostap::Math::LASS
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2013-10-05
-     */
-    class  LASS : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::LASS, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      LASS  ( const char*          name          ,
-              const char*          title         ,
-              RooAbsReal&          x             ,
-              RooAbsReal&          m1430         , // mass  of K*(1430)
-              RooAbsReal&          g1430         , // width of K*(1430)
-              RooAbsReal&          a             ,
-              RooAbsReal&          r             ,
-              RooAbsReal&          e             ,
-              const double         m1    = 493.7 ,   // mass of K
-              const double         m2    = 139.6 ) ; // mass of pi
-      /// "copy constructor"
-      LASS  ( const LASS& right , const char* name = 0 )  ;
-      /// destructor
-      virtual ~LASS () ;
-      /// clone
-      LASS * clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      LASS () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      std::complex<double>     amplitude () const ;
-      /// access to underlying function
-      const Ostap::Math::LASS& function  () const { return m_lass ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the mass
-      RooRealProxy m_x     ;
-      /// K*(1430) parameters
-      RooRealProxy m_m0    ;
-      RooRealProxy m_g0    ;
-      /// LASS parameters
-      RooRealProxy m_a     ;
-      RooRealProxy m_r     ;
-      RooRealProxy m_e     ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::LASS m_lass ;              // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class LASS23L
-     *  S-wave Kpi amplitude for Kpi from B-> Kpi X decays
-     *  @see Ostap::Math::LASS23L
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-02
-     */
-    class  LASS23L : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::LASS23L, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      LASS23L ( const char*          name          ,
-                const char*          title         ,
-                RooAbsReal&          x             ,
-                RooAbsReal&          m1430         ,
-                RooAbsReal&          g1430         ,
-                RooAbsReal&          a             ,
-                RooAbsReal&          r             ,
-                RooAbsReal&          e             ,
-                const double         m1    = 493.7 ,
-                const double         m2    = 139.6 ,
-                const double         m3    = 3097  ,
-                const double         m     = 5278  ,
-                const unsigned short L     = 1     ) ;
-      /// "copy constructor"
-      LASS23L ( const LASS23L& right , const char* name = 0 )  ;
-      /// destructor
-      virtual ~LASS23L() ;
-      /// clone
-      LASS23L* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      LASS23L () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the complex amplitude
-      std::complex<double>        amplitude () const ; // get the complex amplitude
-      /// access to underlying function
-      const Ostap::Math::LASS23L& function  () const { return m_lass ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the mass
-      RooRealProxy m_x     ;
-      /// K*(1430) parameters:
-      RooRealProxy m_m0    ;
-      RooRealProxy m_g0    ;
-      /// LASS parameters
-      RooRealProxy m_a     ;
-      RooRealProxy m_r     ;
-      RooRealProxy m_e     ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::LASS23L m_lass ;              // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Bugg
-     *  parametrisation of sigma-pole for
-     *  two pion mass distribution
-     *
-     *  The parameterization of sigma pole by
-     *  B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-01
-     *  @see Ostap::Math::Bugg
-     */
-    class  Bugg : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Bugg, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Bugg  ( const char*          name               ,
-              const char*          title              ,
-              RooAbsReal&          x                  ,
-              RooAbsReal&          M                  ,   // sigma M
-              RooAbsReal&          g2                 ,   // sigma G2
-              RooAbsReal&          b1                 ,   // sigma B1
-              RooAbsReal&          b2                 ,   // sigma B2
-              RooAbsReal&          a                  ,   // sigma a
-              RooAbsReal&          s1                 ,   // sigma s1
-              RooAbsReal&          s2                 ,   // sigma s2
-              const double         m1    = 139.6/1000 ) ; // mass of pi GeV
-      /// "copy constructor"
-      Bugg  ( const Bugg& right , const char* name = 0 )  ;
-      /// destructor
-      virtual ~Bugg () ;
-      /// clone
-      Bugg* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Bugg () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      std::complex<double>     amplitude () const ;
-      /// access to underlying function
-      const Ostap::Math::Bugg& function  () const { return m_bugg ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the mass
-      RooRealProxy m_x     ;
-      /// sigma/bugg parameters
-      RooRealProxy m_M     ;
-      RooRealProxy m_g2    ;
-      RooRealProxy m_b1    ;
-      RooRealProxy m_b2    ;
-      RooRealProxy m_a     ;
-      RooRealProxy m_s1    ;
-      RooRealProxy m_s2    ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::Bugg m_bugg ;              // the actual function
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Bugg23L
-     *  parametrisation of sigma-pole for
-     *  two pion mass distribution form three body decays
-     *
-     *  The parameterization of sigma pole by
-     *  B.S.Zou and D.V.Bugg, Phys.Rev. D48 (1993) R3948.
-     *
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2012-04-01
-     *  @see Ostap::Math::Bugg23L
-     */
-    class  Bugg23L : public RooAbsPdf
-    {
-    public:
-      // ======================================================================
-      ClassDef(Ostap::Models::Bugg23L, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Bugg23L ( const char*          name               ,
-                const char*          title              ,
-                RooAbsReal&          x                  ,
-                RooAbsReal&          M                  ,   // sigma M
-                RooAbsReal&          g2                 ,   // sigma G2
-                RooAbsReal&          b1                 ,   // sigma B1
-                RooAbsReal&          b2                 ,   // sigma B2
-                RooAbsReal&          a                  ,   // sigma a
-                RooAbsReal&          s1                 ,   // sigma s1
-                RooAbsReal&          s2                 ,   // sigma s2
-                const double         m1    = 139.6/1000 ,   // mass of pi GeV
-                const double         m3 = 3097.0 / 1000 ,   //  GeV
-                const double         m  = 5278.0 / 1000 ,   // GeV
-                const unsigned short L  =    1          ) ;
-      /// "copy constructor"
-      Bugg23L ( const Bugg23L& right , const char* name = 0 )  ;
-      /// destructor
-      virtual ~Bugg23L () ;
-      /// clone
-      Bugg23L* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Bugg23L () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      std::complex<double>        amplitude () const ;
-      /// access to underlying function
-      const Ostap::Math::Bugg23L& function  () const { return m_bugg ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the mass
-      RooRealProxy m_x     ;
-      /// sigma/bugg parameters
-      RooRealProxy m_M     ;
-      RooRealProxy m_g2    ;
-      RooRealProxy m_b1    ;
-      RooRealProxy m_b2    ;
-      RooRealProxy m_a     ;
-      RooRealProxy m_s1    ;
-      RooRealProxy m_s2    ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::Bugg23L m_bugg ;              // the actual function
       // ======================================================================
     } ;
     // ========================================================================
@@ -1146,100 +639,100 @@ namespace Ostap
       mutable Ostap::Math::PseudoVoigt m_voigt ;                // the function
       // ======================================================================
     };
-    // ========================================================================
-    /** @class Swanson
-     *  Swanson's S-wau cusp
-     *  @see Ostap::Math::Swanson
-     *  @see LHCb-PAPER-2016-019, Appendix D
-     *  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952,
-     *  @see http://arxiv.org/abs/1504.07952
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2016-06-12
-     */
-    class  Swanson : public RooAbsPdf
-    {
-      // ======================================================================
-    public :
-      // ======================================================================
-      ClassDef(Ostap::Models::Swanson, 1) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from all parameters
-      Swanson
-        ( const char*          name          ,
-          const char*          title         ,
-          RooAbsReal&          x             ,
-          RooAbsReal&          beta0         ,
-          const Ostap::Math::Swanson& sw     ) ;
-      /// constructor from all parameters
-      Swanson
-        ( const char*          name          ,
-          const char*          title         ,
-          RooAbsReal&          x             ,
-          RooAbsReal&          beta0         ,
-          const double         m1_0          ,
-          const double         m2_0          ,
-          const Ostap::Math::BreitWigner& bw ) ;
-      /// "copy" constructor
-      Swanson ( const Swanson& right , const char* name = 0  ) ;
-      /// virtual destructor
-      virtual ~Swanson () ;
-      /// clone
-      Swanson* clone ( const char* name ) const override;
-      // ======================================================================
-    public: // some fake functionality
-      // ======================================================================
-      // fake default contructor, needed just for proper (de)serialization
-      Swanson () {} ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// access to underlying function
-      const Ostap::Math::Swanson& function() const { return m_swanson ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x      ;
-      RooRealProxy m_beta0  ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      mutable Ostap::Math::Swanson m_swanson ;                 // the function
-      // ======================================================================
-    };
-    // ========================================================================
+//     // ========================================================================
+//     /** @class Swanson
+//      *  Swanson's S-wau cusp
+//      *  @see Ostap::Math::Swanson
+//      *  @see LHCb-PAPER-2016-019, Appendix D
+//      *  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952,
+//      *  @see http://arxiv.org/abs/1504.07952
+//      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+//      *  @date 2016-06-12
+//      */
+//     class  Swanson : public RooAbsPdf
+//     {
+//       // ======================================================================
+//     public :
+//       // ======================================================================
+//       ClassDef(Ostap::Models::Swanson, 1) ;
+//       // ======================================================================
+//     public:
+//       // ======================================================================
+//       /// constructor from all parameters
+//       Swanson
+//         ( const char*          name          ,
+//           const char*          title         ,
+//           RooAbsReal&          x             ,
+//           RooAbsReal&          beta0         ,
+//           const Ostap::Math::Swanson& sw     ) ;
+//       /// constructor from all parameters
+//       Swanson
+//         ( const char*          name          ,
+//           const char*          title         ,
+//           RooAbsReal&          x             ,
+//           RooAbsReal&          beta0         ,
+//           const double         m1_0          ,
+//           const double         m2_0          ,
+//           const Ostap::Math::BreitWigner& bw ) ;
+//       /// "copy" constructor
+//       Swanson ( const Swanson& right , const char* name = 0  ) ;
+//       /// virtual destructor
+//       virtual ~Swanson () ;
+//       /// clone
+//       Swanson* clone ( const char* name ) const override;
+//       // ======================================================================
+//     public: // some fake functionality
+//       // ======================================================================
+//       // fake default contructor, needed just for proper (de)serialization
+//       Swanson () {} ;
+//       // ======================================================================
+//     public:
+//       // ======================================================================
+//       // the actual evaluation of function
+//       Double_t evaluate() const override;
+//       // ======================================================================
+//     public: // integrals
+//       // ======================================================================
+//       Int_t    getAnalyticalIntegral
+//         ( RooArgSet&     allVars      ,
+//           RooArgSet&     analVars     ,
+//           const char* /* rangename */ ) const override;
+//       Double_t analyticalIntegral
+//         ( Int_t          code         ,
+//           const char*    rangeName    ) const override;
+//       // ======================================================================
+//     public:
+//       // ======================================================================
+//       /// set all parameters
+//       void setPars () const ; // set all parameters
+//       // ======================================================================
+//     public:
+//       // ======================================================================
+//       /// access to underlying function
+//       const Ostap::Math::Swanson& function() const { return m_swanson ; }
+//       // ======================================================================
+//     private:
+//       // ======================================================================
+// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
+//       // ======================================================================
+//       RooSpan<double> evaluateBatch 
+//       ( std::size_t begin     , 
+//         std::size_t batchSize ) const ;
+//       // ======================================================================
+// #endif
+//       // ======================================================================
+//     protected:
+//       // ======================================================================
+//       RooRealProxy m_x      ;
+//       RooRealProxy m_beta0  ;
+//       // ======================================================================
+//     private:
+//       // ======================================================================
+//       /// the actual function
+//       mutable Ostap::Math::Swanson m_swanson ;                 // the function
+//       // ======================================================================
+//     };
+//     // ========================================================================
 
 
     // ========================================================================
@@ -3038,10 +2531,6 @@ namespace Ostap
       mutable Ostap::Math::PhaseSpaceLeftExpoPol m_ps ;  // the actual function
       // ======================================================================
     } ;
-
-
-
-
     // ========================================================================
     /** @class PhaseSpace23L
      *  simple model for 2-body phase space from 3-body decays with

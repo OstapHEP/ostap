@@ -32,8 +32,8 @@ else                       : logger = getLogger ( __name__            )
 # helper adapter for 1D-functions 
 class _WO1_ (object)  :
     "Helper adapter for 1D-functions"
-    def __init__ ( self , o              ) :        self._o   =  o 
-    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0]        )
+    def __init__ ( self , o              ) :        self._o   = o
+    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] )
 # =============================================================================
 # helper adapter for 2D-functions 
 class _WO2_ (object)  :
@@ -54,12 +54,17 @@ neg_infinity = float('-inf')
 def tf1  ( self                 ,
            xmin  = neg_infinity ,
            xmax  = pos_infinity ,
-           npars = 0            , args = () ) :
+           **kwargs             ) :
     """Convert the function to TF1    
     >>> obj = ...
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
     >>> fun.Draw() 
     """
+    
+    npars = kwargs.pop ( 'npars' , 0            )
+    args  = kwargs.pop ( 'args'  , ()           )
+    npx   = kwargs.pop ( 'npx'   , 250          )
+    
     #
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( self )
     if not self._wo1                 : self._wo1 = _WO1_ ( self )
@@ -81,7 +86,7 @@ def tf1  ( self                 ,
     
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-    fun.SetNpx ( 500 )
+    fun.SetNpx ( npx )
     ##
     return fun 
 
@@ -92,7 +97,10 @@ def tf2 ( self ,
           xmax  = pos_infinity ,
           ymin  = neg_infinity ,
           ymax  = pos_infinity ,
-          npars = 0            , args = () ) :
+          npars = 0            ,
+          args  = ()           ,
+          npx   = 50           ,
+          npy   = 50           ) :
     """Convert the function to TF2
     >>> obj = ...    
     >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
@@ -130,8 +138,8 @@ def tf2 ( self ,
     ##
     _wo = self._wo2
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
-    fun.SetNpx ( 100 ) 
-    fun.SetNpy ( 100 ) 
+    fun.SetNpx ( npx ) 
+    fun.SetNpy ( npy ) 
     #
     return fun 
 
@@ -144,7 +152,11 @@ def tf3 ( self ,
           ymax  = pos_infinity ,
           zmin  = neg_infinity ,
           zmax  = pos_infinity ,
-          npars = 0            , args = () ) :
+          npars = 0            ,
+          args  = ()           , 
+          npx   = 25           ,
+          npy   = 25           ,
+          npz   = 25           ) :
     """Convert the function to TF3
     >>> obj = ...    
     >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
@@ -194,9 +206,9 @@ def tf3 ( self ,
     #
     _wo = self._wo3
     fun = ROOT.TF3 ( funID ()  , _wo , xmin , xmax , ymin , ymax , zmin ,  zmax , npars , *args )
-    fun.SetNpx ( 40 ) 
-    fun.SetNpy ( 40 ) 
-    fun.SetNpy ( 40 ) 
+    fun.SetNpx ( npx ) 
+    fun.SetNpy ( npy ) 
+    fun.SetNpy ( npz ) 
     #
     return fun 
 
@@ -207,18 +219,17 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
+    
+    if hasattr ( self , '_tf1' ) :
+        xmin  = kwargs.get ( 'xmin'  , None )
+        xmax  = kwargs.get ( 'xmax'  , None )
+        if   not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
+        elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
+                    
+    
     if not hasattr ( self , '_tf1'  ) :
- 
-        xmin  = kwargs.pop ( 'xmin'  , neg_infinity )
-        xmax  = kwargs.pop ( 'xmax'  , pos_infinity )
-        npars = kwargs.pop ( 'npars' , 0  ) 
-        args  = kwargs.pop ( 'args'  , () )
         
-        self._tf1        =  tf1 ( self          ,
-                                  xmin  = xmin  ,
-                                  xmax  = xmax  ,
-                                  npars = npars ,
-                                  args  = args  )
+        self._tf1        =  tf1 ( self , **kwargs )
         
         if type(self) in ( Ostap.Math.Positive          ,
                            Ostap.Math.PositiveEven      , 
@@ -233,6 +244,12 @@ def f1_draw ( self , opts ='' , **kwargs ) :
                            Ostap.Math.TwoExpoPositive   ) :                                
             self._tf1.SetMinimum(0)
             
+    kwargs.pop ( 'xmin'  , None )
+    kwargs.pop ( 'xmax'  , None )
+    kwargs.pop ( 'npars' , None ) 
+    kwargs.pop ( 'args'  , None )
+    kwargs.pop ( 'npx'   , None )
+
     return self._tf1.draw ( opts , **kwargs )
 
 # =============================================================================
@@ -301,14 +318,14 @@ def _amp_ ( self , x ) :
     v = self.amplitude ( x )
     return complex( v.real () , v.imag () ) 
 
-Ostap.Math.LASS            . amp = _amp_
-Ostap.Math.LASS23L         . amp = _amp_
-Ostap.Math.Bugg23L         . amp = _amp_
+## Ostap.Math.LASS            . amp = _amp_
+## Ostap.Math.LASS23L         . amp = _amp_
+## Ostap.Math.Bugg23L         . amp = _amp_
 Ostap.Math.Flatte          . amp = _amp_
-Ostap.Math.Flatte2         . amp = _amp_
-Ostap.Math.Flatte23L       . amp = _amp_
-Ostap.Math.BreitWignerBase . amp = _amp_
-Ostap.Math.Swanson         . amp = _amp_
+## Ostap.Math.Flatte2         . amp = _amp_
+## Ostap.Math.Flatte23L       . amp = _amp_
+Ostap.Math.BW              . amp = _amp_
+## Ostap.Math.Swanson         . amp = _amp_
 
 
 # =============================================================================
@@ -825,6 +842,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.CrystalBallDoubleSided ,
                Ostap.Math.GramCharlierA          ,
                Ostap.Math.PhaseSpace2            ,
+               Ostap.Math.sPhaseSpace2           ,
                Ostap.Math.PhaseSpace3            ,
                Ostap.Math.PhaseSpace3s           ,
                Ostap.Math.PhaseSpaceLeft         ,
@@ -833,20 +851,20 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.PhaseSpaceNL           ,
                Ostap.Math.PhaseSpace23L          ,
                Ostap.Math.BreitWigner            ,
-               Ostap.Math.BreitWignerBase        ,
+               Ostap.Math.BW                     ,
                Ostap.Math.BreitWignerMC          ,
                Ostap.Math.Rho0                   ,
                Ostap.Math.Kstar0                 ,
                Ostap.Math.Phi0                   ,
-               Ostap.Math.Rho0FromEtaPrime       ,
+               ## Ostap.Math.Rho0FromEtaPrime       ,
                Ostap.Math.Flatte                 ,
-               Ostap.Math.Flatte2                ,
-               Ostap.Math.LASS                   ,
-               Ostap.Math.LASS23L                ,
-               Ostap.Math.Bugg23L                ,
-               Ostap.Math.BW23L                  ,
-               Ostap.Math.Flatte23L              ,
-               Ostap.Math.Gounaris23L            ,
+               ## Ostap.Math.Flatte2                ,
+               ## Ostap.Math.LASS                   ,
+               ## Ostap.Math.LASS23L                ,
+               ## Ostap.Math.Bugg23L                ,
+               ## Ostap.Math.BW23L                  ,
+               ## Ostap.Math.Flatte23L              ,
+               ## Ostap.Math.Gounaris23L            ,
                Ostap.Math.StudentT               ,
                Ostap.Math.BifurcatedStudentT     ,
                Ostap.Math.Voigt                  ,
@@ -868,7 +886,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Atlas                  ,
                Ostap.Math.Sech                   ,
                Ostap.Math.Losev                  ,
-               Ostap.Math.Swanson                ,
+               ## Ostap.Math.Swanson                ,
                Ostap.Math.Argus                  ,
                Ostap.Math.Slash                  ,
                Ostap.Math.AsymmetricLaplace      ,
@@ -1144,11 +1162,11 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.Voigt              ,
              Ostap.Models.PseudoVoigt        ,
              Ostap.Models.Logistic           ,
-             Ostap.Models.LASS               ,
-             Ostap.Models.Bugg               ,
-             Ostap.Models.LASS23L            ,
-             Ostap.Models.Bugg23L            , 
-             Ostap.Models.BW23L              , 
+             ## Ostap.Models.LASS               ,
+             ## Ostap.Models.Bugg               ,
+             ## Ostap.Models.LASS23L            ,
+             ## Ostap.Models.Bugg23L            , 
+             ## Ostap.Models.BW23L              , 
              Ostap.Models.PolyPositive       ,
              Ostap.Models.ExpoPositive       ,
              Ostap.Models.TwoExpoPositive    ,
@@ -1170,7 +1188,7 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.Atlas              ,
              Ostap.Models.Sech               ,
              Ostap.Models.Losev              ,
-             Ostap.Models.Swanson            ,
+             ## Ostap.Models.Swanson            ,
              Ostap.Models.Argus              ,
              Ostap.Models.Slash              ,
              Ostap.Models.AsymmetricLaplace  ,
@@ -1428,13 +1446,13 @@ for p in ( Ostap.Math.Positive3D    ,
 # =============================================================================
 ## add complex amplitudes 
 # =============================================================================
-Ostap.Math.LASS            . amp = _amp_
-Ostap.Math.LASS23L         . amp = _amp_
-Ostap.Math.Bugg23L         . amp = _amp_
+## Ostap.Math.LASS            . amp = _amp_
+## Ostap.Math.LASS23L         . amp = _amp_
+## Ostap.Math.Bugg23L         . amp = _amp_
 Ostap.Math.Flatte          . amp = _amp_
-Ostap.Math.Flatte2         . amp = _amp_
-Ostap.Math.Flatte23L       . amp = _amp_
-Ostap.Math.BreitWignerBase . amp = _amp_
+## Ostap.Math.Flatte2         . amp = _amp_
+## Ostap.Math.Flatte23L       . amp = _amp_
+Ostap.Math.BW                 . amp = _amp_
     
 # =============================================================================
 
@@ -1482,16 +1500,16 @@ _decorated_classes_ = set( [
     Ostap.Math.ConvexOnlySpline       ,
     Ostap.Math.ExpoPositive           ,
     Ostap.Math.TwoExpoPositive        ,
-    Ostap.Math.LASS                   , 
-    Ostap.Math.LASS23L                , 
-    Ostap.Math.Bugg23L                , 
+    ## Ostap.Math.LASS                   , 
+    ## Ostap.Math.LASS23L                , 
+    ## Ostap.Math.Bugg23L                , 
     Ostap.Math.Flatte                 , 
-    Ostap.Math.Flatte2                , 
-    Ostap.Math.Flatte23L              ,
+    ## Ostap.Math.Flatte2                , 
+    ## Ostap.Math.Flatte23L              ,
     Ostap.Math.BreitWigner            ,
-    Ostap.Math.BreitWignerBase        ,
+    Ostap.Math.BW                     ,
     Ostap.Math.BreitWignerMC          ,
-    Ostap.Math.Swanson                ,
+    ## Ostap.Math.Swanson                ,
     ##
     Ostap.Math.Chebyshev              ,
     Ostap.Math.ChebyshevU             ,
@@ -1518,6 +1536,7 @@ _decorated_classes_ = set( [
     Ostap.Math.CrystalBallDoubleSided ,
     Ostap.Math.GramCharlierA          ,
     Ostap.Math.PhaseSpace2            ,
+    Ostap.Math.sPhaseSpace2           ,
     Ostap.Math.PhaseSpace3            ,
     Ostap.Math.PhaseSpace3s           ,
     Ostap.Math.PhaseSpaceLeft         ,
@@ -1526,20 +1545,20 @@ _decorated_classes_ = set( [
     Ostap.Math.PhaseSpaceNL           ,
     Ostap.Math.PhaseSpace23L          ,
     Ostap.Math.BreitWigner            ,
-    Ostap.Math.BreitWignerBase        ,
+    Ostap.Math.BW                     ,
     Ostap.Math.BreitWignerMC          ,
     Ostap.Math.Rho0                   ,
     Ostap.Math.Kstar0                 ,
     Ostap.Math.Phi0                   ,
-    Ostap.Math.Rho0FromEtaPrime       ,
+    ## Ostap.Math.Rho0FromEtaPrime       ,
     Ostap.Math.Flatte                 ,
-    Ostap.Math.Flatte2                ,
-    Ostap.Math.LASS                   ,
-    Ostap.Math.LASS23L                ,
-    Ostap.Math.Bugg23L                ,
-    Ostap.Math.BW23L                  ,
-    Ostap.Math.Flatte23L              ,
-    Ostap.Math.Gounaris23L            ,
+    ## Ostap.Math.Flatte2                ,
+    ## Ostap.Math.LASS                   ,
+    ## Ostap.Math.LASS23L                ,
+    ## Ostap.Math.Bugg23L                ,
+    ## Ostap.Math.BW23L                  ,
+    ## Ostap.Math.Flatte23L              ,
+    ## Ostap.Math.Gounaris23L            ,
     Ostap.Math.StudentT               ,
     Ostap.Math.BifurcatedStudentT     ,
     Ostap.Math.Voigt                  ,
@@ -1561,7 +1580,7 @@ _decorated_classes_ = set( [
     Ostap.Math.Atlas                  ,
     Ostap.Math.Sech                   ,
     Ostap.Math.Losev                  ,
-    Ostap.Math.Swanson                ,
+    ## Ostap.Math.Swanson                ,
     Ostap.Math.Argus                  ,
     Ostap.Math.Slash                  ,
     Ostap.Math.AsymmetricLaplace      ,
@@ -1668,11 +1687,11 @@ _decorated_classes_ = set( [
     Ostap.Models.Voigt              ,
     Ostap.Models.PseudoVoigt        ,
     Ostap.Models.Logistic           ,
-    Ostap.Models.LASS               ,
-    Ostap.Models.Bugg               ,
-    Ostap.Models.LASS23L            ,
-    Ostap.Models.Bugg23L            , 
-    Ostap.Models.BW23L              , 
+    ## Ostap.Models.LASS               ,
+    ## Ostap.Models.Bugg               ,
+    ## Ostap.Models.LASS23L            ,
+    ## Ostap.Models.Bugg23L            , 
+    ## Ostap.Models.BW23L              , 
     Ostap.Models.PolyPositive       ,
     Ostap.Models.ExpoPositive       ,
     Ostap.Models.TwoExpoPositive    ,
@@ -1694,7 +1713,7 @@ _decorated_classes_ = set( [
     Ostap.Models.Atlas              ,
     Ostap.Models.Sech               ,
     Ostap.Models.Losev              ,
-    Ostap.Models.Swanson            ,
+    ## Ostap.Models.Swanson            ,
     Ostap.Models.Argus              ,
     Ostap.Models.Slash              ,
     Ostap.Models.AsymmetricLaplace  ,
@@ -1736,14 +1755,14 @@ _decorated_classes_ = set( [
     ## 
     Ostap.Math.NSphere        ,
     ##
-    Ostap.Math.LASS          , 
-    Ostap.Math.LASS23L       ,
-    Ostap.Math.Bugg23L       , 
+    ## Ostap.Math.LASS          , 
+    ## Ostap.Math.LASS23L       ,
+    ## Ostap.Math.Bugg23L       , 
     Ostap.Math.Flatte        ,
-    Ostap.Math.Flatte2       , 
-    Ostap.Math.Flatte23L     , 
+    ## Ostap.Math.Flatte2       , 
+    ## Ostap.Math.Flatte23L     , 
     Ostap.Math.BreitWigner     ,
-    Ostap.Math.BreitWignerBase ,
+    Ostap.Math.BW              ,
     Ostap.Math.BreitWignerMC   ,
     ##
     Ostap.Math.Bernstein3D    ,

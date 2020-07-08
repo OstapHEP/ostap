@@ -1077,8 +1077,8 @@ namespace Ostap
     ( const Ostap::Vector3D& a  , 
       const Ostap::Vector3D& b  ) ;
     // ========================================================================
-    /** momentum of the first partle form two-body decay
-     *  \f$ m\rightarrow m_1 m_2 \f$ in th eret frasme of \f$ m \f$.
+    /** momentum of the first particle from two-body decay
+     *  \f$ m\rightarrow m_1 m_2 \f$ in the rest frame of the~\f$ m \f$.
      *  \f[ q ( m , m_1 , m_2 )  \equiv 
      *  \frac{\lambda^{1/2}\left( m^2, m_1^2, m_2^2\right)}{2m} \f]
      */
@@ -1086,6 +1086,20 @@ namespace Ostap
     ( const double m  , 
       const double m1 ,
       const double m2 ) ;
+    // ========================================================================
+    /** momentum of the first particle from two-body decay
+     *  \f$ \sqrt{s} \rightarrow m_1 m_2 \f$ 
+     *  in the rest frame of the mother particle \f$ \sqrt{s}\f$.
+     *  \f[ q_s ( s , m_1^2 , m_2^2 )  \equiv 
+     *  \frac{\lambda^{1/2}\left( s , m_1^2, m_2^2\right)}{2 \sqrt{s} } \f]
+     *  @param s     squared mass of the mother particle 
+     *  @param m2_1  squared mass of the first  particle 
+     *  @param m2_2  squared mass of the second particle 
+     */
+    double q_s 
+    ( const double s    , 
+      const double m2_1 ,
+      const double m2_2 ) ;
     // ========================================================================
     /** two-body phase space: 
      *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} 
