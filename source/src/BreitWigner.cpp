@@ -41,6 +41,9 @@ namespace
   /// imaginary unit 
   const std::complex<double> s_j { 0.0 , 1.0 } ;
   // ==========================================================================
+  /// @var s_iPI  
+  const double s_iPI = 1.0 / M_PI ;
+  // ==========================================================================
 } //                                            The end of  anonymous namespace 
 // ============================================================================
 // Rho-functions from Jackson
@@ -1645,201 +1648,6 @@ std::size_t Ostap::Math::Flatte::tag () const
 
 
 // // ============================================================================
-// // LASS: Kpi S-wave 
-// // ============================================================================
-// /*  constructor from all masses and angular momenta
-//  *  @param m1 the mass of the first  particle
-//  *  @param m2 the mass of the second particle
-//  *  @param a  the LASS parameter
-//  *  @param r  the LASS parameter
-//  *  @param e  the LASS parameter
-//  */
-// // ============================================================================
-// Ostap::Math::LASS::LASS
-// ( const double         m1 ,
-//   const double         m2 ,
-//   const double         m0 ,
-//   const double         g0 ,
-//   const double         a  ,
-//   const double         r  ,
-//   const double         e  )
-//   : m_m0  ( std::abs ( m0 ) )
-//   , m_g0  ( std::abs ( g0 ) )
-//   , m_a   ( std::abs ( a  ) )
-//   , m_r   ( std::abs ( r  ) )
-//   , m_e   ( std::abs ( e  ) )
-// // phase space
-//   , m_ps2 ( m1 , m2 )
-// //
-//   , m_workspace ()
-// {}
-// // ============================================================================
-// // destructor
-// // ============================================================================
-// Ostap::Math::LASS::~LASS(){}
-// // ============================================================================
-// // set the proper parameters
-// // ============================================================================
-// bool Ostap::Math::LASS::setM0 ( const double x )
-// {
-//   //
-//   const double v = std::abs ( x ) ;
-//   if ( s_equal ( v , m_m0 ) ) { return false ; }
-//   //
-//   m_m0 = v ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // set the proper parameters
-// // ============================================================================
-// bool Ostap::Math::LASS::setG0 ( const double x )
-// {
-//   //
-//   const double v = std::abs ( x ) ;
-//   if ( s_equal ( v , m_g0 ) ) { return false ; }
-//   //
-//   m_g0 = v ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // set the proper parameters
-// // ============================================================================
-// bool Ostap::Math::LASS::setA ( const double x )
-// {
-//   //
-//   const double v = std::abs ( x ) ;
-//   if ( s_equal ( v , m_a ) ) { return false ; }
-//   //
-//   m_a = v ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // set the proper parameters
-// // ============================================================================
-// bool Ostap::Math::LASS::setR ( const double x )
-// {
-//   //
-//   const double v = std::abs ( x ) ;
-//   if ( s_equal ( v , m_r ) ) { return false ; }
-//   //
-//   m_r = v ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // set the proper parameters
-// // ============================================================================
-// bool Ostap::Math::LASS::setE ( const double x )
-// {
-//   //
-//   const double v = std::abs ( x ) ;
-//   if ( s_equal ( v , m_e ) ) { return false ; }
-//   //
-//   m_e = v ;
-//   //
-//   return true ;
-// }
-// // ============================================================================
-// // get the (complex) LASS amplitude
-// // ============================================================================
-// std::complex<double>
-// Ostap::Math::LASS::amplitude ( const double x ) const
-// {
-//   //
-//   const double q  = m_ps2.q ( x ) ;
-//   if ( 0 >= q                ) { return 0 ; }  // RETURN
-//   //
-//   // get the width:
-//   const double gs = gamma_run ( m_g0        ,
-//                                 x           ,
-//                                 m_ps2.m1 () ,
-//                                 m_ps2.m2 () ,
-//                                 m_m0        ,
-//                                 // K*(1430) is a scalar! 
-//                                 0           ) * m_m0 / x  ;
-//   //
-//   // phase shift:
-//   const double cotB = 1.0 / ( m_a * q ) + 0.5 * m_r * q  ;
-//   // phase shift:
-//   const double cotR = ( m_m0 * m_m0 - x * x )  / m_m0 / gs ;
-//   //
-//   // const double sinB =  1.0 / std::sqrt ( 1 + cotB*cotB ) ;
-//   const double sinB =  1.0 / std::hypot ( 1.0 ,  cotB ) ;
-//   const double cosB = cotB * sinB ;
-//   //
-//   // exp( i*pi/2 )
-//   static const std::complex<double> i = std::complex<double>( 0 , 1 );
-//   //
-//   // exp( i*Delta_B )
-//   std::complex<double> deltaB ( cosB , sinB ) ;
-//   //
-//   // the amplitude
-//   std::complex<double> A =
-//     1.0 / ( cotB - i ) + m_e * deltaB * deltaB / ( cotR - i ) ;
-//   //
-//   // scale it!
-//   std::complex<double> T = A * ( x / q ) ;
-//   //
-//   return T ;
-// }
-// // ============================================================================
-// // get the phase space factor
-// // ============================================================================
-// double Ostap::Math::LASS::phaseSpace ( const double x ) const
-// { return std::max ( 0.0 , m_ps2 ( x ) ) ; }
-// // ============================================================================
-// // evaluate LASS
-// // ============================================================================
-// double Ostap::Math::LASS::operator () ( const double x ) const
-// {
-//   const double result = phaseSpace  ( x ) ;
-//   if ( 0 >= result ) { return 0 ; }
-//   //
-//   return result * std::norm ( amplitude( x ) ) ;
-// }
-// // ============================================================================
-// // get the integral between low and high limits
-// // ============================================================================
-// double  Ostap::Math::LASS::integral
-// ( const double low  ,
-//   const double high ) const
-// {
-//   if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-//   if (           low > high   ) { return - integral ( high ,
-//                                                       low  ) ; } // RETURN
-//   //
-//   if ( high <= m_ps2.lowEdge  () ) { return 0 ; }
-//   //
-//   if ( low  <  m_ps2.lowEdge  () )
-//   { return integral ( m_ps2.lowEdge() , high ) ; }
-//   //
-//   // use GSL to evaluate the integral
-//   //
-//   static const Ostap::Math::GSL::Integrator1D<LASS> s_integrator {} ;
-//   static char s_message[] = "Integral(LASS)" ;
-//   //
-//   const auto F = s_integrator.make_function ( this ) ;
-//   int    ierror   =  0 ;
-//   double result   =  1 ;
-//   double error    = -1 ;
-//   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
-//     ( &F , 
-//       low , high          ,          // low & high edges
-//       workspace ( m_workspace ) ,    // workspace      
-//       s_PRECISION         ,          // absolute precision
-//       s_PRECISION         ,          // relative precision
-//       m_workspace.size () ,          // size of workspace
-//       s_message           , 
-//       __FILE__ , __LINE__ ) ;
-//   //
-//   return result ;
-// }
-// // ============================================================================
-
-// // ============================================================================
 // // Bugg
 // // ============================================================================
 // /*  constructor from all masses and angular momenta
@@ -2541,6 +2349,375 @@ Ostap::Math::ChannelDalitz::clone() const
 { return new Ostap::Math::ChannelDalitz ( *this ) ; }
 // ============================================================================
 
+
+// ============================================================================
+// Gounaris-Sakirai
+// ============================================================================
+
+// ============================================================================
+// constructor with gamma and pion mass
+// ============================================================================
+Ostap::Math::ChannelGS::ChannelGS 
+( const double gamma ,
+  const double mpi   ) 
+  : ChannelBW ( gamma ) 
+  , m_mpi        ( std::abs ( mpi ) ) 
+  , m_sthreshold ( 4  * mpi * mpi   ) 
+{}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelGS*
+Ostap::Math::ChannelGS::clone() const 
+{ return new Ostap::Math::ChannelGS (*this ); }
+// ============================================================================
+// h-function
+// ============================================================================
+double Ostap::Math::ChannelGS::h ( const double s ) const 
+{
+  //
+  if      ( s_zero ( s ) ) { return s_iPI; }
+  else if ( s <= 0       ) 
+  {
+    const double q2  = m_sthreshold - s ;
+    const double sqs = std::sqrt ( -s  ) ;
+    const double sq2 = std::sqrt (  q2 ) ;
+    return ( sq2 / sqs ) * std::log  ( ( sqs + sq2 ) / ( 2 * m_mpi ) ) * s_iPI ;
+  }
+  else if ( s <= m_sthreshold ) 
+  {
+    const double q2 = m_sthreshold - s ;
+    const double a  = std::sqrt ( q2 / s ) ;
+    return 0.5 * a * ( 1 - 2 * s_iPI * std::atan ( a ) ) ;
+  }
+  /// physical region 
+  const double q2  = s - m_sthreshold ;
+  const double sqs = std::sqrt ( s  ) ;
+  const double sq2 = std::sqrt ( q2 ) ;
+  return ( sq2 / sqs ) * std::log  ( ( sqs + sq2  ) / ( 2 * m_mpi ) ) * s_iPI ;
+  //
+}
+// ============================================================================
+
+// ============================================================================
+// h'-function
+// ============================================================================
+double Ostap::Math::ChannelGS::h_prime ( const double s ) const 
+{
+  
+  if ( s < 0 ) 
+  {
+    const double q2 = m_sthreshold - s ;
+    //
+    const double sqs   = std::sqrt ( -s  ) ;
+    const double sq2   = std::sqrt (  q2 ) ;
+    
+    const double t1    = sq2 / sqs ;
+    const double et2   = ( sqs + sq2 ) / ( 2 * m_mpi ) ;
+    const double t2    = std::log ( et2 ) * s_iPI ;
+    //
+    const double dt1ds = 0.5 / t1 * ( 1 + q2 / s ) / s ;
+    const double dt2ds = - 0.25 * s_iPI / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
+    //
+    return dt1ds * t2 + t1 * dt2ds ;
+  }
+  else if ( s < m_sthreshold ) 
+  {
+    const double q2 = m_sthreshold - s ;
+    
+    const double a      = q2 / s  ;
+    const double sqa    = std::sqrt ( a ) ;
+    const double dads   = -1 * ( 1 + q2 / s ) / s ;
+    const double dsqads = 0.5 / sqa * dads ;
+    
+    const double t1     = 0.5 * sqa ;
+    const double t2     = ( 1 - 2  * s_iPI * std::atan ( sqa ) ) ;
+    //
+    const double dt1ds  = 0.5 * dsqads ;
+    const double dt2ds  = -2 * s_iPI / ( 1 + a ) * dsqads ;
+    //
+    return dt1ds * t2 + t1 * dt2ds ;
+  }
+  /// physical  region 
+  const double q2    = s - m_sthreshold ;
+  const double sqs   = std::sqrt ( s  ) ;
+  const double sq2   = std::sqrt ( q2 ) ;
+  //
+  const double t1    = sq2 / sqs ;
+  const double et2   = ( sqs + sq2  ) / ( 2 * m_mpi ) ;
+  const double t2    = std::log  ( et2 ) * s_iPI ;
+  //
+  const double dt1ds = 0.5 / t1 * ( 1 - q2 / s ) / s ;
+  const double dt2ds = 0.25 * s_iPI / ( et2 * m_mpi ) * ( 1/sqs + 1/sq2 ) ;
+  //
+  return dt1ds * t2 + t1 * dt2ds ;
+  //
+}
+// ============================================================================
+/*  term in the denominator for the amplitide
+ *  \f$ D(s,m_0) = m_0 \Gamma_0 \gamma(s) + if(s) \f$
+ */
+// ============================================================================
+std::complex<double> Ostap::Math::ChannelGS::D    
+( const double s  , 
+  const double m0 ) const 
+{
+  //
+  const double q2 = s       - m_sthreshold ;
+  const double q0 = m0 * m0 - m_sthreshold ;
+  //
+  const double grho = s <= m_sthreshold ?  0.0 : 
+    gamma0 () * m0 / std::sqrt ( s ) * ( q2 / q0 ) * std::sqrt ( q2 / q0 ) ;
+  //
+  const double dh = h ( s ) - h ( m0 * m0 ) ;
+  //
+  const double fs = 
+    2 * gamma0 () * m0 * m0 / ( q0 * std::sqrt ( q0 ) ) * 
+    ( q2 * dh + q0 *  h_prime ( m0 * m0 ) * ( m0 * m0 - s ) ) ;
+  //
+  return m0 * grho + s_j * fs ;
+}
+// ============================================================================
+/*   squared  numerator for the amplitude 
+ * \f$ N^2(s,m_0) =  m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$ 
+ */
+// ============================================================================
+double Ostap::Math::ChannelGS::N2
+( const double s  , 
+  const double m0 ) const 
+{
+  if ( s <= m_sthreshold ) { return 0.0 ; }
+  //
+  const double q2 = s       - m_sthreshold ;
+  const double q0 = m0 * m0 - m_sthreshold ;
+  //
+  return q2 / q0 ;
+}
+// ======================================================================
+/*  get the phase space factor  \f$ \varrho(s) \f$
+ *  optionally normalized at the point \f$ m_n \f$ 
+ */
+// ======================================================================
+double Ostap::Math::ChannelGS::rho_s 
+( const double s  , 
+  const double mn ) const
+{ 
+  if ( s < m_sthreshold ) { return 0 ; }
+  //
+  const double mnsq  = mn    * mn    ;
+  const double mpisq = m_mpi * m_mpi ;
+  return mnsq <= m_sthreshold ? 
+    Ostap::Math::PhaseSpace2::phasespace_s ( s    , mpisq , mpisq  ) :
+    Ostap::Math::PhaseSpace2::phasespace_s ( s    , mpisq , mpisq  ) /
+    Ostap::Math::PhaseSpace2::phasespace_s ( mnsq , mpisq , mpisq  ) ;
+}
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelGS::tag () const
+{ return std::hash_combine ( std::string ( "ChannelGS" ) , 
+                             gamma0 () ,
+                             m_mpi     ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelGS::describe() const 
+{
+  return 
+    "ChannelGS(" + std::to_string ( gamma0 () ) + 
+    ","          + std::to_string ( m_mpi     ) + ")" ;
+}
+// ============================================================================
+
+
+// ============================================================================
+/// full constructor 
+// ============================================================================
+Ostap::Math::ChannelQ::ChannelQ 
+( const double gamma ,
+  const double m1    , 
+  const double m2    ) 
+  : ChannelBW ( gamma ) 
+  , m_ps2     ( s_zero ( m1 ) || s_zero ( m1 * m1 ) ? 0.0 : std::abs ( m1 ) , 
+                s_zero ( m2 ) || s_zero ( m2 * m2 ) ? 0.0 : std::abs ( m2 ) ) 
+{}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelQ*
+Ostap::Math::ChannelQ::clone() const 
+{ return new Ostap::Math::ChannelQ (*this) ; }
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelQ::tag () const
+{ return std::hash_combine ( std::string ( "ChannelQ" ) , 
+                             gamma0    () ,
+                             m_ps2.tag () ) ; }
+// ============================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelQ::describe() const 
+{
+  return 
+    "ChannelQ(" + std::to_string ( gamma0   () ) +
+    ","         + std::to_string ( m_ps2.m1 () ) + 
+    ","         + std::to_string ( m_ps2.m2 () ) + ")" ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================
+/*  constructor from all masses and angular momenta
+ *  @param m0 the mass of K*(1450) 
+ *  @param g0 the width of  K*(1430)
+ *  @param m1 the mass of the first  particle (kaon)
+ *  @param m2 the mass of the second particle (pion)
+ *  @param m3 the mass of the third  particle (eta') 
+ *  @param a  the LASS parameter a 
+ *  @param b  the LASS parameter b 
+ *  @param e  the LASS parameter e (elasticity)
+ */
+// ============================================================================
+Ostap::Math::LASS::LASS
+( const double m0 ,   // K*(1450) mass
+  const double g0 ,   // K*(1430) width
+  const double m1 ,   // kaon mass 
+  const double m2 ,   // pion mass 
+  const double m3 ,   // eta' mass 
+  const double a  , 
+  const double r  ,
+  const double e  )  // elasticity 
+  : BW    ( m0 ) 
+  , m_a   ( a  ) 
+  , m_b   ( a  ) 
+  , m_e   ( s_zero ( e ) ? 0.0 : s_equal ( e , 1 ) ? 1 : e ) 
+  , m_ps2 ( m1 , m2 ) 
+{
+  //
+  Ostap::Assert ( 0 <= m_e  && m_e <= 1 , "Invalid elasticity!" , "LASS" ) ;
+  const double g1 =       m_e   * std::abs ( g0 ) ;
+  const double g2 = ( 1 - m_e ) * std::abs ( g0 ) ;
+  //
+  add ( Channel ( g1 , m1 , m2 , 0 ) ) ;
+  add ( Channel ( g2 , m1 , m3 , 0 ) ) ;
+  //
+}
+// ======================================================================
+// clone method
+// ======================================================================
+Ostap::Math::LASS*
+Ostap::Math::LASS::clone() const 
+{ return new Ostap::Math::LASS ( *this ) ; }
+// ======================================================================
+/* LASS amplitude 
+ * \f[ \begin{array} {rcl}
+ *  \mathcal{A}(m) & = & A_{\mathrm{B}}  +  \\ 
+ *                       A_{\mathrm{BW}} {\mathrm{e}}^{i\phi}  \\
+ *  A_{\mathrm{B}}  & = & \sin \deeelta \mathrm{e}^{i\delta}   \\ 
+ *  \cot \delta     & = & \frac{1}{aq} + \frac{1}{2}bq         \\ 
+ &  A_{\mathrm{BW}} & = & \frac{M_R\Gamma_1}{ \left(\M^2_R - M^2 right)
+ *                        - iM_R (\Gamma_1 + \Gamma_2 ) }      \\ 
+ *  \Gamma_i        & = & q_i \Gamma_{R,i}       \\
+ *  \phi            & = & 2\delta  \end{array} \f] 
+ */
+// ======================================================================
+std::complex<double>
+Ostap::Math::LASS::amplitude ( const double m ) const
+{
+  if ( m <= m_ps2.threshold () ) { return 0 ; }
+  //
+  const std::complex<double> bw = 
+    BW::amplitude ( m ) * channel()->N2 ( m * m , m0 () ) ;
+  //
+  const double q         = m_ps2.q ( m ) ;
+  const double cot_delta = 1 / ( q * m_a ) + 0.5  * m_b * q ;
+  const double delta     = std::atan ( 1.0 / cot_delta ) ;
+  const double sin_delta = std::sin  ( delta   ) ;
+  const double cos_delta = cot_delta * sin_delta ;
+  const double phi       = 2 * delta             ;
+  const double sin_phi   = 2 * sin_delta * cos_delta     ;
+  const double cos_phi   = 2 * cos_delta * cos_delta - 1 ;
+  //
+  const std::complex<double> bg = sin_delta  * 
+    std::complex<double>  ( cos_delta , sin_delta ) ;
+  //
+  return bg + bw * std::complex<double>  ( cos_phi , sin_phi ) ;
+}
+// ============================================================================
+// evaluate LASS function 
+// ============================================================================
+double Ostap::Math::LASS::operator () ( const double m ) const 
+{
+  return m <= m_ps2.threshold () ? 0.0 :
+    2 * m * m_ps2 ( m ) * std::norm ( amplitude ( m ) ) / M_PI ;
+}
+// ============================================================================
+// set the proper parameters
+// ============================================================================
+bool Ostap::Math::LASS::setA ( const double x )
+{
+  //
+  const double v = std::abs ( x ) ;
+  if ( s_equal ( v , m_a ) ) { return false ; }
+  //
+  m_a = v ;
+  //
+  return true ;
+}
+// ============================================================================
+// set the proper parameters
+// ============================================================================
+bool Ostap::Math::LASS::setB ( const double x )
+{
+  //
+  const double v = std::abs ( x ) ;
+  if ( s_equal ( v , m_b ) ) { return false ; }
+  //
+  m_b = v ;
+  //
+  return true ;
+}
+// ============================================================================
+// set the proper parameters
+// ============================================================================
+bool Ostap::Math::LASS::setE ( const double x )
+{
+  //
+  const double v = std::abs ( x ) ;
+  if ( s_equal ( v , m_e ) ) { return false ; }
+  //
+  m_e = v ;
+  const double g  = gamma () ;
+  //
+  m_channels [ 0 ] -> setGamma0 (       m_e   * g ) ;
+  m_channels [ 1 ] -> setGamma0 ( ( 1 - m_e ) * g ) ;
+  //
+  return true ;
+}
+// ============================================================================
+// unique label/tag 
+// ============================================================================
+std::size_t Ostap::Math::LASS::tag () const 
+{ return std::hash_combine  ( std::string ("LASS") , 
+                              BW::tag     (      ) , 
+                              m_a , m_b , m_e      ) ; }
+
+
+
+  
+
+// ======================================================================
+    
 
 // ============================================================================
 //                                                                      The END 

@@ -166,7 +166,7 @@ namespace Ostap
     // =========================================================================
     /** @class ChannelGeneric
      *  Generic description of the channel. 
-     *  \f[ \beginP{array}{lcl}
+     *  \f[ \beginp{array}{lcl}
      *   N^2(s,m_0) & = & m_0 \Gamma0 f_{N^2}(s,m_0)\ \
      *   D (s,m_0)  & = & m_0 \Gamma0 f_{D}(s,m_0)  \                   \
      *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)
@@ -362,7 +362,7 @@ namespace Ostap
     // =========================================================================
     /** @class ChannelWidth
      *  Description of the channel with generic mass-dependent width 
-     *  \f[ \beginP{array}{lcl}
+     *  \f[ \begin{array}{lcl}
      *   N^2(s,m_0)      & = & m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \\
      *   D (s,m_0)       & = & m_0 \Gamma0 \frac{w(s)}{w(m^2_0)} \\
      *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
@@ -468,7 +468,7 @@ namespace Ostap
     // =========================================================================
     /** @class ChannelGamma
      *  Description of the channel with generic mass-dependent width 
-     *  \f[ \beginP{array}{lcl}
+     *  \f[ \begin{array}{lcl}
      *   N^2(s,m_0)      & = & \Gamma0 \gamma(s) } \\
      *   D (s,m_0)       & = & \Gamma0 \gamma(s) } \\
      *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
@@ -572,6 +572,84 @@ namespace Ostap
 
 
     // =========================================================================
+    /** @class ChannelQ
+     *  Description of the very simple S-wave channel
+     *  \f[ \begin{array}{lcl}
+     *   N^2(s,m_0)      & = & m_0 \Gamma0 q ( s )  } \\
+     *   D (s,m_0)       & = &     \Gamma0 q ( s )  } \\
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
+     *  \end{array}\,,\f]
+     */
+    class ChannelQ : public ChannelBW 
+    {
+    public:
+      // =======================================================================
+      /** @typedef Width 
+       *  the function type for the mass-dependent width
+       */
+      typedef std::function<double(double)> Width ;
+      // =======================================================================
+    public : 
+      // ======================================================================
+      /// full constructor with all functions specified 
+      ChannelQ ( const double gamma ,
+                 const double m1    , 
+                 const double m2    ) ;
+      // =======================================================================
+      /// clone the channel 
+      ChannelQ* clone () const override ;
+      // ======================================================================
+    public:
+      // =======================================================================
+      /** squared numerator for the amplitude 
+       * \f[ N^2(s,m_0) = m_0 \Gamma0 q(s) \f] 
+       */
+      double N2
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_ps2.s_threshold () ? 0.0 : m0 * gamma0 () * m_ps2.q_s ( s ) ; }      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       * \f[ D (s,m_0) = \Gamma0 q(s) \f] 
+       */
+      // ======================================================================
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_ps2.s_threshold () ? 0.0 : m0 * gamma0 () * m_ps2.q_s ( s ) ; }      
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) \f] 
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override 
+      { return s <= m_ps2.s_threshold () ? 0.0 : 1 ; }      
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_ps2.s_threshold () ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      // =======================================================================
+      /// describe the channel 
+      std::string describe  () const override ;
+      // =======================================================================
+    public :
+      // =======================================================================
+      /// get the phasespace 
+      const Ostap::Math::PhaseSpace2& ps2() const { return m_ps2 ; }
+      // =======================================================================
+    private :
+      // =======================================================================
+      /// two  body phase space 
+      Ostap::Math::PhaseSpace2  m_ps2 ; // two  body phase space 
+      // =======================================================================
+    } ;
+
+    // =========================================================================
     /** @class Channel
      *  Simple definition for the open decay channel, \f$ m_0 > m_1 + m_2 \f$) 
      *  @see Ostap::Math::ChannelBW 
@@ -647,7 +725,7 @@ namespace Ostap
     public: // two main methods
       // ======================================================================
       /** the first main method: numerator
-       *  \f[ N^2(s,m_0) = \frac{1}{\pi} m_0 \Gamma_0 
+       *  \f[ N^2(s,m_0) = m_0 \Gamma_0 
        *      \left( \frac{q}{q_0}\right)^{2L}        
        *      \frac{F^2_L(q)}{F^2(q_0)} \f] 
        */
@@ -825,8 +903,8 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      BW ( const double     m0 , 
-           const ChannelBW& channel = Channel() ) ;     
+      BW ( const double     m0      , 
+           const ChannelBW& channel ) ;     
       ///    copy construtor
       BW ( const BW& bw ) ;
       /// move construtor
@@ -917,7 +995,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      std::size_t tag() const ;
+      /// unique tag/label 
+      virtual std::size_t tag() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get number of channels 
+      inline unsigned int nChannels() const { return m_channels.size()  ; }
       // ======================================================================
     protected :
       // ======================================================================
@@ -1181,11 +1265,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// get number of channels 
-      inline unsigned int nChannels() const { return m_channels.size()  ; }
-      // ======================================================================
-      /// set total gamma 
-      
+      /// set total gamma      
       using BW::channel  ;
       // ======================================================================
       /// get the  gamma for the certain channel 
@@ -1621,106 +1701,6 @@ namespace Ostap
     // ========================================================================
 
 
-
-    // /** @class LASS
-    //  *  The LASS parameterization (Nucl. Phys. B296, 493 (1988))
-    //  *  describes the 0+ component of the Kpi spectrum.
-    //  *  It consists of the K*(1430) resonance together with an
-    //  *  effective range non-resonant component
-    //  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-    //  *  @date 2013-10-05
-    //  */
-    // class  LASS
-    // {
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /** constructor from all masses and angular momenta
-    //    *  @param m1 the mass of the first  particle
-    //    *  @param m2 the mass of the second particle
-    //    *  @param m0 the mass of K* 
-    //    *  @param g0 the width of  K*
-    //    *  @param a  the LASS parameter
-    //    *  @param r  the LASS parameter
-    //    *  @param e  the LASS parameter
-    //    */
-    //   LASS ( const double         m1 =  493.7  ,
-    //          const double         m2 =  139.6  ,
-    //          const double         m0 = 1435    , // K*(1450) mass
-    //          const double         g0 =  279    , // K*(1430) width
-    //          const double         a  = 1.94e-3 ,
-    //          const double         r  = 1.76e-3 ,
-    //          const double         e  = 1.0     ) ;
-    //   /// destructor
-    //   virtual ~LASS () ;                                          // destructor
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// get the (complex) LASS amplitude
-    //   std::complex<double> amplitude  ( const double x ) const ;
-    //   /// get the phase space factor
-    //   double               phaseSpace ( const double x ) const ;
-    //   /// evaluate LASS
-    //   double operator () ( const double x ) const ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// pole position
-    //   double m0  ( ) const { return m_m0 ; }
-    //   /// width at the pole 
-    //   double g0  ( ) const { return m_g0 ; }
-    //   /// a 
-    //   double a   ( ) const { return m_a  ; }
-    //   /// r 
-    //   double r   ( ) const { return m_r  ; }
-    //   /// elasticity 
-    //   double e   ( ) const { return m_e  ; }
-    //   // ======================================================================
-    //   /// the mass of the first daughter 
-    //   double m1  ( ) const { return m_ps2.m1 () ; }
-    //   /// the mass of the second daughter 
-    //   double m2  ( ) const { return m_ps2.m2 () ; }
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// set pole posiiton 
-    //   bool setM0 ( const double value ) ;
-    //   /// set with 
-    //   bool setG0 ( const double value ) ;
-    //   /// a 
-    //   bool setA  ( const double value ) ;
-    //   /// r
-    //   bool setR  ( const double value ) ;
-    //   /// elatisicity 
-    //   bool setE  ( const double value ) ;
-    //   // ======================================================================
-    // public:
-    //   // ======================================================================
-    //   /// get the integral between low and high limits
-    //   double integral ( const double low  ,
-    //                     const double high ) const ;
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   /// the pole position for scalar meson
-    //   double   m_m0 ;
-    //   double   m_g0 ;
-    //   /// LASS-parameters
-    //   double   m_a  ;
-    //   double   m_r  ;
-    //   double   m_e  ;
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   /// phase space
-    //   Ostap::Math::PhaseSpace2 m_ps2     ;    // phase space
-    //   // ======================================================================
-    // private:
-    //   // ======================================================================
-    //   /// integration workspace
-    //   Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-    //   // ======================================================================
-    // } ;
     // // ========================================================================
     // /** @class Bugg
     //  *  parametrisation of sigma-pole for
@@ -2313,8 +2293,78 @@ namespace Ostap
         const std::size_t                            tag    , 
         const std::string& description = "ChannelDalitz"    ) 
       { return ChannelDalitz ( gamma , dalitz , me2 , tag ) ; }
-      // =====================================================================
+      // ======================================================================
     };
+    // ========================================================================
+    /** @class  ChannelGS 
+     *  Gounaris-Sakurai parameteriztaion of \f$ \rho \rigtharrow \pi+ \pi^- \$f
+     *  @see Gounaris, G.J. and Sakurai, J.J.
+     *       "Finite width corrections to the vector meson dominance prediction for rho ---> e+ e-}".
+     *        Phys. Rev. Lett 21, (1968) 244 
+     *        doi = "10.1103/PhysRevLett.21.244"
+     *  @see https://doi.org/10.1103/PhysRevLett.21.244 
+     *  @see  Lichard, Peter and Vojik, Martin,
+     *       "An Alternative parametrization of the pion form-factor and the mass and width of rho(770)}",
+     *        hep-ph/0611163, 2006,
+     *  @see https://arxiv.org/abs/hep-ph/0611163
+     */
+    class ChannelGS : public ChannelBW 
+    {
+    public :
+      // ======================================================================
+      /// constructor with gamma and pion mass
+      ChannelGS ( const double gamma ,
+                  const double mpi   ) ;
+      /// clone method
+      ChannelGS* clone() const override ;
+      // ======================================================================
+    public:
+      // =====================================================================
+      /**  squared  numerator for the amplitude 
+       * \f$ N^2(s,m_0) =  m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$ 
+       */
+      double N2
+      ( const double s  , 
+        const double m0 ) const override ;      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       *  \f$ D(s,m_0) = m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$
+       */
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override ;
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       */
+      double rho_s 
+      ( const double s  , 
+        const double mn ) const override ;
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =====================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// h-function
+      double h       ( const double s ) const ;
+      /// derivative of h-function
+      double h_prime ( const double s ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// pion mass 
+      double m_mpi        ; // pion mass
+      /// s-threshold: \f$ 4m^2_{\pi} \f$ 
+      double m_sthreshold ; // s-threshold: \f$ 4m^2_{\pi} \f$ 
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class Gounaris23L
      *  parametrisation of rho0 for
@@ -2454,6 +2504,126 @@ namespace Ostap
       Ostap::Math::WorkSpace     m_workspace  ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+
+    // ========================================================================
+    // ========================================================================
+
+    // ========================================================================
+    /** @class LASS
+     *  The LASS parameterization. 
+     *  It describes the 0+ component of the Kpi spectrum ("kappa")
+     *  It consists of the K*(1430) resonance together with an
+     *  effective range non-resonant component
+     * 
+     * \f[ \begin{array} {rcl}
+     *  \mathcal{A}(m) & = & A_{\mathrm{B}}  +  \\ 
+     *                       A_{\mathrm{BW}} {\mathrm{e}}^{i\phi} \\
+     *  A_{\mathrm{B}}  & = & \sin \delta \mathrm{e}^{i\delta}   \\ 
+     *  \cot \delta     & = & \frac{1}{aq} + \frac{1}{2}bq         \\ 
+     &  A_{\mathrm{BW}} & = & \frac{m_0\Gamma_1}{ \left(m^2_0 - m^2 right)
+     *                        - im_0 (\Gamma_1 + \Gamma_2 ) }      \\ 
+     *  \Gamma_i        & = & q_i \Gamma_{R,i}       \\
+     *  \phi            & = & 2\delta \end{array} \f] 
+     *
+     *  @see D. Aston et al.,  "A Study of K- pi+ Scattering in the Reaction 
+     *                         K- p ---> K- pi+ n at 11-GeV/c}",
+     *                         Nucl .Phys. B, 296 (1988) 493
+     *  @see  DOI: 10.1016/0550-3213(88)90028-4
+     *  @see https://doi.org/10.1016/0550-3213(88)90028-4  
+     *  @see https://lib-extopc.kek.jp/preprints/PDF/1987/8708/8708374.pdf
+     * 
+     *  @see P. Estabrooks,"Where and what are the scalar mesons?",
+     *                      Phys.Rev.D, 19 ()1979) 2678, 
+     *                      doi = "10.1103/PhysRevD.19.2678",
+     *  @see https://doi.org/10.1103/PhysRevD.19.2678
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2013-10-05
+     */
+    class LASS : public BW 
+    {
+    public: 
+      // ======================================================================
+      /** constructor from all masses and angular momenta
+       *  @param m0 the mass of K*(1450) 
+       *  @param g0 the width of  K*(1430)
+       *  @param m1 the mass of the first  particle (kaon)
+       *  @param m2 the mass of the second particle (pion)
+       *  @param m3 the mass of the third  particle (eta')
+       *  @param a  the LASS parameter
+       *  @param b  the LASS parameter
+       *  @param e  the LASS parameter
+       */
+      LASS ( const double m0 = 1429    ,   // K*(1450) mass
+             const double g0 =  287    ,   // K*(1430) width
+             const double m1 =  493.7  ,   // kaon mass 
+             const double m2 =  139.6  ,   // pion mass 
+             const double m3 =  957.8  ,   // eta' mass 
+             const double a  = 4.03e-3 , 
+             const double b  = 1.29e-3 ,
+             const double e  = 1.00    ) ; // elasticity 
+      // ======================================================================
+      /// clone method 
+      LASS* clone () const  override ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /** LASS amplitude 
+       * \f[ \begin{array} {rcl}
+       *  \mathcal{A}(m) & = & A_{\mathrm{B}}  +  \\ 
+       *                       A_{\mathrm{BW}} {\mathrm{e}}^{i\phi} \   \
+       *  A_{\mathrm{B}}  & = & \sin \deeelta \mathrm{e}^{i\delta}   \\ 
+       *  \cot \delta     & = & \frac{1}{aq} + \frac{1}{2}bq         \\ 
+       &  A_{\mathrm{BW}} & = & \frac{M_R\Gamma_1}{ \left(\M^2_R - M^2 right)
+       *                        - iM_R (\Gamma_1 + \Gamma_2 ) }      \\ 
+       *  \Gamma_i        & = & q_i \Gamma_{R,i}       \\
+       *  \phi            & = & 2\delta  \end{array} \f] 
+       */
+      std::complex<double>
+      amplitude          ( const double m ) const override ;
+      /// evaluate LASS function 
+      double operator () ( const double m ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// unique label/tag 
+      std::size_t tag () const override ;
+      // ======================================================================
+    public : // getters 
+      // ======================================================================     
+      /// a-parameter of LASS function
+      double a () const { return m_a ; }
+      /// b-parameter of LASS function
+      double b () const { return m_b ; }
+      /// elasticity 
+      double e () const { return m_e ; }
+      // ======================================================================
+    public : // setters 
+      // ======================================================================
+      /// a 
+      bool setA ( const double value ) ;
+      /// b
+      bool setB ( const double value ) ;
+      /// elatisicity 
+      bool setE ( const double value ) ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// a-parametter of LASS function 
+      double                     m_a ;  // a-parametter of LASS functuion 
+      /// b-parametter of LASS functuion 
+      double                     m_b ;  // b-parametter of LASS functuion 
+      /// elasticity parameter 
+      double                     m_e ;  // elasticity parameter 
+      /// phase space 
+      Ostap::Math::PhaseSpace2   m_ps2 ; // phase space
+      // ======================================================================
+    } ;  
+    // ========================================================================
+
+
+
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

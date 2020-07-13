@@ -14,6 +14,7 @@
 // ============================================================================
 #include "RooArgSet.h"
 #include "RooRealVar.h"
+#include "RooGlobalFunc.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -57,13 +58,13 @@ Ostap::Models::BreitWigner::BreitWigner
   const unsigned short L     )
   : RooAbsPdf  (name ,title ) 
 //
-  , m_x     ( "x"  , "Observable" , this , x     ) 
-  , m_mass  ( "m0" , "Peak"       , this , mass  ) 
-  , m_width ( "g0" , "Width"      , this , width )
+  , m_x      ( "x"  , "Observable" , this , x     ) 
+  , m_mass   ( "m0" , "Peak"       , this , mass  ) 
+  , m_widths ( "g"  , "Widths"     , this )
     //
   , m_bw ( std::make_unique<Ostap::Math::BreitWigner>( 0 , 1 , m1 , m2 , L ) )
 {
-  setPars () ;
+  m_widths.add (  width ) ;
 }
 // ============================================================================
 // constructor from all parameters 
@@ -80,13 +81,13 @@ Ostap::Models::BreitWigner::BreitWigner
   const Ostap::Math::FormFactors::JacksonRho rho ) 
   : RooAbsPdf  ( name , title ) 
     //
-  , m_x     ( "x"  , "Observable" , this , x     ) 
-  , m_mass  ( "m0" , "Peak"       , this , mass  ) 
-  , m_width ( "g0" , "Width"      , this , width )
+  , m_x      ( "x"  , "Observable" , this , x     ) 
+  , m_mass   ( "m0" , "Peak"       , this , mass  ) 
+  , m_widths ( "g"  , "Widths"     , this )
     //
   , m_bw ( std::make_unique<Ostap::Math::BreitWigner> ( 0 , 1 , m1 , m2 , L , rho ) ) 
 {
-  setPars() ;
+  m_widths.add (  width ) ;
 }
 // ============================================================================
 // constructor from all parameters 
@@ -100,29 +101,54 @@ Ostap::Models::BreitWigner::BreitWigner
   const Ostap::Math::BW& bw    ) 
   : RooAbsPdf  ( name , title ) 
     //
-  , m_x     ( "x"  , "Observable" , this , x     ) 
-  , m_mass  ( "m0" , "Peak"       , this , mass  ) 
-  , m_width ( "g0" , "Width"      , this , width )
+  , m_x      ( "x"  , "Observable" , this , x     ) 
+  , m_mass   ( "m0" , "Peak"       , this , mass  ) 
+  , m_widths ( "g"  , "Widths"     , this )
     //
   , m_bw ( bw.clone() ) 
 {
-  setPars () ;
+  m_widths.add (  width ) ;
+}
+// ============================================================================
+// (protected) constructor from all parameters
+// ============================================================================
+Ostap::Models::BreitWigner::BreitWigner
+( const char* name          , 
+  const char* title         ,
+  RooAbsReal& x             ,
+  RooAbsReal& mass          , 
+  RooArgList& widths        ,
+  const Ostap::Math::BW& bw ) 
+  : RooAbsPdf ( name , title ) 
+    //
+  , m_x        ( "x"  , "Observable" , this , x    ) 
+  , m_mass     ( "m0" , "Peak"       , this , mass ) 
+  , m_widths   ( "g"  , "Widths"     , this ) 
+    //
+  , m_bw ( bw.clone() ) 
+{
+  //
+  ::copy_real   ( widths , m_widths , "Invalid width parameter!" ,
+                  "Ostap::Models::BreitWigner" ) ;
+  //
+  Ostap::Assert ( ::size ( m_widths ) == m_bw->nChannels() , 
+                  "Widths/#channels mismatch" , 
+                  "Ostap::Models::BreitWigner" ) ;
 }
 // ============================================================================
 // "copy" constructor 
 // ============================================================================
 Ostap::Models::BreitWigner::BreitWigner 
 ( const Ostap::Models::BreitWigner& right , 
-  const char*                          name  ) 
+  const char*                       name  ) 
   : RooAbsPdf ( right , name ) 
     //
-  , m_x     ( "x"  , this , right.m_x     ) 
-  , m_mass  ( "m0" , this , right.m_mass  ) 
-  , m_width ( "g0" , this , right.m_width )
+  , m_x      ( "x"  , this , right.m_x      ) 
+  , m_mass   ( "m0" , this , right.m_mass   ) 
+  , m_widths ( "g"  , this , right.m_widths )
     //
-  , m_bw    (  right.m_bw->clone()        ) 
+  , m_bw     (  right.m_bw->clone()        ) 
 {
-  setPars () ;
 }
 // ============================================================================
 // destructor
@@ -138,20 +164,15 @@ Ostap::Models::BreitWigner::clone ( const char* name ) const
 void Ostap::Models::BreitWigner::setPars () const 
 {
   //
-  m_bw->setM0    ( m_mass  ) ;
-  m_bw->setGamma ( m_width ) ;
+  m_bw -> setM0    (                 m_mass     ) ;
+  m_bw -> setGamma ( ::get_par ( 0 , m_widths ) ) ;
   //
 }
 // ============================================================================
 // the actual evaluation of function 
 // ============================================================================
 Double_t Ostap::Models::BreitWigner::evaluate() const 
-{
-  //
-  setPars() ;
-  //
-  return  ( *m_bw ) ( m_x ) ;
-}
+{ setPars() ; return  ( *m_bw ) ( m_x ) ; }
 // ============================================================================
 Int_t Ostap::Models::BreitWigner::getAnalyticalIntegral
 ( RooArgSet&     allVars      , 
@@ -170,19 +191,13 @@ Double_t Ostap::Models::BreitWigner::analyticalIntegral
   if ( 1 != code ) {}
   //
   setPars() ;
-  return m_bw->integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  return m_bw->integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
 }
 // ============================================================================
 // get the amplitude 
 // ============================================================================
 std::complex<double> Ostap::Models::BreitWigner::amplitude () const
-{
-  //
-  m_bw -> setM0    ( m_mass  ) ;
-  m_bw -> setGamma ( m_width ) ;
-  //
-  return m_bw->amplitude ( m_x ) ;
-}
+{ setPars () ; return m_bw->amplitude ( m_x ) ; }
 // ============================================================================
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
 // ============================================================================
@@ -217,45 +232,25 @@ Ostap::Models::BreitWigner::evaluateBatch
 // constructor from all parameters
 // ============================================================================
 Ostap::Models::BreitWignerMC::BreitWignerMC
-( const char*                                 name      , 
-  const char*                                 title     ,
-  RooAbsReal&                                 x         ,
-  RooAbsReal&                                 mass      , 
-  RooArgList&                                 widths    ,
-  const Ostap::Math::BreitWignerMC& bw ) 
-  : RooAbsPdf ( name , title ) 
-    //
-  , m_x        ( "x"       , "Observable"   , this , x    ) 
-  , m_mass     ( "m0"      , "PolePosition" , this , mass ) 
-  , m_widths   ( "widths"  , "Widths"       , this ) 
-    //
-  , m_bw ( bw.clone() ) 
+( const char*                                 name   , 
+  const char*                                 title  ,
+  RooAbsReal&                                 x      ,
+  RooAbsReal&                                 mass   , 
+  RooArgList&                                 widths ,
+  const Ostap::Math::BreitWignerMC&           bwmc   ) 
+  : BreitWigner ( name , title , x , mass , widths , bwmc ) 
 {
-  //
-  ::copy_real   ( widths , m_widths , "Invalid width parameter!" ,
-                  "Ostap::Models::BreitWignerMC" ) ;
-  //
-  Ostap::Assert ( ::size ( m_widths ) == m_bw->nChannels() , 
-                  "Widths/#channels mismatch" , 
-                  "Ostap::Models::BreitWignerMC" ) ;
-  //
-  setPars() ;
+  Ostap::Assert ( widths.size() == bwmc.nChannels()    , 
+                  "Invalid number of width-parameters" , 
+                  "Ostap::Models::BreitWignerMC"       ) ;
 }
 // ============================================================================
 // "copy" constructor
 // ============================================================================
 Ostap::Models::BreitWignerMC::BreitWignerMC
 ( const Ostap::Models::BreitWignerMC& right, const char* name  )
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x        ( "x"      , this , right.m_x      ) 
-  , m_mass     ( "m0"     , this , right.m_mass   ) 
-  , m_widths   ( "widths" , this , right.m_widths ) 
-    //
-  , m_bw       ( right.m_bw->clone() ) 
-{
-  setPars() ;
-}
+  : BreitWigner ( right , name )
+{}
 // ============================================================================
 // destructor
 // ============================================================================
@@ -270,85 +265,29 @@ Ostap::Models::BreitWignerMC::clone ( const char* name ) const
 void Ostap::Models::BreitWignerMC::setPars () const 
 {
   // set the mass 
-  m_bw->setM0 ( m_mass ) ;
-  // 
-  // set the widths
-  RooAbsArg*       g   = 0 ;
-  const RooArgSet* nset  = m_widths.nset() ;
+  m_bw -> setM0 ( m_mass ) ;
   //
-  unsigned short k = 0 ;
-  Ostap::Utils::Iterator it ( m_widths ) ;
-  while ( ( g = (RooAbsArg*) it.next() ) )
-  {
-    const RooAbsReal* r = dynamic_cast<RooAbsReal*> ( g ) ;
-    if ( 0 == r ) { continue ; }
-    //
-    const double width = r->getVal ( nset ) ;
-    //
-    m_bw->setGamma ( k  , width ) ;
-    //
-    ++k ;
-  }
+  Ostap::Math::BreitWignerMC* bwmc = (Ostap::Math::BreitWignerMC*) m_bw.get() ;
+  //
+  const unsigned short nc = bwmc -> nChannels() ;
+  for ( unsigned short i = 0 ; i < nc ; ++i ) 
+  { bwmc -> setGamma ( i , ::get_par ( i , m_widths ) ) ; }
   //
 }
 // ============================================================================
-// get the amplitude
+// access to underlying function
 // ============================================================================
-std::complex<double>  Ostap::Models::BreitWignerMC::amplitude () const  
-{
-  setPars() ;
-  return m_bw->amplitude( m_x ) ;
-}
-// ============================================================================
-// the actual evaluation of function
-// ============================================================================
-Double_t Ostap::Models::BreitWignerMC::evaluate() const 
-{
-  setPars() ;
-  return (*m_bw)(m_x) ;
-}   
-// ============================================================================
-Int_t Ostap::Models::BreitWignerMC::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::BreitWignerMC::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
-  //
-  setPars() ;
-  return m_bw->integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
-}
-// ============================================================================  
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::BreitWignerMC::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
+const Ostap::Math::BreitWignerMC&  
+Ostap::Models::BreitWignerMC::breit_wigner_MC () const 
 { 
-  // 
-  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
-  if (  x     . empty ()      ) { return {} ; }
-  // 
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars () ;
-  compute_X ( output , *m_bw , x ) ;
-  //
-  return output ;
+  setPars() ;
+  const Ostap::Math::BreitWignerMC* bwmc = 
+    (const Ostap::Math::BreitWignerMC*) m_bw.get() ;
+  return *bwmc ; 
 }
-// ======================================================================
-#endif
-// ======================================================================
+// ============================================================================
+
+
 
 // ============================================================================
 /// Breit-wigner with interference 
@@ -362,68 +301,9 @@ Ostap::Models::BWI::BWI
   RooAbsReal&                       ab    , 
   RooAbsReal&                       phib  ) 
   : BreitWigner ( bw , name ) 
-  , m_b     ( "b"     , "backgground"       , this , b     ) 
-  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
-  , m_phib  ( "phib"  , "background phase"  , this , phib  )
-{}
-// ============================================================================
-// constructor from all parameters
-// ============================================================================
-Ostap::Models::BWI::BWI
-( const char*          name      ,
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          mass      ,
-  RooAbsReal&          width     ,
-  const double         m1        ,
-  const double         m2        ,
-  const unsigned short L         , 
-  RooAbsReal&          b         ,
-  RooAbsReal&          ab        , 
-  RooAbsReal&          phib      ) 
-  : BreitWigner  ( name , title , x , mass , width , m1 , m2 , L ) 
-  , m_b     ( "b"     , "backgground"       , this , b     ) 
-  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
-  , m_phib  ( "phib"  , "background phase"  , this , phib  )
-{}
-// ============================================================================
-// constructor from all parameters
-// ============================================================================
-Ostap::Models::BWI::BWI
-( const char*          name      ,
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  RooAbsReal&          mass      ,
-  RooAbsReal&          width     ,
-  const double         m1        ,
-  const double         m2        ,
-  const unsigned short L                         ,
-  const Ostap::Math::FormFactors::JacksonRho rho , 
-  RooAbsReal&          b         ,
-  RooAbsReal&          ab        , 
-  RooAbsReal&          phib      ) 
-  : BreitWigner  ( name , title , x , mass , width , m1 , m2 , L , rho ) 
-  , m_b     ( "b"     , "backgground"       , this , b     ) 
-  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
-  , m_phib  ( "phib"  , "background phase"  , this , phib  )
-{}
-// ============================================================================
-// constructor from all parameters
-// ============================================================================
-Ostap::Models::BWI::BWI
-( const char*          name          ,
-  const char*          title         ,
-  RooAbsReal&          x             ,
-  RooAbsReal&          mass          ,
-  RooAbsReal&          width         ,
-  const Ostap::Math::BreitWigner& bw , 
-  RooAbsReal&          b             ,
-  RooAbsReal&          ab            , 
-  RooAbsReal&          phib          ) 
-  : BreitWigner  ( name , title , x , mass , width , bw    ) 
-  , m_b     ( "b"     , "backgground"       , this , b     ) 
-  , m_ab    ( "ab"    , "backgronud factor" , this , ab    ) 
-  , m_phib  ( "phib"  , "background phase"  , this , phib  )
+  , m_b     ( "b"     , "background"        , this , b    ) 
+  , m_ab    ( "ab"    , "background factor" , this , ab   ) 
+  , m_phib  ( "phib"  , "background phase"  , this , phib )
 {}
 // ============================================================================
 // "copy" constructor 
@@ -446,23 +326,32 @@ Ostap::Models::BWI*
 Ostap::Models::BWI::clone ( const char* name ) const 
 { return new Ostap::Models::BWI ( *this , name ) ; }
 // ============================================================================
-// the actual evaluation of function
+// get the amplitude
 // ============================================================================
-Double_t Ostap::Models::BWI::evaluate () const 
+std::complex<double> Ostap::Models::BWI::amplitude () const
 {
-  //
   setPars () ;
   //
-  const double x = m_x ;
+  const double x    = m_x ;
   //
   const double b    = m_b    ;
   const double ab   = m_ab   ;
   const double phib = m_phib ;
   //
-  const std::complex<double> ib  = ab * std::exp ( std::complex<double>(0,1) * phib ) ;
+  const std::complex<double> ib  = 
+    ab * std::complex<double> ( std::cos (  phib ) , std::sin ( phib ) ) ;
+  //
   const std::complex<double> amp = amplitude() + b * ib ;
   //
-  return function().breit_wigner ( x , amp ) ;
+  return amp ;
+}
+// ============================================================================
+// the actual evaluation of function
+// ============================================================================
+Double_t Ostap::Models::BWI::evaluate () const 
+{
+  const std::complex<double> amp = amplitude() ;
+  return m_bw->breit_wigner ( m_x , amp ) ;
 }
 // ============================================================================
 Int_t Ostap::Models::BWI::getAnalyticalIntegral
@@ -477,25 +366,18 @@ Int_t Ostap::Models::BWI::getAnalyticalIntegral
 // constructor from all parameters 
 // ============================================================================
 Ostap::Models::Flatte::Flatte 
-( const char*                name      , 
-  const char*                title     ,
-  RooAbsReal&                x         ,
-  RooAbsReal&                m0        ,
-  RooAbsReal&                g1        ,
-  RooAbsReal&                g2        ,
-  RooAbsReal&                g0        ,
-  const Ostap::Math::Flatte& flatte    ) 
-  : RooAbsPdf ( name , title ) 
-//
-  , m_x      ( "x"     , "Observable" , this , x  ) 
-  , m_m0     ( "m0"    , "Peak"       , this , m0 ) 
-  , m_g1     ( "g1"    , "g1"         , this , g1 )
-  , m_g2     ( "g2"    , "g2"         , this , g2 )
-  , m_g0     ( "g0"    , "Gamma0"     , this , g0 )
-    //
-  , m_flatte ( flatte.clone () ) 
+( const char*                name   , 
+  const char*                title  ,
+  RooAbsReal&                x      ,
+  RooAbsReal&                m0     ,
+  RooAbsReal&                g1     ,
+  RooAbsReal&                g2     ,
+  RooAbsReal&                g0     ,
+  const Ostap::Math::Flatte& flatte ) 
+  : BreitWigner ( name ,  title , x , m0 , g1 , flatte ) 
 {
-  setPars() ;
+  m_widths.add ( g2 ) ;
+  m_widths.add ( g0 ) ;
 }
 // ============================================================================
 // "copy" constructor 
@@ -503,18 +385,8 @@ Ostap::Models::Flatte::Flatte
 Ostap::Models::Flatte::Flatte 
 ( const Ostap::Models::Flatte& right , 
   const char*                     name  ) 
-  : RooAbsPdf ( right , name ) 
-    //
-  , m_x  ( "x"  , this , right.m_x  ) 
-  , m_m0 ( "m0" , this , right.m_m0 ) 
-  , m_g1 ( "g1" , this , right.m_g1 )
-  , m_g2 ( "g2" , this , right.m_g2 )
-  , m_g0 ( "g0" , this , right.m_g0 )
-    //
-  , m_flatte ( right.m_flatte->clone() ) 
-{
-  setPars() ;
-}
+  : BreitWigner ( right , name ) 
+{}
 // ============================================================================
 // destructor 
 // ============================================================================
@@ -528,70 +400,89 @@ Ostap::Models::Flatte::clone( const char* name ) const
 // ============================================================================
 void Ostap::Models::Flatte::setPars () const 
 {
-  m_flatte->setM0   ( m_m0 ) ;
-  m_flatte->setG1   ( m_g1 ) ;
-  m_flatte->setG2   ( m_g2 ) ;
-  m_flatte->setGam0 ( m_g0 ) ;
-}
-// ============================================================================
-// the actual evaluation of function 
-// ============================================================================
-Double_t Ostap::Models::Flatte::evaluate() const 
-{
-  setPars () ;
-  return (*m_flatte) ( m_x ) ;
-}
-// ============================================================================
-Int_t Ostap::Models::Flatte::getAnalyticalIntegral
-( RooArgSet&     allVars      , 
-  RooArgSet&     analVars     ,
-  const char* /* rangename */ ) const 
-{
-  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
-  return 0 ;
-}
-// ============================================================================
-Double_t Ostap::Models::Flatte::analyticalIntegral 
-( Int_t       code      , 
-  const char* rangeName ) const 
-{
-  assert ( code == 1 ) ;
-  if ( 1 != code ) {}
   //
-  setPars () ;
-  return m_flatte->integral ( m_x.min(rangeName) , m_x.max(rangeName) ) ;
+  Ostap::Math::Flatte* flatte = (Ostap::Math::Flatte*) m_bw.get() ;
+  //
+  flatte -> setM0   ( m_mass      ) ;
+  flatte -> setG1   ( ::get_par ( 0 , m_widths ) ) ;
+  flatte -> setG2   ( ::get_par ( 1 , m_widths ) ) ;
+  flatte -> setGam0 ( ::get_par ( 2 , m_widths ) ) ;
 }
-// ===========================================================================
-// get the amplitude 
-// ===========================================================================
-std::complex<double> Ostap::Models::Flatte::amplitude () const  
+// ============================================================================
+// access to underlying function
+// ============================================================================
+const Ostap::Math::Flatte& 
+Ostap::Models::Flatte::flatte    () const 
 {
   setPars () ;
-  return m_flatte->amplitude ( m_x ) ;
+  const Ostap::Math::Flatte* flatte = (const Ostap::Math::Flatte*) m_bw.get() ;
+  return *flatte ;
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Flatte::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x      = m_x     . getValBatch ( begin , batchSize ) ;
-  if (  x     . empty ()      ) { return {} ; }
-  // 
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars () ;
-  compute_X ( output , *m_flatte , x ) ;
-  //
-  return output ;
-}
-// ======================================================================
-#endif
-// ======================================================================
 
+
+// ============================================================================
+// constructor from all parameters
+// ===========================================================================
+Ostap::Models::LASS::LASS 
+( const char*                name   ,
+  const char*                title  ,
+  RooAbsReal&                x      ,
+  RooAbsReal&                m0     ,
+  RooAbsReal&                g0     ,
+  RooAbsReal&                a      ,
+  RooAbsReal&                b      ,
+  RooAbsReal&                e      , 
+  const Ostap::Math::LASS&   lass   ) 
+  : BreitWigner ( name ,  title , x , m0 , g0 , lass ) 
+  , m_a      ( "a"     , "a-parameter" , this , a  ) 
+  , m_b      ( "b"     , "b-parameter" , this , b  ) 
+  , m_e      ( "e"     , "elasticity"  , this , e  ) 
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::LASS::LASS 
+( const Ostap::Models::LASS& right , 
+  const char*                     name  ) 
+  : BreitWigner ( right  , name ) 
+    //
+  , m_a  ( "a"  , this , right.m_a  ) 
+  , m_b  ( "b"  , this , right.m_b  ) 
+  , m_e  ( "e"  , this , right.m_e  ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::LASS::~LASS (){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::LASS*
+Ostap::Models::LASS::clone( const char* name ) const 
+{ return new Ostap::Models::LASS ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::LASS::setPars () const 
+{
+  Ostap::Math::LASS* lass = (Ostap::Math::LASS*) m_bw.get() ;
+  //
+  lass -> setM0    ( m_mass       ) ;
+  lass -> setGamma ( ::get_par ( 0 , m_widths ) ) ;
+  lass -> setA     ( m_a          ) ;
+  lass -> setB     ( m_b          ) ;
+  lass -> setE     ( m_e          ) ;
+}
+// ============================================================================
+// access to underlying function
+// ============================================================================
+const Ostap::Math::LASS& 
+Ostap::Models::LASS::lass () const 
+{
+  setPars () ;
+  const Ostap::Math::LASS* lass = (const Ostap::Math::LASS*) m_bw.get() ;
+  return *lass ;
+}
+// ============================================================================
 
 
 
@@ -8065,8 +7956,9 @@ Ostap::Models::Uniform::evaluateBatch
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 
-ClassImp(Ostap::Models::BWI  ) 
+ClassImp(Ostap::Models::BWI                ) 
 ClassImp(Ostap::Models::Flatte             ) 
+ClassImp(Ostap::Models::LASS               ) 
 ClassImp(Ostap::Models::Voigt              ) 
 ClassImp(Ostap::Models::PseudoVoigt        ) 
 // ClassImp(Ostap::Models::Swanson            ) 

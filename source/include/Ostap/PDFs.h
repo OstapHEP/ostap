@@ -34,9 +34,7 @@ namespace Ostap
    *  - BreitWigner, Rho0, Kstar, Phi, ...
    *  - BreitWigner from 3-body decay of mother particle: BW23L
    *  - LASS (kappa pole)
-   *  - LASS from 3-body decay of mother particle: LASS23L
    *  - Bugg (sigma pole)
-   *  - Bugg from 3-body decay of mother particle: Bugg23L
    *  - Voigt
    *  - Swanson's S-wave cusp
    *
@@ -152,6 +150,16 @@ namespace Ostap
       /// clone
       BreitWigner* clone ( const char* name ) const override;
       // ======================================================================
+    protected: 
+      // ======================================================================
+      /// constructor from main parameters and "shape"
+      BreitWigner ( const char*            name      ,
+                    const char*            title     ,
+                    RooAbsReal&            x         ,
+                    RooAbsReal&            mass      ,
+                    RooArgList&            widths    ,
+                    const Ostap::Math::BW& bw        ) ;
+      // ======================================================================
     public: // some fake functionality
       // ======================================================================
       // fake default constructor, needed just for proper (de)serialization
@@ -175,14 +183,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// set all parameters
-      void setPars () const ; // set all parameters
+      virtual void setPars () const ; // set all parameters
       // ======================================================================
     public:
       // ======================================================================
       /// get the amplitude
-      std::complex<double>   amplitude () const  ;
+      virtual std::complex<double> amplitude    () const  ;
       /// access to underlying function
-      const Ostap::Math::BW& function  () const { return *m_bw ; }
+      const Ostap::Math::BW& function     () const { setPars () ; return *m_bw ; }
+      /// access to underlying function
+      const Ostap::Math::BW& breit_wigner () const { setPars () ; return *m_bw ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -194,13 +204,13 @@ namespace Ostap
       // ======================================================================
 #endif
       // ======================================================================
-    protected:
+    protected :
       // ======================================================================
-      RooRealProxy m_x     ;
-      RooRealProxy m_mass  ;
-      RooRealProxy m_width ;
+      RooRealProxy m_x      ;
+      RooRealProxy m_mass   ;
+      RooListProxy m_widths ;
       // ======================================================================
-    private:
+    protected :
       // ======================================================================
       /// the actual function
       std::unique_ptr<Ostap::Math::BW> m_bw{}  ; // the actual function
@@ -212,7 +222,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  BreitWignerMC : public RooAbsPdf
+    class  BreitWignerMC : public BreitWigner 
     {
     public:
       // ======================================================================
@@ -222,15 +232,14 @@ namespace Ostap
       // ======================================================================
       /// constructor from all parameters
       BreitWignerMC
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        RooAbsReal&          mass      , 
-        RooArgList&          widths    ,
+      ( const char*                       name      ,
+        const char*                       title     ,
+        RooAbsReal&                       x         ,
+        RooAbsReal&                       mass      , 
+        RooArgList&                       widths    ,
         const Ostap::Math::BreitWignerMC& bw ) ;
       /// "copy" constructor
-      BreitWignerMC 
-      ( const BreitWignerMC& , const char* name = 0 ) ;
+      BreitWignerMC ( const BreitWignerMC& , const char* name = 0 ) ;
       /// virtual destructor
       virtual ~BreitWignerMC() ;
       /// clone
@@ -243,51 +252,13 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
       /// set all parameters
-      void setPars () const ; // set all parameters
+      void setPars () const override ; // set all parameters
       // ======================================================================
     public:
       // ======================================================================
-      /// get the amplitude
-      std::complex<double>            amplitude () const  ;
       /// access to underlying function
-      const Ostap::Math::BreitWignerMC& function  () const { return *m_bw ; }
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x      ;
-      RooRealProxy m_mass   ;
-      RooListProxy m_widths ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the actual function
-      std::unique_ptr<Ostap::Math::BreitWignerMC> m_bw{}  ; // the actual function
+      const Ostap::Math::BreitWignerMC& breit_wigner_MC () const ;
       // ======================================================================
     } ;
     // ========================================================================
@@ -297,7 +268,7 @@ namespace Ostap
      *  where \f$b(x)\f$ - any smooth function and 
      *  \f$ A(x)_{\mathrm{BW}} \f$ is Breit-Wigner amplitude 
      */
-    class BWI  : public BreitWigner
+    class BWI final : public BreitWigner
     {
     public:
       // ======================================================================
@@ -311,41 +282,6 @@ namespace Ostap
             RooAbsReal&                         b     , 
             RooAbsReal&                         ab    , 
             RooAbsReal&                         phib  ) ;
-      /// constructor from all parameters
-      BWI ( const char*          name      ,
-            const char*          title     ,
-            RooAbsReal&          x         ,
-            RooAbsReal&          mass      ,
-            RooAbsReal&          width     ,
-            const double         m1        ,
-            const double         m2        ,
-            const unsigned short L         , 
-            RooAbsReal&          b         ,
-            RooAbsReal&          ab        , 
-            RooAbsReal&          phib      ) ;
-      /// constructor from all parameters
-      BWI ( const char*          name      ,
-            const char*          title     ,
-            RooAbsReal&          x         ,
-            RooAbsReal&          mass      ,
-            RooAbsReal&          width     ,
-            const double         m1        ,
-            const double         m2        ,
-            const unsigned short L                         ,
-            const Ostap::Math::FormFactors::JacksonRho rho , 
-            RooAbsReal&          b         ,
-            RooAbsReal&          ab        , 
-            RooAbsReal&          phib      ) ;
-      /// constructor from main parameters and "shape"
-      BWI ( const char*          name          ,
-            const char*          title         ,
-            RooAbsReal&          x             ,
-            RooAbsReal&          mass          ,
-            RooAbsReal&          width         ,
-            const Ostap::Math::BreitWigner& bw , 
-            RooAbsReal&          b             ,
-            RooAbsReal&          ab            , 
-            RooAbsReal&          phib          ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
@@ -360,15 +296,17 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get the amplitude
+      std::complex<double> amplitude () const override ;
       // the actual evaluation of function
-      Double_t evaluate () const override;
+      Double_t             evaluate  () const override;
       // ======================================================================
     public: // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
       ( RooArgSet&     allVars      ,
         RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
+        const char* /* rangename */ ) const override ;
       // ======================================================================
     protected:
       // ======================================================================
@@ -391,7 +329,7 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
-    class  Flatte : public RooAbsPdf
+    class  Flatte : public BreitWigner 
     {
     public:
       // ======================================================================
@@ -422,55 +360,68 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      // the actual evaluation of function
-      Double_t evaluate() const override;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-      ( RooArgSet&     allVars      ,
-        RooArgSet&     analVars     ,
-        const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-      ( Int_t          code         ,
-        const char*    rangeName    ) const override;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the amplitude
-      virtual std::complex<double> amplitude () const  ;
       /// access to underlying function
-      const Ostap::Math::Flatte&   function  () const { return *m_flatte ; }
+      const Ostap::Math::Flatte& flatte    () const ;
       // ======================================================================
     public:
       // ======================================================================
       /// set all parameters
-      void setPars () const ; // set all parameters
-      // ======================================================================
-    private:
-      // ======================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-      // ======================================================================
-      RooSpan<double> evaluateBatch 
-      ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
-      // ======================================================================
-#endif
-      // ======================================================================
-    protected:
-      // ======================================================================
-      RooRealProxy m_x  ;
-      RooRealProxy m_m0 ;
-      RooRealProxy m_g1 ;
-      RooRealProxy m_g2 ;
-      RooRealProxy m_g0 ;
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// the actual function
-      std::unique_ptr<Ostap::Math::Flatte> m_flatte ;  // the actual function
+      void setPars () const override ; // set all parameters
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class LASS 
+     */
+    class LASS : public BreitWigner 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::LASS, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      LASS ( const char*                name   ,
+             const char*                title  ,
+             RooAbsReal&                x      ,
+             RooAbsReal&                m0     ,
+             RooAbsReal&                g0     ,
+             RooAbsReal&                a      ,
+             RooAbsReal&                b      ,
+             RooAbsReal&                e      , 
+             const Ostap::Math::LASS&   lass   ) ;
+      /// "copy" constructor
+      LASS ( const LASS & , const char* name = 0 ) ;
+      /// virtual destructor
+      virtual ~LASS () ;
+      /// clone
+      LASS * clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      LASS  () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::LASS& lass () const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const override ; // set all parameters
+      // ======================================================================
+    protected:
+      // ======================================================================
+      /// a-parameter 
+      RooRealProxy m_a    ; // a-parameter 
+      /// b-parameter 
+      RooRealProxy m_b    ; // b-parameter 
+      /// eliasticity 
+      RooRealProxy m_e    ; // eliasticity 
+      // ======================================================================
+    } ;  
     // ========================================================================
     /** @class Voigt
      *  "Voigt"-function

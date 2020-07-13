@@ -21,7 +21,8 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT 
-from    ostap.core.core import cpp, Ostap, funID
+from    ostap.core.core       import cpp, Ostap, funID
+import  ostap.math.derivative as     D  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -917,6 +918,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Functions.PyCallable        , 
                Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
+               D.Derivative                      , 
                ) :
     model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D
@@ -1775,6 +1777,7 @@ _decorated_classes_ = set( [
     Ostap.Functions.PyCallable        , 
     Ostap.Math.Piecewise              , 
     Ostap.Math.ChebyshevApproximation ,
+    D.Derivative                      
     ])
 
 # ============================================================================

@@ -75,6 +75,17 @@ namespace
     //
   }
   // ==========================================================================
+  /// get parameter from Roo
+  inline double get_par ( const unsigned short index , const RooListProxy&  lst ) 
+  {
+    const RooAbsArg* v    = lst.at ( index ) ;
+    if ( nullptr ==  v ) { return 0 ; }
+    const RooArgSet* nset = lst.nset() ;
+    //
+    const RooAbsReal* r = static_cast<const RooAbsReal*>( v ) ;
+    return r->getVal ( nset ) ;
+  }
+  // ==========================================================================
   template <class OBJECT>
   inline void set_pars ( const RooListProxy& lst , OBJECT& obj ) 
   {
