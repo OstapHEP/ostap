@@ -14,7 +14,7 @@
 #include "Ostap/MoreMath.h"
 #include "Ostap/Kinematics.h"
 #include "Ostap/DalitzIntegrator.h"
-// #include "Ostap/Decay.h"
+#include "Ostap/Workspace.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -43,6 +43,11 @@ namespace
   // ==========================================================================
   /// @var s_iPI  
   const double s_iPI = 1.0 / M_PI ;
+  // ==========================================================================
+  /** @var s_WS 
+   *  local integration workspace 
+   */
+  const Ostap::Math::WorkSpace s_WS ;
   // ==========================================================================
 } //                                            The end of  anonymous namespace 
 // ============================================================================
@@ -1019,7 +1024,7 @@ Ostap::Math::BW::BW
   add ( channel ) ;
 } 
 // ============================================================================
-// default (empty) constructor 
+// protected default (empty) constructor 
 // ============================================================================
 Ostap::Math::BW::BW
 ( const double  m0 )
@@ -1040,6 +1045,10 @@ Ostap::Math::BW::BW
 {
   for ( const auto& c : bw.m_channels ) { add ( *c ) ; }
 }
+// ============================================================================
+/// destructor 
+// ============================================================================
+Ostap::Math::BW::~BW(){}
 // ============================================================================
 //  calculate the Breit-Wigner amplitude
 // ============================================================================
@@ -1340,111 +1349,6 @@ Ostap::Math::BreitWignerMC::BreitWignerMC
   const Ostap::Math::ChannelBW& c1 )
   : BW ( m0 , c1 )
 {}
-// ===========================================================================
-/*  constructor from two channels 
- *  @param m0   the pole position 
- *  @param c1   the 1st channel 
- *  @param c2   the 2nd channel 
- */
-// ===========================================================================
-Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
-  const Ostap::Math::ChannelBW& c1 , 
-  const Ostap::Math::ChannelBW& c2 ) 
-  : BW ( m0 , c1 )
-{
-  add ( c2 ) ; 
-}
-// ===========================================================================
-/*  constructor from three channels 
- *  @param m0   the pole position 
- *  @param c1   the 1st channel 
- *  @param c2   the 2nd channel 
- *  @param c3   the 3rd channel 
- */
-// ===========================================================================
-Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
-  const Ostap::Math::ChannelBW& c1 , 
-  const Ostap::Math::ChannelBW& c2 ,
-  const Ostap::Math::ChannelBW& c3 ) 
-  : BW ( m0 , c1 )
-{ 
-  add ( c2 ) ; 
-  add ( c3 ) ;
-}
-// ===========================================================================
-/*  constructor from four channels 
- *  @param m0   the pole position 
- *  @param c1   the 1st channel 
- *  @param c2   the 2nd channel 
- *  @param c3   the 3rd channel 
- *  @param c4   the 4th channel 
- */
-// ===========================================================================
-Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
-  const Ostap::Math::ChannelBW& c1 , 
-  const Ostap::Math::ChannelBW& c2 ,
-  const Ostap::Math::ChannelBW& c3 , 
-  const Ostap::Math::ChannelBW& c4 ) 
-  : BW ( m0 , c1 )
-{ 
-  add ( c2 ) ; 
-  add ( c3 ) ; 
-  add ( c4 ) ; 
-}
-// ===========================================================================
-/*  constructor from five channels 
- *  @param m0   the pole position 
- *  @param c1   the 1st channel 
- *  @param c2   the 2nd channel 
- *  @param c3   the 3rd channel 
- *  @param c4   the 4th channel 
- *  @param c5   the 5th channel 
- */
-// ===========================================================================
-Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
-  const Ostap::Math::ChannelBW& c1 , 
-  const Ostap::Math::ChannelBW& c2 ,
-  const Ostap::Math::ChannelBW& c3 , 
-  const Ostap::Math::ChannelBW& c4 , 
-  const Ostap::Math::ChannelBW& c5 ) 
-  : BW ( m0 , c1 )
-{ 
-  add ( c2 ) ; 
-  add ( c3 ) ; 
-  add ( c4 ) ; 
-  add ( c5 ) ; 
-}
-// ===========================================================================
-/*  constructor from six channels 
- *  @param m0   the pole position 
- *  @param c1   the 1st channel 
- *  @param c2   the 2nd channel 
- *  @param c3   the 3rd channel 
- *  @param c4   the 4th channel 
- *  @param c5   the 5th channel 
- *  @param c6   the 6th channel 
- */
-// ===========================================================================
-Ostap::Math::BreitWignerMC::BreitWignerMC 
-( const double                  m0 ,
-  const Ostap::Math::ChannelBW& c1 , 
-  const Ostap::Math::ChannelBW& c2 ,
-  const Ostap::Math::ChannelBW& c3 , 
-  const Ostap::Math::ChannelBW& c4 ,
-  const Ostap::Math::ChannelBW& c5 , 
-  const Ostap::Math::ChannelBW& c6 ) 
-  : BW ( m0 , c1 )
-{ 
-  add ( c2 ) ; 
-  add ( c3 ) ; 
-  add ( c4 ) ; 
-  add ( c5 ) ; 
-  add ( c6 ) ; 
-}
 // ============================================================================
 // clone it 
 // ============================================================================
@@ -1631,10 +1535,6 @@ Ostap::Math::Flatte::Flatte
   m_channels[2] -> setGamma0 ( g0 ) ;
   //
 }
-// ============================================================================
-// destructor
-// ============================================================================
-Ostap::Math::Flatte::~Flatte(){}
 // ============================================================================
 Ostap::Math::Flatte*
 Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; }
@@ -2318,6 +2218,7 @@ Ostap::Math::GammaBW3::GammaBW3
 double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const 
 {
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
+  //
   return 
     0 == m_tag ? 
     Ostap::Math::DalitzIntegrator::integrate_s1s2 
@@ -2325,7 +2226,6 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
     Ostap::Math::DalitzIntegrator::integrate_s1s2 
     ( m_tag , std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) ;
 }
-
 // ============================================================================
 // constructor from (partial) width
 // ============================================================================

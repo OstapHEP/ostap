@@ -239,10 +239,10 @@ namespace Ostap
       // ======================================================================
     private: 
       // ======================================================================
-      /// the first sqaured mass
-      double m_m2_1 ; // the first  sqaured mass
-      /// the second squared mass
-      double m_m2_2 ; // the second squared mass
+      /// the first mass squared
+      double m_m2_1 ; // the first mass squared
+      /// the second mass squared
+      double m_m2_2 ; // the second mass squared
       // ======================================================================
     } ;
     // ========================================================================
@@ -260,7 +260,7 @@ namespace Ostap
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
      *  @see Ostap::Kinematics::phasespace3     
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-10-31
      */
     class PhaseSpace3s

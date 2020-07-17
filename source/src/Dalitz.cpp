@@ -31,28 +31,30 @@ Ostap::Kinematics::Dalitz0::Dalitz0
 ( const double m1 , 
   const double m2 , 
   const double m3 ) 
-  : m_m1 ( 0 == m1 || s_zero ( m1 * m1 ) ? 0.0 : std::abs ( m1 ) )
-  , m_m2 ( 0 == m2 || s_zero ( m2 * m2 ) ? 0.0 : std::abs ( m2 ) )
-  , m_m3 ( 0 == m3 || s_zero ( m3 * m3 ) ? 0.0 : std::abs ( m3 ) )
+  : m_m1 ( s_zero ( m1 ) || s_zero ( m1 * m1 ) ? 0.0 : std::abs ( m1 ) )
+  , m_m2 ( s_zero ( m2 ) || s_zero ( m2 * m2 ) ? 0.0 : std::abs ( m2 ) )
+  , m_m3 ( s_zero ( m3 ) || s_zero ( m3 * m3 ) ? 0.0 : std::abs ( m3 ) )
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
-  , m_cache { // s1_min, s2_min, s3_min
-              ( m_m1 + m_m2 ) * ( m_m1 + m_m2 )       , // [0]
-              ( m_m2 + m_m3 ) * ( m_m2 + m_m3 )       , // [1] 
-              ( m_m3 + m_m1 ) * ( m_m3 + m_m1 )       , // [2] 
-              // mass-squared 
-              m_m1 * m_m1                             , // [3] 
-              m_m2 * m_m2                             , // [4]
-              m_m3 * m_m3                             , // [5] 
-              m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3 , // [6]
-              // sum of masses
-              m_m1 + m_m2 + m_m3                      , // [7]
-              // sum of masses
-              std::pow  ( m_m1 + m_m2 + m_m3 , 2 )     // [8]
-              }
-  , m_cacheb { s_zero ( m_m1 ) ,
-                s_zero ( m_m2 ) ,
-                s_zero ( m_m3 )
-               }
+  , m_cache {
+  // s1_min, s2_min, s3_min
+  ( m_m1 + m_m2 ) * ( m_m1 + m_m2 )         , // [0]
+    ( m_m2 + m_m3 ) * ( m_m2 + m_m3 )       , // [1] 
+    ( m_m3 + m_m1 ) * ( m_m3 + m_m1 )       , // [2] 
+    // mass-squared 
+    m_m1 * m_m1                             , // [3] 
+    m_m2 * m_m2                             , // [4]
+    m_m3 * m_m3                             , // [5] 
+    m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3 , // [6]
+    // sum of masses
+    m_m1 + m_m2 + m_m3                      , // [7]
+    // sum of masses
+    std::pow  ( m_m1 + m_m2 + m_m3 , 2 )      // [8]
+    }
+  , m_cacheb { 
+    s_zero ( m_m1 ) ,
+      s_zero ( m_m2 ) ,
+      s_zero ( m_m3 )
+      }
   , m_tag ( std::hash_combine ( m_m1  , m_m2 , m_m3 ) ) 
 {}
 // ============================================================================
@@ -60,7 +62,7 @@ Ostap::Kinematics::Dalitz0::Dalitz0
  *  Get the sign of G-function 
  *  \f$ g(s_1,s_2) = G ( s_1, s_2 , s , m_2^2, m_1^2, m_3^2) \f$
  *  @see Ostap::Math::PhaseSpace2::G
- *  Physical region correspoinds to \f$ g\le0 \f$  
+ *  Physical region corresponds to \f$ g\le0 \f$  
  */
 // ============================================================================
 bool Ostap::Kinematics::Dalitz0::inside

@@ -469,8 +469,8 @@ namespace Ostap
     /** @class ChannelGamma
      *  Description of the channel with generic mass-dependent width 
      *  \f[ \begin{array}{lcl}
-     *   N^2(s,m_0)      & = & \Gamma0 \gamma(s) } \\
-     *   D (s,m_0)       & = & \Gamma0 \gamma(s) } \\
+     *   N^2(s,m_0)      & = & m_0 \Gamma0 \gamma(s) } \          \
+     *   D (s,m_0)       & = & m_0 \Gamma0 \gamma(s) } \          \
      *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right)
      *  \end{array}\,,\f]
      */
@@ -523,21 +523,21 @@ namespace Ostap
     public:
       // =======================================================================
       /** squared  numerator for the amplitude 
-       * \f[ N^2(s,m_0) = \Gamma0 \gamma(s) \f] 
+       * \f[ N^2(s,m_0) = m_0 \Gamma0 \gamma(s) \f] 
        */
       double N2
-      ( const double    s     , 
-        const double /* m0 */ ) const override 
-      { return s <= m_sthreshold ? 0.0 : gamma0 () * m_gamma ( s ) ; }      
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_sthreshold ? 0.0 : m0 * gamma0 () * m_gamma ( s ) ; }      
       // ======================================================================
       /** term in the denominator for the amplitide
-       * \f[ D (s,m_0) = \Gamma0 \gamma (s) \f] 
+       * \f[ D (s,m_0) = m_0 \Gamma0 \gamma (s) \f] 
        */
       // ======================================================================
       std::complex<double> D    
-      ( const double    s     , 
-        const double /* m0 */ ) const override 
-      { return s <= m_sthreshold ? 0.0 : gamma0 () * m_gamma ( s ) ; }      
+      ( const double s  , 
+        const double m0 ) const override 
+      { return s <= m_sthreshold ? 0.0 : m0 * gamma0 () * m_gamma ( s ) ; }      
       // ======================================================================
       /** get the phase space factor  \f$ \varrho(s) \f$
        *  optionally normalized at the point \f$ m_n \f$ 
@@ -549,6 +549,13 @@ namespace Ostap
       { return s <= m_sthreshold ? 0.0 : 1 ; }
       /// get the opening threshold \f$ s_{threshold} \$ for the channel 
       double s_threshold () const override { return m_sthreshold ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /** get a value of mass-dependent width  (as function of s )
+       *  \f$ \gamma(s) \f$ 
+       */
+      inline double gamma ( const double s ) const { return m_gamma ( s ) ; }
       // =======================================================================
     public: //  helper methods 
       // =======================================================================
@@ -569,7 +576,7 @@ namespace Ostap
       std::string m_description ;
       // ======================================================================
     } ;
-
+    
 
     // =========================================================================
     /** @class ChannelQ
@@ -905,20 +912,19 @@ namespace Ostap
       /// constructor from all parameters
       BW ( const double     m0      , 
            const ChannelBW& channel ) ;     
-      ///    copy construtor
-      BW ( const BW& bw ) ;
+      ///    copy constructor
+      BW ( const BW&  bw ) ;
       /// move construtor
-      BW (       BW&&   ) = default ;
+      BW (       BW&&    ) = default ;
+      /// virtual destructor 
+      virtual ~BW() ;
+      /// clone it 
+      virtual BW* clone() const = 0 ;
       // ======================================================================
     protected :
       // ======================================================================
       /// default (empty) constructor 
       BW ( const double m0 = 1 ) ;
-      // ======================================================================
-    public: 
-      // ======================================================================
-      /// clone it 
-      virtual BW* clone() const = 0 ;
       // ======================================================================
     public:
       // ======================================================================
@@ -961,16 +967,28 @@ namespace Ostap
       double         mass   () const { return   m0 () ; }
       /// pole position 
       double         peak   () const { return   m0 () ; }
-      /// the width at the pole 
+      /** The sum of "gamma" for each channels
+       *  - If all channnels are open channels and for 
+       *  each channel \f$ \Gamma_i \f$ represents 
+       *  the partial width for this channel, 
+       *   the result corrrsponds to  a total width 
+       *   of the Breit-Wigner
+       */
       double         gamma  () const ;
       // =====================================================================
-    public:
-      // =====================================================================
-      /// get the main decay channel
-      const ChannelBW* channel  () const { return m_channels.front().get() ; }
-      /// get the decay channel with index \f$ i\f$: 
-      const ChannelBW* channel  ( const unsigned short i ) const
+    public: // number of channels 
+      // ======================================================================
+      /** get the decay channel with index \f$ i\f$
+       *  - index <code>0</code> corresponds to "the main" dchannel
+       *  @param i channel index 
+       *  @return the channel with given index, or <code>nullptr</code> otherwise 
+       */
+      const ChannelBW* channel ( const unsigned short i = 0 ) const
       { return i < m_channels.size() ? m_channels[i].get() : nullptr ; }
+      // ======================================================================
+      /// get number of channels 
+      inline unsigned int nChannels() const { return m_channels.size()  ; }
+      // ======================================================================
       /// get the threshold value (cached in constructor)
       double           threshold () const { return m_threshold ; }
       // ======================================================================
@@ -985,7 +1003,7 @@ namespace Ostap
       // set total width at pole 
       bool setGamma  ( const double x ) ;
       // ======================================================================
-    public:
+    public: /// integration 
       // ======================================================================
       /// get the integral
       double integral () const ;
@@ -998,20 +1016,23 @@ namespace Ostap
       /// unique tag/label 
       virtual std::size_t tag() const ;
       // ======================================================================
-    public:
-      // ======================================================================
-      /// get number of channels 
-      inline unsigned int nChannels() const { return m_channels.size()  ; }
-      // ======================================================================
-    protected :
+    protected : 
       // ======================================================================
       /// add one more channel 
       void add ( const ChannelBW& ) ;
+      /// add several channels 
+      template <typename ...CHANNELS>
+      void add ( const ChannelBW&    channel  , 
+                 const CHANNELS& ... channels ) 
+      {
+        this -> add ( channel     ) ;
+        this -> add ( channels... ) ;
+      }
       // ======================================================================
     private:
       // ======================================================================
       /// the mass
-      double m_m0              ; // the mass
+      double m_m0        { 1 } ; // the mass
       /// the threshold 
       double m_threshold { 0 } ; // the threshold 
       // ======================================================================
@@ -1020,7 +1041,7 @@ namespace Ostap
       /// the channel(s) 
       mutable std::vector<std::unique_ptr<ChannelBW> > m_channels ; // the channel(s)
       // ======================================================================
-    private:
+    private : // integrtaion workspace 
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
@@ -1092,6 +1113,8 @@ namespace Ostap
                     const ChannelBW&     channel ) ;
       /// copy constructor
       BreitWigner ( const BreitWigner&  bw ) = default ;
+      /// move constructor
+      BreitWigner (       BreitWigner&& bw ) = default ;
       // ======================================================================
       /// clone it 
       BreitWigner* clone() const override ;
@@ -1118,6 +1141,9 @@ namespace Ostap
       /// destructor
       virtual ~Rho0 () ;
       // ======================================================================
+      /// clone method 
+      Rho0* clone()   const override { return new Rho0 ( *this ) ; }
+      // ======================================================================
     } ;
     // ========================================================================
     /** @class Kstar0
@@ -1133,13 +1159,16 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      // constructor from all parameters
+      /// constructor from all parameters
       Kstar0  ( const double m0       = 770   ,     // MeV
                 const double gam0     = 150   ,     // MeV
                 const double k_mass   = 493.7 ,     // MeV
                 const double pi_mass  = 139.6 ) ;   // MeV
       /// destructor
       virtual ~Kstar0 () ;
+      // ======================================================================
+      /// clone method 
+      Kstar0* clone()   const override { return new Kstar0 ( *this ) ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -1156,12 +1185,15 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      // constructor from all parameters
+      /// constructor from all parameters
       Phi0  ( const double m0       = 1019.5 ,     // MeV
               const double gam0     =    4.3 ,     // MeV
               const double k_mass   =  493.7 ) ;   // MeV
       /// destructor
       virtual ~Phi0 () ;
+      // ======================================================================
+      /// clone method 
+      Phi0* clone()   const override { return new Phi0 ( *this ) ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -1185,106 +1217,45 @@ namespace Ostap
       ( const double     m0 = 0.770       ,
         const ChannelBW& c1 = Channel ( ) ) ;
       // ======================================================================
-      /** constructor from two channels 
-       *  @param m0   the pole position 
-       *  @param c1   the 1st channel 
-       *  @param c2   the 2nd channel 
-       */
-      BreitWignerMC 
-      ( const double     m0 ,
-        const ChannelBW& c1 , 
-        const ChannelBW& c2 ) ;
-      // ======================================================================
-      /** constructor from three channels 
-       *  @param m0   the pole position 
-       *  @param c1   the 1st channel 
-       *  @param c2   the 2nd channel 
-       *  @param c3   the 3rd channel 
-       */
-      BreitWignerMC 
-      ( const double     m0 ,
-        const ChannelBW& c1 , 
-        const ChannelBW& c2 ,
-        const ChannelBW& c3 ) ;
-      // ======================================================================
-      /** constructor from four channels 
-       *  @param m0   the pole position 
-       *  @param c1   the 1st channel 
-       *  @param c2   the 2nd channel 
-       *  @param c3   the 3rd channel 
-       *  @param c4   the 4th channel 
-       */
-      // ======================================================================
-      BreitWignerMC 
-      ( const double     m0 ,
-        const ChannelBW& c1 , 
-        const ChannelBW& c2 ,
-        const ChannelBW& c3 ,
-        const ChannelBW& c4 ) ;
-      // ======================================================================
-      /** constructor from four channels 
-       *  @param m0   the pole position 
-       *  @param c1   the 1st channel 
-       *  @param c2   the 2nd channel 
-       *  @param c3   the 3rd channel 
-       *  @param c4   the 4th channel 
-       *  @param c5   the 5th channel 
-       */
-      // ======================================================================
-      BreitWignerMC 
-      ( const double     m0 ,
-        const ChannelBW& c1 , 
-        const ChannelBW& c2 ,
-        const ChannelBW& c3 ,
-        const ChannelBW& c4 ,
-        const ChannelBW& c5 ) ;
-      // ======================================================================
-      /** constructor from four channels 
-       *  @param m0   the pole position 
-       *  @param c1   the 1st channel 
-       *  @param c2   the 2nd channel 
-       *  @param c3   the 3rd channel 
-       *  @param c4   the 4th channel 
-       *  @param c5   the 5rd channel 
-       *  @param c6   the 6th channel 
-       */
-      BreitWignerMC 
-      ( const double     m0 ,
-        const ChannelBW& c1 , 
-        const ChannelBW& c2 ,
-        const ChannelBW& c3 ,
-        const ChannelBW& c4 ,
-        const ChannelBW& c5 ,
-        const ChannelBW& c6 ) ;
+      /// template constructor with variadic number of channels
+      template <typename... CHANNELS>
+      BreitWignerMC ( const double       m0       , 
+                      const ChannelBW&   c1       , 
+                      const CHANNELS&... channels )
+        : BreitWignerMC ( m0 , c1 ) 
+      { this->add ( channels... ) ; }
       // ======================================================================
       /// copy constructor
       BreitWignerMC ( const BreitWignerMC&  bw ) = default ;
+      /// move constructor
+      BreitWignerMC (       BreitWignerMC&& bw ) = default ;
       // ======================================================================
       /// clone it 
       BreitWignerMC* clone() const override ;
       // ======================================================================
     public:
       // ======================================================================
-      /// set total gamma      
-      using BW::channel  ;
+      /// template creator 
+      template <typename... CHANNELS>
+      static inline BreitWignerMC
+      create ( const double       m0       , 
+               const ChannelBW&   c1       , 
+               const CHANNELS&... channels )
+      { return BreitWignerMC ( m0 , c1 , channels... ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// get the  gamma for the certain channel 
-      double gamma     ( const unsigned short i ) const 
+      double gamma    ( const unsigned short i ) const 
       { return i < nChannels() ? m_channels[i] -> gamma0()            : 0.0   ; }
       /// set the gamma for the certain decay
-      bool   setGamma  ( const unsigned short i , const double value ) 
+      bool   setGamma ( const unsigned short i , const double value ) 
       { return i < nChannels() ? m_channels[i] -> setGamma0 ( value ) : false ; }
       // ======================================================================
-      /// get the decay channel with the index \f$ i\f$: 
-      const ChannelBW* channel  ( const unsigned short i ) const
-      { return i < nChannels () ? m_channels[i].get () : nullptr ; }
-      // ======================================================================
       /// get the total gamma 
-      double    gamma     () const { return BW::gamma ( ) ; }
+      double    gamma () const { return BW::gamma ( ) ; }
       /// get the total gamma 
-      bool   setGamma     ( const double value ) { return BW::setGamma ( value ) ; }
-      /// get the mani/firtst decay channel: 
-      const ChannelBW* channel () const { return BW::channel ( ) ; }
+      bool   setGamma ( const double value ) { return BW::setGamma ( value ) ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -1366,7 +1337,7 @@ namespace Ostap
        */
       Flatte ( const double m0    = 980   ,
                const double m0g1  = 165   ,
-               const double g2og1 = 4.21  ,
+               const double g2og1 = 4.21  , // dimensinless 
                const double mA1   = 139.6 ,
                const double mA2   = 139.6 ,
                const double mB1   = 493.7 ,
@@ -1374,8 +1345,8 @@ namespace Ostap
                const double g0    = 0     ) ; // the constant width for "other" decays
       /// copy constructor 
       Flatte ( const Flatte&  right ) = default ;
-      /// destructor
-      virtual ~Flatte () ;
+      /// move constructor 
+      Flatte (       Flatte&& right ) = default ;
       // ======================================================================
       /// clone it!
       Flatte* clone() const override ;
@@ -1383,25 +1354,25 @@ namespace Ostap
     public:
       // ======================================================================
       /// unique tag
-      virtual std::size_t tag() const ; // unique tag
+      std::size_t tag() const override ; // unique tag
       // ======================================================================
     public:
       // ======================================================================
-      /// coupling coinstant for the main channel 
+      /// coupling constant for the main channel 
       double g1    () const { return m_channels [ 0 ] -> gamma0 () ; }
       /// coupling coinstant for the coupled channel 
       double g2    () const { return m_channels [ 1 ] -> gamma0 () ; }
       /// additional constant width for "extra=channels"
       double gam0  () const { return m_channels [ 2 ] -> gamma0 () ; }
       // ======================================================================
-    public : 
+    public :  /// derived quantities 
       // ======================================================================
-      /// m*g1 
+      /// m  * g1 
       double m0g1  () const { return m0 () * g1 () ; }
-      /// g2/g1 
+      /// g2 / g1 
       double g2og1 () const { return g2 () / g1 () ; }
       // ======================================================================
-    public :
+    public :  /// setters 
       // ======================================================================
       bool setG1   ( const double value ) { return m_channels[0] -> setGamma0 ( value ) ; }
       bool setG2   ( const double value ) { return m_channels[1] -> setGamma0 ( value ) ; }

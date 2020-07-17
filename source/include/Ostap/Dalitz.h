@@ -173,6 +173,8 @@ namespace Ostap
         const double    s2    ) const
       { return 0.5 * ( s3  ( s , s1 , s2 ) - m1sq () -  m3sq () ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} +  m_1^2 \right) \f$
        */
@@ -200,6 +202,8 @@ namespace Ostap
         const double /* s2 */ ) const
       { return 0.5 * ( s - s1 + m3sq () ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
       /** get product of 4-momenta 
        *  \f$ pp_{12} = \frac{1}{2}\left(s + s_{12} - m^2_3\right)\f$
        */
@@ -207,7 +211,7 @@ namespace Ostap
       ( const double    s     ,
         const double    s1    ,
         const double /* s2 */ ) const
-      { return 0.5 * ( s + s1 - m1sq () ) ; }
+      { return 0.5 * ( s + s1 - m3sq () ) ; }
       // ======================================================================
       /** get product of 4-momenta 
        *  \f$ pp_{23} = \frac{1}{2}\left(s + s_{23} - m^2_1\right)\f$
@@ -226,6 +230,80 @@ namespace Ostap
         const double    s1    ,
         const double    s2    ) const
       { return 0.5 * ( s + s3 ( s , s1 , s2 )  - m2sq () ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get product of 4-momenta \f$ p_1p_{12} = m_1^2 +  p_1p_2\f$ 
+       */
+      inline double p1p12 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return m1sq () + p1p2 ( s , s1 , s2 ) ; }
+      // =====================================================================
+      /** get product of 4-momenta \f$ p_1p_{13} = m_1^2 +  p_1p_3\f$ 
+       */
+      inline double p1p13 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return m1sq () + p1p3 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** get product of 4-momenta \f$ p_1p_{23} = p_1p_2 +  p_1p_3\f$ 
+       */
+      inline double p1p23 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p1p2 ( s , s1 , s2 ) + p1p3 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** get product of 4-momenta \f$ p_2p_{12} = p_1p_2 + m^2_2\f$ 
+       */
+      inline double p2p12 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p1p2 ( s , s1 , s2 ) + m2sq () ; }
+      // =====================================================================
+      /** get product of 4-momenta \f$ p_2p_{13} = p_1p_2 + p2p3 \f$ 
+       */
+      inline double p2p13 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p1p2 ( s , s1 , s2 ) + p2p3 ( s , s1 , s2 )  ; }
+      // =====================================================================
+      /** get product of 4-momenta \f$ p_2p_{23} = m^2_2 p_2p_3 \f$ 
+       */
+      inline double p2p23 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return m2sq () + p2p3 ( s , s1 , s2 )  ; }
+      // =====================================================================      
+      /** get product of 4-momenta \f$ p_3p_{12} = p_1p_3 + p2p3 \f$ 
+       */
+      inline double p3p12 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p1p3 ( s , s1 , s2 ) + p2p3 ( s , s1 , s2 ) ; }
+      // =====================================================================
+      /** get product of 4-momenta \f$ p_3p_{13} = p_1p_3 + m^2_3 \f$ 
+       */
+      inline double p3p13 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p1p3 ( s , s1 , s2 ) + m3sq () ; }
+      // =====================================================================
+      /** get product of 4-momenta \f$ p_3p_{23} = p_2p_3 + m^2_3 \f$ 
+       */
+      inline double p3p23 
+      ( const double    s     ,
+        const double    s1    ,
+        const double    s2    ) const
+      { return p2p3 ( s , s1 , s2 ) + m3sq () ; }
       // ======================================================================
     public:
       // ======================================================================

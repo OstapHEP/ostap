@@ -83,7 +83,8 @@ class Timer(object):
                     name   = ''                   ,
                     logger = None                 ,
                     format = 'Timing %-18s %.3fs' ,
-                    start  = ''                   ) :        
+                    start  = ''                   ) :
+        
         self.name   = name
         
         if   logger and isinstance ( logger , _logger_t ) :
@@ -94,7 +95,10 @@ class Timer(object):
             self.logger = self.__logger 
 
         self.format        = format
-        self.start_message = start 
+        
+        if    start               : self.start_message = start
+        elif '' == start and name : self.start_message = 'Start  %s' % name
+        else                      : self.start_message = '' 
         
     def __enter__ ( self ) :
         self.start = _timer ()

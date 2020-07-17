@@ -9,6 +9,7 @@
 // ============================================================================
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
+#include "Ostap/Workspace.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -63,11 +64,82 @@ namespace
    */
   const unsigned int s_MAXCALLS2 = 250000 ;
   // ==========================================================================  
+  /** @var local integration workspace  
+   */
+  const Ostap::Math::WorkSpace  s_WS {} ;
+  // ==========================================================================  
 }
 // ============================================================================
 
 // ============================================================================
-// 1D-integration
+// 1D-integration (no workspace)
+// ============================================================================
+
+// ============================================================================
+/*  evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
+ *  \f[ F(s_1,s_2)  = \int_{s_{mim}}^{s_{max}} ds f(s,s_1,s_2) \f]
+ *  @param f3  the fun§ãtion \f$  f(s,s_1,s_2)\f$
+ *  @param s1    value of \f$ s_1\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param smax  upper inntegration limit for  \f$s\f$
+ *  @param d     helper Dalitz-object 
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s
+( Ostap::Math::DalitzIntegrator::function3 f3   ,
+  const double                             s1   ,
+  const double                             s2   ,
+  const double                             smax , 
+  const Ostap::Kinematics::Dalitz0&        d    ) 
+{ return integrate_s ( std::cref ( f3 ) , s1 , s2 , smax , d , s_WS ) ; }
+// ============================================================================
+/*  evaluate integral over \f$s_1\f$ for \f$ f(a,s_1,s_2) \f$
+ *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
+ *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
+ *  @param s     value of \f$ s\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function3 f3 ,
+  const double                             s  ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz0&        d  ) 
+{ return integrate_s1 ( std::cref ( f3 ) , s , s2 , d , s_WS ) ; }
+// ============================================================================
+/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function2 f2 ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz&         d  )
+{ return integrate_s1  ( std::cref  ( f2 ) , s2 , d , s_WS ) ; }
+// ============================================================================
+/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
+ *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
+ *  @param f2    the funсtion \f$  f(s_1,s_2)\f$
+ *  @param s     value of \f$ s \f$
+ *  @param s2    value of \f$ s_2\f$
+ *  @param d     helper Dalitz-object 
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_s1
+( Ostap::Math::DalitzIntegrator::function2 f2 ,
+  const double                             s  ,
+  const double                             s2 ,
+  const Ostap::Kinematics::Dalitz0&        d  )
+{ return integrate_s1 ( std::cref ( f2 ) , s , s2 , d , s_WS ) ; }
+// ============================================================================
+
+
+// ============================================================================
+// 1D-integration with workspace 
 // ============================================================================
 
 // ============================================================================
@@ -99,9 +171,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s
   //
   auto ff = std::cref ( f3 ) ;
   function1 fun = [&ff,s1,s2,&d] ( const double s ) -> double
-                  {
-                    return d.inside ( s , s1 , s2 ) ? ff ( s , s1 , s2 ) : 0.0 ;
-                  } ;
+    { return d.inside ( s , s1 , s2 ) ? ff ( s , s1 , s2 ) : 0.0 ; } ;
   
   /// get integrator
   const auto F = s_DI1.make_function ( &fun ) ;
@@ -124,8 +194,10 @@ double Ostap::Math::DalitzIntegrator::integrate_s
   //
   return result ;  
 }
+
+
 // ============================================================================
-/*  evaluate integral over \f$s_ы\f$ for \f$ f(a,s_1,s_2) \f$
+/*  evaluate integral over \f$s_1\f$ for \f$ f(a,s_1,s_2) \f$
  *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
  *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
  *  @param s     value of \f$ s\f$
@@ -145,14 +217,12 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   //
   auto ff = std::cref ( f3 ) ;
   function2 fun = [&ff,s,&d] ( const double s_1  , const double s_2 ) -> double
-                  {
-                    return d.inside ( s , s_1 , s_2 ) ? ff ( s , s_1 , s_2 ) : 0.0 ;
-                  } ;
+    { return d.inside ( s , s_1 , s_2 ) ? ff ( s , s_1 , s_2 ) : 0.0 ; } ;
   //
   return integrate_s1 ( std::cref ( fun ) , s , s2 , d , ws ) ;
 }
 // ============================================================================
-/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
  *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
  *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
  *  @param s2    value of \f$ s_2\f$
@@ -167,7 +237,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   const Ostap::Math::WorkSpace&            ws )
 { return integrate_s1  ( std::cref  ( f2 ) , d.s() , s2  , d  , ws  ) ; }
 // ============================================================================
-/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
+/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
  *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
  *  @param f2    the funсtion \f$  f(s_1,s_2)\f$
  *  @param s     value of \f$ s \f$
@@ -187,9 +257,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   //
   auto ff = std::cref ( f2 ) ;
   function1 fun = [&ff,s,s2,&d] ( const double s1 ) -> double
-                  {
-                    return d.inside ( s , s1 , s2 ) ? ff ( s1 , s2 ) : 0.0 ;
-                   } ;
+    { return d.inside ( s , s1 , s2 ) ? ff ( s1 , s2 ) : 0.0 ; } ;
   
   double s1mn , s1mx ;
   std::tie ( s1mn , s1mx ) = d.s1_minmax_for_s_s2 ( s , s2 ) ;
@@ -218,6 +286,8 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   return result ;
 }
 // ============================================================================
+
+
 
 // ============================================================================
 // 1D-integration with cache 
@@ -777,12 +847,12 @@ double Ostap::Math::DalitzIntegrator::integrate_e2e3
   auto         ff  = std::cref ( f2 )  ;
   const double J   = 0.25 / ( M * M ) ; // jacobian 
   function2    fun = [&d,&ff,J] ( const double s1 , const double s2 ) -> double
-                     {
-                       const double e2 = d.E2 ( s1 , s2 ) ;
-                       const double e3 = d.E3 ( s1 , s2 ) ;
-                       if ( e2 <= 0 || e3 <= 0 || !d.inside ( s1 , s2 ) ) { return 0 ; }
-                       return ff ( e2 , e3 ) * J ;
-                     } ;
+    {
+      const double e2 = d.E2 ( s1 , s2 ) ;
+      const double e3 = d.E3 ( s1 , s2 ) ;
+      if ( e2 <= 0 || e3 <= 0 || !d.inside ( s1 , s2 ) ) { return 0 ; }
+      return ff ( e2 , e3 ) * J ;
+    } ;
   //
   return integrate_s1s2 ( std::cref ( fun ) , M * M , d ) ;
 }

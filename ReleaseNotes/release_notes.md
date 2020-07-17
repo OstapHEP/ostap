@@ -1,7 +1,6 @@
 
 # v1.5.0.0
 
-
 ## New features 
   1. Make`Ostap::Math::Choose` a bit  more  efficient
   1. add `Ostap::Math::choose_array` to get array of binomial coefficients (compile time)
@@ -21,6 +20,7 @@
   1. extend `Ostap::Math::ChebyshevApproximation` (add scale and bias operators)
   1. add `Ostap::Math::Piecewise` function 
   1. Improve `Ostap::Math::ChebyshevApproximation`
+  1. further extend `Ostap::Math::DaltzIntegrator`
   
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
