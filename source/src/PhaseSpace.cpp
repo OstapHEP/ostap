@@ -1126,6 +1126,26 @@ Ostap::Math::S2Q::S2Q
   if ( m1 <= 0 || s_zero ( m1 ) || s_zero ( m_m2_1 ) ) { m_m2_1 = 0 ; }
   if ( m2 <= 0 || s_zero ( m2 ) || s_zero ( m_m2_2 ) ) { m_m2_2 = 0 ; }
 }
+// ============================================================================
+Ostap::Math::Q2M::Q2M 
+( const double m1 , 
+  const double m2 )
+  : m_m2_1 ( m1 * m1 )
+  , m_m2_2 ( m2 * m2 )
+{
+  if ( m1 <= 0 || s_zero ( m1 ) || s_zero ( m_m2_1 ) ) { m_m2_1 = 0 ; }
+  if ( m2 <= 0 || s_zero ( m2 ) || s_zero ( m_m2_2 ) ) { m_m2_2 = 0 ; }
+}
+// ============================================================================
+Ostap::Math::Q2S::Q2S 
+( const double m1 , 
+  const double m2 )
+  : m_m2_1 ( m1 * m1 )
+  , m_m2_2 ( m2 * m2 )
+{
+  if ( m1 <= 0 || s_zero ( m1 ) || s_zero ( m_m2_1 ) ) { m_m2_1 = 0 ; }
+  if ( m2 <= 0 || s_zero ( m2 ) || s_zero ( m_m2_2 ) ) { m_m2_2 = 0 ; }
+}
 
 
 

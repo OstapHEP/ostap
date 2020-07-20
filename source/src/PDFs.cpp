@@ -45,6 +45,72 @@ namespace
 }
 #endif
 // ============================================================================
+//  Shape1D
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Shape1D::Shape1D
+( const Ostap::Models::Shape1D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name ) 
+  , m_x        ( "x"  , this , right.m_x ) 
+  , m_function ( right.m_function ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Shape1D*
+Ostap::Models::Shape1D::clone ( const char* name ) const 
+{ return new Ostap::Models::Shape1D(*this,name) ; }
+// ============================================================================
+//  Shape2D
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Shape2D::Shape2D
+( const Ostap::Models::Shape2D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name ) 
+  , m_x        ( "x"  , this , right.m_x ) 
+  , m_y        ( "y"  , this , right.m_y ) 
+  , m_function ( right.m_function ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Shape2D*
+Ostap::Models::Shape2D::clone ( const char* name ) const 
+{ return new Ostap::Models::Shape2D(*this,name) ; }
+// ============================================================================
+//  Shape3D
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Shape3D::Shape3D
+( const Ostap::Models::Shape3D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name ) 
+  , m_x        ( "x"  , this , right.m_x ) 
+  , m_y        ( "y"  , this , right.m_y ) 
+  , m_z        ( "z"  , this , right.m_z ) 
+  , m_function ( right.m_function ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Shape3D*
+Ostap::Models::Shape3D::clone ( const char* name ) const 
+{ return new Ostap::Models::Shape3D(*this,name) ; }
+// ============================================================================
+
+
+
+
+
+
+
+
+// ============================================================================
 // constructor from all parameters 
 // ============================================================================
 Ostap::Models::BreitWigner::BreitWigner 
@@ -7953,6 +8019,9 @@ Ostap::Models::Uniform::evaluateBatch
 
 
 // ============================================================================
+ClassImp(Ostap::Models::Shape1D            ) 
+ClassImp(Ostap::Models::Shape2D            ) 
+ClassImp(Ostap::Models::Shape3D            ) 
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 

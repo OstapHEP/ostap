@@ -5975,6 +5975,211 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class Shape1D
+     *  simple generic PDF
+     */
+    class Shape1D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::Shape1D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+        Shape1D ( const char*  name  , 
+                  const char*  title , 
+                  RooAbsReal&  x     ,
+                  FUNCTION     f     )
+        : RooAbsPdf  (  name ,  title ) 
+        , m_x        ( "x"   , "Variable" , this , x ) 
+        , m_function ( f ) 
+      {}
+      /// copy constructor 
+      Shape1D ( const Shape1D& right , const char* name = nullptr ) ;
+      /// clone method
+      Shape1D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+        static inline Shape1D 
+        create
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&        x     ,
+          FUNCTION           f     ) 
+      { return Shape1D  ( name.c_str () , title.c_str () , x , f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override
+      { const double x = m_x ; return std::max ( m_function ( x ) , 0.0 ) ; ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x ) const 
+      { return std::max ( m_function ( x ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// variable 
+      RooRealProxy                   m_x        ; // variable 
+      /// the function itself 
+      std::function<double(double)>  m_function ; // function 
+      // ======================================================================      
+    } ;    
+    // ========================================================================
+    /** @class Shape2D
+     *  simple generic PDF
+     */
+    class Shape2D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::Shape2D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+      Shape2D ( const char*  name  , 
+                const char*  title , 
+                RooAbsReal&  x     ,
+                RooAbsReal&  y     ,
+                FUNCTION     f     )
+        : RooAbsPdf  (  name ,  title ) 
+        , m_x        ( "x"   , "x-variable" , this , x ) 
+        , m_y        ( "y"   , "y-variable" , this , y ) 
+        , m_function ( f ) 
+      {}
+      /// copy constructor 
+      Shape2D ( const Shape2D& right , const char* name = nullptr ) ;
+      /// clone method
+      Shape2D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+      static inline Shape2D 
+      create
+      ( const char*  name  , 
+        const char*  title , 
+        RooAbsReal&  x     ,
+        RooAbsReal&  y     ,
+        FUNCTION     f     ) { return Shape2D ( name , title , x , y , f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override
+      { 
+        const double x = m_x ; 
+        const double y = m_y ; 
+        return std::max ( m_function ( x , y ) , 0.0 ) ; 
+      }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x , 
+                     const double y ) const 
+      { return std::max ( m_function ( x , y ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// x-variable 
+      RooRealProxy                          m_x        ; // x-variable 
+      /// y-variable 
+      RooRealProxy                          m_y        ; // y-variable 
+      /// the function itself 
+      std::function<double(double,double)>  m_function ; // function 
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Shape3D
+     *  simple generic PDF
+     */
+    class Shape3D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::Shape3D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+      Shape3D ( const char*  name  , 
+                const char*  title , 
+                RooAbsReal&  x     ,
+                RooAbsReal&  y     ,
+                RooAbsReal&  z     ,
+                FUNCTION     f     )
+        : RooAbsPdf  (  name ,  title ) 
+        , m_x        ( "x"   , "x-variable" , this , x ) 
+        , m_y        ( "y"   , "y-variable" , this , y ) 
+        , m_z        ( "z"   , "z-variable" , this , z ) 
+        , m_function ( f ) 
+      {}
+      /// copy constructor 
+      Shape3D ( const Shape3D& right , const char* name = nullptr ) ;
+      /// clone method
+      Shape3D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION> 
+      static inline Shape3D 
+      create
+      ( const char*  name  , 
+        const char*  title , 
+        RooAbsReal&  x     ,
+        RooAbsReal&  y     ,
+        RooAbsReal&  z     ,
+        FUNCTION     f     ) { return Shape3D ( name , title , x , y , z , f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override
+      { 
+        const double x = m_x ; 
+        const double y = m_y ; 
+        const double z = m_z ; 
+        return std::max ( m_function ( x , y , z ) , 0.0 ) ; 
+      }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x , 
+                     const double y , 
+                     const double z ) const 
+      { return std::max ( m_function ( x , y , z ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// x-variable 
+      RooRealProxy                          m_x        ; // x-variable 
+      /// y-variable 
+      RooRealProxy                          m_y        ; // y-variable 
+      /// z-variable 
+      RooRealProxy                          m_z        ; // z-variable 
+      /// the function itself 
+      std::function<double(double,double,double)>  m_function ; // function 
+      // ======================================================================      
+    } ;
+    
+        
+    // ========================================================================
+
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
 } //                                                  end of namespace Analysis

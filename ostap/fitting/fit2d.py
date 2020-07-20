@@ -22,6 +22,7 @@ __all__     = (
     'Model2D'       , ## helper class to construct 2D-models. 
     'Sum2D'         , ## non-extended sum of two PDFs
     'H2D_pdf'       , ## convertor of 1D-histo to RooDataPdf
+    'Shape2D_pdf'   , ## simple PDF from C++ shape     
     ## 
     )
 # =============================================================================
@@ -1232,6 +1233,48 @@ class Model2D(PDF2) :
         """``y-model'' y-component of Model(x)*Model(y) PDF"""
         return self.__ymodel
     
+# =============================================================================
+## Generic 2D-shape from C++ callable
+#  @see Ostap::Models:Shape2D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape2D_pdf(PDF) :
+    """ Generic 2D-shape from C++ callable
+    - see Ostap::Models:Shape2D
+    """
+    
+    def __init__ ( self , name , shape , xvar , yvar ) :
+
+        ##  iniialize the base 
+        PDF2.__init__ ( self , name , xvar , yvar ) 
+
+        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo2D ( shape )
+            
+        self.__shape = shape
+            
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape2D.create  (
+            "s2D_%s"      % self.name , 
+            "shape2D(%s)" % self.name ,
+            self.xvar                 ,
+            self.yvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+ 
 
 # =============================================================================
 ## simple convertor of 2D-histogram into PDF
@@ -1246,12 +1289,16 @@ class H2D_pdf(H2D_dset,PDF2) :
                    xvar    = None  , 
                    yvar    = None  ,
                    density = False ,
+                   order   = 0     , ## interpolation order 
                    silent  = False ) :
         
         H2D_dset.__init__ ( self , histo , xvar , yvar , density , silent )
         PDF2    .__init__ ( self , name  , self.xaxis , self.yaxis ) 
         
         self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar )
+
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
         
         #
         ## finally create PDF :
@@ -1261,7 +1308,8 @@ class H2D_pdf(H2D_dset,PDF2) :
                 'hpdf_%s'            % name ,
                 'Histo2PDF(%s/%s/%s)' % ( name , self.histo.GetName() , self.histo.GetTitle() ) , 
                 self.__vset , 
-                self.dset   )
+                self.dset   ,
+                order       )
             
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
@@ -1274,7 +1322,18 @@ class H2D_pdf(H2D_dset,PDF2) :
             'yvar'    : self.yvar    , 
             'density' : self.density , 
             'silent'  : self.silent  ,             
+            'order'   : self.order   ,             
             }
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
 
 
 # =============================================================================

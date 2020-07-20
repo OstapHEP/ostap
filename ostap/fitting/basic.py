@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -24,6 +25,7 @@ __all__     = (
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
     'Sum1D'         , ## wrapper for RooAddPdf 
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
+    'Shape1D_pdf'   , ## simple PDF from C++ shape 
     'make_pdf'      , ## helper function to make PDF 
     ##
     )
@@ -2795,7 +2797,46 @@ def make_pdf ( pdf , args , name = '' ) :
     
     raise TypeError ( "Invalid length of arguments %s " % num ) 
 
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::Models:Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_pdf(PDF) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::Models:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar ) :
 
+        ##  iniialize the base 
+        PDF.__init__ ( self , name , xvar ) 
+        
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo1D ( shape )
+
+        self.__shape = shape
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape1D.create  (
+            "s1D_%s"      % self.name , 
+            "shape1D(%s)" % self.name ,
+            self.xvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+            
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -2808,11 +2849,15 @@ class H1D_pdf(H1D_dset,PDF) :
                    histo           ,
                    xvar    = None  ,
                    density = False ,
+                   order   = 0     , ## interpolation order 
                    silent  = False ) :
         
         H1D_dset.__init__ ( self , histo , xvar , density , silent )
         PDF     .__init__ ( self , name  , self.xaxis ) 
-        
+
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
         with roo_silent ( silent ) : 
             #
             ## finally create PDF :
@@ -2821,19 +2866,31 @@ class H1D_pdf(H1D_dset,PDF) :
                 'hpdf_%s'             % name ,
                 'Histo1PDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
                 self.__vset , 
-                self.dset   )
+                self.dset   ,
+                order       )
             
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
-
+        
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
             'histo'   : self.histo   , 
             'xvar'    : self.xvar    , 
             'density' : self.density , 
-            'silent'  : self.silent  ,             
+            'silent'  : self.silent  ,
+            'order'   : self.order   ,
             }
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
         
 # =============================================================================
 ## @class Fit1D

@@ -865,7 +865,6 @@ namespace Ostap
     /** @class Q2M 
      *  \f$ q \rightarrow m \f$ transformation
      *  @see Ostap::Math::PhaseSpace2::q
-     *  @see Ostap::Math::PhaseSpace2::q_q
      */
     class Q2M  
     {
@@ -878,6 +877,35 @@ namespace Ostap
       { 
         const double q2 = q <= 0 ? 0.0 : q * q ;
         return std::sqrt ( m_m2_1 + q2 )  + std::sqrt ( m_m2_2 + q2 ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Q2S 
+     *  \f$ q \rightarrow s \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     */
+    class Q2S  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      Q2S ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double q ) const 
+      { 
+        const double q2   = q <= 0 ? 0.0 : q * q ;
+        const double e2_1 = m_m2_1 + q2 ;
+        const double e2_2 = m_m2_2 + q2 ;
+        //
+        return e2_1 + e2_2 + 2 * std::sqrt ( e2_1 * e2_2 ) ;
       }
       // ======================================================================
     private:

@@ -85,9 +85,5 @@
       <field name  = "m_formula" />      
     </class>
 
-    <class name    = "Ostap::Decays::VVS">
-      <field name  = "m_resonance"/>      
-    </class>
-
   </exclusion>  
 </lcgdict>

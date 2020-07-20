@@ -21,6 +21,7 @@
   1. add `Ostap::Math::Piecewise` function 
   1. Improve `Ostap::Math::ChebyshevApproximation`
   1. further extend `Ostap::Math::DaltzIntegrator`
+  1. extend generic functions, add generic PDFs 
   
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`

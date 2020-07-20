@@ -165,8 +165,8 @@ namespace Ostap
       // ======================================================================
     }; //    
     // ========================================================================
-    /** @class TransformVar 
-     *  Transformed variable 
+    /** @class FunOneVar 
+     *  Class for tranformation of variables 
      */
     class FunOneVar : public OneVar  
     {
@@ -175,14 +175,35 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor 
+      /** create the tranformation variable
+       *  \f$ z = f(x) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
+      template <class FUNCTION> 
+      FunOneVar ( const std::string& name  , 
+                  const std::string& title , 
+                  FUNCTION           fun   , 
+                  RooAbsReal&        x     )
+        : OneVar ( name , title , x )
+        , m_fun  ( fun ) 
+      {}
+      // =====================================================================
+      /** create the tranformation variable
+       *  \f$ z = f(x) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
       template <class FUNCTION> 
       FunOneVar ( FUNCTION    fun               , 
-                  RooAbsReal& var               ,                   
+                  RooAbsReal& x                 ,                   
                   const std::string& name  = "" , 
                   const std::string& title = "" )
-        : OneVar ( name , title , var )
-        , m_fun  ( fun ) 
+        : FunOneVar ( name ,   title , fun , x )
       {}
       /// copy  
       FunOneVar ( const FunOneVar& right        , 
@@ -196,13 +217,20 @@ namespace Ostap
       // ======================================================================
     public :  
       // ======================================================================     
+      /** create the tranformation variable
+       *  \f$ z = f(x) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
       template <class FUNCTION>
       static inline FunOneVar 
       create ( FUNCTION    fun               , 
-               RooAbsReal& var               ,
+               RooAbsReal& x                 ,
                const std::string& name  = "" , 
                const std::string& title = "" )
-      { return FunOneVar ( var , fun , name , title ) ; }
+      { return FunOneVar ( fun , x , name , title ) ; }
       // ======================================================================
     public :  
       // ======================================================================     
@@ -255,8 +283,19 @@ namespace Ostap
      */
     class FunTwoVars : public TwoVars 
     {
+      // ========================================================================
+      ClassDef(Ostap::MoreRooFit::FunTwoVars , 1 ) ;  
+      // ========================================================================
     public: 
       // ======================================================================
+      /** create the tranformation variable as function from two variables 
+       *  \f$ z= f(x,y) \f$ 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param y the second variable 
+       */
       template <class FUNCTION>
       FunTwoVars ( const std::string& name  , 
                    const std::string& title , 
@@ -266,7 +305,15 @@ namespace Ostap
         : TwoVars ( name , title , x , y ) 
         , m_fun2  ( fun )
       {}  
-      /// constructor with two variables 
+      // ======================================================================
+      /** create the tranformation variable as function from two variables 
+       *  \f$ z= f(x,y) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param y the second variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
       template <class FUNCTION>
       FunTwoVars ( FUNCTION fun                    , 
                    RooAbsReal&         x           , 
@@ -286,6 +333,14 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /** create the tranformation variable as function from two variables 
+       *  \f$ z = f(x,y) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param y the second variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
       template <class FUNCTION>
       static inline FunTwoVars 
       create ( FUNCTION fun                    , 

@@ -29,6 +29,8 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+    public: // the actual static methods to perform the integration 
+      // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
        *  @param f1 the function 

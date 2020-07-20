@@ -30,29 +30,32 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.transform_pdf' 
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
 ## @class TrPDF
-#  PDF of the tranformed variable.
-#  - gaussian in log10 scale:
+#  PDF of the transformed variable.
+
+#  - e.g. gaussian in log10 scale:
 #  @code
 #  
 #  x  = ROOT.RooRealVar ( 'x'  ,''        ,1,100000 ) ## original/old variable
 #  lx = ROOT.RooRealVar ( 'lx' ,'log10(x)',0,5      ) ## new_variable
 #  LX = Fun1D( lx , lx )
-#  NX = 10 ** LX   ## old variable as function of new variable 
+#  NX = 10 ** LX   ## old variable as a function of new variable 
 #
 #  ## PDF as function of old variable:
 #  g1 = Gauss_pdf ( 'G1' , xvar = x , mean = 10000 , sigma = 10000 )
 #
-#  ## PDF as functionn of new variable 
+#  ## PDF as function of new variable 
 #  g2 = TrPDF ( pdf = g1, new_var = NX )
 #  @endcode
-#  Optinally the absolute value of th ejacobina can b specified:
+# 
+#  Optionally the absolute value of the jacobian can be specified:
 #  @code
 #  J = math.log(10) * ( 10**LX)
-#  ## PDF as functionn of new variable 
+#  ## PDF as function of new variable 
 #  g2 = TrPDF ( pdf = g1, new_var = NX , jacob = J )
 #  @endcode
 class TrPDF(PDF) :
-    """ PDF of the tranformed variable.
+    """ PDF of the transformed variable.
+    
     - e.g. gaussian in log10 scale:
     >>> x  = ROOT.RooRealVar ( 'x'  ,''        ,1,100000 ) ## original/old variable
     >>> lx = ROOT.RooRealVar ( 'lx' ,'log10(x)',0,5      ) ## new_variable
@@ -60,17 +63,18 @@ class TrPDF(PDF) :
     >>> NX = 10 ** LX                      ## old variable as function of new variable
     - PDF as function of old variable:
     >>> g1 = Gauss_pdf ( 'G1' , xvar = x , mean = 10000 , sigma = 10000 )
-    - PDF as functionn of new variable 
+    - PDF as function of new variable 
     >>> g2 = TrPDF ( pdf = g1, new_var = NX )
-    Optinally the absolute value of th ejacobina can b specified:
+    
+    Optionally the absolute value of the jacobian can be specified:
     >>> J = math.log(10) * ( 10**LX) 
     >>> g2 = TrPDF ( pdf = g1, new_var = NX , jacob = J )
     """
-        
+    
     def __init__ ( self         ,
-                   pdf          ,   ## template PDF of "old" variab;e  
-                   new_var      ,   ## old varibale as fnuction of new varibale 
-                   jacob = None ,   ## absolute value fo Jacobian: |d(old)/d(new)| 
+                   pdf          ,   ## template PDF of "old" variabe  
+                   new_var      ,   ## old variable as function of a new variable
+                   jacob = None ,   ## absolute value of the Jacobian: |d(old)/d(new)|
                    name  = ''   ) : ## proposed name   
         
         assert pdf     and isinstance ( pdf     , PDF  ) , 'Invalid PDF type %s'     % type ( pdf     )
@@ -83,9 +87,9 @@ class TrPDF(PDF) :
         
         if not jacob : jacob = abs ( new_var.dFdX () )
 
-        assert isinstance ( jacob , FUNC ) , 'Invalid Jacobian %s' % type ( nvar )
+        assert isinstance ( jacob , FUNC ) , 'Invalid Jacobian %s' % type ( jacob )
         if not xvar in jacob :
-            self.warning('Jacobian has does not depend on xvar!')  
+            self.warning ( 'Jacobian has does not depend on xvar!')  
 
         self.__jacob   = jacob
         self.__new_var = new_var 
@@ -93,13 +97,13 @@ class TrPDF(PDF) :
         
         self.__clo_pdf = pdf.clone ( xvar = new_var.fun )
 
-        ## new PDF as function
+        ## new PDF as a function
         self.__new_fun = var_mul ( jacob.fun  , self.__clo_pdf.pdf )
 
         from ostap.fitting.basic import make_pdf
         self.__new_pdf = make_pdf ( self.__new_fun , [ xvar ] , self.name + '_' )
         
-        ##  finally the new PDF:
+        ## finally the new PDF:
         self.pdf  = self.__new_pdf.pdf
         
         self.config = {
@@ -115,7 +119,7 @@ class TrPDF(PDF) :
         
     @property
     def orig_pdf ( self ) :
-        """``orig_pdf'': original,no-transformed PDF"""
+        """``orig_pdf'': original, not-transformed PDF"""
         return self.__ori_pdf
 
     @property
@@ -130,10 +134,10 @@ class TrPDF(PDF) :
 
     @property
     def jacob( self ) :
-        """``jacob''  : absolute value of the Jacobian |d(nvar)/dX| """
+        """``jacob''  : absolute value of the Jacobian |d(old)/d(new)| """
         return self.__jacob 
-        
 
+        
 # =============================================================================
 if '__main__' == __name__ :
     

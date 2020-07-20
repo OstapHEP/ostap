@@ -23,6 +23,7 @@ __all__     = (
     'Model3D'       , ## trivial class to build 3D model from 1D-components 
     'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
+    'Shape3D_pdf'   , ## simple PDF from C++ shape     
     )
 # =============================================================================
 import ROOT, random
@@ -1302,7 +1303,54 @@ class Model3D(PDF3) :
     def zmodel ( self ) :
         """``z-model'' z-component of M(x)*M(y)*M(z) PDF"""
         return self.__zmodel
+
+
+
+# =============================================================================
+## Generic 2D-shape from C++ callable
+#  @see Ostap::Models:Shape3D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape3D_pdf(PDF) :
+    """ Generic 3D-shape from C++ callable
+    - see Ostap::Models:Shape3D
+    """
     
+    def __init__ ( self , name , shape , xvar , yvar , zvar ) :
+
+        ##  iniialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+
+        if isinstance ( shape , ROOT.TH3 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo3D ( shape )
+            
+        self.__shape = shape
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape3D.create  (
+            "s3D_%s"      % self.name , 
+            "shape3D(%s)" % self.name ,
+            self.xvar                 ,
+            self.yvar                 ,
+            self.zvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'zvar'    : self.yvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+ 
+  
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -1317,6 +1365,7 @@ class H3D_pdf(H3D_dset,PDF3) :
                    yvar    = None  ,
                    zvar    = None  ,
                    density = False ,
+                   order   = 0     , 
                    silent  = False ) :
         
         H3D_dset.__init__ ( self , histo3 ,      xvar  ,      yvar  ,      zvar  ,  density , silent )
@@ -1324,7 +1373,10 @@ class H3D_pdf(H3D_dset,PDF3) :
         
         self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar , self.zvar )
         
-        #
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+        
+       #
         ## finally create PDF :
         #
         with roo_silent ( silent ) : 
@@ -1332,7 +1384,8 @@ class H3D_pdf(H3D_dset,PDF3) :
                 'hpdf_%s'            % name ,
                 'Histo3PDF(%s/%s/%s)' % ( name , histo3.GetName() , histo2.GetTitle() ) , 
                 self.__vset  , 
-                self.dset    )
+                self.dset    ,
+                order        )
 
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
@@ -1346,8 +1399,19 @@ class H3D_pdf(H3D_dset,PDF3) :
             'zvar'    : self.zvar    , 
             'density' : self.density , 
             'silent'  : self.silent  ,             
+            'order'   : self.order   ,             
             }
-             
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
+      
 # =============================================================================
 # Compound models for 3D-fit
 # =============================================================================

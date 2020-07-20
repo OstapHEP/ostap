@@ -59,11 +59,11 @@ class Product1D_pdf(PDF) :
 
         self.__pdf1 = None 
         self.__pdf2 = None
-        
+
         if isinstance ( pdf1 , PDF ) :
             self.__pdf1 = pdf1
             if xvar and not ( xvar is pdf1.xvar ) :
-                self.error ("Mismatch in ``xvar''-observable") 
+                self.error ("Mismatch in ``xvar''-observable (1) %s/%s" % ( xvar , pdf1.xvar ) ) 
             elif not xvar : xvar = pdf1.xvar 
         elif isinstance ( pdf1 , ROOT.RooAbsPdf ) and xvar :
             self.__pdf1 = Generic1D_pdf ( pdf1 , xvar )
@@ -75,7 +75,7 @@ class Product1D_pdf(PDF) :
         if isinstance ( pdf2 , PDF ) :
             self.__pdf2 = pdf2
             if xvar and not ( xvar is pdf2.xvar ) :
-                self.error ("Mismatch in ``xvar''-observable") 
+                self.error ("Mismatch in ``xvar''-observable (2) %s/%s" % ( xvar , pdf2.xvar ) ) 
             elif not xvar : xvar = pdf2.xvar 
         elif isinstance ( pdf2 , ROOT.RooAbsPdf ) and xvar :
             self.__pdf2 = Generic1D_pdf ( pdf2 , xvar )
@@ -124,6 +124,21 @@ class Product1D_pdf(PDF) :
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
         return self.__pdf2
+
+    ## redefine the clone 
+    def clone ( self , **kwargs ) :
+        """ Redefine the clone
+        """
+        
+        pdf1 = kwargs.pop ( 'pdf1' , None )
+        pdf2 = kwargs.pop ( 'pdf2' , None )
+        
+        if not pdf1 : pdf1 = self.pdf1.clone ( **kwargs )
+        if not pdf2 : pdf2 = self.pdf2.clone ( **kwargs )
+
+        return FUNC.clone ( self , pdf1 = pdf1 , pdf2 = pdf2 , **kwargs ) 
+    
+        
 
 models.append ( Product1D_pdf ) 
 # =============================================================================

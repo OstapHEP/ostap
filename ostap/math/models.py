@@ -918,7 +918,8 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Functions.PyCallable        , 
                Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
-               D.Derivative                      , 
+               D.Derivative                      ,
+               Ostap.Math.Histo1D                , 
                ) :
     model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D
@@ -1082,7 +1083,8 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.ExpoPS2DPol         ,
                Ostap.Math.Expo2DPol           ,
                Ostap.Math.Expo2DPolSym        ,
-               Ostap.Math.LegendreSum2        ) :
+               Ostap.Math.LegendreSum2        ,
+               Ostap.Math.Histo2D             ) :
     
     model . tf2  =  tf2 
     model . tf   =  tf2
@@ -1109,7 +1111,8 @@ for model in ( Ostap.Math.Bernstein3D    ,
                Ostap.Math.Positive3D     ,
                Ostap.Math.Positive3DSym  ,
                Ostap.Math.Positive3DMix  ,
-               Ostap.Math.LegendreSum3   ) :
+               Ostap.Math.LegendreSum3   ,
+               Ostap.Math.Histo3D        ) :
     
     model . tf3  =  tf3 
     model . tf   =  tf3 
