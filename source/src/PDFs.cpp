@@ -306,9 +306,9 @@ Ostap::Models::BreitWignerMC::BreitWignerMC
   const Ostap::Math::BreitWignerMC&           bwmc   ) 
   : BreitWigner ( name , title , x , mass , widths , bwmc ) 
 {
-  Ostap::Assert ( widths.size() == bwmc.nChannels()    , 
-                  "Invalid number of width-parameters" , 
-                  "Ostap::Models::BreitWignerMC"       ) ;
+  Ostap::Assert ( ::size ( widths )  == bwmc.nChannels() , 
+                  "Invalid number of width-parameters"   , 
+                  "Ostap::Models::BreitWignerMC"         ) ;
 }
 // ============================================================================
 // "copy" constructor
