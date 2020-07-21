@@ -35,6 +35,10 @@ else :
 # =============================================================================
 def  test_transform () :
     
+    if not 62000 <= ROOT.gROOT.GetVersionInt() :
+        logger.info ("Not for this version of ROOT")
+        return 
+    
     x  = ROOT.RooRealVar('x','',1,100000)
     mean  =  1000
     sigma =  1000 
@@ -60,10 +64,6 @@ def  test_transform () :
     
     r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
     logger.info ( 'Fit x:\%s' % r1.table() ) 
-    
-    if not 62000 <= ROOT.gROOT.GetVersionInt() :
-        logger.warning("Not for this version of ROOT")
-        ## return
     
     lx = dataset.lx
     LX = Fun1D (  lx , lx )
