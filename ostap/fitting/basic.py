@@ -53,7 +53,7 @@ else                       : logger = getLogger ( __name__              )
 # =============================================================================
 ## @var arg_types
 #  list of "good" argument  types 
-arg_types = num_types + ( VE , ROOT, RooAbsReal )
+arg_types = num_types + ( VE , ROOT.RooAbsReal )
 # =============================================================================
 ## are all args of "good" type? 
 def all_args ( *args ) :
