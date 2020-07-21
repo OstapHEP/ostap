@@ -48,6 +48,9 @@ namespace Ostap
       ( const Ostap::Kinematics::Dalitz0& dalitz   , 
         const std::size_t                 size = 0 ) ;
       // ======================================================================
+      /// get the Dalitz configuration 
+      const Ostap::Kinematics::Dalitz0& dalitz () const { return m_dalitz ; }
+      // ======================================================================
     public:
       // ======================================================================
       /** evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
@@ -84,7 +87,6 @@ namespace Ostap
        *  \int_{s_1^{min}}^{s_1^{max}} ds_1 
        *  \int_{s_2^{min}(s_1)}^{s_2^{max}(s_1)} ds_2 f(s,s_1,s_2)  \f] 
        *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
-       *  @param d  helper Dalitz-object 
        *  @return integral over Dalitz plot
        */
       template <class FUNCTION23> 
@@ -97,7 +99,7 @@ namespace Ostap
        *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
        *  @param f3 the function \f$  f(s,s_1,s_2) \f$
        *  @param s2 fixed value of s2 
-       *  @param smax upper-edge fo inntegrato ove \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
@@ -106,7 +108,60 @@ namespace Ostap
       ( FUNCTION3    f3   ,
         const double s2   ,
         const double smax ) const 
-      { return integrate_s1s2 ( std::cref ( f3 ) , s2 , smax , m_dalitz ) ; }
+      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smax , m_dalitz ) ; }
+      // ===================================================================== 
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smin lowe-edge for integration over \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      template <class FUNCTION3> 
+      double integrate_ss1
+      ( FUNCTION3    f3   ,
+        const double s2   ,
+        const double smin ,
+        const double smax ) const 
+      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , m_dalitz ) ; }
+      // ======================================================================
+    public: // with cache 
+      // ======================================================================
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      template <class FUNCTION3> 
+      double integrate_ss1
+      ( const std::size_t tag  , 
+        FUNCTION3         f3   ,
+        const double      s2   ,
+        const double      smax ) const 
+      { return integrate_ss1 ( tag , std::cref ( f3 ) , s2 , smax , m_dalitz ) ; }
+      // ===================================================================== 
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smin lowe-edge for integration over \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      template <class FUNCTION3> 
+      double integrate_ss1
+      ( const std::size_t tag , 
+        FUNCTION3         f3   ,
+        const double      s2   ,
+        const double      smin ,
+        const double      smax ) const 
+      { return integrate_ss1 ( tag , std::cref ( f3 ) , s2 , smin , smax , m_dalitz ) ; }
       // ======================================================================
     public : // 1D integrations  (with workspace) 
       // ======================================================================
@@ -115,7 +170,7 @@ namespace Ostap
        *  @param f3  the fun§ãtion \f$  f(s,s_1,s_2)\f$
        *  @param s1    value of \f$ s_1\f$
        *  @param s2    value of \f$ s_2\f$
-       *  @param smax  upper inntegration limit for  \f$s\f$
+       *  @param smax  upper integration limit for  \f$s\f$
        *  @param d     helper Dalitz-object 
        *  @param ws    integration workspace  
        */
@@ -255,6 +310,22 @@ namespace Ostap
         const double                      smax ,
         const Ostap::Kinematics::Dalitz0& d    ) ;
       // =======================================================================
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smin lower-edge for integration over \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      static double integrate_ss1
+      ( function3                         f3   ,
+        const double                      s2   ,
+        const double                      smin ,
+        const double                      smax ,
+        const Ostap::Kinematics::Dalitz0& d    ) ;
+      // =======================================================================
     public: // integrations with cache
       // =======================================================================
       /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
@@ -293,7 +364,7 @@ namespace Ostap
        *  @param tag tag that indicate the uniquness of function
        *  @param f3 the function \f$  f(s,s_1,s_2) \f$
        *  @param s2 fixed value of s2 
-       *  @param smax upper-edge fo inntegrato ove \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
@@ -301,6 +372,24 @@ namespace Ostap
       ( const std::size_t                tag ,
         function3                         f3   ,
         const double                      s2   ,
+        const double                      smax ,
+        const Ostap::Kinematics::Dalitz0& d    ) ;
+      // =======================================================================
+      /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+       *  @param tag tag that indicate the uniquness of function
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s2 fixed value of s2 
+       *  @param smin lower-edge for integration over \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      static double integrate_ss1
+      ( const std::size_t                tag ,
+        function3                         f3   ,
+        const double                      s2   ,
+        const double                      smin ,
         const double                      smax ,
         const Ostap::Kinematics::Dalitz0& d    ) ;
       // =======================================================================

@@ -456,28 +456,39 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
   //
   return result / f_norm ;
 }
+
+
 // ============================================================================
 /* evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
  *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
  *  @param f3 the function \f$  f(s,s_1,s_2) \f$
  *  @param s2 fixed value of s2 
+ *  @param smin lower-edge for integration over \f$ s \f$
  *  @param smax upper-edge for integration over \f$ s \f$
  *  @param d  helper Dalitz-object 
  *  @return integral over \f$ s, s_1\f$
  */
 // ============================================================================
 double Ostap::Math::DalitzIntegrator::integrate_ss1
-( function3                         f3   ,
-  const double                      s2   ,
-  const double                      smax ,
-  const Ostap::Kinematics::Dalitz0& d    )
+( Ostap::Math::DalitzIntegrator::function3 f3   ,
+  const double                             s2   ,
+  const double                             smin ,
+  const double                             smax ,
+  const Ostap::Kinematics::Dalitz0&        d    )
 {
+  //
+  if      ( s_equal ( smax ,  smin ) ) { return 0 ; }
+  else if (           smax < smin    ) 
+  { return -1 * integrate_ss1 ( std::cref ( f3 ) , s2 , smax , smin , d ) ; }
+  //
   if ( s2   <= d.s1_min () ||
        smax <= d.sqsumm () || 
        s2   >= d.s2_max ( smax ) ) { return 0 ; }
   //
-  const double smin = d.sqsumm() + s2 - d.s2_min() ;
-  if ( smax  <= smin ) { return 0 ; }
+  const double mins = d.sqsumm() + s2 - d.s2_min () ;
+  if      ( smax <= mins ) { return 0 ; }
+  else if ( smin <  mins )
+  { return integrate_ss1 ( std::cref ( f3 ) , s2 , mins , smax , d ) ; }
   //
   const double y1_min = smin ;
   const double y1_max = smax ;
@@ -525,6 +536,31 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
     ( &F , s_MAXCALLS1 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result / f_norm ;
+}
+// ============================================================================
+/* evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+ *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+ *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+ *  @param s2 fixed value of s2 
+ *  @param smax upper-edge for integration over \f$ s \f$
+ *  @param d  helper Dalitz-object 
+ *  @return integral over \f$ s, s_1\f$
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_ss1
+( Ostap::Math::DalitzIntegrator::function3 f3   ,
+  const double                             s2   ,
+  const double                             smax ,
+  const Ostap::Kinematics::Dalitz0&        d    )
+{
+  if ( s2   <= d.s1_min () ||
+       smax <= d.sqsumm () || 
+       s2   >= d.s2_max ( smax ) ) { return 0 ; }
+  //
+  const double smin = d.sqsumm() + s2 - d.s2_min() ;
+  if ( smax  <= smin ) { return 0 ; }
+  //
+  return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , d ) ;
 }
 // ============================================================================
 /*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
@@ -618,7 +654,8 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
  *  @param tag tag that indicate theuniquness of function
  *  @param f3 the function \f$  f(s,s_1,s_2) \f$
  *  @param s2 fixed value of s2 
- *  @param smax upper-edge for inntegration over \f$ s \f$
+ *  @param smin upper-edge for integration over \f$ s \f$
+ *  @param smax upper-edge for integration over \f$ s \f$
  *  @param d  helper Dalitz-object 
  *  @return integral over \f$ s, s_1\f$
  */
@@ -627,15 +664,23 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
 ( const std::size_t                 tag ,
   function3                         f3   ,
   const double                      s2   ,
+  const double                      smin ,
   const double                      smax ,
   const Ostap::Kinematics::Dalitz0& d    )
 {
+  //
+  if      ( s_equal ( smax ,  smin ) ) { return 0 ; }
+  else if (           smax < smin    ) 
+  { return -1 * integrate_ss1 ( tag , std::cref ( f3 ) , s2 , smax , smin , d ) ; }
+  //
   if ( s2   <= d.s1_min () ||
        smax <= d.sqsumm () || 
        s2   >= d.s2_max ( smax ) ) { return 0 ; }
   //
-  const double smin = d.sqsumm() + s2  - d.s2_min() ;
-  if ( smax  <= smin ) { return 0 ; }
+  const double mins = d.sqsumm() + s2 - d.s2_min () ;
+  if      ( smax <= mins ) { return 0 ; }
+  else if ( smin <  mins ) 
+  { return integrate_ss1 ( tag , std::cref ( f3 ) , s2 , mins , smax , d ) ; }
   //
   const double y1_min = smin ;
   const double y1_max = smax ;
@@ -684,6 +729,34 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
     ( key , &F , s_MAXCALLS2 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result / f_norm ;
+}
+
+// ============================================================================
+/*  evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
+ *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
+ *  @param tag tag that indicate theuniquness of function
+ *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+ *  @param s2 fixed value of s2 
+ *  @param smax upper-edge for integration over \f$ s \f$
+ *  @param d  helper Dalitz-object 
+ *  @return integral over \f$ s, s_1\f$
+ */
+// ============================================================================
+double Ostap::Math::DalitzIntegrator::integrate_ss1
+( const std::size_t                 tag ,
+  function3                         f3   ,
+  const double                      s2   ,
+  const double                      smax ,
+  const Ostap::Kinematics::Dalitz0& d    )
+{
+  if ( s2   <= d.s1_min () ||
+       smax <= d.sqsumm () || 
+       s2   >= d.s2_max ( smax ) ) { return 0 ; }
+  //
+  const double smin = d.sqsumm() + s2 - d.s2_min() ;
+  if ( smax  <= smin ) { return 0 ; }
+  //
+  return integrate_ss1 ( tag , std::cref ( f3 ) , s2 , smin , smax , d ) ;
 }
 // ============================================================================
 /*  evaluate the integral over \f$e_2\f$ , \f$e_3\f$ variables 
