@@ -26,7 +26,8 @@ __all__     = (
     'Sum1D'         , ## wrapper for RooAddPdf 
     'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
     'Shape1D_pdf'   , ## simple PDF from C++ shape 
-    'make_pdf'      , ## helper function to make PDF 
+    'make_pdf'      , ## helper function to make PDF
+    'all_args'      , ## check that all arguments has correct type 
     ##
     )
 # =============================================================================
@@ -49,6 +50,22 @@ from   ostap.fitting.funbasic  import FUNC
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+## @var arg_types
+#  list of "good" argument  types 
+arg_types = num_types + ( VE , ROOT, RooAbsReal )
+# =============================================================================
+## are all args of "good" type? 
+def all_args ( *args ) :
+    """Are all arguments of ``good'' type?
+    """
+    ## try to find 
+    for a in args :
+        if not isinstance ( a , arg_types ) : return False
+    
+    return True 
+
+    
 # =============================================================================
 ## @class PDF
 #  The helper base class for implementation of various PDF-wrappers 
@@ -3559,6 +3576,7 @@ class Fit1D (PDF) :
     def  fractions ( self ) :
         """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
+
 
 # =============================================================================
 if '__main__' == __name__ :

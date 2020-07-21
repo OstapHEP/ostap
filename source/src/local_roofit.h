@@ -38,7 +38,7 @@ namespace
 #endif
   }
   // ==========================================================================
-  /** copy RooAbsReal from lsy to proxy
+  /** copy RooAbsReal from list to proxy
    *  @param from objects to be copied from this list 
    *  @param to   objects to be copied to this proxy 
    */
@@ -75,7 +75,7 @@ namespace
     //
   }
   // ==========================================================================
-  /// get parameter from Roo
+  /// get parameter from RooListProxy
   inline double get_par ( const unsigned short index , const RooListProxy&  lst ) 
   {
     const RooAbsArg* v    = lst.at ( index ) ;

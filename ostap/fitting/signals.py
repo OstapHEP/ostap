@@ -120,8 +120,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import MASS, PDF, MASSMEAN, CheckMean  
+from   ostap.core.core        import cpp , Ostap, VE  
+from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -3153,7 +3153,9 @@ class BW23L_pdf(MASS) :
         """The Breit-Wigner function itself"""
         return self.__breitwigner
 
-models.append ( BW23L_pdf )                          
+models.append ( BW23L_pdf )
+
+
 # =============================================================================
 ## @class Flatte_pdf
 #  Flatte function
@@ -3196,7 +3198,9 @@ class Flatte_pdf(MASSMEAN) :
                                  mean_name  = 'm0_%s'    % name ,
                                  mean_title = '#m_0(%s)' % name )
                  
-
+        assert all_args ( m0 , m0g1 , g2og1 ) or \
+               all_args ( m0 ,   g1 , g2    ) , 'Invalid combination of arguments!'
+        
         self.__flatte = flatte
             
         self.__gamma0 = self.make_var  ( gamma0                  ,
