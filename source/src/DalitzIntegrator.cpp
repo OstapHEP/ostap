@@ -64,77 +64,21 @@ namespace
    */
   const unsigned int s_MAXCALLS2 = 250000 ;
   // ==========================================================================  
-  /** @var local integration workspace  
-   */
-  const Ostap::Math::WorkSpace  s_WS {} ;
-  // ==========================================================================  
 }
 // ============================================================================
-
-// ============================================================================
-// 1D-integration (no workspace)
-// ============================================================================
-
-// ============================================================================
-/*  evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
- *  \f[ F(s_1,s_2)  = \int_{s_{mim}}^{s_{max}} ds f(s,s_1,s_2) \f]
- *  @param f3  the fun§ãtion \f$  f(s,s_1,s_2)\f$
- *  @param s1    value of \f$ s_1\f$
- *  @param s2    value of \f$ s_2\f$
- *  @param smax  upper inntegration limit for  \f$s\f$
- *  @param d     helper Dalitz-object 
+/*  constructor from Dalitz configurtaion and the integration workspace
+ *  @param dalitz  Dalitz configuration 
+ *  @param size    size of the integrtaion woekjspace 
+ *  @see Ostap::Math::WorkSpace
+ *  @see Ostap::Kinematics::Dalitz0 
  */
 // ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s
-( Ostap::Math::DalitzIntegrator::function3 f3   ,
-  const double                             s1   ,
-  const double                             s2   ,
-  const double                             smax , 
-  const Ostap::Kinematics::Dalitz0&        d    ) 
-{ return integrate_s ( std::cref ( f3 ) , s1 , s2 , smax , d , s_WS ) ; }
-// ============================================================================
-/*  evaluate integral over \f$s_1\f$ for \f$ f(a,s_1,s_2) \f$
- *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
- *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
- *  @param s     value of \f$ s\f$
- *  @param s2    value of \f$ s_2\f$
- *  @param d     helper Dalitz-object 
- */
-// ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1
-( Ostap::Math::DalitzIntegrator::function3 f3 ,
-  const double                             s  ,
-  const double                             s2 ,
-  const Ostap::Kinematics::Dalitz0&        d  ) 
-{ return integrate_s1 ( std::cref ( f3 ) , s , s2 , d , s_WS ) ; }
-// ============================================================================
-/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
- *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
- *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
- *  @param s2    value of \f$ s_2\f$
- *  @param d     helper Dalitz-object 
- */
-// ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1
-( Ostap::Math::DalitzIntegrator::function2 f2 ,
-  const double                             s2 ,
-  const Ostap::Kinematics::Dalitz&         d  )
-{ return integrate_s1  ( std::cref  ( f2 ) , s2 , d , s_WS ) ; }
-// ============================================================================
-/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
- *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
- *  @param f2    the funсtion \f$  f(s_1,s_2)\f$
- *  @param s     value of \f$ s \f$
- *  @param s2    value of \f$ s_2\f$
- *  @param d     helper Dalitz-object 
- */
-// ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1
-( Ostap::Math::DalitzIntegrator::function2 f2 ,
-  const double                             s  ,
-  const double                             s2 ,
-  const Ostap::Kinematics::Dalitz0&        d  )
-{ return integrate_s1 ( std::cref ( f2 ) , s , s2 , d , s_WS ) ; }
+Ostap::Math::DalitzIntegrator::DalitzIntegrator
+( const Ostap::Kinematics::Dalitz0& dalitz , 
+  const std::size_t                 size   )
+  : m_dalitz     ( dalitz ) 
+  , m_workspace  ( size   )
+{}
 // ============================================================================
 
 
@@ -221,21 +165,6 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   //
   return integrate_s1 ( std::cref ( fun ) , s , s2 , d , ws ) ;
 }
-// ============================================================================
-/*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
- *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
- *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
- *  @param s2    value of \f$ s_2\f$
- *  @param d     helper Dalitz-object 
- *  @param ws    integration workspace  
- */
-// ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1
-( Ostap::Math::DalitzIntegrator::function2 f2 ,
-  const double                             s2 ,
-  const Ostap::Kinematics::Dalitz&         d  ,
-  const Ostap::Math::WorkSpace&            ws )
-{ return integrate_s1  ( std::cref  ( f2 ) , d.s() , s2  , d  , ws  ) ; }
 // ============================================================================
 /*  evaluate integral over \f$s_1\f$ for \f$ f(s_1,s_2) \f$
  *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
@@ -356,7 +285,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s
 
 
 // ============================================================================
-/*  evaluate integral over \f$s_ы\f$ for \f$ f(a,s_1,s_2) \f$
+/*  evaluate integral over \f$s_1\f$ for \f$ f(a,s_1,s_2) \f$
  *  \f[ F(s,s_2)  = \int  ds_1 f(s,s_1,s_2) \f]
  *  @param tag tag that indicate the uniquness of function
  *  @param f3  the funсtion \f$  f(s,s_1,s_2)\f$
@@ -384,23 +313,6 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
   //
   return integrate_s1 ( tag , std::cref ( fun ) , s , s2 , d , ws ) ;
 }
-// ============================================================================
-/*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
- *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
- *  @param tag tag that indicate the uniquness of function
- *  @param f2  the funсtion \f$  f(s_1,s_2)\f$
- *  @param s2    value of \f$ s_2\f$
- *  @param d     helper Dalitz-object 
- *  @param ws    integration workspace  
- */
-// ============================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1
-( const std::size_t                        tag ,
-  Ostap::Math::DalitzIntegrator::function2 f2  ,
-  const double                             s2  ,
-  const Ostap::Kinematics::Dalitz&         d   ,
-  const Ostap::Math::WorkSpace&            ws  )
-{ return integrate_s1  ( tag , std::cref  ( f2 ) , d.s() , s2  , d  , ws  ) ; }
 // ============================================================================
 /*  evaluate integral over \f$s_ы\f$ for \f$ f(s_1,s_2) \f$
  *  \f[ F(s_2)  = \int  ds_1 f(s_1,s_2) \f]
@@ -457,29 +369,11 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
 }
 // ============================================================================
 
-
-
-
 // ============================================================================
 // 2D-integration
 // ============================================================================
 
-// ============================================================================
-/*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
- *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) \f] 
- *  @param M the overall mass of the system \f$\sqrt{s} \f$
- *  @param fs the function \f$ f(s, s_1,s_2)\f$ 
- *  @return the integral over dalitz plot
- */
-// ==========================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1s2
-( Ostap::Math::DalitzIntegrator::function3 f3 ,
-  const Ostap::Kinematics::Dalitz&         d  )
-{
-  auto      f1 = std::cref ( f3   ) ;
-  function2 f2 = std::bind ( f1 , d .s() , std::placeholders::_1 , std::placeholders::_2 ) ;
-  return integrate_s1s2 ( std::cref ( f2 ) , d.s() , d  ) ;  
-}
+
 // ============================================================================
 /*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
  *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) \f] 
@@ -631,24 +525,6 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
     ( &F , s_MAXCALLS1 , s_PRECISION , s_PRECISION , s_MESSAGE2 , __FILE__ , __LINE__ ) ;
   //
   return result / f_norm ;
-}
-// ============================================================================
-/*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
- *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) \f] 
- *  @param M the overall mass of the system \f$\sqrt{s} \f$
- *  @param fs the function \f$ f(s, s_1,s_2)\f$ 
- *  @return the integral over dalitz plot
- */
-// ==========================================================================
-double Ostap::Math::DalitzIntegrator::integrate_s1s2
-( const std::size_t                        tag , 
-  Ostap::Math::DalitzIntegrator::function3 f3 ,
-  const Ostap::Kinematics::Dalitz&         d  )
-{
-  auto      f1 = std::cref ( f3   ) ;
-  function2 f2 = std::bind ( f1 , d .s() , std::placeholders::_1 , std::placeholders::_2 ) ;
-  const std::size_t key = std::hash_combine ( tag , d.tag() ) ;
-  return integrate_s1s2 ( key  , std::cref ( f2 ) , d.s() , d  ) ;  
 }
 // ============================================================================
 /*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 

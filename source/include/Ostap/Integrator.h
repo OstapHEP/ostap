@@ -8,14 +8,15 @@
 // ============================================================================
 #include <functional>
 // ============================================================================
+// Ostap
+// ============================================================================
+#include "Ostap/Workspace.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
   namespace Math 
   {
-    // ========================================================================
-    // forward declaration 
-    class WorkSpace ; // forward decalration 
     // ========================================================================
     /** @class Integrator Ostap/Integrator.h 
      *  simple numerical integrator for 1D&2D-cases 
@@ -28,6 +29,59 @@ namespace Ostap
       typedef std::function<double(double,double)> function2 ;
       // ======================================================================
     public:
+      // ======================================================================
+      /// constructor with integrtaion workspace size 
+      Integrator ( const std::size_t size = 0 ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** calculate the integral 
+       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
+       *  @param f1 the function 
+       *  @param xmin lower integration edge 
+       *  @param xmax uppr  integration edge
+       *  @return the value of the integral 
+       */
+      template <class FUNCTION1>
+      double integrate
+      ( FUNCTION1        f1   , 
+        const double     xmin , 
+        const double     xmax ) const
+      { return integrate ( std::cref ( f1 ) , xmin , xmax , m_workspace ) ; }
+      // ======================================================================
+      /** calculate the integral 
+       *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
+       *  @param f2 the function 
+       *  @param y parameter y
+       *  @param xmin lower integration edge in x 
+       *  @param xmax upper integration edge in x 
+       *  @param integration workspace (not used)
+       *  @return the value of the integral 
+       */
+      template <class FUNCTION2>
+      double integrateX
+      ( FUNCTION2        f2   , 
+        const double     y    , 
+        const double     xmin ,
+        const double     xmax ) const 
+      { return integrate ( std::cref ( f2 ) , y , xmin , xmax , m_workspace ) ; }
+      // ======================================================================
+      /** calculate the integral 
+       *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
+       *  @param f2 the function 
+       *  @param x parameter x
+       *  @param ymin lower integration edge in y 
+       *  @param ymax upper integration edge in y 
+       *  @param integration workspace (not used)
+       *  @return the value of the integral 
+       */
+      template <class FUNCTION2>
+      double integrateY
+      ( FUNCTION2        f2   , 
+        const double     x    , 
+        const double     ymin ,
+        const double     ymax ) const 
+      { return integrate ( std::cref ( f2 ) , x , ymin , ymax , m_workspace ) ; }
       // ======================================================================
     public: // the actual static methods to perform the integration 
       // ======================================================================
@@ -106,9 +160,9 @@ namespace Ostap
        */
       static double integrateY
       ( function2        f2   , 
-        const double     y    , 
-        const double     xmin ,
-        const double     xmax ,
+        const double     x    , 
+        const double     ymin ,
+        const double     ymax ,
         const WorkSpace& ws   ) ;
       // ======================================================================
     public: // integration with cache 
@@ -201,6 +255,11 @@ namespace Ostap
         const double      ymin ,
         const double      ymax ,
         const WorkSpace&  ws   ) ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace 
+      Ostap::Math::WorkSpace m_workspace {}  ; // integration workspace 
       // ======================================================================
     };
     // ========================================================================

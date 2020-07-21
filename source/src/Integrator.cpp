@@ -22,6 +22,13 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
 // =============================================================================
+// constructor with integration workspace size 
+// =============================================================================
+Ostap::Math::Integrator::Integrator 
+( const std::size_t size ) 
+  : m_workspace ( size )
+{}
+// =============================================================================
 /*  calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
  *  @param f1 the function 
