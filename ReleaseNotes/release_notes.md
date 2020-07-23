@@ -22,7 +22,10 @@
   1. Improve `Ostap::Math::ChebyshevApproximation`
   1. further extend `Ostap::Math::DaltzIntegrator`
   1. extend generic functions, add generic PDFs 
-  
+  1. add `binnig` functions to create `RooBinning`
+  1. add `ostap.fitting.morphing_pdf` with two PDFs for morphing 
+  1. add test for new morphing PDF 
+ 
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`

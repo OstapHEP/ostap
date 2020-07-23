@@ -45,7 +45,8 @@ from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
                                         fit_status , cov_qual , H1D_dset , get_i  )
-from   ostap.fitting.funbasic  import FUNC 
+from   ostap.fitting.funbasic  import FUNC
+import ostap.histos.histos 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -2643,6 +2644,10 @@ class Generic1D_pdf(PDF) :
         ##
         if not self.special :
             assert isinstance ( pdf  , ROOT.RooAbsPdf ) , "``pdf'' must be ROOT.RooAbsPdf"
+
+        ## Does PDF depends on XVAR ?
+        if not pdf.depends_on ( xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , xvar.name ) ) 
 
         ## PDF itself 
         self.pdf  = pdf

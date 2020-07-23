@@ -178,18 +178,12 @@ class FUNC(XVar) :
         if not self.fun : return False
         ##
         if var and isinstance ( var , ROOT.RooAbsReal ) :
-            params = self.params () 
-            if var in params  : return True
-            for v in var.getParameters( 0 ) :
-                if v in params : return True
-        ##
+            return self.fun.depends_on ( var ) 
+
+        ## 
         if isinstance ( var , FUNC ) :
-            params = self.params () 
-            if var.fun in params : return True
-            for v in var.params () :
-                if v in params : return True
-            for v in var.vars :
-                if v in params : return True
+            if self.fun.depends_on ( var.fun  ) : return True
+            if self.fun.depends_on ( var.vars ) : return True
                 
         return False 
             
