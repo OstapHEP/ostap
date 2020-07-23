@@ -235,7 +235,7 @@ class Morphing2D_pdf (PDF) :
 
             v1 , v2 = k
             
-
+            pdfk = pdfs [ k ] 
             if   isinstance ( pdfk , PDF            ) and pdfk.xvar is self.xvar : pass 
             elif isinstance ( pdfk , ROOT.RooAbsPdf ) : 
                 pdfk = Generic1D_pdf ( pdfk , xvar = self.xvar ) 
@@ -266,10 +266,10 @@ class Morphing2D_pdf (PDF) :
             ib1 = bins_v1.binNumber ( v1 )
             ib2 = bins_v2.binNumber ( v2 )
             
-            grid.addPdf ( p.pdf , ib1 , ib2 )
+            self.__grid.addPdf ( p.pdf , ib1 , ib2 )
 
         morph_vars  = ROOT.RooArgList ( self.mu1 , self.mu2 )
-        observables = ROOT.RooArgList (  slef.xvar )
+        observables = ROOT.RooArgList ( self.xvar )
 
         self.aux_keep.append  ( morph_vars  )
         self.aux_keep.append  ( observables )

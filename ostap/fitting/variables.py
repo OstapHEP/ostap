@@ -1105,7 +1105,7 @@ def binning ( edges , nbins = 0 , name = '' ) :
         return ROOT.RooBinning ( max ( 1 , nbins ) , edges[0] , edges[1] , name ) 
 
     buffer = array.array ( 'd', edges )
-    return ROOT.RooBinning ( nb - 1 , bufffer , name ) 
+    return ROOT.RooBinning ( nb - 1 , buffer , name ) 
     
     
 # =============================================================================

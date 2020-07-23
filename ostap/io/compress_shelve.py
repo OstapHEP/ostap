@@ -357,7 +357,7 @@ class CompressShelf(shelve.Shelf,object):
     #   @endcode  
     def ikeys ( self , pattern = '' ) :
         """Iterator over avilable keys (patterns included).
-        Pattern matching is performed accoriding to
+        Pattern matching is performed according to
         fnmatch/glob/shell rules [it is not regex!] 
         
         >>> db = ...

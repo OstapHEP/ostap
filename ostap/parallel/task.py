@@ -190,12 +190,11 @@ class Task ( object ) :
 #    - append_to   : additional variables to be ''appended''
 #    - prepend_to  : additional variables to be ''prepended''
 class GenericTask(Task) :
-    """Generic ``temlated'' task for parallel processing.
+    """Generic ``templated'' task for parallel processing.
     One needs to  define three functions/functors:
     - processor   :         output = processor   ( jobid , item ) 
     - merger      : updated_output = merger ( old_output , new_output )
     - initializer :         output = initializer (      )  
-    - initializer :         output = initializer (      )
     - directory   : change to this directory  (if it exists)
     - environment : additional environment for the job 
     - append_to   : additional variables to be ''appended''
