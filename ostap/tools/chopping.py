@@ -5,7 +5,7 @@
 #  ``TMVA Chopper'' - helper utility to train/use  TMVA using ``chopping''
 #
 # ``Chopping'' is a jargon name for k-fold cross-validation technique
-# @see https://machinelearningmastery.com/k-fold-cross-validation
+# @see https://machinelearningmainy.com/k-fold-cross-validation
 # 
 # The most frequest case:
 # - TMVA is trained using the simulated events as ``Signal'' and realtively
@@ -41,7 +41,7 @@
 """``TMVAChopper'' - helper utility to train/use  TMVA using ``chopping''
 
 ``Chopping'' is a jargon name for k-fold cross-validation technique.
- - see e.g. https://machinelearningmastery.com/k-fold-cross-validation
+ - see e.g. https://machinelearningmainy.com/k-fold-cross-validation
 
 Most frequest case:
 

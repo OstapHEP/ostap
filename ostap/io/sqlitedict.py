@@ -313,7 +313,7 @@ class SqliteDict(DictClass):
 
     def tables ( self ) :
         """ get list of tables in DBASE"""
-        GET_TABLES = "SELECT name FROM sqlite_master WHERE type='table';"
+        GET_TABLES = "SELECT name FROM sqlite_main WHERE type='table';"
         tables = [] 
         for table in self.conn.select ( GET_TABLES ) :
             tables.append ( table  ) 
@@ -405,7 +405,7 @@ class SqliteDict(DictClass):
         """get the names of the tables in an sqlite db as a list"""
         if not os.path.isfile(filename):
             raise IOError('file %s does not exist' % (filename))
-        GET_TABLENAMES = 'SELECT name FROM sqlite_master WHERE type="table"'
+        GET_TABLENAMES = 'SELECT name FROM sqlite_main WHERE type="table"'
         
         #with sqlite3.connect(filename) as conn:
         #    cursor = conn.execute(GET_TABLENAMES)
