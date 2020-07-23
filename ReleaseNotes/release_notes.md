@@ -25,7 +25,8 @@
   1. add `binnig` functions to create `RooBinning`
   1. add `ostap.fitting.morphing_pdf` with two PDFs for morphing 
   1. add test for new morphing PDF 
- 
+  1. add possiility to use regex for `compressed_shalve.ikeys` method
+  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`

@@ -350,15 +350,15 @@ class CompressShelf(shelve.Shelf,object):
     # =========================================================================
     ##  Iterator over avilable keys (patterns included).
     #   Pattern matching is performed accoriding to
-    #   fnmatch/glob/shell rules [it is not regex!] 
+    #   fnmatch/glob/shell rules (default) or regex 
     #   @code  
     #   db = ...
     #   for k in db.ikeys('*MC*') : print(k)
     #   @endcode  
-    def ikeys ( self , pattern = '' ) :
+    def ikeys ( self , pattern = '' , regex = False ) :
         """Iterator over avilable keys (patterns included).
         Pattern matching is performed according to
-        fnmatch/glob/shell rules [it is not regex!] 
+        fnmatch/glob/shell rules (default) or regex 
         
         >>> db = ...
         >>> for k in db.ikeys('*MC*') : print(k)
@@ -367,13 +367,18 @@ class CompressShelf(shelve.Shelf,object):
         keys_ = self.keys()
         
         if not pattern :
-            good = lambda s,p : True
+            good = lambda k : True
+        elif regex : 
+            import re
+            re_cmp = re.compile ( pattern ) 
+            good = lambda k  : re_cmp.match ( k )
         else :
             import fnmatch
-            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
+            good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
         
+        keys_ = self.keys()
         for k in sorted ( keys_ ) :
-            if good ( k , pattern ) : yield k
+            if good ( k ) : yield k
 
     # =========================================================================
     ## List the available keys (patterns included).
