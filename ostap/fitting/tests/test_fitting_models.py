@@ -1063,53 +1063,53 @@ def test_rasingcosine () :
     models.add ( model )
 
 
-# =============================================================================
-## Breit-Wigner with interference
-# =============================================================================
-def test_bwi () :
-## if 1 < 2 :     
-    logger.info ('Test BWI_pdf' )
+## # =============================================================================
+## ## Breit-Wigner with interference
+## # =============================================================================
+## def test_bwi () :
+## ## if 1 < 2 :     
+##     logger.info ('Test BWI_pdf' )
     
-    ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
-    bw = cpp.Ostap.Math.BreitWigner (
-    m.value() ,
-    m.error() ,
-    0.150     , ## m1 
-    0.150     , ## m2 
-    1         , ## orbital momentum
-    ff          ## formfactor 
-    )
+##     ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
+##     bw = cpp.Ostap.Math.BreitWigner (
+##     m.value() ,
+##     m.error() ,
+##     0.150     , ## m1 
+##     0.150     , ## m2 
+##     1         , ## orbital momentum
+##     ff          ## formfactor 
+##     )
     
-    model = Models.Fit1D (
-        signal = Models.BWI_pdf
-        ( name        = 'BWI'             ,
-          breitwigner = bw                ,     
-          xvar        = mass              ,
-          mean        = signal_gauss.mean ,
-          bkg         = -1                ) ,
-        suffix     = '_a' , 
-        background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 ) ,
-        )
+##     model = Models.Fit1D (
+##         signal = Models.BWI_pdf
+##         ( name        = 'BWI'             ,
+##           breitwigner = bw                ,     
+##           xvar        = mass              ,
+##           mean        = signal_gauss.mean ,
+##           bkg         = -1                ) ,
+##         suffix     = '_a' , 
+##         background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 ) ,
+##         )
     
-    signal = model.signal 
-    model.S.setVal(5000)
-    model.B.setVal(500)
+##     signal = model.signal 
+##     model.S.setVal(5000)
+##     model.B.setVal(500)
     
-    signal.mean.fix ( m.value() )
+##     signal.mean.fix ( m.value() )
     
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset0 )
-        signal.mean .release()
-        signal.gamma.release()
-        result, frame = model. fitTo ( dataset0 )
-        model.draw (  dataset0 )
+##     with rooSilent() : 
+##         result, frame = model. fitTo ( dataset0 )
+##         signal.mean .release()
+##         signal.gamma.release()
+##         result, frame = model. fitTo ( dataset0 )
+##         model.draw (  dataset0 )
 
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
+##     if 0 != result.status() or 3 != result.covQual() :
+##         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
 
-    logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+##     logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
 
-    models.add ( model )
+##     models.add ( model )
 
 # =============================================================================
 ## check that everything is serializable
