@@ -248,7 +248,7 @@ class MakeVar ( object ) :
 
     @property
     def aux_keep ( self ) :
-        """``aux_keep'' -  the list of objects to be kept by this PDF"""
+        """``aux_keep'' -  the list of objects to be kept by this PDF/FUN"""
         return self.__aux_keep
     @property
     def logger   ( self ) :
@@ -270,7 +270,7 @@ class MakeVar ( object ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
         if self.__name == value : return 
         if value in self.__pdf_names and not NameDuplicates.allowed() :
-            self.warning ( 'The name "%s" for PDF already defined!' % value )
+            self.warning ( 'The name "%s" for PDF/FUN already defined!' % value )
         self.__pdf_names.add ( value )     
         self.__name = value
 
