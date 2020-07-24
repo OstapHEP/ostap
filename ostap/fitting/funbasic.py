@@ -262,7 +262,7 @@ class FUNC(XVar) :
 
     @property
     def draw_options ( self ) :
-        """``draw_options'' : dictionary with predefined draw-options for this PDF
+        """``draw_options'' : dictionary with predefined draw-options for this PDF/FUN
         """
         return self.__draw_options
 
@@ -455,7 +455,6 @@ class FUNC(XVar) :
         
         return 
     
-
     # =========================================================================
     ## get the certain predefined drawing option
     #  @code
