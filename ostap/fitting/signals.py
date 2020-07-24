@@ -2699,7 +2699,7 @@ class BreitWigner_pdf(MASS) :
                          sigma_title = '#Gamma(%s)' % name )
 
         bw = breitwigner
-        assert isinstance ( bw , Ostap.Math.BreitWigner ), \
+        assert isinstance ( bw , Ostap.Math.BW ), \
                'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
         #
         ## define the actual BW-shape using

@@ -1564,8 +1564,7 @@ def _f1_deriv_x_ ( self , *args ) :
     """Get the derivative dF/dx for 1D-fuction
     >>> F    = ...
     >>> dFdx = F.dFdX ( ) 
-    = see ROOT.RooAbsReal.derivative
-    
+    - see ROOT.RooAbsReal.derivative    
     """
     if not self.dfdx :
         d = self.fun.derivative ( self.xvar , 1 , *args )
