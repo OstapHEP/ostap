@@ -90,9 +90,11 @@ class FUNC(XVar) :
         self.variables.append ( self.xvar )
 
         self.config = { 'name' : self.name , 'xvar' : self.xvar  }
-
         self.__func_init = True  
 
+        ## derived functions/objects
+        self.__derived = {}
+        
     ## pickling via reduce 
     def __reduce__ ( self ) :
         if py2 : return func_factory , ( type ( self ) , self.config, )

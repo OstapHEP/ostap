@@ -131,7 +131,8 @@ add_library(ostap SHARED src/format.cpp
                          src/PhaseSpace.cpp
                          src/Piecewise.cpp
                          src/Point3DWithError.cpp
-                         src/Polynomials.cpp   
+                         src/Polynomials.cpp    
+                         src/Primitives.cpp
                          src/Printable.cpp
                          src/PyCallable.cpp 
                          src/PyFuncs.cpp 

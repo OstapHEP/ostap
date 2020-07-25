@@ -81,6 +81,7 @@
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
+#include "Ostap/Primitives.h"
 #include "Ostap/Printable.h"
 #include "Ostap/PyCallable.h"   
 #include "Ostap/PyFuncs.h"   

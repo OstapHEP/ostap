@@ -96,9 +96,9 @@ class Convolution(object):
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
-            assert isinstance ( nbins  , integer_types ) and 500   < abs ( nbins  )  , \
+            assert isinstance ( nbins  , integer_types ) and 500   <  abs ( nbins  )  , \
                    "Invalid ``nbins''  parameter %s/%s for fast Fourier transform"  % ( nbins  , type ( nbins  ) )
-            assert isinstance ( buffer ,  float        ) and 0.05  < buffer < 0.95   , \
+            assert isinstance ( buffer ,  float        ) and 0.03  <= buffer <=0.9    , \
                    "Invalid ``buffer'' parameter %s/%s for ``setBufferFraction''"   % ( buffer , type ( buffer ) )
 
             ## adjust #bins if positive. keep it as it is if negavtive 

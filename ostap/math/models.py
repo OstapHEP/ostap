@@ -919,7 +919,15 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
                D.Derivative                      ,
-               Ostap.Math.Histo1D                , 
+               Ostap.Math.Histo1D                ,
+               ## 
+               Ostap.Math.Multiply               ,
+               Ostap.Math.Divide                 ,
+               Ostap.Math.Linear                 ,
+               Ostap.Math.Moebius                ,
+               Ostap.Math.Compose                ,
+               Ostap.Math.Step                   ,
+               ##
                ) :
     model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D
@@ -1780,7 +1788,14 @@ _decorated_classes_ = set( [
     Ostap.Functions.PyCallable        , 
     Ostap.Math.Piecewise              , 
     Ostap.Math.ChebyshevApproximation ,
-    D.Derivative                      
+    D.Derivative                      ,
+    
+    Ostap.Math.Multiply               ,
+    Ostap.Math.Divide                 ,
+    Ostap.Math.Linear                 ,
+    Ostap.Math.Moebius                ,
+    Ostap.Math.Compose                ,
+    Ostap.Math.Step                   ,
     ])
 
 # ============================================================================
