@@ -77,6 +77,7 @@ Ostap::Math::DalitzIntegrator::DalitzIntegrator
 ( const Ostap::Kinematics::Dalitz0& dalitz , 
   const std::size_t                 size   )
   : m_dalitz     ( dalitz ) 
+  , m_dalitz2    ( dalitz.m3() , dalitz.m2() , dalitz.m1() ) 
   , m_workspace  ( size   )
 {}
 // ============================================================================

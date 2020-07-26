@@ -126,6 +126,52 @@ namespace Ostap
         const double smin ,
         const double smax ) const 
       { return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , m_dalitz ) ; }
+      // ====================================================================== 
+      /** evaluate the integral over \f$s\f$ , \f$s_2\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_s \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s1 fixed value of s1 
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      template <class FUNCTION3> 
+      double integrate_ss2
+      ( FUNCTION3    f3   ,
+        const double s1   ,
+        const double smax ) const 
+      {
+        // swap arguments   
+        auto fc = std::cref ( f3 ) ;
+        auto ff = [fc]( const double s_ , const double s1_ , const double s2_ )-> double
+                  { return fc ( s_ , s2_ , s1_ ) ; } ;
+        // invoke integrate over s,s1 with swapped arguments 
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz2 ) ;
+      }
+      // ===================================================================== 
+      /** evaluate the integral over \f$s\f$ , \f$s_s\f$ variables 
+       *  \f[ \int\int f( s, s_1,s_2) ds ds_2 \f]  
+       *  @param f3 the function \f$  f(s,s_1,s_2) \f$
+       *  @param s1 fixed value of s1 
+       *  @param smin lowe-edge for integration over \f$ s \f$
+       *  @param smax upper-edge for integration over \f$ s \f$
+       *  @param d  helper Dalitz-object 
+       *  @return integral over \f$ s, s_1\f$
+       */
+      template <class FUNCTION3> 
+      double integrate_ss2
+      ( FUNCTION3    f3   ,
+        const double s1   ,
+        const double smin ,
+        const double smax ) const 
+      {
+        // swap arguments   
+        auto fc = std::cref ( f3 ) ;
+        auto ff = [fc]( const double s_ , const double s1_ , const double s2_ )-> double
+                  { return fc ( s_ , s2_ , s1_ ) ; } ;
+        // invoke integrate over s,s1 with swapped arguments 
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz2 ) ;
+      }
       // ======================================================================
     public: // with cache 
       // ======================================================================
@@ -498,6 +544,8 @@ namespace Ostap
       // ======================================================================
       /// Dalitz configuration
       Ostap::Kinematics::Dalitz0 m_dalitz    {} ; //  Dalitz configuration
+      /// Dalitz configuration (rotated) 3-2-1, \f$ s_1 \leftrghtarrow s_2\f$ 
+      Ostap::Kinematics::Dalitz0 m_dalitz2   {} ; //  Dalitz configuration (3,2,1)
       /// integration  workspace  
       Ostap::Math::WorkSpace     m_workspace {} ; // integration workspace
       // ======================================================================
