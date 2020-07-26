@@ -26,7 +26,7 @@
   1. add `ostap.fitting.morphing_pdf` with two PDFs for morphing 
   1. add test for new morphing PDF 
   1. add possiility to use regex for `compressed_shalve.ikeys` method
-  1. add integrataon ovr s,s2 variables in `Ostap::Math::DalitzIntegrator`
+  1. add integration over s,s2 variables in `Ostap::Math::DalitzIntegrator`
   `  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
