@@ -482,7 +482,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   else if (           smax < smin    ) 
   { return -1 * integrate_ss1 ( std::cref ( f3 ) , s2 , smax , smin , d ) ; }
   //
-  if ( s2   <= d.s1_min () ||
+  if ( s2   <= d.s2_min () ||
        smax <= d.sqsumm () || 
        s2   >= d.s2_max ( smax ) ) { return 0 ; }
   //
@@ -524,6 +524,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
       double s, s1 ;
       std::tie ( s , s1 ) = d.y2s ( s2 , y1 , y2 ) ;
       const double J = d.J ( s  , s1  , s2 ) ;
+      //
       return J <= 0 ? 0.0 : f3 ( s , s1 , s2 ) * J  * f_norm;
     };
   
@@ -554,7 +555,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double                             smax ,
   const Ostap::Kinematics::Dalitz0&        d    )
 {
-  if ( s2   <= d.s1_min () ||
+  if ( s2   <= d.s2_min () ||
        smax <= d.sqsumm () || 
        s2   >= d.s2_max ( smax ) ) { return 0 ; }
   //

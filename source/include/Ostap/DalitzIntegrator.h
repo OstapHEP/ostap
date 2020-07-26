@@ -143,9 +143,9 @@ namespace Ostap
       {
         // swap arguments   
         auto fc = std::cref ( f3 ) ;
-        auto ff = [fc]( const double s_ , const double s1_ , const double s2_ )-> double
-                  { return fc ( s_ , s2_ , s1_ ) ; } ;
-        // invoke integrate over s,s1 with swapped arguments 
+        auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
+                  { return fc ( s , s_2 , s_1 ) ; } ;
+        // invoke integration over s,s1 with swapped arguments 
         return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz2 ) ;
       }
       // ===================================================================== 
@@ -167,9 +167,9 @@ namespace Ostap
       {
         // swap arguments   
         auto fc = std::cref ( f3 ) ;
-        auto ff = [fc]( const double s_ , const double s1_ , const double s2_ )-> double
-                  { return fc ( s_ , s2_ , s1_ ) ; } ;
-        // invoke integrate over s,s1 with swapped arguments 
+        auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
+                  { return fc ( s , s_2 , s_1 ) ; } ;
+        // invoke integration over s,s1 with swapped arguments 
         return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz2 ) ;
       }
       // ======================================================================
