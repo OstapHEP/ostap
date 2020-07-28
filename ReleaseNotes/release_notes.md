@@ -27,6 +27,7 @@
   1. add test for new morphing PDF 
   1. add possiility to use regex for `compressed_shalve.ikeys` method
   1. add integration over s,s2 variables in `Ostap::Math::DalitzIntegrator`
+  1. add datetime to the logger format for non-isatty output, e.g. log-files...
   `  
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
@@ -34,6 +35,7 @@
   1.`Flatte_pdf`: rename arguments and attributes
   1. rename  `ostap.fitting.basic.Resoluton` to `ostap.fitting.basic.CheckMean` and invert its argument 
   1. total re-write of all Breit-Wigner related stuff and in particular temporarily remove all beast like LASS, Bugg, etc...   
+  1. fix but with parsing arguments of `PDF.fitTo` : fro certain number of argument the creation of `RooFit::MultiArg` was incorrect (thanks to Pavel Krokovny)
 
 ## Bug fixes:
   1. fix missing `hID` in `ostap/fittin/variables.py` (thanks to Alexander Berezhnoy)

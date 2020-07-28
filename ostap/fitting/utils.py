@@ -677,7 +677,8 @@ class MakeVar ( object ) :
         while nn < len ( _args ) :
             _a = [] 
             for c in chunks ( _args , nn ) :
-                _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+                if   2 <= len ( c ) : _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+                elif 1 == len ( c ) : _a.append ( c[1] )
             _args = _a 
                                     
         return tuple ( _args )

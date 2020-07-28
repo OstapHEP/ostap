@@ -91,15 +91,22 @@ logging_levels = { logging.CRITICAL : 'FATAL'   ,
                    logging.VERBOSE  : 'VERBOSE' }
 for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
-logging_format      = '# %(name)-32s %(levelname)-7s %(message)s'
-logging_file_format = '# %(asctime)s %(name)-32s %(levelname)-7s %(message)s'
+logging_format      = '# %(name)-36s %(levelname)-7s %(message)s'
+logging_file_format = '# %(asctime)s %(name)-36s %(levelname)-7s %(message)s'
 logging_date_format = "%Y-%m-%d %H:%M:%S" 
+
+from ostap.utils.basic import isatty
 
 # =============================================================================
 ## The basic configuration 
-logging.basicConfig (
-    level    = logging.INFO   ,
-    format   = logging_format )
+if isatty() :
+    logging.basicConfig (
+        level    = logging.INFO        ,
+        format   = logging_format      )
+else :
+    logging.basicConfig (
+        level    = logging.INFO        ,
+        format   = logging_file_format )
 
 # =============================================================================
 ## get configured logger
@@ -244,7 +251,6 @@ from ostap.logger.colorized import ( with_colors    ,
                                      attention      ,
                                      allright       ,
                                      infostr        ,
-                                     isatty         ,
                                      decolorize     )
 # =============================================================================
 __colored_logger = []
