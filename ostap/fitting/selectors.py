@@ -363,7 +363,9 @@ class Variable(object) :
 # =============================================================================
 ## is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
-
+    """Is this expression corresponds to a valid RooFit formula?
+    """
+    
     if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
     
     expression = expression.strip()
@@ -377,13 +379,15 @@ def valid_formula ( expression , varset ) :
         return result
 
     assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
-    from ostap.logger.utils import rooSilent, rootError  
-    with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
-        with rootError( ROOT.kError + 1 ) :
-            _f  = Ostap.FormulaVar( expression , varset , False )
-            fok = _f.ok ()
-            del _f
-            
+    ## from ostap.logger.utils import rooSilent, rootErro
+    ## with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
+    ## with rootError( ROOT.kError + 1 ) :
+    from ostap.logger.utils import mute 
+    with mute ( True , True ) : 
+        _f  = Ostap.FormulaVar ( expression , varset , False )
+        fok = _f.ok ()
+        del _f
+        
     return fok
             
 # ==============================================================================
@@ -1389,8 +1393,11 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
+    
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection : 
+
+        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection :
+
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
             ds , stat  = self.make_dataset ( variables = selector.variables , selection = selector.selection , silent = silent )
             selector.data = ds
@@ -1581,6 +1588,6 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

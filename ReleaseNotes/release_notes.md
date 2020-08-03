@@ -29,6 +29,8 @@
   1. add integration over s,s2 variables in `Ostap::Math::DalitzIntegrator`
   1. add datetime to the logger format for non-isatty output, e.g. log-files...
   1. add `Ostap::Math::KramersKronig` helper class 
+  1. tiny tweaks for `tootshelve`
+  1. suppress error prints from  `selectors.valid_formula` 
 
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
