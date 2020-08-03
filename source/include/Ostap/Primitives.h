@@ -7,6 +7,7 @@
 // STD&STL
 // ============================================================================
 #include <functional>
+#include <cmath>
 // ============================================================================
 namespace  Ostap
 {
@@ -17,7 +18,7 @@ namespace  Ostap
     /** @class Linear
      *  Linear combination of two functions 
      *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
-     *  With the approproate choice of \f$ c_1 \f$  and \f$c_2 \f$  one gest
+     *  With the approproate choice of \f$ c_1 \f$  and \f$c_2 \f$  one gets
      *   - sum
      *   - difference 
      *   - scaling 
@@ -273,6 +274,110 @@ namespace  Ostap
       /// b-parameter
       double m_b { 0 } ; // b-parameter 
       // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Max
+     *  Maximal of two functions 
+     *   \f[ f(x) =  max ( f_1(x) , f_2(x) ) \f] 
+     */
+    class Max
+    {
+    public :
+      // ======================================================================
+      /** constructor from two functions and two scale factors 
+       *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first function 
+       *  @param f1  the secons function 
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Max ( FUNCTION1    f1 , 
+            FUNCTION2    f2 )
+        : m_fun1 ( f1 )
+        , m_fun2 ( f2 )
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Max ( FUNCTION1    f1 ,
+            const double f2 ) 
+        : m_fun1 (  f1 )
+        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Max ( const double f2 , 
+            FUNCTION1    f1 ) : Max ( f1 , f2 ) {}
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the main method
+      inline  double operator() ( const double x ) const
+      { return std::max  ( m_fun1 ( x ) , m_fun2 ( x ) ) ; }
+      // ======================================================================
+    public:
+      //  =====================================================================
+      template <typename ...  ARGS>
+      inline static Max
+      create ( ARGS... args ) { return Max  ( args ... ) ; }
+      // ======================================================================
+    private :
+      //  =====================================================================
+      /// the first function 
+      std::function<double(double)> m_fun1 {   } ; // the first fuction
+      /// the second function 
+      std::function<double(double)> m_fun2 {   } ; // the second  fuction
+      //  =====================================================================      
+    } ;
+    // ========================================================================
+    /** @class Min
+     *  Minimal value  of two functions 
+     *   \f[ f(x) =  min ( f_1(x) , f_2(x) ) \f] 
+     */
+    class Min
+    {
+    public :
+      // ======================================================================
+      /** constructor from two functions 
+       *   \f[ f(x) =  min  ( f_1(x) , f_2(x) )\f] 
+       *  @param f1  the first function 
+       *  @param f1  the secons function 
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Min ( FUNCTION1    f1 , 
+            FUNCTION2    f2 )
+        : m_fun1 ( f1 )
+        , m_fun2 ( f2 )
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Min ( FUNCTION1    f1 ,
+            const double f2 ) 
+        : m_fun1 (  f1 )
+        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Min ( const double f2 , 
+            FUNCTION1    f1 ) : Min ( f1 , f2 ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      /// the main method
+      inline  double operator() ( const double x ) const
+      { return std::min  ( m_fun1 ( x ) , m_fun2 ( x ) ) ; }
+      // ======================================================================
+    public:
+      //  =====================================================================
+      template <typename ...  ARGS>
+      inline static Min
+      create ( ARGS... args ) { return Min  ( args ... ) ; }
+      // ======================================================================
+    private :
+      //  =====================================================================
+      /// the first function 
+      std::function<double(double)> m_fun1 {   } ; // the first fuction
+      /// the second function 
+      std::function<double(double)> m_fun2 {   } ; // the second  fuction
+      //  =====================================================================      
     } ;
     // ========================================================================
   } //                                         The end of namespace Ostap::Math

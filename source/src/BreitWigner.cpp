@@ -2469,6 +2469,21 @@ std::string Ostap::Math::ChannelQ::describe() const
 
 
 
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Math::ChannelGLR*
+Ostap::Math::ChannelGLR::clone() const
+{ return new ChannelGLR ( *this ) ; }
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelGLR::tag () const
+{ return std::hash_combine ( std::string ( "ChannelGLR" ) ,
+                             m_tag             ,
+                             m_description     ,
+                             gamma0    () ) ;  }
+// ============================================================================
 
 
 

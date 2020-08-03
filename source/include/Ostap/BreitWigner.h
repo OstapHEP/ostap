@@ -166,7 +166,7 @@ namespace Ostap
     // =========================================================================
     /** @class ChannelGeneric
      *  Generic description of the channel. 
-     *  \f[ \beginp{array}{lcl}
+     *  \f[ \begin{array}{lcl}
      *   N^2(s,m_0) & = & m_0 \Gamma0 f_{N^2}(s,m_0)\ \
      *   D (s,m_0)  & = & m_0 \Gamma0 f_{D}(s,m_0)  \                   \
      *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)
@@ -889,6 +889,168 @@ namespace Ostap
       double m_qs { 0 } ; // momentum  scale
       // ======================================================================
     };
+
+
+
+    // =========================================================================
+    /** @class ChannelGRL
+     *  Description of the channel 
+     *  \f[ \begin{array}{lcl}
+     *   N^2(s,m_0)      & = & m_0 \Gamma0 f_{N^2}(s,m_0)\ \
+     *   D (s,m_0)       & = & m_0 \Gamma0 ( f_{D}(s) + i ( f_L(s) - f_L(m^2_0 ) ) \\
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)
+     *  \end{array}\,,\f]
+     *  where \f$ f_{N^2}]\f$,  \f$ f_{D}]\f$, \f$ f_L \f$  and 
+     *  \f$ f_{\varrho}]\f$ are provdied externally
+     *  - Integresting special case is when   
+     *    \f$ f_L (s.m_0^2) \f$ and \f$ f_D \f$ as real and imaginary parts 
+     *   of the amplitude are related via the dispersion relation  
+     *  with the single subtraction 
+     *  \f[ f_L(s) = - \frac{s}{\pi} 
+     *  \int \frac{f_D(s^\prime d s^{\prime}}{s^\prime(s^\prime -s ) } \f]
+     */
+    class ChannelGLR : public ChannelBW 
+    {
+    public:
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2,
+                class FUNCTION3,
+                class FUNCTION4>
+      ChannelGLR  ( const double       gamma            ,
+                    FUNCTION1          fN2              ,
+                    FUNCTION2          fD               ,
+                    FUNCTION3          fL               ,
+                    FUNCTION4          fRho             ,
+                    const double       s0               ,
+                    const std::string& description = "" , 
+                    const std::size_t  tag         = 0  )
+        : ChannelBW ( gamma )
+        , m_fN2         ( fN2         )
+        , m_fD          ( fD          )
+        , m_fL          ( fL          )
+        , m_fRho        ( fRho        )
+        , m_sthreshold  ( s0          )
+        , m_tag         ( tag         ) 
+        , m_description ( description )
+      {}
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2,
+                class FUNCTION3>
+      ChannelGLR  ( const double       gamma            ,
+                    FUNCTION1          fN2              ,
+                    FUNCTION2          fD               ,
+                    FUNCTION3          fL               ,
+                    const double       s0               ,
+                    const std::string& description = "" , 
+                    const std::size_t  tag         = 0  )
+      : ChannelBW ( gamma )
+      , m_fN2         ( fN2         )
+      , m_fD          ( fD          )
+      , m_fL          ( fL          )
+      , m_fRho   (  [s0] ( const double s ) -> double 
+                    { return s <= s0 ? 0 : 1 ; } )
+      , m_sthreshold  ( s0          )
+      , m_tag         ( tag         ) 
+      , m_description ( description )
+      {}  
+      // =======================================================================
+      ///  copy constructor
+      ChannelGLR ( const ChannelGLR& right ) = default ;
+      // =======================================================================
+      /// clone method
+      ChannelGLR*  clone() const override ; // clone method
+      // =======================================================================
+    public:
+      // =======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2,
+                class FUNCTION3,
+                class FUNCTION4>
+      static inline ChannelGLR
+      create ( const double       gamma            ,
+               FUNCTION1          fN2              ,
+               FUNCTION2          fD               ,
+               FUNCTION3          fL               ,
+               FUNCTION4          fRho             ,
+               const double       s0               ,
+               const std::string& description = "" , 
+               const std::size_t  tag         = 0  )
+      { return ChannelGLR ( gamma , fN2 , fD , fL, fRho , s0 , description , tag ) ; }
+      // =======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2,
+                class FUNCTION3>
+      static inline ChannelGLR
+      create ( const double       gamma            ,
+               FUNCTION1          fN2              ,
+               FUNCTION2          fD               ,
+               FUNCTION3          fL               ,
+               const double       s0               ,
+               const std::string& description = "" , 
+               const std::size_t  tag         = 0  )
+      { return ChannelGLR ( gamma , fN2 , fD , fL , s0 , description , tag ) ; }
+      // =======================================================================
+    public:
+      // =======================================================================
+      /** squared  numerator for the amplitude 
+       * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s)\f]
+       */
+      double               N2
+      ( const double s  , 
+        const double m0 ) const override { return m0 * gamma0 () * m_fN2 ( s ) ; }      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       * \f[ D (s,m_0) = m_0 \Gamma0 ( f_{D}(s) + i( f_L(s) - f_L ( m_0^2 )) \f]
+       */
+      // ======================================================================
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override {
+        return m0 * gamma0 () * std::complex<double> ( m_fD ( s ) ,
+                                                       m_fL ( s ) -
+                                                       m_fL ( m0 * m0 ) ) ;
+      }    
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       *  optionally normalized at the point \f$ m_n \f$ 
+       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) f_{\varrho}(s)\f] 
+       */
+      double rho_s 
+      ( const double    s  , 
+        const double /* mn */ ) const override 
+      { return s <= m_sthreshold ? 0.0 : m_fRho ( s ) ; }
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override { return m_description ; }
+      // =======================================================================
+    private :
+      // =======================================================================
+      /// function N2
+      std::function<double(double)>  m_fN2   ; // function N2
+      /// function fD
+      std::function<double(double)>  m_fD    ; // function fD 
+      /// function fL
+      std::function<double(double)>  m_fL    ; // function fL
+      /// function fRho
+      std::function<double(double)>  m_fRho  ; // function fRho
+      /// s-threhold 
+      double                         m_sthreshold  ; // s-threhold 
+      /// unique tag 
+      std::size_t                    m_tag         ; // unique tag 
+      /// description 
+      std::string                    m_description ; // description 
+      // ======================================================================
+    } ;
+    
+    
     // ========================================================================
     /** @class BW
      *

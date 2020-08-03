@@ -927,6 +927,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Moebius                ,
                Ostap.Math.Compose                ,
                Ostap.Math.Step                   ,
+               Ostap.Math.Min                    ,
+               Ostap.Math.Max                    ,
+               Ostap.Math.KramersKronig                    ,
                ##
                ) :
     model.tf1          =  tf1 
@@ -1796,6 +1799,9 @@ _decorated_classes_ = set( [
     Ostap.Math.Moebius                ,
     Ostap.Math.Compose                ,
     Ostap.Math.Step                   ,
+    Ostap.Math.Min                    ,
+    Ostap.Math.Max                    ,
+    Ostap.Math.KramersKronig                    ,
     ])
 
 # ============================================================================

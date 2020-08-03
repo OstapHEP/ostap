@@ -46,6 +46,7 @@
 #include "Ostap/HistoMake.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/HistoStat.h"
+#include "Ostap/KramersKronig.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Line.h"

@@ -278,7 +278,7 @@ namespace Ostap
        *  @return value of the dispersion integral 
        *  @see Ostap::Math::Integrator::cauchy_pv_to_infinity 
        */
-      double kramers_kronig 
+      static double kramers_kronig 
       ( function1            f1   , 
         const double         s    , 
         const double         xmin , 
