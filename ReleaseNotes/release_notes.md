@@ -28,7 +28,8 @@
   1. add possiility to use regex for `compressed_shalve.ikeys` method
   1. add integration over s,s2 variables in `Ostap::Math::DalitzIntegrator`
   1. add datetime to the logger format for non-isatty output, e.g. log-files...
-  `  
+  1. add `Ostap::Math::KramersKronig` helper class 
+
 ## Backward incompatible changes
   1. rewrite `Ostap::Math::DalitzIntegrator`
   1. rewrite `Ostap::Math::Integrator`
