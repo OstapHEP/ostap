@@ -1257,7 +1257,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         for v in vset : vlst.add ( v )
 
         fcols = ROOT.RooArgList() 
-        
+
         ffs   = []
         fcuts = [] 
         for f in formulas :            
@@ -1269,13 +1269,18 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
             if _minv < mn : fcuts.append ( "(%.16g <= %s)" % ( mn      , fv.name ) )
             if _maxv > mx : fcuts.append ( "(%s <= %.16g)" % ( fv.name , mx      ) )
 
-        ds.addColumns ( fcols )
+        with rooSilent ( ROOT.RooFit.ERROR + 1 , True ) :
+            with rootError( ROOT.kError ) :
+                ds.addColumns ( fcols )
+        
         ##  apply cuts (if any) for the  complex expressions 
         if fcuts :
             fcuts = [ '(%s)' % f for f in fcuts ]
             fcuts = ' && '.join ( fcuts )
             _vars = ds.get()
-            ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
+            with rooSilent ( ROOT.RooFit.ERROR  + 1  , True ) :
+                with rootError( ROOT.kError + 1 ) :
+                    ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
             ds.clear()
             del ds
             ds = ds1
