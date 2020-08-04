@@ -126,8 +126,8 @@ std::ostream& Ostap::WStatEntity::fillStream ( std::ostream& o ) const
 {
   return 
     o << Ostap::format ( "#=%-14.8g sum=%-14.8g " , nEff() , sum () ) 
-      << Ostap::format ( " mean=%10.4g +- %-10.5g min/max=%10.4g/%-10.4g" ,
-                         mean() ,  rms() ,  m_values.min() ,  m_values.max() ) ;
+      << Ostap::format ( " mean/rms=%10.4g/%-10.5g min/max=%10.4g/%-10.4g" ,
+                         mean () , rms () , m_values.min() , m_values.max () ) ;
 }
 // ============================================================================
 // convert to string 

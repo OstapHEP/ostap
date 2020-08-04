@@ -39,7 +39,7 @@ from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, va
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
                                         integer_types  , num_types      ,
-                                        list_types    ) 
+                                        list_types     , all_numerics   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
@@ -55,14 +55,26 @@ else                       : logger = getLogger ( __name__              )
 #  list of "good" argument  types 
 arg_types = num_types + ( VE , ROOT.RooAbsReal )
 # =============================================================================
-## are all args of "good" type? 
+## are all args of "good" type?
+#  - ROOT.RooAbsReal
+#  - numeric type
+#  - VE
+#  - tuple of 1-3 arguments of numeric values 
 def all_args ( *args ) :
     """Are all arguments of ``good'' type?
+    - ROOT.RooAbsReal
+    - numeric type
+    - VE
+    - tuple of 1-3 arguments of numeric values 
     """
     ## try to find 
     for a in args :
-        if not isinstance ( a , arg_types ) : return False
-    
+        if   isinstance ( a , arg_types )      : pass
+        elif isinstance ( a , tuple     ) and \
+             1 <= len ( a ) <= 3          and \
+             all_numerics ( *a ) : pass
+        else                                   : return False 
+        
     return True 
 
 # =============================================================================

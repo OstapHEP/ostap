@@ -1,6 +1,9 @@
 
 ## New features 
- 1. `parallel/task.py`  : change master/slave to main/secondary
+ 1. `parallel/task.py`  : change master/slave to main/secondary                    (request from Bogdan Popovici)
+ 1. Modify a bit printout for `Ostap::StatEntity` and `Ostap::WStarEntity` classes (request from Alexey Dzyuba) 
+ 1. tiny tweak for `ostap.fitting.badic.all_args`
+ 1. add `all_integers`, `all_numerics` and `all_strings` to `ostap/core/ostap_types.py`
 
 ## Backward incompatible changes
 
