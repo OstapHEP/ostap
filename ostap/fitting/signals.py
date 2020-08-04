@@ -3194,10 +3194,10 @@ class Flatte_pdf(MASSMEAN) :
         with CheckMean ( False ) :
             # for Flatte-function m0 can be outside the interesting interval 
             MASSMEAN.__init__  ( self , name , xvar ,
-                                 mean        = m0  ,
+                                 mean       = m0  ,
                                  mean_name  = 'm0_%s'    % name ,
                                  mean_title = '#m_0(%s)' % name )
-                 
+            
         assert all_args ( m0 , m0g1 , g2og1 ) or \
                all_args ( m0 ,   g1 , g2    ) , 'Invalid combination of arguments!'
         
@@ -3233,7 +3233,8 @@ class Flatte_pdf(MASSMEAN) :
                                           g1                 , g1 )
             self.__g2 =  self.make_var  ( g2                 ,
                                           'g2_%s'     % name ,
-                                          'g_{2}(%s)' % name , g2 )
+                                          'g_{2}(%s)' % name ,
+                                          g2                 , g2 )
             
             self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
             self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
