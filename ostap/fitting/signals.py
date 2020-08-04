@@ -3210,8 +3210,8 @@ class Flatte_pdf(MASSMEAN) :
         
         if  g1 is None and g2 is None :
             
-            self.__m0g1 = self.make_var  ( m0g1                          ,
-                                           'm0g1_%s'             % name ,
+            self.__m0g1 = self.make_var  ( m0g1                     ,
+                                           'm0g1_%s'         % name ,
                                            'm_{0}#g_{1}(%s)' % name ,
                                            m0g1 , m0g1 )
             
@@ -3223,8 +3223,8 @@ class Flatte_pdf(MASSMEAN) :
             self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
             self.__g2 = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
             
-        elif g1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
-        elif g2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
+        elif g1 is None : raise TypeError ( 'Flatte_pdf: g1 is not specified!' ) 
+        elif g2 is None : raise TypeError ( 'Flatte_pdf: g2 is not specified!' ) 
         else :
             
             self.__g1 =  self.make_var  ( g1                 ,
@@ -3259,11 +3259,11 @@ class Flatte_pdf(MASSMEAN) :
             }
         
         if g1 is None and g2 is None : 
-            self.config.update ( { 'm0g1'   : self.m0g1   , 
-                                   'g2og1'  : self.g2og1  } )
+            self.config.update ( { 'm0g1'  : self.m0g1  , 
+                                   'g2og1' : self.g2og1 } )
         else : 
-            self.config.update ( { 'g1' : self.g1 ,
-                                   'g2' : self.g2 } )
+            self.config.update ( { 'g1'    : self.g1    ,
+                                   'g2'    : self.g2    } )
             
     @property
     def m0 ( self ) :
@@ -3279,8 +3279,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
-        assert gasattr ( self.__m0g1 , 'setVal' ),\
-               "``m0g1''-parameter can't be set!"
+        assert gasattr ( self.__m0g1 , 'setVal' ),"``m0g1''-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
 
@@ -3290,8 +3289,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
-        assert hasattr ( self.__g2og1 , 'setVal'),\
-               "``g2og1''-parameter can't be set!"        
+        assert hasattr ( self.__g2og1 , 'setVal'),"``g2og1''-parameter can't be set!"        
         value = float ( value )
         assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
         self.__g2og1.setVal ( value )
@@ -3302,8 +3300,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g1
     @g1.setter
     def g1 ( self , value ) :
-        assert hasattr ( self.__g1 , 'setVal' ),\
-               "``g1''-parameter can't be set!"
+        assert hasattr ( self.__g1 , 'setVal' ),"``g1''-parameter can't be set!"
         value = float ( value )
         self.__g1.setVal ( value ) 
 
@@ -3313,8 +3310,7 @@ class Flatte_pdf(MASSMEAN) :
         return self.__g2
     @g2.setter
     def g2 ( self , value ) :
-        assert hasattr ( self.__g2 , 'setVal' ),\
-               "``g2''-parameter can't be set!"
+        assert hasattr ( self.__g2 , 'setVal' ),"``g2''-parameter can't be set!"
         value = float ( value )
         self.__g2.setVal ( value ) 
 
