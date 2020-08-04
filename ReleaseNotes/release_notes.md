@@ -1,6 +1,9 @@
 
 ## New features 
+ 1. `parallel/task.py`  : change master/slave to main/secondary
+
 ## Backward incompatible changes
+
 ## Bug fixes:
 
 

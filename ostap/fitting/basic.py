@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
@@ -66,7 +65,6 @@ def all_args ( *args ) :
     
     return True 
 
-    
 # =============================================================================
 ## @class PDF
 #  The helper base class for implementation of various PDF-wrappers 
