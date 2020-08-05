@@ -8,7 +8,7 @@
 ## Backward incompatible changes
 
 ## Bug fixes:
-
+ 1. fix a bit strange "feature" in the function `make_dataset` from `ostap/fitting/selectors.py` (thanks to Alexander Artamonov for reporting it)
 
 # v1.5.0.0
 

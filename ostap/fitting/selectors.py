@@ -1209,7 +1209,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
     expressions = [ f.formula for f in formulas ]
     if selection : expressions.append ( selection ) 
-        
+
     if expressions :
 
         tt = None 
@@ -1221,7 +1221,10 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         if not tt : tt = tree
 
         lvars = tt.the_variables ( *expressions )
-        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions 
+
+        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions
+        if not silent :
+            logger.info ("make_dataset: temporary varibales to be added %s" % str ( lvars ) ) 
         for lname in lvars :
             if not lname in varsete :
                 v = Variable ( lname )
@@ -1248,7 +1251,10 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
             varsete = ds.get()
-                
+
+    if not silent :
+        logger.info( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
+    
     ## add complex expressions 
     if formulas :
         # a
@@ -1285,16 +1291,28 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
             del ds
             ds = ds1
             varsete = ds.get()
+            if not silent :
+                logger.info ( "make_dataset: dataset after (f)cuts\n%s" % ds.table ( prefix = "# " ) ) 
             
         nvars = ROOT.RooArgSet()
         for v in varset   : nvars.add ( v     )
         for v in formulas : nvars.add ( v.var )
         varset  = nvars 
         varsete = ds.get() 
-        
+
+    if formulas and not silent : 
+        logger.info ( "make_dataset: dataset with expressions\n%s" % ds.table ( prefix = "# " ) ) 
+
     ##  remove all temporary variables  
     if len ( varset ) != len ( varsete ) :
-        ds1 = ds.reduce ( varset )
+        vs  = ROOT.RooArgSet()
+        vrm = set ( )
+        for v in ds.get() :
+            if  v in varset : vs .add ( v )
+            else            : vrm.add ( v.name )
+        if vrm and not silent :
+            logger.info  ("make_dataset: temporary variables to be removed %s" % str ( tuple ( vrm) ) )
+        ds1 = ds.reduce ( vs )
         ds.clear()
         del ds
         ds = ds1
