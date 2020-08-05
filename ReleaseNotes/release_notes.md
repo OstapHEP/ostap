@@ -1,3 +1,4 @@
+# v1.5.0.1
 
 ## New features 
  1. `parallel/task.py`  : change master/slave to main/secondary                    (request from Bogdan Popovici)
