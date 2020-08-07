@@ -946,8 +946,7 @@ namespace Ostap
       , m_fN2         ( fN2         )
       , m_fD          ( fD          )
       , m_fL          ( fL          )
-      , m_fRho   (  [s0] ( const double s ) -> double 
-                    { return s <= s0 ? 0 : 1 ; } )
+      , m_fRho        ( [s0] ( const double s ) -> double { return s <= s0 ? 0 : 1 ; } )
       , m_sthreshold  ( s0          )
       , m_tag         ( tag         ) 
       , m_description ( description )
@@ -961,37 +960,14 @@ namespace Ostap
       // =======================================================================
     public:
       // =======================================================================
-      template <class FUNCTION1,
-                class FUNCTION2,
-                class FUNCTION3,
-                class FUNCTION4>
+      template <typename... ARGS>
       static inline ChannelGLR
-      create ( const double       gamma            ,
-               FUNCTION1          fN2              ,
-               FUNCTION2          fD               ,
-               FUNCTION3          fL               ,
-               FUNCTION4          fRho             ,
-               const double       s0               ,
-               const std::string& description = "" , 
-               const std::size_t  tag         = 0  )
-      { return ChannelGLR ( gamma , fN2 , fD , fL, fRho , s0 , description , tag ) ; }
-      // =======================================================================
-      template <class FUNCTION1,
-                class FUNCTION2,
-                class FUNCTION3>
-      static inline ChannelGLR
-      create ( const double       gamma            ,
-               FUNCTION1          fN2              ,
-               FUNCTION2          fD               ,
-               FUNCTION3          fL               ,
-               const double       s0               ,
-               const std::string& description = "" , 
-               const std::size_t  tag         = 0  )
-      { return ChannelGLR ( gamma , fN2 , fD , fL , s0 , description , tag ) ; }
+      create ( const double gamma ,
+               ARGS ...     args  ) { return ChannelGLR ( gamma , args ... ) ; }
       // =======================================================================
     public:
       // =======================================================================
-      /** squared  numerator for the amplitude 
+      /** squared  numerator for the amplitude/width  
        * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s)\f]
        */
       double               N2
@@ -1010,7 +986,6 @@ namespace Ostap
                                                        m_fL ( m0 * m0 ) ) ; }    
       // ======================================================================
       /** get the phase space factor  \f$ \varrho(s) \f$
-       *  optionally normalized at the point \f$ m_n \f$ 
        * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) f_{\varrho}(s)\f] 
        */
       double rho_s 
