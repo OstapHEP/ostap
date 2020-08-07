@@ -389,8 +389,9 @@ namespace Ostap
           const int                  rule       = GSL_INTEG_GAUSS51 ) const // integration rule 
         {
           // ==================================================================
+          static const std::string s_GAQ { "GAQ" } ;
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xlow , xhigh ,  "GAQ" , 
+            ( tag , func->params , xlow , xhigh ,  s_GAQ , 
               aprecision , rprecision , 
               limit      , reason , file , line , rule ) ;
           // ==================================================================
@@ -435,10 +436,11 @@ namespace Ostap
         {
           //
           // ==================================================================
+          static const std::string s_GAQI { "GAQI" } ;
           const std::size_t key = std::hash_combine 
-            ( tag , func->params  ,  "GAQI" , 
+            ( tag , func->params      ,  s_GAQI     , 
               aprecision , rprecision , 
-              limit      , reason , file , line ) ;
+              limit      , reason     , file , line ) ;
           // ==================================================================
           { // look into the cache ============================================
             CACHE::Lock lock { s_cache.mutex() } ;
@@ -481,8 +483,9 @@ namespace Ostap
         {
           //
           // ==================================================================
+          static const std::string s_GAQIU { "GAQIU" } ;
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xlow ,  "GAQIU" , 
+            ( tag , func->params , xlow ,  s_GAQIU , 
               aprecision , rprecision , 
               limit      , reason , file , line ) ;
           // ==================================================================
@@ -528,8 +531,9 @@ namespace Ostap
         {
           //
           // ==================================================================
+          static const std::string s_GAQIL { "GAQIL" } ;
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xhigh , "GAQIL" ,  
+            ( tag , func->params , xhigh , s_GAQIL ,  
               aprecision , rprecision    , 
               limit      , reason        ,  file , line ) ;
           // ==================================================================
@@ -576,8 +580,9 @@ namespace Ostap
           const unsigned long        line       = 0       ) const // line number 
         {
           // ==================================================================
+          static const std::string s_GAQP { "GAQP" } ;
           const std::size_t key = std::hash_combine 
-            ( tag  , func->params       , "GAQP" ,  
+            ( tag  , func->params       , s_GAQP ,  
               xlow , xhigh , pnts       ,   
               aprecision   , rprecision , 
               limit        , reason     ,  file , line ) ;
@@ -630,8 +635,9 @@ namespace Ostap
           const unsigned long        line       = 0       ) const // line number 
         {
           // ==================================================================
+          static const std::string s_GAWC { "GAWC" } ;
           const std::size_t key = std::hash_combine 
-            ( tag  , func->params       , "GAWC" ,  
+            ( tag  , func->params       , s_GAWC ,  
               xlow , xhigh , c          ,   
               aprecision   , rprecision , 
               limit        , reason     ,  file , line ) ;
@@ -681,8 +687,9 @@ namespace Ostap
         // ====================================================================
         typedef std::map<std::size_t,Result>  MAP   ;
         typedef SyncedCache<MAP>              CACHE ;
-        /// the actual integrtaion cache 
+        /// the actual integration cache 
         static CACHE              s_cache     ; // integration cache 
+        /// integration cache size 
         static const unsigned int s_CACHESIZE ; // cache size 
         // ====================================================================
       };  
@@ -692,7 +699,7 @@ namespace Ostap
       Integrator1D<FUNCTION>::s_cache = Integrator1D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 10000 ;
+      const unsigned int Integrator1D<FUNCTION>::s_CACHESIZE = 50000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL
     // ========================================================================
@@ -711,7 +718,7 @@ namespace Ostap
         : m_f2d  ( f2d ) 
         , m_y    ( y   ) 
       {}
-      IntegrateX() =delete ;
+      IntegrateX () =delete ;
       // ======================================================================
       double operator() ( const double x ) const 
       { return (*m_f2d) ( x , m_y ) ; }
@@ -736,7 +743,7 @@ namespace Ostap
         : m_f2d  ( f2d ) 
         , m_x    ( x   ) 
       {}
-      IntegrateY() = delete ;
+      IntegrateY () = delete ;
       // ======================================================================
       double operator() ( const double y ) const 
       { return (*m_f2d) ( m_x , y ) ; }

@@ -61,7 +61,7 @@ namespace std
   template <>
   struct hash<const char*> 
   {
-    size_t operator() ( const char *str ) const 
+    inline size_t operator() ( const char *str ) const 
     {
       std::size_t seed =  0 ;
       char c;
@@ -70,19 +70,19 @@ namespace std
     }
   } ;
   // ==========================================================================
-  template <unsigned int N>
-  struct hash<char[N]>
+  template <typename T, int N>
+  struct hash<T(&)[N]> 
   {
-    size_t operator() ( const char (&s)[N] ) const 
+    inline size_t operator() ( const T(&s)[N] ) const 
     { return hash_range ( &s , &s+N ); }
-  };  
+  } ;
   // ==========================================================================
-  template <unsigned int N>
-  struct hash<const char[N]>
+  template <typename T, int N>
+  struct hash<const T(&)[N]> 
   {
-    size_t operator() ( const char (&s)[N] ) const 
+    inline size_t operator() ( const T(&s)[N] ) const 
     { return hash_range ( &s , &s+N ); }
-  };  
+  } ;
   // ==========================================================================
   template <class T>
   struct hash<std::vector<T> >
