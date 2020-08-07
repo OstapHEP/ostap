@@ -1,15 +1,19 @@
 ## New features 
 
+ 1. Simplify interface for `Ostap::Math::Integrator` and `Ostap::Math::DalitzIntegrator` classes: essentially remove large duplication, the tag/label argumetn for caching is now the last one and "optional"
+ 1. add methods to create `Ostap::Math::ChebyshevSum` from `Ostap::Math::ChebyshevApproximation`
+
 ## Backward incompatible changes
 
 ## Bug fixes:
+
 
 # v1.5.0.1
 
 ## New features 
  1. `parallel/task.py`  : change master/slave to main/secondary                    (request from Bogdan Popovici)
  1. Modify a bit printout for `Ostap::StatEntity` and `Ostap::WStarEntity` classes (request from Alexey Dzyuba) 
- 1. tiny tweak for `ostap.fitting.badic.all_args`
+ 1. tiny tweak for `ostap.fitting.basic.all_args`
  1. add `all_integers`, `all_numerics` and `all_strings` to `ostap/core/ostap_types.py`
 
 ## Backward incompatible changes

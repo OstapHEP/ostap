@@ -42,7 +42,8 @@ double Ostap::Math::Integrator::integrate
 ( Ostap::Math::Integrator::function1 f1   , 
   const double                       xmin , 
   const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   , 
+  const std::size_t                  tag  ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -51,8 +52,9 @@ double Ostap::Math::Integrator::integrate
   double result ;
   double error  ;
   static const char s_message[] = "Ostap::Math::Integrator/integrate(1D)" ;
+  //
   std::tie ( ierror, result , error ) = 
-    integrator.gaq_integrate 
+    integrator.gaq_integrate    
     ( &F                , 
       xmin              ,   // lower integration edge  
       xmax              ,   // upper integration edge
@@ -62,8 +64,9 @@ double Ostap::Math::Integrator::integrate
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
-  //
+      __LINE__          ,   // the line
+      GSL_INTEG_GAUSS51 ,   // the rule 
+      tag               ) ; // label/tag
   //
   return result ;
 }
@@ -77,7 +80,8 @@ double Ostap::Math::Integrator::integrate
 // ============================================================================
 double Ostap::Math::Integrator::integrate_infinity
 ( Ostap::Math::Integrator::function1 f1   , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -95,7 +99,8 @@ double Ostap::Math::Integrator::integrate_infinity
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
+      __LINE__          ,   // the line 
+      tag               ) ; // tag/label 
   //
   return result ;
 }
@@ -111,7 +116,8 @@ double Ostap::Math::Integrator::integrate_infinity
 double Ostap::Math::Integrator::integrate_to_infinity
 ( Ostap::Math::Integrator::function1 f1   , 
   const double                       xmin , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -130,7 +136,8 @@ double Ostap::Math::Integrator::integrate_to_infinity
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
+      __LINE__          ,   // the line 
+      tag               ) ; // tag/label 
   //
   return result ;
 }
@@ -146,7 +153,8 @@ double Ostap::Math::Integrator::integrate_to_infinity
 double Ostap::Math::Integrator::integrate_from_infinity
 ( Ostap::Math::Integrator::function1 f1   , 
   const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -165,7 +173,8 @@ double Ostap::Math::Integrator::integrate_from_infinity
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
+      __LINE__          ,   // the line 
+      tag               ) ; // tag/label 
   //
   return result ;
 }
@@ -184,11 +193,12 @@ double Ostap::Math::Integrator::cauchy_pv
   const double                       c    , 
   const double                       xmin , 
   const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   if      ( s_equal ( xmax , xmin ) ) {return 0 ; }  
   else if (           xmax < xmin   ) 
-  { return -1 * cauchy_pv ( std::cref ( f1 ) , c , xmax , xmin , ws ) ; }
+  { return -1 * cauchy_pv ( std::cref ( f1 ) , c , xmax , xmin , ws , tag ) ; }
   //
   // regular integration  
   if ( c < xmin || xmax < c ) 
@@ -197,7 +207,7 @@ double Ostap::Math::Integrator::cauchy_pv
     auto ff = [f2,c]  ( const double  x ) -> double 
       { return f2 ( x ) / ( x - c ) ; } ;
     //
-    return integrate ( std::cref ( ff ) , xmin , xmax , ws ) ;
+    return integrate ( std::cref ( ff ) , xmin , xmax , ws , tag ) ;
   }
   else if ( s_equal ( c , xmin ) ) 
   {
@@ -225,9 +235,10 @@ double Ostap::Math::Integrator::cauchy_pv
         -1                    ,   // limit 
         s_message             ,   // reason of failure 
         __FILE__              ,   // the file 
-        __LINE__              ) ; // the line 
+        __LINE__              ,   // the line 
+        tag                   ) ; // tag/label 
     //
-    return result + integrate ( std::cref ( ff ) , xc , xmax , ws ) ;
+    return result + integrate ( std::cref ( ff ) , xc , xmax , ws , tag ) ;
   }
   else if ( s_equal ( c , xmax ) ) 
   {
@@ -255,9 +266,10 @@ double Ostap::Math::Integrator::cauchy_pv
         -1                    ,   // limit 
         s_message             ,   // reason of failure 
         __FILE__              ,   // the file 
-        __LINE__              ) ; // the line 
+        __LINE__              ,   // the line 
+        tag                   ) ; // tag/label 
     //
-    return result + integrate ( std::cref ( ff ) , xmin , xc , ws ) ;
+    return result + integrate ( std::cref ( ff ) , xmin , xc , ws , tag ) ;
   }
   //
   // regular Cauchy integral
@@ -286,11 +298,12 @@ double Ostap::Math::Integrator::cauchy_pv
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
+      __LINE__          ,   // the line 
+      tag               ) ; // tag/label 
   //
   return result + 
-    integrate ( std::cref ( ff ) , xmin   , c - dx , ws ) + 
-    integrate ( std::cref ( ff ) , c + dx , xmax   , ws ) ;
+    integrate ( std::cref ( ff ) , xmin   , c - dx , ws , tag ) + 
+    integrate ( std::cref ( ff ) , c + dx , xmax   , ws , tag ) ;
   //
 }
 // ============================================================================
@@ -306,7 +319,8 @@ double Ostap::Math::Integrator::cauchy_pv_to_infinity
 ( Ostap::Math::Integrator::function1 f1    , 
   const double                       c     , 
   const double                       xmin  , 
-  const Ostap::Math::WorkSpace&      ws    ) 
+  const Ostap::Math::WorkSpace&      ws    , 
+  const std::size_t                  tag   ) 
 {
   //
   if ( c < xmin ) 
@@ -315,7 +329,7 @@ double Ostap::Math::Integrator::cauchy_pv_to_infinity
     auto ff = [f2,c]  ( const double  x ) -> double 
       { return f2 ( x ) / ( x - c ) ; } ;
     //
-    return integrate_to_infinity ( std::cref ( ff ) , xmin , ws ) ;
+    return integrate_to_infinity ( std::cref ( ff ) , xmin , ws , tag ) ;
   }
   //
   double xx = c + ( c - xmin ) / 2 ;
@@ -326,8 +340,8 @@ double Ostap::Math::Integrator::cauchy_pv_to_infinity
     { return f2 ( x ) / ( x - c ) ; } ;
   //
   return 
-    cauchy_pv              ( std::cref ( f1 ) , c , xmin , xx , ws ) + 
-    integrate_to_infinity  ( std::cref ( ff ) ,            xx , ws ) ;
+    cauchy_pv              ( std::cref ( f1 ) , c , xmin , xx , ws , tag ) + 
+    integrate_to_infinity  ( std::cref ( ff ) ,            xx , ws , tag ) ;
 }
 // ============================================================================
 /*  get Cauchy principal value integral 
@@ -342,7 +356,8 @@ double Ostap::Math::Integrator::cauchy_pv_from_infinity
 ( Ostap::Math::Integrator::function1 f1    , 
   const double                       c     , 
   const double                       xmax  , 
-  const Ostap::Math::WorkSpace&      ws    ) 
+  const Ostap::Math::WorkSpace&      ws    ,
+  const std::size_t                  tag   ) 
 {
   //
   if ( c > xmax ) 
@@ -351,7 +366,7 @@ double Ostap::Math::Integrator::cauchy_pv_from_infinity
     auto ff = [f2,c]  ( const double  x ) -> double 
       { return f2 ( x ) / ( x - c ) ; } ;
     //
-    return integrate_from_infinity ( std::cref ( ff ) , xmax , ws ) ;
+    return integrate_from_infinity ( std::cref ( ff ) , xmax , ws , tag ) ;
   }
   //
   double xx =  c - ( xmax - c ) / 2 ;
@@ -362,8 +377,8 @@ double Ostap::Math::Integrator::cauchy_pv_from_infinity
     { return f2 ( x ) / ( x - c ) ; } ;
   //
   return 
-    integrate_from_infinity  ( std::cref ( ff ) ,            xx , ws ) +
-    cauchy_pv                ( std::cref ( f1 ) , c , xx , xmax , ws ) ;
+    integrate_from_infinity  ( std::cref ( ff ) ,            xx , ws , tag ) +
+    cauchy_pv                ( std::cref ( f1 ) , c , xx , xmax , ws , tag ) ;
 }
 // ============================================================================
 /*  Kramers-Kronig dispersion relation with n-subtractions 
@@ -381,7 +396,8 @@ double Ostap::Math::Integrator::kramers_kronig
   const double                       s    , 
   const double                       xmin , 
   const unsigned short               n    , 
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   // 
   if ( 0 < n ) 
@@ -392,10 +408,10 @@ double Ostap::Math::Integrator::kramers_kronig
     //
     return 
       std::pow ( s , n ) * 
-      kramers_kronig ( std::cref ( ff ) , s , xmin , 0 , ws ) ;
+      kramers_kronig ( std::cref ( ff ) , s , xmin , 0 , ws , tag ) ;
   }
   // no subtractions 
-  return cauchy_pv_to_infinity ( std::cref ( f1 ) , s , xmin , ws ) / M_PI ;
+  return cauchy_pv_to_infinity ( std::cref ( f1 ) , s , xmin , ws , tag ) / M_PI ;
 }
 // ============================================================================
 /*  calculate the integral 
@@ -412,11 +428,12 @@ double Ostap::Math::Integrator::integrateX
   const double                       y    , 
   const double                       xmin ,
   const double                       xmax ,
-  const Ostap::Math::WorkSpace&      ws   ) 
+  const Ostap::Math::WorkSpace&      ws   , 
+  const std::size_t                  tag  ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , std::placeholders::_1 , y ) ;
-  return integrate ( std::cref ( f1 ) , xmin , xmax , ws ) ;
+  return integrate ( std::cref ( f1 ) , xmin , xmax , ws , tag ) ;
 } 
 // ============================================================================
 /** calculate the integral 
@@ -433,11 +450,12 @@ double Ostap::Math::Integrator::integrateY
   const double                       x    , 
   const double                       ymin ,
   const double                       ymax ,
-  const Ostap::Math::WorkSpace&      ws   )
+  const Ostap::Math::WorkSpace&      ws   ,
+  const std::size_t                  tag  ) 
 {
   auto f2_ = std::cref ( f2 ) ;
   auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
-  return integrate ( std::cref ( f1 ) , ymin , ymax , ws ) ;
+  return integrate ( std::cref ( f1 ) , ymin , ymax , ws , tag ) ;
 }
 // ==========================================================================
 /** calculate the integral 
@@ -457,8 +475,9 @@ double Ostap::Math::Integrator::integrate
   const double                       xmax ,
   const double                       ymin , 
   const double                       ymax , 
-  const Ostap::Math::WorkSpace&     /* ws */ )  
-{ return integrate ( std::cref ( f2 ) , xmin , xmax , ymin , ymax ) ; }
+  const Ostap::Math::WorkSpace&     /* ws */ , 
+  const std::size_t                  tag     ) 
+{ return integrate ( std::cref ( f2 ) , xmin , xmax , ymin , ymax , tag ) ; }
 // ==========================================================================
 /** calculate the integral 
  *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -475,7 +494,8 @@ double Ostap::Math::Integrator::integrate
   const double                       xmin , 
   const double                       xmax ,
   const double                       ymin , 
-  const double                       ymax ) 
+  const double                       ymax ,
+  const std::size_t                  tag  ) 
 { 
   //
   static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;
@@ -489,170 +509,19 @@ double Ostap::Math::Integrator::integrate
       100000      ,   // limits  
       s_PRECISION ,   // absolute precision 
       s_PRECISION ,   // relative precision 
-      //10000      ,   // limits  
-      //1.e-5      , 
-      //1.e-5      , 
       //
       s_message   ,   // message 
       __FILE__    ,   // the file name 
-      __LINE__    ) ; // the line number 
-  //
-  return result ;
+      __LINE__    ,   // the line number 
+      tag         ) ; // tag/label 
+    //
+    return result ;
 }
 // =============================================================================
 
 
-// =============================================================================
-// Integration with cache 
-// =============================================================================
 
 
-// =============================================================================
-/*  calculate the integral 
- *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
- *  @param f1 the function 
- *  @param xmin lower integration edge 
- *  @param xmax uppr  integration edge
- *  @return the value of the integral 
- */
-// =============================================================================
-double Ostap::Math::Integrator::integrate
-( const std::size_t                  tag  , 
-  Ostap::Math::Integrator::function1 f1   , 
-  const double                       xmin , 
-  const double                       xmax , 
-  const Ostap::Math::WorkSpace&      ws   ) 
-{
-  static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
-  auto F = integrator.make_function( &f1 ) ;
-  //
-  int    ierror ;
-  double result ;
-  double error  ;
-  static const char s_message[] = "Ostap::Math::Integrator/integrate(1Dc)" ;
-  std::tie ( ierror, result , error ) = 
-    integrator.gaq_integrate_with_cache   
-    ( tag               , 
-      &F                , 
-      xmin              ,   // lower integration edge  
-      xmax              ,   // upper integration edge
-      workspace ( ws )  ,   // workspace 
-      s_PRECISION       ,   // absolute precision 
-      s_PRECISION       ,   // relative precision 
-      -1                ,   // limit 
-      s_message         ,   // reason of failure 
-      __FILE__          ,   // the file 
-      __LINE__          ) ; // the line 
-  //
-  return result ;
-}
-// ============================================================================
-/*  calculate the integral 
- *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
- *  @param f2 the function 
- *  @param y parameter y
- *  @param xmin lower integration edge in x 
- *  @param xmax upper integration edge in x 
- *  @return the value of the integral 
- */
-// ============================================================================
-double Ostap::Math::Integrator::integrateX
-( const std::size_t                  tag  , 
-  Ostap::Math::Integrator::function2 f2   , 
-  const double                       y    , 
-  const double                       xmin ,
-  const double                       xmax ,
-  const Ostap::Math::WorkSpace&      ws   ) 
-{
-  auto f2_ = std::cref ( f2 ) ;
-  auto f1  = std::bind ( f2_ , std::placeholders::_1 , y ) ;
-  return integrate ( std::hash_combine ( tag , 'X' , y )  , std::cref ( f1 ) , xmin , xmax , ws ) ;
-} 
-// ============================================================================
-/** calculate the integral 
- *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
- *  @param f2 the function 
- *  @param x parameter x
- *  @param ymin lower integration edge in y 
- *  @param ymax upper integration edge in y 
- *  @return the value of the integral 
- */
-// ============================================================================
-double Ostap::Math::Integrator::integrateY
-( const std::size_t                  tag  , 
-  Ostap::Math::Integrator::function2 f2   , 
-  const double                       x    , 
-  const double                       ymin ,
-  const double                       ymax ,
-  const Ostap::Math::WorkSpace&      ws   ) 
-{
-  auto f2_ = std::cref ( f2 ) ;
-  auto f1  = std::bind ( f2_ , x , std::placeholders::_1 ) ;
-  return integrate ( std::hash_combine ( tag , 'Y' , x ) , std::cref ( f1 ), ymin , ymax , ws ) ;
-}
-// ==========================================================================
-/** calculate the integral 
- *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
- *  @param f2 the function 
- *  @param xmin lower integration edge in x 
- *  @param xmax upper integration edge in x 
- *  @param ymin lower integration edge in y 
- *  @param ymax upper integration edge in y 
- *  @param integration workspace (not used)
- *  @return the value of the integral 
- */
-// ==========================================================================
-double Ostap::Math::Integrator::integrate
-( const std::size_t                  tag  , 
-  Ostap::Math::Integrator::function2 f2   , 
-  const double                       xmin , 
-  const double                       xmax ,
-  const double                       ymin , 
-  const double                       ymax , 
-  const Ostap::Math::WorkSpace&     /* ws */ ) 
-{ return integrate ( tag , std::cref ( f2 ) , xmin , xmax , ymin , ymax ) ; }
-// ==========================================================================
-/** calculate the integral 
- *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
- *  @param f2 the function 
- *  @param xmin lower integration edge in x 
- *  @param xmax upper integration edge in x 
- *  @param ymin lower integration edge in y 
- *  @param ymax upper integration edge in y 
- *  @return the value of the integral 
- */
-// ==========================================================================
-double Ostap::Math::Integrator::integrate
-( const std::size_t                  tag  , 
-  Ostap::Math::Integrator::function2 f2   , 
-  const double                       xmin , 
-  const double                       xmax ,
-  const double                       ymin , 
-  const double                       ymax ) 
-{ 
-  //
-  static const Ostap::Math::GSL::Integrator2D<function2> s_cubature{} ;
-  static const char s_message[] = "Ostap::Math::Integrator/integrate(2Dc)" ;
-  const auto F = s_cubature.make_function ( &f2 , xmin , xmax , ymin , ymax ) ;
-  int     ierror =  0 ;
-  double  result =  1 ;
-  double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
-    ( tag         , 
-      &F          ,   // the function  
-      100000      ,   // limits  
-      s_PRECISION ,   // absolute precision 
-      s_PRECISION ,   // relative precision 
-      // 20000      ,   // limits  
-      // 1.e-5      , 
-      // 1.e-5      , 
-      //
-      s_message   ,   // message 
-      __FILE__    ,   // the file name 
-      __LINE__    ) ; // the line number 
-  //
-  return result ;
-}
 // =============================================================================
 //                                                                       The END 
 // =============================================================================

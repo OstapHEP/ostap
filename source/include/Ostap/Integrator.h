@@ -45,10 +45,11 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double integrate
-      ( FUNCTION1        f1   , 
-        const double     xmin , 
-        const double     xmax ) const
-      { return integrate ( std::cref ( f1 ) , xmin , xmax , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      xmin     , 
+        const double      xmax     ,
+        const std::size_t tag  = 0 ) const 
+      { return integrate ( std::cref ( f1 ) , xmin , xmax , m_workspace , tag ) ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{+\infty} f_1(x) dx \f]
@@ -57,8 +58,9 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double integrate_infinity
-      ( FUNCTION1        f1   )  const 
-      { return integrate_infinity  ( std::cref ( f1 ) , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const std::size_t tag  = 0 ) const 
+      { return integrate_infinity  ( std::cref ( f1 ) , m_workspace , tag ) ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{+\infty} f_1(x) dx \f]
@@ -68,9 +70,10 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double integrate_to_infinity
-      ( FUNCTION1        f1   , 
-        const double     xmin )  const 
-      { return integrate_to_infinity  ( std::cref ( f1 ) , xmin , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      xmin     , 
+        const std::size_t tag  = 0 ) const 
+      { return integrate_to_infinity  ( std::cref ( f1 ) , xmin , m_workspace , tag ) ; }
       // ========================================================================
       /** calculate the integral 
        *  \f[ r = \mathcal{P}\int_{-\infty}^{x_{max}} f_1(x) dx \f]
@@ -81,9 +84,10 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double integrate_from_infinity
-      ( FUNCTION1        f1   , 
-        const double     xmax )  const 
-      { return integrate_from_infinity  ( std::cref ( f1 ) , xmax , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      xmax     , 
+        const std::size_t tag  = 0 ) const 
+      { return integrate_from_infinity  ( std::cref ( f1 ) , xmax , m_workspace , tag ) ; }
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{x_{min}}^{x_{max}}\frac{f(x)}{x-c}dx \f]
@@ -94,11 +98,12 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double cauchy_pv 
-      ( FUNCTION1        f1   , 
-        const double     c    , 
-        const double     xmin , 
-        const double     xmax ) const 
-      { return cauchy_pv ( std::cref ( f1 ) , c , xmin , xmax , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      c        , 
+        const double      xmin     , 
+        const double      xmax     , 
+        const std::size_t tag  = 0 ) const 
+      { return cauchy_pv ( std::cref ( f1 ) , c , xmin , xmax , m_workspace , tag ) ; }
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{x_{min}}^{+\infty}\frac{f(x)}{x-c}dx \f]
@@ -108,10 +113,11 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double cauchy_pv_to_infinity  
-      ( FUNCTION1        f1   , 
-        const double     c    , 
-        const double     xmin ) const 
-      { return cauchy_pv_to_infinity ( std::cref ( f1 ) , c , xmin , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      c        , 
+        const double      xmin     ,  
+        const std::size_t tag  = 0 ) const 
+      { return cauchy_pv_to_infinity ( std::cref ( f1 ) , c , xmin , m_workspace , tag ) ; }
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{-\infty}^{x_{max}}\frac{f(x)}{x-c}dx \f]
@@ -121,10 +127,11 @@ namespace Ostap
        */
       template <class FUNCTION1>
       double cauchy_pv_from_infinity  
-      ( FUNCTION1        f1   , 
-        const double     c    , 
-        const double     xmax ) const 
-      { return cauchy_pv_from_infinity ( std::cref ( f1 ) , c , xmax , m_workspace ) ; }
+      ( FUNCTION1         f1       , 
+        const double      c        , 
+        const double      xmax     , 
+        const std::size_t tag  = 0 ) const 
+      { return cauchy_pv_from_infinity ( std::cref ( f1 ) , c , xmax , m_workspace , tag ) ; }
       // ======================================================================
       /** Kramers-Kronig dispersion relation with n-subtractions 
        *  \f[ g(s) = \frac{s^n}{\pi}
@@ -140,8 +147,9 @@ namespace Ostap
       ( FUNCTION1            f1       , 
         const double         s        , 
         const double         xmin     , 
-        const unsigned short n    = 0 ) const 
-      { return kramers_kronig ( std::cref ( f1 ) , s , xmin , n , m_workspace ) ; }
+        const unsigned short n    = 0 , 
+        const std::size_t    tag  = 0 ) const 
+      { return kramers_kronig ( std::cref ( f1 ) , s , xmin , n , m_workspace , tag ) ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
@@ -154,11 +162,12 @@ namespace Ostap
        */
       template <class FUNCTION2>
       double integrateX
-      ( FUNCTION2        f2   , 
-        const double     y    , 
-        const double     xmin ,
-        const double     xmax ) const 
-      { return integrate ( std::cref ( f2 ) , y , xmin , xmax , m_workspace ) ; }
+      ( FUNCTION2         f2      , 
+        const double      y       , 
+        const double      xmin    ,
+        const double      xmax    ,  
+        const std::size_t tag = 0 ) const
+      { return integrate ( std::cref ( f2 ) , y , xmin , xmax , m_workspace , tag ) ; }
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
@@ -171,11 +180,12 @@ namespace Ostap
        */
       template <class FUNCTION2>
       double integrateY
-      ( FUNCTION2        f2   , 
-        const double     x    , 
-        const double     ymin ,
-        const double     ymax ) const 
-      { return integrate ( std::cref ( f2 ) , x , ymin , ymax , m_workspace ) ; }
+      ( FUNCTION2         f2      , 
+        const double      x       , 
+        const double      ymin    ,
+        const double      ymax    ,
+        const std::size_t tag = 0 ) const 
+      { return integrate ( std::cref ( f2 ) , x , ymin , ymax , m_workspace , tag ) ; }
       // ======================================================================
     public: // the actual static methods to perform the integration 
       // ======================================================================
@@ -184,24 +194,28 @@ namespace Ostap
        *  @param f1 the function 
        *  @param xmin lower integration edge 
        *  @param xmax upper  integration edge
-       *  @param integration workspace 
+       *  @param ws   integration workspace 
+       *  @param tag   unique tag/label 
        *  @return the value of the integral 
        */
       static double integrate
-      ( function1        f1   , 
-        const double     xmin , 
-        const double     xmax , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const double      xmin    , 
+        const double      xmax    , 
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{+\infty} f_1(x) dx \f]
        *  @param f1 the function 
-       *  @param integration workspace 
+       *  @param ws integration workspace 
+       *  @param tag   unique tag/label 
        *  @return the value of the integral 
        */
       static double integrate_infinity
-      ( function1        f1   , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{+\infty} f_1(x) dx \f]
@@ -211,9 +225,10 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrate_to_infinity
-      ( function1        f1   , 
-        const double     xmin , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const double      xmin    , 
+        const WorkSpace&  ws      ,
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{-\infty}^{x_{max}} f_1(x) dx \f]
@@ -223,9 +238,10 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrate_from_infinity
-      ( function1        f1   , 
-        const double     xmax , 
-        const WorkSpace& ws   ) ;
+      ( function1        f1       , 
+        const double     xmax     , 
+        const WorkSpace& ws       ,
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{x_{min}}^{x_{max}}\frac{f(x)}{x-c}dx \f]
@@ -236,11 +252,12 @@ namespace Ostap
        *  @param integration workspace 
        */
       static double cauchy_pv 
-      ( function1        f1   , 
-        const double     c    , 
-        const double     xmin , 
-        const double     xmax , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const double      c       , 
+        const double      xmin    , 
+        const double      xmax    , 
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{x_{min}}^{+\infty}\frac{f(x)}{x-c}dx \f]
@@ -250,10 +267,11 @@ namespace Ostap
        *  @param integration workspace 
        */
       static double cauchy_pv_to_infinity 
-      ( function1        f1   , 
-        const double     c    , 
-        const double     xmin , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const double      c       , 
+        const double      xmin    , 
+        const WorkSpace&  ws      ,
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** get Cauchy principal value integral 
        *  \f[ g(c) =  \mathcal{P} \int_{-\infty}^{+x_{max}}\frac{f(x)}{x-c}dx \f]
@@ -263,10 +281,11 @@ namespace Ostap
        *  @param integration workspace 
        */
       static double cauchy_pv_from_infinity 
-      ( function1        f1   , 
-        const double     c    , 
-        const double     xmax , 
-        const WorkSpace& ws   ) ;
+      ( function1         f1      , 
+        const double      c       , 
+        const double      xmax    , 
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** Kramers-Kronig dispersion relation with n-subtractions 
        *  \f[ g(s) = \frac{s^n}{\pi} 
@@ -279,11 +298,12 @@ namespace Ostap
        *  @see Ostap::Math::Integrator::cauchy_pv_to_infinity 
        */
       static double kramers_kronig 
-      ( function1            f1   , 
-        const double         s    , 
-        const double         xmin , 
-        const unsigned short n    , 
-        const WorkSpace&     ws   ) ;
+      ( function1            f1      , 
+        const double         s       , 
+        const double         xmin    , 
+        const unsigned short n       , 
+        const WorkSpace&     ws      , 
+        const std::size_t    tag = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -300,12 +320,13 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrate
-      ( function2        f2   , 
-        const double     xmin , 
-        const double     xmax ,
-        const double     ymin , 
-        const double     ymax ,
-        const WorkSpace& /* ws */ ) ;
+      ( function2         f2      , 
+        const double      xmin    , 
+        const double      xmax    ,
+        const double      ymin    , 
+        const double      ymax    ,
+        const WorkSpace& /* ws */ , 
+        const std::size_t tag = 0 ) ;
       // =======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
@@ -317,11 +338,12 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrate
-      ( function2        f2   , 
-        const double     xmin , 
-        const double     xmax ,
-        const double     ymin , 
-        const double     ymax ) ;
+      ( function2         f2      , 
+        const double      xmin    , 
+        const double      xmax    ,
+        const double      ymin    , 
+        const double      ymax    ,
+        const std::size_t tag = 0 ) ;
       // =======================================================================
       // 1D integrtaion for 2D functions 
       // =======================================================================
@@ -335,11 +357,12 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrateX
-      ( function2        f2   , 
-        const double     y    , 
-        const double     xmin ,
-        const double     xmax ,
-        const WorkSpace& ws   ) ;
+      ( function2         f2      , 
+        const double      y       , 
+        const double      xmin    ,
+        const double      xmax    ,
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
       /** calculate the integral 
        *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
@@ -351,102 +374,12 @@ namespace Ostap
        *  @return the value of the integral 
        */
       static double integrateY
-      ( function2        f2   , 
-        const double     x    , 
-        const double     ymin ,
-        const double     ymax ,
-        const WorkSpace& ws   ) ;
-      // ======================================================================
-    public: // integration with cache 
-      // ======================================================================      
-      /** calculate the integral 
-       *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
-       *  @param tag unique tag 
-       *  @param f1 the function 
-       *  @param xmin lower integration edge 
-       *  @param xmax uppr  integration edge
-       *  @param integration workspace 
-       *  @return the value of the integral 
-       */
-      static double  integrate
-      ( const std::size_t tag  , 
-        function1         f1   , 
-        const double      xmin , 
-        const double      xmax , 
-        const WorkSpace&  ws   ) ;
-      // ======================================================================
-      /** calculate the integral 
-       *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
-       *  @param tag unique tag 
-       *  @param f2 the function 
-       *  @param xmin lower integration edge in x 
-       *  @param xmax upper integration edge in x 
-       *  @param ymin lower integration edge in y 
-       *  @param ymax upper integration edge in y 
-       *  @param integration workspace (not used)
-       *  @return the value of the integral 
-       */
-      static double integrate
-      ( const std::size_t tag  , 
-        function2         f2   , 
-        const double      xmin , 
-        const double      xmax ,
-        const double      ymin , 
-        const double      ymax ,
-        const WorkSpace& /* ws */ ) ;
-      // =======================================================================
-      /** calculate the integral 
-       *  \f[ r = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}}f_2(x,y) dx dy \f]
-       *  @param f2 the function 
-       *  @param xmin lower integration edge in x 
-       *  @param xmax upper integration edge in x 
-       *  @param ymin lower integration edge in y 
-       *  @param ymax upper integration edge in y 
-       *  @return the value of the integral 
-       */
-      static double  integrate
-      ( const std::size_t tag  , 
-        function2         f2   , 
-        const double      xmin , 
-        const double      xmax ,
-        const double      ymin , 
-        const double      ymax ) ;
-      // =======================================================================
-      /** calculate the integral 
-       *  \f[ r = \int_{x_{min}}^{x_{max}}f_2(x,y) dx \f]
-       *  @param tag unique tag 
-       *  @param f2 the function 
-       *  @param y parameter y
-       *  @param xmin lower integration edge in x 
-       *  @param xmax upper integration edge in x 
-       *  @param integration workspace (not used)
-       *  @return the value of the integral 
-       */
-      static double integrateX
-      ( const std::size_t tag  , 
-        function2         f2   , 
-        const double      y    , 
-        const double      xmin ,
-        const double      xmax ,
-        const WorkSpace&  ws   ) ;
-      // ======================================================================
-      /** calculate the integral 
-       *  \f[ r = \int_{y_{min}}^{y_{max}}f_2(x,y) dy \f]
-       *  @param tag unique tag 
-       *  @param f2 the function 
-       *  @param x parameter x
-       *  @param ymin lower integration edge in y 
-       *  @param ymax upper integration edge in y 
-       *  @param integration workspace (not used)
-       *  @return the value of the integral 
-       */
-      static double  integrateY
-      ( const std::size_t tag  , 
-        function2         f2   , 
-        const double      x    , 
-        const double      ymin ,
-        const double      ymax ,
-        const WorkSpace&  ws   ) ;
+      ( function2         f2      , 
+        const double      x       , 
+        const double      ymin    ,
+        const double      ymax    ,
+        const WorkSpace&  ws      , 
+        const std::size_t tag = 0 ) ;
       // ======================================================================
     private:
       // ======================================================================

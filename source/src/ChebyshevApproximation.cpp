@@ -18,6 +18,7 @@
 // ============================================================================
 #include "Ostap/ChebyshevApproximation.h"
 #include "Ostap/PyCallable.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -38,6 +39,7 @@ namespace
   const char s_METHOD3 [] = "Ostap::Math::ChebyshevApproximation::integral"   ;
   const char s_METHOD4 [] = "Ostap::Math::ChebyshevApproximation::operator+"  ;
   const char s_METHOD5 [] = "Ostap::Math::ChebyshevApproximation::operator*"  ;
+  const char s_METHOD6 [] = "Ostap::Math::ChebyshevApproximation::polynomial" ;
   const Ostap::StatusCode s_SC =  Ostap::StatusCode::FAILURE                  ;
   // ==========================================================================
 }
@@ -297,6 +299,22 @@ Ostap::Math::ChebyshevApproximation::operator*= ( const double a )
   //
   return *this ;
 }
+// ============================================================================
+// convert it to pure chebyshev sum 
+// ============================================================================
+Ostap::Math::ChebyshevSum
+Ostap::Math::ChebyshevApproximation::polynomial() const
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD6 , s_SC ) ;
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  Ostap::Math::ChebyshevSum cp { cs->c , cs->c + cs->order + 1 , cs->a , cs->b } ;
+  cp.setPar ( 0 , 0.5 * cp.par(0) ) ;
+  return cp ;
+}
+// ============================================================================
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

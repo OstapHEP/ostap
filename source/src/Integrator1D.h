@@ -72,24 +72,39 @@ namespace Ostap
           F.params   = const_cast<FUNCTION*>( f )  ;
           F.function = &adapter ;
           return F ; 
-        }
+       }
         // ====================================================================
       public :
         //  ===================================================================
         /// adaptive integrator 
         Result gaq_integrate   
-        ( const gsl_function*        func                 ,       // the function
-          const double               xlow                 ,       // low integration edge 
-          const double               xhigh                ,       // high integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const int                  rule       = GSL_INTEG_GAUSS51 ) const // integration rule 
+        ( const gsl_function*        func                 ,           // the function
+          const double               xlow                 ,           // low integration edge 
+          const double               xhigh                ,           // high integration edge 
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = 1.e-8   ,           // absolute precision
+          const double               rprecision = 1.e-8   ,           // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0                 , // line number          
+          const int                  rule       = GSL_INTEG_GAUSS51 , // integration rule 
+          const std::size_t          tag        = 0                 ) const  // tag/label 
         {
+          // cache? 
+          if ( 0 != tag ) { return gaq_integrate ( tag        , 
+                                                   func       , 
+                                                   xlow       , 
+                                                   xhigh      , 
+                                                   workspace  , 
+                                                   aprecision , 
+                                                   rprecision ,
+                                                   limit      , 
+                                                   reason     ,
+                                                   file       , 
+                                                   line       , 
+                                                   rule       ) ; }
+          //
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -122,8 +137,20 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
-        {
+          const unsigned long        line       = 0       ,       // line number 
+          const std::size_t          tag        = 0       ) const  // tag/label 
+        {          
+          // cache? 
+          if ( 0 != tag ) { return gaqi_integrate ( tag        , 
+                                                    func       , 
+                                                    workspace  ,
+                                                    aprecision , 
+                                                    rprecision ,
+                                                    limit      , 
+                                                    reason     ,
+                                                    file       , 
+                                                    line       ) ; }
+          //
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -134,12 +161,12 @@ namespace Ostap
           //
           const int ierror = gsl_integration_qagi 
             ( const_cast<gsl_function*> ( func ) ,   // the function
-              aprecision         ,   // absolute precision
-              rprecision         ,   // relative precision
-              limit              ,   // maximum number of subintervals
-              workspace          ,   // workspace
-              &result            ,   // the result
-              &error             ) ; // the error in result
+              aprecision                         ,   // absolute precision
+              rprecision                         ,   // relative precision
+              limit                              ,   // maximum number of subintervals
+              workspace                          ,   // workspace
+              &result                            ,   // the result
+              &error                             ) ; // the error in result
           if ( ierror ) { gsl_error ( reason , file , line , ierror ) ; }
           //
           return Result { ierror , result , error } ;  
@@ -155,8 +182,21 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
-        {
+          const unsigned long        line       = 0       ,       // line number 
+          const std::size_t          tag        = 0       ) const // tag/label 
+        {          
+          // cache? 
+          if ( 0 != tag ) { return gaqiu_integrate ( tag        , 
+                                                     func       , 
+                                                     xlow       ,
+                                                     workspace  , 
+                                                     aprecision , 
+                                                     rprecision ,
+                                                     limit      , 
+                                                     reason     ,
+                                                     file       , 
+                                                     line       ) ; }
+          //
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -189,8 +229,20 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const unsigned long        line       = 0       ,       // line number 
+          const std::size_t          tag        = 0       ) const // tag/label 
         {
+          // cache? 
+          if ( 0 != tag ) { return gaqil_integrate ( tag        , 
+                                                     func       , 
+                                                     xhigh      ,
+                                                     workspace  ,
+                                                     aprecision , 
+                                                     rprecision ,
+                                                     limit      , 
+                                                     reason     ,
+                                                     file       , 
+                                                     line       ) ; }
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -225,8 +277,23 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const unsigned long        line       = 0       ,       // line number 
+          const std::size_t          tag        = 0       ) const // tag/label 
         {
+          // cache? 
+          if ( 0 != tag ) { return gaqp_integrate ( tag        , 
+                                                    func       , 
+                                                    xlow       ,
+                                                    xhigh      ,
+                                                    pnts       , 
+                                                    workspace  ,
+                                                    aprecision , 
+                                                    rprecision ,
+                                                    limit      , 
+                                                    reason     ,
+                                                    file       , 
+                                                    line       ) ; }
+          
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -265,8 +332,22 @@ namespace Ostap
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const unsigned long        line       = 0       ,       // line number 
+          const std::size_t          tag        = 0       ) const // tag/label 
         {
+          // cache? 
+          if ( 0 != tag ) { return gawc_integrate ( tag        , 
+                                                    func       , 
+                                                    xlow       ,
+                                                    xhigh      ,
+                                                    c          , 
+                                                    workspace  ,
+                                                    aprecision , 
+                                                    rprecision ,
+                                                    limit      , 
+                                                    reason     ,
+                                                    file       , 
+                                                    line       ) ; }
           // setup GSL 
           Ostap::Math::GSL::GSL_Error_Handler sentry ;
           //
@@ -293,7 +374,7 @@ namespace Ostap
       public: // integration with cache 
         // ====================================================================
         /// adaptive integrator with cache 
-        Result gaq_integrate_with_cache   
+        Result gaq_integrate   
         ( const std::size_t          tag                  ,  
           const gsl_function*        func                 ,       // the function
           const double               xlow                 ,       // low integration edge 
@@ -309,7 +390,7 @@ namespace Ostap
         {
           // ==================================================================
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xlow , xhigh ,  
+            ( tag , func->params , xlow , xhigh ,  "GAQ" , 
               aprecision , rprecision , 
               limit      , reason , file , line , rule ) ;
           // ==================================================================
@@ -340,8 +421,8 @@ namespace Ostap
           // ==================================================================
         }
         // ====================================================================
-        /// adaptive integrator 
-        Result gaqi_integrate_with_cache 
+        /// adaptive integrator with cache 
+        Result gaqi_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,       // the function
           gsl_integration_workspace* workspace            ,       // workspace
@@ -355,7 +436,7 @@ namespace Ostap
           //
           // ==================================================================
           const std::size_t key = std::hash_combine 
-            ( tag , func->params  , 
+            ( tag , func->params  ,  "GAQI" , 
               aprecision , rprecision , 
               limit      , reason , file , line ) ;
           // ==================================================================
@@ -385,8 +466,8 @@ namespace Ostap
           // ==================================================================
         }
         // ====================================================================
-        /// adaptive integrator 
-        Result gaqiu_integrate_with_cache 
+        /// adaptive integrator with cache 
+        Result gaqiu_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,       // the function
           const double               xlow                 ,       // low integration edge 
@@ -401,7 +482,7 @@ namespace Ostap
           //
           // ==================================================================
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xlow ,  
+            ( tag , func->params , xlow ,  "GAQIU" , 
               aprecision , rprecision , 
               limit      , reason , file , line ) ;
           // ==================================================================
@@ -433,7 +514,7 @@ namespace Ostap
         }
         // ====================================================================
         /// adaptive integrator 
-        Result gaqil_integrate_with_cache 
+        Result gaqil_integrate
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,       // the function
           const double               xhigh                ,       // upper integration edge 
@@ -448,9 +529,9 @@ namespace Ostap
           //
           // ==================================================================
           const std::size_t key = std::hash_combine 
-            ( tag , func->params , xhigh ,  
-              aprecision , rprecision , 
-              limit      , reason , file , line ) ;
+            ( tag , func->params , xhigh , "GAQIL" ,  
+              aprecision , rprecision    , 
+              limit      , reason        ,  file , line ) ;
           // ==================================================================
           { // look into the cache ============================================
             CACHE::Lock lock { s_cache.mutex() } ;
@@ -466,6 +547,114 @@ namespace Ostap
                                             aprecision , rprecision  , 
                                             limit      , 
                                             reason     , file , line ) ;
+          // ==================================================================
+          { // update the cache ===============================================
+            CACHE::Lock lock  { s_cache.mutex() } ;
+            // clear the cache is too large
+            if ( s_CACHESIZE < s_cache->size() ) { s_cache->clear() ; }
+            // update the cache
+            s_cache->insert ( std::make_pair ( key , result ) ) ;
+          } // ================================================================
+          // ==================================================================
+          return result ;
+          // ==================================================================
+        }
+        // ====================================================================
+        /// adaptive integrator with cache 
+        Result gaqp_integrate   
+        ( const std::size_t          tag                  ,       // tag/label
+          const gsl_function*        func                 ,       // the  function
+          const double               xlow                 ,       // low  integration edge 
+          const double               xhigh                ,       // high integration edge 
+          const std::vector<double>& pnts                 ,       // knowns singular points 
+          gsl_integration_workspace* workspace            ,       // workspace
+          const double               aprecision = 1.e-8   ,       // absolute precision
+          const double               rprecision = 1.e-8   ,       // relative precision
+          int                        limit      = -1      ,       // limit 
+          const char*                reason     = nullptr ,       // message 
+          const char*                file       = nullptr ,       // file name 
+          const unsigned long        line       = 0       ) const // line number 
+        {
+          // ==================================================================
+          const std::size_t key = std::hash_combine 
+            ( tag  , func->params       , "GAQP" ,  
+              xlow , xhigh , pnts       ,   
+              aprecision   , rprecision , 
+              limit        , reason     ,  file , line ) ;
+          // ==================================================================
+          { // look into the cache ============================================
+            CACHE::Lock lock { s_cache.mutex() } ;
+            auto it = s_cache->find  ( key ) ;
+            if ( s_cache->end() != it ) {  return it->second ; }  // AVOID calculation
+            // ================================================================
+          } // ================================================================
+          // ==================================================================
+          // perform numerical inntegration using GSL 
+          Result result = gaqp_integrate ( func       ,
+                                           xlow       ,
+                                           xhigh      ,
+                                           pnts       ,
+                                           workspace  , 
+                                           aprecision , 
+                                           rprecision , 
+                                           limit      , 
+                                           reason     , 
+                                           file       , 
+                                           line       ) ;
+          // ==================================================================
+          { // update the cache ===============================================
+            CACHE::Lock lock  { s_cache.mutex() } ;
+            // clear the cache is too large
+            if ( s_CACHESIZE < s_cache->size() ) { s_cache->clear() ; }
+            // update the cache
+            s_cache->insert ( std::make_pair ( key , result ) ) ;
+          } // ================================================================
+          // ==================================================================
+          return result ;
+          // ==================================================================
+        }
+        // ====================================================================
+        /// Cauchy principal value adaptive integrator 
+        Result gawc_integrate   
+        ( const std::size_t          tag                  ,       // tag/label    
+          const gsl_function*        func                 ,       // the  function
+          const double               xlow                 ,       // low  integration edge 
+          const double               xhigh                ,       // high integration edge 
+          const double               c                    ,       // Cauchy's point
+          gsl_integration_workspace* workspace            ,       // workspace
+          const double               aprecision = 1.e-8   ,       // absolute precision
+          const double               rprecision = 1.e-8   ,       // relative precision
+          int                        limit      = -1      ,       // limit 
+          const char*                reason     = nullptr ,       // message 
+          const char*                file       = nullptr ,       // file name 
+          const unsigned long        line       = 0       ) const // line number 
+        {
+          // ==================================================================
+          const std::size_t key = std::hash_combine 
+            ( tag  , func->params       , "GAWC" ,  
+              xlow , xhigh , c          ,   
+              aprecision   , rprecision , 
+              limit        , reason     ,  file , line ) ;
+          // ==================================================================
+          { // look into the cache ============================================
+            CACHE::Lock lock { s_cache.mutex() } ;
+            auto it = s_cache->find  ( key ) ;
+            if ( s_cache->end() != it ) {  return it->second ; }  // AVOID calculation
+            // ================================================================
+          } // ================================================================
+          // ==================================================================
+          // perform numerical integration using GSL 
+          Result result = gawc_integrate ( func       ,
+                                           xlow       ,
+                                           xhigh      ,
+                                           c          ,
+                                           workspace  , 
+                                           aprecision , 
+                                           rprecision , 
+                                           limit      , 
+                                           reason     ,
+                                           file       , 
+                                           line       ) ;
           // ==================================================================
           { // update the cache ===============================================
             CACHE::Lock lock  { s_cache.mutex() } ;

@@ -108,7 +108,7 @@ namespace
     int    ierror    =  0   ;
     double result    =  1.0 ;
     double error     = -1.0 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
       ( tag                  , 
         &F                   ,   // the function
         xlow   , xhigh       ,   // low & high edges
@@ -555,7 +555,7 @@ double Ostap::Math::PS2DPol2::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+  std::tie ( ierror , result , error ) = s_cubature.cubature
     ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return result ;
@@ -587,7 +587,7 @@ double Ostap::Math::PS2DPol2::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     (std::hash_combine ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -629,7 +629,7 @@ double Ostap::Math::PS2DPol2::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     (std::hash_combine ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
@@ -736,7 +736,7 @@ double Ostap::Math::PS2DPol2Sym::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+  std::tie ( ierror , result , error ) = s_cubature.cubature
     ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return  result ;
@@ -769,7 +769,7 @@ double Ostap::Math::PS2DPol2Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( std::hash_combine ( tag() , 'X' , x )                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -929,7 +929,7 @@ double Ostap::Math::PS2DPol3::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache  
+  std::tie ( ierror , result , error ) = s_cubature.cubature
     ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return result ;
@@ -960,7 +960,7 @@ double Ostap::Math::PS2DPol3::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache   
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag  ()                   , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
@@ -999,7 +999,7 @@ double Ostap::Math::PS2DPol3::integrateX
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache  
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     (std::hash_combine ( tag() , 'Y' , y )                   , 
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
@@ -1106,7 +1106,7 @@ double Ostap::Math::PS2DPol3Sym::integral
   int    ierror  =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
-  std::tie ( ierror , result , error ) = s_cubature.cubature_with_cache 
+  std::tie ( ierror , result , error ) = s_cubature.cubature
     ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return  result ;
@@ -1137,7 +1137,7 @@ double Ostap::Math::PS2DPol3Sym::integrateY
   int    ierror    =  0   ;
   double result    =  1.0 ;
   double error     = -1.0 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( std::hash_combine ( tag() , 'X' , x )                  , 
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges

@@ -1196,7 +1196,7 @@ double  Ostap::Math::BW::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low    , high       ,          // low & high edges
@@ -1236,7 +1236,7 @@ double  Ostap::Math::BW::integral () const
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate_with_cache 
+  std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
     ( tag () , 
       &F     , 
       x_high              ,          // low edge
@@ -2219,12 +2219,8 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
 {
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
-  return 
-    0 == m_tag ? 
-    Ostap::Math::DalitzIntegrator::integrate_s1s2 
-    (         std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) :
-    Ostap::Math::DalitzIntegrator::integrate_s1s2 
-    ( m_tag , std::cref ( m_me2 ) , s , m_dalitz ) / ( s * std::sqrt ( s ) ) ;
+  return Ostap::Math::DalitzIntegrator::integrate_s1s2 
+    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag ) / ( s * std::sqrt ( s ) ) ;
 }
 // ============================================================================
 // constructor from (partial) width

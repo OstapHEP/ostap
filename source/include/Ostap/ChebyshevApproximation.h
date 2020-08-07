@@ -11,6 +11,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
@@ -82,6 +83,11 @@ namespace Ostap
       // ======================================================================
       // default (protected) constructor 
       ChebyshevApproximation () ;
+      // ======================================================================
+    public: // convert to ChebyshevSum
+      // ======================================================================
+      /// convert it to pure chebyshev sum 
+      ChebyshevSum polynomial() const ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -227,6 +233,24 @@ namespace Ostap
     inline ChebyshevApproximation operator/
     ( const ChebyshevApproximation& a ,
       const double                  b ) { return a * ( 1/ b ) ; }
+    // ========================================================================
+    /** Build Chebyshev polynomial approximation for the function 
+     *  @param f the function 
+     *  @param a low   edge 
+     *  @param b high edge 
+     *  @param N the order of approximation 
+     *  @see Ostap::Math::ChebyshevSum 
+     *  @see Ostap::Math::ChebyshevApproximation
+     *  @see Ostap::math::chebyshev_sum 
+     */
+    template <class FUNCTION>
+    inline Ostap::Math::ChebyshevSum 
+    approximate ( FUNCTION             f ,  
+                  const double         a , 
+                  const double         b , 
+                  const unsigned short N ) 
+    { return Ostap::Math::ChebyshevApproximation 
+        ( std::cref ( f ) ,  a , b , N ).polynomial () ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
