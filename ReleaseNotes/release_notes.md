@@ -63,7 +63,7 @@
   1. fix but with parsing arguments of `PDF.fitTo` : fro certain number of argument the creation of `RooFit::MultiArg` was incorrect (thanks to Pavel Krokovny)
 
 ## Bug fixes:
-  1. fix missing `hID` in `ostap/fittin/variables.py` (thanks to Alexander Berezhnoy)
+  1. fix missing `hID` in `ostap/fitting/variables.py` (thanks to Alexander Berezhnoy)
   
 
 # v1.4.9.1

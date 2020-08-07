@@ -889,9 +889,6 @@ namespace Ostap
       double m_qs { 0 } ; // momentum  scale
       // ======================================================================
     };
-
-
-
     // =========================================================================
     /** @class ChannelGRL
      *  Description of the channel 
@@ -1007,11 +1004,10 @@ namespace Ostap
       // ======================================================================
       std::complex<double> D    
       ( const double s  , 
-        const double m0 ) const override {
-        return m0 * gamma0 () * std::complex<double> ( m_fD ( s ) ,
+        const double m0 ) const override 
+      { return m0 * gamma0 () * std::complex<double> ( m_fD ( s ) ,
                                                        m_fL ( s ) -
-                                                       m_fL ( m0 * m0 ) ) ;
-      }    
+                                                       m_fL ( m0 * m0 ) ) ; }    
       // ======================================================================
       /** get the phase space factor  \f$ \varrho(s) \f$
        *  optionally normalized at the point \f$ m_n \f$ 

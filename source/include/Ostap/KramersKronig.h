@@ -42,18 +42,21 @@ namespace Ostap
        *   @param omega0 low intergation edge  
        *   @param n      number of subtractions  
        *   @param scale  scale factor (e.g. sign)
-       *   @param size   size of integrtaion workspace  
+       *   @param tag    unique tag/label for cacheing 
+       *   @param size   size of integration workspace  
        */
       template <class FUNCTION>
       KramersKronig ( FUNCTION             rho       ,
                       const double         omega0    ,
                       const unsigned short n     = 0 ,
-                      const double         scale = 1 , 
+                      const double         scale = 1 ,                      
+                      const std::size_t    tag   = 0 ,
                       const std::size_t    size  = 0 )
         : m_rho        ( rho    )
         , m_omega0     ( omega0 )
         , m_n          ( n      )
         , m_scale      ( scale  )          
+        , m_tag        ( tag    )          
         , m_integrator ( size   )
       {}
       // ======================================================================
@@ -65,7 +68,8 @@ namespace Ostap
        *   @param omega0 low intergation edge  
        *   @param n      number of subtractions  
        *   @param scale  scale factor (e.g. sign)
-       *   @param size   size of integrtaion workspace  
+       *   @param tag    unique tag/label for cacheing 
+       *   @param size   size of integration workspace  
        */
       template <class FUNCTION>
       inline static KramersKronig
@@ -73,8 +77,9 @@ namespace Ostap
                 const double         omega0     ,
                 const unsigned short n      = 0 ,
                 const double         scale  = 1 , 
+                const std::size_t    tag    = 0 ,
                 const std::size_t    size   = 0 )
-      { return KramersKronig ( rho , omega0 , n , scale , size ) ; }
+      { return KramersKronig ( rho , omega0 , n , scale , tag , size ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -89,18 +94,21 @@ namespace Ostap
        * @see Ostap::Math::Integrator::kramers_kronig
        */
       double operator() ( const double x ) const
-      { return m_scale * m_integrator.kramers_kronig ( std::cref ( m_rho ) , x , m_omega0 , m_n ) ; }
+      { return m_scale * m_integrator.kramers_kronig 
+          ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag ) ; }
       // ======================================================================
     private:
       // ======================================================================
       /// the function 
-      std::function<double(double)>  m_rho    ; // the function
+      std::function<double(double)>  m_rho        ; // the function
       /// the low integrtaion limit
-      double                         m_omega0 ; // low integration limit 
+      double                         m_omega0     ; // low integration limit 
       /// number of subtractions
-      unsigned short                 m_n      ; // number of subtractions
+      unsigned short                 m_n          ; // number of subtractions
       /// scale factor (e.g. sign) 
-      unsigned short                 m_scale  ; // scale factor (e.g. sign) 
+      unsigned short                 m_scale      ; // scale factor (e.g. sign) 
+      /// unique tag/label 
+      std::size_t                    m_tag        ; // unique tag/label 
       /// Integrator
       Ostap::Math::Integrator        m_integrator ; // integrator 
       // ======================================================================

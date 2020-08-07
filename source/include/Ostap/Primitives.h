@@ -210,13 +210,12 @@ namespace  Ostap
     } ;
     // ========================================================================
     /** @class Moebius
-     *  Moebius tranformation  \f$ f(x) = \frac{ax+b}{cx+d}\f$,with
-     *  \f$ ad-bx \neq 0\f$  
+     *  Moebius tranformation  \f$ f(x) = \frac{ax+b}{cx+d}\f$,
+     *  with \f$ ad - bc \neq 0\f$  
      *  Depending on the parameters one gets:
      *   - linear function, \f$ c=0\f$
      *   - scaling
-     *   - constant function     
-     *   - hyperbola 
+     *   - hyperbola , \f$ a =0 \f$ 
      *  @see https://en.wikipedia.org/wiki/M%C3%B6bius_transformation
      */
     class Moebius
@@ -231,7 +230,7 @@ namespace  Ostap
       // ======================================================================
       /// the only important method 
       inline double operator()  ( const double x ) const
-      { return ( m_a *  x + m_b ) / ( m_c  * x  + m_d ) ;}        
+      { return ( m_a * x + m_b ) / ( m_c  * x  + m_d ) ; }        
       // ======================================================================
     private :
       // ======================================================================
@@ -378,6 +377,45 @@ namespace  Ostap
       /// the second function 
       std::function<double(double)> m_fun2 {   } ; // the second  fuction
       //  =====================================================================      
+    } ;
+    // ========================================================================
+    /** @class Apply
+     *  keep and apply arbitrary function
+     */
+    class Apply
+    {
+    public:
+      // ======================================================================
+      /// constrtuctor  from the function 
+      template <class FUNCTION>
+      Apply ( FUNCTION f ) 
+        : m_fun ( f ) 
+      {}
+      /// constant function 
+      explicit Apply ( const double a ) 
+        : m_fun ( [a] ( const double x ) -> double { return a ;} )
+      {}
+      /// copy constructor 
+      Apply ( const Apply&  ) = default ;
+      /// move constructor
+      Apply (       Apply&& ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      static inline Apply 
+      create ( FUNCTION f ) { return Apply ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the only one important method 
+      inline double operator() ( const double x ) const { return m_fun ( x ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================     
+      /// the function 
+      std::function<double(double)>  m_fun ; // the function
+      // ======================================================================
     } ;
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
