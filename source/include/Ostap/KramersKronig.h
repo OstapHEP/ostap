@@ -97,16 +97,27 @@ namespace Ostap
       { return m_scale * m_integrator.kramers_kronig 
           ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag ) ; }
       // ======================================================================
+    public:
+      // ====================================================================== 
+      /// get the value of \f$ \varrho \f$ function  
+      double         rho     ( const double x ) const { return m_rho ( x ) ; }
+      /// number of subtractions 
+      unsigned short n       () const { return m_n      ; }
+      /// scale  factor 
+      double         scale   () const { return m_scale  ; }
+      /// low integrtaion edge 
+      double         lowEdge () const { return m_omega0 ; }
+      // ======================================================================
     private:
       // ======================================================================
       /// the function 
       std::function<double(double)>  m_rho        ; // the function
-      /// the low integrtaion limit
-      double                         m_omega0     ; // low integration limit 
+      /// the low integration eddge 
+      double                         m_omega0     ; // low integration edge 
       /// number of subtractions
       unsigned short                 m_n          ; // number of subtractions
       /// scale factor (e.g. sign) 
-      unsigned short                 m_scale      ; // scale factor (e.g. sign) 
+      double                         m_scale      ; // scale factor (e.g. sign) 
       /// unique tag/label 
       std::size_t                    m_tag        ; // unique tag/label 
       /// Integrator

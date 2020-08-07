@@ -209,6 +209,69 @@ namespace  Ostap
       //  =====================================================================      
     } ;
     // ========================================================================
+    /** @class Sum
+     *  simple sum of several functions 
+     *  \f[ f(x) = \sum_i f_i(x)  \f] 
+     */
+    class Sum
+    {
+    public :
+      // ======================================================================
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) + f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Sum ( FUNCTION1    f1 ,
+            FUNCTION2    f2 ) 
+        : m_fun1 ( f1 )
+        , m_fun2 ( f2 )
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Sum ( FUNCTION1    f1     ,
+            const double f2     )
+        : m_fun1 ( f1 )
+        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
+      {}
+      // ======================================================================
+      template <class FUNCTION2>
+      Sum ( const double f1     ,
+            FUNCTION2    f2     ) 
+        : m_fun1 ( [f1]( const double /* x */ ) -> double { return f1 ; } )
+        , m_fun2 ( f2 )
+      {}
+      // ====================================================================== 
+      /// Constructor with several functions
+      template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
+      Sum ( FUNCTION1 f1   ,
+            FUNCTION2 f2   , 
+            ARGS ...  args ) 
+        : Sum ( Sum ( f1 , f2 ) , args ... )
+      {}
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// the main method
+      inline  double operator() ( const double x ) const
+      { return m_fun1 ( x ) + m_fun2 ( x ) ; }
+      // ======================================================================
+    public:
+      //  =====================================================================
+      template <typename ...  ARGS>
+      inline static Sum
+      create ( ARGS... args ) { return Sum ( args ... ) ; }
+      // ======================================================================
+    private :
+      //  =====================================================================
+      /// the first function 
+      std::function<double(double)> m_fun1 {   } ; // the first fuction
+      /// the second function 
+      std::function<double(double)> m_fun2 {   } ; // the second  fuction
+      //  =====================================================================      
+    } ;
+    // ========================================================================
     /** @class Moebius
      *  Moebius tranformation  \f$ f(x) = \frac{ax+b}{cx+d}\f$,
      *  with \f$ ad - bc \neq 0\f$  

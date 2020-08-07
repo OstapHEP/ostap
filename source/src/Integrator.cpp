@@ -209,76 +209,72 @@ double Ostap::Math::Integrator::cauchy_pv
     //
     return integrate ( std::cref ( ff ) , xmin , xmax , ws , tag ) ;
   }
-  else if ( s_equal ( c , xmin ) ) 
-  {
-    auto f2 = std::cref ( f1 ) ;
-    auto ff = [f2,xmin]  ( const double  x ) -> double 
-      { return f2 ( x ) / ( x - xmin ) ; } ;
-    //
-    const double xc = xmin + 0.05 * ( xmax - xmin ) ;
-    static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
-    auto F = integrator.make_function( &f1 ) ;
-    //
-    int    ierror ;
-    double result ;
-    double error  ;
-    static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
-    std::tie ( ierror, result , error ) = 
-      integrator.gaqp_integrate 
-      ( &F                    , 
-        xmin                  ,   // lower integration edge  
-        xc                    ,   // high integration edge  
-        std::vector<double>() ,   // other singular points 
-        workspace ( ws )      ,   // workspace 
-        s_PRECISION           ,   // absolute precision 
-        s_PRECISION           ,   // relative precision 
-        -1                    ,   // limit 
-        s_message             ,   // reason of failure 
-        __FILE__              ,   // the file 
-        __LINE__              ,   // the line 
-        tag                   ) ; // tag/label 
-    //
-    return result + integrate ( std::cref ( ff ) , xc , xmax , ws , tag ) ;
-  }
-  else if ( s_equal ( c , xmax ) ) 
-  {
-    auto f2 = std::cref ( f1 ) ;
-    auto ff = [f2,xmax]  ( const double  x ) -> double 
-      { return f2 ( x ) / ( x - xmax ) ; } ;
-    //
-    const double xc = xmax - 0.05 * ( xmax - xmin ) ;
-    static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
-    auto F = integrator.make_function( &f1 ) ;
-    //
-    int    ierror ;
-    double result ;
-    double error  ;
-    static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
-    std::tie ( ierror, result , error ) = 
-      integrator.gaqp_integrate 
-      ( &F                    , 
-        xc                    ,   // lower integration edge  
-        xmax                  ,   // high integration edge  
-        std::vector<double>() ,   // other singular points 
-        workspace ( ws )      ,   // workspace 
-        s_PRECISION           ,   // absolute precision 
-        s_PRECISION           ,   // relative precision 
-        -1                    ,   // limit 
-        s_message             ,   // reason of failure 
-        __FILE__              ,   // the file 
-        __LINE__              ,   // the line 
-        tag                   ) ; // tag/label 
-    //
-    return result + integrate ( std::cref ( ff ) , xmin , xc , ws , tag ) ;
-  }
+  // else if ( s_equal ( c , xmin ) ) 
+  // {
+  //   auto f2 = std::cref ( f1 ) ;
+  //   auto ff = [f2,xmin]  ( const double  x ) -> double 
+  //     { return f2 ( x ) / ( x - xmin ) ; } ;
+  //   //
+  //   const double xc = xmin + 0.05 * ( xmax - xmin ) ;
+  //   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
+  //   auto F = integrator.make_function( &f1 ) ;
+  //   //
+  //   int    ierror ;
+  //   double result ;
+  //   double error  ;
+  //   static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
+  //   std::tie ( ierror, result , error ) = 
+  //     integrator.gaqp_integrate 
+  //     ( &F                    , 
+  //       xmin                  ,   // lower integration edge  
+  //       xc                    ,   // high integration edge  
+  //       std::vector<double>() ,   // other singular points 
+  //       workspace ( ws )      ,   // workspace 
+  //       s_PRECISION           ,   // absolute precision 
+  //       s_PRECISION           ,   // relative precision 
+  //       -1                    ,   // limit 
+  //       s_message             ,   // reason of failure 
+  //       __FILE__              ,   // the file 
+  //       __LINE__              ,   // the line 
+  //       tag                   ) ; // tag/label 
+  //   //
+  //   return result + integrate ( std::cref ( ff ) , xc , xmax , ws , tag ) ;
+  // }
+  // else if ( s_equal ( c , xmax ) ) 
+  // {
+  //   auto f2 = std::cref ( f1 ) ;
+  //   auto ff = [f2,xmax]  ( const double  x ) -> double 
+  //     { return f2 ( x ) / ( x - xmax ) ; } ;
+  //   //
+  //   const double xc = xmax - 0.05 * ( xmax - xmin ) ;
+  //   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
+  //   auto F = integrator.make_function( &f1 ) ;
+  //   //
+  //   int    ierror ;
+  //   double result ;
+  //   double error  ;
+  //   static const char s_message[] = "Ostap::Math::Integrator/integrate_to_infinity" ;
+  //   std::tie ( ierror, result , error ) = 
+  //     integrator.gaqp_integrate 
+  //     ( &F                    , 
+  //       xc                    ,   // lower integration edge  
+  //       xmax                  ,   // high integration edge  
+  //       std::vector<double>() ,   // other singular points 
+  //       workspace ( ws )      ,   // workspace 
+  //       s_PRECISION           ,   // absolute precision 
+  //       s_PRECISION           ,   // relative precision 
+  //       -1                    ,   // limit 
+  //       s_message             ,   // reason of failure 
+  //       __FILE__              ,   // the file 
+  //       __LINE__              ,   // the line 
+  //       tag                   ) ; // tag/label 
+  //   //
+  //   return result + integrate ( std::cref ( ff ) , xmin , xc , ws , tag ) ;
+  // }
   //
   // regular Cauchy integral
   //
-  const double dx = std::min ( std::abs ( c - xmin ) , std::abs ( c - xmax ) ) / 2 ;
-  //
-  auto f2 = std::cref ( f1 ) ;
-  auto ff = [f2,c]  ( const double  x ) -> double 
-    { return f2 ( x ) / ( x - c ) ; } ;
+  const double dx = std::min ( std::abs ( c - xmin ) , std::abs ( c - xmax ) ) / 4 ;
   //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
@@ -290,7 +286,7 @@ double Ostap::Math::Integrator::cauchy_pv
   std::tie ( ierror, result , error ) = 
     integrator.gawc_integrate 
     ( &F                , 
-      c - dx , c + dx   ,   // low and high integrtaion edges 
+      c - dx , c + dx   ,   // low and high integration edges 
       c                 ,   // Cauchy's point 
       workspace ( ws )  ,   // workspace 
       s_PRECISION       ,   // absolute precision 
@@ -300,6 +296,10 @@ double Ostap::Math::Integrator::cauchy_pv
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
       tag               ) ; // tag/label 
+  //
+  auto f2 = std::cref ( f1 ) ;
+  auto ff = [f2,c]  ( const double  x ) -> double 
+    { return f2 ( x ) / ( x - c ) ; } ;
   //
   return result + 
     integrate ( std::cref ( ff ) , xmin   , c - dx , ws , tag ) + 
