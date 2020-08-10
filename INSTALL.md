@@ -23,7 +23,7 @@ On lxplus/7 you can do it with several LCG versions (95,96,97), using the script
 
     lb-set-platform x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh
-    source ./scripts/setup.sh
+    ./scripts/setup.sh
     source LCG_$LCG_VERSION/INSTALL/thisostap.sh
 
 
