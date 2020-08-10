@@ -24,15 +24,19 @@ On lxplus/7 you can do it with several LCG versions (95,96,97), using the script
     lb-set-platform x86_64-centos7-gcc8-opt
     source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh
     ./scripts/setup.sh
-    source LCG_$LCG_VERSION/INSTALL/thisostap.sh
+    source build/INSTALL/thisostap.sh
 
 
-To update the package to latest version:
+To update the package to latest version use the command:
 
     git pull origin <latest tag>
 or to get the head version:
 
     git pull origin master
+
+After update please repite the compilation [steps](INSTALL.md#L24) 
+
+
 For the latest tag check the page https://github.com/OstapHEP/ostap/releases
 
 Docker
