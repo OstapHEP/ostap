@@ -1,3 +1,5 @@
+# v1.5.0.1
+
 ## New features 
 
  1. Simplify interface for `Ostap::Math::Integrator` and `Ostap::Math::DalitzIntegrator` classes: essentially remove large duplication, the tag/label argumetn for caching is now the last one and "optional"
