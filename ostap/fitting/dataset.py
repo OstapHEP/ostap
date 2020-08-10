@@ -837,6 +837,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     #
     vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst , False )
     dataset.addColumn ( vcol )
+    del vcol 
     #
     return dataset 
 

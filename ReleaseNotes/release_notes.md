@@ -6,7 +6,8 @@
 ## Backward incompatible changes
 
 ## Bug fixes:
-
+ 1. fix a bit strange "feature" with "derived" variable in `RooDataSet` (thanks  to Alexander Artamonov for rereporting).  It happens that `RooDataSet::addColumn`RooDataSet::addColumns` behave a bit differently. the  first one issues the error message and variable behaves weirdly. 
+  
 
 # v1.5.0.1
 

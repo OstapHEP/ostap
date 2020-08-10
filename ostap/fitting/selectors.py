@@ -112,7 +112,7 @@ from   ostap.logger.colorized import attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, items_loop 
+from   ostap.core.core        import cpp, Ostap, items_loop, dsID  
 from   ostap.core.ostap_types import num_types, string_types, integer_types  
 import ostap.fitting.roofit 
 # =============================================================================
@@ -545,7 +545,6 @@ class SelectorWithVars(SelectorWithCuts) :
                    silence      = False           ) :
         
         if not     name :
-            from   ostap.core.core import dsID 
             name = dsID()
             
         if not fullname : fullname = name 
@@ -1231,9 +1230,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
                 varsete.add  ( v.var )
                 stor.add ( v )
                 
-    if not name :
-        from ostap.core.core import dsID 
-        name = dsID () 
+    if not name : name = dsID () 
     if not title and tree.GetName() != tree.GetTitle  :
         title = tree.GetTitle ()
 
@@ -1277,8 +1274,13 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
         with rooSilent ( ROOT.RooFit.ERROR + 1 , True ) :
             with rootError( ROOT.kError ) :
-                ds.addColumns ( fcols )
-        
+                ## it causes some strange behaviour
+                ## ds.addColumns ( fcols )
+                ## it is ok: 
+                for  f in fcols : ds.addColumn ( f ) 
+                del fcols
+                del ffs 
+            
         ##  apply cuts (if any) for the  complex expressions 
         if fcuts :
             fcuts = [ '(%s)' % f for f in fcuts ]
@@ -1308,11 +1310,11 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         vs  = ROOT.RooArgSet()
         vrm = set ( )
         for v in ds.get() :
-            if  v in varset : vs .add ( v )
+            if  v in varset : vs .add ( v      )
             else            : vrm.add ( v.name )
         if vrm and not silent :
             logger.info  ("make_dataset: temporary variables to be removed %s" % str ( tuple ( vrm) ) )
-        ds1 = ds.reduce ( vs )
+        ds1 = ds.reduce ( vs , '' )
         ds.clear()
         del ds
         ds = ds1
