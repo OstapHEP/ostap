@@ -20,19 +20,24 @@ After setting the enviroments clone and build ostap package:
     source <INSTALL_DIRECTORY>/thisostap.sh 
     
 On lxplus/7 you can do it with several LCG versions (95,96,97), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 97 and  x86_64-centos7-gcc8-opt:
+<ul>
+  <li><a name="L24"> lb-set-platform x86_64-centos7-gcc8-opt</li>
+  <li><a name="L25">  source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh</li>
+  <li><a name="L26">  ./scripts/setup.sh</li>
+  <li><a name="L27">  source build/INSTALL/thisostap.sh</li>
+</ul>
 
-    lb-set-platform x86_64-centos7-gcc8-opt
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh
-    source ./scripts/setup.sh
-    source LCG_$LCG_VERSION/INSTALL/thisostap.sh
 
-
-To update the package to latest version:
+To update the package to latest version use the command:
 
     git pull origin <latest tag>
 or to get the head version:
 
     git pull origin master
+
+After update please repite the compilation [steps](INSTALL.md#L24) 
+
+
 For the latest tag check the page https://github.com/OstapHEP/ostap/releases
 
 Docker
