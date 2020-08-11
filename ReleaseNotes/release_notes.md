@@ -1,4 +1,17 @@
-# v1.5.0.1
+## New features 
+ 1. add argument `callable` for model plotting and conversion to `TF1`. it allows to draw some derived quantitites 
+```
+bw = Ostap.Math.BreitWigner( ... )
+bw.draw ( xmin = ... , xmax = ... ) ## draw Breit-Wwigner lineshape 
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).real ) ## draw real part of amplitude
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).imag ) ## draw real part of amplitude
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : cmath.phase ( bw.amp ( x ) ) ## draw the phase 
+``` 
+## Backward incompatible changes
+
+## Bug fixes:
+
+# v1.5.0.2
 
 ## New features 
 

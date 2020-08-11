@@ -33,20 +33,26 @@ else                       : logger = getLogger ( __name__            )
 # helper adapter for 1D-functions 
 class _WO1_ (object)  :
     "Helper adapter for 1D-functions"
-    def __init__ ( self , o              ) :        self._o   = o
-    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] )
+    def __init__ ( self , o              ) :        self.__callme = o
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] )
+    @property
+    def callme   ( self ) : return self.__callme 
 # =============================================================================
 # helper adapter for 2D-functions 
 class _WO2_ (object)  :
     "Helper adapter for 2D-functions"
-    def __init__ ( self , o              ) :        self._o   =  o 
-    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] , x[1] )
+    def __init__ ( self , o              ) :        self.__callme =  o 
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] , x[1] )
+    @property
+    def callme   ( self ) : return self.__callme 
 # =============================================================================
 # helper adapter for 3D-functions 
 class _WO3_ (object)  :
-    "Helper adapter for 2D-functions"
-    def __init__ ( self , o              ) :        self._o   =  o 
-    def __call__ ( self , x , pars  = [] ) : return self._o ( x [0] , x[1] , x[2] )
+    "Helper adapter for 3D-functions"
+    def __init__ ( self , o              ) :        self.__callme =  o 
+    def __call__ ( self , x , pars  = [] ) : return self.__callme ( x [0] , x [1] , x [2] )
+    @property
+    def callme   ( self ) : return self.__callme 
 # =============================================================================
 pos_infinity = float('+inf')
 neg_infinity = float('-inf')
@@ -61,14 +67,17 @@ def tf1  ( self                 ,
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
     >>> fun.Draw() 
     """
-    
-    npars = kwargs.pop ( 'npars' , 0            )
-    args  = kwargs.pop ( 'args'  , ()           )
-    npx   = kwargs.pop ( 'npx'   , 250          )
-    
-    #
-    if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( self )
-    if not self._wo1                 : self._wo1 = _WO1_ ( self )
+
+    npars    = kwargs.pop ( 'npars'    , 0    )
+    args     = kwargs.pop ( 'args'     , ()   )
+    npx      = kwargs.pop ( 'npx'      , 250  )
+    callme   = kwargs.pop ( 'callable' , self ) 
+
+    if hasattr ( self , '_wo1' ) and callme is not self._wo1.callme :
+        del self._wo1 
+        
+    if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( callme )
+    if not self._wo1                 : self._wo1 = _WO1_ ( callme )
     #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
@@ -108,8 +117,10 @@ def tf2 ( self ,
     >>> fun.Draw() 
     """
     ##
-    if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( self )
-    if not self._wo2                 : self._wo2 = _WO2_ ( self )
+    callme   = kwargs.pop ( 'callable' , self ) 
+    ##
+    if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
+    if not self._wo2                 : self._wo2 = _WO2_ ( callme )
     ##
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
@@ -164,8 +175,11 @@ def tf3 ( self ,
     >>> fun.Draw() 
     """
     ##
-    if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( self )
-    if not self._wo3                 : self._wo3 = _WO3_ ( self )
+    ##
+    callme   = kwargs.pop ( 'callable' , self ) 
+    ##
+    if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( callme )
+    if not self._wo3                 : self._wo3 = _WO3_ ( callme )
     ##
 
     if hasattr ( self , 'xmin'  ) :
@@ -221,13 +235,17 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     >>> fun.draw()    
     """
     
+    if kwargs.has_key ( 'callable' ) and hasattr ( self , '_tf1' ) : del self._tf1
+    
+        
     if hasattr ( self , '_tf1' ) :
         xmin  = kwargs.get ( 'xmin'  , None )
         xmax  = kwargs.get ( 'xmax'  , None )
         if   not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
         elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
-                    
-    
+
+        if kwargs.has_key ( 'callable' ) : del self._tf1
+
     if not hasattr ( self , '_tf1'  ) :
         
         self._tf1        =  tf1 ( self , **kwargs )
@@ -245,11 +263,12 @@ def f1_draw ( self , opts ='' , **kwargs ) :
                            Ostap.Math.TwoExpoPositive   ) :                                
             self._tf1.SetMinimum(0)
             
-    kwargs.pop ( 'xmin'  , None )
-    kwargs.pop ( 'xmax'  , None )
-    kwargs.pop ( 'npars' , None ) 
-    kwargs.pop ( 'args'  , None )
-    kwargs.pop ( 'npx'   , None )
+    kwargs.pop ( 'xmin'     , None )
+    kwargs.pop ( 'xmax'     , None )
+    kwargs.pop ( 'npars'    , None ) 
+    kwargs.pop ( 'args'     , None )
+    kwargs.pop ( 'npx'      , None )
+    kwargs.pop ( 'callable' , None ) 
 
     return self._tf1.draw ( opts , **kwargs )
 
@@ -260,6 +279,7 @@ def f2_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
+        
     if not hasattr ( self , '_tf2'  ) :
 
         xmin  = kwargs.pop ( 'xmin' , neg_infinity )
