@@ -235,16 +235,13 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     >>> fun.draw()    
     """
     
-    if kwargs.has_key ( 'callable' ) and hasattr ( self , '_tf1' ) : del self._tf1
-    
-        
     if hasattr ( self , '_tf1' ) :
         xmin  = kwargs.get ( 'xmin'  , None )
         xmax  = kwargs.get ( 'xmax'  , None )
         if   not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
         elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
 
-        if kwargs.has_key ( 'callable' ) : del self._tf1
+        if 'callable' in kwargs : del self._tf1
 
     if not hasattr ( self , '_tf1'  ) :
         

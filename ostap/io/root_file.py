@@ -216,9 +216,6 @@ def _rd_getitem_ ( rdir , name ) :
     >>> h = f['histo']
     """
     ##
-    key, obj = _rd_key_object_ ( rdir , name )
-    
-    return obj 
     
     if not rdir : raise IOError("TDirectory is invalid")
     ##
