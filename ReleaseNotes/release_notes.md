@@ -1,5 +1,5 @@
 ## New features 
- 1. add argument `callable` for model plotting and conversion to `TF1`. it allows to draw some derived quantitites 
+  1. add argument `callable` for model plotting and conversion to `TF1`. it allows to draw some derived quantitites 
 ```
 bw = Ostap.Math.BreitWigner( ... )
 bw.draw ( xmin = ... , xmax = ... ) ## draw Breit-Wwigner lineshape 
@@ -7,6 +7,19 @@ bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).real ) ##
 bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).imag ) ## draw real part of amplitude
 bw.draw ( xmin = ... , xmax = ... , callable = lambda x : cmath.phase ( bw.amp ( x ) ) ## draw the phase 
 ``` 
+  1. add  tiny utilities `lrange` and `log_range` (in addition to `vrange`) into  `ostap/utils/utils.py`
+```
+for x in vrange ( 0 , 10     , 10 ) : print x  ## "lin-range"
+for x in lrange ( 1 , 10**10 , 10 ) : print x  ## "log-range"
+```
+  1. add methods `amp_real`, `amp_imag`, 'amp_phase' for Breit-Wigner-like models
+  1. add Argand plot for  Breit-Wigner-like models
+```
+bw = Ostap.Math.BreitWigner(... )
+ap = bw.argand ( xmin = ... , xmax = ... , npx = 500 )
+ap.draw('alc')
+```
+ 
 ## Backward incompatible changes
 
 ## Bug fixes:

@@ -336,6 +336,66 @@ def _amp_ ( self , x ) :
     v = self.amplitude ( x )
     return complex( v.real () , v.imag () ) 
 
+
+# ==============================================================================
+## get the real part of amplitude
+#  @code
+#  f = ...
+#  r = f.amp_real ( x ) 
+# @endcode
+def _amp_re_ ( self, x ) :
+    """Get   the real part of amplitude
+    >>> f = ...
+    >>> r = f.amp_real ( x )     
+    """
+    return complex ( self.amp ( x ) ).real 
+    
+# ==============================================================================
+## get the imaginary part of amplitude
+#  @code
+#  f = ...
+#  r = f.amp_imag ( x ) 
+# @endcode
+def _amp_im_ ( self, x ) :
+    """Get   the imaginary part of amplitude
+    >>> f = ...
+    >>> r = f.amp_imag ( x )     
+    """    
+    return complex ( self.amp ( x ) ).imag
+
+# ==============================================================================
+## get the phase of amplitude
+#  @code
+#  f = ...
+#  r = f.amp_phase ( x ) 
+# @endcode
+def _amp_phase_ ( self, x ) :
+    """Get   the phase of amplitude
+    >>> f = ...
+    >>> r = f.amp_phase ( x )     
+    """    
+    return cmath.phase (  complex ( self.amp ( x ) ) )
+
+# =============================================================================
+## build the Argand diagram/graph 
+#  @code
+#  f = ...
+#  g = f.argand ( x , xmin = ...  , xmax = ... ) 
+#  @@endcode 
+def _amp_argand_ ( self , xmin , xmax , npx =  500 ) : 
+    """Build the Argand diagram/graph 
+    >>> f = ...
+    >>> g = f.argand ( x , xmin = ...  , xmax = ... ) 
+    """
+    import ostap.histos.graphs
+    from ostap.utils.utils import vrange
+    g = ROOT.TGraph  ( npx + 1 ) 
+    for i , x in enumerate ( vrange ( xmin , xmax , npx ) ) :
+        a = complex ( self.amp ( x ) )
+        g[i] = a.real, a.imag
+    return g
+
+
 ## Ostap.Math.LASS            . amp = _amp_
 ## Ostap.Math.LASS23L         . amp = _amp_
 ## Ostap.Math.Bugg23L         . amp = _amp_
@@ -345,7 +405,14 @@ Ostap.Math.Flatte          . amp = _amp_
 Ostap.Math.BW              . amp = _amp_
 ## Ostap.Math.Swanson         . amp = _amp_
 
-
+for m in  ( Ostap.Math.Flatte ,
+            Ostap.Math.BW     ) :
+    m.amp       = _amp_ 
+    m.amp_real  = _amp_re_ 
+    m.amp_imag  = _amp_im_ 
+    m.amp_phase = _amp_phase_ 
+    m.argand    = _amp_argand_ 
+    
 # =============================================================================
 ## get min/max values for bernstein polynomials
 #  @code
