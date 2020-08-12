@@ -1,40 +1,42 @@
 ## New features 
-  1. add argument `callable` for model plotting and conversion to `TF1`. it allows to draw some derived quantitites 
+  1. add argument `callable` for models plotting and their conversion to `TF1`. It allows to draw some derived quantitites 
 ```
 bw = Ostap.Math.BreitWigner( ... )
-bw.draw ( xmin = ... , xmax = ... ) ## draw Breit-Wwigner lineshape 
+bw.draw ( xmin = ... , xmax = ... ) ## draw the Breit-Wigner lineshape
 bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).real ) ## draw real part of amplitude
 bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).imag ) ## draw real part of amplitude
 bw.draw ( xmin = ... , xmax = ... , callable = lambda x : cmath.phase ( bw.amp ( x ) ) ## draw the phase 
 ``` 
-  1. add  tiny utilities `lrange` and `log_range` (in addition to `vrange`) into  `ostap/utils/utils.py`
+  1. add  tiny utilities `lrange` and `log_range` (in addition to existing `vrange`) into  `ostap/utils/utils.py`
 ```
-for x in vrange ( 0 , 10     , 10 ) : print x  ## "lin-range"
-for x in lrange ( 1 , 10**10 , 10 ) : print x  ## "log-range"
+for x in vrange ( 0.0 , 10.0     , 10 ) : print x  ## "lin-range"
+for x in lrange ( 1.0 , 10.0**10 , 10 ) : print x  ## "log-range"
 ```
-  1. add methods `amp_real`, `amp_imag`, 'amp_phase' for Breit-Wigner-like models
-  1. add Argand plot for  Breit-Wigner-like models
+  1. add methods `amp_real`, `amp_imag`, `amp_phase` for the Breit-Wigner-like models
+  1. add Argand plot for the Breit-Wigner-like models
 ```
 bw = Ostap.Math.BreitWigner(... )
 ap = bw.argand ( xmin = ... , xmax = ... , npx = 500 )
 ap.draw('alc')
 ```
- 
-## Backward incompatible changes
+  1. add utilities for better visuzalisation of Dalitz densities 
+
+## Backward incompatible changes: 
 
 ## Bug fixes:
+
 
 # v1.5.0.2
 
 ## New features 
 
- 1. Simplify interface for `Ostap::Math::Integrator` and `Ostap::Math::DalitzIntegrator` classes: essentially remove large duplication, the tag/label argumetn for caching is now the last one and "optional"
+ 1. Simplify interface for `Ostap::Math::Integrator` and `Ostap::Math::DalitzIntegrator` classes: essentially remove large duplication, the tag/label argument for caching is now the last one and always "optional" - no caching is performed if  argument is  zero (default)
  1. add methods to create `Ostap::Math::ChebyshevSum` from `Ostap::Math::ChebyshevApproximation`
 
 ## Backward incompatible changes
 
 ## Bug fixes:
- 1. fix a bit strange "feature" with "derived" variable in `RooDataSet` (thanks  to Alexander Artamonov for rereporting).  It happens that `RooDataSet::addColumn`RooDataSet::addColumns` behave a bit differently. the  first one issues the error message and variable behaves weirdly. 
+ 1. fix a bit strange "feature" with "derived" variable in `RooDataSet` (thanks  to Alexander Artamonov for reporting).  It happens that `RooDataSet::addColumn`RooDataSet::addColumns` behave a bit differently. the  first one issues the error message and variable behaves weirdly. 
   
 
 # v1.5.0.1

@@ -151,9 +151,7 @@ def test_dalitz2 () :
 
 def test_dalitz3 () :
 
-
     for i , p  in enumerate ( plots ) : 
-
         
         if   i == 0 : logger.info ( "All masses are     zero" )
         elif i <  4 : logger.info ( "Two masses are     zero" )

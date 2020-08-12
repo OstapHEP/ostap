@@ -446,10 +446,31 @@ double Ostap::Kinematics::Dalitz0::J
   return f1 <= 0 ? 0.0 : f2 <= 0 ? 0.0 : std::sqrt ( f1 * f2 ) / ( 2 * s2 ) ;
 }
 // ============================================================================
-
-
-
-
+/*  "transpose it", such that \f$ s_{i1} \f$ and \f$ s_{i2}\f$ 
+ *  becomes  the main  variable
+ */
+// ============================================================================
+Ostap::Kinematics::Dalitz0
+Ostap::Kinematics::Dalitz0::transpose 
+( const unsigned short i1 , 
+  const unsigned short i2 ) const 
+{
+  Ostap::Assert ( 1 <= i1 && i1 <= 3 , "Invalid i1" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  Ostap::Assert ( 1 <= i2 && i2 <= 3 , "Invalid i2" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  Ostap::Assert ( i1 != i2           , "Invalid i1/i2" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  
+  if      ( 1 == i1 && 2 == i2 ) { return Dalitz0 ( m1 () , m2 () , m3 () ) ; }
+  else if ( 1 == i1 && 3 == i2 ) { return Dalitz0 ( m2 () , m1 () , m3 () ) ; }
+  else if ( 2 == i1 && 1 == i2 ) { return Dalitz0 ( m3 () , m2 () , m1 () ) ; }
+  else if ( 2 == i1 && 3 == i2 ) { return Dalitz0 ( m2 () , m3 () , m1 () ) ; }
+  else if ( 3 == i1 && 1 == i2 ) { return Dalitz0 ( m3 () , m1 () , m2 () ) ; }
+  else if ( 3 == i1 && 2 == i2 ) { return Dalitz0 ( m1 () , m3 () , m2 () ) ; }
+  //
+  return Dalitz0 ( m1 () , m2 () , m3 () ) ;
+}
 // ============================================================================
 // Dalitz 
 // ============================================================================
