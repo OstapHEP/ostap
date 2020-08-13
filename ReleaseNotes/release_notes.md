@@ -20,6 +20,7 @@ ap = bw.argand ( xmin = ... , xmax = ... , npx = 500 )
 ap.draw('alc')
 ```
   1. add utilities for better visuzalisation of Dalitz densities 
+  1. more improvements for Dalitz plot vizualization 
 
 ## Backward incompatible changes: 
 

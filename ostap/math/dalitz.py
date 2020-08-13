@@ -34,7 +34,8 @@ else                       : logger = getLogger ( __name__            )
 # =============================================================================
 import ostap.math.kinematic
 from   ostap.core.core      import Ostap, fID 
-import ostap.math.base 
+import ostap.math.base
+import ostap.histos.graphs  
 
 # =============================================================================
 ## make a graph of Dalitz plot
@@ -272,7 +273,7 @@ def _dp_graph21_ ( dp , npoints = 250 , masses = False ) :
     >>> graph.draw ('al')
     """
     dp0 = Ostap.Kinematics.Dalitz0 ( dp ) 
-    return _dp0_graph21_ ( dp0 , dp.M () , npoints , masses )
+    return _dp0_graph21_ ( dp0 , M = dp.M () , npoints = npoints , masses = masses  )
 
 
 # =============================================================================
@@ -289,7 +290,7 @@ def _dp_graph31_ ( dp , npoints = 250 , masses = False ) :
     >>> graph.draw ('al')
     """
     dp0 = Ostap.Kinematics.Dalitz0 ( dp ) 
-    return _dp0_graph31_ ( dp0 , dp.M () , npoints , masses )
+    return _dp0_graph31_ ( dp0 , M = dp.M () , npoints = npoints , masses = masses )
 
 
 # =============================================================================
@@ -306,7 +307,7 @@ def _dp_graph32_ ( dp , npoints = 250 , masses = False ) :
     >>> graph.draw ('al')
     """
     dp0 = Ostap.Kinematics.Dalitz0 ( dp ) 
-    return _dp0_graph32_ ( dp0 , dp.M () , npoints , masses )
+    return _dp0_graph32_ ( dp0 , M = dp.M () , npoints = npoints , masses = masses )
 
 
 # ============================================================================
@@ -322,7 +323,7 @@ Ostap.Kinematics.Dalitz .graph32 = _dp_graph32_
 
 # =============================================================================
 ## @class DSwap
-#  Swap variables for the Dalitz plot density  
+#  Swap variables for the Dalitz plot density
 class DSwap( object ) :
     """Swap variables for the Dalitz plot density
     """
@@ -421,10 +422,26 @@ class DPlot(object) :
         self.__tf = ROOT.TF2 ( fID () , self.eval , xmin , xmax , ymin , ymax )
         return self.__tf
         
+    ## get the dalitz plot boundary
+    def graph ( self ) :
+        """Get Dalitz plot boundary
+        """
+        gr = _dp0_graph21_ ( self.dalitz , M = self.M )
+        self.__gr =  gr
+        gr.SetLineWidth ( 2 ) 
+        return gr
+    
     @property
     def s (  self ) :
         """``s'' : s-parameter"""
         return self.__s
+    @s.setter
+    def s ( self , value ) :
+        v = float ( value ) 
+        assert self.dalitz.s_min () <= v , 'Invalid value for s %s' % v 
+        self.__s = v
+        self.__M = v ** 0.5
+        
     @property
     def M ( self ) :
         """``sM'' : <-parameter"""
@@ -448,6 +465,9 @@ class DPlot(object) :
         ##
         T = type ( self )
         return T ( f , d , self.s )
+
+        
+
 
 # =============================================================================
 ## @class DPlotM
@@ -499,6 +519,16 @@ class DPlotM(DPlot) :
         self.__tf = ROOT.TF2 ( fID () , self.eval , xmin , xmax , ymin , ymax )        
         return self.__tf
 
+    ## get the dalitz plot boundary
+    def graph ( self ) :
+        """Get Dalitz plot boundary
+        """
+        gr = _dp0_graph21_ ( self.dalitz , M = self.M , masses = True )
+        self.__gr =  gr
+        gr.SetLineWidth ( 2 ) 
+        return gr
+
+        
 # =============================================================================
 ## @class DPlotR
 #  Visualize Dalitz density as function of ``rectangular variables''
@@ -527,10 +557,23 @@ class DPlotR(DPlot) :
     - see Ostap.Kinematics.Dalitz0.x2s
     - see Ostap.Kinematics.Dalitz0.J    
     """    
+    def __init__ ( self        ,
+                   f3          ,
+                   dalitz      ,
+                   s           ,
+                   T = True    ) :
+
+        DPlot.__init__ ( self , f3 , dalitz , s )
+        self.__T = True if T else False 
 
     ## the main method 
     def __call__ ( self , x1 , x2 ) :
         """The main method"""
+
+        ## swap variables 
+        if self.__T :
+            x2 , x2 = x1 , x2
+            
         s       = self.s
         d       = self.dalitz 
         s1 , s2 = d.x2s ( s , x1 , x2 ) 
@@ -540,24 +583,57 @@ class DPlotR(DPlot) :
 
     ## convert to TF2 
     def tf2  ( self        ,
-               xmin = -1.0 ,
-               xmax =  1.0 ,
+               xmin = None ,
+               xmax = None  ,
                ymin = None ,
                ymax = None ) :
 
         d = self.dalitz
         s = self.s  
         M = self.M
-        
-        ymin = ymin if not ymin is None else d.s2_min (   ) 
-        ymax = ymax if not ymax is None else d.s2_max ( M )
 
+        if not self.__T : 
+            xmin = xmin if not xmin is None else -1.0 
+            xmax = xmax if not xmax is None else +1.0
+            ymin = ymin if not ymin is None else d.s2_min (   ) 
+            ymax = ymax if not ymax is None else d.s2_max ( M )
+        else :
+            xmin = xmin if not xmin is None else d.s2_min (   ) 
+            xmax = xmax if not xmax is None else d.s2_max ( M )
+            ymin = ymin if not ymin is None else -1.0 
+            ymax = ymax if not ymax is None else +1.0
+            
         assert xmin < xmax, 'Invalid xmin/xmax %s/%s' %  ( xmin , xmax )
         assert ymin < ymax, 'Invalid ymin/ymax %s/%s' %  ( ymin , ymax )
         
         self.__tf = ROOT.TF2 ( fID () , self.eval , xmin , xmax , ymin , ymax )
         return self.__tf
 
+    @property
+    def T  ( self ) :
+        """``T'' : swap variables/transpose ? """
+        return  self.__T 
+
+    ## get the dalitz plot boundary
+    def graph ( self ) :
+        """Get Dalitz plot boundary
+        """
+        
+        gr = ROOT.TGraph ( 5 )
+        d  = self.dalitz
+        M  = self.M
+        
+        gr [ 0 ] = -1.0 , d.s2_min (   )
+        gr [ 1 ] = -1.0 , d.s2_max ( M )
+        gr [ 2 ] =  1.0 , d.s2_max ( M )
+        gr [ 3 ] =  1.0 , d.s2_min (   )
+        gr [ 4 ] = -1.0 , d.s2_min (   )
+
+        if self.T : gr = gr.T ()
+        
+        gr.SetLineWidth ( 2 ) 
+        self.__gr =  gr
+        return gr
 
 # =============================================================================
 ## @class DPlotRM
@@ -570,7 +646,7 @@ class DPlotR(DPlot) :
 #  dp = DPlotR ( density , dalitz , s = 5 )
 #  f2 = dp.tf2 () 
 #  @endcode
-class DPlotRM(DPlot) :
+class DPlotRM(DPlotR) :
     """Helper class to vizualize the Dalitz density using 'rectangular variables'
     -  x1 : cos theta^{12}_{R23}
     -  x2 : m_23 
@@ -581,8 +657,13 @@ class DPlotRM(DPlot) :
     """    
 
     ## the main method 
-    def __call__ ( self , x1 , m23 ) :
+    def __call__ ( self , x1 , x2 ) :
         """The main method"""
+        
+        ## swap variables 
+        if self.T :
+            m23 , x1 = x1 , x2 
+
         s       = self.s
         d       = self.dalitz
         s2      = m23 * m23 
@@ -593,8 +674,8 @@ class DPlotRM(DPlot) :
 
     ## convert to TF2 
     def tf2  ( self        ,
-               xmin = -1.0 ,
-               xmax =  1.0 ,
+               xmin = None ,
+               xmax = None ,
                ymin = None ,
                ymax = None ) :
 
@@ -602,8 +683,16 @@ class DPlotRM(DPlot) :
         s = self.s  
         M = self.M
         
-        ymin = ymin if not ymin is None else d.s2_min (   ) ** 0.5
-        ymax = ymax if not ymax is None else d.s2_max ( M ) ** 0.5 
+        if not self.T : 
+            xmin = xmin if not xmin is None else -1.0 
+            xmax = xmax if not xmax is None else +1.0
+            ymin = ymin if not ymin is None else d.s2_min (   ) ** 0.5 
+            ymax = ymax if not ymax is None else d.s2_max ( M ) ** 0.5 
+        else :
+            xmin = xmin if not xmin is None else d.s2_min (   ) ** 0.5 
+            xmax = xmax if not xmax is None else d.s2_max ( M ) ** 0.5 
+            ymin = ymin if not ymin is None else -1.0 
+            ymax = ymax if not ymax is None else +1.0
 
         assert xmin < xmax, 'Invalid xmin/xmax %s/%s' %  ( xmin , xmax )
         assert ymin < ymax, 'Invalid ymin/ymax %s/%s' %  ( ymin , ymax )
@@ -611,7 +700,26 @@ class DPlotRM(DPlot) :
         self.__tf = ROOT.TF2 ( fID () , self.eval , xmin , xmax , ymin , ymax )
         return self.__tf
 
+    ## get the dalitz plot boundary
+    def graph ( self ) :
+        """Get Dalitz plot boundary
+        """
+        
+        gr = ROOT.TGraph ( 5 )
+        d  = self.dalitz
+        M  = self.M
+        
+        gr [ 0 ] = -1.0 , d.s2_min (   ) ** 0.5
+        gr [ 1 ] = -1.0 , d.s2_max ( M ) ** 0.5 
+        gr [ 2 ] =  1.0 , d.s2_max ( M ) ** 0.5 
+        gr [ 3 ] =  1.0 , d.s2_min (   ) ** 0.5 
+        gr [ 4 ] = -1.0 , d.s2_min (   ) ** 0.5 
 
+        if self.T : gr = gr.T ()
+        
+        gr.SetLineWidth ( 2 ) 
+        self.__gr =  gr
+        return gr
 
 # =============================================================================   
 ## decorated classes 
@@ -631,7 +739,6 @@ _new_methods_       = (
     Ostap.Kinematics.Dalitz .graph31 , 
     Ostap.Kinematics.Dalitz .graph32 ,
     )
-
 
 # =============================================================================
 if '__main__' == __name__ :
