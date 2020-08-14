@@ -24,6 +24,7 @@ __all__ = (
     'logColor'       , ## context manager to switch on  color logging locally  
     'logNoColor'     , ## context manager to switch off color logging locally  
     'noColor'        , ## context manager to switch off color logging locally  
+    'keepColor'      , ## context manager preserve to preserve coloring
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
     ##
@@ -90,15 +91,24 @@ logging_levels = { logging.CRITICAL : 'FATAL'   ,
                    logging.VERBOSE  : 'VERBOSE' }
 for a in logging_levels : logging.addLevelName ( a ,  logging_levels[a]  )
 # =============================================================================
-logging_format      = '# %(name)-32s %(levelname)-7s %(message)s'
-logging_file_format = '# %(asctime)s %(name)-32s %(levelname)-7s %(message)s'
+logging_format      = '# %(name)-30s %(levelname)-7s %(message)s'
+logging_file_format = '# %(asctime)s %(name)-30s %(levelname)-7s %(message)s'
 logging_date_format = "%Y-%m-%d %H:%M:%S" 
+
+from ostap.utils.basic import isatty
 
 # =============================================================================
 ## The basic configuration 
-logging.basicConfig (
-    level    = logging.INFO   ,
-    format   = logging_format )
+if isatty() :
+    logging.basicConfig (
+        level    = logging.INFO        ,
+        format   = logging_format      ,
+        datefmt  = logging_date_format )
+else :
+    logging.basicConfig (
+        level    = logging.INFO        ,
+        format   = logging_file_format ,
+        datefmt  = logging_date_format )
 
 # =============================================================================
 ## get configured logger
@@ -243,7 +253,6 @@ from ostap.logger.colorized import ( with_colors    ,
                                      attention      ,
                                      allright       ,
                                      infostr        ,
-                                     isatty         ,
                                      decolorize     )
 # =============================================================================
 __colored_logger = []

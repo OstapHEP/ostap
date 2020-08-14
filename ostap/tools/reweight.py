@@ -149,7 +149,7 @@ class Weight(object) :
                     functions = functions[:skip] 
                 elif 0 > skip and abs(skip) < flen :
                     logger.info  ("Skip last %d iterations for ``%s''" % ( skip , funname ) )
-                    functions = functions[:-1*skip] 
+                    functions = functions[:skip] 
                 elif 0 == skip :
                     pass
                 else :

@@ -95,29 +95,29 @@ class Task ( object ) :
         
         return obj
 
-    ## Local initialization:  invoked once on localhost for master task
+    ## Local initialization:  invoked once on localhost for the main task
     def initialize_local  ( self )          :
-        """Local initialization:  invoked once on localhost for master task"""
+        """Local initialization:  invoked once on localhost for the main task"""
         pass
     
-    ## Remote initialization: invoked for each slave task on remote host
+    ## Remote initialization: invoked for each secondary task on remote host
     def initialize_remote ( self , jobid = -1 )  :
-        """Remote initialization: invoked for each slave task on remote host
+        """Remote initialization: invoked for each secondary task on remote host
         - default: run ``local initialization''
         """
         return self.initialize_local () 
     
-    ## Finalization action: invoked once on local host for the master task (after merge)
+    ## Finalization action: invoked once on local host for the main task (after merge)
     def finalize          ( self )          :
-        """Finalization action: invoked once on local host for the master task (after merge)"""
+        """Finalization action: invoked once on local host for the main task (after merge)"""
         pass
     
-    ## Process the (slave) task on remote host
+    ## Process the (secondary) task on remote host
     #  @attention must return the result
     #  @param jobid jobid 
     @abc.abstractmethod 
     def process           ( self , jobid , *params ) :
-        """Process the (slave) task on remote host
+        """Process the (secondary) task on remote host
         - It must return the results!
         """
         return None 
@@ -190,12 +190,11 @@ class Task ( object ) :
 #    - append_to   : additional variables to be ''appended''
 #    - prepend_to  : additional variables to be ''prepended''
 class GenericTask(Task) :
-    """Generic ``temlated'' task for parallel processing.
+    """Generic ``templated'' task for parallel processing.
     One needs to  define three functions/functors:
     - processor   :         output = processor   ( jobid , item ) 
     - merger      : updated_output = merger ( old_output , new_output )
     - initializer :         output = initializer (      )  
-    - initializer :         output = initializer (      )
     - directory   : change to this directory  (if it exists)
     - environment : additional environment for the job 
     - append_to   : additional variables to be ''appended''

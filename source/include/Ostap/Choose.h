@@ -76,7 +76,46 @@ namespace Ostap
     ( const int            n ,
       const unsigned short k ) ;
     // ========================================================================
-    
+    namespace detail
+    {
+      // ========================================================================
+      /** @class _C
+       *  Binomial coefficents    \f$ C^n_k = \frac{n!}{k!(n-k)!}\f$
+       */
+      template <unsigned int N, unsigned int K>
+      struct _C
+      {
+        static_assert ( K <= N , "K must not exceed N!" ) ;
+        enum _ : unsigned long long {  value =
+                                       K     == 0 ? 1 : 
+                                       K     == 1 ? N : 
+                                       K     == N ? 1 :
+                                       K + 1 == N ? N :
+                                       _C<N,K-1>::value * ( N  + 1 - K ) / K                                     
+        } ;   
+      };
+      // ========================================================================
+      template <>
+      struct _C<0,0>
+      { enum _ : unsigned long long { value = 1 } ; };
+      // ========================================================================
+      template <unsigned int N>
+      struct _C<N,0>
+      { enum _ : unsigned long long { value = 1 } ; };
+      // ========================================================================
+      template <unsigned int N>
+      struct _C<N,N>
+      { enum _ : unsigned long long { value = 1 } ; };
+      // ========================================================================
+      template <unsigned int N, unsigned int K,bool B>
+      struct _C1 ;
+      template <unsigned int N, unsigned int K>
+      struct _C1<N,K,true>
+      { enum _ : unsigned long long { value = _C<N,K>::value    } ; };
+      template <unsigned int N, unsigned int K>
+      struct _C1<N,K,false>
+      { enum _ : unsigned long long { value = _C<N,N-K>::value  } ; };
+    }
     // ========================================================================
     /** @class Choose 
      *  Binomial coefficents    \f$ C^n_k = \frac{n!}{k!(n-k)!}\f$
@@ -87,12 +126,22 @@ namespace Ostap
     template <unsigned short N, unsigned short K>
     struct Choose
     {
-      enum _ : unsigned long long { value =  
-          N <  K           ? 0 :
-          0 == K || K == N ? 1 :
-          Choose<N-1,K-1>::value + 
-          Choose<N-1,K  >::value } ;
-    };
+      static_assert ( K <= N , "K must not exceed N!" ) ;
+      enum _ : unsigned long long { value = detail::_C1<N,K,K+K<=N>::value } ;
+    }; 
+    // ========================================================================
+    /** Compile-time generation of the sequence of Stirling numbers of 1st kind 
+     *  useful for implementatinoof Pochhammer symbols 
+     *  @code
+     *  std::array<double,7> p7 = stirling_array<double,6>() ;
+     *  @endcode 
+     */
+    template<unsigned short N,size_t... i>
+    constexpr auto choose_array ( std::index_sequence<i...> )
+    { return std::array<unsigned long long,N+1>{{Choose<N,i>::value...}}; }
+    template<unsigned short N>
+    constexpr auto choose_array() 
+    { return choose_array<N>(std::make_index_sequence<N+1>{}); }
     // ========================================================================
     /** @class Stirling1
      *  unsigned Stirling numbers of 1st kind 

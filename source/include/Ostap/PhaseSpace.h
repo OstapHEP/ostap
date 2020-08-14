@@ -44,23 +44,68 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate 2-body phase space
-      double operator () ( const double x ) const ;
+      inline double operator () ( const double m ) const 
+      { return phasespace ( m , m_m1 , m_m2 ) ; }
       /// integral
       double integral    ( const double xmin , const double xmax ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the momentum at center of mass
-      double                q_  ( const double x ) const ;
-      /// ditto but as complex
-      std::complex<double>  q1_ ( const double x ) const ;
+      /// get a phase space 
+      inline double        rho  ( const double m ) const 
+      { return phasespace ( m , m_m1 , m_m2 ) ;}
+      // ======================================================================
+      /** get (a complex) phase space 
+       *  real for x >= threshold , imaginary for x< threshold 
+       */
+      std::complex<double> rho1 ( const double m ) const { return rho1_s (  m * m ) ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// get a phase space as function of s 
+      inline double        rho_s  ( const double s ) const 
+      { return phasespace_s ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ;}
+      // ======================================================================
+      /** get (a complex) phase space 
+       *  real for x >= threshold , imaginary for x< threshold 
+       */
+      std::complex<double> rho1_s ( const double s ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      double m1        () const { return m_m1 ; }
-      double m2        () const { return m_m2 ; }
-      double lowEdge   () const { return m1 () + m2 () ; }
-      double threshold () const { return m1 () + m2 () ; }
+      /// get the momentum at center of mass
+      inline double                q    ( const double m ) const
+      { return q    ( m , m_m1 , m_m2 ) ; }
+      /// ditto but as complex
+      inline std::complex<double>  q1   ( const double m ) const 
+      { return q1   ( m , m_m1 , m_m2 ) ; }
+      /// get the momentum at given s 
+      inline double                q_s  ( const double s ) const 
+      { return q_s  ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ; }
+      /// ditto but as complex 
+      inline std::complex<double>  q1_s ( const double s ) const 
+      { return q1_s ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the mass for the given momentum
+       *  \f$ m = \sqrt{m_1^2+q^2} + \sqrt{m_2^2+q^2}\f$
+       */
+      double q2m ( const double q ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the first mass 
+      inline double m1        () const { return m_m1          ; }
+      /// the second mass 
+      inline double m2        () const { return m_m2          ; }
+      /// threshold 
+      inline double lowEdge   () const { return m1 () + m2 () ; }
+      /// threshold 
+      inline double threshold () const { return m1 () + m2 () ; }
+      ///  threshols for s 
+      inline double s_threshold () const 
+      { const double a = threshold() ; return a * a ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -109,6 +154,32 @@ namespace Ostap
         const double m1 ,
         const double m2 ) ;
       // ======================================================================
+      /** calculate the particle momentum in the rest frame
+       *  \f[ q = \frac{1}{2}\frac{ \lambda^{\frac{1}{2}}
+       *        \left( m^2 , m_1^2, m_2^2 \right) }{ m }\f],
+       *  @param s    the squared mass
+       *  @param m2_1 the squared mass of the first particle
+       *  @param m2_2 the srqured mass of the second particle
+       *  @return the momentum in rest frame (physical values only)
+       */
+      static double  q_s
+      ( const double s    ,
+        const double m2_1 ,
+        const double m2_2 ) ;
+      // ======================================================================
+      /** calculate the particle momentum in rest frame
+       *  - real for physical case 
+       *  - imaginary for non-physical case (below the threshold)
+       *  @param s    the squared mass
+       *  @param m2_1 the squared  mass of the first particle
+       *  @param m2_2 the squared mass of the second particle
+       *  @return the momentum in rest frame  (imaginary for non-physical branch)
+       */
+      static std::complex<double> q1_s
+      ( const double s    ,
+        const double m2_1 ,
+        const double m2_2 ) ;
+      // ======================================================================
       /** calculate the phase space for   m -> m1 + m2
        *  \f[ \Phi = \frac{1}{8\pi} \left( \frac{ \lambda^{\frac{1}{2}}
        *       \left( m^2 , m_1^2, m_2^2 \right) }{ m^2 }\right)^{2L+1}\f],
@@ -116,14 +187,29 @@ namespace Ostap
        *  @param m the mass
        *  @param m1 the mass of the first particle
        *  @param m2 the mass of the second particle
-       *  @param L  the orbital momentum 
        *  @return two-body phase space
        */
       static double phasespace
-      ( const double         m      ,
-        const double         m1     ,
-        const double         m2     ,
-        const unsigned short L  = 0 ) ;
+      ( const double         m        ,
+        const double         m1       ,
+        const double         m2       ,  
+        const unsigned short L    = 0 ) 
+      { return phasespace_s ( m * m , m1 * m1 , m2 * m2 , L ) ; }
+      // ======================================================================
+      /** calculate the phase space for   m -> m1 + m2
+       *  \f[ \Phi = \frac{1}{8\pi} \left( \frac{ \lambda^{\frac{1}{2}}
+       *       \left( m^2 , m_1^2, m_2^2 \right) }{ m^2 }\right)^{2L+1}\f],
+       *  where \f$\lambda\f$ is a triangle function
+       *  @param s    the squared mass
+       *  @param m2_1 the squared mass of the first particle
+       *  @param m2_1 the squared mass of the second particle
+       *  @return two-body phase space
+       */
+      static double phasespace_s
+      ( const double         s        ,
+        const double         m2_1     ,
+        const double         m2_2     , 
+        const unsigned short L    = 0 ) ;
       // ======================================================================
     private:
       // ======================================================================
@@ -131,6 +217,34 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;  
+    // ========================================================================
+    /** @class sPhaseSpace2
+     *  Two-body phase space as function of s 
+     *  @see Ostap::Math::PhaseSpace2
+     *  @see Ostap::Math::PhaseSpace2::phasespace_s
+     *  @see Ostap::Math::PhaseSpace2::phasespace_s
+     */
+    class sPhaseSpace2 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from two masses
+      sPhaseSpace2 ( const double m1 = 0 , 
+                     const double m2 = 1 ) ;
+      // ======================================================================
+      /// Two-body phase space as function of s
+      inline double operator () ( const double s ) const 
+      { return PhaseSpace2::phasespace_s ( s , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// the first mass squared
+      double m_m2_1 ; // the first mass squared
+      /// the second mass squared
+      double m_m2_2 ; // the second mass squared
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class PhaseSpace3s
      *  Symmetric form of 3-body phase space 
@@ -146,7 +260,7 @@ namespace Ostap
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
      *  @see Ostap::Kinematics::phasespace3     
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-10-31
      */
     class PhaseSpace3s
@@ -700,6 +814,108 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class M2Q 
+     *  \f$ m \rightarrow q \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     *  @see Ostap::Math::PhaseSpace2::q_q
+     */
+    class M2Q  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      M2Q ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double m ) const 
+      { return Ostap::Math::PhaseSpace2::q_s ( m * m , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class S2Q 
+     *  \f$ s \rightarrow q \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q_s
+     */
+    class S2Q  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      S2Q ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double s ) const 
+      { return Ostap::Math::PhaseSpace2::q_s ( s , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Q2M 
+     *  \f$ q \rightarrow m \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     */
+    class Q2M  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      Q2M ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double q ) const 
+      { 
+        const double q2 = q <= 0 ? 0.0 : q * q ;
+        return std::sqrt ( m_m2_1 + q2 )  + std::sqrt ( m_m2_2 + q2 ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Q2S 
+     *  \f$ q \rightarrow s \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     */
+    class Q2S  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      Q2S ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double q ) const 
+      { 
+        const double q2   = q <= 0 ? 0.0 : q * q ;
+        const double e2_1 = m_m2_1 + q2 ;
+        const double e2_2 = m_m2_2 + q2 ;
+        //
+        return e2_1 + e2_2 + 2 * std::sqrt ( e2_1 * e2_2 ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

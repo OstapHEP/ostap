@@ -373,9 +373,9 @@ ROOT.RooDataSet . __iadd__      = _rad_iadd_
 ROOT.RooAbsData . __mul__       = _rad_mul_
 ROOT.RooAbsData . __rmul__      = _rad_mul_
 ROOT.RooAbsData . __imul__      = _rad_imul_
-ROOT.RooAbsData . __div__       = _rad_div_
 ROOT.RooAbsData . __mod__       = _rad_mod_
-
+ROOT.RooAbsData . __div__       = _rad_div_
+ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
@@ -409,6 +409,7 @@ _new_methods_ += [
    ROOT.RooAbsData . __imul__      ,
    ROOT.RooAbsData . __div__       ,
    ROOT.RooAbsData . __mod__       ,
+   ROOT.RooAbsData . __truediv__   ,
    #
    ROOT.RooAbsData . sample        ,
    ROOT.RooAbsData . shuffle       ,
@@ -654,6 +655,12 @@ def _ds_getattr_ ( dataset , aname ) :
     """
     _vars = dataset.get()
     return getattr ( _vars , aname )  
+## get the attibute for RooDataSet
+# =============================================================================
+
+def get_var( self, aname ) :
+    _vars = self.get()
+    return getattr ( _vars , aname )  
 
 # =============================================================================
 ## Get min/max for the certain variable in dataset
@@ -710,11 +717,14 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
 ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
 ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
 ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+ROOT.RooDataSet.get_var       = get_var
 
 _new_methods_ += [
     ROOT.RooDataSet .clear ,
     ROOT.RooDataSet .erase ,
     ROOT.RooDataSet .Reset ,
+
+    ROOT.RooDataSet .get_var ,
     ]
 
 # =============================================================================
@@ -827,6 +837,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     #
     vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst , False )
     dataset.addColumn ( vcol )
+    del vcol 
     #
     return dataset 
 

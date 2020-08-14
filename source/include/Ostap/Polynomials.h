@@ -1560,7 +1560,7 @@ namespace Ostap
       // ======================================================================
       /// copy 
       ChebyshevSum ( const ChebyshevSum&  ) = default ;
-      /// copy 
+      /// move
       ChebyshevSum (       ChebyshevSum&& ) = default ;
       // ======================================================================
       ///  constructor from Polinomial           (efficient)

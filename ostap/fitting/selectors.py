@@ -112,7 +112,7 @@ from   ostap.logger.colorized import attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.selectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, items_loop 
+from   ostap.core.core        import cpp, Ostap, items_loop, dsID  
 from   ostap.core.ostap_types import num_types, string_types, integer_types  
 import ostap.fitting.roofit 
 # =============================================================================
@@ -175,7 +175,7 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
 
         ## initialize the base
         self.__selection = str ( selection ).strip()  
-        Ostap.SelectorWithCuts.__init__ ( self , self.selection , None , self )
+        Ostap.SelectorWithCuts.__init__ ( self , self.selection , 0 , self )
         
         if self.cuts () and not self.silence :
             logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
@@ -363,7 +363,9 @@ class Variable(object) :
 # =============================================================================
 ## is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
-
+    """Is this expression corresponds to a valid RooFit formula?
+    """
+    
     if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
     
     expression = expression.strip()
@@ -377,13 +379,15 @@ def valid_formula ( expression , varset ) :
         return result
 
     assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
-    from ostap.logger.utils import rooSilent, rootError  
-    with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
-        with rootError( ROOT.kError + 1 ) :
-            _f  = Ostap.FormulaVar( expression , varset , False )
-            fok = _f.ok ()
-            del _f
-            
+    ## from ostap.logger.utils import rooSilent, rootErro
+    ## with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
+    ## with rootError( ROOT.kError + 1 ) :
+    from ostap.logger.utils import mute 
+    with mute ( True , True ) : 
+        _f  = Ostap.FormulaVar ( expression , varset , False )
+        fok = _f.ok ()
+        del _f
+        
     return fok
             
 # ==============================================================================
@@ -541,7 +545,6 @@ class SelectorWithVars(SelectorWithCuts) :
                    silence      = False           ) :
         
         if not     name :
-            from   ostap.core.core import dsID 
             name = dsID()
             
         if not fullname : fullname = name 
@@ -1205,7 +1208,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
     expressions = [ f.formula for f in formulas ]
     if selection : expressions.append ( selection ) 
-        
+
     if expressions :
 
         tt = None 
@@ -1217,16 +1220,17 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         if not tt : tt = tree
 
         lvars = tt.the_variables ( *expressions )
-        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions 
+
+        assert not lvars is None , 'Unable to get the basic variables for %s' % expressions
+        if not silent :
+            logger.info ("make_dataset: temporary varibales to be added %s" % str ( lvars ) ) 
         for lname in lvars :
             if not lname in varsete :
                 v = Variable ( lname )
                 varsete.add  ( v.var )
                 stor.add ( v )
                 
-    if not name :
-        from ostap.core.core import dsID 
-        name = dsID () 
+    if not name : name = dsID () 
     if not title and tree.GetName() != tree.GetTitle  :
         title = tree.GetTitle ()
 
@@ -1244,7 +1248,10 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         with rootError( ROOT.kWarning ) :
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
             varsete = ds.get()
-                
+
+    if not silent :
+        logger.info( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
+    
     ## add complex expressions 
     if formulas :
         # a
@@ -1253,7 +1260,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
         for v in vset : vlst.add ( v )
 
         fcols = ROOT.RooArgList() 
-        
+
         ffs   = []
         fcuts = [] 
         for f in formulas :            
@@ -1265,27 +1272,49 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
             if _minv < mn : fcuts.append ( "(%.16g <= %s)" % ( mn      , fv.name ) )
             if _maxv > mx : fcuts.append ( "(%s <= %.16g)" % ( fv.name , mx      ) )
 
-        ds.addColumns ( fcols )
+        with rooSilent ( ROOT.RooFit.ERROR + 1 , True ) :
+            with rootError( ROOT.kError ) :
+                ## it causes some strange behaviour
+                ## ds.addColumns ( fcols )
+                ## it is ok: 
+                for  f in fcols : ds.addColumn ( f ) 
+                del fcols
+                del ffs 
+            
         ##  apply cuts (if any) for the  complex expressions 
         if fcuts :
             fcuts = [ '(%s)' % f for f in fcuts ]
             fcuts = ' && '.join ( fcuts )
             _vars = ds.get()
-            ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
+            with rooSilent ( ROOT.RooFit.ERROR  + 1  , True ) :
+                with rootError( ROOT.kError + 1 ) :
+                    ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
             ds.clear()
             del ds
             ds = ds1
             varsete = ds.get()
+            if not silent :
+                logger.info ( "make_dataset: dataset after (f)cuts\n%s" % ds.table ( prefix = "# " ) ) 
             
         nvars = ROOT.RooArgSet()
         for v in varset   : nvars.add ( v     )
         for v in formulas : nvars.add ( v.var )
         varset  = nvars 
         varsete = ds.get() 
-        
+
+    if formulas and not silent : 
+        logger.info ( "make_dataset: dataset with expressions\n%s" % ds.table ( prefix = "# " ) ) 
+
     ##  remove all temporary variables  
     if len ( varset ) != len ( varsete ) :
-        ds1 = ds.reduce ( varset )
+        vs  = ROOT.RooArgSet()
+        vrm = set ( )
+        for v in ds.get() :
+            if  v in varset : vs .add ( v      )
+            else            : vrm.add ( v.name )
+        if vrm and not silent :
+            logger.info  ("make_dataset: temporary variables to be removed %s" % str ( tuple ( vrm) ) )
+        ds1 = ds.reduce ( vs , '' )
         ds.clear()
         del ds
         ds = ds1
@@ -1389,8 +1418,11 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
+    
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection : 
+
+        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection :
+
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
             ds , stat  = self.make_dataset ( variables = selector.variables , selection = selector.selection , silent = silent )
             selector.data = ds
@@ -1581,6 +1613,6 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

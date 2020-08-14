@@ -134,9 +134,11 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
 else                      : logger = getLogger ( __name__ )
 # =============================================================================
-import os , sys , zlib 
+import os , sys , zlib, collections, datetime   
 import sqlite3
-from   ostap.io.sqlitedict import SqliteDict
+from   ostap.io.sqlitedict  import SqliteDict
+from   ostap.io.dbase       import Item
+from   ostap.core.meta_info import meta_info 
 # =============================================================================
 try:
     from cPickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
@@ -287,9 +289,22 @@ class SQLiteShelf(SqliteDict):
                               autocommit   = writeback    ,
                               journal_mode = journal_mode )
         
-        self.__compression = compress_level 
-        self.__protocol    = protocol
-        self.__sizes       = {}
+        self.__compresslevel = compress_level 
+        self.__protocol      = protocol
+        self.__sizes         = {}
+
+        if self.flag in (  'w' , 'n' ) :
+            meta = meta_info()
+            dct  = collections.OrderedDict() 
+            dct  [ 'Created by'                  ] = meta.User
+            dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
+            dct  [ 'Created with Ostap version'  ] = meta.Ostap
+            dct  [ 'Created with Python version' ] = meta.Python
+            dct  [ 'Created with ROOT version'   ] = meta.ROOT 
+            dct  [ 'Pickle protocol'             ] = protocol 
+            dct  [ 'Compress level'              ] = self.__compresslevel 
+            self [ '__metainfo__' ] = dct
+
 
     @property
     def  writeback  ( self ):
@@ -299,12 +314,17 @@ class SQLiteShelf(SqliteDict):
         Otherwise, changes are committed on `self.commit()`,
         `self.clear()` and `self.close()`."""        
         return self.autocommit
-    
+
     @property
     def compression ( self ) :
         """The  compression level from zlib"""
-        return self.__compression
+        return self.__compresslevel
     
+    @property
+    def compresslevel ( self ) :
+        "``compress level'' : compression level"
+        return self.__compresslevel 
+
     @property
     def protocol    ( self ) :
         """The pickling protocol"""
@@ -382,7 +402,13 @@ class SQLiteShelf(SqliteDict):
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
 
-        table = [ ( 'Key' , 'type' , '   size   ') ] 
+        table = [ ( 'Key' , 'type' , '   size   ', ' created/modified ') ]
+
+        meta = self.get( '__metainfo__' , {} )
+        for k in meta :
+            row = "META:%s" % k , '' , '' , str ( meta[k] )
+            table.append ( row  ) 
+        
         for k in keys :
             size = '' 
             ss   =   self.__sizes.get ( k , -1 )
@@ -396,8 +422,13 @@ class SQLiteShelf(SqliteDict):
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
                 
             ot    = type ( self [ k ] )
-            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
-            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size 
+            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__
+
+            rawitem = self.__get_raw_item__ ( k )
+            if isinstance ( rawitem , Item ) : timetag = rawitem.time
+            else                             : timetag = '' 
+
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size , timetag 
             table.append ( row )
 
         import ostap.logger.table as T
@@ -447,7 +478,7 @@ class SQLiteShelf(SqliteDict):
 
     # =============================================================================
     ## ``get-and-uncompress-item'' from dbase 
-    def __getitem__ ( self, key ):
+    def __get_raw_item__ ( self, key ):
         """ ``get-and-uncompress-item'' from dbase 
         """
         GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
@@ -461,20 +492,53 @@ class SQLiteShelf(SqliteDict):
         return value
 
     # =============================================================================
+    ## ``get-and-uncompress-item'' from dbase 
+    def __getitem__ ( self, key ):
+        """ ``get-and-uncompress-item'' from dbase 
+        """
+
+        value  = self.__get_raw_item__ ( key )
+        if isinstance ( value , Item ) : value = value.payload 
+        return value
+
+    # =============================================================================
     ## ``set-and-compress-item'' to dbase 
     def __setitem__ ( self , key , value ) :
         """ ``set-and-compress-item'' to dbase 
         """
         ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
-        
+
+        item = Item ( datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' ) , value )
+
         f     = BytesIO ()
         p     = Pickler ( f , self.protocol )
-        p.dump ( value )
+        p.dump ( item )
         blob  = f.getvalue ( ) 
         zblob = zlib.compress ( blob , self.compression )
         
         self.__sizes [ key ] = len ( zblob )
         self.conn.execute ( ADD_ITEM, ( key , sqlite3.Binary ( zblob ) ) )
+
+
+    # =========================================================================
+    ## close and compress (if needed)
+    def close ( self ) :
+        """ Close the file (and compress it if required) 
+        """
+
+        if self.flag == 'c' : 
+            meta = meta_info () 
+            dct = self.get ( '__metainfo__' , {} )
+            dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
+            dct  [ 'Updated by'                  ] = meta.User 
+            dct  [ 'Updated with Ostap version'  ] = meta.Ostap 
+            dct  [ 'Updated with Python version' ] = meta.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta.ROOT   
+            self [ '__metainfo__' ] = dct
+
+            
+        return SqliteDict.close ( self )
+
         
     ## context manager
     def __enter__ ( self      ) :

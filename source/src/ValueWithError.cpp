@@ -942,18 +942,10 @@ Ostap::Math::binomEff2
   const bool zeroA = _zero ( vA      ) ;
   const bool zeroR = _zero ( vR      ) ;
   //
-  if ( zeroA && zeroR ) { return ValueWithError ( 1 , -1 ) ; }
+  if      ( zeroA && zeroR ) { return ValueWithError  ( 1 , -1 ) ; }
+  else if ( zeroA          ) { return 1.0 - binomEff2 ( nRejected , nAccepted ) ; }
   //
-  const double vB  = vA + vR ;
-  const bool zeroB = _zero ( vB ) ;
-  //
-  if ( zeroB          ) { return ValueWithError ( 0 , -1 ) ; }
-  //
-  double cov2   =  vA * vA * nRejected.cov2() ;
-  cov2         +=  vR * vR * nAccepted.cov2() ;
-  cov2         /=  vB * vB   ;
-  //
-  return ValueWithError ( vA / vB , cov2 ) ;
+  return 1.0 / ( 1.0 + ( nRejected / nAccepted ) ) ;
 }
 // ============================================================================
 /*  calculate the ratio of weighted to unweighted sample with uncertainties

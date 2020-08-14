@@ -41,6 +41,13 @@ namespace std
     _hash_combine ( seed, args...) ;
     return seed ;
   }
+  template <class   ITERATOR>
+  size_t hash_range ( ITERATOR i1 , ITERATOR i2 )
+  {
+    size_t seed = 0 ;
+    for ( ; i1 != i2 ; ++i1 ) { _hash_combine ( seed , *i1 ) ; }
+    return seed ;
+  }
   // ==========================================================================
   template <typename RT=size_t , typename T1, typename ...T>
   RT hash_combine  ( const T&...   args , const T1& t1 ) 
@@ -54,14 +61,35 @@ namespace std
   template <>
   struct hash<const char*> 
   {
-    size_t operator() ( const char *str ) const 
+    inline size_t operator() ( const char *str ) const 
     {
       std::size_t seed =  0 ;
       char c;
-      while ( c = *str++) { _hash_combine ( seed , c ) ; }
+      while ( ( c = *str++ ) ) { _hash_combine ( seed , c ) ; }
       return seed ;
     }
   } ;
+  // ==========================================================================
+  template <typename T, int N>
+  struct hash<T(&)[N]> 
+  {
+    inline size_t operator() ( const T(&s)[N] ) const 
+    { return hash_range ( &s , &s+N ); }
+  } ;
+  // ==========================================================================
+  template <typename T, int N>
+  struct hash<const T(&)[N]> 
+  {
+    inline size_t operator() ( const T(&s)[N] ) const 
+    { return hash_range ( &s , &s+N ); }
+  } ;
+  // ==========================================================================
+  template <class T>
+  struct hash<std::vector<T> >
+  {
+    size_t operator() ( const std::vector<T>& v ) const 
+    { return hash_range ( v.begin () , v.end () ) ; }
+  } ;  
   // ==========================================================================
 } //
 // ============================================================================

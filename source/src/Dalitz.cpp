@@ -1,18 +1,25 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <functional>
+// ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/Kinematics.h"
 #include "Ostap/Dalitz.h"
+#include "Ostap/DalitzIntegrator.h"
 // ============================================================================
 // local
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
+#include "local_hash.h"
 // ============================================================================
 /** @file
  *  Implementation file for class Ostap::Kinematics::Dalitz
+ *  @see Ostap::Kinematics::Dalitz0
  *  @see Ostap::Kinematics::Dalitz
  *  @date 2019-07-15 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -20,37 +27,474 @@
 // ============================================================================
 // Dalitz 
 // ============================================================================
-Ostap::Kinematics::Dalitz::Dalitz
-( const double M  , 
-  const double m1 , 
+Ostap::Kinematics::Dalitz0::Dalitz0
+( const double m1 , 
   const double m2 , 
   const double m3 ) 
-  : m_M  ( std::abs ( M  ) )
-  , m_m1 ( std::abs ( m1 ) )
-  , m_m2 ( std::abs ( m2 ) )
-  , m_m3 ( std::abs ( m3 ) )
+  : m_m1 ( s_zero ( m1 ) || s_zero ( m1 * m1 ) ? 0.0 : std::abs ( m1 ) )
+  , m_m2 ( s_zero ( m2 ) || s_zero ( m2 * m2 ) ? 0.0 : std::abs ( m2 ) )
+  , m_m3 ( s_zero ( m3 ) || s_zero ( m3 * m3 ) ? 0.0 : std::abs ( m3 ) )
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
-  , m_cache {{  
-    ( m_m1 + m_m2 ) * ( m_m1 + m_m2 ) , // [0]
-      ( m_M  - m_m3 ) * ( m_M  - m_m3 ) , // [1]
-      ( m_m2 + m_m3 ) * ( m_m2 + m_m3 ) , // [2] 
-      ( m_M  - m_m1 ) * ( m_M  - m_m1 ) , // [3]
-      ( m_m3 + m_m1 ) * ( m_m3 + m_m1 ) , // [4] 
-      ( m_M  - m_m2 ) * ( m_M  - m_m2 ) , // [5] 
-      // sum of all invariants 
-      m_M * m_M + m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3  , //    [6] 
-      // mass-squared 
-      m_m1 * m_m1 ,   // [7] 
-      m_m2 * m_m2 ,   // [8]
-      m_m3 * m_m3 ,   // [9] 
-      m_M  * m_M ,    // [10]
-      // max e1 , e2 , e3 
-      ( m_M * m_M + m_m1 * m_m1 - ( m_m2 + m_m3 ) * ( m_m2 + m_m3 ) ) / ( 2 * m_M ) ,
-      ( m_M * m_M + m_m2 * m_m2 - ( m_m1 + m_m3 ) * ( m_m1 + m_m3 ) ) / ( 2 * m_M ) ,
-      ( m_M * m_M + m_m3 * m_m3 - ( m_m1 + m_m2 ) * ( m_m1 + m_m2 ) ) / ( 2 * m_M ) 
-      }}
+  , m_cache {
+  // s1_min, s2_min, s3_min
+  ( m_m1 + m_m2 ) * ( m_m1 + m_m2 )         , // [0]
+    ( m_m2 + m_m3 ) * ( m_m2 + m_m3 )       , // [1] 
+    ( m_m3 + m_m1 ) * ( m_m3 + m_m1 )       , // [2] 
+    // mass-squared 
+    m_m1 * m_m1                             , // [3] 
+    m_m2 * m_m2                             , // [4]
+    m_m3 * m_m3                             , // [5] 
+    m_m1 * m_m1 + m_m2 * m_m2 + m_m3 * m_m3 , // [6]
+    // sum of masses
+    m_m1 + m_m2 + m_m3                      , // [7]
+    // sum of masses
+    std::pow  ( m_m1 + m_m2 + m_m3 , 2 )      // [8]
+    }
+  , m_cacheb { 
+    s_zero ( m_m1 ) ,
+      s_zero ( m_m2 ) ,
+      s_zero ( m_m3 )
+      }
+  , m_tag ( std::hash_combine ( m_m1  , m_m2 , m_m3 ) ) 
+{}
+// ============================================================================
+/** Is point \f$ (s_1,s_2)\f$ "inside" the Dalizt plot?
+ *  Get the sign of G-function 
+ *  \f$ g(s_1,s_2) = G ( s_1, s_2 , s , m_2^2, m_1^2, m_3^2) \f$
+ *  @see Ostap::Math::PhaseSpace2::G
+ *  Physical region corresponds to \f$ g\le0 \f$  
+ */
+// ============================================================================
+bool Ostap::Kinematics::Dalitz0::inside
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const 
 {
-  Ostap::Assert ( m_M > m_m1 + m_m2 + m_m3 , 
+  return
+    s1_min () <= s1 && s1 <= s &&   
+    s2_min () <= s2 && s2 <= s &&
+    sqsumm () <= s             && 
+    s1 + s2   <= s + summ2 ()  && 
+    0 >= Ostap::Kinematics::G ( s1 , s2 , s , m2sq() , m1sq (), m3sq () ) ;
+}
+// ============================================================================
+/*  get the measure of the distance from the point to the boundary of Dalitz plot. 
+ *  Distance is defined as \f$ d \equiv = \lambda ( P_1^2, P_2^2, P_3^2) \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::distance
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const 
+{
+  //
+  const double s3 = s + summ2 () - s1 - s2 ;
+  //
+  const double p1 = Ostap::Kinematics::triangle ( s , m1sq () , s2 ) ;
+  const double p2 = Ostap::Kinematics::triangle ( s , m2sq () , s3 ) ;
+  const double p3 = Ostap::Kinematics::triangle ( s , m3sq () , s1 ) ;
+  //
+  const double scale = 0.25 / s ;
+  //
+  return Ostap::Kinematics::triangle ( scale * p1 , scale * p2 , scale * p3 );
+}
+// ============================================================================
+// maximal value of momenta of the first  particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p1_max 
+( const double s ) const
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m1sq () , s2_min () ) / s ) ;
+}
+// ============================================================================
+// maximal value of momenta of the second particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p2_max 
+( const double s ) const 
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m2sq () , s3_min () ) / s ) ;
+}
+// ============================================================================
+// maximal value of momenta of the third  particle for the given s 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::p3_max 
+( const double s ) const 
+{
+  return s <= s_min () ? 0.0 : 
+    0.5  * std::sqrt ( Ostap::Kinematics::triangle ( s , m3sq () , s1_min () ) / s ) ;
+}
+// ============================================================================
+// Dalitz plot boundaries \f$ s_1^{min/max} ( s, s_2 ) \f$ 
+// ============================================================================
+std::pair<double,double>  
+Ostap::Kinematics::Dalitz0::s1_minmax_for_s_s2 
+( const double s  , 
+  const double s2 ) const 
+{
+  //
+  static const std::pair<double,double> s_BAD { s1_min () , -s1_min () } ;
+  //
+  // wrong arguments ?
+  if ( s < sqsumm () || s < s2 || s2 < s2_min () ) { return s_BAD ; }
+  //
+  const bool m12_zero = m1_zero () && m2_zero () ;
+  const bool m23_zero = m2_zero () && m3_zero () ;
+  const bool m31_zero = m3_zero () && m1_zero () ;
+  //
+  const bool all_zero  = m12_zero && m23_zero        ;
+  //
+  const double sqs   = std::sqrt ( s ) ;
+  //
+  // simple case : all masses are zero 
+  if      ( all_zero )
+  {
+    //
+    const double s_min = 0 ;
+    const double s_max = s ;
+    //
+    return
+      s2 < s_min || s2 > s_max ? s_BAD :
+      s_equal ( s2 , s_min ) ? std::make_pair ( s_min , s_max ) :
+      s_equal ( s2 , s_max ) ? std::make_pair ( s_min , s_min ) : std::make_pair ( 0.0 , s_max - s2 ) ; 
+  }
+  // two masses are zero 
+  else if ( m12_zero )
+  {
+    //
+    const double s_min = m3sq () ;
+    const double s_max = s       ;
+    //
+    return
+      s2 < s_min || s2 > s_max ? s_BAD :
+      s_equal ( s2 , s_min ) ? std::make_pair ( 0.0 , 0.0 ) :
+      s_equal ( s2 , s_max ) ? std::make_pair ( 0.0 , 0.0 ) : std::make_pair ( 0.0 , ( s - s2 ) * ( s2 - m3sq () ) / s2 )  ;
+  }
+  // two masses are zero 
+  else if ( m23_zero ) 
+  {
+    const double s_min = 0 ;
+    const double s_max = s2_max ( sqs ) ;
+    //
+    if      ( s2 < s_min || s2 > s_max ) { return s_BAD ; }
+    else if ( s_equal ( s2 , s_min )   ) { return std::make_pair ( m1 () , s ) ; }
+    else if ( s_equal ( s2 , s_max )   ) { const double q = m1 () * sqs ; return std::make_pair ( q , q ) ; }
+    //
+    const double a  = 1 ;
+    const double b  = s2 - s - m1sq () ;
+    const double c  = s * m1sq () ;
+    const double d  = std::sqrt ( b * b - 4  * a * c  )  ;
+    const double sc =  -0.5 / a ;
+    //
+    return std::make_pair ( sc * ( -b - d ) , sc * ( -b + d ) ) ;
+  }
+  // two masses are zero 
+  else if ( m31_zero ) 
+  {
+    //
+    const double s_min = m2sq () ;
+    const double s_max = s       ;
+    //
+    return 
+      s2 < s_min || s2 > s_max  ? s_BAD :
+      s_equal ( s2 , s_min )    ? std::make_pair ( s_max , s_max ) :
+      s_equal ( s2 , s_max )    ? std::make_pair ( s_min , s_min ) :
+      std::make_pair ( s * s_min /  s2 , s + s_min - s2 ) ; 
+  }
+  //
+  // generic case 
+  //
+  const double s_a       = m1sq()  + m2sq()  ;
+  //
+  const double s_min     = s2_min () ;
+  const double s_max     = s2_max ( sqs ) ;
+  //
+  if ( s2 < s_min || s2 > s_max ) { return s_BAD  ; }
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s2 , s       , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  if ( f1 < 0 || f2 < 0         ) { return s_BAD ; }
+  //
+  const double b  = ( s2 - s  + m1sq() ) * ( s2 + m2sq () - m3sq () ) ;
+  const double c  = std::sqrt ( f1 * f2 ) ;
+  //
+  const double q1 = s_a - ( b - c ) / ( 2 * s2 ) ;
+  const double q2 = s_a - ( b + c ) / ( 2 * s2 ) ;
+  //
+  return std::make_pair ( q2 , q1 ) ;
+}
+
+
+
+// ============================================================================
+// Dalitz plot boundaries \f$ s_2^{min/max} ( s , s_1 ) \f$ 
+// ============================================================================
+std::pair<double,double>  
+Ostap::Kinematics::Dalitz0::s2_minmax_for_s_s1 
+( const double s  ,
+  const double s1 )
+  const 
+{
+  //
+  static const std::pair<double,double> s_BAD { s2_min () , -s2_min () } ;
+  //
+  // wrong arguments ?
+  if ( s < sqsumm () || s < s1 || s1 < s1_min () ) { return s_BAD ; }
+  //
+  const bool m12_zero  = m1_zero () && m2_zero() ;
+  const bool m23_zero  = m2_zero () && m3_zero() ;
+  const bool m31_zero  = m3_zero () && m1_zero() ;
+  //
+  const bool all_zero  = m12_zero        && m23_zero        ;
+  //
+  const double sqs   = std::sqrt ( s ) ;
+  //
+  if      ( all_zero )
+  {
+    //
+    const double s_min = 0 ;
+    const double s_max = s ;
+    //
+    return
+      s1 < s_min || s1 > s_max ? s_BAD :
+      s_equal ( s1 , s_min ) ? std::make_pair ( s_min , s_max ) :
+      s_equal ( s1 , s_max ) ? std::make_pair ( s_min , s_min ) : std::make_pair ( 0.0 , s_max - s1 ) ; 
+  }
+  //
+  else if  ( m23_zero )
+  {
+    //
+    const double s_min = m1sq () ;
+    const double s_max = s       ;
+    //
+    return
+      s1 < s_min || s1 > s_max ? s_BAD :
+      s_equal ( s1 , s_min ) ? std::make_pair ( 0.0 , 0.0 ) :
+      s_equal ( s1 , s_max ) ? std::make_pair ( 0.0 , 0.0 ) : std::make_pair ( 0.0 , ( s - s1 ) * ( s1 - m1sq () ) / s1 )  ;
+  }
+  //
+  else if ( m12_zero ) 
+  {
+    const double s_min = 0               ;
+    const double s_max = s1_max ( sqs )  ;
+    //
+    if      ( s1 < s_min || s1 > s_max ) { return s_BAD ; }
+    else if ( s_equal ( s1 , s_min )   ) { return std::make_pair ( m1 () , s ) ; }
+    else if ( s_equal ( s1 , s_max )   ) { const double q = m3 () * sqs ; return std::make_pair ( q , q ) ; }
+    //
+    const double a  = 1 ;
+    const double b  = s1 - s - m3sq () ;
+    const double c  = s * m3sq () ;
+    const double d  = std::sqrt ( b * b - 4  * a * c  )  ;
+    const double sc =  -0.5 / a ;
+    //
+    return std::make_pair ( sc * ( -b - d ) , sc * ( -b + d ) ) ;
+  }
+  else if ( m31_zero ) 
+  {
+    //
+    const double s_min = m2sq () ;
+    const double s_max = s       ;
+    //
+    return 
+      s1 < s_min || s1 > s_max  ? s_BAD :
+      s_equal ( s1 , s_min )    ? std::make_pair ( s_max , s_max ) :
+      s_equal ( s1 , s_max )    ? std::make_pair ( s_min , s_min ) :
+      std::make_pair ( s * s_min /  s1 , s + s_min - s1 ) ; 
+  }
+  //
+  const double s_a       = m3sq () + m2sq()  ;
+  //
+  const double s_min     = s1_min (     ) ;
+  const double s_max     = s1_max ( sqs ) ;
+  //
+  if ( s1 < s_min || s1 > s_max ) { return std::make_pair ( 1.0 , -1.0 ) ; }
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s1 , s       , m3sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s1 , m2sq () , m1sq () ) ;
+  //
+  if ( f1 < 0 || f2 < 0 ) { return std::make_pair ( 1.0 , -1.0 ) ; }
+  //
+  const double b  = ( s1 - s + m3sq () ) * ( s1 + m2sq () - m1sq()  ) ;
+  const double c  = std::sqrt ( f1 * f2 ) ;
+  //
+  const double q1 = s_a - ( b - c ) / ( 2 * s1 ) ;
+  const double q2 = s_a - ( b + c ) / ( 2 * s1 ) ;
+  //
+  return std::make_pair ( q2 , q1 ) ; 
+}
+// ============================================================================
+/** the first x-variable is just \f$ x_1 = \cos_{R23}(12) \f$ 
+ *  - cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
+ *  \f$ \cos \theta_{12}^{R(2,3)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::x1
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const
+{
+  //
+  if  ( !inside ( s , s1  , s2 ) ) { return -1000 ; }
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2       ) { return  -1000 ; }
+  //
+  const double f = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
+                            + 2 * s2 * ( m1sq () + m2sq () - s1 ) ;
+  //
+  return f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/* (inverse) variable transformation  
+ *   \f[ \begin{array{l} 
+ *        s_1 = f_1 ( x_1 ,x_2  )  \\ 
+ *        s_2 = f_2 ( x_1 ,x_2  )
+ *       \end{array}\f]
+ *   where 
+ *   \f[ \begin{array{l} 
+ *        x_1 = \cos_{R23)(12)  \\ 
+ *        x_2 =s_2 
+ *       \end{array} \f]
+ *  @code
+ *  Dalitz d = ... ;
+ *  const double x1 = 0.1  ;
+ *  const double x2 = 14.5 ;
+ *  double s1, s2 ;
+ *   std::tie ( s1, s2 ) = d.x2s ( s , x1 , x2 ) ; 
+ *  @endcode  
+ */
+// ============================================================================
+std::pair<double,double> Ostap::Kinematics::Dalitz0::x2s
+( const double s  ,
+  const double x1 ,
+  const double x2 ) const 
+{
+  if ( s  < sqsumm () ) { return std::make_pair ( -1 , -1  ) ; }
+  // adjust to the allowed boundaries 
+  const double s2 = std::min ( std::max ( x2 , s2_min () ) , s2_max ( std::sqrt( s ) ) ) ;
+  const double ct = std::min ( std::max ( x1 , -1.0      ) , 1.0       ) ;
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  const double f  = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
+    + 2 * s2 * ( m1sq () + m2sq ()  ) ;
+  //
+  const double s1 = ( f - ct * std::sqrt ( f1 * f2 ) ) / ( 2 * s2 ) ;
+  //
+  return std::make_pair ( s1 , s2  ) ;
+}
+// ============================================================================
+/** (inverse) variable transformation  
+ *   \f[ \begin{array{l} 
+ *        s   = f_1 ( y_1 ,y_2  )  \\ 
+ *        s_1 = f_2 ( y_1 ,y_2  )
+ *       \end{array}\f]
+ *   where 
+ *   \f[ \begin{array{l} 
+ *        y_1 = s \\  
+ *        y_2 = \cos_{R23)(12) 
+ *       \end{array} \f]
+ *  @code
+ *  Dalitz d = ... ;
+ *  const double y1 = 0.1  ;
+ *  const double y2 = 0.5 ;
+ *  double s, s1 ;
+ *   std::tie ( s , s1 ) = d.y2s ( s2 , y1 , y2 ) ; 
+ *  @endcode  
+ */
+// ============================================================================
+std::pair<double,double> Ostap::Kinematics::Dalitz0::y2s
+( const double s2 ,
+  const double y1 ,
+  const double y2 ) const
+{
+  const double s = std::max  ( y1 , sqsumm () ) ;
+  if ( s2 < s2_min() || s2 > s2_max  ( s ) ) { return std::make_pair ( -1 , -1  ) ; }
+  //
+  const double ct = std::min ( std::max ( y2 , -1.0 ) , 1.0 ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  const double f  = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
+    + 2 * s2 * ( m1sq () + m2sq ()  ) ;
+  //
+  const double s1 = ( f - ct * std::sqrt ( f1 * f2 ) ) / ( 2 * s2 ) ;
+  //
+  return std::make_pair ( s , s1  ) ;
+}
+// ============================================================================
+/**  absolute value of the jacobian  
+ *   \f$ J(s, s_1,s_2) = \left| \frac{\partial(s_1,s_2) }{\partial(x_1,x_2)} \right| \f$ 
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::J
+( const double s  ,
+  const double s1 ,
+  const double s2 ) const
+{
+  if  ( !inside ( s , s1 , s2 ) ) { return 0 ; }
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  return f1 <= 0 ? 0.0 : f2 <= 0 ? 0.0 : std::sqrt ( f1 * f2 ) / ( 2 * s2 ) ;
+}
+// ============================================================================
+/*  "transpose it", such that \f$ s_{i1} \f$ and \f$ s_{i2}\f$ 
+ *  becomes  the main  variable
+ */
+// ============================================================================
+Ostap::Kinematics::Dalitz0
+Ostap::Kinematics::Dalitz0::transpose 
+( const unsigned short i1 , 
+  const unsigned short i2 ) const 
+{
+  Ostap::Assert ( 1 <= i1 && i1 <= 3 , "Invalid i1" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  Ostap::Assert ( 1 <= i2 && i2 <= 3 , "Invalid i2" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  Ostap::Assert ( i1 != i2           , "Invalid i1/i2" , 
+                  "Ostap::Kinematics::Dalitz0::transpose" ) ;
+  
+  if      ( 1 == i1 && 2 == i2 ) { return Dalitz0 ( m1 () , m2 () , m3 () ) ; }
+  else if ( 1 == i1 && 3 == i2 ) { return Dalitz0 ( m2 () , m1 () , m3 () ) ; }
+  else if ( 2 == i1 && 1 == i2 ) { return Dalitz0 ( m3 () , m2 () , m1 () ) ; }
+  else if ( 2 == i1 && 3 == i2 ) { return Dalitz0 ( m2 () , m3 () , m1 () ) ; }
+  else if ( 3 == i1 && 1 == i2 ) { return Dalitz0 ( m3 () , m1 () , m2 () ) ; }
+  else if ( 3 == i1 && 2 == i2 ) { return Dalitz0 ( m1 () , m3 () , m2 () ) ; }
+  //
+  return Dalitz0 ( m1 () , m2 () , m3 () ) ;
+}
+// ============================================================================
+// Dalitz 
+// ============================================================================
+Ostap::Kinematics::Dalitz::Dalitz
+( const double M  ,
+  const Ostap::Kinematics::Dalitz::Dalitz0& b )   
+  : Dalitz0 ( b )  
+  , m_M     ( std::abs ( M  ) )
+    // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
+  , m_cache2 { Dalitz0::s1_max ( m_M )       , // [0]
+               Dalitz0::s2_max ( m_M )       , // [1]
+               Dalitz0::s3_max ( m_M )       , // [2] 
+               // sum of all invariants 
+               m_M * m_M + summ2 () , // [3] 
+               // mass-squared               
+               m_M  * m_M           , // [4]
+               // max e1 , e2 , e3 
+               ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
+               ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
+               ( m_M * m_M + m3sq () - ( m1 () + m2 () ) * ( m1 () + m2 () ) ) / ( 2 * m_M )   // [7]
+               }
+  , m_tag2 ( std::hash_combine ( Dalitz0::tag()  , m_M ) ) 
+{
+  Ostap::Assert ( m_M > m1 ()  + m2 () + m3 ()  , 
                   "Invalid masses for Dalitz" , 
                   "Ostap::Kinematics::Dalitz" ) ;
 }
@@ -443,9 +887,9 @@ double Ostap::Kinematics::Dalitz::dRds3   ( const double s3 ) const
   //
   if ( s3 < s3_min () || s3 > s3_max () ){ return 0 ; }
   //
-  const double f1 = Ostap::Kinematics::triangle ( s3 , s ()        , m2sq () ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s3 , s ()   , m2sq () ) ;
   if ( f1 < 0 ) {  return 0 ; }
-  const double f2 = Ostap::Kinematics::triangle ( s3 , m_m3 * m_m3 , m1sq () ) ;  
+  const double f2 = Ostap::Kinematics::triangle ( s3 , m3sq() , m1sq () ) ;  
   if ( f1 < 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * M_PI * M_PI ;
@@ -466,9 +910,9 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   //
   if ( s1 < s1_min () || s1 > s1_max () ){ return 0 ; }
   //
-  const double f1 = Ostap::Kinematics::triangle ( s1 , s ()        , m3sq () ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s1 , s ()   , m3sq () ) ;
   if ( f1 < 0 ) {  return 0 ; }
-  const double f2 = Ostap::Kinematics::triangle ( s1 , m_m1 * m_m1 , m2sq () ) ;  
+  const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;  
   if ( f1 < 0 ) {  return 0 ; }
   //
   static const double s_norm = 0.25 * M_PI * M_PI ;
@@ -476,180 +920,7 @@ double Ostap::Kinematics::Dalitz::dRds1   ( const double s1 ) const
   return 0 < f1 && 0 < f2 ? s_norm * std::sqrt ( f1 * f2 ) / ( s () * s1 ) : 0.0 ; 
 }
 // ============================================================================
-// Dalitz plot boundaries \f$ s_1^{min/max} ( s_2 ) \f$ 
-// ============================================================================
-std::pair<double,double>  
-Ostap::Kinematics::Dalitz::s1_minmax_for_s2 
-( const double s2 ) const 
-{
-  //
-  const bool   m12_zero  = s_zero ( m_m1 ) && s_zero ( m_m2 ) ;
-  const bool   m23_zero  = s_zero ( m_m2 ) && s_zero ( m_m3 ) ;
-  const bool   m31_zero  = s_zero ( m_m3 ) && s_zero ( m_m1 ) ;
-  //
-  const bool   all_zero  = m12_zero        && m23_zero        ;
-  //
-  if ( all_zero )
-  {
-    //
-    const double s_min = 0    ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s2 , s_min ) ) { return std::make_pair ( s_min , s_max ) ; }
-    else if ( s2 < s_min             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    else if ( s_equal ( s2 , s_max ) ) { return std::make_pair ( s_max ,  0.0  ) ; }
-    else if ( s2 > s_max             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    //
-    return std::make_pair ( 0.0 , s_max - s2 ) ; 
-  }
-  //
-  if  ( m12_zero )
-  {
-    //
-    const double s_min = m3sq () ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s2 , s_min ) ) { return std::make_pair ( s_min ,  0.0 ) ; }
-    else if ( s2 < s_min             ) { return std::make_pair ( 1.0   , -1.0 ) ; }
-    else if ( s_equal ( s2 , s_max ) ) { return std::make_pair ( s_max ,  0.0 ) ; }
-    else if ( s2 > s_max             ) { return std::make_pair ( 1.0   , -1.0 ) ; }
-    //
-    return  std::make_pair ( 0.0 , ( s() - s2 ) * ( s2 - m3sq () ) / s2 )  ;
-  }
-  //
-  if ( m23_zero ) 
-  {
-    const double s_min = 0 ;
-    const double s_max = ( sqs () - m_m1  ) * ( sqs () - m_m1  ) ;
-    //
-    if      ( s_equal ( s2 , s_min ) ) { return std::make_pair ( m1sq () , s()     ) ; }
-    else if ( s2 < s_min             ) { return std::make_pair ( 1.0 , -1.0        ) ; }
-    else if ( s_equal ( s2 , s_max ) ) { return std::make_pair ( m_m1  * sqs () , m_m1  * sqs () ) ; }
-    else if ( s2 > s_max             ) { return std::make_pair ( 1.0 , -1.0        ) ; }
-    //
-  }
-  //
-  if ( m31_zero ) 
-  {
-    //
-    const double s_min = m2sq () ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s2 , s_min ) ) { return std::make_pair ( s_min , s_max ) ; }
-    else if ( s2 < s_min             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    else if ( s_equal ( s2 , s_max ) ) { return std::make_pair ( s_max , s_min ) ; }
-    else if ( s2 > s_max             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    //
-    return  std::make_pair ( s_max * s_min / s2 , s_max +  s_min - s2 ) ; 
-  }
-  //
-  const double s_a       = m1sq()  + m2sq()  ;
-  //
-  const double s_min     = s2_min () ;
-  const double s_max     = s2_max () ;
-  //
-  if ( s2 < s_min || s2 > s_max ) { return std::make_pair ( 1.0 , -1.0 ) ; }
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s2 , s ()    , m1sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
-  //
-  if ( f1 < 0 || f2 < 0 ) { return std::make_pair ( 1.0 , -1.0 ) ; }
-  //
-  const double b  = ( s2 - s() + m1sq() ) * ( s2 + m2sq() - m3sq () ) ;
-  const double c  = std::sqrt ( f1 * f2 ) ;
-  //
-  const double q1 = s_a - ( b - c ) / ( 2 * s2 ) ;
-  const double q2 = s_a - ( b + c ) / ( 2 * s2 ) ;
-  //
-  return std::make_pair ( q2 , q1 ) ;
-}
-// ============================================================================
-// Dalitz plot boundaries \f$ s_2^{min/max} ( s_1 ) \f$ 
-// ============================================================================
-std::pair<double,double>  
-Ostap::Kinematics::Dalitz::s2_minmax_for_s1 
-( const double s1 ) const 
-{
-  //
-  const bool   m12_zero  = s_zero ( m_m1 ) && s_zero ( m_m2 ) ;
-  const bool   m23_zero  = s_zero ( m_m2 ) && s_zero ( m_m3 ) ;
-  const bool   m31_zero  = s_zero ( m_m3 ) && s_zero ( m_m1 ) ;
-  //
-  const bool   all_zero  = m12_zero        && m23_zero        ;
-  //
-  if ( all_zero )
-  {
-    //
-    const double s_min = 0    ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s1 , s_min ) ) { return std::make_pair ( s_min , s_max ) ; }
-    else if ( s1 < s_min             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    else if ( s_equal ( s1 , s_max ) ) { return std::make_pair ( s_max ,  0.0  ) ; }
-    else if ( s1 > s_max             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    //
-    return std::make_pair ( 0.0 , s_max - s1 ) ; 
-  }
-  //
-  if  ( m23_zero )
-  {
-    //
-    const double s_min = m1sq () ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s1 , s_min ) ) { return std::make_pair ( s_min ,  0.0 ) ; }
-    else if ( s1 < s_min             ) { return std::make_pair ( 1.0   , -1.0 ) ; }
-    else if ( s_equal ( s1 , s_max ) ) { return std::make_pair ( s_max ,  0.0 ) ; }
-    else if ( s1 > s_max             ) { return std::make_pair ( 1.0   , -1.0 ) ; }
-    //
-    return  std::make_pair ( 0.0 , ( s() - s1 ) * ( s1 - m1sq () ) / s1 )  ;
-  }
-  //
-  if ( m12_zero ) 
-  {
-    const double s_min = 0 ;
-    const double s_max = s1_max ()  ;
-    //
-    if      ( s_equal ( s1 , s_min ) ) { return std::make_pair ( m3sq() , s() ) ; }
-    else if ( s1 < s_min             ) { return std::make_pair ( 1.0 , -1.0        ) ; }
-    else if ( s_equal ( s1 , s_max ) ) { return std::make_pair ( m_m3  * sqs () , m_m3  * sqs () ) ; }
-    else if ( s1 > s_max             ) { return std::make_pair ( 1.0 , -1.0        ) ; }
-    //
-  }
-  if ( m31_zero ) 
-  {
-    //
-    const double s_min = m2sq () ;
-    const double s_max = s () ;
-    //
-    if      ( s_equal ( s1 , s_min ) ) { return std::make_pair ( s_min , s_max ) ; }
-    else if ( s1 < s_min             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    else if ( s_equal ( s1 , s_max ) ) { return std::make_pair ( s_max , s_min ) ; }
-    else if ( s1 > s_max             ) { return std::make_pair ( 1.0   , -1.0  ) ; }
-    //
-    return  std::make_pair ( s_max * s_min / s1 , s_max +  s_min - s1 ) ; 
-  }
-  //
-  const double s_a       = m3sq () + m2sq()  ;
-  //
-  const double s_min     = s1_min () ;
-  const double s_max     = s1_max () ;
-  //
-  if ( s1 < s_min || s1 > s_max ) { return std::make_pair ( 1.0 , -1.0 ) ; }
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s1 , s ()    , m3sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s1 , m2sq () , m1sq () ) ;
-  //
-  if ( f1 < 0 || f2 < 0 ) { return std::make_pair ( 1.0 , -1.0 ) ; }
-  //
-  const double b  = ( s1 - s() +  m3sq () ) * ( s1 + m2sq () - m1sq()  ) ;
-  const double c  = std::sqrt ( f1 * f2 ) ;
-  //
-  const double q1 = s_a - ( b - c ) / ( 2 * s1 ) ;
-  const double q2 = s_a - ( b + c ) / ( 2 * s1 ) ;
-  //
-  return std::make_pair ( q2 , q1 ) ; 
-}
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

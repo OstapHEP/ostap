@@ -124,7 +124,9 @@ import ostap.utils.pdg_format
 import ostap.plotting.canvas
 
 import ostap.fitting.minuit 
-import ostap.fitting.roofit
+import ostap.fitting.minuit 
+
+import ostap.plotting.draw_attributes 
 
 # =============================================================================
 ## graphs 
@@ -141,5 +143,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

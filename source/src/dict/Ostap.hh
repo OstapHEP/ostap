@@ -46,6 +46,7 @@
 #include "Ostap/HistoMake.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/HistoStat.h"
+#include "Ostap/KramersKronig.h"
 #include "Ostap/Interpolation.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Line.h"
@@ -55,9 +56,12 @@
 #include "Ostap/Kinematics.h"
 #include "Ostap/Math.h"
 #include "Ostap/MatrixUtils.h"
+#include "Ostap/MatrixUtils2.h"
+#include "Ostap/MatrixUtilsT.h"
 #include "Ostap/MatrixTransforms.h"
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"
+#include "Ostap/Moments.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/MoreVars.h"
@@ -72,11 +76,13 @@
 #include "Ostap/PDFs2D.h"
 #include "Ostap/PDFs3D.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/Piecewise.h"
 #include "Ostap/Plane3DTypes.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
+#include "Ostap/Primitives.h"
 #include "Ostap/Printable.h"
 #include "Ostap/PyCallable.h"   
 #include "Ostap/PyFuncs.h"   
@@ -104,6 +110,7 @@
 #include "Ostap/Vector3DTypes.h"
 #include "Ostap/Vector3DWithError.h"
 #include "Ostap/Vector4DTypes.h"
+#include "Ostap/Voigt.h"
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
@@ -311,6 +318,10 @@ namespace
     Ostap::Math::LessOrEqual<double>     __eq_7 ;
     Ostap::Math::GreaterOrEqual<double>  __eq_8 ;
     //
+    std::function<std::complex<double>(double)>               __ff0 ;
+    std::function<std::complex<double>(double,double)>        __ff1 ;
+    std::function<std::complex<double>(double,double,double)> __ff2 ;
+    
   };
   // ==========================================================================
 } //                                             The end of anonymous namespace 

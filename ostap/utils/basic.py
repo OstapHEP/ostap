@@ -72,7 +72,7 @@ def terminal_size():
                                struct.pack('HHHH', 0, 0, 0, 0)))
         return th , tw  
     except :
-        return 20 , 80
+        return 50 , 128
 
     
 # =============================================================================

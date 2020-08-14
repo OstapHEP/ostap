@@ -9,8 +9,12 @@
   <class pattern    = "Ostap::Models::*"          />
   <class pattern    = "Ostap::Functions::*"       />
   <class pattern    = "Ostap::Kinematics::*"      />
-  <class pattern    = "Ostap::MoreRooFit:*"       />
+  <class pattern    = "Ostap::MoreRooFit::*"      />
 
+  <!--
+      <class pattern    = "Ostap::Math::Ops::*"       />  
+  -->
+  
   <function pattern = "Ostap::Math::*"            />
   <function pattern = "Ostap::Utils::*"           />
   <function pattern = "Ostap::Utils::Histos::*"   />
@@ -47,6 +51,7 @@
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
     <class pattern = "ROOT::Math::Impl::Plane3D*"      />
+
     
     
     <class name    = "Ostap::Utils::Tee">
@@ -75,10 +80,10 @@
     <class name    = "Ostap::Functions::FuncFormula">  
       <field name  = "m_formula" />      
     </class>
+
     <class name    = "Ostap::Functions::FuncRooFormula">  
       <field name  = "m_formula" />      
     </class>
-
 
   </exclusion>  
 </lcgdict>

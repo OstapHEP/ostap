@@ -24,10 +24,12 @@ __all__     = (
     'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
     'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
     'two_yields'      , ## ``converter'': T,F ->  (A,B) == ( R*F , T*(1-F) )
+    'depends_on'      , ## Is this "RooFit" function depends on the variable?
+    'binning'         , ## create RooBinning object 
     ) 
 # =============================================================================
-import ROOT, random
-from   ostap.core.core  import VE
+import ROOT, random, array 
+from   ostap.core.core  import VE, hID 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types )   
 # =============================================================================
@@ -418,6 +420,10 @@ ROOT.RooRealVar . __iadd__  = _rrv_iadd_
 ROOT.RooRealVar . __isub__  = _rrv_isub_
 ROOT.RooRealVar . __idiv__  = _rrv_idiv_
 
+ROOT.RooRealVar . __truediv__ = ROOT.RooRealVar . __div__
+ROOT.RooRealVar .__rtruediv__ = ROOT.RooRealVar .__rdiv__
+ROOT.RooRealVar .__itruediv__ = ROOT.RooRealVar .__idiv__
+
 
 _new_methods_ += [
     ROOT.RooRealVar.__add__   , 
@@ -433,7 +439,11 @@ _new_methods_ += [
     #
     ROOT.RooRealVar.__iadd__  , 
     ROOT.RooRealVar.__isub__  , 
-    ROOT.RooRealVar.__idiv__  , 
+    ROOT.RooRealVar.__idiv__  ,
+    #
+    ROOT.RooRealVar . __truediv__ ,
+    ROOT.RooRealVar .__rtruediv__ , 
+    ROOT.RooRealVar .__itruediv__ ,
     ]
 
 # =============================================================================
@@ -1038,7 +1048,66 @@ ROOT.RooUniformBinning.__str__  = _rub_str_
 ROOT.RooUniformBinning.__repr__ = _rub_str_
 
 
+# =============================================================================
+## Does  this variable depends on another one?
+#  @code
+#  fun = ...
+#  var = ...
+#  if fun.depends_on ( var ) :
+#     ...
+#  @endcode
+def depends_on ( fun , var ) :
+    """Does  this variable depends on another one?
+    
+    >>> fun = ...
+    >>> var = ...
+    >>> if fun.depends_on ( var ) :
+    ...
+    
+    """
+    if isinstance ( var , ROOT.RooAbsCollection ) :
+        for v in var :
+            if depends_on ( fun , v ) : return True
+        return False
 
+    fpars = fun.getParameters ( 0 )
+    
+    ## direct dependency?
+    if var  in fpars : return True
+        
+    ## check indirect dependency
+    vvars = var.getParameters ( 0 )
+    for v in vvars :
+        if v in fpars : return True
+
+    ##
+    return False 
+
+ROOT.RooAbsReal.depends_on  = depends_on
+
+# =============================================================================
+## Create <code>RooBinnig</code> object
+#  @param edges vector of bin edges 
+#  @param nbins number of bins
+#  @param name  binning name
+#  @see RooBinning
+def binning ( edges , nbins = 0 , name = '' ) :
+    """Create `RooBinnig` object
+    - see ROOT.RooBinning
+    """
+    assert isinstance ( nbins , integer_types ) and 0 <= nbins, \
+           "Invalid ``nbins'' parameter %s/%s" % ( nbins , type ( nbins ) )
+
+    nb = len ( edges ) 
+    assert 2 <= nb , "Invalid length of ``edges'' array!"
+
+    if 2 == nb :
+        return ROOT.RooBinning ( max ( 1 , nbins ) , edges[0] , edges[1] , name ) 
+
+    buffer = array.array ( 'd', edges )
+    return ROOT.RooBinning ( nb - 1 , buffer , name ) 
+    
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar        ,

@@ -64,10 +64,16 @@ __all__     = (
     ##
     'which'              , ## which command (from shutil)
     ##
-    'gen_password'       , ## generate password/secret 
+    'gen_password'       , ## generate password/secret
+    ##
+    'vrange'             , ## helper loop over values between xmin and xmax
+    ## 
+    'log_range'          , ## helper loop over values between xmin and xmax in log
+    ## 
+    'lrange'             , ## helper loop over values between xmin and xmax in log   
    )
 # =============================================================================
-import ROOT, time, os , sys ## attention here!!
+import ROOT, time, os , sys, math ## attention here!!
 from   builtins            import range
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -75,13 +81,14 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
 else                       : logger = getLogger( __name__            )
 del getLogger
 # =============================================================================
-from sys                import version_info  as python_version 
+from sys                    import version_info  as python_version 
 ## timing stuff
-from ostap.utils.timing import timing, timer
+from ostap.utils.timing     import timing, timer
 ## other useful stuff 
-from ostap.utils.basic  import isatty, with_ipython
+from ostap.utils.basic      import isatty, with_ipython
+from ostap.core.ostap_types import integer_types 
 ## ... and more useful stuff 
-from ostap.utils.memory import memory, virtualMemory, Memory 
+from ostap.utils.memory     import memory, virtualMemory, Memory 
 # =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
@@ -698,27 +705,61 @@ def cmd_exists ( command ) :
 
 
 # =============================================================================
-## loop over values between x_min and x_max 
+## loop over values between xmin and xmax 
 #  @code
-#  for x in vrange ( x_min , x_max , 200 ) :
+#  for x in vrange ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def vrange ( x_min , x_max , n = 100 ) :
-    """ Loop  over range of values betwene x_min and x_max 
-    >>> for x in vrange ( x_min , x_max , 200 ) :
+def vrange ( xmin , xmax , n = 100 ) :
+    """ Loop  over range of values between xmin and xmax 
+    >>> for x in vrange ( xmin , xmax , 200 ) :
     ...                print (x) 
     """
-    assert isinstance ( n , int ) and 0 < n, 'Invalid N=%s/%s' % ( n  , type ( n ) ) 
+    assert isinstance ( n , integer_types ) and 0 < n,\
+           'vrange: invalid N=%s/%s' % ( n  , type ( n ) ) 
 
     fn = 1.0 / float ( n ) 
     for i in range ( n + 1 ) :
         #
-        if   0 == i : yield x_max
-        elif n == i : yield x_min
+        if   0 == i : yield xmin
+        elif n == i : yield xmax
         else        :
             f2 = i * fn
             f1 = 1 - f2
-            yield  x_min * f1 + f2 * x_max 
+            yield xmin * f1 + f2 * xmax 
+
+# =============================================================================
+## loop over values between xmin and xmax in log-scale 
+#  @code
+#  for x in log_range ( xmin , xmax , 200 ) :
+#         print (x) 
+#  @endcode
+def log_range ( xmin , xmax , n = 100 ) :
+    """:oop over values between xmin and xmax in log-scale 
+    >>> for x in log_range ( xmin , xmax , 200 ) :
+    >>>      print (x) 
+    """
+    assert 0 < xmin  and 0 < xmax,\
+           'log_range: invalid  xmin/xmax values: %s/%s' %  ( xmin , xmax )
+
+    ## loop
+    for x in vrange ( math.log10 ( xmin ) , math.log10 ( xmax ) , n ) :
+        yield 10.0**x 
+
+# =============================================================================
+## loop over values between xmin and xmax in log-scale 
+#  @code
+#  for x in lrange ( xmin , xmax , 200 ) : ## ditto 
+#         print (x) 
+#  @endcode
+def lrange ( xmin , xmax , n = 100 ) :
+    """:oop over values between xmin and xmax in log-scale 
+    >>> for x in lrange ( xmin , xmax , 200 ) :  ## ditto 
+    >>>      print (x) 
+    """
+    for x in log_range ( xmin , xmax , n ) : yield x 
+        
+
 
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word

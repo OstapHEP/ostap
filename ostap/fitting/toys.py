@@ -50,7 +50,8 @@ def vars_transform ( vars ) :
         for p in vars : result [ p ] = float ( vars [ p ] ) 
     else :
         for p in vars :
-            result [ p.GetName()  ] = float ( p )
+            if not isinstance ( p , ROOT.RooAbsCategory ) :
+                result [ p.GetName()  ] = float ( p )
             
     return result
 # =============================================================================
@@ -186,7 +187,7 @@ def make_toys ( pdf                ,
     import ostap.fitting.roofitresult
     import ostap.fitting.basic 
 
-    params = pdf.pdf.getParameters ( None )
+    params = pdf.params ()
     varset = ROOT.RooArgSet() 
     
     if isinstance ( data , ROOT.RooAbsData       ) : varset = data.varset() 
@@ -207,7 +208,7 @@ def make_toys ( pdf                ,
     pdf.load_params ( None , fix_init , silent = silent )
 
     ## save all initial parameters (needed fot the final statistics)
-    params  = pdf.pdf.getParameters ( None )
+    params  = pdf.params      ()
     fix_all = vars_transform  ( params ) 
     
     fitcnf = {}
@@ -235,20 +236,22 @@ def make_toys ( pdf                ,
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
-        ## 
-        if r.status () : continue
-
-        ## 4. save results 
-        rpf = r.params ( float_only = True ) 
-        for i in rpf : 
-            results [ i ].append ( rpf[i][0] ) 
-
-        for v in more_vars :
-            func  = more_vars[v] 
-            results [v] .append ( func ( r , pdf ) )
+        ## ok ? 
+        if r and 0 == r.status () :
             
+            ## 4. save results 
+            rpf = r.params ( float_only = True ) 
+            for i in rpf : 
+                results [ i ].append ( rpf[i][0] ) 
+                
+            for v in more_vars :
+                func  = more_vars[v] 
+                results [v] .append ( func ( r , pdf ) )
+                
         dataset.clear()
         del dataset
+        del r
+
         
     ## make a final statistics 
     from   ostap.core.core        import SE 
@@ -369,8 +372,8 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     import ostap.fitting.roofitresult
     import ostap.fitting.basic 
 
-    gparams = gen_pdf.pdf.getParameters ( None )
-    varset  = ROOT.RooArgSet() 
+    gparams = gen_pdf.params ()
+    varset  = ROOT.RooArgSet () 
     
     if isinstance ( data , ROOT.RooAbsData ) : varset = data.varset() 
     else :
@@ -389,7 +392,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     
     ## parameters for fitting 
 
-    fparams = fit_pdf.pdf.getParameters ( None )
+    fparams = fit_pdf.params ()
     fix_fit_init = vars_transform ( fparams  )     
     fix_fit_pars = vars_transform ( fit_pars )
     

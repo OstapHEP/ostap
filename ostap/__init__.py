@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-#                                            1.4.6.1
+#                                   1.4.9.1 (Jun 01, 2020, 12:23 [UTC])
 #     .oooooo.                .                        
 #    d8P'  `Y8b             .o8                        
 #   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
@@ -23,20 +23,32 @@
 # 
 # =============================================================================
 __all__ = (
-    'banner',
-    'version'
+    'banner'       , ## Ostap banner 
+    'version'      , ## Ostap version 
+    'version_info' , ## version info as named tuple
+    'build_date'   , ## Ostap build/reelase date (as string)
+    'build_time'   , ## Ostap build/release time (as datetime)
     )
 # =============================================================================
 ## the  actual version of Ostap 
-version     = "1.4.6.1"
-__version__ = version 
+__version__ = "1.4.9.1"
+__date__    = "Jun 01, 2020, 12:23 [UTC]"
+# =============================================================================
+import datetime 
+from   collections import namedtuple
+# =============================================================================
+version      = __version__
+VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak'))
+version_info = VersionInfo ( 1 , 4 , 9 , 1 )
+build_date   = __date__
+build_time   = datetime.datetime.utcfromtimestamp ( 1591014212 )
 # =============================================================================
 ##
 import ostap.fixes.fixes
 # =============================================================================
 ## Banner
 banner = r"""
-                                            1.4.6.1
+                                        1.4.9.1 (Jun 01, 2020, 12:23 [UTC])
      .oooooo.                .
     d8P'  `Y8b             .o8
    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.
@@ -51,6 +63,7 @@ banner = r"""
  - https://ostaphep.github.io/ostap-tutorials
  - https://github.com/OstapHEP/ostap-tutorials
 """
+   
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

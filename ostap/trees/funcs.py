@@ -41,7 +41,8 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
     """Helper class to implement ``TTree-function'' in python 
     """
     def __init__ ( self , tree = None ) :
-        ## initialize the base class 
+        ## initialize the base class
+        if tree is None : tree = 0 
         Ostap.Functions.PyFuncTree.__init__ ( self , self , tree )
         
     @property

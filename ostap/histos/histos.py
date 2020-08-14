@@ -29,7 +29,7 @@ __all__     = (
     'Histo3DFun'      , ## 3D-histogram as function object 
     )
 # =============================================================================
-import ROOT, sys, math
+import ROOT, sys, math, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -50,7 +50,8 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               isint    , islong    ,
                               natural_entry        ,
                               natural_number       )
-from ostap.core.ostap_types import integer_types, num_types , long_type
+from   ostap.core.ostap_types import integer_types, num_types , long_type
+import ostap.plotting.draw_attributes 
 # =============================================================================
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')
@@ -2449,6 +2450,7 @@ def _h1_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
         
+    result.ResetStats() 
     return result
 
 
@@ -2479,6 +2481,7 @@ def _h1_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( i1 , v.value () ) 
         h1.SetBinError   ( i1 , v.error () )
         
+    h1.ResetStats() 
     return h1 
 
 
@@ -2614,7 +2617,8 @@ def _h1_pow_ ( h1 , val ) :
         #
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
-        
+
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -2641,6 +2645,7 @@ def _h1_abs_ ( h1 ) :
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3021,11 +3026,12 @@ def _h2_random_ ( h2 ) :
     >>> x,y = h2.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    h2.GetRandom2( _x , _y )
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
     #
-    return float(_x) , float(_y)
+    h2.GetRandom2( x , y )
+    #
+    return float( x.value ) , float( y.value )
 
 # =============================================================================
 ## get the random triplet from 3D-histogram
@@ -3041,12 +3047,14 @@ def _h3_random_ ( h3 ) :
     >>> x,y,z = h3.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    _z = ROOT.Double(2.0)
-    h3.GetRandom3( _x , _y ,_z)
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
+    z = ctypes.c_double ( 2.0 )
     #
-    return float(_x) , float(_y) , float(_z) 
+    h3.GetRandom3( x , y , z )
+    #
+    return float( x.value ) , float( y.value ) , float( z.value )
+
 
 ROOT.TH2F.random = _h2_random_
 ROOT.TH2D.random = _h2_random_
@@ -3090,6 +3098,7 @@ def _h2_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result
 
 # =============================================================================
@@ -3120,6 +3129,7 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( ix1 , iy1 , v.value () ) 
         h1.SetBinError   ( ix1 , iy1 , v.error () )
 
+    h1.ResetStats() 
     return h1
 
 # =============================================================================
@@ -3300,6 +3310,7 @@ def _h2_pow_ ( h1 , val ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3326,6 +3337,7 @@ def _h2_abs_ ( h1 ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3450,6 +3462,7 @@ def _h3_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
 
+    result.ResetStats() 
     return result
 
 
@@ -3480,6 +3493,7 @@ def _h3_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         h1.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
 
+    h1.ResetStats() 
     return h1
 
 # =============================================================================
@@ -3600,6 +3614,7 @@ def _h3_pow_ ( h1 , val ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 
@@ -3676,6 +3691,7 @@ def _h3_abs_ ( h1 ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3793,6 +3809,7 @@ def _h1_add_function_integral_ ( h1 , func ) :
         ## update 
         h1[ibin]  = y + ii
 
+    h1.ResetStats() 
     return h1
 
 ROOT.TH1F.addFunctionIntegral = _h1_add_function_integral_
@@ -3860,6 +3877,7 @@ def _h1_effic_ ( h , increasing = True ) :
 
         result [ibin] = s1.frac( s2 ) if increasing else s2.frac( s1 ) 
 
+    result.ResetStats() 
     return result 
 
 
@@ -4018,6 +4036,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
             
             h2[i2] += val2
 
+    h2.ResetStats() 
     return h2
 
 
@@ -4044,6 +4063,7 @@ def _h1_transform_ ( h1 , func ) :
         
         h2 [ i ] = func ( x, y ) 
         
+    h2.ResetStats() 
     return h2 
 
 ROOT.TH1F. transform = _h1_transform_ 
@@ -4101,6 +4121,7 @@ def _h2_transform_ ( h2 , func ) :
         
         h3 [ ix , iy ] = func ( x, y , z ) 
         
+    h3.ResetStats() 
     return h3 
 
 ROOT.TH2F. transform = _h2_transform_ 
@@ -4254,6 +4275,7 @@ def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         
         result [bin] = v2
         
+    result.ResetStats() 
     return result
 
 ROOT.TH1 ._sample_ = _h_sample_
@@ -4291,6 +4313,7 @@ def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
         
         result [bin] = v2
         
+    result.ResetStats() 
     return result
     
 ROOT.TH1 .poisson = _h_poisson_
@@ -4368,6 +4391,7 @@ def _fom_1_ ( s , b , alpha = 1 , increase = True ) :
         
         h [i] = _sb_ ( si , bi , alpha ) 
         
+    h.ResetStats() 
     return h 
 
 ROOT.TH1D . fom_1 = _fom_1_ 
@@ -4488,7 +4512,8 @@ def _rebin_nums_1D_ ( h1 , template ) :
             o = _bin_overlap_1D_ ( i1[1] , i2[1] )
             
             h2 [ i2[0] ] +=  o * i1[2] 
-            
+
+    h2.ResetStats() 
     return h2 
 # =============================================================================
 ## rebin 1D-histogram as FUNCTION 
@@ -4519,6 +4544,7 @@ def _rebin_func_1D_ ( h1 , template ) :
             
             h2 [ i2[0] ] +=  o * i1[2]
             
+    h2.ResetStats() 
     return h2 
 
 
@@ -4544,8 +4570,10 @@ def _rebin_nums_2D_ ( h1 , template ) :
             o = _bin_overlap_2D_ ( i1[2] , i1[3] , i2[2] , i2[3] )
             
             h2 [ i2[0] , i2[1] ] +=  o * i1[4] 
-            
-    return h2 
+             
+    h2.ResetStats() 
+    return h2
+
 # =============================================================================
 ## rebin 2D-histogram as FUNCTION 
 def _rebin_func_2D_ ( h1 , template ) :
@@ -4571,6 +4599,7 @@ def _rebin_func_2D_ ( h1 , template ) :
             
             h2 [ i2[0] , i2[1] ] +=  o * i1[4]
             
+    h2.ResetStats() 
     return h2 
 
 for t in ( ROOT.TH1F , ROOT.TH1D ) :
@@ -4937,6 +4966,7 @@ def _h1_shift_ ( h , bias ) :
         x         += bias
         result[i]  = h ( x )
         
+    result.ResetStats() 
     return result
 
 
@@ -4964,6 +4994,7 @@ def _h1_irshift_ ( h , ibias ) :
         if j in h :  h [ i ] = h[ j ]
         else      :  h [ i ] = VE() 
         
+    h.ResetStats() 
     return h     
 
 # =============================================================================
@@ -4990,6 +5021,7 @@ def _h1_ilshift_ ( h , ibias ) :
         if j in h :  h [ i ] = h[ j ]
         else      :  h [ i ] = VE() 
         
+    h.ResetStats() 
     return h     
 
 # =============================================================================
@@ -5011,6 +5043,7 @@ def _h1_lshift_ ( h , ibias ) :
     if not result.GetSumw2()  : result.Sumw2()
     #
     result <<= ibias
+
     return result 
 
 # =============================================================================
@@ -5310,6 +5343,8 @@ def _h1_moment_ ( h1 , order ) :
     >>> mom   = histo.moment ( 4 , 0 ) 
     """
     #
+    h1.ResetStats()
+    #
     m = HStats.moment    ( h1 , order )
     e = HStats.momentErr ( h1 , order )
     #
@@ -5327,6 +5362,8 @@ def _h1_central_moment_ ( h1 , order ) :
     >>> histo = ...
     >>> cmom  = histo.centralMoment ( 4 ) 
     """
+    #
+    h1.ResetStats()
     #
     m = HStats.centralMoment    ( h1 , order )
     e = HStats.centralMomentErr ( h1 , order )
@@ -5367,6 +5404,9 @@ def _h1_skewness_ ( h1 ) :
     >>> histo = ...
     >>> skew  = histo.skewness () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.skewness    ( h1 )
     e = HStats.skewnessErr ( h1 )
     #
@@ -5384,6 +5424,9 @@ def _h1_kurtosis_ ( h1 ) :
     >>> histo = ...
     >>> k     = histo.kurtosis () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.kurtosis    ( h1 )
     e = HStats.kurtosisErr ( h1 )
     #
@@ -5401,6 +5444,9 @@ def _h1_mean_ ( h1 ) :
     >>> histo = ...
     >>> k     = histo.mean () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.mean    ( h1 )
     e = HStats.meanErr ( h1 )
     #
@@ -5419,6 +5465,9 @@ def _h1_rms_ ( h1 ) :
     >>> histo = ...
     >>> s     = histo.rms () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.rms    ( h1 )
     e = HStats.rmsErr ( h1 )
     #
@@ -5461,6 +5510,9 @@ def _h2_moment_ ( h2 , orderx , ordery  , x0 = 0.0 , y0 = 0.0 ) :
     >>> h2   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 0.0 , 0.0 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.moment2 ( h2 , orderx , ordery , x0 , y0 )
 
 _h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__  
@@ -5483,6 +5535,9 @@ def _h2_cmoment_ ( h2 , orderx , ordery ) :
     >>> h2   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.central_moment2 ( h2 , orderx , ordery )
 
 _h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__  
@@ -5506,6 +5561,9 @@ def _h2_smoment_ ( h2 , orderx , ordery ) :
     >>> h2   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.std_moment2 ( h2 , orderx , ordery )
 
 _h2_smoment_ . __doc__ +=  '\n' + HStats.std_moment2.__doc__  
@@ -5534,6 +5592,9 @@ def _h3_moment_ ( h3 , orderx , ordery , orderz  , x0 = 0.0 , y0 = 0.0 , z0 = 0.
     >>> h3   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 4 , 0.0 , 0.0 , 0.0 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.moment3 ( h3 , orderx , ordery , orderz ,  x0 , y0 , z0 )
 
 _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__ 
@@ -5558,6 +5619,9 @@ def _h3_cmoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> h3   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 , 4 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.central_moment3 ( h3 , orderx , ordery , orderz  )
 
 _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__ 
@@ -5582,6 +5646,9 @@ def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> h3   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 , 4 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.std_moment3 ( h3 , orderx , ordery , orderz  )
 
 
@@ -5861,6 +5928,9 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
         j = i + 1 if left else i
         hn [ j ] = h1 [ i ]
         
+    #
+    hn.ResetStats()
+    #
     return hn 
 
 # =============================================================================
@@ -5993,6 +6063,7 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
         
         hn [ j ] = h2 [ i ]
         
+    hn.ResetStats()
     return hn 
 
 
@@ -6103,6 +6174,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
         
         hn [ j ] = h3 [ i ]
         
+    hn.ResetStats()
     return hn 
 
 for _h in ( ROOT.TH3F , ROOT.TH3D ) :
@@ -6272,6 +6344,7 @@ def _h2_get_slice_ ( h2 , axis , ibins ) :
         if   1 == axis and ix in ibins : h_slice [ iy ] += h2 [ i ]
         elif 2 == axis and iy in ibins : h_slice [ ix ] += h2 [ i ]
         
+    h_slice.ResetStats()
     return h_slice 
 
 ROOT.TH2F . slice  = _h2_get_slice_ 
@@ -6394,6 +6467,7 @@ def _h3_get_slice_ ( h3 , axis , ibins ) :
         elif 2 == axis and iy in ibins : h_slice [ ix , iz ] += h3 [ i ]
         elif 3 == axis and iz in ibins : h_slice [ ix , iy ] += h3 [ i ] 
 
+    h_slice.ResetStats()
     return h_slice 
 
 ROOT.TH3F . slice  = _h3_get_slice_
@@ -6960,6 +7034,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
         ib = nh.findBin( nc )        
         if ib in nh : nh[ib] += value
         
+    nh.ResetStats()
     return nh 
 
 

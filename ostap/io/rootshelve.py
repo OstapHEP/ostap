@@ -202,11 +202,17 @@ class RootOnlyShelf(shelve.Shelf):
         return new_db 
 
     # =========================================================================
-    ## iterator over good keys 
-    def ikeys ( self , pattern = '' ) :
+    ##  Iterator over avilable keys (patterns included).
+    #   Pattern matching is performed accoriding to
+    #   fnmatch/glob/shell rules (default) or regex 
+    #   @code  
+    #   db = ...
+    #   for k in db.ikeys('*MC*') : print(k)
+    #   @endcode  
+    def ikeys ( self , pattern = '' , regex = False ) :
         """Iterator over avilable keys (patterns included).
-        Pattern matching is performed accoriding to
-        fnmatch/glob/shell rules [it is not regex!] 
+        Pattern matching is performed according to
+        fnmatch/glob/shell rules (default) or regex 
         
         >>> db = ...
         >>> for k in db.ikeys('*MC*') : print(k)
@@ -215,13 +221,18 @@ class RootOnlyShelf(shelve.Shelf):
         keys_ = self.keys()
         
         if not pattern :
-            good = lambda s,p : True
+            good = lambda k : True
+        elif regex : 
+            import re
+            re_cmp = re.compile ( pattern ) 
+            good = lambda k  : re_cmp.match ( k )
         else :
             import fnmatch
-            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
+            good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
         
+        keys_ = self.keys()
         for k in sorted ( keys_ ) :
-            if good ( k , pattern ) : yield k
+            if good ( k ) : yield k
 
     @property
     def filename    ( self       ) :
@@ -370,11 +381,15 @@ class RootShelf(RootOnlyShelf):
         """ Get object (unpickle if needed)  from dbase
         >>> obj = db['A/B/C']
         """
+
         try:    
             value = self.cache [ key ]
         except KeyError:
-            value = self.dict [ key ]
-            self.__sizes [ key ] = len ( value ) 
+
+            ## value = self.dict [ key ]
+            tkey , value = self.dict.get_key_object ( key )
+            self.__sizes [ key ] = tkey.GetNbytes()
+            
             ## blob ?
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
@@ -464,7 +479,7 @@ class RootShelf(RootOnlyShelf):
         for k in keys :
             size = '' 
             ss   =   self.__sizes.get ( k , -1 )
-            if    ss < 0    : size = '' 
+            if    ss < 0    : size = ''  
             elif  ss < 1024 : size = '%7d   ' % ss 
             elif  ss < 1024 * 1024 :
                 size = '%7.2f kB' %  ( float ( ss ) / 1024 )

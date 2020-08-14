@@ -15,7 +15,7 @@ __version__ = "Version$Revision$"
 # =============================================================================
 __all__     = ()
 # =============================================================================
-import ROOT, cppyy 
+import ROOT, cppyy, ctypes  
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -185,7 +185,7 @@ _V3D. asP3 = _v3_as_p3_
 if not hasattr ( Ostap.Math , 'Vector3' ) :
     import ostap.math.linalg
     
-_V3 = Ostap.Math.Vector3
+_V3 = Ostap.Math.Vector(3)
 # =============================================================================
 ## convert 3D-Vector/3D-point into SVector
 #  @code
@@ -475,13 +475,16 @@ def _intersect_line_and_plane_ ( line , plane ) :
 
     """
     _point = Ostap.XYZPoint(0,0,-1.e+10)
-    _mu    = ROOT.Double(-1.e+10)
+    _mu    = ctypes.c_double (-1.e+10)
     _flag  = _GeomFun.intersection ( line   ,
                                      plane  ,
                                      _point ,
                                      _mu    )
     if _flag : _flag = True
     else     : _flag = False
+    
+    _mu = float ( _mu.value )
+
     return (_point,_mu,_flag)
 
 _intersect_line_and_plane_ . __doc__ += '\n' + _GeomFun.intersection . __doc__
@@ -688,11 +691,16 @@ def _closest_point_params_ ( line , line1 ) :
     - the 'mu-parameter of closest point along the second line
     - the flag (true is everything OK)
     """
-    _mu1    = ROOT.Double(-1.e+10)
-    _mu2    = ROOT.Double(-1.e+11)
+    _mu1    = ctypes.c_double (-1.e+10)
+    _mu2    = ctypes.c_double (-1.e+11)
+    
     _flag   = _GeomFun.closestPointParams ( line , line1 , _mu1 , _mu2 )
     if    _flag : _flag = True
     else        : _flag = False
+
+    _mu1  = float ( _mu1.value )
+    _mu2  = float ( _mu2.value )
+    
     return (_mu1,_mu2,_flag)
 
 

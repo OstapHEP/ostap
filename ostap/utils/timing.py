@@ -79,7 +79,12 @@ class Timer(object):
     """
     __logger = logger.info
     ##
-    def __init__  ( self , name = '' , logger = None , format = 'Timing %-18s %.3fs' ) :        
+    def __init__  ( self                          ,
+                    name   = ''                   ,
+                    logger = None                 ,
+                    format = 'Timing %-18s %.3fs' ,
+                    start  = ''                   ) :
+        
         self.name   = name
         
         if   logger and isinstance ( logger , _logger_t ) :
@@ -89,10 +94,16 @@ class Timer(object):
         else :
             self.logger = self.__logger 
 
-        self.format = format
+        self.format        = format
+        
+        if    start               : self.start_message = start
+        elif '' == start and name : self.start_message = 'Start  %s' % name
+        else                      : self.start_message = '' 
         
     def __enter__ ( self ) :
         self.start = _timer ()
+        if self.start_message :
+            self.logger ( self.start_message )
         return self
     
     def __exit__  ( self, *_ ) :
@@ -122,7 +133,7 @@ class Timer(object):
 #     ... at the exit it prints the clock counts 
 #  print t.delta 
 #  @endcode
-def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs') :
+def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs' , **kwargs  ) :
     """Simple context manager to measure the clock counts 
     
     >>> with timing () :
@@ -135,7 +146,7 @@ def timing ( name = '' , logger = None , format = 'Timing %-18s %.3fs') :
     
     >>> print c.delta
     """
-    return Timer ( name , logger , format ) 
+    return Timer ( name , logger , format , **kwargs ) 
 
 ## ditto 
 timer = timing   # ditto

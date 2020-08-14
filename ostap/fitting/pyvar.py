@@ -332,13 +332,13 @@ class PyVAR2 (object) :
             
         self.__vars  = vars
         
-        ## create the actual RooAbsPdf 
-        pyvar        = Ostap.Models.PyVar2 ( name          ,
-                                             title         ,
-                                             self.function ,
-                                             self.__vars   )
+        ## create the actual RooAbsReal
+        pyvar        = Ostap.Functions.PyVar2 ( name              ,
+                                                title             ,
+                                                self.__pyfunction ,
+                                                self.__vars       )
         ROOT.SetOwnership ( pyvar , False )
-    
+        
         ## finally set the variable!
         self.__var   = pyvar
 

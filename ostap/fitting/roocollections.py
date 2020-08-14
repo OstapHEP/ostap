@@ -24,6 +24,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core         import Ostap
+from   ostap.core.ostap_types  import string_types 
 import ostap.fitting.variables
 # =============================================================================
 # logging 
@@ -58,8 +59,12 @@ def _ral_iter_ ( self ) :
 def _ral_contains_ ( self , i ) :
     """Check the presence of element or index in the list
     """
-    if isinstance ( i , int ) : return 0<= i < len(self)
-    return  0 <= self.index ( i )
+    if   isinstance ( i , int            ) : return 0<= i < len(self)
+    elif isinstance ( i , string_types   ) : return self.find     ( i ) 
+    elif isinstance ( i , ROOT.RooAbsArg ) : return self.contains ( i ) 
+    obj = self.find ( i )
+    return True if obj else False  
+    ## return  0 <= self.index ( i )
 
 # =============================================================================
 ##  get item form the list 

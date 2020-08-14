@@ -192,7 +192,7 @@ class Bz2Shelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.bz2' , 
+    extensions = '.tbz' , '.tbz2' , '.bz2' , '.bz2db' 
     ## 
     def __init__(
         self                                   ,
@@ -240,28 +240,44 @@ class Bz2Shelf(CompressShelf):
     
     # =========================================================================
     ## compress (bz2) the file into temporary location, keep original
-    def compress_file   ( self , filein ) :
+    def compress_files   ( self , files ) :
         """Compress (bz2) the file into temporary location, keep original
         """
-        import tempfile , io 
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.bz2' )
-        with io.open ( filein , 'rb' ) as fin :
-            with bz2.open ( fileout , 'wb') as fout : 
-                shutil.copyfileobj ( fin , fout )            
-                return fileout 
-    
+        output = self.tempfile()
+        
+        import tarfile
+        with tarfile.open ( output , 'w:bz2' ) as tfile :
+            for file in files  :
+                _ , name = os.path.split ( file )
+                tfile.add ( file , name  )
+        ##
+        return output 
+
     # =========================================================================
     ## uncompress (bz2) the file into temporary location, keep original
     def uncompress_file ( self , filein ) :
         """Uncompress (bz2) the file into temporary location, keep original
         """
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 2) try compressed-tarfile 
+        import tarfile
+        if tarfile.is_tarfile ( filein ) : 
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+                items.sort() 
+                return tuple ( items )
+            
         import tempfile , io   
         fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
         with bz2.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )                
-                return fileout
-    
+                return fileout , 
+            
     # ==========================================================================
     ## compress (bzip2)  the item  using <code>bz2.compress</code>
     def compress_item ( self , value ) :
@@ -375,9 +391,9 @@ class TmpBz2Shelf(Bz2Shelf):
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename 
         Bz2Shelf.close ( self )
         ## delete the file 
+        fname = self.nominal_dbname 
         if os.path.exists ( fname ) :
             try :
                 os.unlink ( fname )
@@ -410,6 +426,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

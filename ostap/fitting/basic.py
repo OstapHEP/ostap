@@ -14,6 +14,7 @@ __date__    = "2011-07-25"
 __all__     = (
     ##
     'PDF'           , ## useful base class for 1D-models
+    'MASSMEAN'      , ## useful base class to create "signal" PDFs for mass-fits
     'MASS'          , ## useful base class to create "signal" PDFs for mass-fits
     'RESOLUTION'    , ## useful base class to create "resolution" PDFs
     ##
@@ -22,7 +23,10 @@ __all__     = (
     'Flat1D'        , ## trivial 1D-pdf: constant 
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
     'Sum1D'         , ## wrapper for RooAddPdf 
-    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf 
+    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
+    'Shape1D_pdf'   , ## simple PDF from C++ shape 
+    'make_pdf'      , ## helper function to make PDF
+    'all_args'      , ## check that all arguments has correct type 
     ##
     )
 # =============================================================================
@@ -35,16 +39,44 @@ from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, va
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
                                         integer_types  , num_types      ,
-                                        list_types     , dictlike_types ) 
+                                        list_types     , all_numerics   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
                                         fit_status , cov_qual , H1D_dset , get_i  )
-from   ostap.fitting.funbasic  import FUNC 
+from   ostap.fitting.funbasic  import FUNC
+import ostap.histos.histos 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+## @var arg_types
+#  list of "good" argument  types 
+arg_types = num_types + ( VE , ROOT.RooAbsReal )
+# =============================================================================
+## are all args of "good" type?
+#  - ROOT.RooAbsReal
+#  - numeric type
+#  - VE
+#  - tuple of 1-3 arguments of numeric values 
+def all_args ( *args ) :
+    """Are all arguments of ``good'' type?
+    - ROOT.RooAbsReal
+    - numeric type
+    - VE
+    - tuple of 1-3 arguments of numeric values 
+    """
+    ## try to find 
+    for a in args :
+        if   isinstance ( a , arg_types )      : pass
+        elif isinstance ( a , tuple     ) and \
+             1 <= len ( a ) <= 3          and \
+             all_numerics ( *a ) : pass
+        else                                   : return False 
+        
+    return True 
+
 # =============================================================================
 ## @class PDF
 #  The helper base class for implementation of various PDF-wrappers 
@@ -53,7 +85,7 @@ else                       : logger = getLogger ( __name__              )
 class PDF (FUNC) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
-    def __init__ ( self , name ,  xvar = None , special = False ) :
+    def __init__ ( self , name ,  xvar , special = False ) :
 
         FUNC.__init__  ( self , name , xvar = xvar ) 
 
@@ -333,7 +365,7 @@ class PDF (FUNC) :
             self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
-        ## check the integrals (when possible)
+        ## check the integrals (if/when possible)
         #
         if hasattr ( self , 'yields' ) and self.yields  :
             
@@ -355,13 +387,14 @@ class PDF (FUNC) :
                         self.debug   ( "fitTo: variable ``%s'' == %s [very close (< 1%%) to minimum %s]"
                                        % ( i.GetName() , i.value , imn ) )
                         
-            if not dataset.isWeighted () :
+            if hasattr ( self , 'natural' ) and self.natural and not dataset.isWeighted () :
 
                 sums = [ nsum ]
+                    
                 if 2 <= len ( self.yields ) : sums.append ( result.sum ( *self.yields ) )
 
                 for ss in sums :
-                    if 0 >= ss.cov2() : continue 
+                    if 0 >= ss.cov2() : continue
                     nl = ss.value() - 0.50 * ss.error() 
                     nr = ss.value() + 0.50 * ss.error()
                     if not nl <= len ( dataset ) <= nr :
@@ -400,7 +433,12 @@ class PDF (FUNC) :
         for s in self.signals     : 
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
-        ## 
+        ## ##
+        ## if   not silent and result and 0 == result.status() :
+        ##     logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        ## elif not silent and result :
+        ##     logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+                         
         return result, frame 
 
     ## helper method to draw set of components 
@@ -486,6 +524,7 @@ class PDF (FUNC) :
                nbins                 = 100  ,   ## Frame binning
                silent                = True ,   ## silent mode ?
                style                 = None ,   ## use another style ?
+               drawvar               = None ,   ## drawvar 
                args                  = ()   , 
                **kwargs                     ) :
         """  Visualize the fits results
@@ -545,7 +584,7 @@ class PDF (FUNC) :
         # 
         with roo_silent ( silent ) , useStyle ( style ) :
 
-            drawvar = self.draw_var if self.draw_var else self.xvar  
+            drawvar = drawvar if drawvar else ( self.draw_var if self.draw_var else self.xvar )  
 
             binned = dataset and isinstance ( dataset , ROOT.RooDataHist )
 
@@ -687,7 +726,7 @@ class PDF (FUNC) :
             ## calculate chi2/ndf
             frame.chi2dnf = None 
             if dataset and not silent :             
-                pars          = self.pdf.getParameters ( dataset )
+                pars          = self.params ( dataset )
                 frame.chi2ndf = frame.chiSquare ( len ( pars ) )
                 binw          = -1 
                 if nbins and isinstance ( nbins , integer_types ) and 1 < nbins :
@@ -892,7 +931,7 @@ class PDF (FUNC) :
             dataset = dataset.dset
             
         ## get all parametrs
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset )
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
@@ -1065,7 +1104,7 @@ class PDF (FUNC) :
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
@@ -1125,7 +1164,7 @@ class PDF (FUNC) :
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
 
@@ -1208,7 +1247,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
@@ -1310,7 +1349,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset )
+        pars = self.params ( dataset ) 
         
         assert var in pars , "Variable %s is not a parameter/1"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
@@ -2241,165 +2280,6 @@ class PDF (FUNC) :
                           xvar   = xvar        ,
                           logger = self.logger , **kwargs ) 
 
-    # =========================================================================
-    ## Load parameters from:
-    #    - external dictionary <code>{ name : value }</code>
-    #    - sequence of <code>RooAbsReal</code> object
-    #    - <code>ROOT.RooFitResult</code> object 
-    #  @code
-    #  pdf     = ...
-    #  dataset = ...
-    #  params  = { 'A' : 10 , 'B' : ... }
-    #  pdf.load_params ( dataset , params ) 
-    #  params  = ( A , B , C , ... )
-    #  pdf.load_params ( dataset , params )  
-    #  @endcode 
-    def load_params ( self , dataset = None , params = {} , silent = False  ) :
-        """Load parameters from
-        - external dictionary `{ name : value }`
-        - sequence of `RooAbsReal` objects
-        - `RooFitResult` object
-        
-        >>> pdf      = ...
-        >>> dataset = ... 
-        >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
-        >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
-        """
-        ## nothing to load 
-        if not params : return 
-
-        if isinstance ( params , ROOT.RooFitResult ) :
-            params = params.dct_params () 
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        table = [] 
-        if isinstance ( params , dictlike_types ) :
-            keys   = set () 
-            for key in params :
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' ) : continue
-                    if p.name != key                 : continue
-                    
-                    v  = params[key]
-                    vv = float ( v  )
-                    pv = p.getVal ()   
-                    if vv != pv : 
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add ( key )
-
-            not_used = set ( params.keys() ) - keys 
-
-        ## list of objects 
-        else :
-            
-            keys = set()        
-            for i , pp in enumerate ( params ) :  
-                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' )       : continue
-                    if p.name != pp.name                   : continue
-                    
-                    vv = float ( pp )
-                    pv = p.getVal () 
-                    if vv != pv :
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add  ( i )
-
-            not_used = []
-            for i , pp in enumerate ( params ) :  
-                if i in keys : continue
-                not_used.append ( pp )
-
-        if not silent :
-            
-            table.sort()
-            npars = len ( table )
-            
-            if npars :            
-                title = 'Parameters loaded: %s' % npars 
-                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
-                import ostap.logger.table
-                table = ostap.logger.table.table ( table , title , prefix = "# " )
-                
-            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
-            
-            not_used = list ( not_used )
-            not_used.sort() 
-            if not_used :
-                self.warning ("Following keys are unused %s" % not_used ) 
-        
-        return 
-
-    # =========================================================================
-    ## get all parameters/variables in form of dictionary
-    #  @code
-    #  pdf    = ...
-    #  params = pdf.parameters ( dataset ) 
-    #  @endcode
-    def parameters ( self , dataset = None ) :
-        """ Get all parameters/variables in form of dictionary
-        >>> pdf    = ...
-        >>> params = pdf.parameters ( dataset ) 
-        """
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        tmp    = {}
-        for p in pars :
-            if not isinstance ( p, ROOT.RooAbsCategory ) :
-                tmp [ p.name ] = p.value
-                
-        keys   = tmp.keys()
-        result = {} 
-        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
-            
-        return result 
-
-    # ========================================================================
-    ## get the parameter value by name
-    #  @code
-    #  pdf = ...
-    #  p   = pdf.parameter  ( 'A' )
-    #  @endcode
-    def parameter ( self , param , dataset = None ) :
-        """Get the parameter value by name
-        >>> pdf = ...
-        >>> p   = pdf.parameter  ( 'A' )
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        for p in pars :
-            if p.name == param : return p
-            
-        self.error ( "No parameter %s defined" % param )
-        raise KeyError ( "No parameter %s defined" % param )
-
-    # ==========================================================================
-    ## get parameter by name 
-    #  @code
-    #  pdf = ...
-    #  a   = pdf['A']
-    #  @endcode
-    def __getitem__ ( self , param ) :
-        """Get parameter by name 
-        >>> pdf = ...
-        >>> a   = pdf['A']
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( None )
-        for p in pars :
-            if p.name == param : return p
-        raise KeyError ( "No parameter %s defined" % param )
         
 # =============================================================================
 ##  helper utilities to imlement resolution models.
@@ -2408,29 +2288,45 @@ class _CHECKMEAN(object) :
     check = True
 def checkMean() :
     return True if  _CHECKMEAN.check else False
-class Resolution(object) :    
-    def __init__  ( self , resolution = True ) :
-        self.check = False if resolution else True 
-    def __enter__ ( self ) :
-        self.old         = _CHECKMEAN.check 
-        _CHECKMEAN.check =  self.check
-    def __exit__  ( self , *_ ) :
-        _CHECKMEAN.check =  self.old 
 # =============================================================================
-## helper base class for implementation  of various helper pdfs 
+## @class CheckMean 
+#  Helper contex manager to enable/disable check for the mean/location-values
+class CheckMean(object) :
+    """Helper contex manager to enable/disable check for the mean/location-values
+    """
+    def __init__  ( self , check ) :
+        self.__check = True if check else False 
+    def __enter__ ( self ) :
+        self.__old       = _CHECKMEAN.check 
+        _CHECKMEAN.check =  self.__check
+    def __exit__  ( self , *_ ) :
+        _CHECKMEAN.check =  self.__old
+    @property
+    def check ( self ) :
+        """``check''  : check the mean/location?"""
+        return self.__check
+    
+# =============================================================================
+## helper base class for implementation  of various helper pdfs
+#  - it defines alias <code>mass</code> for <code>xvar</code>
+#  - it defiens a variable <code>mean</code> alias <code>location</code>
+#  - optionally it checks that this variable is withing the specified range  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class MASS(PDF) :
+class MASSMEAN(PDF) :
     """Helper base class for implementation of various pdfs
     It is useful for ``peak-like'' distributions, where one can talk about
     - ``mean/location''
-    - ``sigma/width/scale'' 
+    - it defines alias `mass` for `xvar`
+    - it defiens a variable `mean` (alias `location`)
+    - optionally it checks that this variable is withing the specified range  
     """
-    def __init__ ( self            ,
-                   name            ,
-                   xvar            ,
-                   mean     = None ,
-                   sigma    = None ) : 
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,
+                   mean      = None  ,
+                   mean_name  = ''   , 
+                   mean_title = ''   ) : 
         
         m_name  = "m_%s"     % name
         m_title = "mass(%s)" % name
@@ -2454,54 +2350,46 @@ class MASS(PDF) :
                                    m_title    , ## title/comment
                                    fix = None ) ## fix ? 
         else :
-            raise AttributeError("MASS: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+            raise AttributeError("MASSMEAN: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
         ## intialize the base 
         PDF.__init__ ( self , name , xvar = xvar )
-        
 
-        limits_mean  = ()
-        limits_sigma = ()
+        ## check mean/location values ? 
+        self.__check_mean = self.xminmax () and checkMean () 
         
-        if   self.xminmax() :            
+        self.__limits_mean  = ()
+        if  self.check_mean and self.xminmax () :    
             mn , mx = self.xminmax()
             dm      =  mx - mn
-            limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
-            sigma_max    =  2 * dm / math.sqrt(12)  
-            limits_sigma = 1.e-3 * sigma_max , sigma_max 
-        #
+            self.__limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
+
         ## mean-value
-        #
-        self.__mean = self.make_var ( mean              ,
-                                      "mean_%s"  % name ,
-                                      "mean(%s)" % name , mean , *limits_mean )
-        ## 
-        if checkMean () and self.xminmax() : 
-            mn , mx = self.xminmax() 
+        m_name  = mean_name  if mean_name  else "mean_%s"  % name
+        m_title = mean_title if mean_title else "mean(%s)" % name
+        self.__mean = self.make_var ( mean , m_name , m_title , mean , *self.limits_mean )
+        
+        ##
+        if self.limits_mean :  
+            mn , mx = self.limits_mean  
             dm      =  mx - mn
             if   self.mean.isConstant() :
                 if not mn <= self.mean.getVal() <= mx : 
-                    raise AttributeError ( 'MASS(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
+                    self.error ( 'MASSMEAN(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
             elif self.mean.minmax() :
                 mmn , mmx = self.mean.minmax()
-                self.mean.setMin ( max ( mmn , mn - 0.1 * dm ) )
-                self.mean.setMax ( min ( mmx , mx + 0.1 * dm ) )
-                self.debug ( 'mean range is redefined to be %s' % list( self.mean.minmax() ) )
-        #
-        ## sigma
-        #
-        self.__sigma = self.make_var ( sigma               ,
-                                       "sigma_%s"   % name ,
-                                       "#sigma(%s)" % name , sigma , *limits_sigma )
-        
+                self.mean.setMin ( max ( mmn , mn ) )
+                self.mean.setMax ( min ( mmx , mx ) )
+                self.debug ( 'mean range is adjusted  to be %s' % list ( self.mean.minmax() ) )
+
         ## save the configuration
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'mean'  : self.mean  ,
-            'sigma' : self.sigma
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  ,
+            'mean'        : self.mean  ,
+            'mean_name'   : mean_name  ,
+            'mean_title'  : mean_title ,
             }
-            
 
     @property 
     def mass ( self ) :
@@ -2515,13 +2403,10 @@ class MASS(PDF) :
     @mean.setter
     def mean ( self , value ) :
         value =  float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            m1 = mn - 1.0 * dm
-            m2 = mx + 1.0 * dm
-            if not m1 <= value <= m2 :
-                self.warning ("``mean'' %s is outside the interval  %s,%s"  % ( value , m1 , m2 ) )                
+        if self.check_mean and self.limits_mean  :  
+            mn , mx = self.limits_mean 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval  %s,%s"  % ( self.mean.name , value , mn , mx ) )                
         self.mean.setVal ( value )
         
     @property
@@ -2530,24 +2415,86 @@ class MASS(PDF) :
         return self.mean
     @location.setter
     def location ( self , value ) :
-        self.mean =  value 
+        self.mean =  value
+
+    @property
+    def check_mean ( self ) :
+        """``check_mean'' : Is mean/location -value to be checked?"""
+        return self.__check_mean
+
+    @property
+    def limits_mean ( self ) :
+        """``limits_mean'' : reasonable limits for mean/location"""
+        return self.__limits_mean
     
+# =============================================================================
+## @class MASS
+#  helper base class for implementation  of various helper pdfs 
+#  - mean/location
+#  - sigma/width/scale
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class MASS(MASSMEAN) :
+    """Helper base class for implementation of various pdfs
+    It is useful for ``peak-like'' distributions, where one can talk about
+    - ``mean/location''
+    - ``sigma/width/scale'' 
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   sigma       = None , 
+                   mean_name   = ''   , 
+                   mean_title  = ''   ,
+                   sigma_name  = ''   , 
+                   sigma_title = ''   ) : 
+            
+        ## base class 
+        MASSMEAN.__init__ ( self , name , xvar , mean )
+
+        self.__limits_sigma = ()        
+        if   self.xminmax() :            
+            mn , mx = self.xminmax()
+            dm      =  mx - mn
+            sigma_max    =  2 * dm / math.sqrt(12)  
+            self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
+
+        ## sigma
+        s_name  = sigma_name  if sigma_name  else "sigma_%s"   % name
+        s_title = sigma_title if sigma_title else "#sigma(%s)" % name
+        #
+        self.__sigma = self.make_var ( sigma  , s_name , s_title , sigma , *self.limits_sigma )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name   ,
+            'xvar'        : self.xvar   ,
+            'mean'        : self.mean   ,
+            'sigma'       : self.sigma  ,
+            'mean_name'   : mean_name   ,
+            'mean_title'  : mean_title  ,
+            'sigma_name'  : sigma_name  ,
+            'sigma_title' : sigma_title ,
+            }
+            
     @property
     def sigma ( self ):
-        """``sigma/width/scale''-variable"""
+        """``sigma/width/scale/spread''-variable"""
         return self.__sigma
     @sigma.setter
     def sigma ( self , value ) :
         value =   float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            smax = 2 * dm / math.sqrt ( 12 ) 
-            smin = 2.e-5 * smax  
-            if not smin <= value <= smax :
-                self.warning ("``sigma'' %s is outside the interval (%s,%s)" % ( value , smin , smax ) )
+        if self.limits_sigma  : 
+            mn , mx = self.limits_sigma 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval (%s,%s)" % ( self.sigma.name , value , mn , mx ) )
         self.sigma.setVal ( value )
 
+    @property
+    def limits_sigma ( self ) :
+        """``limits_sigma'' : reasonable limits for sigma/width"""
+        return self.__limits_sigma
 
 # =============================================================================
 ## @class RESOLUTION
@@ -2576,7 +2523,7 @@ class RESOLUTION(MASS) :
                    mean     = None ,
                    fudge    = 1.0  ) :
         
-        with Resolution() :
+        with CheckMean ( False ) :
             super(RESOLUTION,self).__init__ ( name  = name  ,
                                               xvar  = xvar  ,
                                               sigma = sigma ,
@@ -2708,10 +2655,14 @@ class Generic1D_pdf(PDF) :
         if not self.special :
             assert isinstance ( pdf  , ROOT.RooAbsPdf ) , "``pdf'' must be ROOT.RooAbsPdf"
 
+        ## Does PDF depends on XVAR ?
+        if not pdf.depends_on ( xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , xvar.name ) ) 
+
         ## PDF itself 
         self.pdf  = pdf
 
-        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+        if not self.xvar in self.params () : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
             
         ## add it to the list of signal components ?
@@ -2730,28 +2681,16 @@ class Generic1D_pdf(PDF) :
             'prefix'         : prefix              ,
             'suffix'         : suffix              ,            
             }
-            
+
+        self.checked_keys.add  ( 'pdf'     )
+        self.checked_keys.add  ( 'xvar'    )
+        self.checked_keys.add  ( 'special' )
+        
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic1D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``xvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``special''")
-            
-        return PDF.clone ( self , **kwargs )
     
 # =============================================================================
 ## @class Sum1D
@@ -2811,14 +2750,11 @@ class Sum1D(PDF) :
         self.alist1     = ROOT.RooArgList ( self.pdf1.pdf ,
                                             self.pdf2.pdf )
         self.alist2     = ROOT.RooArgList ( self.fraction )
-        ## self.alist3     = self.__pdf1 , self.__pdf2 ## ??? 
         
         self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
                                     self.pdf1.pdf ,
                                     self.pdf2.pdf ,
                                     self.fraction )
-        ## self.alist1 ,
-        ## self.alist2 )
         
         if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
         if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
@@ -2827,6 +2763,7 @@ class Sum1D(PDF) :
             'pdf1'     : self.pdf1 ,
             'pdf2'     : self.pdf2 ,
             'xvar'     : self.xvar ,
+            'name'     : self.name , 
             'fraction' : self.fraction 
             }
 
@@ -2856,8 +2793,82 @@ class Sum1D(PDF) :
     @F.setter
     def F ( self , value ) :
         self.fraction = value 
-        
 
+
+
+# =============================================================================
+_ROOT_VERSION = ROOT.gROOT.GetVersionInt() 
+    
+# =============================================================================
+## Helper function to create the PDF/PDF2/PDF3
+#  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
+#  pa
+def make_pdf ( pdf , args , name = '' ) :
+    """Helper function to create the PDF/PDF2/PDF3
+    """
+    
+    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), 'make_pdf: Invalid type %s' % type ( pdf )
+    
+    name = name if name else "PDF_from_%s" % pdf.name
+    
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) :
+        if 62000 <= _ROOT_VERSION : 
+            pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
+        else :
+            raise TypeError("RooWrapperPdf is not available for ROOT %s" % _ROOT_VERSION )
+        
+    num = len ( args )
+    if   1 == num :
+        return Generic1D_pdf ( pdf , name = name , *args )
+    elif 2 == num :
+        from ostap.fitting.fit2d import Generic2D_pdf 
+        return Generic2D_pdf ( fun , name = name , *args )
+    elif 3 == num :
+        from ostap.fitting.fit3d import Generic3D_pdf 
+        return Generic3D_pdf ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
+
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::Models:Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_pdf(PDF) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::Models:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar ) :
+
+        ##  iniialize the base 
+        PDF.__init__ ( self , name , xvar ) 
+        
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo1D ( shape )
+
+        self.__shape = shape
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape1D.create  (
+            "s1D_%s"      % self.name , 
+            "shape1D(%s)" % self.name ,
+            self.xvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+            
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -2870,11 +2881,15 @@ class H1D_pdf(H1D_dset,PDF) :
                    histo           ,
                    xvar    = None  ,
                    density = False ,
+                   order   = 0     , ## interpolation order 
                    silent  = False ) :
         
         H1D_dset.__init__ ( self , histo , xvar , density , silent )
         PDF     .__init__ ( self , name  , self.xaxis ) 
-        
+
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
         with roo_silent ( silent ) : 
             #
             ## finally create PDF :
@@ -2883,19 +2898,31 @@ class H1D_pdf(H1D_dset,PDF) :
                 'hpdf_%s'             % name ,
                 'Histo1PDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
                 self.__vset , 
-                self.dset   )
+                self.dset   ,
+                order       )
             
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
-
+        
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
             'histo'   : self.histo   , 
             'xvar'    : self.xvar    , 
             'density' : self.density , 
-            'silent'  : self.silent  ,             
+            'silent'  : self.silent  ,
+            'order'   : self.order   ,
             }
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
         
 # =============================================================================
 ## @class Fit1D
@@ -3032,7 +3059,7 @@ class Fit1D (PDF) :
             raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
         
         if not name :
-            name = '%s' % self.__signal.name 
+            name = 'Fit%s' % self.__signal.name 
             if suffix : name += '_' + suffix 
 
         ## Init base class
@@ -3262,6 +3289,8 @@ class Fit1D (PDF) :
             'fB'                  : self.fB                  ,
             'fC'                  : self.fC                  ,
             }
+
+        self.checked_keys.add  ( 'xvar' )
         
     @property
     def extended ( self ) :
@@ -3340,7 +3369,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__signal_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3360,7 +3389,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__background_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
                 
     @property
@@ -3380,7 +3409,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__components_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3419,7 +3448,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
     
     @property
@@ -3457,7 +3486,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property
@@ -3495,7 +3524,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property 
@@ -3531,21 +3560,30 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
             s.setVal   ( vv ) 
 
     @property
     def  yields    ( self ) :
         """The list/tuple of the yields of all numeric components (empty for non-extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if     self.extended else ()
-    
+
+    @property
+    def natural ( self ) :
+        """Are all yileds natural? """
+        if not self.yeilds : return False
+        for y in self.yields :
+            if not isinstance  ( y , ROOT.RooRealVar ) : return False 
+        return True 
+        
     def total_yield ( self ) :
-        """``total_yield''' : get the total yield"""
+        """``total_yield''' : get the total yield if/when possible"""
         if not self.extended    : return None 
         if not self.fit_result                                 : return None
         if not valid_pointer ( self.fit_result )               : return None
         yields = self.yields
         if not yields                                          : return None
+        if not self.natural                                    : return None 
         if 1 ==  len ( yields )                                : return yields[0].value  
         return self.fit_result.sum ( *yields ) 
  
@@ -3553,6 +3591,7 @@ class Fit1D (PDF) :
     def  fractions ( self ) :
         """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
+
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -3562,5 +3601,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

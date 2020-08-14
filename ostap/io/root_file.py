@@ -169,6 +169,40 @@ def _tnamed_rshift_ ( tnamed , rdir ) :
 
                  
 # ===============================================================================
+## get the (key,object) pair from ROOT-file/directory
+#  @code
+#  t = f.get_key_object ('A/tup') 
+#  h = f.get_key_object ('histo') 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
+#  @date 2015-07-30
+def _rd_key_object_ ( rdir , name ) :
+    """Get the (key.,object) pair from ROOT-file/directory
+    >>> t = f.get_key_object ('A/tup') 
+    >>> h = f.get_key_object ('histo') 
+    """
+    ##
+    if not rdir : raise IOError ( "TDirectory is invalid" )
+    ##
+    with ROOTCWD() :
+        ##
+        dirname , sep , fname = name.partition('/')
+        ##
+        while sep :
+            rdir.cd()
+            subdir = rdir.GetDirectory(dirname)
+            if not subdir :
+                raise KeyError("TDirectory[]: unknown directory name '%s%s'" % (rdir.GetPath() , dirname  ) ) 
+            rdir = subdir
+            dirname, sep , fname = fname.partition ('/') 
+
+        rdir.cd()
+        obj = rdir.Get ( dirname ) 
+        if not obj : raise KeyError ("TDirectory[]: unknown object '%s%s'" % ( rdir.GetPath(), dirname ) )
+        
+        return rdir.FindKey ( dirname ) , obj 
+                 
+# ===============================================================================
 ## get the object from ROOT-file/directory
 #  @code
 #  h1 = rfile['MyHisto'      ] 
@@ -182,6 +216,7 @@ def _rd_getitem_ ( rdir , name ) :
     >>> h = f['histo']
     """
     ##
+    
     if not rdir : raise IOError("TDirectory is invalid")
     ##
     with ROOTCWD() :
@@ -200,6 +235,18 @@ def _rd_getitem_ ( rdir , name ) :
         obj = rdir.Get ( dirname ) 
         if not obj : raise KeyError ("TDirectory[]: unknown object '%s%s'" % ( rdir.GetPath(), dirname ) )
         return obj 
+
+# ===============================================================================
+## get the key from ROOT-file/directory
+#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
+#  @date 2015-07-30
+def _rd_key_ ( rdir , name ) :
+    """Get the key from ROOT-file/directory
+    """
+    ##
+    key , obj = _rd_key_object ( rdir , name )
+    
+    return key 
 
 # ===============================================================================
 ## get the object from ROOT-file/directory 
@@ -720,13 +767,16 @@ ROOT.TDirectory.__iter__     = _rd_iter_
 # =============================================================================
 ## the extended protocol
 
-ROOT.TDirectory.get          = _rd_get_
-ROOT.TDirectory.keys         = _rd_keys_
-ROOT.TDirectory.has_key      = _rd_contains_
-ROOT.TDirectory.iteritems    = _rd_iteritems_
-ROOT.TDirectory.iterkeys     = _rd_iterkeys_
-ROOT.TDirectory.itervalues   = _rd_itervalues_
-ROOT.TDirectory.ikeyskeys    = _rd_ikeyskeys_
+ROOT.TDirectory.get            = _rd_get_
+ROOT.TDirectory.keys           = _rd_keys_
+ROOT.TDirectory.has_key        = _rd_contains_
+ROOT.TDirectory.iteritems      = _rd_iteritems_
+ROOT.TDirectory.iterkeys       = _rd_iterkeys_
+ROOT.TDirectory.itervalues     = _rd_itervalues_
+ROOT.TDirectory.ikeyskeys      = _rd_ikeyskeys_
+ROOT.TDirectory.get_key        = _rd_key_
+ROOT.TDirectory.get_key_object = _rd_key_object_
+
 
 # =============================================================================
 ## some extra stuff 
@@ -995,5 +1045,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -22,7 +22,7 @@ from   ostap.core.ostap_types import integer_types, string_types
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger      import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.minuit' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
@@ -43,9 +43,6 @@ def _mn_par_ ( self , i ) :
     """
     if not i in self : raise IndexError
     #
-    ## val = ROOT.Double ( 0 )
-    ## err = ROOT.Double ( 0 )
-    ##
     val = ctypes.c_double ( 0 )  
     err = ctypes.c_double ( 0 ) 
     #
@@ -266,14 +263,14 @@ def _mn_minerr_ ( self , i ) :
     #
     if not i in self : raise IndexError
     #
-    eplus  = ROOT.Double ( 0 ) 
-    eminus = ROOT.Double ( 0 ) 
-    epara  = ROOT.Double ( 0 ) 
-    gcc    = ROOT.Double ( 0 ) 
+    eplus  = ctypes.c_double ( 0 ) 
+    eminus = ctypes.c_double ( 1 ) 
+    epara  = ctypes.c_double ( 2 ) 
+    gcc    = ctypes.c_double ( 3 ) 
     #
     self.mnerrs ( i , eplus , eminus , epara , gcc )
     #
-    return eplus,eminus 
+    return float ( eplus.value ) , float ( eminus.value )  
 
 ROOT.TMinuit .   minErr  = _mn_minerr_ 
 ROOT.TMinuit . minosErr  = _mn_minerr_ 
@@ -329,13 +326,10 @@ def _mn_stat_  ( self ) :
     *
     
     """
-    # fmin    = ROOT.Double ( )
-    # fedm    = ROOT.Double ( )
-    # errdef  = ROOT.Double ( )
     
-    fmin    = ctypes.c_double () 
-    fedm    = ctypes.c_double ()
-    errdef  = ctypes.c_double () 
+    fmin    = ctypes.c_double ( 1 ) 
+    fedm    = ctypes.c_double ( 2 )
+    errdef  = ctypes.c_double ( 3 ) 
     
     npari   = ctypes.c_int ( 1 )
     nparx   = ctypes.c_int ( 2 )
@@ -343,12 +337,12 @@ def _mn_stat_  ( self ) :
     #
     self . mnstat( fmin, fedm, errdef, npari , nparx , istat )
     #
-    return { 'FMIN'   : float( fmin   . value ) ,
-             'FEDM'   : float( fmin   . value ) ,
-             'ERRDEF' : float( errdef . value ) ,
-             'NPARI'  : int  ( npari  . value ) ,
-             'NPARX'  : int  ( nparx  . value ) ,
-             'ISTAT'  : int  ( istat  . value ) } 
+    return { 'FMIN'   : float ( fmin   . value ) ,
+             'FEDM'   : float ( fmin   . value ) ,
+             'ERRDEF' : float ( errdef . value ) ,
+             'NPARI'  : int   ( npari  . value ) ,
+             'NPARX'  : int   ( nparx  . value ) ,
+             'ISTAT'  : int   ( istat  . value ) } 
 
 _mn_stat_ . __doc__  += '\n' + ROOT.TMinuit.mnstat . __doc__
 
@@ -428,7 +422,8 @@ def _mn_cov_ ( self , size = -1 , root = False ) :
     matrix = array ( 'd' , [ 0 for i in range(0, size * size) ]  )
     self.mnemat ( matrix , size )
     #
-    from ostap.math.linalg import Ostap 
+    import ostap.math.linalg
+    from   ostap.core.core import Ostap 
     mtrx = Ostap.Math.SymMatrix ( size )() 
     for i in range ( 0 , size ) :
         for j in range ( i , size ) :            

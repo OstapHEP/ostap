@@ -23,6 +23,7 @@ __all__     = (
     'Model3D'       , ## trivial class to build 3D model from 1D-components 
     'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
+    'Shape3D_pdf'   , ## simple PDF from C++ shape     
     )
 # =============================================================================
 import ROOT, random
@@ -30,6 +31,7 @@ from   ostap.core.core        import dsID , hID ,  VE , Ostap , valid_pointer
 from   ostap.core.ostap_types import integer_types
 from   ostap.logger.utils     import roo_silent , rooSilent
 from   ostap.fitting.utils    import H3D_dset , component_similar , component_clone
+from   ostap.fitting.funbasic import FUNC3
 from   ostap.fitting.basic    import PDF  , Flat1D 
 from   ostap.fitting.fit2d    import PDF2 , Model2D 
 from   ostap.fitting.roofit   import SETVAR
@@ -43,31 +45,15 @@ else                       : logger = getLogger ( __name__              )
 # The helper base class for implementation of 3D-pdfs 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2017-11-11
-class PDF3 (PDF2) :
+class PDF3 (PDF2,FUNC3) :
     """ Useful helper base class for implementation of PDFs for 3D-fit
     """
-    def __init__ ( self , name , xvar = None , yvar = None , zvar  = None , special = False ) : 
+    def __init__ ( self , name , xvar , yvar , zvar, special = False ) : 
         
-        PDF2.__init__ ( self , name , xvar , yvar , special = special ) 
-        
-        ## create the variable 
-        if isinstance ( zvar , tuple ) and 2 == len(zvar) :  
-            self.__zvar = self.make_var ( zvar               , ## var 
-                                    'z'                , ## name 
-                                    'z-variable(mass)' , ## title/comment
-                                    None               , ## fix ?
-                                    *zvar              ) ## min/max 
-        elif isinstance ( zvar , ROOT.RooAbsReal ) :
-            self.__zvar = self.make_var ( zvar               , ## var 
-                                    'z'                , ## name 
-                                    'z-variable/mass'  , ## title/comment
-                                    fix = None         ) ## fix ? 
-        else :
-            self.warning('``z-variable''is not specified properly %s/%s' % ( zvar , type ( zvar ) ) )
-            self.__zvar = self.make_var( zvar , 'z' , 'z-variable' )
+        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special ) 
+        FUNC3.__init__ ( self , self.name , self.xvar , self.yvar , zvar )
 
-
-        self.vars.add ( self.__zvar )
+        self.vars.add ( self.zvar )
         
         ## save the configuration
         self.config = {
@@ -77,20 +63,6 @@ class PDF3 (PDF2) :
             'zvar' : self.zvar ,            
             }
         
-    def zminmax ( self ) :
-        """Min/max values for z-variable"""
-        return self.__zvar.minmax()
-    
-    @property 
-    def zvar ( self ) :
-        """``z''-variable for the fit (same as ``z'')"""
-        return self.__zvar
-
-    @property 
-    def z    ( self ) :
-        """``z''-variable for the fit (same as ``zvar'')"""
-        return self.__zvar
-
     # =========================================================================
     ## make the actual fit 
     #  @code
@@ -181,12 +153,18 @@ class PDF3 (PDF2) :
         """
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
             range_name = 'aux3_rng12_%s' % self.name
-            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) :
+                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+                if dataset:
+                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
             in_range2  = range_name 
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
             range_name = 'aux3_rng13_%s' % self.name
-            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : 
+                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                if dataset:
+                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
             in_range3  = range_name 
 
         in_range = []
@@ -236,12 +214,20 @@ class PDF3 (PDF2) :
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             range_name = 'aux3_rng21_%s' % self.name
-            with rooSilent ( 3 ) : self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )  
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+
             in_range1  = range_name
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
             range_name = 'aux3_rng23_%s' % self.name
-            with rooSilent ( 3 ) : self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+            with rooSilent ( 3 ) : 
+                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                if dataset:
+                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
+
             in_range3  = range_name 
 
         in_range = []
@@ -290,12 +276,20 @@ class PDF3 (PDF2) :
         """
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             range_name = 'aux3_rng31_%s' % self.name
-            with rooSilent ( 3 ) : self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )       
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+
             in_range1  = range_name 
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
             range_name = 'aux3_rng32_%s' % self.name
-            with rooSilent ( 3 ) : self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+            with rooSilent ( 3 ) : 
+                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )    
+                if dataset:
+                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
+
             in_range2  = range_name 
 
         in_range = []
@@ -1022,11 +1016,11 @@ class Generic3D_pdf(PDF3) :
         ## PDF! 
         self.pdf = pdf
 
-        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+        if not self.xvar in self.params () : 
             self.warning ( "Function/PDF does not depend on xvar=%s" % self.xvar.name )
-        if not self.yvar in self.pdf.getParameters ( 0 ) : 
+        if not self.yvar in self.params () : 
             self.warning ( "Function/PDF does not depend on yvar=%s" % self.yvar.name )
-        if not self.zvar in self.pdf.getParameters ( 0 ) :
+        if not self.zvar in self.params () :
             self.warning ( "Function/PDF does not depend on zvar=%s" % self.zvar.name )
 
         ## add it to the list of signal components ?
@@ -1048,33 +1042,17 @@ class Generic3D_pdf(PDF3) :
             'suffix'         : suffix              ,                        
             }
 
+        self.checked_keys.add ( 'pdf'    )
+        self.checked_keys.add ( 'xvar'    )
+        self.checked_keys.add ( 'yvar'    )
+        self.checked_keys.add ( 'zvar'    )
+        self.checked_keys.add ( 'special' )
     
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
     
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar = None , yvar = None , zvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Generic3D_pdf can not be cloned with different `zvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic3D_pdf can not be cloned with different ``special''")
-        
-        return PDF.clone ( self , **kwargs )
-
 # =============================================================================
 ## @class Sum3D
 #  Non-extended sum of two PDFs
@@ -1154,6 +1132,7 @@ class Sum3D(PDF3) :
             'pdf2'     : self.pdf2     ,
             'xvar'     : self.xvar     ,
             'yvar'     : self.yvar     ,
+            'zvar'     : self.zvar     ,
             'name'     : self.name     , 
             'fraction' : self.fraction 
             }
@@ -1324,7 +1303,54 @@ class Model3D(PDF3) :
     def zmodel ( self ) :
         """``z-model'' z-component of M(x)*M(y)*M(z) PDF"""
         return self.__zmodel
+
+
+
+# =============================================================================
+## Generic 2D-shape from C++ callable
+#  @see Ostap::Models:Shape3D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape3D_pdf(PDF) :
+    """ Generic 3D-shape from C++ callable
+    - see Ostap::Models:Shape3D
+    """
     
+    def __init__ ( self , name , shape , xvar , yvar , zvar ) :
+
+        ##  iniialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+
+        if isinstance ( shape , ROOT.TH3 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo3D ( shape )
+            
+        self.__shape = shape
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape3D.create  (
+            "s3D_%s"      % self.name , 
+            "shape3D(%s)" % self.name ,
+            self.xvar                 ,
+            self.yvar                 ,
+            self.zvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            'yvar'    : self.yvar    , 
+            'zvar'    : self.yvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+ 
+  
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -1339,6 +1365,7 @@ class H3D_pdf(H3D_dset,PDF3) :
                    yvar    = None  ,
                    zvar    = None  ,
                    density = False ,
+                   order   = 0     , 
                    silent  = False ) :
         
         H3D_dset.__init__ ( self , histo3 ,      xvar  ,      yvar  ,      zvar  ,  density , silent )
@@ -1346,7 +1373,10 @@ class H3D_pdf(H3D_dset,PDF3) :
         
         self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar , self.zvar )
         
-        #
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+        
+       #
         ## finally create PDF :
         #
         with roo_silent ( silent ) : 
@@ -1354,7 +1384,8 @@ class H3D_pdf(H3D_dset,PDF3) :
                 'hpdf_%s'            % name ,
                 'Histo3PDF(%s/%s/%s)' % ( name , histo3.GetName() , histo2.GetTitle() ) , 
                 self.__vset  , 
-                self.dset    )
+                self.dset    ,
+                order        )
 
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
@@ -1368,8 +1399,19 @@ class H3D_pdf(H3D_dset,PDF3) :
             'zvar'    : self.zvar    , 
             'density' : self.density , 
             'silent'  : self.silent  ,             
+            'order'   : self.order   ,             
             }
-             
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
+      
 # =============================================================================
 # Compound models for 3D-fit
 # =============================================================================
@@ -1900,23 +1942,11 @@ class Fit3D (PDF3) :
             'zvar'       : self.zvar    ,
             'name'       : self.name    ,             
             }
-        
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3D can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3D can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3D can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
 
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
+        
     @property
     def SSS ( self ) :
         """The yield of Signal(x)*Signal(y)*Signal(z) component"""
@@ -2637,22 +2667,10 @@ class Fit3DSym (PDF3) :
             'name'       : self.name    ,             
             }
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3DSym can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
-
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
+        
     @property
     def SSS ( self ) :
         """The yield of Signal(x)*Signal(y)*Signal(z) component"""
@@ -3490,21 +3508,9 @@ class Fit3DMix (PDF3) :
             'name'       : self.name    ,             
             }
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , name = '' , xvar = None , yvar = None , zvar = None  ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fit3DMix can not be cloned with different `zvar''")
-        return PDF.clone ( self , name = name ) if name else PDF.clone( self )
+        self.checked_keys.add  ( 'xvar' )
+        self.checked_keys.add  ( 'yvar' )
+        self.checked_keys.add  ( 'zvar' )
 
     @property
     def SSS ( self ) :

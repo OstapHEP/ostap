@@ -11,7 +11,8 @@ ENV PATH="/root/miniconda/bin:${PATH}"
 RUN echo $PATH
 RUN conda config --set always_yes yes --set changeps1 no
 RUN conda config --add channels conda-forge
-RUN conda create -q -n ostapenv python=2.7 root  cmake future
+RUN conda create -q -n ostapenv  root_base root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
+
 
 ADD . /ostap
 WORKDIR /ostap

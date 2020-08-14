@@ -148,7 +148,7 @@ if '__main__' == __name__ :
     
     with timing ('RooFormulaVar : ') : test_formula ()
     with timing ('PyVAR         : ') : test_pyvar   ()
-    with timing ('PyVAR2        : ') : test_pyvar   ()
+    with timing ('PyVAR2        : ') : test_pyvar2  ()
 
 
 # =============================================================================

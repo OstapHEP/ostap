@@ -120,8 +120,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import MASS, PDF 
+from   ostap.core.core        import cpp , Ostap, VE  
+from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -1025,24 +1025,22 @@ class GenGaussV1_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self  , name , xvar , mean  , alpha ) 
+        MASS.__init__  ( self  , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = alpha ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
+                 
         
         #
         ## rename it!
         #
         self.__alpha = self.sigma
-        if self.alpha != alpha : 
-            sname  = self.alpha.GetName  ()
-            stitle = self.alpha.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'alpha' )
-            gtitle = stitle.replace ( 'sigma' , 'alpha' )
-            self.alpha.SetName  ( gname  ) 
-            self.alpha.SetTitle ( gtitle )
-            
+        
         self.__beta  = self.make_var ( beta ,
-                                 'beta_%s'        % name  ,
-                                 '#beta_{v1}(%s)' % name  , beta , 
-                                 2 , 1.e-4  , 1.e+6 ) 
+                                       'beta_%s'        % name  ,
+                                       '#beta_{v1}(%s)' % name  , beta , 
+                                       2 , 1.e-4  , 1.e+6 ) 
         #
         ## finally build PDF
         #
@@ -1118,19 +1116,15 @@ class GenGaussV2_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , alpha ) 
-        
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = alpha ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
         #
         ## rename it!
         #
         self.__alpha = self.sigma        
-        sname      = self.alpha.GetName  ()
-        stitle     = self.alpha.GetTitle ()
-        gname      = sname .replace ( 'sigma' , 'alpha' )
-        gtitle     = stitle.replace ( 'sigma' , 'alpha' )
-        self.alpha.SetName  ( gname  ) 
-        self.alpha.SetTitle ( gtitle )
-        
         self.__xi    = self.mean 
         self.__kappa = self.make_var ( kappa ,
                                  'kappa_%s'        % name  ,
@@ -1211,7 +1205,11 @@ class SkewGauss_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , omega )
+        MASS.__init__  ( self , name , xvar , 
+                         mean        = mean  ,
+                         sigma       = omega ,
+                         sigma_name  = 'omega_%s'   % name ,
+                         sigma_title = '#omega(%s)' % name )
         
                 
         #
@@ -1219,16 +1217,7 @@ class SkewGauss_pdf(MASS) :
         #
         
         self.__omega = self.sigma        
-        sname      = self.sigma.GetName  ()
-        stitle     = self.sigma.GetTitle ()
-        gname      = sname .replace ( 'sigma' , 'omega' )
-        gtitle     = stitle.replace ( 'sigma' , 'omega' )
-        self.omega.SetName  ( gname  ) 
-        self.omega.SetTitle ( gtitle )
-        
-
-        self.__xi   = self.mean 
-        
+        self.__xi   = self.mean         
         self.__alpha = self.make_var ( alpha ,
                                  'alpha_%s'   % name  ,
                                  '#alpha(%s)' % name  , alpha, 
@@ -1812,28 +1801,18 @@ class JohnsonSU_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self    , name , xvar , xi  , lambd   ) ## mean    , sigma  )
-
+        MASS.__init__  ( self    , name , xvar ,
+                         mean        = xi                   ,
+                         sigma       = lambd                ,
+                         mean_name   = 'xi_%s'       % name ,
+                         mean_title  = '#xi(%s)'     % name ,
+                         sigma_name  = 'lambda_%s'   % name ,
+                         sigma_title = '#lambda(%s)' % name )
+        
         self.__xi = self.mean
-        if not self.xi is xi : ## newly created 
-            oname   = self.xi.GetName ()
-            otitle  = self.xi.GetTitle()
-            nname   = oname .replace ( 'mean' , 'xi' )
-            ntitle  = otitle.replace ( 'mean' , 'xi' )
-            self.xi.SetName  ( nname  )
-            self.xi.SetTitle ( ntitle )
-            
         self.__lambd = self.sigma
-        if not self.lambd is lambd : ## newly created 
-            oname    = self.lambd.GetName ()
-            otitle   = self.lambd.GetTitle()
-            nname    = oname .replace ( 'sigma' , 'lambda' )
-            ntitle   = otitle.replace ( 'sigma' , 'lambda' )
-            self.lambd.SetName  ( nname  )
-            self.lambd.SetTitle ( ntitle )
-            self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
-
-            
+        self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
+    
         self.__delta   = self.make_var ( delta                 ,
                                    'delta_%s'     % name ,
                                    '#delta(%s)'   % name , delta ,
@@ -1982,17 +1961,13 @@ class Slash_pdf(MASS) :
                    scale   = None ) : ## related to scale
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar , mean, scale )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = scale ,
+                         sigma_name  = 'scale_%s'   % name ,
+                         sigma_title = '#scale(%s)' % name )
         
         self.__scale = self.sigma
-        if self.scale != scale : 
-            sname  = self.scale.GetName  ()
-            stitle = self.scale.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.scale.SetName  ( gname  ) 
-            self.scale.SetTitle ( gtitle )
-
 
         ## finally build pdf
         self.pdf = Ostap.Models.Slash (
@@ -2057,7 +2032,11 @@ class AsymmetricLaplace_pdf(MASS) :
                    asymmetry = 0    ) : ## 0 corresponds to symmetric laplace 
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar , mean , slope )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = slope ,
+                         sigma_name  = 'slope_%s'   % name ,
+                         sigma_title = '#slope(%s)' % name )
         
         self.__asym = self.make_var ( asymmetry               ,
                                 'asym_%s'        % name ,
@@ -2065,14 +2044,6 @@ class AsymmetricLaplace_pdf(MASS) :
 
         self.__slope = self.sigma
 
-        ## rename it if needed 
-        if self.__slope != slope :
-            sname  = self.slope.GetName  ()
-            stitle = self.slope.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'slope' )
-            gtitle = stitle.replace ( 'sigma' , 'slope' )
-            self.slope.SetName  ( gname  ) 
-            self.slope.SetTitle ( gtitle )          
             
         ## Right-side lambda 
         self.__lst_R   = ROOT.RooArgList ( self.slope , self.asym )
@@ -2238,7 +2209,7 @@ models.append ( Sech_pdf )
 #   @see Ostap::Math::Losev 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-11-026
-class Losev_pdf(MASS) :
+class Losev_pdf(MASSMEAN) :
     """ Asymmetric variant of hyperbolic secant distribution
     - Leptokurtic distribution with exponential tails
     see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
@@ -2259,16 +2230,11 @@ class Losev_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , None )
+        MASSMEAN.__init__  ( self , name , xvar , 
+                             mean        = mean  ,
+                             mean_name  = 'mu_%s'   % name ,
+                             mean_title = '#mu(%s)' % name )
 
-        ## rename if possible 
-        if mean is not self.mean :
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'mu_%s' % self.name  )
-            gtitle = stitle.replace ( 'mean' , 'mu'                 )
-            self.mean.SetName  ( gname  ) 
-            self.mean.SetTitle ( gtitle )
 
         ## left tail 
         self.__alpha = self.make_var ( alpha ,
@@ -2417,16 +2383,14 @@ class RaisingCosine_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , scale  )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = scale ,
+                         sigma_name  = 'scale_%s'   % name ,
+                         sigma_title = '#scale(%s)' % name )
+
         
         self.__scale = self.sigma
-        if self.__scale != scale : 
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.__scale.SetName  ( gname  ) 
-            self.__scale.SetTitle ( gtitle )
 
         #
         ## finally build pdf
@@ -2495,16 +2459,14 @@ class QGaussian_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , scale  )
+        MASS.__init__  ( self , name , xvar  , 
+                         mean        = mean  ,
+                         sigma       = scale,
+                         sigma_name  = 'scale_%s'  % name ,
+                         sigma_title = 'scale(%s)' % name )
+                 
 
         self.__scale = self.sigma
-        if self.__scale != scale : 
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.__scale.SetName  ( gname  ) 
-            self.__scale.SetTitle ( gtitle )
 
         ## Q 
         self.__q = self.make_var ( q               ,
@@ -2730,29 +2692,18 @@ class BreitWigner_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name, xvar , mean , gamma )
-        
-        if gamma is not self.sigma :
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'Gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.sigma.SetName  ( gname  ) 
-            self.sigma.SetTitle ( gtitle )
-            if  self.xminmax () and self.sigma.minmax() : 
-                mn  , mx  = self.xminmax() 
-                dm = mx - mn
-                smn , smx = self.sigma.minmax()                 
-                self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
-                self.sigma.setMax ( min (  2     * dm , smx ) )
-        
-        bw = breitwigner 
-        assert isinstance ( bw , Ostap.Math.BreitWigner ), \
+        MASS.__init__  ( self  , name  , xvar ,
+                         mean  = mean ,
+                         sigma = gamma ,
+                         sigma_name  = 'gamma_%s'   % name ,
+                         sigma_title = '#Gamma(%s)' % name )
+
+        bw = breitwigner
+        assert isinstance ( bw , Ostap.Math.BW ), \
                'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
         #
         ## define the actual BW-shape using
         #      Ostap::Math::BreitWeigner object
-        #
         self.__breitwigner = breitwigner  ## Ostap::Math::BreitWeigner object
 
         ## create PDF 
@@ -2913,22 +2864,12 @@ class BWMC_pdf(MASS) :
         # =====================================================================
         ## initialize the base 
         # =====================================================================
-        MASS.__init__ ( self , name , xvar , mean , gamma )
-        
-        if gamma is not self.sigma :
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'Gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.sigma.SetName  ( gname  ) 
-            self.sigma.SetTitle ( gtitle )
-            if  self.xminmax () and self.sigma.minmax() : 
-                mn  , mx  = self.xminmax() 
-                dm = mx - mn
-                smn , smx = self.sigma.minmax()                 
-                self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
-                self.sigma.setMax ( min (  2     * dm , smx ) )
-        
+        MASS.__init__ ( self , name , xvar ,
+                        mean =  mean ,
+                        siga = gamma ,
+                        sigma_name  = 'gamma_%s'   % name ,
+                        sigma_title = '#Gamma(%s)' % name )
+                
         ## create branching fractions 
         if 1 == case :
             
@@ -3165,16 +3106,13 @@ class BW23L_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , gamma )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = gamma ,
+                         sigma_name  = 'gamma_%s'   % name ,
+                         sigma_title = '#gamma(%s)' % name )
         
         self.__gamma = self.sigma
-        if  self.gamma  != gamma : 
-            sname  = self.gamma.GetName  ()
-            stitle = self.gamma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.gamma.SetName  ( gname  ) 
-            self.gamma.SetTitle ( gtitle )
         
         #
         ## define the actual BW-shape using
@@ -3215,7 +3153,9 @@ class BW23L_pdf(MASS) :
         """The Breit-Wigner function itself"""
         return self.__breitwigner
 
-models.append ( BW23L_pdf )                          
+models.append ( BW23L_pdf )
+
+
 # =============================================================================
 ## @class Flatte_pdf
 #  Flatte function
@@ -3229,7 +3169,7 @@ models.append ( BW23L_pdf )
 #  @see Ostap::Math::Flatte2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-01-18
-class Flatte_pdf(MASS) :
+class Flatte_pdf(MASSMEAN) :
     """Flatte function:
     S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
     and (KbarK) systems near (KbarK) threshold'' 
@@ -3243,93 +3183,61 @@ class Flatte_pdf(MASS) :
                    flatte            ,    ## Ostap::Math::Flatte/Flatte2
                    xvar              ,
                    m0       = None   ,    ## the pole 
-                   m0g1     = None   ,    ## m0*gamma_1 
-                   g2og1    = None   ,    ## gamma2/gamma1 
-                   gamma1   = None   ,    ## gamma1 
-                   gamma2   = None   ,    ## gamma2 
+                   m0g1     = None   ,    ## m0*g1 
+                   g2og1    = None   ,    ## g2/g1 
+                   g1       = None   ,    ## g1 
+                   g2       = None   ,    ## g2 
                    gamma0   = None   ) :  ## gamma0 
-        
-        #
-        ## initialize the base
-        # 
-        MASS.__init__  ( self , name , xvar , m0 , None )
 
+
+        ## initialize the base
+        with CheckMean ( False ) :
+            # for Flatte-function m0 can be outside the interesting interval 
+            MASSMEAN.__init__  ( self , name , xvar ,
+                                 mean       = m0  ,
+                                 mean_name  = 'm0_%s'    % name ,
+                                 mean_title = '#m_0(%s)' % name )
+            
+        assert all_args ( m0 , m0g1 , g2og1 ) or \
+               all_args ( m0 ,   g1 , g2    ) , 'Invalid combination of arguments!'
+        
         self.__flatte = flatte
-            
-        self.__m0 = self.mean
-        if self.m0 != m0 :
-            
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0' )
-            gtitle = stitle.replace ( 'mean' , 'm0' )
-            self.m0.SetName  ( gname  ) 
-            self.m0.SetTitle ( gtitle ) 
             
         self.__gamma0 = self.make_var  ( gamma0                  ,
                                          'gamma0_%s'      % name ,
-                                         '#gamma_{0}(%s)' % name ,
-                                         gamma0 , 0 , 0 , 5 * self.sigma.getVal() )
+                                         '#Gamma_{0}(%s)' % name ,
+                                         gamma0 , gamma0 , 0 , gamma0 )
         
-        if  gamma1 is None and gamma2 is None :
+        if  g1 is None and g2 is None :
             
-            vmin = 0.2 * self.mean.getMin () * self.gamma.getMin ()
-            vmax = 2.0 * self.mean.getMax () * self.gamma.getMax ()
-            
-            self.__m0g1 = self.make_var  ( m0g1                          ,
-                                           'm0g1_%s'             % name ,
-                                           'm_{0}#gamma_{1}(%s)' % name ,
-                                           m0g1 , m0g1 , vmin , xmax )
+            self.__m0g1 = self.make_var  ( m0g1                     ,
+                                           'm0g1_%s'         % name ,
+                                           'm_{0}#g_{1}(%s)' % name ,
+                                           m0g1 , m0g1 )
             
             self.__g2og1 = self.make_var ( g2og1    ,
-                                           'g2og1_%s'                  % name ,
-                                           '#gamma_{2}/#gamma_{1}(%s)' % name ,
-                                           g2og1    ,  1  ,  0.01  , 100  ) 
+                                           'g2og1_%s'        % name ,
+                                           'g_{2}/g_{1}(%s)' % name ,
+                                           g2og1    ,  g2og1  , 0.005  , 200  ) 
+
+            self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
+            self.__g2 = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
             
-            self.__lst1   = ROOT.RooArgList ( self.m0g1  , self.m0     ) 
-            self.__gamma1 = ROOT.RooRealVar ( 
-                'g1_%s'          % name ,
-                '#gamma_{1}(%s)' % name ,
-                '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() ) , 
-                self.__lst1  )
-            self.__lst2   = ROOT.RooArgList ( self.g2og1 , self.gamma1 ) 
-            self.__gamma2 = ROOT.RooRealVar ( 
-                'g2_%s'          % name ,
-                '#gamma_{2}(%s)' % name ,
-                '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() ) , 
-                self.__lst2 )
-            
-        elif gamma1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
-        elif gamma2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
+        elif g1 is None : raise TypeError ( 'Flatte_pdf: g1 is not specified!' ) 
+        elif g2 is None : raise TypeError ( 'Flatte_pdf: g2 is not specified!' ) 
         else :
             
-            self.__gamma1 =  self.make_var  ( gamma1                   ,
-                                              'g1_%s'          % name ,
-                                              '#gamma_{1}(%s)' % name ,
-                                              gamma1               ,
-                                              self.gamma.getVal () ,
-                                              self.gamma.getMin () ,
-                                              self.gamma.getMax () )            
-            self.__gamma2 =  self.make_var  ( gamma2                   ,
-                                              'g2_%s'          % name ,
-                                              '#gamma_{2}(%s)' % name ,
-                                              gamma2   ,
-                                              self.gamma.getVal () ,
-                                              self.gamma.getMin () ,
-                                              self.gamma.getMax () )
+            self.__g1 =  self.make_var  ( g1                 ,
+                                          'g1_%s'     % name ,
+                                          'g_{1}(%s)' % name ,
+                                          g1                 , g1 )
+            self.__g2 =  self.make_var  ( g2                 ,
+                                          'g2_%s'     % name ,
+                                          'g_{2}(%s)' % name ,
+                                          g2                 , g2 )
             
-            self.__lst1  = ROOT.RooArgList ( self.m0     , self.gamma1 ) 
-            self.__m0g1  = ROOT.RooFormulaVar (
-                'm0g1_%s'             % name ,
-                'm_{0}#gamma_{1}(%s)' % name ,
-                '%s * %s ' % ( self.m0.GetName() , self.gamma1.GetName() ) ,
-                self.__lst1 )
-            self.__lst2  = ROOT.RooArgList ( self.gamma2 , self.gamma1 ) 
-            self.__g2og1 = ROOT.RooFormulaVar ( 
-                'g2og1_%s'                  % name ,
-                '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 ,
-                '%s / %s '  % ( self.gamma2.GetName() , self.gamma1.GetName() ) ,
-                self.__lst2 )
+            self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
+            self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
                 
         ## create PDF 
         self.pdf = Ostap.Models.Flatte ( 
@@ -3337,8 +3245,8 @@ class Flatte_pdf(MASS) :
             "Flatte(%s)" % name ,
             self.xvar    ,
             self.m0      ,
-            self.m0g1    ,
-            self.g2og1   ,
+            self.g1      ,
+            self.g2      ,
             self.gamma0  ,
             self.flatte  )
 
@@ -3351,21 +3259,20 @@ class Flatte_pdf(MASS) :
             'gamma0'      : self.gamma0  ,
             }
         
-        if gamma1 is None and gamma2 is None : 
-            self.config.update ( { 'm0g1'   : self.m0g1   , 
-                                   'g2og1'  : self.g2og1  } )
+        if g1 is None and g2 is None : 
+            self.config.update ( { 'm0g1'  : self.m0g1  , 
+                                   'g2og1' : self.g2og1 } )
         else : 
-            self.config.update ( { 'gamma1' : self.gamma1 ,
-                                   'gamma2' : self.gamma2 } )
+            self.config.update ( { 'g1'    : self.g1    ,
+                                   'g2'    : self.g2    } )
             
     @property
     def m0 ( self ) :
         """``m0''-parameter for Flatte-function (same as ``mean'')"""
-        return self.__m0
+        return self.mean 
     @m0.setter
     def m0  ( self, value ) :
-        value = float ( value )
-        self.__m0.setVal ( value ) 
+        self.mean = value
 
     @property
     def m0g1 ( self ) :
@@ -3373,8 +3280,7 @@ class Flatte_pdf(MASS) :
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
-        assert not isinstance ( self.__m0g1 , ROOT.RooFormulaVar ),\
-               "``m0g1''-parameter can't be set!"
+        assert gasattr ( self.__m0g1 , 'setVal' ),"``m0g1''-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
 
@@ -3384,33 +3290,30 @@ class Flatte_pdf(MASS) :
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
-        assert not isinstance ( self.__g2og1 , ROOT.RooFormulaVar ),\
-               "``g2og1''-parameter can't be set!"        
+        assert hasattr ( self.__g2og1 , 'setVal'),"``g2og1''-parameter can't be set!"        
         value = float ( value )
         assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
         self.__g2og1.setVal ( value )
 
     @property
-    def gamma1 ( self ) :
-        "``gamma1''-parameter for Flatte-function"
-        return self.__gamma1
-    @gamma1.setter
-    def gamma1 ( self , value ) :
-        assert not isinstance ( self.__gamma1 , ROOT.RooFormulaVar ),\
-               "``gamma1''-parameter can't be set!"
+    def g1 ( self ) :
+        "``g1''-parameter for Flatte-function"
+        return self.__g1
+    @g1.setter
+    def g1 ( self , value ) :
+        assert hasattr ( self.__g1 , 'setVal' ),"``g1''-parameter can't be set!"
         value = float ( value )
-        self.__gamma1.setVal ( value ) 
+        self.__g1.setVal ( value ) 
 
     @property
-    def gamma2 ( self ) :
-        "``gamma2''-parameter for Flatte-function"
-        return self.__gamma2
-    @gamma2.setter
-    def gamma2 ( self , value ) :
-        assert not isinstance ( self.__gamma2 , ROOT.RooFormulaVar ),\
-               "``gamma2''-parameter can't be set!"
+    def g2 ( self ) :
+        "``g2''-parameter for Flatte-function"
+        return self.__g2
+    @g2.setter
+    def g2 ( self , value ) :
+        assert hasattr ( self.__g2 , 'setVal' ),"``g2''-parameter can't be set!"
         value = float ( value )
-        self.__gamma2.setVal ( value ) 
+        self.__g2.setVal ( value ) 
 
     @property
     def gamma0 ( self ) :
@@ -3459,25 +3362,17 @@ class LASS_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m0 , g0 )
+        MASS.__init__  ( self , name , xvar , 
+                         mean        = m0 ,
+                         sigma       = g0 ,
+                         mean_name   = 'm0_%s'    % name ,
+                         mean_title  = '#m_0(%s)' % name ,
+                         sigma_name  = 'g_%s'     % name ,
+                         sigma_title = 'g_0(%s)'  % name )
+        
         
         self.__g0 = self.sigma
-        if self.__g0 != g0  : 
-            sname  = self.g0.GetName  ()
-            stitle = self.g0.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'g0' )
-            gtitle = stitle.replace ( 'sigma' , 'g0' )
-            self.g0.SetName  ( gname  ) 
-            self.g0.SetTitle ( gtitle )
-            
         self.__m0 = self.mean
-        if self.__m0 !=  m0 : 
-            sname  = self.m0.GetName  ()
-            stitle = self.m0.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0' )
-            gtitle = stitle.replace ( 'mean' , 'm0' )
-            self.m0.SetName  ( gname  ) 
-            self.m0.SetTitle ( gtitle ) 
             
         self.__a = self.make_var ( a                  ,
                                    'aLASS_%s'  % name ,
@@ -3598,28 +3493,19 @@ class Bugg_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m , g2 ) 
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = m    ,
+                         sigma       = g2   ,
+                         mean_name   = 'mBugg_%s'        % name ,
+                         mean_title  = '#m_{Bugg}_2(%s)' % name ,
+                         sigma_name  = 'gamma2_%s'       % name ,
+                         sigma_title = '#gamma_2(%s)'    % name )
+
         
         self.__bugg_g2 = self.sigma
         self.__gamma   = self.sigma
         ##
-        if self.gamma != g2 :  
-            sname  = self.gamma.GetName  ()
-            stitle = self.gamma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma2_Bugg' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma2_Bugg' )
-            self.bugg_g2.SetName  ( gname  ) 
-            self.bugg_g2.SetTitle ( gtitle )
-            self.gamma = self.bugg_g2 
-            
         self.__bugg_m = self.mean
-        if self.bugg_m != m :  
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm_Bugg' )
-            gtitle = stitle.replace ( 'mean' , 'm_Bugg' )
-            self.bugg_m.SetName  ( gname  ) 
-            self.bugg_m.SetTitle ( gtitle ) 
 
         self.__bugg_b1 = self.make_var ( b1                  ,
                                          'b1Bugg_%s'  % name ,

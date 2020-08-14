@@ -1456,16 +1456,23 @@ class PSRight_pdf(PDF) :
         PDF.__init__ ( self , name , xvar )
         #
         self.__L = L 
-        self.__N = N 
+        self.__N = N
+
+        limits = ()  
+        if self.xminmax() :
+            mn , mx  = self.xminmax()
+            mx = mx + ( mx  - mn )
+            limits = mn , mx
+            
         self.__right = self.make_var ( right ,
-                                       'right_%s'      % name ,
-                                       'm_{right}(%s)' % name ,
-                                       None , *self.xminmax() )
-        
+                                       'right_%s'      % name  ,
+                                       'm_{right}(%s)' % name  ,
+                                       None , right ,  *limits )
+
         if self.xminmax() and self.right.minmax() :
             mn  , mx  = self      .xminmax()
             rmn , rmx = self.right. minmax()            
-            assert rmn <= mx, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
+            assert rmx > mn, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
             
         self.pdf  = Ostap.Models.PhaseSpaceRight (
             'psr_%s'              % name ,

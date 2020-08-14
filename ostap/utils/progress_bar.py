@@ -202,8 +202,11 @@ class ProgressBar(object):
     """
     def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
 
-        self.silent   = kwargs.get( 'silent' , False ) or not isatty() 
-
+        tty = isatty()
+        
+        self.silent   = kwargs.get( 'silent' , False ) ## or not isatty() 
+        self.r        = '\r' if tty else '\n'
+        
         self.char = kwargs.get ( 'char' , '#'       ) ##
         self.mode = kwargs.get ( 'mode' , 'fixed'   ) ## fixed or dynamic
         if not self.mode in ['fixed', 'dynamic']:
@@ -212,7 +215,8 @@ class ProgressBar(object):
         self.bar      = ''
         self.min      = min_value
         self.max      = max_value
-        self.span     = max ( max_value - min_value , 1 ) 
+        self.span     = max ( max_value - min_value , 1 )
+        self.last     = '' 
         ##
 
         ncols         = columns () - 12
@@ -324,10 +328,11 @@ class ProgressBar(object):
         return str(self.bar)
 
     def show ( self ) :
-        if not self.silent  : 
+        if not self.silent and self.bar != self.last :   
             if self.prefix : sys.stdout.write( self.prefix ) 
-            sys.stdout.write( self.bar + '\r' ) 
+            sys.stdout.write( self.bar + self.r ) 
             sys.stdout.flush()
+            self.last = self.bar  
         
     def end  ( self  ) :
         if not self.silent :

@@ -276,7 +276,7 @@ class Sim1D(PDF) :
                    name       = None , 
                    title      = ''   ) :
 
-        warnings.warn("Usage of obsolete Sim1D. Use SimFit instead")
+        warnings.warn ( "Usage of obsolete Sim1D. Use SimFit instead" )
         
         if isinstance ( sample , ( tuple , list ) ) :
             _cat = ROOT.RooCategory ( 'sample' , 'sample' )
@@ -1165,7 +1165,7 @@ class SimFit ( MakeVar ) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {}  ) :
+    def load_params ( self , dataset = None , params = {}  , silent = False ) :
         """Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
@@ -1176,8 +1176,49 @@ class SimFit ( MakeVar ) :
         >>> pdf.load_params ( dataset , params )  
         """
         ## nothing to load 
-        return self.pdf.load_params ( dataset , params )
+        return self.pdf.load_params ( dataset , params , silent )
 
+    # =========================================================================
+    ##  Does this function depend on this variable,
+    #   @code
+    #   fun = ...
+    #   var = ...
+    #   if var in fun :
+    #      ... 
+    #   @endcode  
+    def __contains__ ( self , var ) : 
+        """Does this function depend on this variable?
+        >>> fun = ...
+        >>> var = ...
+        >>> if var in fun :
+        ...      ... 
+        """
+        return var in self.pdf
+    
+    # =========================================================================
+    ## Get the parameters
+    #  @code
+    #  fun = ...
+    #  parameters = fun.params ( )
+    #  @endcode
+    #  Or
+    #  @code  
+    #  pdf       = ...
+    #  dataset   = ...
+    #  parameters = pdf.params ( dataset)
+    #  @endcode
+    #  @see RooAbsReal::getParameters
+    def params ( self , dataset = None  ) :
+        """Get the parameters
+        >>>  fun = ...
+        >>> parameters = fun.params ( )
+        Or
+        >>>  pdf       = ...
+        >>> dataset   = ...
+        >>> parameters = pdf.params ( dataset)
+        - see RooAbsReal::getParameters
+        """
+        return self.pdf.params  ( dataset )
     
     # =========================================================================
     ## get all parameters/variables in form of dictionary

@@ -842,6 +842,28 @@ double Ostap::Kinematics::q
   return 0 < l ?  0.5 * std::sqrt ( l ) / m : 0.0 ;
 }
 // ============================================================================
+/*  momentum of the first particle from two-body decay
+ *  \f$ \sqrt{s} \rightarrow m_1 m_2 \f$ 
+ *  in the rest frame of the mother particle \f$ \sqrt{s}\f$.
+ *  \f[ q_s ( s , m_1^2 , m_2^2 )  \equiv 
+ *  \frac{\lambda^{1/2}\left( s , m_1^2, m_2^2\right)}{2 \sqrt{s} } \f]
+ *  @param s     squared mass of the mother particle 
+ *  @param m2_1  squared mass of the first  particle 
+ *  @param m2_2  squared mass of the second particle 
+ */
+// ============================================================================
+double Ostap::Kinematics::q_s
+( const double s    , 
+  const double m2_1 ,
+  const double m2_2 ) 
+{
+  if ( s <= 0 || m2_1 < 0 || m2_2 < 0 ) { return 0 ; }
+  //
+  const double l = triangle  ( s , m2_1 , m2_2 ) ;
+  //
+  return 0 < l ?  0.5 * std::sqrt ( l / s ) : 0.0 ;
+}
+// ============================================================================
 /*  two-body phase space 
  *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f] 
  * Note that there exist also an alternative normalization:

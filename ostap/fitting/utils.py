@@ -17,6 +17,9 @@ __all__     = (
     #
     'RangeVar'          , ## Helper class to temporary change a range for the variable 
     'MakeVar'           , ## Helper bade class that allow storage of newly created RooFit objects
+    'XVar'              , ## helper to deal with x-variable
+    'YVar'              , ## helper to deal with y-variable
+    'ZVar'              , ## helper to deal with z-variable
     #
     "H1D_dset"          , ## 1D-histogram to RooDataHist converter 
     "H2D_dset"          , ## 2D-histogram to RooDataHist converter 
@@ -177,7 +180,19 @@ class NameDuplicates(object) :
     def allowed ( cls ) : return cls.__allowed
     @classmethod
     def allow   ( cls , allowed ) :
-        cls.__allowed = True if allowed else False 
+        cls.__allowed = True if allowed else False
+    # =========================================================================
+    def __init__   ( self , allow  ) :
+        self.__allow  = True if allow else False
+        self.__backup = self.allowed()
+    def __enter__  ( self ) :        
+        self.__backup = self.allowed()
+        self.allow ( self.__allow )
+        return self
+    def __exit__   ( self , *_     ) :
+        self.allow ( self.__backup )
+# =============================================================================
+
 # =============================================================================
 ## keep the list of local loggers  
 _loggers  = {}           
@@ -187,7 +202,7 @@ _loggers  = {}
 #   - creation of <code>ROOT.RooRealVar objects</code>
 #   - store newly created RooFit objects
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2018-07-14  
+#  @date 2018-07-14
 class MakeVar ( object ) :
     """Helper class that allows implement several purely  technical methods:
     - creation of <code>ROOT.RooRealVar objects</code>
@@ -200,9 +215,10 @@ class MakeVar ( object ) :
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
-            
-        obj.__aux_keep = []                      ## ATTENTION!        
-        obj.__name     = None                    ## ATTENTION!
+        ##
+        obj.__aux_keep     = []                      ## ATTENTION!        
+        obj.__name        = None                    ## ATTENTION!
+        obj.__local_names = set()
         return obj
     
     ##  produce ERROR    message using the local logger 
@@ -232,7 +248,7 @@ class MakeVar ( object ) :
 
     @property
     def aux_keep ( self ) :
-        """``aux_keep'' -  the list of objects to be kept by this PDF"""
+        """``aux_keep'' -  the list of objects to be kept by this PDF/FUN"""
         return self.__aux_keep
     @property
     def logger   ( self ) :
@@ -252,8 +268,9 @@ class MakeVar ( object ) :
     @name.setter
     def name ( self , value ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
+        if self.__name == value : return 
         if value in self.__pdf_names and not NameDuplicates.allowed() :
-            self.warning ( 'The name "%s" for PDF already defined!' % value )
+            self.warning ( 'The name "%s" for PDF/FUN already defined!' % value )
         self.__pdf_names.add ( value )     
         self.__name = value
 
@@ -332,9 +349,27 @@ class MakeVar ( object ) :
         if name in self.__var_names and not NameDuplicates.allowed() :
             self.warning ( 'The variable name "%s" is already defined!' % name )
             
-        self.__var_names.add ( name )
+        self.__var_names.add   ( name )
+        self.__local_names.add ( name )
         return name
-    
+
+    # =========================================================================
+    ## delete the obejct
+    #  - remove the registered names in storages
+    #  - clear the local storage of names 
+    def __del__ ( self ) :
+        """Delete the obejct
+        - remove the registered names in storages
+        - clear the local storage of names 
+        """
+        
+        if self.name and self.name in self.__pdf_names :
+            self.__pdf_names.remove ( self.name ) 
+            while self.__local_names :
+                a = self.__local_names.pop ()
+                if a in self.__var_names :
+                    self.__var_names.remove  ( a ) 
+        
     # =========================================================================
     ## create ROOT.RooFit.Binning from TAxis
     #  @see RooFit::Binning
@@ -548,6 +583,28 @@ class MakeVar ( object ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , string_types   ) \
+                     and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :                
+                _v = self.params()[ a ]
+                _s = ROOT.RooArgSet ( _v )
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos        ( _s )  )                
+            elif kup in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
+
+                _s     = ROOT.RooArgSet()
+                _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
+                for v in a :
+                    if   v in _pars and isinstance ( v , string_types ):
+                        _v = _pars [ v ] 
+                        _s.add ( _v )
+                    elif v in _pars and isinstance ( v , ROOT.RooAbsArg  ) :
+                        _s.add (  v )
+                    else :
+                        self.error ( "Can not find %s in parameetrs" % v )
+
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos ( _s )  )
+                                
             elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
             elif kup in ( 'CLONE'            ,
@@ -620,7 +677,8 @@ class MakeVar ( object ) :
         while nn < len ( _args ) :
             _a = [] 
             for c in chunks ( _args , nn ) :
-                _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+                if   2 <= len ( c ) : _a.append ( ROOT.RooFit.MultiArg ( *c ) )
+                elif 1 == len ( c ) : _a.append ( c[1] )
             _args = _a 
                                     
         return tuple ( _args )
@@ -1331,7 +1389,26 @@ class MakeVar ( object ) :
             
         self.error ( "Can't generate positive number from %s/%s" % ( events , type ( events ) ) )
         return 
-    
+
+    # =========================================================================
+    ## get the proper min/max range for the variable  
+    def vmnmx    ( self , var , vmin , vmax ) :
+        """Get the proper min/max range for the variable 
+        """
+        if var.xminmax() :
+            vmn , vmx = var.xminmax ()
+            if   is_good_number ( vmin ) : vmin = max ( vmin , vmn )
+            else                         : vmin = vmn
+            if   is_good_number ( vmax ) : vmax = min ( vmax , vmx )
+            else                         : vmax = vmx
+
+        assert is_good_number ( vmin ), 'Invalid type of ``min'' %s/%s' % ( vmin , type ( vmin ) )
+        assert is_good_number ( vmax ), 'Invalid type of ``max'' %s/%s' % ( vmin , type ( vmin ) )
+        assert vmin < vmax, 'Invalid min/max range: %s/%s' % ( vmin , vmax )
+        
+        return vmin , vmax
+
+  
 # =============================================================================
 
 
@@ -1552,7 +1629,175 @@ class H3D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-    
+
+# =============================================================================
+## @class XVar
+#  Helper class to keep all properties of the x-variable
+class XVar(MakeVar) :
+    """Helper class to keep all properteis the x-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(XVar, cls).__new__( cls )
+        else                         : obj = super(XVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__xvar_init = False  
+        return obj
+
+    def  __init__ ( self , xvar ):
+
+        if self.__xvar_init : return
+        else                : self.__xvar_init = False
+        
+        self.__xvar = None
+
+        if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
+        elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( xvar , tuple ) and 2 == len ( xvar ) :  
+            self.__xvar = self.make_var ( xvar         , ## var 
+                                          'x'          , ## name 
+                                          'x-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *xvar        ) ## min/max 
+        elif isinstance ( xvar , ROOT.RooAbsReal ) :
+            self.__xvar = self.make_var ( xvar         , ## var 
+                                          'x'          , ## name 
+                                          'x-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``x-variable''is not specified properly %s/%s" % ( xvar , type ( xvar ) ) )
+                
+    @property 
+    def xvar ( self ) :
+        """``x''-variable  (same as ``x'')"""
+        return self.__xvar
+    @property 
+    def x    ( self ) :
+        """``x''-variable (same as ``xvar'')"""
+        return self.xvar
+    def xminmax ( self ) :
+        """Min/max values for x-variable"""
+        return self.xvar.minmax()
+
+    ## get the proper xmin/xmax range
+    def xmnmx    ( self , xmin , xmax ) :
+        """Get the proper xmin/xmax range
+        """
+        return self.vmnmx ( self.xvar , xmin , xmax )
+
+# =============================================================================
+## @class YVar
+#  Helper class to keep all properties of the y-variable
+class YVar(MakeVar) :
+    """Helper class to keep all properteis the y-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(YVar, cls).__new__( cls )
+        else                         : obj = super(YVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__yvar_init = False  
+        return obj
+
+    def  __init__ ( self , yvar ):
+         
+        if self.__yvar_init : return
+        else                : self.__yvar_init = False
+
+        self.__yvar = None
+
+        if   isinstance ( yvar , ROOT.TH1   ) : yvar = yvar.xminmax()
+        elif isinstance ( yvar , ROOT.TAxis ) : yvar = yvar.GetXmin() , yvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( yvar , tuple ) and 2 == len ( yvar ) :  
+            self.__yvar = self.make_var ( yvar         , ## var 
+                                          'y'          , ## name 
+                                          'y-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *yvar        ) ## min/max 
+        elif isinstance ( yvar , ROOT.RooAbsReal ) :
+            self.__yvar = self.make_var ( yvar         , ## var 
+                                          'y'          , ## name 
+                                          'y-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``y-variable''is not specified properly %s/%s" % ( yvar , type ( yvar ) ) )
+                
+    @property 
+    def yvar ( self ) :
+        """``y''-variable (same as ``y'')"""
+        return self.__yvar
+    @property 
+    def y    ( self ) :
+        """``y''-variable (same as ``yvar'')"""
+        return self.yvar
+    def yminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.yvar.minmax()
+
+    ## get the proper ymin/ymax range
+    def ymnmx    ( self , ymin , ymax ) :
+        """Get the proper ymin/ymax range
+        """
+        return self.vmnmx ( self.yvar , ymin , ymax )
+
+
+# =============================================================================
+## @class ZVar
+#  Helper class to keep all properties of the z-variable
+class ZVar(MakeVar) :
+    """Helper class to keep all properteis the z-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(ZVar, cls).__new__( cls )
+        else                         : obj = super(ZVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__zvar_init = False  
+        return obj
+        
+    def  __init__ ( self , zvar ):
+         
+        if self.__zvar_init : return
+        else                : self.__zvar_init = False
+
+        self.__zvar = None
+
+        if   isinstance ( zvar , ROOT.TH1   ) : zvar = zvar.xminmax()
+        elif isinstance ( zvar , ROOT.TAxis ) : zvar = zvar.GetXmin() , yvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( zvar , tuple ) and 2 == len ( zvar ) :  
+            self.__zvar = self.make_var ( zvar         , ## var 
+                                          'z'          , ## name 
+                                          'z-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *zvar        ) ## min/max 
+        elif isinstance ( zvar , ROOT.RooAbsReal ) :
+            self.__zvar = self.make_var ( zvar         , ## var 
+                                          'z'          , ## name 
+                                          'z-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``z-variable'' is not specified properly %s/%s" % ( zvar , type ( zvar ) ) )
+                
+    @property 
+    def zvar ( self ) :
+        """``y''-variable (same as ``z'')"""
+        return self.__zvar
+    @property 
+    def z    ( self ) :
+        """``z''-variable (same as ``zvar'')"""
+        return self.zvar
+    def zminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.zvar.minmax()
+
+    ## get the proper xmin/xmax range
+    def zmnmx    ( self , xmin , xmax ) :
+        """Get the proper zmin/zmax range
+        """
+        return self.vmnmx ( self.zvar , zmin , zmax )
 
 # =============================================================================
 ## @class Phases

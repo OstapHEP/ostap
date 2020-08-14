@@ -1,4 +1,244 @@
-## New features:
+## New features 
+  1. add argument `callable` for models plotting and their conversion to `TF1`. It allows to draw some derived quantitites 
+```
+bw = Ostap.Math.BreitWigner( ... )
+bw.draw ( xmin = ... , xmax = ... ) ## draw the Breit-Wigner lineshape
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).real ) ## draw real part of amplitude
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : bw.amp ( x ).imag ) ## draw real part of amplitude
+bw.draw ( xmin = ... , xmax = ... , callable = lambda x : cmath.phase ( bw.amp ( x ) ) ## draw the phase 
+``` 
+  1. add  tiny utilities `lrange` and `log_range` (in addition to existing `vrange`) into  `ostap/utils/utils.py`
+```
+for x in vrange ( 0.0 , 10.0     , 10 ) : print x  ## "lin-range"
+for x in lrange ( 1.0 , 10.0**10 , 10 ) : print x  ## "log-range"
+```
+  1. add methods `amp_real`, `amp_imag`, `amp_phase` for the Breit-Wigner-like models
+  1. add Argand plot for the Breit-Wigner-like models
+```
+bw = Ostap.Math.BreitWigner(... )
+ap = bw.argand ( xmin = ... , xmax = ... , npx = 500 )
+ap.draw('alc')
+```
+  1. add utilities for better visuzalisation of Dalitz densities 
+  1. more improvements for Dalitz plot vizualization 
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+
+# v1.5.0.2
+
+## New features 
+
+ 1. Simplify interface for `Ostap::Math::Integrator` and `Ostap::Math::DalitzIntegrator` classes: essentially remove large duplication, the tag/label argument for caching is now the last one and always "optional" - no caching is performed if  argument is  zero (default)
+ 1. add methods to create `Ostap::Math::ChebyshevSum` from `Ostap::Math::ChebyshevApproximation`
+
+## Backward incompatible changes
+
+## Bug fixes:
+ 1. fix a bit strange "feature" with "derived" variable in `RooDataSet` (thanks  to Alexander Artamonov for reporting).  It happens that `RooDataSet::addColumn`RooDataSet::addColumns` behave a bit differently. the  first one issues the error message and variable behaves weirdly. 
+  
+
+# v1.5.0.1
+
+## New features 
+ 1. `parallel/task.py`  : change master/slave to main/secondary                    (request from Bogdan Popovici)
+ 1. Modify a bit printout for `Ostap::StatEntity` and `Ostap::WStarEntity` classes (request from Alexey Dzyuba) 
+ 1. tiny tweak for `ostap.fitting.basic.all_args`
+ 1. add `all_integers`, `all_numerics` and `all_strings` to `ostap/core/ostap_types.py`
+
+## Backward incompatible changes
+
+## Bug fixes:
+ 1. fix a bit strange "feature" in the function `make_dataset` from `ostap/fitting/selectors.py` (thanks to Alexander Artamonov for reporting it)
+
+# v1.5.0.0
+
+## New features 
+  1. Make`Ostap::Math::Choose` a bit  more  efficient
+  1. add `Ostap::Math::choose_array` to get array of binomial coefficients (compile time)
+  1. add templated central moments `Ostap::Math::Moment_<N>`
+  1. add their python decorators `ostap.stats.moment`
+  1. add test for moment-counters `test_stats_moment.py`
+  1. add templated weighted moment counters  `Ostap::Math::WMoment_<N>`
+  1. large modificatons in `Ostap::Kinematics::Dalitz`
+  1. `fitting.basic` : add intermediate mase class `MASSMEAN` that does not hold `sigma`
+  1. add `mean_name`, `mena_title` , `sigma_name` and `sigma_title` for `MASSMEAN` and `MASS` base classes : it allows to remove many ugly lines with post-fix for the  variable names
+  1. make use of `mean_name`, `meean_title`, `sigma_name`, `sigma_title` for many `PDFs` 
+  1. Remove `sigma`(`gamma`) from `Flatte_pdf`
+  1. extend interface for `ostap.fitting.simfit.SimFit`, allowinng usage of it for toys
+  1. add test `test_fitting_toys_simfit.py`
+  1. further extend `Ostap::Math::DaltzIntegrator`
+  1. further extend `Ostap::Kinematics::Daltz0` and `Ostap::Kinematics::Daltz` (add more invariants)
+  1. extend `Ostap::Math::ChebyshevApproximation` (add scale and bias operators)
+  1. add `Ostap::Math::Piecewise` function 
+  1. Improve `Ostap::Math::ChebyshevApproximation`
+  1. further extend `Ostap::Math::DaltzIntegrator`
+  1. extend generic functions, add generic PDFs 
+  1. add `binnig` functions to create `RooBinning`
+  1. add `ostap.fitting.morphing_pdf` with two PDFs for morphing 
+  1. add test for new morphing PDF 
+  1. add possiility to use regex for `compressed_shalve.ikeys` method
+  1. add integration over s,s2 variables in `Ostap::Math::DalitzIntegrator`
+  1. add datetime to the logger format for non-isatty output, e.g. log-files...
+  1. add `Ostap::Math::KramersKronig` helper class 
+  1. tiny tweaks for `tootshelve`
+  1. suppress error prints from  `selectors.valid_formula` 
+
+## Backward incompatible changes
+  1. rewrite `Ostap::Math::DalitzIntegrator`
+  1. rewrite `Ostap::Math::Integrator`
+  1.`Flatte_pdf`: rename arguments and attributes
+  1. rename  `ostap.fitting.basic.Resoluton` to `ostap.fitting.basic.CheckMean` and invert its argument 
+  1. total re-write of all Breit-Wigner related stuff and in particular temporarily remove all beast like LASS, Bugg, etc...   
+  1. fix but with parsing arguments of `PDF.fitTo` : fro certain number of argument the creation of `RooFit::MultiArg` was incorrect (thanks to Pavel Krokovny)
+
+## Bug fixes:
+  1. fix missing `hID` in `ostap/fitting/variables.py` (thanks to Alexander Berezhnoy)
+  
+
+# v1.4.9.1
+
+## New features 
+  1. improve banner
+  1. extend `ostap/__init__.py.in`
+  1. add new test for splot `test_fitting_splot
+  1. extent option `minos`, allow to specify variable name or sequence of names
+  ```
+  model.fitTo ( ....   , minos = 'S', ...)
+  model.fitTo ( ....   , minos = ('S','B') , ... )
+  ```
+  1. add new test/example `test_fitting_components2.py`
+  `  
+## Backward incompatible changes
+  
+## Bug fixes:
+  1. fix `truediv` for python3 in several files 
+
+
+# v1.4.9.0
+
+## New features 
+  1. add new cass `P2Quantile` that interfaces P^2 algorithm from GSL for running quatile (approximate)
+  1. Add methods `Ostap::Statvar::p2quantile`, `Ostap::StatVar::p2quantiles` and  `Ostap::StatVar::p2interval`. These are much faster (but approximate) versions of `Ostap::StatVar::quantile`, `Ostap::StatVar::quantiles` and `Ostap::StatVar::interval`, using P^2 algorithm. 
+  1. update `ostap.stat.statvar` for modified `Ostap::StatVar` methods
+  1. allow uisng sqlite3 dbase for compresed shelves
+  1. extend compressed shelves to keep some metainformation on database (creating/modification date, versions of ostap, ROOT and python versions
+  1. add creation/modification date for the items in compressed shelves   
+  
+## Backward incompatible changes
+  1. change return type from `Ostap::StatVar::quantile` , `Ostap::StatVar::quantiles` and  `Ostap::StatVar::intrval`  method, adding  also number fo events used for quantile/interval estimation.  It allows to judge abotu the precision  
+  
+## Bug fixes:
+  1. fix really stupid bug in `ValueWithError`
+  1. Tiny fix in `Ostap.DataFrame.ProgressBar`
+  1. fixed in_range option for the case when fit variables are defined as  RooRealVar
+
+# v1.4.8.7
+
+## New features
+  1. implement true `read-only mode for `sqldict` (and therefore for `sqlliteshelve`
+  1. tune the names of temporary files/directories for `compress_shelve`
+  
+## Backward incompatible changes
+
+## Bug fixes:
+  1. couple of minor fixes in `compressed_shelve` and `dbase`
+   
+# v1.4.8.6
+
+## New features
+
+  1. improve `compress_shelve` for (much) better treatment of "other' databases, in particular those with several on-disk files 
+  1. fix unesessary complains/warnings on redefined varibales 
+  1. allow implicit name duplicationn for cloning&copy of `FUNC`/`PDF` objects  (Is it a good idea???)
+  1. update `test_fitting_models` 
+ 
+## Backward incompatible changes
+
+## Bug fixes:
+
+
+# v1.4.8.4
+
+## New features
+
+  1. improvea bot the printout for `compressed_shelve`  
+  1. add new module `ostap.math.covtransform` for transformation  of covariance matrices
+  1. add tests for `contransfrmm`
+  1. extend (part of) linear algebra for `SVectorWithError`
+  1. add `io.dbase` module allowing to use `bsddb3` if/when available (for python3)
+  `
+## Backward incompatible changes
+
+## Bug fixes:
+
+  1. fix bug for `PDF`/`FUNC` evalaution with uncertainty 
+  1. fix bug for `Ostap::Math::SMatrixWithError`
+  1. fix travis-CI tests   
+
+
+# v1.4.8.3
+
+## New features
+
+  1. change the inheritance diagrams for PDF/PDF2/PDF FUNC/FUNC2/FUNC4 classes: now PDF3 inherits from PDF2 and FUNC3, FUN2 innherics formm PDF and FUNC2, PDF inherits from FUNC, FUNC3 inherits from FUNC2 and ZVar, FUN2 inherits from FUNC and YVar and FUNC innherits fomr XVar
+  1. add new method: derivatives and integration for FUNC/FUNC2/FUNC3 classes 
+  1. add the test/example for `graph_summary`  
+  1. small optimization for `linalg2'
+  1. polishing for `graph_summary` - add `offset` argument
+  1. move certainmethdo from PDF to FUNC: `params`, `__contains__` , `parameter`, `parameters` , `load_parameters`
+  1. remove usage of `RooAbsReal::getParameter ( None )`
+  1. remove usage of `None` as null-pointer
+  1. adjust a bit `RooArgList.__contains__`  to use `RooCollection::find` insntead of `RooArgList::index`
+  1. add the actual database type to the printut of `compressed_shelve`
+  1. add transformation PDF + test/example 
+  1. add `M2Q` and `Q2M` transfomoration variables/function
+  
+## Backward incompatible changes
+
+## Bug fixes:  
+  1. fix bugs in `funbasic`, `roofuncs` methods
+  1. fix bugs in `PyVAR2`
+  1. fix namings in `MakeVar.name`
+  1. more fixes in `linalg2/MatrixUtils2/MAtrixUtilsT`
+  1. few minor fixes as preparatory for "transform-PDF"
+  
+# v1.4.8.2
+
+## New features
+  1. Modify `Ostap::Models::BWI::evaluate` (temporary action,
+     to be properly fixed in the future)
+  1. Fix `toys.make_toys` for possible memory leak (thanks to
+     Abdul-Kerim Gusseinov for repoting the problem and for solution)
+  1. Add `bufstrat` argument for `Convolution` and `Connvolution_pdf`
+  1. add more functions `isuint`, `isulong` , `islonglong` , `isulonglong`
+  1. more operations with `TMultiGraph`
+  1. add `graph_summary`
+  1. update `graph_summary` to add colored bands for "averages" `
+  1. replace `ROOT.Double` with `ctypes.c_double`
+  1. `graph_summary` : add labels and type `Graph`
+  1. `graph_summary` : rename classes, remove `TMultiGraph` and add documentation`  
+  1. rewrite `ostap.math.linalg` : more functions & mixed operations: S/T-matrices/vectors&numpy
+  
+## Backward incompatible changes
+
+## Bug fixes:  
+
+  1. fix limits for `right` variable for `PSRight_pdf`(thanks to Tatiana Ovsiannikova for reporting the problem)
+  1. fix `pdg_format` for certaint cases
+  1. fix missing `name` attribute for `Sum1D/Sum3D` clone  machinery  
+  1. fix some bugs in `graphs.py`
+  1. more bug fixes in `graphs.py`
+  1. fix `Flatte_pdf`
+  
+  
+# v1.4.8.1
+
+
+## New features:#include "Ostap/MatrixUtils.h"
+
 
   1. add new roofit variables  (`RooAbsReal`):  
 

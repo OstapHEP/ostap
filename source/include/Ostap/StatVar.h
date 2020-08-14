@@ -41,8 +41,75 @@ namespace Ostap
     /// the actual type for vector of statistic 
     typedef std::vector<Statistic> Statistics ;
     // ========================================================================
-    /// the actual type for interval 
-    typedef std::pair<double,double>  Interval  ;
+    /** @struct Interval 
+     *  the actual type for interval
+     */
+    struct Interval
+    {
+      Interval (  const double l = 0 , const double h = 0  )
+        : low  ( std::min ( l , h ) )
+        , high ( std::max ( l , h ) )
+      {}
+      // ======================================================================
+      /// low edge of the interval 
+      double low  { 0 } ; // low edge of the interval 
+      /// high edge of the interval 
+      double high { 0 } ; // high edge of the interval 
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @struct Quantile 
+     *  The actual type for quantile and statitsics 
+     */    
+    struct Quantile 
+    {
+      Quantile ( const double q = 0 , const unsigned long n = 0  )
+        : quantile ( q ) 
+        , nevents  ( n ) 
+      {}
+      // ======================================================================
+      /// quantile value  
+      double        quantile { 0 } ; // quantile value  
+      /// number of events used for estimation
+      unsigned long nevents  { 0 } ; // number of events used for estimation
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @struct Quantiles 
+     *  The actual type for quantiles and statitsics 
+     */    
+    struct Quantiles 
+    {
+      Quantiles ( const std::vector<double>& q = std::vector<double>() , 
+                  const unsigned long        n = 0  )
+        : quantiles ( q ) 
+        , nevents   ( n ) 
+      {}
+      // ======================================================================
+      /// quantile values  
+      std::vector<double> quantiles {} ; // quantile values  
+      /// number of events used for estimation
+      unsigned long       nevents  { 0 } ; // number of events used for estimation
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @struct QInterval
+     *  The actual type for interval with statitsics 
+     */    
+    struct QInterval    
+    {
+      QInterval ( const Interval&     i  = Interval() ,
+                  const unsigned long n = 0           )
+        : interval ( i ) 
+        , nevents  ( n ) 
+      {}
+      // =====================================================================
+      /// the interval
+      Interval      interval {}    ; // the interval
+      /// number of events used for estimation
+      unsigned long nevents  { 0 } ; // number of events used for estimation
+      // =====================================================================
+    };
     // ========================================================================
   public: 
     // ========================================================================
@@ -787,7 +854,24 @@ namespace Ostap
      *   @param  last  (INPUT) the last event to  process
      *   @return the quantile value 
      */
-    static double quantile
+    static Quantile quantile
+    ( TTree&              tree         ,
+      const double        q            , //  0<q<1 
+      const std::string&  expr         , 
+      const std::string&  cuts  = ""   , 
+      const unsigned long first = 0    ,
+      const unsigned long last  = LAST ) ;
+    // ========================================================================    
+    /**  get (approximate) quantile of the distribution  using P^2 algortihm
+     *   @param tree  (INPUT) the input tree 
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static Quantile p2quantile
     ( TTree&              tree         ,
       const double        q            , //  0<q<1 
       const std::string&  expr         , 
@@ -807,7 +891,26 @@ namespace Ostap
      *   @param  cut_range (INPUT) cut range 
      *   @return the quantile value 
      */
-    static double quantile
+    static Quantile quantile
+    ( const RooAbsData&   data             ,
+      const double        q                , //  0<q<1 
+      const std::string&  expr             , 
+      const std::string&  cuts      = ""   , 
+      const std::string&  cut_range = ""   , 
+      const unsigned long first     = 0    ,
+      const unsigned long last      = LAST ) ;
+    // ========================================================================    
+    /**  get (approximate) quantile of the distribution  using p^2 algorithm
+     *   @param data   (INPUT) the input data
+     *   @param q      (INPUT) quantile value   0 < q < 1  
+     *   @param expr   (INPUT) the expression 
+     *   @param cuts   (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @param  cut_range (INPUT) cut range 
+     *   @return the quantile value 
+     */
+    static Quantile p2quantile
     ( const RooAbsData&   data             ,
       const double        q                , //  0<q<1 
       const std::string&  expr             , 
@@ -825,7 +928,20 @@ namespace Ostap
      *   @param cuts   (INPUT) selection criteria
      *   @return the quantile value 
      */
-    static double quantile
+    static Quantile quantile
+    ( DataFrame           frame            ,
+      const double        q                , //  0<q<1 
+      const std::string&  expr             , 
+      const std::string&  cuts      = ""   ) ;
+    // ========================================================================    
+    /**  get approximate quantile of the distribution usnig P^2 algorithm 
+     *   @param frame  (INPUT) the input data
+     *   @param q      (INPUT) quantile value   0 < q < 1  
+     *   @param expr   (INPUT) the expression 
+     *   @param cuts   (INPUT) selection criteria
+     *   @return the quantile value 
+     */
+    static Quantile p2quantile
     ( DataFrame           frame            ,
       const double        q                , //  0<q<1 
       const std::string&  expr             , 
@@ -842,7 +958,7 @@ namespace Ostap
      *   @param  last  (INPUT) the last event to  process
      *   @return the quantile value 
      */
-    static std::vector<double> quantiles
+    static Quantiles quantiles
     ( TTree&                     tree             ,
       const std::vector<double>& quantiles        , 
       const std::string&         expr             , 
@@ -859,7 +975,44 @@ namespace Ostap
      *   @param  last  (INPUT) the last event to  process
      *   @return the quantile value 
      */
-    static std::vector<double> quantiles
+    static Quantiles quantiles
+    ( const RooAbsData&          data              ,
+      const std::vector<double>& quantiles         , 
+      const std::string&         expr              , 
+      const std::string&         cuts       = ""   , 
+      const std::string&         cut_range  = ""   , 
+      const unsigned long        first      = 0    ,
+      const unsigned long        last       = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================    
+    /**  get (approximate) quantiles of the distribution  using P^2 algorithm
+     *   @param tree  (INPUT) the input tree 
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static Quantiles p2quantiles
+    ( TTree&                     tree             ,
+      const std::vector<double>& quantiles        , 
+      const std::string&         expr             , 
+      const std::string&         cuts      = ""   , 
+      const unsigned long        first     = 0    ,
+      const unsigned long        last      = LAST ) ;
+    // ========================================================================
+    /**  get (approximate) quantiles of the distribution using P^2 algorithm  
+     *   @param data  (INPUT) the input data
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     */
+    static Quantiles p2quantiles
     ( const RooAbsData&          data              ,
       const std::vector<double>& quantiles         , 
       const std::string&         expr              , 
@@ -877,7 +1030,22 @@ namespace Ostap
      *   @param cuts  (INPUT) selection cuts 
      *   @return the quantile value 
      */
-    static std::vector<double> quantiles
+    static Quantiles quantiles
+    ( DataFrame                  frame            ,
+      const std::vector<double>& quantiles        , 
+      const std::string&         expr             , 
+      const std::string&         cuts      = ""   ) ;
+    // ========================================================================
+  public:
+    // ========================================================================    
+    /**  get approximate  quantiles of the distribution  using P^2 algorithm
+     *   @param frame (INPUT) the input frame
+     *   @param q     (INPUT) quantile value   0 < q < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @return the quantile value 
+     */
+    static Quantiles p2quantiles
     ( DataFrame                  frame            ,
       const std::vector<double>& quantiles        , 
       const std::string&         expr             , 
@@ -900,7 +1068,7 @@ namespace Ostap
      *   Interval ab = interval ( tree , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
      *   @endcode 
      */
-    static Interval interval 
+    static QInterval interval 
     ( TTree&              tree         ,
       const double        q1           , //  0<q1<1 
       const double        q2           , //  0<q2<1 
@@ -924,7 +1092,58 @@ namespace Ostap
      *   Interval ab = interval ( data , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
      *   @endcode 
      */
-    static Interval interval 
+    static QInterval interval 
+    ( const RooAbsData&   data             ,
+      const double        q1               , //  0<q1<1 
+      const double        q2               , //  0<q2<1 
+      const std::string&  expr             , 
+      const std::string&  cuts      = ""   , 
+      const std::string&  cut_range = ""   , 
+      const unsigned long first     = 0    ,
+      const unsigned long last      = LAST ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /**  get the (aapproximate) interval of the distribution suong P^2 algotirhm 
+     *   @param tree  (INPUT) the input tree 
+     *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+     *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     *   @code
+     *   Tree& tree = ... ;
+     *   /// get 90% interval:
+     *   Interval ab = p2interval ( tree , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+     *   @endcode 
+     */
+    static QInterval p2interval 
+    ( TTree&              tree         ,
+      const double        q1           , //  0<q1<1 
+      const double        q2           , //  0<q2<1 
+      const std::string&  expr         , 
+      const std::string&  cuts  = ""   , 
+      const unsigned long first = 0    ,
+      const unsigned long last  = LAST ) ;
+    // ========================================================================    
+    /**  get the approximate  interval of the distribution using P^2 algorithm 
+     *   @param data  (INPUT) the input data
+     *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+     *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @param  first (INPUT) the first  event to process 
+     *   @param  last  (INPUT) the last event to  process
+     *   @return the quantile value 
+     *   @code
+     *   const RooAbsData& data = ... ;
+     *   /// get 90% interval:
+     *   Interval ab = p2interval ( data , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+     *   @endcode 
+     */
+    static QInterval p2interval 
     ( const RooAbsData&   data             ,
       const double        q1               , //  0<q1<1 
       const double        q2               , //  0<q2<1 
@@ -949,7 +1168,29 @@ namespace Ostap
      *   Interval ab = interval ( frame , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
      *   @endcode 
      */
-    static Interval interval 
+    static QInterval interval 
+    ( DataFrame           frame        ,
+      const double        q1           , //  0<q1<1 
+      const double        q2           , //  0<q2<1 
+      const std::string&  expr         , 
+      const std::string&  cuts  = ""   ) ;
+    // ========================================================================    
+  public:
+    // ========================================================================    
+    /**  get the approximate  interval of the distribution  
+     *   @param tree  (INPUT) the input tree 
+     *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+     *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+     *   @param expr  (INPUT) the expression 
+     *   @param cuts  (INPUT) selection cuts 
+     *   @return the quantile value 
+     *   @code
+     *   FRAME& frame = ... ;
+     *   /// get 90% interval:
+     *   Interval ab = p2interval ( frame , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+     *   @endcode 
+     */
+    static QInterval p2interval 
     ( DataFrame           frame        ,
       const double        q1           , //  0<q1<1 
       const double        q2           , //  0<q2<1 

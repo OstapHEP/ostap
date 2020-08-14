@@ -84,15 +84,19 @@ add_library(ostap SHARED src/format.cpp
                          src/Lomont.cpp
                          src/LorentzVectorWithError.cpp
                          src/Math.cpp
+                         src/MatrixUtils.cpp                         
                          src/Models.cpp
                          src/Models2D.cpp
+                         src/Moments.cpp
                          src/MoreMath.cpp
                          src/MoreRooFit.cpp
                          src/MoreVars.cpp
                          src/Mute.cpp
                          src/NStatEntity.cpp
                          src/Notifier.cpp
+                         src/Ostap.cpp
                          src/OstapDataFrame.cpp
+                         src/P2Quantile.cpp
                          src/Parameterization.cpp
                          src/Params.cpp
                          src/Peaks.cpp
@@ -100,8 +104,10 @@ add_library(ostap SHARED src/format.cpp
                          src/PDFs2D.cpp
                          src/PDFs3D.cpp
                          src/PhaseSpace.cpp
+                         src/Piecewise.cpp
                          src/Point3DWithError.cpp
                          src/Polynomials.cpp   
+                         src/Primitives.cpp
                          src/Printable.cpp
                          src/PyBLOB.cpp
                          src/PyCallable.cpp 
@@ -123,6 +129,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp
                          src/Vector3DWithError.cpp
+                         src/Voigt.cpp
                          src/Workspace.cpp    
                          src/WStatEntity.cpp    
                          src/nSphere.cpp      

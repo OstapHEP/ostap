@@ -67,8 +67,18 @@ namespace Ostap
           const double        rprecision = 1.e-8   ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
-          const unsigned long line       = 0       ) const // line number 
+          const unsigned long line       = 0       ,       // line number 
+          const std::size_t   tag        = 0       ) const // tag/label
         {
+          if ( 0 != tag ) { return cubature ( tag        , 
+                                              fun        , 
+                                              maxcalls   , 
+                                              aprecision , 
+                                              rprecision , 
+                                              reason     , 
+                                              file       , 
+                                              line       ) ; }
+          //
           double result =  1 ;        
           double error  = -1 ;
           const int ierror = hcubature 
@@ -84,7 +94,7 @@ namespace Ostap
           return Result { ierror , result , error } ;
         }
         // ====================================================================
-        Result cubature_with_cache 
+        Result cubature
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
           const unsigned      maxcalls   = 20000   ,
@@ -156,7 +166,7 @@ namespace Ostap
       Integrator2D<FUNCTION>::s_cache = Integrator2D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 1000 ;
+      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 25000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
     // ========================================================================

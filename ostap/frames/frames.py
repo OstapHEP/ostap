@@ -85,7 +85,8 @@ def _fr_len_ ( f ) :
     >>> frame = ...
     >>> print len(frame)
     """
-    return f.Count().GetValue() 
+    cpf = Ostap.DataFrame ( f )   ## make independet loop?
+    return cpf.Count().GetValue() 
 
 # =============================================================================
 ## Draw (lazy) progress bar for the    DataFrame:
@@ -112,7 +113,7 @@ def _fr_progress_bar_ ( self          ,
     
     if width < 16 : width = 16 
     nchunks = width - 14
-    csize   = length / nchunks 
+    csize   = max ( int ( length / nchunks ) , 1 ) 
 
     left   = "[ "
     right  = " ]"
@@ -177,7 +178,7 @@ def _fr_statCov_ ( frame       ,
     import ostap.math.linalg 
     stat1  = Ostap.WStatEntity       ()
     stat2  = Ostap.WStatEntity       ()
-    cov2   = Ostap.Math.SymMatrix2x2 ()
+    cov2   = Ostap.Math.SymMatrix(2) ()
 
     length = Ostap.StatVar.statCov ( frame       ,
                                      expression1 ,

@@ -192,7 +192,7 @@ class LzShelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.xz' , '.lz' , '.lzma'  
+    extensions =  '.txz', '.tlz' , '.xz' , '.lz' , '.lzma'  
     ## 
     def __init__(
         self                                   ,
@@ -240,21 +240,38 @@ class LzShelf(CompressShelf):
     
     # =========================================================================
     ## compress (LZMA) the file into temporary location, keep original
-    def compress_file   ( self , filein ) :
+    def compress_files ( self , files ) :
         """Compress (LZMA) the file into temporary location, keep original
         """
-        import tempfile , io 
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.xz' )
-        with io.open ( filein , 'rb' ) as fin :
-            with lzma.open ( fileout , 'wb' ) as fout : 
-                shutil.copyfileobj ( fin , fout )            
-                return fileout 
+        output = self.tempfile()
+        
+        import tarfile
+        with tarfile.open ( output , 'x:xz' ) as tfile :
+            for file in files  :
+                _ , name = os.path.split ( file )
+                tfile.add ( file , name  )
+        ##
+        return output 
 
     # =========================================================================
     ## uncompress (LZMA) the file into temporary location, keep original
     def uncompress_file ( self , filein ) :
         """Uncompress (LZMA) the file into temporary location, keep original
         """
+
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 2) try compressed-tarfile 
+        import tarfile
+        if tarfile.is_tarfile ( filein ) : 
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+                items.sort() 
+                return tuple ( items )
+                    
         import tempfile , io   
         fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
         with lzma.open ( filein  , 'rb' ) as fin : 
@@ -378,9 +395,9 @@ class TmpLzShelf(LzShelf):
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename 
         LzShelf.close ( self )
         ## delete the file 
+        fname = self.nominal_dbname 
         if os.path.exists ( fname ) :
             try :
                 os.unlink ( fname )
@@ -412,6 +429,7 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

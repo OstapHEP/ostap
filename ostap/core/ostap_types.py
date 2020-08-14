@@ -33,6 +33,9 @@ __all__     = (
     'is_list'         , ## is a value of list/tuple type?
     'is_list_like'    , ## is a value of list-like type?
     ##
+    'all_integers'    , ## all argumets of integer types?
+    'all_numerics'    , ## all argumets of numeric types?
+    'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
 # logging 
@@ -108,12 +111,48 @@ def is_list  ( v ) :
 def is_list_like  ( v ) :
     """Is value of list-like type (list but not a string-like!)"""
     return isinstance ( v , listlike_type ) and not isinstance ( v , string_types )
+
+# =============================================================================
+## are all values of integer-line types?
+def all_integers ( *args ) :
+    """Are all value of integer-line types?
+    """
+    for a in args :
+        if not isinstance ( a , integer_types ) : return False
+    return True
+
+# =============================================================================
+## are all values of numeric types?
+def all_numerics ( *args ) :
+    """Are all values of numeric types?
+    """
+    for a in args :
+        if not isinstance ( a , num_types ) : return False
+    return True
+
+# =============================================================================
+## are all values of string types?
+def all_strings ( *args ) :
+    """Are all values of string types?
+    """
+    for a in args :
+        if not isinstance ( a , stgring_types ) : return False
+    return True
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+
+    
+# =============================================================================
+if '__main__' == __name__ :
+
+    from ostap.utils.docme import docme
+    docme ( __name__ , logger = logger )
+
     
 # =============================================================================
 ##                                                                      The END 

@@ -18,17 +18,21 @@ __all__     = (
     'Fun1D'             , ## wrapper for 1D-function
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
+    'make_fun'          , ## helper functno to reate FUNC-objects 
     )
 # =============================================================================
 import ROOT, math, sys 
-from   ostap.core.ostap_types        import list_types , num_types, is_good_number      
+from   sys                           import version_info as python_version 
+from   ostap.core.ostap_types        import ( integer_types  , num_types   ,
+                                              dictlike_types , list_types  ,
+                                              is_good_number )     
 from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
 from   ostap.logger.utils            import roo_silent , rootWarning
 from   ostap.fitting.roofit          import PDF_fun 
-from   ostap.fitting.utils           import MakeVar
+from   ostap.fitting.utils           import MakeVar, XVar, YVar, ZVar, NameDuplicates  
 import ostap.fitting.variables
-import ostap.fitting.roocollections 
+import ostap.fitting.roocollections
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.funbasic' )
@@ -39,46 +43,35 @@ py2 = 2 >= sys.version_info.major
 ## helper factory function
 def func_factory ( klass , config ) :
     """Helper factory function, used for unpickling"""
-    return klass ( **config ) 
+    with NameDuplicates ( True ) : 
+        return klass ( **config ) 
 # =============================================================================
 ## @class FUNC
 #  Helper base class for impolementation of various (Roo)Function-wrappers
-class FUNC(MakeVar) :
+class FUNC(XVar) :
     """Helper base class for implementation of various (Roo)Function-wrappers
     """
-    def __new__  ( cls  , *args  , **kwargs  ) :
-        return super(FUNC,cls).__new__( cls )
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(FUNC, cls).__new__( cls )
+        else                         : obj = super(FUNC, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__func_init = False  
+        return obj
         
-    def __init__ ( self , name , xvar = None ) :
+    def __init__ ( self , name , xvar ) :
+
+        if self.__func_init : return 
+        else                : self.__func_init = True  
         
-        ## name is defined via base class MakeVar 
+        ## name is defined via the base class MakeVar 
         self.name  = name ## name is defined via the base class MakeVar 
-     
-        if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
-        elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
-
-        self.__xvar = None
         
-        ## create the variable 
-        if isinstance ( xvar , tuple ) and 2 == len ( xvar ) :  
-            self.__xvar = self.make_var ( xvar         , ## var 
-                                          'x'          , ## name 
-                                          'x-variable' , ## title/comment
-                                          None         , ## fix ? 
-                                          *xvar        ) ## min/max 
-        elif isinstance ( xvar , ROOT.RooAbsReal ) :
-            self.__xvar = self.make_var ( xvar         , ## var 
-                                          'x'          , ## name 
-                                          'x-variable' , ## title/comment
-                                          fix = None   ) ## fix ? 
-        else :
-            self.warning('FUNC: ``x-variable''is not specified properly %s/%s' % ( xvar , type ( xvar ) ) )
-            self.__xvar = self.make_var( xvar , 'x' , 'x-variable' )
-            
+        ##  super(FUNC,self).__init__ ( xvar )
+        XVar .__init__ ( self , xvar )
 
-        self.__vars = ROOT.RooArgSet  ()
-        self.vars.add ( self.__xvar )
-        
+        self.__vars      = ROOT.RooArgSet  ()
+        self.__variables = [] 
+
         self.__config       = {}
         self.__fun          = None
         
@@ -88,20 +81,30 @@ class FUNC(MakeVar) :
         self.__draw_var     = None
         self.__draw_options = {} ## predefined drawing options for this FUNC/PDF
 
-        self.config = { 'name' : self.name , 'xvar' : self.xvar  }
+        self.__checked_keys = set()
+        
+        self.__dfdx = None
+        self.__intx = None
+        
+        self.vars.add         ( self.xvar )
+        self.variables.append ( self.xvar )
 
+        self.config = { 'name' : self.name , 'xvar' : self.xvar  }
+        self.__func_init = True  
+
+        ## derived functions/objects
+        self.__derived = {}
+        
     ## pickling via reduce 
     def __reduce__ ( self ) :
-        print ('REDUCE', self.config)
-        for k in self.config :
-            print( 'KEY/value/type %s/%s/%s'  % ( k , self.config[k], type(self.config[k])))
-        if py2 :  return func_factory , ( type(self) , self.config, )
-        return type(self).factory , ( self.config, )
+        if py2 : return func_factory , ( type ( self ) , self.config, )
+        else   : return type ( self ).factory , ( self.config, )
     ## factory method 
     @classmethod
     def factory ( klass , config ) :
-         """Factory method, used for unpickling"""
-         return klass ( **config ) 
+        """Factory method, used for unpickling"""
+        with NameDuplicates ( True ) : 
+            return klass ( **config ) 
         
     ## conversion to string 
     def __str__ (  self ) :
@@ -109,47 +112,15 @@ class FUNC(MakeVar) :
     __repr__ = __str__ 
 
     @property 
-    def xvar ( self ) :
-        """``x''-variable for the fit (same as ``x'')"""
-        return self.__xvar
-    @property 
-    def x    ( self ) :
-        """``x''-variable for the fit (same as ``xvar'')"""
-        return self.__xvar
-
-    @property 
     def vars ( self ) :
         """``vars'' : variables/observables (as ROOT.RooArgSet)"""
-        return self.__vars    
+        return self.__vars
 
-    ## Min/max values for x-variable (when applicable)
-    def xminmax ( self ) :
-        """Min/max values for x-variable (when applicable)"""
-        return self.__xvar.minmax() if self.__xvar else () 
+    @property 
+    def variables ( self ) :
+        """``variables'' : variables/observables at list"""
+        return self.__variables
 
-    ## get the proper xmin/xmax range 
-    def xmnmx    ( self , xmin , xmax ) :
-        """Get the proper xmin/xmax range
-        """
-        if self.xminmax() :
-            
-            xmn , xmx = self.xminmax ()
-            
-            if   is_good_number ( xmin ) : xmin = max ( xmin , xmn )
-            else                         : xmin = xmn
-            
-            if   is_good_number ( xmax ) : xmax = min ( xmax , xmx )
-            else                         : xmax = xmx
-            
-        assert is_good_number ( xmin ),\
-               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
-        assert is_good_number ( xmax ),\
-               'Invalid type of ``xmin'' %s/%s'  %  ( xmin , type ( xmin ) )
-
-        assert xmin < xmax, 'Invalid xmin/xmax range: %s/%s' % ( xmin , xmax )
-
-        return xmin , xmax
-    
     @property
     def fun  ( self ) :
         """The actual function (ROOT.RooAbsReal)"""
@@ -159,9 +130,9 @@ class FUNC(MakeVar) :
         if value is None :
             self.__fun = value
             return        
-        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf'' is not ROOT.RooAbsReal"
+        assert isinstance ( value , ROOT.RooAbsReal ) , "``pdf/fun'' is not ROOT.RooAbsReal"
         self.__fun = value
-        
+
     @property
     def fun_name ( self ) :
         """``fun_name'' : get the name of the underlying RooAbsReal"""
@@ -191,6 +162,33 @@ class FUNC(MakeVar) :
         conf.update ( value )
         self.__config = conf
 
+    # =========================================================================
+    ##  Does this function depend on this variable,
+    #   @code
+    #   fun = ...
+    #   var = ...
+    #   if var in fun :
+    #      ... 
+    #   @endcode  
+    def __contains__ ( self , var ) : 
+        """Does this function depend on this variable?
+        >>> fun = ...
+        >>> var = ...
+        >>> if var in fun :
+        ...      ... 
+        """
+        if not self.fun : return False
+        ##
+        if var and isinstance ( var , ROOT.RooAbsReal ) :
+            return self.fun.depends_on ( var ) 
+
+        ## 
+        if isinstance ( var , FUNC ) :
+            if self.fun.depends_on ( var.fun  ) : return True
+            if self.fun.depends_on ( var.vars ) : return True
+                
+        return False 
+            
     @property
     def draw_var ( self ) :
         """``draw_var''  :  variable to be drawn if not specified explicitely"""
@@ -213,11 +211,252 @@ class FUNC(MakeVar) :
         self.__tricks = val
 
     @property
+    def checked_keys ( self ) :
+        """``checked keys'' : special keys for clone-method
+        """
+        return self.__checked_keys
+
+    # =========================================================================
+    ##  Convert function to PDF
+    #   @code
+    #   fun = ...
+    #   pdf = fun.as_PDF () 
+    #   @endcode
+    #   - for PDC, <code>self</code> is returned
+    #   - otherwise <code>RooWrappedPdf</code> is used
+    #   @see RooWrapperPdf 
+    def as_PDF ( self  , name ) :
+        """Convert function to PDF
+        >>> fun = ...
+        >>> pdf = fun.as_PDF () 
+        - for PDC, `self` is returned
+        - otherwise `RooWrappedPdf` is used
+        - see ROOT.RooWrapperPdf 
+        """
+        from ostap.fit.basic import PDF, make_pdf 
+        if    isinstance ( self     , PDF           ) : return self
+
+        name = name if name else "PDF_from_%s" % self.name
+        ##
+        return make_pdf ( self.fun , name = name , *self.variables )
+
+    # =========================================================================
+    @property 
+    def dfdx ( self ) :
+        """``dfdx'' : derivative dF/dX"""
+        return self.__dfdx
+    @dfdx.setter
+    def dfdx ( self , value ) :
+        assert value is None or isinstance ( value , FUNC ) , \
+               "``dfdx'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__dfdx = value 
+
+    # =========================================================================
+    @property 
+    def intx ( self ) :
+        """``intx'' : running integral over X"""
+        return self.__intx
+    @intx.setter
+    def intx ( self , value ) :
+        assert value is None or isinstance ( value , FUNC ) , \
+               "``intx'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__intx = value 
+
+    @property
     def draw_options ( self ) :
-        """``draw_options'' : dictionary with predefined draw-options for this PDF
+        """``draw_options'' : dictionary with predefined draw-options for this PDF/FUN
         """
         return self.__draw_options
 
+    # =========================================================================
+
+    # =========================================================================
+    ## Get the parameters
+    #  @code
+    #  fun = ...
+    #  parameters = fun.params ( )
+    #  @endcode
+    #  Or
+    #  @code  
+    #  pdf       = ...
+    #  dataset   = ...
+    #  parameters = pdf.params ( dataset)
+    #  @endcode
+    #  @see RooAbsReal::getParameters
+    def params ( self , dataset = None  ) :
+        """Get the parameters
+        >>>  fun = ...
+        >>> parameters = fun.params ( )
+        Or
+        >>>  pdf       = ...
+        >>> dataset   = ...
+        >>> parameters = pdf.params ( dataset)
+        - see RooAbsReal::getParameters
+        """
+        assert self.fun, "FUNC::params: Function is invalid!"        
+        return self.fun.getParameters ( 0 ) if dataset is None else self.fun.getParameters ( dataset )
+    
+    # =========================================================================
+    ## get the parameter value by name
+    #  @code
+    #  fun = ...
+    #  p   = fun.parameter  ( 'A' )
+    #  @endcode
+    def parameter ( self , param , dataset = None ) :
+        """Get the parameter value by name
+        >>> pdf = ...
+        >>> p   = pdf.parameter  ( 'A' )
+        """
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset )
+
+        for p in pars :
+            if p.name == param : return p
+            
+        self.error ( "No parameter %s defined" % param )
+        raise KeyError ( "No parameter %s defined" % param )
+
+    # =========================================================================
+    ## get all parameters/variables in form of dictionary
+    #  @code
+    #  fun    = ...
+    #  params = fun.parameters ( dataset ) 
+    #  @endcode
+    def parameters ( self , dataset = None ) :
+        """ Get all parameters/variables in form of dictionary
+        >>> fun    = ...
+        >>> params = fun.parameters ( dataset ) 
+        """
+        
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset ) 
+
+        tmp    = {}
+        for p in pars :
+            if not isinstance ( p, ROOT.RooAbsCategory ) :
+                tmp [ p.name ] = p.value
+                
+        keys   = tmp.keys()
+        result = {} 
+        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
+            
+        return result 
+
+    # ==========================================================================
+    ## get parameter by name 
+    #  @code
+    #  pdf = ...
+    #  a   = pdf['A']
+    #  @endcode
+    def __getitem__ ( self , param ) :
+        """Get parameter by name 
+        >>> pdf = ...
+        >>> a   = pdf['A']
+        """
+        ## get the list of the actual parameters 
+        pars = self.params ( )
+        for p in pars :
+            if p.name == param : return p
+        raise KeyError ( "No parameter %s defined" % param )
+
+
+    # =========================================================================
+    ## Load parameters from:
+    #    - external dictionary <code>{ name : value }</code>
+    #    - sequence of <code>RooAbsReal</code> object
+    #    - <code>ROOT.RooFitResult</code> object 
+    #  @code
+    #  pdf     = ...
+    #  dataset = ...
+    #  params  = { 'A' : 10 , 'B' : ... }
+    #  pdf.load_params ( dataset , params ) 
+    #  params  = ( A , B , C , ... )
+    #  pdf.load_params ( dataset , params )  
+    #  @endcode 
+    def load_params ( self , dataset = None , params = {} , silent = False  ) :
+        """Load parameters from
+        - external dictionary `{ name : value }`
+        - sequence of `RooAbsReal` objects
+        - `RooFitResult` object
+        
+        >>> pdf      = ...
+        >>> dataset = ... 
+        >>> params = { 'A' : 10 , 'B' : ... }
+        >>> pdf.load_params ( dataset , params ) 
+        >>> params = ( A , B , C , ... )
+        >>> pdf.load_params ( dataset , params )  
+        """
+        ## nothing to load 
+        if not params : return 
+
+        if isinstance ( params , ROOT.RooFitResult ) :
+            params = params.dct_params () 
+        
+        ## get the list of the actual parameters 
+        pars = self.params ( dataset ) 
+
+        table = [] 
+        if isinstance ( params , dictlike_types ) :
+            keys   = set () 
+            for key in params :
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' ) : continue
+                    if p.name != key                 : continue
+                    
+                    v  = params[key]
+                    vv = float ( v  )
+                    pv = p.getVal ()   
+                    if vv != pv : 
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add ( key )
+
+            not_used = set ( params.keys() ) - keys 
+
+        ## list of objects 
+        else :
+            
+            keys = set()        
+            for i , pp in enumerate ( params ) :  
+                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
+                for p in pars :
+                    if not hasattr ( p  , 'setVal' )       : continue
+                    if p.name != pp.name                   : continue
+                    
+                    vv = float ( pp )
+                    pv = p.getVal () 
+                    if vv != pv :
+                        p.setVal   ( vv )
+                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        table.append ( item ) 
+                    keys.add  ( i )
+
+            not_used = []
+            for i , pp in enumerate ( params ) :  
+                if i in keys : continue
+                not_used.append ( pp )
+
+        if not silent :
+            
+            table.sort()
+            npars = len ( table )
+            
+            if npars :            
+                title = 'Parameters loaded: %s' % npars 
+                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
+                import ostap.logger.table
+                table = ostap.logger.table.table ( table , title , prefix = "# " )
+                
+            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
+            
+            not_used = list ( not_used )
+            not_used.sort() 
+            if not_used :
+                self.warning ("Following keys are unused %s" % not_used ) 
+        
+        return 
+    
     # =========================================================================
     ## get the certain predefined drawing option
     #  @code
@@ -321,7 +560,7 @@ class FUNC(MakeVar) :
     #  >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
     #  @endcode 
     def clone ( self , **kwargs ) :
-        """Make a clone for the given fuuction/PDF with
+        """Make a clone for the given fucction/PDF with
         the optional replacement of the certain parameters
         >>> xpdf = ...
         >>> ypdf = xpdf.clone ( xvar = yvar ,  name = 'PDFy' ) 
@@ -329,6 +568,13 @@ class FUNC(MakeVar) :
 
         ## get config 
         conf = {}
+        
+        ## check for the special keys 
+        for k in kwargs :
+            if k in self.checked_keys :
+                if not hasattr ( self , k ) or getattr ( self, k ) != kwargs [ k ] :
+                    raise AttributeError ("Class %s cannot be cloned with ``%s'' key" % ( self.__class__.__name__ , k ) )
+
         conf.update ( self.config ) 
 
         ## modify the name if the name is in config  
@@ -350,7 +596,6 @@ class FUNC(MakeVar) :
             
         return cloned 
             
-
     # =========================================================================
     ## make a copy/clone for the given function/PDF 
     #  @code
@@ -374,10 +619,18 @@ class FUNC(MakeVar) :
         """Helper  function to implement some math stuff 
         """
         fun         = self.fun
-        xmin , xmax = self.xminmax()
+        
+        if self.xminmax() : 
+            xmin , xmax = self.xminmax()
+            xmin = kwargs.pop ( 'xmin' , xmin )
+            xmax = kwargs.pop ( 'xmax' , xmax )
+        else : 
+            xmin = kwargs.pop ( 'xmin' , None )
+            xmax = kwargs.pop ( 'xmax' , None )
 
-        xmin = kwargs.pop ( 'xmin' , xmin )
-        xmax = kwargs.pop ( 'xmax' , xmax )
+        assert not xmin is None  , 'xmin is not defined!' 
+        assert not xmax is None  , 'xmax is not defined!' 
+
         
         if self.tricks and hasattr ( fun , 'function' ) :    
             ff = fun.function()
@@ -452,7 +705,7 @@ class FUNC(MakeVar) :
                 v = self.fun.getVal ( self.vars ) if normalized else self.fun.getVal ()  
 
                 e = -1 
-                if   error and isinstance ( error , ROOT.TFitResult ) : 
+                if   error and isinstance ( error , ROOT.RooFitResult ) : 
                     e = self.fun.getPropagatedError ( error           )
                 elif error and self.fit_result : 
                     e = self.fun.getPropagatedError ( self.fit_result )
@@ -479,9 +732,10 @@ class FUNC(MakeVar) :
         >>> pdf = ...
         >>> print pdf.derivative ( 0 ) 
         """
-        ## check limits 
-        if hasattr ( self.xvar , 'getMin' ) and x < self.xvar.getMin() : return 0.
-        if hasattr ( self.xvar , 'getMax' ) and x > self.xvar.getMax() : return 0.
+        ## check limits
+        if self.xminmax() :
+            xmin , xmax = self.xminmax ()
+            if x < xmin or x > xmax : return 0
 
         ## make a try to use analytical derivatives 
         if self.tricks  and hasattr ( self , 'pdf' ) :
@@ -510,16 +764,19 @@ class FUNC(MakeVar) :
         >>> pdf = ...
         >>> x = pdf.minimum()
         """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax =  min ( xmax , self.xminmax()[1] )
+        if self.xminmax () :
+            xmn , xmx = self.xminmax() 
+            xmin = xmn if xmin is None else max ( xmin , xmn )
+            xmax = xmx if xmax is None else min ( xmax , xmx )
             
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
+        assert is_good_number ( xmin ) , 'xmin is not specified!'
+        assert is_good_number ( xmax ) , 'xmax is not specified!'
+        assert xmin < xmax             , 'Invalid xmin/xmax : %s/%s' % ( xmin , xmax )
+
+        if x0 is None  :  x0 = 0.5 * ( xmin + xmax )
         
         if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+            self.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
         
         from ostap.math.minimize import sp_minimum_1D
         return sp_minimum_1D (  self , xmin , xmax , x0 )
@@ -535,20 +792,23 @@ class FUNC(MakeVar) :
         >>> pdf = ...
         >>> x = pdf.maximum()
         """
-        if xmin is None : xmin = self.xminmax()[0]
-        if xmax is None : xmax = self.xminmax()[1]
-        if self.xminmax() :
-            xmin =  max ( xmin , self.xminmax()[0] )
-            xmax  = min ( xmax , self.xminmax()[1] )
+        
+        if self.xminmax () :
+            xmn , xmx = self.xminmax() 
+            xmin = xmn if xmin is None else max ( xmin , xmn )
+            xmax = xmx if xmax is None else min ( xmax , xmx )
             
-        if x0 is None           : x0 = 0.5 * ( xmin + xmax )
+        assert is_good_number ( xmin ) , 'xmin is not specified!'
+        assert is_good_number ( xmax ) , 'xmax is not specified!'
+        assert xmin < xmax             , 'Invalid xmin/xmax : %s/%s' % ( xmin , xmax )
+
+        if x0 is None  :  x0 = 0.5 * ( xmin + xmax )
 
         if not xmin <= x0 <= xmax :
-            logger.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
+            self.error("Wrong xmin/x0/xmax: %s/%s/%s"   % ( xmin , x0 , xmax ) )
         
         from ostap.math.minimize import sp_maximum_1D
         return sp_maximum_1D (  self , xmin , xmax , x0 )
-
 
     # ================================================================================
     ## visualise the function 
@@ -670,57 +930,37 @@ class Fun1D ( FUNC ) :
             'xvar' : self.xvar ,
             'name' : self.name ,            
             }
-
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun1D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun1D cannot be cloned with different ``xvar''")
-
-        return FUNC.clone ( self , **kwargs ) 
+        
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
 
     
 # =============================================================================
 ## @class FUNC2
 #  The base class for 2D-function
-class FUNC2(FUNC) :
+class FUNC2(FUNC,YVar) :
     """Base class for 2D-function
     """
-    def __init__ ( self , name , xvar = None , yvar = None ) :
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(FUNC2, cls).__new__( cls )
+        else                         : obj = super(FUNC2, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__func2_init = False  
+        return obj
+    
+    def __init__ ( self , name , xvar , yvar ) :
 
-        FUNC.__init__ ( self , name , xvar = xvar )
+        if self.__func2_init : return 
+        else                 : self.__func2_init = True  
         
-        if   isinstance ( yvar , ROOT.TH1   ) : yvar = yvar.xminmax()
-        elif isinstance ( yvar , ROOT.TAxis ) : yvar = yvar.GetXmin() , yvar.GetXmax()
-
-        self.__yvar = None
+        FUNC .__init__ ( self , name , xvar )
+        YVar .__init__ ( self , yvar )
         
-        ## create the variable 
-        if isinstance ( yvar , tuple ) and 2 == len ( yvar ) :  
-            self.__yvar = self.make_var ( yvar         , ## var 
-                                          'y'          , ## name 
-                                          'y-variable' , ## title/comment
-                                          None         , ## fix ? 
-                                          *yvar        ) ## min/max 
-        elif isinstance ( yvar , ROOT.RooAbsReal ) :
-            self.__yvar = self.make_var ( yvar         , ## var 
-                                          'y'          , ## name 
-                                          'y-variable' , ## title/comment
-                                          fix = None   ) ## fix ? 
-        else :
-            self.warning ( 'FUNC: ``y-variable''is not specified properly %s/%s' % ( yvar , type ( yvar ) ) )
-            self.__yvar = self.make_var( yvar , 'y' , 'y-variable' )
-            
-
-        self.vars.add ( self.__yvar )
+        self.__dfdy = None 
+        self.__inty = None 
+        
+        self.vars     .add    ( self.yvar )
+        self.variables.append ( self.yvar )
         
         ## save the configuration
         self.config = {
@@ -738,19 +978,27 @@ class FUNC2(FUNC) :
     __repr__ = __str__ 
 
 
-    def yminmax ( self ) :
-        """Min/max values for y-varibale"""
-        return self.__yvar.minmax()
+    # =========================================================================
+    @property
+    def dfdy ( self ) :
+        """``dfdy'': derivative dF/dY"""
+        return self.__dfdy
+    @dfdy.setter
+    def dfdy ( self , value ) :
+        assert value is None or isinstance ( value , FUNC2 ) , \
+               "``dfdy'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__dfdy = value 
     
+    # =========================================================================
     @property 
-    def yvar ( self ) :
-        """``y''-variable for the fit (same as ``y'')"""
-        return self.__yvar
-
-    @property 
-    def y    ( self ) :
-        """``y''-variable for the fit (same as ``yvar'')"""
-        return self.__yvar
+    def inty ( self ) :
+        """``inty'' : running integral over Y"""
+        return self.__inty
+    @inty.setter
+    def inty ( self , value ) :
+        assert value is None or isinstance ( value , FUNC2 ) , \
+               "``inty'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__inty = value 
 
 
     # =========================================================================
@@ -896,7 +1144,23 @@ class FUNC2(FUNC) :
                            silent   = silent    ,
                            in_range = in_range  ,
                            args     = args      , **kwargs )
+
+
+    # =========================================================================
+    ## disabled 
+    def __disabled ( self , name ) :
+        """Disabled method"""
+        self.error ('Method "%s" is disabled for FUNC2/DUNC3' % name )
+        raise NotImplementedError('Method "%s"is disabled for FUNC2/DUNC3' % name  )
     
+    # =========================================================================
+    def minimum    ( self , *args , **kwargs ) : return self.__disabled ( "minimum"    ) 
+    def maximum    ( self , *args , **kwargs ) : return self.__disabled ( "maximum"    ) 
+    def fwhm       ( self , *args , **kwargs ) : return self.__disabled ( "fwhm"       ) 
+    def mid_point  ( self , *args , **kwargs ) : return self.__disabled ( "mid_point"  ) 
+    def mode       ( self , *args , **kwargs ) : return self.__disabled ( "mode"       ) 
+    def derivative ( self , *args , **kwargs ) : return self.__disabled ( "derivative" ) 
+
 # =============================================================================
 ## @class Fun2D
 #  Simple wrapper for 2D-function
@@ -925,8 +1189,8 @@ class Fun2D ( FUNC2 ) :
 
         assert not xvar is yvar, "xvar and yvar must be different!"
 
-        if fun is xvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , xvar )
-        if fun is yvar : fun = Ostap.MoreRooFit.Addition  ( "" , "" , yvar )
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "" , "" , xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "" , "" , yvar )
             
         if not name : name = 'Fun2D_%s' % fun.GetName() 
 
@@ -945,59 +1209,39 @@ class Fun2D ( FUNC2 ) :
             'yvar' : self.yvar ,
             'name' : self.name ,            
             }
-
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , yvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun2D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun2D cannot be cloned with different ``xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fun2D cannot be cloned with different ``yvar''")
-
-        return FUNC2.clone ( self , **kwargs ) 
+        
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
+        self.checked_keys.add  ( 'yvar' ) 
 
     
 # =============================================================================
 ## @class FUNC3
 #  The base class for 3D-function
-class FUNC3(FUNC2) :
+class FUNC3(FUNC2,ZVar) :
     """Base class for 3D-function
     """
-    def __init__ ( self , name , xvar = None , yvar = None , zvar = None ) :
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(FUNC3, cls).__new__( cls )
+        else                         : obj = super(FUNC3, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__func3_init = False  
+        return obj
 
-        FUNC2.__init__ ( self , name , xvar = xvar , yvar = yvar )
+    def __init__ ( self , name , xvar , yvar , zvar ) :
+
         
-        if   isinstance ( zvar , ROOT.TH1   ) : zvar = zvar.xminmax()
-        elif isinstance ( zvar , ROOT.TAxis ) : zvar = zvar.GetXmin() , zvar.GetXmax()
+        if self.__func3_init : return 
+        else                 : self.__func3_init = True  
 
-        self.__zvar = None
+        FUNC2.__init__ ( self , name , xvar , yvar )
+        ZVar .__init__ ( self , zvar )
         
-        ## create the variable 
-        if isinstance ( zvar , tuple ) and 2 == len ( zvar ) :  
-            self.__zvar = self.make_var ( zvar         , ## var 
-                                          'z'          , ## name 
-                                          'z-variable' , ## title/comment
-                                          None         , ## fix ? 
-                                          *zvar        ) ## min/max 
-        elif isinstance ( zvar , ROOT.RooAbsReal ) :
-            self.__zvar = self.make_var ( zvar         , ## var 
-                                          'z'          , ## name 
-                                          'z-variable' , ## title/comment
-                                          fix = None   ) ## fix ? 
-        else :
-            self.warning ( 'FUNC: ``z-variable''is not specified properly %s/%s' % ( zvar , type ( zvar ) ) )
-            self.__zvar = self.make_var( zvar , 'z' , 'z-variable' )
-            
-
-        self.vars.add ( self.__zvar )
+        self.__dfdz = None 
+        self.__intz = None 
+        
+        self.vars     .add    ( self.zvar )
+        self.variables.append ( self.zvar )
         
         ## save the configuration
         self.config = {
@@ -1016,20 +1260,27 @@ class FUNC3(FUNC2) :
                                                     self.zvar.name )
     __repr__ = __str__ 
 
-    def zminmax ( self ) :
-        """Min/max values for z-varibale"""
-        return self.__zvar.minmax()
+    # =========================================================================
+    @property
+    def dfdz ( self ) :
+        """``dfdz'': derivative dF/dZ"""
+        return self.__dfdz
+    @dfdz.setter
+    def dfdz ( self , vallue ) :
+        assert value is None or isinstance ( value , FUNC3 ) , \
+               "``dfdz'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__dfdz = value 
     
+    # =========================================================================
     @property 
-    def zvar ( self ) :
-        """``z''-variable for the fit (same as ``z'')"""
-        return self.__zvar
-
-    @property 
-    def z    ( self ) :
-        """``z''-variable for the fit (same as ``zvar'')"""
-        return self.__zvar
-
+    def intz ( self ) :
+        """``intz'' : (running) integral over Z"""
+        return self.__intz
+    @intz.setter
+    def intz ( self , value ) :
+        assert value is None or isinstance ( value , FUNC3 ) , \
+               "``intz'' has invalid type %s/%s" % ( value , type ( value ) )
+        self.__intz = value 
     
     # =========================================================================
     ## simple 'function-like' interface 
@@ -1255,9 +1506,9 @@ class Fun3D ( FUNC3 ) :
         assert not xvar is zvar, "xvar and zvar must be different!"
         assert not yvar is zvar, "yvar and zvar must be different!"
         
-        if fun is xvar : fun = Ostap.MoreRooFit.Id ( xvar )
-        if fun is yvar : fun = Ostap.MoreRooFit.Id ( yvar )
-        if fun is zvar : fun = Ostap.MoreRooFit.Id ( zvar )
+        if fun is xvar : fun = Ostap.MoreRooFit.Id ( "" , "" , xvar )
+        if fun is yvar : fun = Ostap.MoreRooFit.Id ( "" , "" , yvar )
+        if fun is zvar : fun = Ostap.MoreRooFit.Id ( "" , "" , zvar )
             
         if not name : name = 'Fun3D_%s' % fun.GetName() 
 
@@ -1281,26 +1532,456 @@ class Fun3D ( FUNC3 ) :
             'name' : self.name ,            
             }
 
-    # =========================================================================
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , fun = None , xvar = None , yvar = None , zvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if fun  and not  fun is self.fun  :
-            raise AttributeError("Fun3D cannot be cloned with different `fun''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``xvar''")
-        if yvar and not yvar is self.yvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``yvar''")
-        if zvar and not zvar is self.zvar :
-            raise AttributeError("Fun3D cannot be cloned with different ``zvar''")
+        self.checked_keys.add  ( 'fun'  ) 
+        self.checked_keys.add  ( 'xvar' ) 
+        self.checked_keys.add  ( 'yvar' ) 
+        self.checked_keys.add  ( 'zvar' ) 
 
-        return FUNC3.clone ( self , **kwargs ) 
+# =============================================================================
+## Helper function to create the function
+def make_fun ( fun , args , name ) :
+    """Helper function to create the function
+    """
+    
+    assert fun and isinstance ( fun , ROOT.RooAbsReal ), 'make_fun: Invalid type %s' % type ( fun ) 
+    
+    num = len ( args )
+    if   1 == num : return Fun1D ( fun , name = name , *args )
+    elif 2 == num : return Fun2D ( fun , name = name , *args )
+    elif 3 == num : return Fun3D ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
 
+
+# =============================================================================
+## Get the derivative  dF/dx for the 1D-function
+#  \f[ f(x) = \frac{dF(x)}{dx}\f]
+#  @code
+#  F    = ...
+#  dFdx = F.dFdX ( ) 
+#  @endcode 
+#  @see RooAsbReal::derivative 
+def _f1_deriv_x_ ( self , *args ) :
+    """Get the derivative dF/dx for 1D-fuction
+    >>> F    = ...
+    >>> dFdx = F.dFdX ( ) 
+    - see ROOT.RooAbsReal.derivative    
+    """
+    if not self.dfdx :
+        d = self.fun.derivative ( self.xvar , 1 , *args )
+        self.dfdx = Fun1D ( d , self.xvar )
+    ##
+    return self.dfdx 
+
+# =============================================================================
+## Get the partial derivative  dF/dx for 2D-function
+#  \f[ f(x,y) = \frac{\partial F(x,y)}{\partial x} \f]
+#  @code
+#  F    = ...
+#  dFdx = F.dFdX ( ) 
+#  @endcode 
+#  @see RooAbsReal::derivative 
+def _f2_deriv_x_ ( self , *args ) :
+    """Get the partial derivative dF/dx for 2D-function
+    >>> F    = ...
+    >>> dFdx = F.dFdX ( ) 
+    = see ROOT.RooAbsReal.derivative
+    """
+    if not self.dfdx :
+        d = self.fun.derivative ( self.xvar , 1 , *args )
+        self.dfdx = Fun2D ( d , self.xvar , self.yvar )
+    ##
+    return func.dfdx 
+
+
+# =============================================================================
+## Get the partial derivative  dF/dy for 2D-function
+#  \f[ f(f,y) = \frac{\partial F(x,y)}{\partial y} \f]
+#  @code
+#  F    = ...
+#  dFdy = F.dFdY ( ) 
+#  @endcode 
+#  @see RooAbsReal::derivative 
+def _f2_deriv_y_ ( self , *args ) :
+    """Get the partial derivative dF/dx for 2D-function
+    >>> F    = ...
+    >>> dFdy = F.dFdY ( ) 
+    = see ROOT.RooAbsReal.derivative
+    """
+    if not self.dfdy :
+        d = self.fun.derivative ( self.yvar , 1 , *args )
+        self.dfdy = Fun2D ( d , self.xvar , self.yvar )
+    ##
+    return self.dfdy 
+
+# =============================================================================
+## Get the partial derivative  dF/dx for 3D-function
+#  \f[ f(x,y,z) = \frac{\partial F(x,y,z)}{\partial x}\f]
+#  @code
+#  F    = ...
+#  dFdx = F.dFdX ( ) 
+#  @endcode 
+#  @see RooAbsReal::derivative 
+def _f3_deriv_x_ ( self , *args ) :
+    """Get the partial derivative dF/dx for 3D-function
+    >>> F    = ...
+    >>> dFdx = F.dFdX ( ) 
+    = see ROOT.RooAbsReal.derivative
+    """
+    if not self.dfdx :
+        d = self.fun.derivative ( self.xvar , 1 , *args )
+        self.dfdx = Fun3D ( d , self.xvar , self.yvar , self.yvar )
+    ##
+    return self.dfdx 
+
+# =============================================================================
+## Get the partial derivative  dF/dy for 3D-function
+#  \f[ f(x,y,z) = \frac{\partial F(x,y,z)}{\partial y} \f]
+#  @code
+#  F    = ...
+#  dFdy = F.dFdY ( ) 
+#  @endcode 
+#  @see RooAbsReal::derivative 
+def _f3_deriv_y_ ( self , *args ) :
+    """Get the partial derivative dF/dy for 3D-function
+    >>> F    = ...
+    >>> dFdy = F.dFdY ( ) 
+    = see ROOT.RooAbsReal.derivative
+    """
+    if not self.dfdy :
+        d = self.fun.derivative ( self.yvar , 1 , *args )
+        self.dfdy = Fun3D ( d , self.xvar , self.yvar , self.yvar )
+    ##
+    return self.dfdy 
+
+# =============================================================================
+## Get the partial derivative  df/dz for 3D-function
+#  \f[ f(x,y,z) = \frac{\partial F(x,y,z)}{\partial z}\f]
+#  @code
+#  F    = ...
+#  dFdz = F.dFdZ ( ) 
+#  @endcode 
+#  @see RooAbsReal::derivative 
+def _f3_deriv_z_ ( self , *args ) :
+    """Get the partial derivative dF/dy for 3D-function
+    >>> F    = ...
+    >>> dFdz = F.dFdZ ( ) 
+    = see ROOT.RooAbsReal.derivative
+    """
+    if not self.dfdz :
+        d = self.fun.derivative ( self.zvar , 1 , *args )
+        self.dfdz = Fun3D ( d , self.xvar , self.yvar , self.yvar )
+    ##
+    return self.dfdz 
+
+
+FUNC .dFdX = _f1_deriv_x_
+FUNC2.dFdX = _f2_deriv_x_
+FUNC2.dFdY = _f2_deriv_y_
+FUNC3.dFdX = _f3_deriv_x_
+FUNC3.dFdY = _f3_deriv_y_
+FUNC3.dFdZ = _f3_deriv_z_
+
+# =============================================================================
+## @var num_bins
+#  default number of cache-bins for RooNumRuningInt
+#  @see RooNumRuningInt
+num_bins = 5000
+
+# =============================================================================
+## check cache binnig scheme
+def check_bins ( var , *args ) :
+    """Check cache bining scheme
+    """
+    
+    if not args :
+        if not var.hasBinning('cache') : var.setBins ( 5000 , 'cache' ) 
+        return args
+
+    if ininstance ( bins , string_types  ) and var.hasBinning ( bins ) : return bins ,
+    if isinstance ( bins , integer_types ) and 100 < bins :
+        if var.hasBininig ( 'cache' ) :
+            cbins = var.getBinning ( 'cache' ).numBins()
+            if cbins < bins :  var.setBins ( bins , 'cache' )
+        else : var.setBins ( bins , 'cache' )
+        return ()
+
+    raise TypeError ("Invalid binning %s/%s" % ( bins , type ( bins ) ) ) 
+
+        
+    
+# =============================================================================
+## Get the running integral for 1D-function
+#  \f[ f(x) = \int_{x_{low}}^{x} F(t) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_x ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f1_rint_x_ ( self , *args  ) :
+    """ Get the running integral for 1D-function
+    >>> f = ...
+    >>> g = f.integral_x ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.intx :
+        
+        kargs = check_bins ( self.xvar , *args )
+        
+        i = ROOT,RooNumRunnigInt ( "IntX_%s"    % self.name ,
+                                   "IntegralX " + self.name ,
+                                   self.fun     , self.xvar , *kargs )
+        
+        self.intx = Fun1D ( i , self.xvar )
+    ##
+    return func.intx 
+
+# =============================================================================
+## Get the running integral for 2D-function
+#  \f[ f(x,y) = \int_{x_{low}}^{x} F(t,y) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_x ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f2_rint_x_ ( self , *args ) :
+    """ Get the running integral for 2D-function
+    >>> f = ...
+    >>> g = f.integral_x ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.intx :
+        
+        kargs = check_bins ( self.xvar , *args )
+        
+        i = ROOT,RooNumRunnigInt ( "IntX_%s"    % self.name ,
+                                   "IntegralX " + self.name ,
+                                   self.fun     , self.xvar , *kargs )
+        
+        self.intx = Fun2D ( i , self.xvar , self.yvar )
+    ##
+    return func.intx 
+
+# =============================================================================
+## Get the running integral for 2D-function
+#  \f[ f(x,y) = \int_{y_{low}}^{y} F(x,t) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_y ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f2_rint_y_ ( self , *args  ) :
+    """ Get the running integral for 2D-function
+    >>> f = ...
+    >>> g = f.integral_y ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.inty :
+        
+        kargs = check_bins ( self.yvar , *args )
+
+        i = ROOT,RooNumRunnigInt ( "IntY_%s"    % self.name ,
+                                   "IntegralY " + self.name ,
+                                   self.fun     , self.yvar , *kargs )
+        
+        self.inty = Fun2D ( i , self.xvar , self.yvar )
+    ##
+    return func.inty 
+
+# =============================================================================
+## Get the running integral for 3D-function
+#  \f[ f(x,y,z) = \int_{x_{low}}^{x} F(t,y,z) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_x ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f3_rint_x_ ( self , *args ) :
+    """ Get the running integral for 3D-function
+    >>> f = ...
+    >>> g = f.integral_x ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.intx :
+        
+        kargs = check_bins ( self.xvar , *args )
+
+        i = ROOT,RooNumRunnigInt ( "IntX_%s"    % self.name ,
+                                   "IntegralX " + self.name ,
+                                   self.fun     , self.xvar , *kargs )
+        
+        self.intx = Fun3D ( i , self.xvar , self.yvar , self.zvar )
+    ##
+    return func.intx 
+
+# =============================================================================
+## Get the running integral for 3D-function
+#  \f[ f(x,y,z) = \int_{y_{low}}^{y} F(x,t,z) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_y ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f3_rint_y_ ( self , *args  ) :
+    """ Get the running integral for 2D-function
+    >>> f = ...
+    >>> g = f.integral_y ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.inty :
+
+        kargs = check_bins ( self.yvar , *args )
+
+        i = ROOT,RooNumRunnigInt ( "IntY_%s"    % self.name ,
+                                   "IntegralY " + self.name ,
+                                   self.fun     , self.yvar , kargs )
+        self.inty = Fun3D ( i , self.xvar , self.yvar , self.zvar )
+    ##
+    return func.inty 
+
+
+# =============================================================================
+## Get the running integral for 3D-function
+#  \f[ f(x,y,z) = \int_{z_{low}}^{z} F(x,y,t) dt \f]
+#  @code
+#  f = ...
+#  g = f.integral_z ( ) 
+#  @endcode 
+#  @see RooNumRunnigInt 
+def _f3_rint_z_ ( self , *args ) :
+    """ Get the running integral for 3D-function
+    >>> f = ...
+    >>> g = f.integral_z ( ) 
+    - see ROOT.RooNumRunnigInt 
+    """
+    if not self.intz :
+        
+        kargs = check_bins ( self.zvar , *args )
+
+        i = ROOT,RooNumRunnigInt ( "IntZ_%s"    % self.name ,
+                                   "IntegralZ " + self.name ,
+                                   self.fun     , self.zvar , *kargs )
+        
+        self.intz = Fun3D ( i , self.xvar , self.yvar , self.zvar )
+    ##
+    return func.intz 
+
+
+FUNC .integral_x = _f1_rint_x_
+FUNC2.integral_x = _f2_rint_x_
+FUNC2.integral_y = _f2_rint_y_
+FUNC3.integral_x = _f3_rint_x_
+FUNC3.integral_y = _f3_rint_y_
+FUNC3.integral_y = _f3_rint_z_
+
+
+# ==============================================================================
+## Integrate 2D function over x
+#  \f[ f(y) = \int F(x,y) dx \f]
+#  @code
+#  f = ...
+#  g = f.integrate_x ( 'x-range' ) 
+#  @endcode 
+#  @see RooAbsReal::createIntegral
+def _f2_int_x_ ( self , *args ) :
+    """ Integrate 2D-function over x  
+    >>> f = ...
+    >>> g = f.integrate_x ( 'x-range' ) 
+    - see ROOT.RooAbsReal.createIntegral
+    """
+    ##
+    vset = ROOT.RooArgSet ( self.xvar ) 
+    i = self.fun.createIntegral ( vset , *args )
+    ## 
+    return Fun1D ( i , self.yvar )
+
+# ==============================================================================
+## Integrate 2D function over y
+#  \f[ f(x) = \int F(x,y) dy \f]
+#  @code
+#  f = ...
+#  g = f.integrate_y ( 'y-range' ) 
+#  @endcode 
+#  @see RooAbsReal::createIntegral
+def _f2_int_y_ ( self , *args ) :
+    """ Integrate 2D-function over y  
+    >>> f = ...
+    >>> g = f.integrate_x ( 'x-range' ) 
+    - see ROOT.RooAbsReal.createIntegral
+    """
+    ##
+    vset = ROOT.RooArgSet ( self.yvar ) 
+    i = self.fun.createIntegral ( vset , *args )
+    ## 
+    return Fun1D ( i , self.xvar )
+
+
+# ==============================================================================
+## Integrate 3D function over x
+#  \f[ f(y,z) = \int F(x,y,z) dx \f]
+#  @code
+#  f = ...
+#  g = f.integrate_x ( 'x-range' ) 
+#  @endcode 
+#  @see RooAbsReal::createIntegral
+def _f3_int_x_ ( self , *args ) :
+    """ Integrate 3D-function over x  
+    >>> f = ...
+    >>> g = f.integrate_x ( 'x-range' ) 
+    - see ROOT.RooAbsReal.createIntegral
+    """
+    ##
+    vset = ROOT.RooArgSet ( self.xvar ) 
+    i = self.fun.createIntegral ( vset , *args )
+    ## 
+    return Fun2D ( i , self.yvar , self.zvar )
+
+# ==============================================================================
+## Integrate 3D function over y
+#  \f[ f(x,z) = \int F(x,y,z) dy \f]
+#  @code
+#  f = ...
+#  g = f.integrate_y ( 'y-range' ) 
+#  @endcode 
+#  @see RooAbsReal::createIntegral
+def _f3_int_y_ ( self , *args ) :
+    """ Integrate 3D-function over y  
+    >>> f = ...
+    >>> g = f.integrate_y ( 'y-range' ) 
+    - see ROOT.RooAbsReal.createIntegral
+    """
+    ##
+    vset = ROOT.RooArgSet ( self.yvar ) 
+    i = self.fun.createIntegral ( vset , *args )
+    ## 
+    return Fun2D ( i , self.xvar , self.zvar )
+
+# ==============================================================================
+## Integrate 3D function over z
+#  \f[ f(x,y) = \int F(x,y,z) dz \f]
+#  @code
+#  f = ...
+#  g = f.integrate_z ( 'z-range' ) 
+#  @endcode 
+#  @see RooAbsReal::createIntegral
+def _f3_int_z_ ( self , *args ) :
+    """ Integrate 3D-function over z  
+    >>> f = ...
+    >>> g = f.integrate_z ( 'z-range' ) 
+    - see ROOT.RooAbsReal.createIntegral
+    """
+    ##
+    vset = ROOT.RooArgSet ( self.zvar ) 
+    i = self.fun.createIntegral ( vset , *args )
+    ## 
+    return Fun2D ( i , self.xvar , self.yvar )
+
+
+FUNC2.integrate_x = _f2_int_x_
+FUNC2.integrate_y = _f2_int_y_
+FUNC3.integrate_x = _f3_int_x_
+FUNC3.integrate_y = _f3_int_y_
+FUNC3.integrate_z = _f3_int_z_
 
 # =============================================================================
 ## Operator for `3D-function (op) other`:
@@ -1729,7 +2410,7 @@ FUNC2.__rpow__     = _f2_rpow_
 ## Operator for `1D-function (op) other`:
 def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
     """ Operator for `1D-function (op) other`:"""
-    
+
     xvar, yvar, zvar  = fun1.xvar , None , None 
     
     if   isinstance ( fun2 , FUNC3 ) :
@@ -1874,62 +2555,61 @@ def _f1_rop_ ( fun1 , fun2 , ftype , fname ) :
     """ Operator for `1D-function (op) other`:"""
     
     xvar, yvar, zvar  = fun1.xvar , None , None 
-    
+
     if isinstance ( fun2 , num_types ) :
-        
+         
         fun2   = ROOT.RooRealConstant.value ( float ( fun2 )  ) 
         s      = ftype ( fun2 ,  fun1.fun )
-        result = Fun1D ( s ,
+        result = Fun1D ( s            ,
                          xvar = xvar  ,
                          name = fname % ( fun2.name , fun1.name ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
         return result
-
 
     elif isinstance ( fun2 , ROOT.RooAbsReal ) :
         
         s      = ftype ( fun2 , fun1.fun )
-        result = Fun1D ( s ,
+        result = Fun1D ( s            ,
                          xvar = xvar  ,
                          name = fname % ( fun2.name , fun1.name ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
         return result
-
+    
     return NotImplemented 
 
 
 # =============================================================================
-## operator for "1D-function + other"
+## operator for "other + 1D-function"
 def _f1_radd_ ( self , other ) :
-    """Operator for ``1D-function + other''"""
+    """Operator for ``other + 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
 
 # =============================================================================
-## operator for "1D-function - other"
+## operator for "other - 1D-function"
 def _f1_rsub_ ( self , other ) :
-    """Operator for ``2D-function - other''"""
+    """Operator for ``other - 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
 
 # =============================================================================
-## operator for "1D-function * other"
+## operator for "other * 1D-function"
 def _f1_rmul_ ( self , other ) :
-    """Operator for ``2D-function * other''"""
+    """Operator for ``other * 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
 
 # =============================================================================
-## operator for "1D-function / other"
+## operator for "other/1D-function"
 def _f1_rdiv_ ( self , other ) :
-    """Operator for ``1D-function / other''"""
+    """Operator for ``other / 1D-function ''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
         
 # =============================================================================
-## operator for "1D-function ** other"
+## operator for "other ** 1D-function"
 def _f1_rpow_ ( self , other ) :
-    """Operator for ``1D-function **  other''"""
+    """Operator for ``other ** 1D-function''"""
     return _f1_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
         
 
