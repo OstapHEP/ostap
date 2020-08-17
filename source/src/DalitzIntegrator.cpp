@@ -57,7 +57,7 @@ namespace
   /** @var s_MAXCALLS1 
    *  Maximal number of (uncached)function calls 
    */
-  const unsigned int s_MAXCALLS1 = 150000 ;
+  const unsigned int s_MAXCALLS1 = 250000 ;
   // ==========================================================================
   /** @var s_MAXCALLS2 
    *  Maximal number of (cached)function calls 
@@ -66,7 +66,7 @@ namespace
   // ==========================================================================  
 }
 // ============================================================================
-/*  constructor from Dalitz configurtaion and the integration workspace
+/*  constructor from Dalitz configuration and the integration workspace
  *  @param dalitz  Dalitz configuration 
  *  @param size    size of the integrtaion woekjspace 
  *  @see Ostap::Math::WorkSpace
@@ -240,13 +240,15 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
 ( Ostap::Math::DalitzIntegrator::function3 f3  ,
   const double                             s   ,
   const Ostap::Kinematics::Dalitz0&        d   ,
-  const std::size_t                        tag ) 
+  const std::size_t                        tag , 
+  const unsigned short                     n1  , 
+  const unsigned short                     n2  )
 {
   if ( s  <= d.sqsumm() ) { return 0 ; }
   //
   auto      f1 = std::cref ( f3   ) ;
   function2 f2 = std::bind ( f1 , s , std::placeholders::_1 , std::placeholders::_2 ) ;
-  return integrate_s1s2 ( std::cref ( f2 ) , s , d  , tag ) ;  
+  return integrate_s1s2 ( std::cref ( f2 ) , s , d  , tag , n1 , n2 ) ;  
 }
 // ===========================================================================
 /*  evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
@@ -260,7 +262,9 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
 ( Ostap::Math::DalitzIntegrator::function2 f2  ,
   const double                             s   ,
   const Ostap::Kinematics::Dalitz0&        d   ,
-  const std::size_t                        tag ) 
+  const std::size_t                        tag ,
+  const unsigned short                     n1  , 
+  const unsigned short                     n2  ) 
 {
   if ( s <= d.sqsumm () ) { return 0 ; }
   //
@@ -269,26 +273,25 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
   const double x2_min = d.s2_min (   ) ;
   const double x2_max = d.s2_max ( M ) ;
   //
-  double f_avg = 0 ;
+  double f_avg = 1.0 ;
+  if  ( 0 < n1 && 0 < n2 ) 
   { 
-    const unsigned short nx1 { 4 } ;
-    const unsigned short nx2 { 5 } ;
-    const double         dx1 = 2.0                 / nx1 ;
-    const double         dx2 = ( x2_max - x2_min ) / nx2 ;
+    const double         dx1 = 2.0                 / n1 ;
+    const double         dx2 = ( x2_max - x2_min ) / n2 ;
     //
-    double f_value = 0.0 ;
-    for ( unsigned short ix2 = 0 ; ix2 < nx2 ; ++ix2 ) 
+    double f_val = 0.0 ;
+    for ( unsigned short ix2 = 0 ; ix2 < n2 ; ++ix2 ) 
     {
       const double x2 = x2_min + ( 0.5 + ix2 ) * dx2 ;
-      for ( unsigned short ix1 = 0 ; ix1 < nx1 ; ++ix1 ) 
+      for ( unsigned short ix1 = 0 ; ix1 < n1 ; ++ix1 ) 
       {
         const double x1 = -1.0  + ( 0.5 + ix1 ) * dx1 ;
         double s1 , s2 ;
         std::tie ( s1 , s2 ) = d.x2s ( s , x1 , x2 ) ;
-        f_avg += f2 ( s1 , s2 ) ;
+        f_val += f2 ( s1 , s2 ) ;
       }
     }
-    f_avg /= ( nx1 * nx2 ) ;
+    f_avg =  f_val / ( n1 * n2 ) ;
   }
   //
   const double f_norm = s_zero ( f_avg ) ? 1.0 : 1.0 / f_avg ;
@@ -315,12 +318,10 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
       s_MESSAGE2  , 
       __FILE__    ,
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine (  tag , d.tag() ) ) ; // tag/label
+      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag() ) ) ; // tag/label
   //
   return result / f_norm ;
 }
-
-
 // ============================================================================
 /* evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
  *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
@@ -338,7 +339,9 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double                             smin ,
   const double                             smax ,
   const Ostap::Kinematics::Dalitz0&        d    , 
-  const std::size_t                        tag  ) 
+  const std::size_t                        tag  ,
+  const unsigned short                     n1   , 
+  const unsigned short                     n2   )
 {
   //
   if      ( s_equal ( smax ,  smin ) ) { return 0 ; }
@@ -357,26 +360,26 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double y1_min = smin ;
   const double y1_max = smax ;
   //
-  double f_avg = 0 ;
+  // "Average value" of the function over n1xn2 points 
+  double f_avg = 1 ;
+  if ( 0 < n1 && 0 < n2 ) 
   { 
-    const unsigned short ny1 { 5 } ;
-    const unsigned short ny2 { 4 } ;
-    const double         dy1 = ( y1_max - y1_min ) / ny1 ;
-    const double         dy2 = 2.0                 / ny2 ;
+    const double         dy1 = ( y1_max - y1_min ) / n1 ;
+    const double         dy2 = 2.0                 / n2 ;
     //
-    double f_value = 0.0 ;
-    for ( unsigned short iy2 = 0 ; iy2 < ny2 ; ++iy2 ) 
+    double f_val = 0.0 ;
+    for ( unsigned short iy2 = 0 ; iy2 < n2 ; ++iy2 ) 
     {
       const double y2 = -1.0  + ( 0.5 + iy2 ) * dy2 ;
-      for ( unsigned short iy1 = 0 ; iy1 < ny1 ; ++iy1 ) 
+      for ( unsigned short iy1 = 0 ; iy1 < n1 ; ++iy1 ) 
       {
         const double y1 = y1_min  + ( 0.5 + iy1 ) * dy1 ;
         double s , s1 ;
         std::tie ( s , s1 ) = d.y2s ( s2 , y1 , y2 ) ;
-        f_avg += f3 ( s , s1 , s2 ) ;
+        f_val += f3 ( s , s1 , s2 ) ;
       }
     }
-    f_avg /= ( ny1 * ny2 ) ;
+    f_avg = f_val / ( n1 * n2 ) ;
   }
   //
   const double f_norm = s_zero ( f_avg ) ? 1.0 : 1.0 / f_avg ;
@@ -405,7 +408,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
       s_MESSAGE2  , 
       __FILE__    , 
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine (  tag , d.tag() ) ) ; // tag/label
+      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag ()) ) ; // tag/label
   //
   return result / f_norm ;
 }
@@ -424,7 +427,9 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double                             s2   ,
   const double                             smax ,
   const Ostap::Kinematics::Dalitz0&        d    ,
-  const std::size_t                        tag  ) 
+  const std::size_t                        tag  ,
+  const unsigned short                     n1   , 
+  const unsigned short                     n2   ) 
 {
   if ( s2   <= d.s2_min () ||
        smax <= d.sqsumm () || 
@@ -433,18 +438,20 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double smin = d.sqsumm() + s2 - d.s2_min() ;
   if ( smax  <= smin ) { return 0 ; }
   //
-  return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , d , tag ) ;
+  return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , d , tag , n1 , n2 ) ;
 }
 // ============================================================================
 double Ostap::Math::DalitzIntegrator::integrate_e2e3
 ( Ostap::Math::DalitzIntegrator::function3 f3  ,
   const Ostap::Kinematics::Dalitz&         d   ,
-  const std::size_t                        tag ) 
+  const std::size_t                        tag , 
+  const unsigned short                     n1  , 
+  const unsigned short                     n2  ) 
 {
   const double M = d.M()  ;
   auto      f1 = std::cref ( f3 )  ;
   function2 f2 = std::bind ( f1 , d.M() , std::placeholders::_1 , std::placeholders::_2 ) ;
-  return integrate_e2e3 ( std::cref ( f2 ) , d , tag ) ;
+  return integrate_e2e3 ( std::cref ( f2 ) , d , tag , n1 , n2 ) ;
 }
 // ============================================================================
 /* evaluate the integral over \f$e_2\f$ , \f$e_3\f$ variables 
@@ -459,7 +466,9 @@ double Ostap::Math::DalitzIntegrator::integrate_e2e3
 double Ostap::Math::DalitzIntegrator::integrate_e2e3
 ( Ostap::Math::DalitzIntegrator::function2 f2  ,
   const Ostap::Kinematics::Dalitz&         d   ,
-  const std::size_t                        tag ) 
+  const std::size_t                        tag ,
+  const unsigned short                     n1  , 
+  const unsigned short                     n2  ) 
 {
   //
   const double M = d.M() ;
@@ -473,7 +482,7 @@ double Ostap::Math::DalitzIntegrator::integrate_e2e3
       return ff ( e2 , e3 ) * J ;
     } ;
   //
-  return integrate_s1s2 ( std::cref ( fun ) , M * M , d , tag ) ;
+  return integrate_s1s2 ( std::cref ( fun ) , M * M , d , tag , n1 , n2 ) ;
 }
 // ============================================================================
 //                                                                      The END 

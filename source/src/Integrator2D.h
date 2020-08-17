@@ -121,7 +121,7 @@ namespace Ostap
           // perform the numerical integration via the cubature method 
           Result result = cubature ( fun      , 
                                      maxcalls , aprecision , rprecision  , 
-                                     reason   ,  file      , line        ) ;
+                                     reason   , file       , line        ) ;
           // ==================================================================
           { // update the cache ===============================================
             CACHE::Lock lock  { s_cache.mutex() } ;
@@ -138,16 +138,20 @@ namespace Ostap
       public:
         // ====================================================================
         /// the actual adapter for cubature 
-        static int adapter2d ( unsigned      ndim  , 
-                               const double* x     , 
-                               void*         fdata ,
-                               unsigned      fdim  , 
-                               double*       fval  )   
+        static int adapter2d 
+        ( unsigned      ndim  , 
+          const double* x     , 
+          void*         fdata ,
+          unsigned      fdim  , 
+          double*       fval  )   
         {
-          if ( 1  != fdim || 2 != ndim || 
-               nullptr == x || nullptr == fdata || nullptr == fval ) { return 1 ; }
+          if ( 1       != fdim  || 
+               2       != ndim  || 
+               nullptr == x     || 
+               nullptr == fdata || 
+               nullptr == fval  ) { return 1 ; }
           const FUNCTION* f = (FUNCTION*) fdata  ; 
-          fval[0] = (*f) ( x[0] , x[1] ) ;
+          fval [ 0 ] = (*f) ( x [ 0 ] , x [ 1 ] ) ;
           return 0 ;
         }
         // ====================================================================
@@ -166,7 +170,7 @@ namespace Ostap
       Integrator2D<FUNCTION>::s_cache = Integrator2D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 25000 ;
+      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 50000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
     // ========================================================================

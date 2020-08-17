@@ -21,6 +21,8 @@ ap.draw('alc')
 ```
   1. add utilities for better visuzalisation of Dalitz densities 
   1. more improvements for Dalitz plot vizualization 
+  1. more tweaks for `Ostap::Math::DalitzIntegrator`
+  1. more tweaks for `Ostap::Math::BW`
 
 ## Backward incompatible changes: 
 

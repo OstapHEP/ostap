@@ -391,7 +391,7 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 ) :
     from ostap.utils.utils import vrange
     g = ROOT.TGraph  ( npx + 1 ) 
     for i , x in enumerate ( vrange ( xmin , xmax , npx ) ) :
-        a = complex ( self.amp ( x ) )
+        a = complex ( self.amp ( x ) )        
         g[i] = a.real, a.imag
     return g
 
@@ -1007,6 +1007,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                ## 
                Ostap.Math.Multiply               ,
                Ostap.Math.Divide                 ,
+               Ostap.Math.Const                  ,
                Ostap.Math.Linear                 ,
                Ostap.Math.Sum                    ,
                Ostap.Math.Moebius                ,
@@ -1881,6 +1882,7 @@ _decorated_classes_ = set( [
     
     Ostap.Math.Multiply               ,
     Ostap.Math.Divide                 ,
+    Ostap.Math.Const                  ,
     Ostap.Math.Linear                 ,
     Ostap.Math.Sum                    ,
     Ostap.Math.Moebius                ,
@@ -1904,5 +1906,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

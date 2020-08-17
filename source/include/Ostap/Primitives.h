@@ -15,6 +15,26 @@ namespace  Ostap
   namespace Math
   {
     // ========================================================================
+    /** @class Const
+     *  Constant "function": \f$ f(x) \equiv  c \f$ 
+     */
+    class Const
+    {
+    public :
+      // ======================================================================
+      Const ( const double c = 0 ) : m_c ( c )
+      {}
+      // ======================================================================
+      /// the main method
+      inline  double operator() ( const double /* x */ ) const { return m_c ; }
+      // ======================================================================
+    private :
+      //  =====================================================================
+      /// c-parameter
+      double m_c   { 0 } ;  // c-parameter
+      //  =====================================================================      
+    } ;
+    // ========================================================================
     /** @class Linear
      *  Linear combination of two functions 
      *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
@@ -31,42 +51,75 @@ namespace  Ostap
       /** constructor from two functions and two scale factors 
        *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
        *  @param f1  the first function 
-       *  @param f1  the secons function 
-       *  @param c1 the first  scale parameter
+       *  @param f2  the secons function 
+       *  @param c1 the first   scale parameter
        *  @param c2 the second  scale parameter
        */
       template <class FUNCTION1, class FUNCTION2>
-      Linear ( FUNCTION1    f1     ,
-               FUNCTION2    f2     ,
-               const double c1 = 1 ,
-               const double c2 = 1 )
+      Linear ( FUNCTION1 f1 , 
+               FUNCTION2 f2 )
+        : m_fun1 ( f1 )
+        , m_fun2 ( f2 )
+        , m_c1   ( 1  ) 
+        , m_c2   ( 1  ) 
+      {}
+      // ======================================================================
+      template <class FUNCTION1>
+      Linear ( FUNCTION1    f1 ,
+               const double f2 )
+        : m_fun1 ( f1 )
+        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
+        , m_c1   ( 1 ) 
+        , m_c2   ( 1 )          
+      {}
+      // ======================================================================
+      template <class FUNCTION2>
+      Linear ( const double f1 ,
+               FUNCTION2    f2 ) 
+        : m_fun1 ( [f1]( const double /* x */ ) -> double { return f1 ; } )
+        , m_fun2 ( f2 )
+        , m_c1   ( 1  ) 
+        , m_c2   ( 1  )          
+      {}
+      // ======================================================================
+      /** constructor from two functions and two scale factors 
+       *  \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
+       *  @param f1 the first function 
+       *  @param c1 the first   scale parameter
+       *  @param f2 the second function 
+       *  @param c2 the second  scale parameter
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Linear ( FUNCTION1    f1 ,
+               const double c1 ,
+               FUNCTION2    f2 ,
+               const double c2 )
         : m_fun1 ( f1 )
         , m_fun2 ( f2 )
         , m_c1   ( c1 ) 
         , m_c2   ( c2 ) 
       {}
       // ======================================================================
-      template <class FUNCTION1>
-      Linear ( FUNCTION1    f1     ,
-               const double f2     ,
-               const double c1 = 1 ,
-               const double c2 = 1 )
-        : m_fun1 ( f1 )
-        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
-        , m_c1   ( c1 ) 
-        , m_c2   ( c2 )          
+      /** constructor from functions and scale factors 
+       *  \f[ f(x) =  \sum_i c_i f_i(x) +\f] 
+       *  @param f1   the first function 
+       *  @param c1   the first  scale parameter
+       *  @param f2   the second function 
+       *  @param c2   the second  scale parameter
+       *  @param args other functions/parameters 
+       */
+      template <class FUNCTION1, 
+                class FUNCTION2, 
+                typename ... ARGS>
+      Linear ( FUNCTION1    f1   ,
+               const double c1   ,
+               FUNCTION2    f2   ,
+               const double c2   , 
+               ARGS...      args )
+        : Linear ( Linear ( f1 , c1 , f2 , c2 ) , 1.0 , args... )
       {}
       // ======================================================================
-      template <class FUNCTION2>
-      Linear ( const double f1     ,
-               FUNCTION2    f2     , 
-               const double c1 = 1 ,
-               const double c2 = 1 )
-        : m_fun1 ( [f1]( const double /* x */ ) -> double { return f1 ; } )
-        , m_fun2 ( f2 )
-        , m_c1   ( c1 ) 
-        , m_c2   ( c2 )          
-      {}
+    public:
       // ======================================================================
       /// the main method
       inline  double operator() ( const double x ) const

@@ -93,10 +93,12 @@ namespace Ostap
        */
       template <class FUNCTION23> 
       double integrate_s1s2
-      ( FUNCTION23        f23     ,
-        const double      s       , 
-        const std::size_t tag = 0 ) const 
-      { return integrate_s1s2 ( std::cref ( f23 ) , s , m_dalitz , tag ) ; }
+      ( FUNCTION23           f23     ,
+        const double         s       , 
+        const std::size_t    tag = 0 , 
+        const unsigned short n1  = 0 , 
+        const unsigned short n2  = 0 ) const 
+      { return integrate_s1s2 ( std::cref ( f23 ) , s , m_dalitz , tag , n1 , n2 ) ; }
       // ======================================================================
       /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
        *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
@@ -108,29 +110,33 @@ namespace Ostap
        */
       template <class FUNCTION3> 
       double integrate_ss1
-      ( FUNCTION3         f3      ,
-        const double      s2      ,
-        const double      smax    , 
-        const std::size_t tag = 0 ) const 
-      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smax , m_dalitz , tag ) ; }
+      ( FUNCTION3            f3      ,
+        const double         s2      ,
+        const double         smax    , 
+        const std::size_t    tag = 0 ,
+        const unsigned short n1  = 0 , 
+        const unsigned short n2  = 0 ) const 
+      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smax , m_dalitz , tag , n1 , n2 ) ; }
       // ===================================================================== 
       /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
        *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
        *  @param f3 the function \f$  f(s,s_1,s_2) \f$
        *  @param s2 fixed value of s2 
-       *  @param smin lowe-edge for integration over \f$ s \f$
+       *  @param smin lower-edge for integration over \f$ s \f$
        *  @param smax upper-edge for integration over \f$ s \f$
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
       template <class FUNCTION3> 
       double integrate_ss1
-      ( FUNCTION3         f3      ,
-        const double      s2      ,
-        const double      smin    ,
-        const double      smax    ,
-        const std::size_t tag = 0 ) const 
-      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , m_dalitz , tag ) ; }
+      ( FUNCTION3            f3      ,
+        const double         s2      ,
+        const double         smin    ,
+        const double         smax    ,
+        const std::size_t    tag = 0 , 
+        const unsigned short n1  = 0 , 
+        const unsigned short n2  = 0 ) const 
+      { return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , m_dalitz , tag , n1 , n2 ) ; }
       // ====================================================================== 
       /** evaluate the integral over \f$s\f$ , \f$s_2\f$ variables 
        *  \f[ \int\int f( s, s_1,s_2) ds ds_s \f]  
@@ -142,17 +148,19 @@ namespace Ostap
        */
       template <class FUNCTION3> 
       double integrate_ss2
-      ( FUNCTION3         f3      ,
-        const double      s1      ,
-        const double      smax    ,
-        const std::size_t tag = 0 ) const 
+      ( FUNCTION3            f3      ,
+        const double         s1      ,
+        const double         smax    ,
+        const std::size_t    tag = 0 ,
+        const unsigned short n1  = 0 , 
+        const unsigned short n2  = 0 ) const 
       {
         // swap arguments   
         auto fc = std::cref ( f3 ) ;
         auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
                   { return fc ( s , s_2 , s_1 ) ; } ;
         // invoke integration over s,s1 with swapped arguments 
-        return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz2 , tag ) ;
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz2 , tag , n1 , n2 ) ;
       }
       // ===================================================================== 
       /** evaluate the integral over \f$s\f$ , \f$s_s\f$ variables 
@@ -166,18 +174,20 @@ namespace Ostap
        */
       template <class FUNCTION3> 
       double integrate_ss2
-      ( FUNCTION3         f3      ,
-        const double      s1      ,
-        const double      smin    ,
-        const double      smax    ,
-        const std::size_t tag = 0 ) const 
+      ( FUNCTION3            f3      ,
+        const double         s1      ,
+        const double         smin    ,
+        const double         smax    ,
+        const std::size_t    tag = 0 , 
+        const unsigned short n1  = 0 , 
+        const unsigned short n2  = 0 ) const 
       {
         // swap arguments   
         auto fc = std::cref ( f3 ) ;
         auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
           { return fc ( s , s_2 , s_1 ) ; } ;
         // invoke integration over s,s1 with swapped arguments 
-        return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz2 , tag ) ;
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz2 , tag , n1 , n2 ) ;
       }
       // ======================================================================
     public : // 1D integrations  (with workspace) 
@@ -246,7 +256,9 @@ namespace Ostap
       ( function3                         f3      ,
         const double                      s       ,
         const Ostap::Kinematics::Dalitz0& d       ,
-        const std::size_t                 tag = 0 ) ;
+        const std::size_t                 tag = 0 ,
+        const unsigned short              nx  = 0 , 
+        const unsigned short              ny  = 0 ) ;
       // ======================================================================
       /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
        *  \f[ \int\int ds_1 ds_2 f( s_1,s_2) = 
@@ -261,7 +273,9 @@ namespace Ostap
       ( function2                         f2      ,
         const double                      s       ,
         const Ostap::Kinematics::Dalitz0& d       ,
-        const std::size_t                 tag = 0 ) ;
+        const std::size_t                 tag = 0 ,
+        const unsigned short              nx  = 0 , 
+        const unsigned short              ny  = 0 ) ;
       // =======================================================================      
       /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
        *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
@@ -269,6 +283,7 @@ namespace Ostap
        *  @param s2 fixed value of s2 
        *  @param smax upper-edge fo inntegrato ove \f$ s \f$
        *  @param d  helper Dalitz-object 
+       *  @param tag unique label/tag  (for caching)
        *  @return integral over \f$ s, s_1\f$
        */
       static double integrate_ss1
@@ -276,7 +291,9 @@ namespace Ostap
         const double                      s2      ,
         const double                      smax    ,
         const Ostap::Kinematics::Dalitz0& d       ,
-        const std::size_t                 tag = 0 ) ;
+        const std::size_t                 tag = 0 , 
+        const unsigned short              nx  = 0 , 
+        const unsigned short              ny  = 0 ) ;
       // =======================================================================
       /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
        *  \f[ \int\int f( s, s_1,s_2) ds ds_1 \f]  
@@ -293,7 +310,9 @@ namespace Ostap
         const double                      smin    ,
         const double                      smax    ,
         const Ostap::Kinematics::Dalitz0& d       ,
-        const std::size_t                 tag = 0 ) ;
+        const std::size_t                 tag = 0 ,
+        const unsigned short              n1  = 0 , 
+        const unsigned short              n2  = 0 ) ;
       // =======================================================================
     public:
       // =======================================================================
@@ -303,11 +322,12 @@ namespace Ostap
        */
       template <class FUNCTION, typename... ARGS>
       static inline double 
-      integral_s ( FUNCTION        f    , 
-                   const double    s1   , 
-                   const double    s2   , 
-                   const double    smax , 
-                   const ARGS& ... args )
+      integral_s
+      ( FUNCTION        f    , 
+        const double    s1   , 
+        const double    s2   , 
+        const double    smax , 
+        const ARGS& ... args )
       { return integrate_s ( std::cref ( f ) , s1 , s2  , smax , args... ) ; }
       // =====================================================================      
       /** integrate the function \f$ f(s,s_1,s_2)\f$ or \f$ f(s_1,s_2) 
@@ -316,10 +336,23 @@ namespace Ostap
        */
       template <class FUNCTION, typename... ARGS>
       static inline double 
-      integral_s1 ( FUNCTION        f    , 
-                    const double    x    , 
-                    const ARGS& ... args )
+      integral_s1 
+      ( FUNCTION        f    , 
+        const double    x    , 
+        const ARGS& ... args )
       { return integrate_s1 ( std::cref ( f ) , x , args... ) ; }
+      // ======================================================================
+     /** integrate the function \f$ f(s,s_1,s_2)\f$ or \f$ f(s_1,s_2) 
+       *  over \f$ \f$ s_1,s_2 \f$
+       *  @see Ostap::Math::DalitzIntegrator::integrate_s1s2
+       */
+      template <class FUNCTION, typename... ARGS>
+      static inline double 
+      integral_s1s2 
+      ( FUNCTION        f , 
+        const double    s , 
+        const ARGS& ... args )
+      { return integrate_s1s2 ( std::cref ( f ) , s , args... ) ; }
       // =====================================================================
       /** integrate the function \f$ f(s,s_1,s_2)\f$ or \f$ f(s_1,s_2) 
        *  over \f$ s\f$  and \f$s_1\f$
@@ -327,8 +360,9 @@ namespace Ostap
        */
       template <class FUNCTION, typename... ARGS>
       static inline double 
-      integral_ss1 ( FUNCTION        f    , 
-                     const ARGS& ... args )
+      integral_ss1 
+      ( FUNCTION        f    , 
+        const ARGS& ... args )
       { return integrate_ss1 ( std::cref ( f ) , args... ) ; }
       // =====================================================================
     public: // as functions of energy 
@@ -344,7 +378,9 @@ namespace Ostap
       static double integrate_e2e3
       ( function3                        f3      ,
         const Ostap::Kinematics::Dalitz& d       , 
-        const std::size_t                tag = 0 ) ;
+        const std::size_t                tag = 0 ,
+        const unsigned short              n1 = 0 , 
+        const unsigned short              n2 = 0 ) ;
       // =======================================================================
       /** evaluate the integral over \f$e_2\f$ , \f$e_3\f$ variables 
        *  \f[ \int\int de_2 de_3 f(e_2,e_3) = 
@@ -357,7 +393,9 @@ namespace Ostap
       static double integrate_e2e3
       ( function2                        f2      ,
         const Ostap::Kinematics::Dalitz& d       , 
-        const std::size_t                tag = 0 ) ;
+        const std::size_t                tag = 0 ,
+        const unsigned short              n1 = 0 , 
+        const unsigned short              n2 = 0 ) ;
       // ======================================================================
     private:
       // ======================================================================

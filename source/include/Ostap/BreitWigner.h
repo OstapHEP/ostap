@@ -1065,32 +1065,39 @@ namespace Ostap
        *  \f$\frac{1}{\pi}\frac{\omega\Gamma(\omega)}
        *   { (\omega_0^2-\omega^2)^2-\omega_0^2\Gamma^2(\omega)-}\f$
        */
-      virtual double operator() ( const double x ) const 
-      { return breit_wigner ( x ) ; }
+      virtual double operator() ( const double m ) const 
+      { return breit_wigner ( m ) ; }
       // ======================================================================
     public:  // amplitude 
       // ======================================================================
       /** Get Breit-Wigner amplitude
        *  \f[ A(m) = \frac{1}{m^2_0 - m^2 - \sum_a D_a ( m^2 ) } \f]
        */
-      virtual std::complex<double> amplitude ( const double x ) const ;
+      virtual std::complex<double> amplitude ( const double m ) const ;
       // ======================================================================      
       /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
        *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
        *   \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A} \right|^2 \f] 
+       *  @param m the mass point 
        */
-      double breit_wigner ( const double x ) const 
-      { return x <= threshold() ? 0.0 : breit_wigner ( x , amplitude ( x ) ) ; }
+      double breit_wigner ( const double m ) const 
+      { return m <= threshold() ? 0.0 : breit_wigner ( m , amplitude ( m ) ) ; }
       // ======================================================================
       /** Get Breit-Wigner lineshape in channel \f$ a\f$ : 
        *  \f[ F_a(m) = 2m \varrho(s) N^2_a(s,m_0) 
        *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
-       *  @param x the mass point 
+       *  @param m the mass point 
        *  @param A the amplitide at this point 
        */
       double breit_wigner 
-      ( const double                x , 
+      ( const double                m , 
         const std::complex<double>& A ) const ;
+      // ======================================================================
+      /// get factor \f$ N^2(s,m_0^2)\f$ from the main channel
+      double N2    ( const double s ) const 
+      { return s <= s_threshold () ? 0.0 : channel() -> N2 ( s , m0 () ) ; }      
+      /// get factor \f$ \varrho(s,m_n^2) \f$ from the main channel 
+      double rho_s ( const double s ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1123,7 +1130,9 @@ namespace Ostap
       inline unsigned int nChannels() const { return m_channels.size()  ; }
       // ======================================================================
       /// get the threshold value (cached in constructor)
-      double           threshold () const { return m_threshold ; }
+      double           threshold   () const { return m_threshold ; }
+      /// get the threshold value (cached in constructor)
+      double           s_threshold () const { return m_threshold * m_threshold ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1186,7 +1195,7 @@ namespace Ostap
      *  J.D.Jackson,
      *  "Remarks on the Phenomenological Analysis of Resonances",
      *  In Nuovo Cimento, Vol. XXXIV, N.6
-     *
+     *  
      *  http://www.springerlink.com/content/q773737260425652/
      *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -1329,6 +1338,10 @@ namespace Ostap
       Phi0* clone()   const override { return new Phi0 ( *this ) ; }
       // ======================================================================
     } ;
+    // ========================================================================
+      
+
+
     // ========================================================================
     /** @class BreitWignerMC
      *  function to describe Breit-Wigner signal with several channels,

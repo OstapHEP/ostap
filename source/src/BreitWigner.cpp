@@ -1072,6 +1072,17 @@ std::size_t Ostap::Math::BW::tag() const
   return seed ;
 }
 // ============================================================================
+// get factor \f$ \varrho(s,m_n^2) \f$ from the main channel 
+// ============================================================================
+double Ostap::Math::BW::rho_s ( const double s ) const
+{
+  if ( s <= s_threshold () ) { return 0 ; }
+  /// get the main/first channel 
+  const ChannelBW* c    = channel () ;
+  /// get rho-factor 
+  return c -> rho_s ( s , threshold () < m0() ? m0 () : 1.2 * threshold () ) ;
+}
+// ============================================================================
 /*  Get Breit-Wigner lineshape in channel \f$ a\f$ : 
  *  \f[ F_a(m) = 2m \varrho(s) N_a(s,m_0) 
  *    \frac{\Gamma_{tot}}{\Gamma_{0,a}} \left| \mathcal{A}  \right|^2 \f] 
@@ -1080,27 +1091,25 @@ std::size_t Ostap::Math::BW::tag() const
  */
 // ============================================================================
 double Ostap::Math::BW::breit_wigner 
-( const double                x ,
+( const double                m ,
   const std::complex<double>& A ) const 
 {
-  if ( x <= threshold () ) { return 0 ; }
+  if ( m <= threshold () ) { return 0 ; }
   //
-  const double s =  x * x ;
-  /// get the main/first channel 
-  const ChannelBW* c    = channel () ;
+  const double s = m * m ;
   //
-  /// normalization point 
-  const double mn = threshold () <= m0 () ? m0 () : 1.2 * threshold () ;
-  //  
-  const double     rhos = c -> rho_s ( s , mn  ) ;
+  /// get factor \f$ \varrho(s,m_n)\f$ 
+  const double rhos = rho_s ( s ) ;
   if ( rhos <= 0 ) { return 0 ; }
   //
-  const double     n2   = c -> N2 ( s , m0 () ) ;
+  /// get factor \f$ N^2(s,m_0) \f$ 
+  const double     n2   = N2 ( s ) ;
   if ( n2   <= 0 ) { return 0 ; }
   //
-  const double gs = 1 < m_channels.size () ? gamma () / c->gamma0 () : 1.0 ;
+  // rescale the overall  normalization   facror
+  const double gs = 1 < m_channels.size () ? gamma () / channel()->gamma0 () : 1.0 ;
   //
-  return 2 * x * n2 * std::norm ( A ) * rhos * gs / M_PI ;
+  return 2 * m * n2 * std::norm ( A ) * rhos * gs / M_PI ;
   //
 }
 // ============================================================================
@@ -1496,10 +1505,6 @@ std::string Ostap::Math::ChannelFlatte::describe() const
     ","          + std::to_string ( m2     () ) + ")" ;
 }
 // ============================================================================
-
-
-
-
 
 
 
