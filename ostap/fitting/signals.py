@@ -2687,14 +2687,15 @@ class BreitWigner_pdf(MASS) :
                    breitwigner        , ## Ostap::Math::BreitWeigner object
                    xvar               ,
                    mean        = None , 
-                   gamma       = None ) : 
-        
+                   gamma       = None ) :        
         #
         ## initialize the base
         # 
         MASS.__init__  ( self  , name  , xvar ,
-                         mean  = mean ,
+                         mean  = mean  ,
                          sigma = gamma ,
+                         ## mean_name   = 'm0_%s'      % name ,
+                         ## mean_title  = '#m_0(%s)'   % name ,                         
                          sigma_name  = 'gamma_%s'   % name ,
                          sigma_title = '#Gamma(%s)' % name )
 
@@ -2725,6 +2726,14 @@ class BreitWigner_pdf(MASS) :
             }
 
     @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
+    @property
     def gamma ( self ) :
         """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
         return self.sigma 
@@ -2735,11 +2744,12 @@ class BreitWigner_pdf(MASS) :
     @property
     def Gamma ( self ) :
         """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
-        return self.gamma 
+        return self.sigma 
     @Gamma.setter
     def Gamma ( self, value ) :
         self.sigma = value 
 
+        
     @property
     def breitwigner ( self ) :
         """The Breit-Wigner function  itself"""

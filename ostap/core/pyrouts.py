@@ -124,7 +124,8 @@ import ostap.utils.pdg_format
 import ostap.plotting.canvas
 
 import ostap.fitting.minuit 
-import ostap.fitting.minuit 
+import ostap.fitting.roofit 
+
 
 import ostap.plotting.draw_attributes 
 

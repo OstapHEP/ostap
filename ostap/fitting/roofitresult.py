@@ -692,14 +692,14 @@ def _rm_migrad_  ( self , refit = 0 , tag = "" , minos = () ) :
 ## run MINOS for set of parameters
 #  @code
 #  pdf = ...
-#  minuit = pdf.minuit()
+#  minuit = pdf.minuit( ... )
 #  minuit.migrad() 
 #  minuit.minos ( 'sigma' , 'mean' )  
 #  @endcode
 def _rm_minos_ ( self , *variables ) :
     """Run MINOS for set of parameters
     >>> pdf = ...
-    >>> minuit = pdf.minuit()
+    >>> minuit = pdf.minuit( ... )
     >>> minuit.migrad() 
     >>> minuit.minos ( 'sigma' , 'mean' )  
     """
@@ -713,7 +713,7 @@ def _rm_minos_ ( self , *variables ) :
 
     aset = ROOT.RooArgSet()
     res  = self.save()
-    
+
     for v in variables :
 
         if   isinstance   ( v , string_types ) or isinstance ( v , ROOT.RooAbsReal ) :
@@ -747,9 +747,54 @@ if not hasattr ( ROOT.RooMinimizer , '_old_minos_' ) :
     ROOT.RooMinimizer._old_minos_  = ROOT.RooMinimizer.minos
     _rm_minos_.__doc__ += '\n' + ROOT.RooMinimizer.minos.__doc__
     ROOT.RooMinimizer.     minos   = _rm_minos_ 
-    
 
+# =============================================================================
+## make 2D contours  in units of ``sigma''
+#  @code
+#  pdf    = ...
+#  minuit = pdf.minuit( ... )
+#  minuit.migrad() 
+#  contour = minuit.contour ( 'A' , 'B' ) 
+#  @endcode 
+def _rm_contour_ ( self                   ,
+                   var1                   ,
+                   var2                   ,
+                   npoints = 100          ,
+                   *levels                ) : 
+
+    """Make 2D contours  in uniys  of ``sigma''
+    >>> pdf    = ...
+    >>> minuit = pdf.minuit( ... )
+    >>> minuit.migrad() 
+    >>> contour = minuit.contour ( 'A' , 'B' ) 
+    """
     
+    assert isinstance ( npoints , integer_types ) and 2 < npoints ,\
+           'Invalid number of points %s' % npoints
+    
+    res  = self.save () 
+    
+    ## var1 = res.param ( var1 ) [ 1 ] 
+    ## var2 = res.param ( var2 ) [ 1 ] 
+
+    n = 6 * [ 0.0 ]
+    for i , l in enumerate ( levels ) :
+        if len ( n ) <= i : break
+        ll = float ( l )
+        assert 0 <= l , 'Invalid level %s' % ll 
+        n [ i ] = ll  
+
+    return self._old_contour_ ( var1    , var2    ,
+                                n [ 0 ] , n [ 1 ] ,
+                                n [ 2 ] , n [ 3 ] ,
+                                n [ 4 ] , n [ 5 ] , npoints )
+
+
+if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
+    ROOT.RooMinimizer._old_contour_ = ROOT.RooMinimizer.contour 
+    _rm_contour_.__doc__ += '\n' + ROOT.RooMinimizer.contour.__doc__
+    ROOT.RooMinimizer. contour  = _rm_contour_ 
+
 # =============================================================================
 ## some decoration over RooFitResult
 ROOT.RooFitResult . __repr__        = _rfr_print_

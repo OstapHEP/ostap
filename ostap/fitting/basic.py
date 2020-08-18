@@ -1082,9 +1082,9 @@ class PDF (FUNC) :
     ## get NLL/profile-graph for the variable, using the specified bscissas
     #  @code
     #  pdf   = ...
-    #  graph = pdf.graph_nll ( 'S'               ,
-    #                          range ( 0 , 100 ) ,
-    #                          dataset           )
+    #  graph = pdf.graph_nll ( 'S'                      ,
+    #                          vrange ( 0 , 100 , 100 ) ,
+    #                          dataset                  )
     #  @endcode
     def graph_nll ( self            ,
                     variable        , 
@@ -1094,9 +1094,9 @@ class PDF (FUNC) :
                     args    = ()    , **kwargs ) :
         """Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
-        >>> graph = pdf.graph_nll ( 'S'               ,
-        ...                          range ( 0 , 100 ) ,
-        ...                          dataset           )
+        >>> graph = pdf.graph_nll ( 'S'                     ,
+        ...                          vrange ( 0 , 100 , 100 ) ,
+        ...                          dataset                )
         """
 
         ## 1) create NLL 
@@ -1110,8 +1110,8 @@ class PDF (FUNC) :
         del pars 
 
         ## 2) collect NLL values 
-        results = []
-        vmin    = None 
+        results   = []
+        vmin      = None
         with SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for v in progress_bar  ( values , silent = silent ) :
@@ -1467,7 +1467,8 @@ class PDF (FUNC) :
         assert nLL or dataset , "minuit: nLL or dataset *must* be specified!" 
         if not nLL : 
             nLL , _ = self.nll ( dataset , args = args , **kwargs )
-        
+            self.aux_keep.append ( nLL )
+            
         m    = ROOT.RooMinimizer ( nLL )
         if isinstance  ( opt_const  , bool ) : m.optimizeConst ( opt_const ) 
         if isinstance  ( max_calls      , integer_types ) and 1 < max_calls :
@@ -2359,7 +2360,7 @@ class MASSMEAN(PDF) :
         self.__check_mean = self.xminmax () and checkMean () 
         
         self.__limits_mean  = ()
-        if  self.check_mean and self.xminmax () :    
+        if  self.check_mean and self.xminmax () and not isinstance ( mean , ROOT.RooAbsReal ) :      
             mn , mx = self.xminmax()
             dm      =  mx - mn
             self.__limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
@@ -2403,10 +2404,13 @@ class MASSMEAN(PDF) :
     @mean.setter
     def mean ( self , value ) :
         value =  float ( value )
+        mn , mx = self.mean.minmax()
+        if not mn <= value <= mx :
+            self.warning( "``%s'': %s is outside the interval (%s,%s)/1" % ( self.mean.name , value , mn , mx ) )
         if self.check_mean and self.limits_mean  :  
             mn , mx = self.limits_mean 
             if not mn <= value <= mx :
-                self.error ("``%s'': %s is outside the interval  %s,%s"  % ( self.mean.name , value , mn , mx ) )                
+                self.error ("``%s'': %s is outside the interval (%s,%s)/2"  % ( self.mean.name , value , mn , mx ) )                
         self.mean.setVal ( value )
         
     @property
@@ -2419,9 +2423,12 @@ class MASSMEAN(PDF) :
 
     @property
     def check_mean ( self ) :
-        """``check_mean'' : Is mean/location -value to be checked?"""
+        """``check_mean'' : Is mean-value to be checked?"""
         return self.__check_mean
-
+    @check_mean.setter
+    def check_mean ( self, value ) :
+        self.__check_mean = True if  value else False
+        
     @property
     def limits_mean ( self ) :
         """``limits_mean'' : reasonable limits for mean/location"""
@@ -2454,16 +2461,17 @@ class MASS(MASSMEAN) :
         MASSMEAN.__init__ ( self , name , xvar , mean )
 
         self.__limits_sigma = ()        
-        if   self.xminmax() :            
-            mn , mx = self.xminmax()
-            dm      =  mx - mn
-            sigma_max    =  2 * dm / math.sqrt(12)  
+        if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
+            mn , mx   = self.xminmax()
+            dm        =  mx - mn
+            sigma_max =  2 * dm / math.sqrt(12)  
             self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
 
         ## sigma
         s_name  = sigma_name  if sigma_name  else "sigma_%s"   % name
         s_title = sigma_title if sigma_title else "#sigma(%s)" % name
         #
+        self.__check_sigma = True 
         self.__sigma = self.make_var ( sigma  , s_name , s_title , sigma , *self.limits_sigma )
         
         ## save the configuration
@@ -2485,12 +2493,23 @@ class MASS(MASSMEAN) :
     @sigma.setter
     def sigma ( self , value ) :
         value =   float ( value )
-        if self.limits_sigma  : 
+        mn , mx = self.sigma.minmax()
+        if not mn <= value <= mx :
+            self.warning ("``%s'': %s is outside the interval (%s,%s)/1" % ( self.sigma.name , value , mn , mx ) )
+        if self.limits_sigma and self.check_sigma  : 
             mn , mx = self.limits_sigma 
             if not mn <= value <= mx :
-                self.error ("``%s'': %s is outside the interval (%s,%s)" % ( self.sigma.name , value , mn , mx ) )
+                self.error ("``%s'': %s is outside the interval (%s,%s)/2" % ( self.sigma.name , value , mn , mx ) )
         self.sigma.setVal ( value )
 
+    @property
+    def check_sigma ( self ) :
+        """``check_mean'' : Is mean-value to be checked?"""
+        return self.__check_sigma 
+    @check_sigma.setter
+    def check_sigma ( self, value ) :
+        self.__check_sigma = True if  value else False 
+    
     @property
     def limits_sigma ( self ) :
         """``limits_sigma'' : reasonable limits for sigma/width"""
