@@ -23,6 +23,8 @@ ap.draw('alc')
   1. more improvements for Dalitz plot vizualization 
   1. more tweaks for `Ostap::Math::DalitzIntegrator`
   1. more tweaks for `Ostap::Math::BW`
+  1. add `bb` ("bounding box") method for `ROOT.TGraph`-like objects.
+
 
 ## Backward incompatible changes: 
 

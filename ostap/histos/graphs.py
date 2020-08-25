@@ -951,8 +951,7 @@ def _gr_xmin_ ( graph ) :
     >>> graph = ...
     >>> xmin  = graph.xmin () 
     """
-    xmin , xmax  = graph.xminmax  ()
-    return xmin
+    return graph.bb() [ 0 ] 
 
 # =============================================================================
 ## get maximal-x 
@@ -967,9 +966,7 @@ def _gr_xmax_ ( graph ) :
     >>> graph = ...
     >>> xmax  = graph.xmax () 
     """    
-    xmin , xmax  = graph.xminmax  ()
-    return xmax
-
+    return graph.bb() [ 1 ] 
 
 # =============================================================================
 ## get minimal-y
@@ -984,8 +981,7 @@ def _gr_ymin_ ( graph ) :
     >>> graph = ...
     >>> ymin  = graph.ymin () 
     """
-    ymin , ymax  = graph.yminmax  ()
-    return ymin
+    return graph.bb() [ 3 ] 
 
 # =============================================================================
 ## get maximal-y
@@ -1000,8 +996,7 @@ def _gr_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    ymin , ymax  = graph.yminmax  ()
-    return ymax
+    return graph.bb() [ 4 ] 
 
 # =============================================================================
 ## get minimal and maximal x for the points
@@ -1016,15 +1011,8 @@ def _gr_xminmax_ ( graph ) :
     >>> graph = ...
     >>> xmin,xmax = graph.xminmax() 
     """
-    xmin = pos_infinity
-    xmax = neg_infinity
-    
-    for i , x , y in graph.iteritems() :
-        
-        xmin = min ( xmin , x ) 
-        xmax = max ( xmax , x )
-        
-    return xmin, xmax
+    xmin , xmax ,  _ , _ = graph.bb()
+    return xmin , xmax
 
 # =============================================================================
 ## get minimal and maximal value for the points
@@ -1040,116 +1028,149 @@ def _gr_yminmax_ ( graph ) :
     >>> graph = ...
     >>> mn,mx = graph.yminmax() 
     """
-    ymin = pos_infinity
-    ymax = neg_infinity
-    
-    for i , x , y in graph.iteritems() :
-        
-        ymin = min ( ymin , y ) 
-        ymax = max ( ymax , y )
-        
-    return ymin, ymax
+    _ , _ , ymin , ymax = graph.bb()
+    return ymin , ymax
+
 
 # =============================================================================
-## get minimal and maximal x for the points
+## Get a "bounding box" for the graph
 #  @code
-#  graph = ...
-#  xmin,xmax = graph.xminmax() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_xminmax_ ( graph ) :
-    """Get minimal and maximal x for the points
-    >>> graph = ...
-    >>> xmin,xmax = graph.xminmax() 
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _gr_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
     """
     xmin = pos_infinity
     xmax = neg_infinity
-    
-    for i , x , y in graph.iteritems() :
+    ymin = pos_infinity
+    ymax = neg_infinity
 
+    for i , x , y in graph.iteritems() :
+        
+        xmin = min ( xmin , x )  
+        xmax = max ( xmax , x )
+        ymin = min ( ymin , y )  
+        ymax = max ( ymax , y )
+
+    if more : 
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+        
+    return xmin , xmax , ymin , ymax
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _gre_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    for i , x , y in graph.iteritems() :
+        
         xv = x.value ()
         ex = x.error ()
         
-        xmin = min ( xmin , xv + ex , xv - ex  ) 
-        xmax = max ( xmax , xv + ex , xv - ex  )
-        
-    return xmin, xmax
-
-# =============================================================================
-## get minimal and maximal value for the points
-#  @code
-#  graph = ...
-#  mn,mx = graph.yminmax() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_yminmax_ ( graph ) :
-    """
-    Get minimal and maximal  for the points
-    >>> graph = ...
-    >>> mn,mx = graph.yminmax() 
-    """
-    ymin = pos_infinity
-    ymax = neg_infinity
-    
-    for i , x , y in graph.iteritems() :
-        
         yv = y.value ()
         ey = y.error ()
-        
-        ymin = min ( ymin , yv + ey , yv - ey  ) 
-        ymax = max ( ymax , yv + ey , yv - ey  )
 
-    return ymin, ymax
+        xmin = min ( xmin , xv , xv + ex , xv - ex )  
+        xmax = max ( xmax , xv , vx + ex , xv - ex )
+        ymin = min ( ymin , yv , yv + ey , yv - ey )  
+        ymax = max ( ymax , yv , yx + ey , yv - ey )
+        
+    if more :
+        
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+
+    return xmin , xmax , ymin , ymax
 
 # =============================================================================
-## get minimal and maximal x for the points
+## Get a "bounding box" for the graph
 #  @code
-#  graph = ...
-#  xmin,xmax = graph.xminmax() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_xminmax_ ( graph ) :
-    """Get minimal and maximal x for the points
-    >>> graph = ...
-    >>> xmin,xmax = graph.xminmax() 
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _grae_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
     """
     xmin = pos_infinity
     xmax = neg_infinity
-    
-    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
-        
-        xmin = min ( xmin , xv - abs ( enx ) , xv + epx  ) 
-        xmax = max ( xmax , xv - abs ( enx ) , xv + epx  )
-        
-    return xmin , xmax
-
-# =============================================================================
-## get minimal and maximal value for the points
-#  @code
-#  graph = ...
-#  mn,mx = graph.yminmax() 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_yminmax_ ( graph ) :
-    """
-    Get minimal and maximal  for the points
-    >>> graph = ...
-    >>> mn,mx = graph.yminmax() 
-    """
     ymin = pos_infinity
     ymax = neg_infinity
-    
-    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
-        
-        ymin = min ( ymin , yv - abs ( eny ) , yv + epy  ) 
-        ymax = max ( ymax , yv - abs ( eny ) , yv + epy  )
-        
-    return ymin , ymax
 
+    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
+
+        xmin = min ( xmin , xv , xv + abs ( epx ) , xv - abs ( enx ) )
+        xmax = max ( xmax , xv , xv + abs ( epx ) , xv - abs ( enx ) )
+        ymin = min ( ymin , yv , yv + abs ( epy ) , xv - abs ( eny ) )
+        ymax = max ( ymax , yv , yv + abs ( epy ) , xv - abs ( eny ) )
+
+    if more :
+        
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+
+    return xmin , xmax , ymin , ymax
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _mg_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    _gs = graph.GetListOfGraps()
+    for gr in _gs :
+        
+        xmn , xmx , ymn , ymx = gr.bb ( more )
+        
+        xmin = min ( xmin , xmn )
+        xmax = max ( xmax , xmx )
+        ymin = min ( ymin , ymn )
+        ymax = max ( ymax , ymx )
+
+    return xmin , xmax , ymin , ymax
+
+
+ROOT.TGraph.bb            =   _gr_bb_ 
+ROOT.TGraphErrors.bb      =  _gre_bb_ 
+ROOT.TGraphAsymmErrors.bb = _grae_bb_ 
+ROOT.TMultiGraph.bb       =   _mg_bb_ 
+    
 # =============================================================================
 ## get "slice" for graph 
 #  @code     
@@ -1469,10 +1490,6 @@ ROOT.TGraphErrors . __setitem__   = _gre_setitem_
 ROOT.TGraphErrors .     items     = _gre_iteritems_ 
 ROOT.TGraphErrors . iteritems     = _gre_iteritems_ 
 
-ROOT.TGraphErrors . xminmax       = _gre_xminmax_ 
-ROOT.TGraphErrors . yminmax       = _gre_yminmax_ 
-ROOT.TGraphErrors .  minmax       = _gre_yminmax_ 
-
 ROOT.TH1F.asGraph = hToGraph
 ROOT.TH1D.asGraph = hToGraph
 ROOT.TH1F.toGraph = hToGraph
@@ -1486,9 +1503,6 @@ ROOT.TGraphAsymmErrors. iteritems    = _grae_iteritems_
 ROOT.TGraphAsymmErrors.__getitem__   = _grae_getitem_ 
 ROOT.TGraphAsymmErrors.__setitem__   = _grae_setitem_ 
 
-ROOT.TGraphAsymmErrors . xminmax     = _grae_xminmax_ 
-ROOT.TGraphAsymmErrors . yminmax     = _grae_yminmax_ 
-ROOT.TGraphAsymmErrors .  minmax     = _grae_yminmax_ 
 
 
 ROOT.TGraphAsymmErrors . transform   = _grae_transform_
@@ -2538,39 +2552,14 @@ ROOT.TMultiGraph.transpose = _mg_transpose_
 ROOT.TMultiGraph.T         = _mg_transpose_ 
 
 
-# =============================================================================
-## get xmin/xmax for MultiGraph 
-def  _mg_xminmax_ ( graph ) :
-    """Get xmin/xmax for MultiGraph
-    """
-    xmin , xmax = pos_infinity , neg_infinity
-    for g in graph :
-        xmn , xmx = g.xminmax ()
-        xmin = min ( xmin , xmn ) 
-        xmax = max ( xmax , xmx ) 
-    return xmin, xmax
+ROOT.TMultiGraph.xminmax = _gr_xminmax_
+ROOT.TMultiGraph.yminmax = _gr_yminmax_
+ROOT.TMultiGraph. minmax = _gr_yminmax_
 
-# =============================================================================
-## get ymin/ymax for MultiGraph 
-def  _mg_yminmax_ ( graph ) :
-    """Get ymin/ymax for MultiGraph
-    """
-    ymin , ymax = pos_infinity , neg_infinity
-    for g in graph :
-        ymn , ymx = g.yminmax ()
-        ymin = min ( ymin , ymn ) 
-        ymax = max ( ymax , ymx ) 
-    return ymin, ymax
-
-
-ROOT.TMultiGraph.xminmax = _mg_xminmax_
-ROOT.TMultiGraph.yminmax = _mg_yminmax_
-ROOT.TMultiGraph. minmax = _mg_yminmax_
-
-ROOT.TMultiGraph.xmin = lambda s : s.xminmax()[0]
-ROOT.TMultiGraph.ymin = lambda s : s.yminmax()[0]
-ROOT.TMultiGraph.xmax = lambda s : s.xminmax()[1]
-ROOT.TMultiGraph.ymax = lambda s : s.yminmax()[1]
+ROOT.TMultiGraph.xmin    = _gr_xmin_ 
+ROOT.TMultiGraph.ymin    = _gr_ymin_  
+ROOT.TMultiGraph.xmax    = _gr_xmax_ 
+ROOT.TMultiGraph.ymax    = _gr_ymax_ 
 
 
 # =============================================================================
@@ -2991,6 +2980,7 @@ _new_methods_      = (
     ROOT.TGraph       . xminmax       ,
     ROOT.TGraph       . yminmax       ,
     ROOT.TGraph       .  minmax       ,
+    ROOT.TGraph       .  bb           ,
     #
     ROOT.TGraphErrors . xminmax       ,
     ROOT.TGraphErrors . yminmax       ,
@@ -3071,6 +3061,7 @@ _new_methods_      = (
     ROOT.TGraphErrors . ymin          ,
     ROOT.TGraphErrors . xmax          ,
     ROOT.TGraphErrors . ymax          , 
+    ROOT.TGraphErrors .  bb           ,
     #
     ROOT.TGraphErrors .  __mul__      , 
     ROOT.TGraphErrors . __rmul__      , 
@@ -3108,6 +3099,7 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors . ymin        ,
     ROOT.TGraphAsymmErrors . xmax        ,
     ROOT.TGraphAsymmErrors . ymax        ,
+    ROOT.TGraphAsymmErrors . bb          ,
     #
     ROOT.TGraphAsymmErrors .  __mul__      , 
     ROOT.TGraphAsymmErrors . __rmul__      , 
