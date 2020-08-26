@@ -30,6 +30,7 @@ ap.draw('alc')
   1. add `PDF.minuit`: add FCN scaling for weighted dataset 
   1. re-add checks for `SumW2/Asymptotic` checks for the `PDF.fitTo` for weighed datasets 
   1. add new test `test_fitting_minuit_weighted`
+  1. add two specific  cases for `Ostap::Math::PhaseSpaceNL`
 
 ## Backward incompatible changes: 
 

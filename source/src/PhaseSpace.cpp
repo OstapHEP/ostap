@@ -759,37 +759,45 @@ Ostap::Math::PhaseSpaceNL::PhaseSpaceNL
   const unsigned short n          )
   : m_threshold1 ( std::min ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )
   , m_threshold2 ( std::max ( std::abs ( threshold1 ) , std::abs ( threshold2 ) ) )
-  , m_N          ( std::max ( l , n ) )
-  , m_L          ( std::min ( l , n ) )
+  , m_N          ( n )
+  , m_L          ( l )
   , m_norm       ( 1 )
-//
+    //
   , m_workspace  ()
-//
+    //
 {
-  long double _norm = 1;
-  if ( ( 3 * m_N * 0.5 - 3       * 0.5 ) < GSL_SF_GAMMA_XMAX &&
-       ( 3 * m_L * 0.5 - 3       * 0.5 ) < GSL_SF_GAMMA_XMAX &&
-       ( 3 * m_N * 0.5 - 3 * m_L * 0.5 ) < GSL_SF_GAMMA_XMAX )
+  //
+  Ostap::Assert ( ( 2 <= l && l <  n ) ||  // the regular case 
+                  ( 0 == l && 1 <= n ) ||  // the right phase space 
+                  ( 2 <= l && 0 == n ) ,   // the left  phase space 
+                  "Invalid N,L-case!"  , 
+                  "Ostap::Math::PhaseSpaceNL" ) ;
+  //
+  if (  2 <= l && l < n ) 
   {
-    //m_norm  = gsl_sf_gamma   ( 3 * m_N * 0.5 - 3       * 0.5 ) ;
-    //m_norm /= gsl_sf_gamma   ( 3 * m_L * 0.5 - 3       * 0.5 ) ;
-    //m_norm /= gsl_sf_gamma   ( 3 * m_N * 0.5 - 3 * m_L * 0.5 ) ;
-    _norm  = std::tgamma   ( 3.0L * m_N * 0.5 - 3       * 0.5 ) ;
-    _norm /= std::tgamma   ( 3.0L * m_L * 0.5 - 3       * 0.5 ) ;
-    _norm /= std::tgamma   ( 3.0L * m_N * 0.5 - 3 * m_L * 0.5 ) ;
+    //
+    long double _norm = 1;
+    if ( ( 3 * m_N * 0.5 - 3       * 0.5 ) < GSL_SF_GAMMA_XMAX &&
+         ( 3 * m_L * 0.5 - 3       * 0.5 ) < GSL_SF_GAMMA_XMAX &&
+         ( 3 * m_N * 0.5 - 3 * m_L * 0.5 ) < GSL_SF_GAMMA_XMAX )
+    {
+      _norm  = std::tgamma   ( 3.0L * m_N * 0.5 - 3       * 0.5 ) ;
+      _norm /= std::tgamma   ( 3.0L * m_L * 0.5 - 3       * 0.5 ) ;
+      _norm /= std::tgamma   ( 3.0L * m_N * 0.5 - 3 * m_L * 0.5 ) ;
+    }
+    else
+    {
+      _norm  = std::lgamma ( 3.0L * m_N * 0.5 - 3       * 0.5 ) ;
+      _norm -= std::lgamma ( 3.0L * m_L * 0.5 - 3       * 0.5 ) ;
+      _norm -= std::lgamma ( 3.0L * m_N * 0.5 - 3 * m_L * 0.5 ) ;
+      _norm  = std::exp    ( _norm ) ;
+    }
+    m_norm = _norm  ;
+    //
   }
-  else
-  {
-    //_norm  = gsl_sf_lngamma ( 3 * m_N * 0.5 - 3       * 0.5 ) ;
-    //_norm -= gsl_sf_lngamma ( 3 * m_L * 0.5 - 3       * 0.5 ) ;
-    //_norm -= gsl_sf_lngamma ( 3 * m_N * 0.5 - 3 * m_L * 0.5 ) ;
-    //_norm  = gsl_sf_exp     ( m_norm ) ;
-    _norm  = std::lgamma ( 3.0L * m_N * 0.5 - 3       * 0.5 ) ;
-    _norm -= std::lgamma ( 3.0L * m_L * 0.5 - 3       * 0.5 ) ;
-    _norm -= std::lgamma ( 3.0L * m_N * 0.5 - 3 * m_L * 0.5 ) ;
-    _norm  = std::exp    ( _norm ) ;
-  }
-  m_norm = _norm  ;
+  else if ( 0 == l ) { m_norm = ( 3.0 * m_N     ) / 2 ; }
+  else if ( 0 == n ) { m_norm = ( 3.0 * m_L - 3 ) / 2 ; }
+  //
 }
 // ============================================================================
 // destructor
@@ -804,11 +812,20 @@ double Ostap::Math::PhaseSpaceNL::operator () ( const double x ) const
   if ( m_threshold1 >= x ) { return 0 ; }
   if ( m_threshold2 <= x ) { return 0 ; }
   //
-  const double y = (  x - m_threshold1 ) / ( m_threshold2 - m_threshold1 ) ;
+  const double ilength = 1.0 / ( m_threshold2 - m_threshold1 ) ;
+  const double y       = (  x - m_threshold1 ) * ilength       ;
+  //
   if ( 0 >= y || 1 <= y )  { return 0 ; }
   //
-  return m_norm
-    / std::abs ( m_threshold2 - m_threshold1               )
+  return 
+    //
+    0 == m_N ?
+    m_norm * ilength * std::pow (     y , 3 * 0.5 *   m_L         - 5 * 0.5 ) :
+    //
+    0 == m_L ? 
+    m_norm * ilength * std::pow ( 1 - y , 3 * 0.5 * ( m_N - m_L ) - 1       ) :
+    //
+    m_norm * ilength 
     * std::pow (     y , 3 * 0.5 *   m_L         - 5 * 0.5 )
     * std::pow ( 1 - y , 3 * 0.5 * ( m_N - m_L ) - 1       ) ;
 }
@@ -844,12 +861,35 @@ double  Ostap::Math::PhaseSpaceNL::integral
   if ( m_threshold2 <= low  ) { return 0 ; }
   if ( m_threshold1 >= high ) { return 0 ; }
   //
-  if ( m_threshold1 >  low  ) { return integral ( m_threshold1 ,  high        ) ; }
+  if ( m_threshold1 >  low  ) { return integral ( m_threshold1 , high         ) ; }
   if ( m_threshold2 <  high ) { return integral ( low          , m_threshold2 ) ; }
   //
-  // split, if the interval is too large
+  // left phase-space 
+  if      ( 0 == m_N ) 
+  {
+    const double ilength = 1.0 / ( m_threshold2  - m_threshold1 ) ;
+    const double y1      = ( low  - m_threshold1 ) * ilength ;
+    const double y2      = ( high - m_threshold1 ) * ilength ;
+    ///
+    return m_norm * ( std::pow ( y2 , 0.5 * ( 3 * m_L - 3 ) ) - 
+                      std::pow ( y1 , 0.5 * ( 3 * m_L - 3 ) ) ) ;
+  }
   //
-  const double width = 0.2 * std::abs  ( m_threshold2 - m_threshold1 ) ;
+  // right phase-space 
+  else if ( 0 == m_L ) 
+  {
+    const double ilength = 1.0 / ( m_threshold2  - m_threshold1 ) ;
+    const double y1      = ( low  - m_threshold1 ) * ilength ;
+    const double y2      = ( high - m_threshold1 ) * ilength ;
+    ///
+    return m_norm * ( std::pow ( y2 , 0.5 * ( 3 * m_N ) ) - 
+                      std::pow ( y1 , 0.5 * ( 3 * m_L ) ) ) ;
+  }
+  //
+  // generic case 
+  //
+  // split, if the interval is too large
+  const double width = 0.25 * std::abs  ( m_threshold2 - m_threshold1 ) ;
   if ( 0 < width &&  width < high - low  )
   {
     return

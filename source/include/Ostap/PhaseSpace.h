@@ -554,6 +554,7 @@ namespace Ostap
      *  Function epresenting the approximation for
      *  the mass distribution of \f$l\f$-particles from \f$n\f$-body
      *  phase space decay:
+     *  for  \f$ 2\le l < n \$ it is defined as  
      *  \f[ \Phi_{l,n}(x;x_{low},x_{high}) \equiv  
      *       C y^{\frac{3l-5}{2}}\left(1-y\right)^{\frac{3(n-l)-2}{2}}\f]
      *  where 
@@ -565,6 +566,15 @@ namespace Ostap
      *  - \f$x_{high}= M - \sum{i=l+1}{n}m_i\f$, is an upper threshold for 
      *     mass of \f$l\f$-particles from \f$n\f$-body decay of the particle
      *     with mass \f$M\f$
+     * 
+     *  It also includes two specific cases 
+     *  - \f$ 0 == l \f$, \f$ 1 \le n \f$
+     *  \f[ \Phi_{0,n}(x;x_{low},x_{high}) \propto   
+     *     \left(1-y\right)^{ \frac{3n-2}{2} } \f]
+     *  - \f$ 2 \le \f$, \f$ n = 0  \f$
+     *  \f[ \Phi_{l,0}(x;x_{low},x_{high}) \propto   
+     *     \left(y\right)^{ \frac{3l-5}{2} } \f]
+     *
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -595,8 +605,11 @@ namespace Ostap
       // ======================================================================
       double          lowEdge () const { return m_threshold1 ; }
       double         highEdge () const { return m_threshold2 ; }
-      unsigned short       L  () const { return m_L ; }
-      unsigned short       N  () const { return m_N ; }
+      unsigned short       L  () const { return m_L          ; }
+      unsigned short       N  () const { return m_N          ; }
+      // ======================================================================
+      double xmin () const { return  lowEdge () ; }
+      double xmax () const { return highEdge () ; }      
       // ======================================================================
     public:
       // ======================================================================
