@@ -981,7 +981,7 @@ def _gr_ymin_ ( graph ) :
     >>> graph = ...
     >>> ymin  = graph.ymin () 
     """
-    return graph.bb() [ 3 ] 
+    return graph.bb() [ 2 ] 
 
 # =============================================================================
 ## get maximal-y
@@ -996,7 +996,7 @@ def _gr_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    return graph.bb() [ 4 ] 
+    return graph.bb() [ 3 ] 
 
 # =============================================================================
 ## get minimal and maximal x for the points
@@ -1088,9 +1088,9 @@ def _gre_bb_ ( graph , more = 0.0 ) :
         ey = y.error ()
 
         xmin = min ( xmin , xv , xv + ex , xv - ex )  
-        xmax = max ( xmax , xv , vx + ex , xv - ex )
+        xmax = max ( xmax , xv , xv + ex , xv - ex )
         ymin = min ( ymin , yv , yv + ey , yv - ey )  
-        ymax = max ( ymax , yv , yx + ey , yv - ey )
+        ymax = max ( ymax , yv , yv + ey , yv - ey )
         
     if more :
         
