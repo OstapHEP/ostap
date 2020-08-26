@@ -87,8 +87,8 @@ class PolyPos2D_pdf(PolyBase2) :
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
-                   nx = 2           ,   ##  polynomial degree in X 
-                   ny = 2           ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) : 
 
         ## check arguments 
@@ -167,7 +167,7 @@ class PolyPos2Dsym_pdf(PolyBase2) :
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
-                   n  = 2           ,   ##  polynomial degree
+                   n        = 2     ,   ##  polynomial degree
                    the_phis = None  ) : 
         
         ## check arguments 
@@ -256,8 +256,8 @@ class PSPol2D_pdf(PolyBase2) :
                    yvar             ,   ##  the second dimension
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -383,8 +383,8 @@ class PSPol2D2_pdf(PolyBase2) :
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
                    mmax             ,   ##  max-mass 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -524,8 +524,8 @@ class PSPol2D3_pdf(PolyBase2) :
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
                    mmax             ,   ##  max-mass 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -1047,12 +1047,12 @@ class ExpoPSPol2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   xvar             ,   ##  the first  dimension  
-                   yvar             ,   ##  the second dimension
-                   psy = None       ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
-                   nx  = 2          ,   ##  polynomial degree in X 
-                   ny  = 2          ,   ##  polynomial degree in Y 
-                   tau = None       , ##  the exponent 
+                   xvar             , ##  the first  dimension  
+                   yvar             , ##  the second dimension
+                   psy      = None  , ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
+                   nx       = 2     , ##  polynomial degree in X 
+                   ny       = 2     , ##  polynomial degree in Y 
+                   tau      = None  , ##  the exponent 
                    the_phis = None  ) :
         
         ## check arguments 

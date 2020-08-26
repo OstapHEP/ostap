@@ -13,6 +13,8 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
+    'match_arg' , ## check the argument name mathhing 
+    'check_arg' , ## check the presense of argument in the list 
     ) 
 # =============================================================================
 import ROOT
@@ -292,11 +294,77 @@ def _rca_print_ ( self ) :
     
     return name
 
+# =============================================================================
+## check if the argument name matches the pattern
+#  @code
+#  ok =  mathch_arg ( "sumw2" , ... ) 
+#  @endcode
+#  - case-insenstive mathch 
+#  - name starts
+#  - <code>fnmatch</code> matching
+#  - <code>regex</code> matching 
+def match_arg ( pattern , arg ) :
+    """Check if the argument name matches the pattern
+    >>> ok =  mathch_arg ( 'sumw2' , ... ) 
+    - case-insenstive mathhicng 
+    - name starts
+    - fnmatch matching
+    - regex matching 
+    """
+    
+    pl = pattern      .lower ()
+    al = arg.GetName().lower () 
+
+    if al == pl                    : return True ## 
+    elif al.startswith ( pl )      : return True
+
+    import fnmatch
+    if fnmatch.fnmatch ( al , pl ) : return True
+    
+    ## regex
+    import re
+    try :
+        expr = re.compile ( pattern , flags = re.I ) 
+        return expr.match ( arg.GetName() ) 
+    except :
+        pass
+    
+    return False 
+
+    
+# =============================================================================
+## Check the presense of the arg in the list
+#  @code
+#  arg =  check_arg ( "sumw2" , ... ) 
+#  @endcode
+#  - case-insenstive mathch 
+#  - name starts
+#  - <code>fnmatch</code> matching
+#  - <code>regex</code> matching 
+def check_arg  ( pattern , *args ) :
+    """Check the presense of the arg in the list
+    >>> arg =  check_arg ( "sumw2" , ... ) 
+    - case-insenstive mathch 
+    - name starts
+    - <code>fnmatch</code> matching
+    - <code>regex</code> matching 
+    """
+    
+    for arg in args :
+
+        if   match_arg ( pattern , arg ) : return arg 
+        elif arg.GetName() == "MultiArg" :
+            for ia in arg.subArgs() :
+                if match_arg ( pattern , ia ) : return ia
+                
+    return None
+
 
 # =============================================================================
 def _rca_bool_ ( self ) :
     """Get boolean value"""
     return True if self.getInt ( 0 ) else False
+
 
 ROOT.RooCmdArg .__str__  = _rca_print_
 ROOT.RooCmdArg .__repr__ = _rca_print_

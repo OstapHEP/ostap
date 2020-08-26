@@ -24,7 +24,10 @@ ap.draw('alc')
   1. more tweaks for `Ostap::Math::DalitzIntegrator`
   1. more tweaks for `Ostap::Math::BW`
   1. add `bb` ("bounding box") method for `ROOT.TGraph`-like objects.
-
+  1. more  tweaks for `ROOT.RooMinimizer`, in particular better control over printout 
+  1. add `PDF.minuit`: add FCN scaling for weighted dataset 
+  1. re-add checks for `SumW2/Asymptotic` checks for the `PDF.fitTo` for weighed datasets 
+  1. add new test `test_fitting_minuit_weighted`
 
 ## Backward incompatible changes: 
 

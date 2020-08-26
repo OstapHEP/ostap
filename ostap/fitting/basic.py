@@ -45,6 +45,8 @@ from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
                                         fit_status , cov_qual , H1D_dset , get_i  )
 from   ostap.fitting.funbasic  import FUNC
+from   ostap.utils.cidict      import select_keys
+from   ostap.fitting.roocmdarg import check_arg
 import ostap.histos.histos 
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -329,6 +331,12 @@ class PDF (FUNC) :
             elif xv :
                 xv.setBins (        nb1         , 'cache' )
                 self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
+
+        if dataset.isWeighted () : 
+            sw = check_arg ( 'sumw2'      , *opts )
+            ae = check_arg ( 'asymptotic' , *opts )
+            if not sw and not ae : 
+                self.warning ("fitTo: neither SumW2 nor Asymptotic are specified for weighted dataset!")
                 
         #
         ## define silent context
@@ -948,7 +956,6 @@ class PDF (FUNC) :
         ##
         largs = [ i for i in  args ]
         ## 
-        from ostap.utils.cidict import select_keys
         dopts = select_keys ( kwargs , ( 'line_color' , 'line_width' , 'line_style' , 
                                          'color'      , 'width'      , 'style'      ) , 
                               transform = lambda s : s.lower().replace('_','') )
@@ -1440,14 +1447,18 @@ class PDF (FUNC) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self                   ,
-                 dataset         = None ,
-                 max_calls       = -1   ,
-                 max_iterations  = -1   , 
-                 opt_const       = True , ## optimize const 
-                 strategy        = None ,
-                 nLL             = None , ## nLL  
-                 args            =   () , **kwargs  ):
+    def minuit ( self                    ,
+                 dataset         = None  ,
+                 max_calls       = -1    ,
+                 max_iterations  = -1    , 
+                 opt_const       = True  , ## optimize const 
+                 strategy        = None  ,
+                 silent          = False ,
+                 print_level     = 0     , 
+                 nLL             = None  , ## nLL
+                 scale           = True  , ## scale weighted dataset ?
+                 offset          = True  , ## offset the FCN values? 
+                 args            =   ()  , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1464,12 +1475,21 @@ class PDF (FUNC) :
         ##                            ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
         ## nll  = self.pdf.createNLL ( dataset , *opts )
 
-        assert nLL or dataset , "minuit: nLL or dataset *must* be specified!" 
-        if not nLL : 
-            nLL , _ = self.nll ( dataset , args = args , **kwargs )
+        assert nLL or dataset , "minuit: nLL or dataset *must* be specified!"
+
+        scale_errdef = 1 
+        if not nLL :
+            nLL , sf = self.nll ( dataset , args = args , **kwargs )
+            if dataset.isWeighted() and 1 != sf :
+                if scale : scale_errdef = sf
+                else     : self.warning("minuit: no FCN scaling for the weighted dataset is defined!")
             self.aux_keep.append ( nLL )
             
         m    = ROOT.RooMinimizer ( nLL )
+
+        if  silent : m.setPrintLevel ( -1 ) 
+        else       : m.setPrintLevel ( print_level )   
+        
         if isinstance  ( opt_const  , bool ) : m.optimizeConst ( opt_const ) 
         if isinstance  ( max_calls      , integer_types ) and 1 < max_calls :
             m.setMaxFunctionCalls ( max_calls )
@@ -1477,7 +1497,17 @@ class PDF (FUNC) :
             m.setMaxIterations    ( max_iterations  )
         if isinstance  ( strategy , integer_types       ) and 0 <= strategy <= 2 :
             m.setStrategy ( strategy )
-            
+
+        ## offset ? 
+        m.setOffsetting ( offset )
+        
+        if 1 != scale_errdef :
+            old_errdef = nLL.defaultErrorLevel ()
+            new_errdef = old_errdef / scale_errdef
+            logger.info ("minuit: Error Level is redefined from %.1f to %.4g" %  ( old_errdef ,
+                                                                                   new_errdef ) )
+            m.setErrorLevel ( new_errdef ) 
+
         return m  
 
     # =========================================================================

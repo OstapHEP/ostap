@@ -642,11 +642,13 @@ class MakeVar ( object ) :
         ## check sumw2 for the weighted datasets 
         if dataset and dataset.isWeighted() :
             for a in _args :
-                if 'SumW2Error'      == a.name and not bool ( a.getInt ( 0 ) ) :
-                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!")
-                if 'AsymptotocError' == a.name and not bool ( a.getInt ( 0 ) ) :
-                    logger.warning ("parse_args: 'asymptorocerror=False' is specified for the weighted  dataset!")
-
+                if   'SumW2Error'      == a.name :
+                    val = bool ( a.getInt ( 0 ) ) 
+                    if not val : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
+                elif 'AsymptoticError' == a.name :
+                    val = bool ( a.getInt ( 0 ) )
+                    if not val : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
+                
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
         
