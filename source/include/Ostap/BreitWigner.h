@@ -1463,7 +1463,7 @@ namespace Ostap
     {
     public:
       // ======================================================================
-      /** constructor  from all parameters
+      /** constructor from all parameters
        *  \f$ f \rightarrow A_1 + A_2\f$
        *  @param m0    the mass
        *  @param m0g1  parameter \f$ m_0\times g_1\f$
@@ -1500,7 +1500,7 @@ namespace Ostap
       double g1    () const { return m_channels [ 0 ] -> gamma0 () ; }
       /// coupling coinstant for the coupled channel 
       double g2    () const { return m_channels [ 1 ] -> gamma0 () ; }
-      /// additional constant width for "extra=channels"
+      /// additional constant width for "extra-channels"
       double gam0  () const { return m_channels [ 2 ] -> gamma0 () ; }
       // ======================================================================
     public :  /// derived quantities 
@@ -2712,6 +2712,11 @@ namespace Ostap
       // ======================================================================
       /// some unique tag 
       std::size_t tag() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool use_rho () const { return m_rho ; }
+      bool use_N2  () const { return m_N2  ; }      
       // ======================================================================
     public:
       // ======================================================================

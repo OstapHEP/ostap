@@ -112,6 +112,7 @@ __all__ = (
     'BW23L_pdf'              , ## BW23L
     'BWMC_pdf'               , ## BWMC
     'BWPS_pdf'               , ## BWPS
+    'FlattePS_pdf'           , ## Flatte-PS 
     #
     )
 # =============================================================================
@@ -3209,7 +3210,7 @@ models.append ( BW23L_pdf )
 #  Breit-Wigner function modulated with extra phase-space and polynomial factors
 #  @see Ostap::Models::BWPS
 #  @see Ostap::Math::BWPS
-class BWPS_pdf(MASS,Phases) :
+class BWPS_pdf(BreitWigner_pdf,Phases) :
     """Breit-Wigner function modulated with extra phase-space and polynomial factors
     - see Ostap.Models.BWPS
     - see Ostap.Math.BWPS
@@ -3226,22 +3227,17 @@ class BWPS_pdf(MASS,Phases) :
         assert isinstance ( breitwigner , Ostap.Math.BWPS ),\
                'Invalid type for breitwigner %s' %  type ( breitwigner )
         
-        #
         ## initialize the base classes 
-        # 
-        MASS.__init__  ( self , name , xvar                ,
-                         mean        = m0                  ,
-                         sigma       = gamma               ,
-                         mean_name   = 'm0_%s'      % name ,
-                         mean_title  = '#m_{0}(%s)' % name ,
-                         sigma_name  = 'gamma_%s'   % name ,
-                         sigma_title = '#gamma(%s)' % name )
+        BreitWigner_pdf.__init__  ( self ,
+                                    name ,
+                                    breitwigner = breitwigner.breit_wigner () , 
+                                    xvar        = xvar   ,
+                                    m0          = m0     ,
+                                    gamma       = gamma  )
         
         Phases.__init__ ( self , breitwigner.npars () , the_phis ) 
         
-        self.__breitwigner =  breitwigner
-
-
+        self.__bwps = breitwigner
         
         ## finally create PDF
         self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
@@ -3250,7 +3246,7 @@ class BWPS_pdf(MASS,Phases) :
                                        self.m0           ,
                                        self.gamma        ,
                                        self.phi_list     ,
-                                       self.breitwigner  ) 
+                                       self.bwps         ) 
             
         ## save configuration
         self.config = {
@@ -3263,34 +3259,11 @@ class BWPS_pdf(MASS,Phases) :
         
         
     @property
-    def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
-        return self.mean
-    @m0.setter
-    def m0 ( self , value ) :
-        self.mean = value 
+    def bwps ( self ) :
+        """The Breit-Wigner function (BWPS) itself"""
+        return self.__bwps
 
-    @property
-    def gamma ( self ) :
-        """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
-        return self.sigma 
-    @gamma.setter
-    def gamma ( self, value ) :
-        self.sigma = value 
     
-    @property
-    def Gamma ( self ) :
-        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
-        return self.gamma 
-    @Gamma.setter
-    def Gamma ( self, value ) :
-        self.sigma = value 
-
-    @property
-    def breitwigner ( self ) :
-        """The Breit-Wigner function (BWPS)  itself"""
-        return self.__breitwigner
-
 models.append ( BWPS_pdf )
 
 # =============================================================================
@@ -3326,6 +3299,8 @@ class Flatte_pdf(MASSMEAN) :
                    g2       = None   ,    ## g2 
                    gamma0   = None   ) :  ## gamma0 
 
+        assert isinstance ( flatte , Ostap.Math.Flatte ), \
+               'Invalid type for flatte %s' %  type ( flatte )
 
         ## initialize the base
         with CheckMean ( False ) :
@@ -3468,6 +3443,88 @@ class Flatte_pdf(MASSMEAN) :
 
 models.append ( Flatte_pdf )                          
 
+
+
+# ============================================================================
+class FlattePS_pdf(Flatte_pdf,Phases) :
+    """Flatte function:
+    S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
+    and (KbarK) systems near (KbarK) threshold'' 
+    Phys. Lett. B63, 224 (1976
+    http://www.sciencedirect.com/science/article/pii/0370269376906547
+
+    Typical case:    f0(980) -> pi+ pi- & K+ K- shapes 
+    """
+    def __init__ ( self              ,
+                   name              ,
+                   flatte            ,   ## Ostap::Math::BWPS 
+                   xvar              ,
+                   m0       = None   ,   ## the pole 
+                   m0g1     = None   ,   ## m0*g1 
+                   g2og1    = None   ,   ## g2/g1 
+                   g1       = None   ,   ## g1 
+                   g2       = None   ,   ## g2 
+                   gamma0   = None   ,   ## gamma0 
+                   the_phis = None   ) : ##
+        
+        assert isinstance ( flatte, Ostap.Math.BWPS ),\
+               'Invalid type for breitwigner %s' %  type ( flatte )
+        
+        ## initialize the base classes 
+        Flatte_pdf.__init__  ( self ,
+                               name ,
+                               flatte = flatte.breit_wigner () ,
+                               xvar   = xvar     , 
+                               m0     = m0       ,
+                               m0g1   = m0g1     ,
+                               g2og1  = g2og1    ,
+                               g1     = g1       ,
+                               g2     = g2       ,
+                               gamma0 = gamma0   )
+        
+        Phases.__init__ ( self , flatte.npars () , the_phis )
+        
+        self.__bwps   = flatte
+  
+        self.__g_list = ROOT.RooArgList ( self.g1 , self.g2 , self.gamma0 )
+        
+        ## finally create PDF
+        self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
+                                       'BWPS(%s)' % name ,
+                                       self.xvar         ,
+                                       self.m0           ,
+                                       self.g_list       ,
+                                       self.phi_list     ,
+                                       self.bwps         ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name    ,
+            'flatte'      : self.flatte  ,
+            'xvar'        : self.xvar    ,
+            'm0'          : self.m0      ,
+            'gamma0'      : self.gamma0  ,
+            'the_phis'    : self.phis    , 
+            }
+        
+        if g1 is None and g2 is None : 
+            self.config.update ( { 'm0g1'  : self.m0g1  , 
+                                   'g2og1' : self.g2og1 } )
+        else : 
+            self.config.update ( { 'g1'    : self.g1    ,
+                                   'g2'    : self.g2    } )
+       
+    @property
+    def bwps ( self ) :
+        """The Breit-Wigner function (BWPS) itself"""
+        return self.__bwps
+    
+    @property
+    def g_list ( self ) :
+        """``g_list'' list of gammas for Breit-Wigner"""
+        return self.__g_list
+
+models.append ( FlattePS_pdf )
 
 # =============================================================================
 ## @class LASS_pdf

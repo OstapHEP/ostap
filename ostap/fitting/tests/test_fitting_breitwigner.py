@@ -30,19 +30,24 @@ else :
 # =============================================================================
 ## make simple test mass
 
-GeV   = 1.0
-MeV   = 0.001 * GeV
+GeV      = 1.0
+MeV      = 0.001 * GeV
 
-m_pi  = 139 *  MeV
-m_rho = 770 * MeV
-g_rho = 150 * MeV
+m_pi     = 139 *  MeV
+m_rho    = 770 * MeV
+g_rho    = 150 * MeV
 
-m_phi = 1019.46 * MeV
-g_phi =   4.249 * MeV
-m_K   = 493.677 * MeV
+m_phi    = 1019.46 * MeV
+g_phi    =   4.249 * MeV
+m_K      = 493.677 * MeV
 
-m_Bs  = 5.366 * GeV
-m_X   = 3.872 * GeV 
+m_Bs     = 5.366 * GeV
+m_X      = 3.872 * GeV 
+
+m0_f0    = 980   * MeV
+m0g1_f0  = 0.165 * GeV**2 * 4.21 
+g2og1_f0 = 1/4.21 
+
 
 def test_breitwigner_rho () : 
 
@@ -105,13 +110,13 @@ def test_breitwigner_phi () :
     bw2.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 4 )
     bw3.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 5 )
 
-    logger.info ("bw1 fraction %s" % ( bw1.integral ( 1.1 , 1.5 ) / bw1.integral ( 0.9 , 1.1 ) ) )
-    logger.info ("bw2 fraction %s" % ( bw2.integral ( 1.1 , 1.5 ) / bw2.integral ( 0.9 , 1.1 ) ) )
-    logger.info ("bw3 fraction %s" % ( bw3.integral ( 1.1 , 1.5 ) / bw3.integral ( 0.9 , 1.1 ) ) )
+    logger.info ("bw1 fraction %s" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw2 fraction %s" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw3 fraction %s" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
 
 # =============================================================================
 def test_breitwigner_phi_ps () : 
-##  if 1 < 2 :
+## if 1 < 2 :
     
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
@@ -134,15 +139,65 @@ def test_breitwigner_phi_ps () :
     f2.draw ( 'same' , linecolor = 4 )
     f3.draw ( 'same' , linecolor = 5 )
 
-    logger.info (" f1 fraction %s" % ( f1.integral ( 1.1 , 1.5 ) / f1.integral ( 0.9 , 1.1 ) ) )
-    logger.info (" f2 fraction %s" % ( f2.integral ( 1.1 , 1.5 ) / f2.integral ( 0.9 , 1.1 ) ) )
-    logger.info (" f3 fraction %s" % ( f3.integral ( 1.1 , 1.5 ) / f3.integral ( 0.9 , 1.1 ) ) )
+    logger.info (" f1 fraction %s" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info (" f2 fraction %s" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info (" f3 fraction %s" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
+    mass    = ROOT.RooRealVar  ('mass' , 'm(KK)' , 0.96 * GeV , 1.5 * GeV ) 
+    
+    p1 = Models.BWPS_pdf ( 'P1' , f1 , xvar = mass , m0 = m_phi  , gamma = g_phi    )
+    p2 = Models.BWPS_pdf ( 'P2' , f2 , xvar = mass , m0 = p1.m0  , gamma = p1.gamma )
+    p3 = Models.BWPS_pdf ( 'P3' , f3 , xvar = mass , m0 = p1.m0  , gamma = p1.gamma )
+    
+    fr1 = p1.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 2 ) , ) ) 
+    fr2 = p2.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) ) 
+    fr3 = p3.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) ) 
+    
+    fr1.draw ()
+    fr2.draw ('same')
+    fr3.draw ('same')
+
+    ## flatte
+    flatte = Ostap.Math.Flatte ( m0_f0 , m0g1_f0 , g2og1_f0 , m_K , m_K , m_pi , m_pi , 0.0 )
+    flatte.draw ( xmin = 960 * MeV , xmax = 1.07 * GeV ) 
+    
+    ##  pdf 
+    f0_980 = Models.Flatte_pdf ( 'F0' ,
+                                 flatte = flatte   ,  
+                                 xvar   = mass     ,
+                                 m0     = ( 980 * MeV , 950 * MeV , 1000 * MeV ) ,
+                                 m0g1   = m0g1_f0  ,
+                                 g2og1  = g2og1_f0 ,
+                                 gamma0 = 0        )
+    f0_980.m0    .fix ( m0_f0 )
+    f0_980.gamma0.fix ( 0     )
+    
+    flatte_ps = Ostap.Math.BWPS ( f0_980.pdf.flatte () , ps , True , True )
+    f0_ps     = Models.FlattePS_pdf ( 'FP' ,
+                                      flatte = flatte_ps      ,
+                                      xvar   = mass           ,
+                                      m0     = f0_980.m0      ,
+                                      m0g1   = f0_980.m0g1    ,
+                                      g2og1  = f0_980.g2og1   ,
+                                      gamma0 = f0_980.gamma0  )
+    
+    fr4 = f0_980.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 6 ) , ) ) 
+    fr5 = f0_ps .draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 7 ) , ) ) 
+
+    fr5.draw (     )
+    fr4.draw ('same')
 
 
+    fr1.draw()
+    fr2.draw('same')
+    fr3.draw('same')
+    fr4.draw('same')
+    fr5.draw('same')
+    
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## pass 
+    ##  pass 
     test_breitwigner_rho    ()
     test_breitwigner_phi    ()
     test_breitwigner_phi_ps ()

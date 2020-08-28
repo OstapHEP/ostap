@@ -2695,7 +2695,7 @@ double Ostap::Math::BWPS::evaluate ( const double x ) const
   // 
   if ( result <= 0 ) { return 0 ; }
   //
-  if      ( !m_rho && !m_N2 ) { result *= (*m_bw)( x ) ; }
+  if      (  m_rho &&  m_N2 ) { result *= (*m_bw)( x ) ; }
   else if (  m_rho && !m_N2 ) 
   { result *= 2 * x * m_bw->rho_s ( x * x ) * std::norm ( m_bw->amplitude ( x ) ) ; }
   else if ( !m_rho &&  m_N2 ) 

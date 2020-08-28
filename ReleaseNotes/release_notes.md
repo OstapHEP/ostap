@@ -1,8 +1,11 @@
 ## New features 
-
+  1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
+  
 ## Backward incompatible changes: 
 
 ## Bug fixes:
+  1. fix bugs in `Ostap::Math::BWPS`
+
 
 # v1.5.0.4
 
