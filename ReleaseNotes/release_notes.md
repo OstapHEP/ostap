@@ -1,3 +1,9 @@
+## New features 
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
 # v1.5.0.4
 
 ## New features 
@@ -10,7 +16,6 @@
  
 
 ## Bug fixes:
-
 
 # v1.5.0.3
 
