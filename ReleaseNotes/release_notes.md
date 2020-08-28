@@ -8,7 +8,7 @@
 
 ## New features 
 
-  1. add `Ostap::Math::BWPS`, `Ostap::Models::BWPS` and `BWPS_pdf` - fnuction for Breit-Wigner profile, modulated with additional phase-space factors and polynpomial degrees of freedom.
+  1. add `Ostap::Math::BWPS`, `Ostap::Models::BWPS` and `BWPS_pdf` - function for Breit-Wigner profile, modulated with additional phase-space factors and polynomial degrees of freedom.
  
 ## Backward incompatible changes: 
 
