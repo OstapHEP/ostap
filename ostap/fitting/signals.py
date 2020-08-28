@@ -111,6 +111,7 @@ __all__ = (
     'PseudoVoigt_pdf'        , ## PseudoVoigt-profile
     'BW23L_pdf'              , ## BW23L
     'BWMC_pdf'               , ## BWMC
+    'BWPS_pdf'               , ## BWPS
     #
     )
 # =============================================================================
@@ -121,7 +122,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' 
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
 from   ostap.core.core        import cpp , Ostap, VE  
-from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args 
+from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args
+from   ostap.fitting.utils    import Phases 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -2541,13 +2543,13 @@ class Voigt_pdf(MASS) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   mean      = None ,
+                   m0        = None ,
                    sigma     = None ,
                    gamma     = None ) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma ) 
+        MASS.__init__  ( self , name , xvar , m0 , sigma ) 
 
         limits_gamma = ()
         if  self.xminmax() :
@@ -2566,7 +2568,7 @@ class Voigt_pdf(MASS) :
             "vgt_"       + name ,
             "Voigt(%s)" % name ,
             self.xvar   ,
-            self.mean   ,
+            self.m0     ,
             self.gamma  ,
             self.sigma  )
 
@@ -2574,11 +2576,19 @@ class Voigt_pdf(MASS) :
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
+            'm0'        : self.m0    ,
             'sigma'     : self.sigma ,
             'gamma'     : self.gamma ,
             }
     
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
     @property
     def gamma ( self ) :
         """``gamma''-parameter for Voigt function"""
@@ -2623,13 +2633,13 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   mean      = None ,
+                   m0        = None ,
                    sigma     = None ,
                    gamma     = None ) :
         #
         ## initialize the base
         # 
-        Voigt_pdf.__init__  ( self , name , xvar , mean , sigma , gamma ) 
+        Voigt_pdf.__init__  ( self , name , xvar , m0 , sigma , gamma ) 
 
         #
         ## finally build pdf
@@ -2646,7 +2656,7 @@ class PseudoVoigt_pdf(Voigt_pdf) :
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
+            'm0'        : self.mean  ,
             'sigma'     : self.sigma ,
             'gamma'     : self.gamma ,
             }
@@ -2686,16 +2696,16 @@ class BreitWigner_pdf(MASS) :
                    name               ,
                    breitwigner        , ## Ostap::Math::BreitWeigner object
                    xvar               ,
-                   mean        = None , 
+                   m0          = None , 
                    gamma       = None ) :        
         #
         ## initialize the base
         # 
         MASS.__init__  ( self  , name  , xvar ,
-                         mean  = mean  ,
-                         sigma = gamma ,
-                         ## mean_name   = 'm0_%s'      % name ,
-                         ## mean_title  = '#m_0(%s)'   % name ,                         
+                         mean        = m0                  ,
+                         sigma       = gamma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,                         
                          sigma_name  = 'gamma_%s'   % name ,
                          sigma_title = '#Gamma(%s)' % name )
 
@@ -2712,7 +2722,7 @@ class BreitWigner_pdf(MASS) :
             "rbw_"    + name ,
             "RBW(%s)" % name ,
             self.xvar        ,
-            self.mean        ,
+            self.m0          ,
             self.gamma       ,
             self.breitwigner )
 
@@ -2721,7 +2731,7 @@ class BreitWigner_pdf(MASS) :
             'name'        : self.name          ,
             'breitwigner' : self.breitwigner   ,
             'xvar'        : self.xvar          ,
-            'mean'        : self.mean          ,
+            'm0'          : self.m0            ,
             'gamma'       : self.gamma         ,
             }
 
@@ -2748,7 +2758,6 @@ class BreitWigner_pdf(MASS) :
     @Gamma.setter
     def Gamma ( self, value ) :
         self.sigma = value 
-
         
     @property
     def breitwigner ( self ) :
@@ -2824,7 +2833,7 @@ class BWMC_pdf(MASS) :
                    name               ,
                    breitwigner        , ## Ostap::Math::BreitWignerMC object
                    xvar               ,
-                   mean        = None , 
+                   m0          = None , 
                    gamma       = None ,
                    widths      = []   ,
                    fractions   = []   ) : 
@@ -2874,9 +2883,11 @@ class BWMC_pdf(MASS) :
         # =====================================================================
         ## initialize the base 
         # =====================================================================
-        MASS.__init__ ( self , name , xvar ,
-                        mean =  mean ,
-                        siga = gamma ,
+        MASS.__init__ ( self , name , xvar                ,
+                        mean        =  m0                 ,
+                        siga        =  gamma              ,
+                        mean_name   = 'm0_%s'      % name ,
+                        mean_title  = '#m_{0}(%s)' % name ,
                         sigma_name  = 'gamma_%s'   % name ,
                         sigma_title = '#Gamma(%s)' % name )
                 
@@ -2946,6 +2957,14 @@ class BWMC_pdf(MASS) :
                                                  'gamma'     : self.gamma     ,
                                                  'widths'    : ()             } )
     @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
+    @property
     def gamma ( self ) :
         """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
         return self.sigma 
@@ -3005,14 +3024,14 @@ class BWI_pdf (BreitWigner_pdf) :
                    name         ,
                    breitwigner  ,
                    xvar         ,
-                   mean  = None ,
+                   m0    = None ,
                    gamma = None ,
                    bkg   = -1   ,   ## background function 
                    a     = None ,   ## background scale 
                    phi   = 0    ) : ## bakcgrouns phase 
         
         ## initialize the base 
-        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , mean , gamma )
+        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , m0 , gamma )
 
         self.__bw = self.pdf
 
@@ -3065,12 +3084,21 @@ class BWI_pdf (BreitWigner_pdf) :
             'name'        : self.name        ,
             'xvar'        : self.xvar        , 
             'breitwigner' : self.breitwigner , 
-            'mean'        : self.mean        ,
+            'm0'          : self.m0          ,
             'gamma'       : self.gamma       ,
             'bkg'         : self.bkg         ,
             'a'           : self.a           , 
             'phi'         : self.phi         } 
                         
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
+
     @property
     def bw          ( self ) :
         """The Breit-Wigner PDF itself"""
@@ -3110,15 +3138,17 @@ class BW23L_pdf(MASS) :
                    name               ,
                    breitwigner        , ## Ostap::Math::BW23L object
                    xvar               ,
-                   mean        = None , 
+                   m0          = None , 
                    gamma       = None ) : 
         
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar ,
-                         mean        = mean  ,
-                         sigma       = gamma ,
+        MASS.__init__  ( self , name , xvar                ,
+                         mean        = m0                  ,
+                         sigma       = gamma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,
                          sigma_name  = 'gamma_%s'   % name ,
                          sigma_title = '#gamma(%s)' % name )
         
@@ -3144,9 +3174,17 @@ class BW23L_pdf(MASS) :
             'name'        : self.name          ,
             'breitwigner' : self.breitwigner   ,
             'xvar'        : self.xvar          ,
-            'mean'        : self.mean          ,
+            'm0'          : self.m0            ,
             'gamma'       : self.gamma         ,
             }
+
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
 
     @property
     def gamma ( self ) :
@@ -3165,6 +3203,95 @@ class BW23L_pdf(MASS) :
 
 models.append ( BW23L_pdf )
 
+
+# =============================================================================
+## @class BWPS
+#  Breit-Wigner function modulated with extra phase-space and polynomial factors
+#  @see Ostap::Models::BWPS
+#  @see Ostap::Math::BWPS
+class BWPS_pdf(MASS,Phases) :
+    """Breit-Wigner function modulated with extra phase-space and polynomial factors
+    - see Ostap.Models.BWPS
+    - see Ostap.Math.BWPS
+    """
+    
+    def __init__ ( self             ,
+                   name             ,
+                   breitwigner      , ## Ostap::Math::BWPS object
+                   xvar             ,
+                   m0        = None ,
+                   gamma     = None ,
+                   the_phis  = None ) :
+
+        assert isinstance ( breitwigner , Ostap.Math.BWPS ),\
+               'Invalid type for breitwigner %s' %  type ( breitwigner )
+        
+        #
+        ## initialize the base classes 
+        # 
+        MASS.__init__  ( self , name , xvar                ,
+                         mean        = m0                  ,
+                         sigma       = gamma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,
+                         sigma_name  = 'gamma_%s'   % name ,
+                         sigma_title = '#gamma(%s)' % name )
+        
+        Phases.__init__ ( self , breitwigner.npars () , the_phis ) 
+        
+        self.__breitwigner =  breitwigner
+
+
+        
+        ## finally create PDF
+        self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
+                                       'BWPS(%s)' % name ,
+                                       self.xvar         ,
+                                       self.m0           ,
+                                       self.gamma        ,
+                                       self.phi_list     ,
+                                       self.breitwigner  ) 
+            
+        ## save configuration
+        self.config = {
+            'name'        : self.name        ,
+            'xvar'        : self.xvar        , 
+            'breitwigner' : self.breitwigner , 
+            'm0'          : self.mean        ,
+            'gamma'       : self.gamma       ,
+            'the_phis'    : self.phis        }
+        
+        
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
+    @property
+    def gamma ( self ) :
+        """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        return self.sigma 
+    @gamma.setter
+    def gamma ( self, value ) :
+        self.sigma = value 
+    
+    @property
+    def Gamma ( self ) :
+        """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
+        return self.gamma 
+    @Gamma.setter
+    def Gamma ( self, value ) :
+        self.sigma = value 
+
+    @property
+    def breitwigner ( self ) :
+        """The Breit-Wigner function (BWPS)  itself"""
+        return self.__breitwigner
+
+models.append ( BWPS_pdf )
 
 # =============================================================================
 ## @class Flatte_pdf
@@ -3205,8 +3332,8 @@ class Flatte_pdf(MASSMEAN) :
             # for Flatte-function m0 can be outside the interesting interval 
             MASSMEAN.__init__  ( self , name , xvar ,
                                  mean       = m0  ,
-                                 mean_name  = 'm0_%s'    % name ,
-                                 mean_title = '#m_0(%s)' % name )
+                                 mean_name  = 'm0_%s'      % name ,
+                                 mean_title = '#m_{0}(%s)' % name )
             
         assert all_args ( m0 , m0g1 , g2og1 ) or \
                all_args ( m0 ,   g1 , g2    ) , 'Invalid combination of arguments!'
@@ -3221,13 +3348,13 @@ class Flatte_pdf(MASSMEAN) :
         if  g1 is None and g2 is None :
             
             self.__m0g1 = self.make_var  ( m0g1                     ,
-                                           'm0g1_%s'         % name ,
-                                           'm_{0}#g_{1}(%s)' % name ,
+                                           'm0g1_%s'          % name ,
+                                           '#m_{0}#g_{1}(%s)' % name ,
                                            m0g1 , m0g1 )
             
             self.__g2og1 = self.make_var ( g2og1    ,
-                                           'g2og1_%s'        % name ,
-                                           'g_{2}/g_{1}(%s)' % name ,
+                                           'g2og1_%s'          % name ,
+                                           '#g_{2}/#g_{1}(%s)' % name ,
                                            g2og1    ,  g2og1  , 0.005  , 200  ) 
 
             self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
@@ -3341,6 +3468,7 @@ class Flatte_pdf(MASSMEAN) :
 
 models.append ( Flatte_pdf )                          
 
+
 # =============================================================================
 ## @class LASS_pdf
 #  The LASS parameterization (Nucl. Phys. B296, 493 (1988))
@@ -3375,10 +3503,10 @@ class LASS_pdf(MASS) :
         MASS.__init__  ( self , name , xvar , 
                          mean        = m0 ,
                          sigma       = g0 ,
-                         mean_name   = 'm0_%s'    % name ,
-                         mean_title  = '#m_0(%s)' % name ,
-                         sigma_name  = 'g_%s'     % name ,
-                         sigma_title = 'g_0(%s)'  % name )
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,
+                         sigma_name  = 'g_%s'       % name ,
+                         sigma_title = 'g_0(%s)'    % name )
         
         
         self.__g0 = self.sigma
@@ -3729,6 +3857,7 @@ class Swanson_pdf(PDF) :
 
 models.append ( Swanson_pdf )
 
+
 # =============================================================================
 if '__main__' == __name__ : 
     
@@ -3736,5 +3865,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

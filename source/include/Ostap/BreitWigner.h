@@ -16,6 +16,7 @@
 #include "Ostap/Workspace.h"
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Dalitz.h"
+#include "Ostap/Models.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
@@ -1019,9 +1020,7 @@ namespace Ostap
       /// description 
       std::string                    m_description ; // description 
       // ======================================================================
-    } ;
-    
-    
+    } ;    
     // ========================================================================
     /** @class BW
      *
@@ -1038,8 +1037,6 @@ namespace Ostap
      */
     class BW
     {
-    public:
-      // ======================================================================
     public:
       // ======================================================================
       /// constructor from all parameters
@@ -1152,6 +1149,15 @@ namespace Ostap
       /// get the integral between low and high limits
       double integral ( const double low  ,
                         const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the  gamma for the certain channel 
+      double gamma    ( const unsigned short i ) const 
+      { return i < nChannels() ? m_channels[i] -> gamma0()            : 0.0   ; }
+      /// set the gamma for the certain decay
+      bool   setGamma ( const unsigned short i , const double value ) 
+      { return i < nChannels() ? m_channels[i] -> setGamma0 ( value ) : false ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -1388,20 +1394,6 @@ namespace Ostap
                const ChannelBW&   c1       , 
                const CHANNELS&... channels )
       { return BreitWignerMC ( m0 , c1 , channels... ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the  gamma for the certain channel 
-      double gamma    ( const unsigned short i ) const 
-      { return i < nChannels() ? m_channels[i] -> gamma0()            : 0.0   ; }
-      /// set the gamma for the certain decay
-      bool   setGamma ( const unsigned short i , const double value ) 
-      { return i < nChannels() ? m_channels[i] -> setGamma0 ( value ) : false ; }
-      // ======================================================================
-      /// get the total gamma 
-      double    gamma () const { return BW::gamma ( ) ; }
-      /// get the total gamma 
-      bool   setGamma ( const double value ) { return BW::setGamma ( value ) ; }
       // ======================================================================
     } ;
     // ========================================================================
@@ -2596,9 +2588,148 @@ namespace Ostap
       // ======================================================================
     } ;  
     // ========================================================================
-
-
-
+    /** @class BWPS
+     *  Breit-Wigner function modulated with some phase-space function
+     *  - it can approximate the distorted Breit-Wigner shapes 
+     *    from multibidy decays 
+     *
+     *  \f[ f(x) \equiv F_{\mathrm{BW}}(x) \Phi_{l,n}(x)  P_k(x) \f]
+     *  - \f$ \Phi_{l,n} \f$  is a phase-space function 
+     *  - \f$ P_{k} \f$  is a polynomial 
+     * 
+     *  The function \f$  F_{\mathrm{BW}}(x) \f$ if defined as 
+     *  - for <code>use_rho=true</code> and <code>use_N2=true</code> 
+     *  \f$ F_{\mathrm{\BW}}(x) \f$ is a Breit-Wigner lineshape 
+     *  - <code>use_rho=true</code> and <code>use_N2=false</code> 
+     *  \f$ F_{\mathrm{\BW}}(x) = x \left| \mathcal{A}_{\mathrm{BW}}(x)\right|^2
+     *   \varrho ( x^2 ) \f$ i
+     *  - <code>use_rho=false</code> and <code>use_N2=true</code> 
+     *  \f$ F_{\mathrm{\BW}}(x) = x \left| \mathcal{A}_{\mathrm{BW}}(x)\right|^2
+     *   N^2_{\mathrm{BW}} ( x ) \f$ i
+     *  - <code>use_rho=false</code> and <code>use_N2=false</code> 
+     *  \f$ F_{\mathrm{\BW}}(x) = x \left| \mathcal{A}_{\mathrm{BW}}(x)\right|^2 \f$ 
+     *  where \f$ \mathcal{A}_{\mathrm{BW}}(x)  \f$ is a complex 
+     *  Breit-Wigner amplitude 
+     */
+    class BWPS
+    {
+    public:
+      // ======================================================================
+      /** constructor from Breit-Wigner, Phase-space and flags 
+       *  @param bw Breit-Wigner shape 
+       *  @param ps phase-space function 
+       *  @param use_rho  use rho-fuction from Breit-Wigner 
+       *  @param use_N2   use N2-function from Breit-Wigner 
+       */
+      BWPS ( const Ostap::Math::BW&            bw      , 
+             const Ostap::Math::PhaseSpacePol& ps      , 
+             const bool use_rho                = true  , 
+             const bool use_N2                 = true  ) ;
+      // ======================================================================
+      /** constructor from Breit-Wigner, phase-space and flags 
+       *  @param bw Breit-Wigner shape 
+       *  @param ps phase-space function 
+       *  @param use_rho  use rho-fuction from Breit-Wigner 
+       *  @param use_N2   use N2-function from Breit-Wigner 
+       */
+      BWPS ( const Ostap::Math::BW&            bw      , 
+             const Ostap::Math::PhaseSpaceNL&  ps      , 
+             const bool use_rho                = true  , 
+             const bool use_N2                 = true  ) ;
+      // ======================================================================
+      /// copy constructor 
+      BWPS ( const BWPS&  ) ;
+      /// move constructor 
+      BWPS (       BWPS&& ) = default ;
+      // =======================================================================
+    public: 
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate   ( const double x ) const ;
+      /// evaluat ethe function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline const Ostap::Math::BW& breit_wigner() const { return *m_bw.get() ; }
+      inline       Ostap::Math::BW& breit_wigner()       { return *m_bw.get() ; }
+      inline const PhaseSpacePol&   phase_space () const { return  m_ps       ; }
+      inline       PhaseSpacePol&   phase_space ()       { return  m_ps       ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get an integral 
+      double integral () const ;
+      /// get an integral 
+      double integral ( const double xmin , const double xmax ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return std::max ( m_ps.xmin() , m_bw->threshold() ) ; }
+      double xmax () const { return            m_ps.xmax() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get number of polynomial parameters
+      std::size_t npars () const { return m_ps.npars () ; }      
+      /// set k-parameter
+      bool setPar       ( const unsigned short k , const double value )
+      { return m_ps.setPar ( k , value ) ; }
+      /// set k-parameter
+      bool setParameter ( const unsigned short k , const double value )
+      { return setPar   ( k , value ) ; }
+      /// get the parameter value
+      double  par       ( const unsigned short k ) const
+      { return m_ps.par ( k ) ; }
+      /// get the parameter value
+      double  parameter ( const unsigned short k ) const
+      { return m_ps.par ( k ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the  gamma for the certain channel 
+      double gamma    ( const unsigned short i ) const 
+      { return m_bw->gamma ( i ) ; }
+      /// set the gamma for the certain decay
+      bool   setGamma ( const unsigned short i , const double value ) 
+      { return m_bw->setGamma ( i , value ) ; }
+      /// get the total gamma 
+      double    gamma () const { return m_bw->gamma() ; }
+      /// set the total gamma 
+      bool   setGamma ( const double value ) 
+      { return m_bw->setGamma ( value ) ; }
+      /// get number of channels 
+      unsigned int nChannels() const { return m_bw->nChannels ()  ; }
+      /// pole position 
+      double       m0     ()   const { return m_bw->m0()     ; }
+      /// set pole position 
+      bool      setM0     ( const double x ) { return m_bw->setM0 ( x ) ; }
+      // get the amplitude 
+      std::complex<double> amplitude ( const double m ) const 
+      { return m_bw->amplitude  ( m ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// some unique tag 
+      std::size_t tag() const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// use rho-factor from BreitWigner ? 
+      bool                              m_rho { true } ;
+      /// use N2-factor from BreitWigner ? 
+      bool                              m_N2  { true } ;
+      /// Breit-wigner 
+      std::unique_ptr<Ostap::Math::BW>  m_bw ;
+      /// Phasespace * pol 
+      Ostap::Math::PhaseSpacePol        m_ps ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace      m_workspace {} ; // integration workspace
+      // ======================================================================
+    };
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

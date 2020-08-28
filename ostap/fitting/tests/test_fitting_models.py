@@ -846,7 +846,7 @@ def test_voigt () :
     model = Models.Fit1D (
         signal = Models.Voigt_pdf ( 'V' , 
                                     xvar  = mass                ,
-                                    mean  = signal_gauss.mean   , 
+                                    m0    = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
         background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 ) , 
         S = S , B = B 
@@ -855,7 +855,7 @@ def test_voigt () :
     signal = model.signal
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
-    signal.mean .fix() 
+    signal.m0   .fix() 
     
     model.B.setVal( 500)
     model.S.setVal(5000)
@@ -884,14 +884,14 @@ def test_pvoigt () :
     model = Models.Fit1D (
         signal = Models.PseudoVoigt_pdf ( 'PV' , 
                                           xvar  = mass                ,
-                                          mean  = signal_gauss.mean   , 
+                                          m0    = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 ) , 
+        background = Models.Bkg_pdf ('BkgPV', xvar = mass , power = 0 ) , 
         S = S , B = B 
         )
     
     signal = model.signal
-    signal.mean .fix() 
+    signal.m0   .fix() 
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
     
@@ -935,7 +935,7 @@ def test_bw () :
         ( name        = 'BW'              ,
           breitwigner = bw                ,     
           xvar        = mass              ,
-          mean        = signal_gauss.mean ) ,
+          m0          = signal_gauss.mean ) ,
         background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 ) , 
         S = S , B = B 
         )
@@ -948,7 +948,7 @@ def test_bw () :
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
-        signal.mean .release()
+        signal.m0   .release()
         signal.gamma.release()
         result, frame = model. fitTo ( dataset0 )
         model.draw (  dataset0 )

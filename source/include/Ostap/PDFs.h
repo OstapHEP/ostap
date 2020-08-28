@@ -423,6 +423,89 @@ namespace Ostap
       // ======================================================================
     } ;  
     // ========================================================================
+    /** @class BWPS
+     *  @see Ostap::Math::BWMC
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  BWPS : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::BWPS , 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      BWPS ( const char*                name   ,
+             const char*                title  ,
+             RooAbsReal&                x      ,
+             RooAbsReal&                m0     ,
+             RooAbsReal&                gamma  ,
+             RooArgList&                phis   , 
+             const Ostap::Math::BWPS&   bwps   ) ;
+      /// constructor from all parameters
+      BWPS ( const char*                name   ,
+             const char*                title  ,
+             RooAbsReal&                x      ,
+             RooAbsReal&                m0     ,
+             RooArgList&                gamma  ,
+             RooArgList&                phis   , 
+             const Ostap::Math::BWPS&   bwps   ) ;
+      /// "copy" constructor 
+      BWPS ( const BWPS& , const char* name = 0 ) ;
+      /// virtual destructor 
+      virtual ~BWPS() ;
+      /// clone method
+      BWPS* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the function 
+      const Ostap::Math::BWPS& bwps      () const { setPars() ; return m_bwps ; }
+      const Ostap::Math::BWPS& function  () const { setPars() ; return m_bwps ; }
+      /// get the amplitude 
+      std::complex<double>     amplitude () const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    protected: 
+      // ======================================================================
+      /// the function  itself 
+      mutable Ostap::Math::BWPS m_bwps ; // the function  itself 
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_m0    ;
+      RooListProxy m_gamma ;
+      RooListProxy m_phis  ;
+      // ======================================================================
+    };
+    
+      
+
+
+
+    // ========================================================================
     /** @class Voigt
      *  "Voigt"-function
      *  @see Ostap::Math::Voigt
@@ -2246,7 +2329,7 @@ namespace Ostap
     };
     // ========================================================================
     /** @class PhaseSpacePol
-     *  The mass-ditribtion of L-particles from N-body phase space decays,
+     *  The mass-ditribution of L-particles from N-body phase space decays,
      *  modulate with non-negative polynomial
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-10-05
@@ -2391,7 +2474,6 @@ namespace Ostap
       mutable Ostap::Math::PhaseSpacePol m_ps ;  // the actual function
       // ======================================================================
     } ;
-
     // ========================================================================
     /** @class PhaseSpaceLeftExpoPol
      *  The mass-ditribuion of L-particles 
@@ -5653,7 +5735,7 @@ namespace Ostap
         ( const char*                          name,
           const char*                          title     ,
           RooAbsReal&                          x         ,
-          const Ostap::Math::MonotonicSpline& spline    ,   // the spline
+          const Ostap::Math::MonotonicSpline&  spline    ,   // the spline
           RooArgList&                          phis      ) ; // parameters
       /// copy
       MonotonicSpline
@@ -6175,11 +6257,8 @@ namespace Ostap
       /// the function itself 
       std::function<double(double,double,double)>  m_function ; // function 
       // ======================================================================      
-    } ;
-    
-        
+    } ;        
     // ========================================================================
-
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
 } //                                                  end of namespace Analysis

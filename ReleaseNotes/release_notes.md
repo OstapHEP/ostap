@@ -1,6 +1,11 @@
 ## New features 
 
+  1. add `Ostap::Math::BWPS`, `Ostap::Models::BWPS` and `BWPS_pdf` - fnuction for Breit-Wigner profile, modulated with additional phase-space factors and polynpomial degrees of freedom.
+ 
 ## Backward incompatible changes: 
+
+  1. Change parameter name `mean` to `m0` for `BreitWigner_pdf`, `BWMC_pdf`, `Voigt_pdf`, `PseudoVoigt_pdf`, ...
+ 
 
 ## Bug fixes:
 

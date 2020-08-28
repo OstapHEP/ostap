@@ -42,7 +42,7 @@ from   ostap.core.ostap_types  import ( is_integer     , string_types   ,
                                         list_types     , all_numerics   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
-from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
+from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phases ,  
                                         fit_status , cov_qual , H1D_dset , get_i  )
 from   ostap.fitting.funbasic  import FUNC
 from   ostap.utils.cidict      import select_keys
@@ -3640,6 +3640,7 @@ class Fit1D (PDF) :
     def  fractions ( self ) :
         """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
+
 
 
 # =============================================================================

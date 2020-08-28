@@ -15,6 +15,7 @@
 #include "Ostap/Kinematics.h"
 #include "Ostap/DalitzIntegrator.h"
 #include "Ostap/Workspace.h"
+#include "Ostap/Models.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -255,7 +256,7 @@ double Ostap::Math::FormFactors::Jackson::operator()
   ( const double m  , const double m0 ,
     const double m1 , const double m2 ) const
 { 
-  return nullptr == m_rho ? 1.0 : ( m / m0 ) * 
+  return nullptr == m_rho ? ( m / m0 )  : ( m / m0 ) * 
     ( (*m_rho) ( m  , m0 , m1 , m2 ) / 
       (*m_rho) ( m0 , m0 , m1 , m2 ) ) ; 
 }
@@ -2628,12 +2629,151 @@ std::size_t Ostap::Math::LASS::tag () const
                               BW::tag     (      ) , 
                               m_a , m_b , m_e      ) ; }
 
+// ============================================================================
+/*  constructor from Breit-Wigner, Phase-space and flags 
+ *  @param bw Breit-Wigner shape 
+ *  @param ps phase-space function 
+ *  @param use_rho  use rho-fuction from Breit-Wigner 
+ *  @param use_N2   use N2-function from Breit-Wigner 
+ */
+// ============================================================================
+Ostap::Math::BWPS::BWPS 
+( const Ostap::Math::BW&            bw , 
+  const Ostap::Math::PhaseSpacePol& ps , 
+  const bool use_rho                   , 
+  const bool use_N2                    ) 
+  : m_rho ( use_rho    ) 
+  , m_N2  ( use_N2     )
+  , m_bw  ( bw.clone() ) 
+  , m_ps  ( ps         )
+  , m_workspace () 
+{}
+// ============================================================================
+/*  constructor from Breit-Wigner, Phase-space and flags 
+ *  @param bw Breit-Wigner shape 
+ *  @param ps phase-space function 
+ *  @param use_rho  use rho-fuction from Breit-Wigner 
+ *  @param use_N2   use N2-function from Breit-Wigner 
+ */
+// ============================================================================
+Ostap::Math::BWPS::BWPS 
+( const Ostap::Math::BW&            bw , 
+  const Ostap::Math::PhaseSpaceNL&  ps , 
+  const bool use_rho                   , 
+  const bool use_N2                    ) 
+  : m_rho ( use_rho    ) 
+  , m_N2  ( use_N2     )
+  , m_bw  ( bw.clone() ) 
+  , m_ps  ( ps , 0     )
+  , m_workspace () 
+{
+  Ostap::Assert ( ( ps.xmin      () <= bw.threshold () ) && 
+                  ( bw.threshold () <  ps.xmax      () )  , 
+                  "Invalid xmin/xmax/threhsold setting", 
+                  "Ostap::Math::BWPS"  ) ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Math::BWPS::BWPS 
+( const Ostap::Math::BWPS& right )
+  : m_rho ( right.m_rho )   
+  , m_N2  ( right.m_N2  )   
+  , m_bw  ( right.m_bw->clone () )   
+  , m_ps  ( right.m_ps  )
+  , m_workspace()
+{}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::BWPS::evaluate ( const double x ) const 
+{
+  //
+  if ( x <= m_ps.xmin() || x >= m_ps.xmax() || x <= m_bw->threshold() ) { return 0 ; }
+  //
+  double result = m_ps ( x ) ;
+  // 
+  if ( result <= 0 ) { return 0 ; }
+  //
+  if      ( !m_rho && !m_N2 ) { result *= (*m_bw)( x ) ; }
+  else if (  m_rho && !m_N2 ) 
+  { result *= 2 * x * m_bw->rho_s ( x * x ) * std::norm ( m_bw->amplitude ( x ) ) ; }
+  else if ( !m_rho &&  m_N2 ) 
+  { result *= 2 * x * m_bw->N2    ( x * x ) * std::norm ( m_bw->amplitude ( x ) ) ; }
+  else  
+  { result *= 2 * x                         * std::norm ( m_bw->amplitude ( x ) ) ; }
+  //
+  return result ;
+}
+// ============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BWPS::integral() const 
+{
+  const double x1 = std::max ( m_ps.xmin() , m_bw->threshold() ) ;
+  const double x2 = m_ps.xmax() ;
+  if ( x2 <= x1 ) { return 0 ; }
+  return integral ( x1 , x2 ) ;
+}
+// =============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BWPS::integral
+( const double x_low  , 
+  const double x_high ) const 
+{
+  //
+  if       ( s_equal ( x_high , x_low ) ) { return 0 ; } 
+  else if  (           x_high < x_low   ) { return -1 * integral ( x_high , x_low ) ; }
+  //
+  const double x1 = std::max ( m_ps.xmin() , m_bw->threshold() ) ;
+  const double x2 = m_ps.xmax() ;
+  //
+  if ( x2 <= x1 ) { return 0 ; }
+  //
+  const double xlow  =  std::max ( x1 , x_low  ) ;
+  const double xhigh =  std::min ( x2 , x_high ) ;
+  //
+  if ( xhigh <= xlow ) { return 0 ; }
+  //
+  if ( ( xhigh - xlow ) > 0.2 * ( x2 - x1 ) ) 
+  {
+    const double xmid = 0.5 * ( xlow + xhigh ) ;
+    return integral ( xlow , xmid ) + integral ( xmid , xhigh ) ; 
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<BWPS> s_integrator {} ;
+  static char s_message [] = "Integral(BWPS)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      xlow    , xhigh     ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      m_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// unique label/tag 
+// ============================================================================
+std::size_t Ostap::Math::BWPS::tag () const 
+{ return std::hash_combine  ( std::string ( "BWPS" ) , 
+                              m_ps .tag () , 
+                              m_bw->tag () , 
+                              m_rho , m_N2 ) ; }
 
-
-  
-
-// ======================================================================
-    
 
 // ============================================================================
 //                                                                      The END 

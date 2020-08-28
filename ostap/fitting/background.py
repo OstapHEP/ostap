@@ -71,7 +71,8 @@ class PolyBase(PDF,Phases) :
         xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
         PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
-        
+
+
 # =============================================================================        
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
@@ -637,7 +638,7 @@ class PSPol_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   xvar             ,   ## the varibale 
+                   xvar             ,   ## the variable 
                    phasespace       ,   ## Ostap::Math::PhaseSpaceNL 
                    power    = 1     ,   ## degree of the polynomial
                    the_phis = None  ) : 

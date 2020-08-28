@@ -552,6 +552,150 @@ Ostap::Models::LASS::lass () const
 
 
 
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BWPS::BWPS 
+( const char*              name  , 
+  const char*              title ,
+  RooAbsReal&              x     ,
+  RooAbsReal&              m0    ,
+  RooAbsReal&              gamma ,
+  RooArgList&              phis  , 
+  const Ostap::Math::BWPS& bwps  ) 
+  : RooAbsPdf  (name ,title ) 
+    //
+  , m_x      ( "x"    , "Observable" , this , x     ) 
+  , m_m0     ( "m0"   , "Peak"       , this , m0    ) 
+  , m_gamma  ( "g"    , "Width"      , this )
+  , m_phis   ( "phis" , "Phis"       , this )
+    //
+  , m_bwps   ( bwps ) 
+{
+  m_gamma.add ( gamma ) ;
+  ::copy_real   ( phis , m_phis , "Invalid phis parameter!" ,
+                  "Ostap::Models::BWPS" ) ;
+  //
+  Ostap::Assert ( ::size ( m_phis  ) == m_bwps.npars() , 
+                  "#phis mismatch"      , 
+                  "Ostap::Models::BWPS" ) ;
+  Ostap::Assert ( ::size ( m_gamma ) == m_bwps.nChannels() , 
+                  "#channels mismatch"      , 
+                  "Ostap::Models::BWPS" ) ;
+}
+
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BWPS::BWPS 
+( const char*              name  , 
+  const char*              title ,
+  RooAbsReal&              x     ,
+  RooAbsReal&              m0    ,
+  RooArgList&              gamma ,
+  RooArgList&              phis  , 
+  const Ostap::Math::BWPS& bwps  ) 
+  : RooAbsPdf  (name ,title ) 
+    //
+  , m_x      ( "x"    , "Observable" , this , x  ) 
+  , m_m0     ( "m0"   , "Peak"       , this , m0 ) 
+  , m_gamma  ( "g"    , "Width"      , this )
+  , m_phis   ( "phis" , "Phis"       , this )
+    //
+  , m_bwps   ( bwps ) 
+{
+  ::copy_real ( gamma , m_gamma , "Invalid gamma parameter!" , "Ostap::Models::BWPS" ) ;
+  ::copy_real ( phis  , m_phis  , "Invalid phis  parameter!" , "Ostap::Models::BWPS" ) ;
+  //
+  Ostap::Assert ( ::size ( m_phis  ) == m_bwps.npars      () , 
+                  "#phis mismatch"      , 
+                  "Ostap::Models::BWPS" ) ;
+  Ostap::Assert ( ::size ( m_gamma ) == m_bwps.nChannels  () , 
+                  "#channels mismatch"      , 
+                  "Ostap::Models::BWPS" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::BWPS::BWPS
+( const Ostap::Models::BWPS& right , 
+  const char*                name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "x"    , this , right.m_x      ) 
+  , m_m0     ( "m0"   , this , right.m_m0     ) 
+  , m_gamma  ( "g"    , this , right.m_gamma  )
+  , m_phis   ( "phis" , this , right.m_phis   )
+    //
+  , m_bwps   ( right.m_bwps )   
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::BWPS::~BWPS(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BWPS*
+Ostap::Models::BWPS::clone ( const char* name ) const 
+{ return new Ostap::Models::BWPS(*this,name) ; }
+// ============================================================================
+void Ostap::Models::BWPS::setPars () const 
+{
+  //
+  m_bwps.setM0    ( m_m0  ) ;
+  //
+  const unsigned short np = m_bwps.npars ();
+  for ( unsigned short i = 0 ; i < np ; ++i ) 
+  { m_bwps.setPar   ( i , ::get_par ( i , m_phis  ) ) ; }
+  //
+  const unsigned short nc = m_bwps.nChannels ();
+  for ( unsigned short i = 0 ; i < nc ; ++i ) 
+  { m_bwps.setGamma ( i , ::get_par ( i , m_gamma ) ) ; }
+  //
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BWPS::evaluate() const 
+{ setPars() ; return  m_bwps  ( m_x ) ; }
+// ============================================================================
+Int_t Ostap::Models::BWPS::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BWPS::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars() ;
+  return m_bwps.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
+// get the amplitude 
+// ============================================================================
+std::complex<double> 
+Ostap::Models::BWPS::amplitude () const
+{ setPars () ; return m_bwps.amplitude ( m_x ) ; }
+// ============================================================================
+
+
+
+
+
+
+
+
+
+
 
 // ============================================================================
 //         Voigt
@@ -8018,6 +8162,8 @@ Ostap::Models::Uniform::evaluateBatch
 // ============================================================================
 
 
+
+
 // ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
@@ -8026,6 +8172,7 @@ ClassImp(Ostap::Models::Uniform            )
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 
 ClassImp(Ostap::Models::BWI                ) 
+ClassImp(Ostap::Models::BWPS               ) 
 ClassImp(Ostap::Models::Flatte             ) 
 ClassImp(Ostap::Models::LASS               ) 
 ClassImp(Ostap::Models::Voigt              ) 
@@ -8092,3 +8239,4 @@ ClassImp(Ostap::Models::ConvexSpline       )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
+
