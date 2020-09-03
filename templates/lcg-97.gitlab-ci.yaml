@@ -1,0 +1,13 @@
+build:
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  tags:
+    - cvmfs
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc7-opt
+    LCG: LCG_97
+  script:
+    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
+    mkdir build
+    cd build
+    cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
+    cd ..
