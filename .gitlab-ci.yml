@@ -11,11 +11,4 @@ local-build:
     - cvmfs
   stage: build
   script:
-    - . /cvmfs/lhcb.cern.ch/lib/group_login.sh
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_95/${CMTCONFIG}/setup.sh
-    - mkdir build 
-    - cd build 
-    - cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/
-    - make
-    - make install
-    - cd .. 
+    - echo "build will be here"
