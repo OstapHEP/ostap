@@ -5,6 +5,7 @@ build:
     CMTCONFIG: x86_64-centos7-gcc8-opt
     LCG: LCG_97
   script:
+    #!/usr/bin/env bash
     source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
     mkdir build
     cd build
