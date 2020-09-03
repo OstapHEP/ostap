@@ -1,6 +1,5 @@
 stages:
   - build
 #  - test
-build:
-  include: templates/lcg-97.gitlab-ci.yaml
+include: templates/lcg-97.gitlab-ci.yaml
 
