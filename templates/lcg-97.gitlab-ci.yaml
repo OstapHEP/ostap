@@ -6,8 +6,4 @@ build:
     LCG: LCG_97
   script:
     #!/usr/bin/env bash
-    source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
-    mkdir build
-    cd build
-    cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install
-    cd ..
+    ./scripts/bootstrap ${{ LCG }} ${{ CMTCONFIG }}
