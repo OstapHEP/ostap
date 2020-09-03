@@ -1,8 +1,6 @@
 build:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-  tags:
-    - cvmfs
   variables:
     CMTCONFIG: x86_64-centos7-gcc8-opt
     LCG: LCG_97
