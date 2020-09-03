@@ -4,7 +4,7 @@ build:
   tags:
     - cvmfs
   variables:
-    CMTCONFIG: x86_64-centos7-gcc7-opt
+    CMTCONFIG: x86_64-centos7-gcc8-opt
     LCG: LCG_97
   script:
     source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
