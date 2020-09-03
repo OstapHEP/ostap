@@ -6,4 +6,4 @@ build:
     LCG: LCG_97
   script:
     #!/usr/bin/env bash
-    ./scripts/bootstrap ${{ LCG }} ${{ CMTCONFIG }}
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
