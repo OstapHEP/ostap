@@ -1,4 +1,4 @@
-build:
+build1:
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
   tags:
     - cvmfs
