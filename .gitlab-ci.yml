@@ -11,6 +11,7 @@ gcc7_lcg95:build:
     - "#!/usr/bin/env bash"
     - "./scripts/bootstrap ${LCG}  ${CMTCONFIG}" 
     - "cd .."
+gcc7_lcg95:test:
   stage: test
   script:
     - "#!/usr/bin/env bash"
