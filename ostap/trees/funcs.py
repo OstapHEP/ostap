@@ -42,7 +42,7 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
     """
     def __init__ ( self , tree = None ) :
         ## initialize the base class
-        if tree is None : tree = 0 
+        if tree is None : tree = ROOT.nullptr  
         Ostap.Functions.PyFuncTree.__init__ ( self , self , tree )
         
     @property
@@ -64,7 +64,8 @@ class FuncData(Ostap.Functions.PyFuncData) :
     """Helper class to implement ``TTree-function''
     """
     def __init__ ( self , data = None ) :
-        ## initialize the base class 
+        ## initialize the base class
+        if  data is None : data = ROOT.nullptr 
         Ostap.Functions.PyFuncData.__init__ ( self , self , data  ) 
         
     @property
@@ -94,6 +95,7 @@ class PyTreeFunction(FuncTree) :
     """
     def __init__ ( self , the_function , tree = None ) :
         """Constructor from the function/callable and (optional) tree"""
+        if tree is None : tree = ROOT.nullptr 
         FuncTree.__init__ ( self , tree  )
         assert callable   ( the_function ), \
                'PyTreeFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
@@ -124,6 +126,7 @@ class PyDataFunction(FuncData) :
     - see Ostap.IFuncData 
     """
     def __init__ ( self , the_function , data = None ) :        
+        if data is None : data = ROOT.nullptr 
         FuncData.__init__ ( self , data  )
         assert callable   ( the_function ), \
                'PyDataFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
@@ -200,5 +203,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

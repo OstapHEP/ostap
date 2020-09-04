@@ -21,7 +21,6 @@ import ostap.io.root_file
 from   builtins                 import range
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
-from   array                    import array
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,65 +30,71 @@ if '__main__' == __name__  or '__builtin__'  == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # ==============================================================================
-from ostap.utils.cleanup import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
-if not os.path.exists( data_file ) :
-    import random 
-    nB =  10000
-    nS =  10000
-    ## nB =  100000
-    ## nS =   20000
-    logger.info('Prepare input ROOT file with data  %s' % data_file )
-    with ROOT.TFile.Open( data_file ,'recreate') as test_file:
-        ## test_file.cd()
-        treeSignal = ROOT.TTree('S','signal     tree')
-        treeBkg    = ROOT.TTree('B','background tree')
-        treeSignal.SetDirectory ( test_file ) 
-        treeBkg   .SetDirectory ( test_file ) 
-        
-        from array import array 
-        var1 = array ( 'd', [0] )
-        var2 = array ( 'd', [0] )
-        var3 = array ( 'd', [0] )
-        
-        treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
-        treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
-        treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
-        
-        treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
-        treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
-        treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
-        
-        ## fill background tuple: 
-        #for i in progress_bar ( range ( nB ) ) : 
-        for i in range ( nB ) : 
-            
-            x = random.uniform ( -2.0 , 2.0 )
-            y = random.uniform ( -2.0 , 2.0 )
-            z = random.gauss   (   .0 , 0.5 )
-            
-            var1[0] =  x + 0.1 * y  
-            var2[0] =  x - 0.1 * y  
-            var3[0] = -x +       z
-            
-            treeBkg.Fill()
-            
-        ## fill signal tuple: 
-        #for i in progress_bar ( range ( nS ) ) : 
-        for i in range ( nS ) : 
-            
-            x = random.gauss  (  0.0 , 0.1 )
-            y = random.gauss  (  0.0 , 0.2 )
-            z = random.gauss  (  0.5 , 0.5 )
-            
-            var1[0] =  x
-            var2[0] =  y  
-            var3[0] =  z 
-            treeSignal.Fill()
-            
-        test_file.Write()
-        test_file.ls()
 
+
+# def test_tmva () :
+if 1 < 2 :   
+    from ostap.utils.cleanup import CleanUp
+    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
+    if not os.path.exists( data_file ) :
+        import random 
+        nB =  10000
+        nS =  10000
+        ## nB =  100000
+        ## nS =   20000
+        logger.info('Prepare input ROOT file with data  %s' % data_file )
+        with ROOT.TFile.Open( data_file ,'recreate') as test_file:
+            logger.info('HERE-0!') 
+            test_file.cd()
+            logger.info('HERE-1!') 
+            treeSignal = ROOT.TTree('S','signal     tree')
+            treeBkg    = ROOT.TTree('B','background tree')
+            treeSignal.SetDirectory ( test_file ) 
+            treeBkg   .SetDirectory ( test_file ) 
+            
+            from array import array 
+            var1 = array ( 'd', [0] )
+            var2 = array ( 'd', [0] )
+            var3 = array ( 'd', [0] )
+            
+            treeSignal.Branch ( 'var1' , var1 , 'var1/D' )
+            treeSignal.Branch ( 'var2' , var2 , 'var2/D' )
+            treeSignal.Branch ( 'var3' , var3 , 'var3/D' )
+            
+            treeBkg   .Branch ( 'var1' , var1 , 'var1/D' )
+            treeBkg   .Branch ( 'var2' , var2 , 'var2/D' )
+            treeBkg   .Branch ( 'var3' , var3 , 'var3/D' )
+            
+            ## fill background tuple: 
+            for i in progress_bar ( range ( nB ) ) : 
+            ## for i in range ( nB ) : 
+                
+                x = random.uniform ( -2.0 , 2.0 )
+                y = random.uniform ( -2.0 , 2.0 )
+                z = random.gauss   (   .0 , 0.5 )
+                
+                var1[0] =  x + 0.1 * y  
+                var2[0] =  x - 0.1 * y  
+                var3[0] = -x +       z
+                
+                treeBkg.Fill()
+                
+            ## fill signal tuple: 
+            for i in progress_bar ( range ( nS ) ) : 
+            ## for i in range ( nS ) : 
+                
+                x = random.gauss  (  0.0 , 0.1 )
+                y = random.gauss  (  0.0 , 0.2 )
+                z = random.gauss  (  0.5 , 0.5 )
+                
+                var1[0] =  x
+                var2[0] =  y  
+                var3[0] =  z 
+                treeSignal.Fill()
+                
+            test_file.Write()
+            test_file.ls()
+                
         
 logger.info('Create and train TMVA')
 with ROOT.TFile.Open( data_file ,'READ') as datafile : 
@@ -246,5 +251,5 @@ for m in methods :
 
 
 # =============================================================================
-# The END
+##                                                                      The END
 # =============================================================================    

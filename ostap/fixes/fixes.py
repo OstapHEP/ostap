@@ -66,7 +66,8 @@ for item in opath :
             else           : npath.append (       item      )
             npath_.append ( nitem ) 
             ## for CINT
-            ROOT.gROOT.ProcessLine ('.include  %s' % nitem )
+            groot = ROOT.ROOT.GetROOT()
+            groot.ProcessLine ('.include  %s' % nitem )
             
 if npath : npath[0] = '-I'+npath[0]
 npath = ' -I'.join(npath)

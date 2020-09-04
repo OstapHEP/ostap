@@ -498,19 +498,23 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
     if isinstance ( histo , str ) :
-    
-        obj = ROOT.gROOT     .FindObject    ( histo )
+
+        groot = ROOT.ROOT.GetROOT() 
+        obj   = groot     .FindObject    ( histo )
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gROOT     .FindObjectAny ( histo )
+        obj   = groot     .FindObjectAny ( histo )
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gDirectory.FindObject    ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gDirectory.FindObjectAny ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
+
+        gdir = ROOT.TDirectory.CurrentDirectory()
+        if gdir : 
+            obj  = gdir.FindObject    ( histo )
+            if instance ( obj  , ROOT.TH1 ) :
+                return ds_project ( dataset , obj , what , cuts , *args )
+            obj  = gdir.FindObjectAny ( histo )
+            if instance ( obj  , ROOT.TH1 ) :
+                return ds_project ( dataset , obj , what , cuts , *args )
 
     ## what it is ????
     if  1 <= len ( what ) \

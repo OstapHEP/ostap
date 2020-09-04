@@ -18,7 +18,8 @@ __all__     = ()
 import ROOT, ctypes 
 from   sys                    import version_info as python_version
 from   ostap.core.core        import cpp, VE
-from   ostap.core.ostap_types import integer_types, string_types 
+from   ostap.core.ostap_types import integer_types, string_types
+from   ostap.core.meta_info   import root_info
 # =============================================================================
 # logging 
 # =============================================================================
@@ -404,7 +405,8 @@ _mn_contour_ . __doc__ += '\n' + ROOT.TMinuit.Contour . __doc__
 ROOT.TMinuit . contour = _mn_contour_
 
 
-_rv = ROOT.gROOT.GetVersionInt() // 10000
+
+root_major = root_info.major 
 # =============================================================================
 ## get the covariance matrix from TMinuit
 def _mn_cov_ ( self , size = -1 , root = False ) :
@@ -467,13 +469,13 @@ def _mn_cor_ ( self , size = -1 , root  = False ) :
             
             if 0 != cov ( i , j ) and 0 < d_i and 0 < d_j  :
                 
-                if root and _rv < 6  : cor [ i ] [ j ] = cov ( i , j ) / sqrt ( d_i * d_j )
-                else                 : cor [ i ,   j ] = cov ( i , j ) / sqrt ( d_i * d_j )
+                if root and root_major < 6  : cor [ i ] [ j ] = cov ( i , j ) / sqrt ( d_i * d_j )
+                else                        : cor [ i ,   j ] = cov ( i , j ) / sqrt ( d_i * d_j )
                 
             else :
                 
-                if root and _rv < 6  : cor [ i ] [ j ] = 0 
-                else                 : cor [ i ,   j ] = 0
+                if root and root_major < 6  : cor [ i ] [ j ] = 0 
+                else                        : cor [ i ,   j ] = 0
 
     return cor
             

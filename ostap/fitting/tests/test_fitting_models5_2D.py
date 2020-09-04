@@ -142,8 +142,14 @@ def test_model_15 () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+    
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_db: test is disabled for ROOT version %s" % root_version_int )
+        return 
+
     logger.info('Saving all objects into DBASE')
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing('Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
@@ -157,10 +163,10 @@ if '__main__' == __name__ :
     
     from ostap.utils.timing import timing
 
-    with timing ('test_model_15'    ) : test_model_15    ()          
+    with timing ('test_model_15'   , logger ) : test_model_15    ()          
 
     ## check finally that everything is serializeable:
-    with timing ('save to DB:'     ) : test_db ()          
+    with timing ('Save to DB:'     , logger ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

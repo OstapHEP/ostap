@@ -287,12 +287,16 @@ def _h1_as_tf1_ ( self                           ,
     """
     #
     fun = _h1_as_fun_    ( self , func , *args , **kwargs )
-    #
-    f1 = fun .tf1  ()
-    nb = self.nbins()
+    f1  = fun .tf1  ()
+    nb  = self.nbins()
+    f1._tmp_fun = fun
     
     if f1.GetNpx() <  1.2 * nb :
         f1.SetNpx ( max ( 100 , 10 * nb ) ) 
+    
+    f1._funobj = fun  
+    f1._histo  = fun._histo
+    f1._func   = fun._func
     
     return f1 
 

@@ -20,6 +20,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -114,9 +115,11 @@ def test_minuit_weighted () :
     
     
     
+# =============================================================================
 if '__main__' == __name__ :
 
-    test_minuit_weighted ()
+    with timing ("minuit weighted" , logger ) :  
+        test_minuit_weighted ()
     
 # =============================================================================
 ##                                                                      The END 

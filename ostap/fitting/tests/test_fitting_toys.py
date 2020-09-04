@@ -11,17 +11,12 @@
 - make some fitting toys 
 """
 # ============================================================================= 
-from   __future__        import print_function
+## from   __future__        import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
-import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
+import ROOT, time, random
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,11 +26,12 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import ROOT, time 
-from   ostap.core.pyrouts   import hID 
+from   ostap.core.pyrouts   import hID
 import ostap.fitting.models as     Models
 import ostap.fitting.toys   as     Toys
-
+import ostap.histos.histos
+from   ostap.utils.timing   import timing 
+# =============================================================================
 mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
 fit_gauss = Models.Gauss_pdf ( 'FG' , xvar = mass )
@@ -59,6 +55,9 @@ def test_toys ( ) :
     - fill distributions of fit results
     - fill distributions of pulls 
     """
+
+    
+    logger.info('HERE-1-START')
     
     results , stats = Toys.make_toys  (
         pdf         = gen_gauss ,
@@ -70,14 +69,23 @@ def test_toys ( ) :
         silent      = True , 
         progress    = True )
 
+    logger.info ('HERE-1-0')
+
     for p in stats :
         logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
 
+    logger.info ( 'HERE-1-1' )
+
     ## make histos:
     
-    h_mean       = ROOT.TH1F ( hID() , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
-    h_sigma      = ROOT.TH1F ( hID() , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
+    h_mean       = ROOT.TH1F ( 'h1' , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
+
+    logger.info ('HERE-1-1.5')
     
+    h_sigma      = ROOT.TH1F ( 'h2' , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
+    
+    logger.info ('HERE-1-2')
+
     for r in results [ 'mean_GG'  ] : h_mean  .Fill ( r ) 
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
@@ -100,6 +108,7 @@ def test_toys2 ( ) :
     - store  fit results
     - fill distributions of fit results
     """    
+
     results , stats = Toys.make_toys2 (
         gen_pdf     = gen_gauss ,
         fit_pdf     = fit_gauss ,
@@ -129,6 +138,7 @@ def test_toys2 ( ) :
         logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
         time.sleep ( 1 )
 
+
 # =============================================================================
 ## Perform toy-study for significance of the signal 
 #  - generate <code>nToys</code> pseudoexperiments using background-only hypothesis 
@@ -143,6 +153,7 @@ def test_significance_toys ( ) :
     - fill distributions for fit results
     """
     
+
     ## only background hypothesis
     bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
 
@@ -184,13 +195,17 @@ def test_significance_toys ( ) :
         logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
         time.sleep  ( 1 )
 
+    
             
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_toys  () 
-    test_toys2 () 
-    test_significance_toys ( ) 
+    with timing ("Toys"              , logger ) :  
+        test_toys  () 
+    with timing ("Toys2"             , logger ) :  
+        test_toys2 () 
+    with timing ("Significance toys" , logger ) :  
+        test_significance_toys ( ) 
     
 
 # =============================================================================

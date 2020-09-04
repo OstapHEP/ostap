@@ -85,5 +85,7 @@
       <field name  = "m_formula" />      
     </class>
 
+    <class name = "Ostap::ROOT_Selector"/>
+
   </exclusion>  
 </lcgdict>

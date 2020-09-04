@@ -93,9 +93,7 @@ namespace Ostap
        * @see Ostap::Math::Integrator
        * @see Ostap::Math::Integrator::kramers_kronig
        */
-      double operator() ( const double x ) const
-      { return m_scale * m_integrator.kramers_kronig 
-          ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag ) ; }
+      double operator() ( const double x ) const ;
       // ======================================================================
     public:
       // ====================================================================== 

@@ -100,6 +100,7 @@ from   ostap.core.ostap_types import integer_types
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils      as     Utils 
+from   ostap.core.meta_info   import root_version_int
 # =============================================================================
 ## @class Trainer
 #  The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
@@ -199,7 +200,8 @@ class Trainer(object) :
                    chop_background   = True                  ,   # chop the background ?
                    logging           = True                  ,   # create log-files    ?
                    make_plots        = True                  ,   # make standard plots ?
-                   parallel          = True                  ,   # parallel training  ? 
+                   multithread       = False                 ,   # use multithreading  ?
+                   parallel          = True                  ,   # parallel training   ? 
                    parallel_conf     = {}                    ) : # parallel configuration ? 
         
         """Create TMVA ``chopping'' trainer
@@ -296,6 +298,8 @@ class Trainer(object) :
         dirname                  = dir_name ( self.name ) 
         self.__dirname           = dirname 
         self.__trainer_dirs      = [] 
+
+        self.__multithread       = multithread and 61800 <= root_version_int 
 
         # =====================================================================
         ## prefilter 
@@ -416,26 +420,27 @@ class Trainer(object) :
 
         mp = self.make_plots and ( self.verbose or 0 == i ) 
         t  = TMVATrainer ( methods           = self.methods          ,
-                          variables         = self.variables         ,
-                          signal            = self.__signal          ,
-                          background        = self.__background      ,
-                          spectators        = self.spectators        ,
-                          bookingoptions    = self.bookingoptions    ,
-                          configuration     = self.configuration     ,
-                          signal_weight     = self.signal_weight     ,
-                          background_weight = self.background_weight ,
-                          prefilter         = self.prefilter         ,
-                          ##
-                          output_file       = ''                     , 
-                          ##
-                          signal_cuts       = scuts                  , 
-                          background_cuts   = bcuts                  ,
-                          ##
-                          name              = nam                    ,
-                          verbose           = self.verbose           ,
-                          logging           = self.logging           ,
-                          make_plots        = mp                     ,
-                          category          = i                      )
+                           variables         = self.variables         ,
+                           signal            = self.__signal          ,
+                           background        = self.__background      ,
+                           spectators        = self.spectators        ,
+                           bookingoptions    = self.bookingoptions    ,
+                           configuration     = self.configuration     ,
+                           signal_weight     = self.signal_weight     ,
+                           background_weight = self.background_weight ,
+                           prefilter         = self.prefilter         ,
+                           ##
+                           output_file       = ''                     , 
+                           ##
+                           signal_cuts       = scuts                  , 
+                           background_cuts   = bcuts                  ,
+                           ##
+                           name              = nam                    ,
+                           verbose           = self.verbose           ,
+                           logging           = self.logging           ,
+                           make_plots        = mp                     ,
+                           multithread       = self.multithread       ,
+                           category          = i                      )
         
         return t
     
@@ -597,6 +602,11 @@ class Trainer(object) :
         """``log_file'': the compressed tar file with tarinng log-files"""
         return str(self.__log_file) if self.__log_file else None 
 
+    @property 
+    def multithread ( self ) :
+        """``multithread'' : make try to use multithreading in TMVA"""
+        return self.__multithread 
+    
     # =========================================================================
     ## The main method: training of all subsamples 
     #  - Use the trainer

@@ -52,21 +52,22 @@ def OstapStyle ( name                           ,
                  colz        = False            ) :
     """Create Ostap-style for the plots    
     """
-    obj = ROOT.gROOT.FindObject  ( name )
+    groot = ROOT.ROOT.GetROOT() 
+    obj   = groot.FindObject  ( name )
     if obj and isinstance ( obj , ROOT.TStyle ) and not makeNew : 
         logger.info               ('The style %s is reused' % obj.GetName() )
         if force :
             obj.cd                () 
             logger.info           ('The style %s is forced' % obj.GetName() )
-            ROOT.gROOT.SetStyle   ( obj.GetName()  )
-            ROOT.gROOT.ForceStyle ( )
+            groot.SetStyle   ( obj.GetName()  )
+            groot.ForceStyle ( )
         return obj
 
     nam = name
     i   = 1
     while obj :
         nam  = name + '_%d' % i
-        obj  = ROOT.gROOT.FindObject ( nam )
+        obj  = groot.FindObject ( nam )
         i   += 1
 
     # ================================================================
@@ -97,8 +98,8 @@ def OstapStyle ( name                           ,
     if force : 
         style . cd() 
         logger.debug ('The style %s is forced' % style.GetName() )
-        ROOT.gROOT.SetStyle   ( style.GetName()  )
-        ROOT.gROOT.ForceStyle ()
+        groot.SetStyle   ( style.GetName()  )
+        groot.ForceStyle ()
         
     return style     
 
@@ -177,7 +178,8 @@ class UseStyle(object):
 
         ## use the style by name 
         if isinstance   ( style , str ) :
-            styles = ROOT.gROOT.GetListOfStyles()
+            groot  = ROOT.ROOT.GetROOT()
+            styles = groot.GetListOfStyles()
             for s in styles :
                 if s.GetName() == style :
                     style = s
@@ -193,12 +195,12 @@ class UseStyle(object):
 
     ## context  manager: enter 
     def __enter__ ( self )      :
-        
-        self.__force_style = ROOT.gROOT.GetForceStyle()
+        groot  = ROOT.ROOT.GetROOT()        
+        self.__force_style = groot.GetForceStyle()
         if self.__new_style : 
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
-            ROOT.gROOT.ForceStyle ( True )
+            groot.ForceStyle ( True )
             if ROOT.gPad : ROOT.gPad.UseCurrentStyle()
             
     ## context  manager: exit
@@ -206,7 +208,8 @@ class UseStyle(object):
 
         if self.__old_style: 
             self.__old_style.cd()
-            ROOT.gROOT.ForceStyle ( self.__force_style ) 
+            groot = ROOT.ROOT.GetROOT()        
+            groot.ForceStyle ( self.__force_style ) 
 
         self.__new_style = None
         self.__old_style = None

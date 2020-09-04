@@ -247,8 +247,9 @@ class PDF2 (PDF,FUNC2) :
         _lst   = ROOT.RooArgList ( self.xvar , self.yvar )  
         if dataset : dataset.fillHistogram( hdata , _lst ) 
         self.pdf.fillHistogram  ( hpdf , _lst )
-        
-        if not ROOT.gROOT.IsBatch() :
+
+        groot = ROOT.ROOT.GetROOT()
+        if not groot.IsBatch() :
             with rootWarning ():
                 hdata.lego ()
                 hpdf .Draw ( 'same surf')

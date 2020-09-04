@@ -24,6 +24,7 @@ import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import dsID
+from   ostap.utils.timing   import timing 
 from   ostap.logger.utils   import rooSilent
 # =============================================================================
 # logging 
@@ -191,7 +192,8 @@ def test_simfit3() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_simfit3 () 
+    with timing ("simfit-3", logger ) :
+        test_simfit3 () 
 
 
 # =============================================================================

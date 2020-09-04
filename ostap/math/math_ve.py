@@ -465,8 +465,8 @@ _b  = VE( _a     )
 if     isequal ( _a.error () , _b.error () ) : pass 
 else :
     jira = 'https://sft.its.cern.ch/jira/browse/ROOT-6627'
-    vers = ROOT.gROOT.GetVersion() 
-    logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , vers ) )
+    from ostap.core.meta_info import root_version 
+    logger.warning ( 'The problem %s is not solved yet ( ROOT %s) ' %  ( jira , root_version ) )
     logger.warning ( 'Temporarily disable cast of VE to float' )
     del VE.__float__
 

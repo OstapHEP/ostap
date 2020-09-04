@@ -416,22 +416,24 @@ class ROOTIgnore( object ) :
         >>> with rootWarning () : some_ROOT_code_here()
         """
         #
-        self._level = int( level )
+        self._level = int ( level )
         
     ## context manager: ENTER 
     def __enter__ ( self ) :
         "The actual context manager: ENTER" 
         self._old = int ( ROOT.gErrorIgnoreLevel ) 
-        if self._old != self._level : 
-            ROOT.gROOT.ProcessLine("gErrorIgnoreLevel= %d ; " % self._level ) 
+        if self._old != self._level :
+            groot = ROOT.ROOT.GetROOT()
+            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._level ) 
             
         return self
     
     ## context manager: EXIT 
     def __exit__ ( self , *_ ) : 
         "The actual context manager: EXIT"             
-        if self._old != int ( ROOT.gErrorIgnoreLevel )  : 
-            ROOT.gROOT.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
+        if self._old != int ( ROOT.gErrorIgnoreLevel )  :
+            groot = ROOT.ROOT.GetROOT()            
+            groot.ProcessLine("gErrorIgnoreLevel= %d ; " % self._old ) 
             
 # =============================================================================
 ## @class NoContext

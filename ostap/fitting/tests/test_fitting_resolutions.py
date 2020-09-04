@@ -20,6 +20,7 @@ import ROOT, random
 import ostap.fitting.roofit 
 from   ostap.core.core       import VE, dsID
 from   builtins              import range
+from   ostap.utils.timing    import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -217,10 +218,16 @@ def test_bukin () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_db: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
         db['dataset'  ] = dataset0
         db['models'   ] = models
@@ -229,16 +236,28 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_gauss  () ## single Gaussian resolution model
-    test_2gauss () ## double Gaussian resolution model
-    test_apo2   () ## symmetric Apollonios resoltuion model
-    test_cb2    () ## double-sided Crystal Ball resoltuion model
-    test_sech   () ## hyperbolic secant resolution model
-    test_bukin  () ## Bukin resolution model
+    with timing ("Gauss"  , logger ) :  
+        test_gauss  () ## single Gaussian resolution model
+        
+    with timing ("2-Gauss"  , logger ) :  
+        test_2gauss () ## double Gaussian resolution model
+        
+    with timing ("Apo2"     , logger ) :  
+        test_apo2   () ## symmetric Apollonios resoltuion model
+        
+    with timing ("CB2"      , logger ) :  
+        test_cb2    () ## double-sided Crystal Ball resoltuion model
+        
+    with timing ("Sech"     , logger ) :  
+        test_sech   () ## hyperbolic secant resolution model
+        
+    with timing ("Bukin"    , logger ) :  
+        test_bukin  () ## Bukin resolution model
     
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing ("Save to DB"    , logger ) :  
+        test_db ()          
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # ============================================================================= 

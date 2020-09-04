@@ -213,7 +213,8 @@ _new_methods_ += [
     ROOT.RooArgSet . __repr__     ,
     ]
 
-ROOT.RooLinkedList.add = ROOT.RooLinkedList.Add
+ROOT.RooLinkedList.add     = ROOT.RooLinkedList.Add
+ROOT.RooLinkedList.__len__ = ROOT.RooLinkedList.GetSize
 
 _new_methods_ += [
     ROOT.RooLinkedList . __len__  ,
@@ -255,7 +256,7 @@ def _ral_add_ ( self , other ) :
     _RAA = ROOT.RooAbsArg  
     if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
     if     isinstance ( other , str )                   : return NotImplemented
-    _clone = self.clone('')
+    _clone  = self.clone('')
     _clone += other
     return _clone
 

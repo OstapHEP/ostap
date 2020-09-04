@@ -13,11 +13,13 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'match_arg' , ## check the argument name mathhing 
-    'check_arg' , ## check the presense of argument in the list 
+    'match_arg'      , ## check the argument name mathhing 
+    'check_arg'      , ## check the presense of argument in the list
+    'nontrivial_arg' , ## check the presense of nontrivial arguments 
     ) 
 # =============================================================================
 import ROOT
+from   ostap.core.ostap_types import string_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -294,6 +296,25 @@ def _rca_print_ ( self ) :
     
     return name
 
+# ============================================================================
+## flatten the list of arguments/commands  
+def flat_args ( *args ) :
+    """Flatten the list of arguments/commands
+    """
+    
+    if not args : return ()
+    
+    flat = []
+    for arg in args :
+
+        if arg.GetName() != "MultiArg" : flat.append ( arg )
+        else :
+            lst = [ i for i in arg.subArgs() ]
+            flat = flat + list ( flat_args ( *lst ) ) 
+
+    return tuple ( flat ) 
+
+
 # =============================================================================
 ## check if the argument name matches the pattern
 #  @code
@@ -331,7 +352,6 @@ def match_arg ( pattern , arg ) :
     
     return False 
 
-    
 # =============================================================================
 ## Check the presense of the arg in the list
 #  @code
@@ -349,17 +369,40 @@ def check_arg  ( pattern , *args ) :
     - <code>fnmatch</code> matching
     - <code>regex</code> matching 
     """
-    
-    for arg in args :
 
-        if   match_arg ( pattern , arg ) : return arg 
-        elif arg.GetName() == "MultiArg" :
-            for ia in arg.subArgs() :
-                if match_arg ( pattern , ia ) : return ia
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+        if  match_arg ( pattern , arg ) : return arg 
                 
     return None
 
+# =============================================================================
+## check at least one command  different form the trivial commands  
+def nontrivial_arg ( trivials , *args ) :
+    """Check at least one command  different form the trivial commands
+    """
 
+    if not args : return False
+    
+    if isinstance ( trivials , string_types ) :
+        trivials = trivials ,
+
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+
+        for pattern in trivials :
+            
+            if match_arg ( pattern , arg ) : break 
+            
+        else :
+
+            return True
+
+    return False 
+        
+    
 # =============================================================================
 def _rca_bool_ ( self ) :
     """Get boolean value"""
@@ -390,5 +433,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

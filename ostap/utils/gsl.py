@@ -173,7 +173,7 @@ def setHandler ( handler ) :
             _setHandler ( Ostap.Utils.GslException () )
             logger.debug('Global GSL error Handler: convert GLS errors to C++/Python exceptions')
         else :
-            raise TypeError('Unknown handler type %s' % handler )
+            raise TypeError ( 'Unknown handler type %s' % handler )
     elif isinstance ( handler , Ostap.Utils.GslError ) :
         _setHandler ( handler  )
         logger.debug('Global Eror Handler: %s' % handler ) 
@@ -189,8 +189,8 @@ useHandler = setHandler
 if '__main__' == __name__ :
     
     from   ostap.logger.logger import getLogger
-    if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.gsl' )
-    else                       : logger = getLogger( __name__          )
+    if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.gsl' )
+    else                       : logger = getLogger ( __name__          )
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
@@ -198,15 +198,15 @@ if '__main__' == __name__ :
     setHandler ( 'Error' )
     with gslIgnore() , gslException() :
         with gslError() :
-            setHandler( 'Exception')
-            setHandler( 'Exception')
-            setHandler( 'Exception')
-            setHandler( 'Exception')
-            setHandler( 'Ignore')
-            setHandler( 'Error')
-            setHandler( 'Error')
-            setHandler( 'Error')
-            setHandler( 'Error')
+            setHandler ( 'Exception' )
+            setHandler ( 'Exception' )
+            setHandler ( 'Exception' )
+            setHandler ( 'Exception' )
+            setHandler ( 'Ignore'    )
+            setHandler ( 'Error'     )
+            setHandler ( 'Error'     )
+            setHandler ( 'Error'     )
+            setHandler ( 'Error'     )
         
     logger.info ( 'Active handlers %s' % _global_gsl_handler ) 
     del   _global_gsl_handler[:]

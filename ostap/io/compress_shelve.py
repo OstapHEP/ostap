@@ -256,13 +256,12 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
         else                                                          : write = False 
         if write :
-            meta = meta_info()
             dct  = collections.OrderedDict() 
-            dct  [ 'Created by'                  ] = meta.User
+            dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
-            dct  [ 'Created with Ostap version'  ] = meta.Ostap
-            dct  [ 'Created with Python version' ] = meta.Python
-            dct  [ 'Created with ROOT version'   ] = meta.ROOT 
+            dct  [ 'Created with Ostap version'  ] = meta_info.Ostap
+            dct  [ 'Created with Python version' ] = meta_info.Python
+            dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__' ] = dct

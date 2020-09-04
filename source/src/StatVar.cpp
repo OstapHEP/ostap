@@ -11,6 +11,7 @@
 // ============================================================================
 // ROOT
 // ============================================================================
+#include "RVersion.h"
 #include "TTree.h"
 #include "TCut.h"
 #include "RooDataSet.h"
@@ -3000,7 +3001,13 @@ Ostap::StatVar::statVar
     .Define ( var    ,  "1.0*(" + expression + ")"   )
     .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + cuts + ")" ) ;
   //
-  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  const unsigned int nSlots =
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  ROOT::GetThreadPoolSize     () ;
+#else 
+  ROOT::GetImplicitMTPoolSize () ;
+#endif
+  //
   std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
   //
   auto fun = [&_stat] ( unsigned int slot , double v , double w ) 
@@ -3070,7 +3077,13 @@ unsigned long Ostap::StatVar::statCov
     .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) 
     .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) ;
   ///
-  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  const unsigned int nSlots =
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  ROOT::GetThreadPoolSize     () ;
+#else 
+  ROOT::GetImplicitMTPoolSize () ;
+#endif
+  //
   std::vector<Statistic>           _sta1 ( nSlots ? nSlots : 1 ) ;
   std::vector<Statistic>           _sta2 ( nSlots ? nSlots : 1 ) ;
   std::vector<Ostap::SymMatrix2x2> _cov2 ( nSlots ? nSlots : 1 ) ;

@@ -21,6 +21,7 @@ import ostap.fitting.models        as     Models
 from   ostap.fitting.transform_pdf import TrPDF
 from   ostap.fitting.funbasic      import Fun1D
 from   builtins                    import range
+from   ostap.utils.timing          import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -79,7 +80,8 @@ def  test_transform () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_transform    () 
+    with timing ("transform" , logger ) :  
+        test_transform    () 
     
 # =============================================================================
 ##                                                                      The END 

@@ -25,6 +25,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import dsID
 from   ostap.logger.utils   import rooSilent
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -137,10 +138,9 @@ def test_simfit2 ( ) :
     fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
     fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
     
-    fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
-    
+    ## fNLL  = model_sim.draw_nll ( 'SM2' , dataset , range =   (0,1000)  )
     ## significance 
-    wilks = model_sim.wilks    ( 'SM2' , dataset  )
+    ## wilks = model_sim.wilks    ( 'SM2' , dataset  )
     
     logger.info ( 'Fit  results are: %s ' % r )
 
@@ -148,7 +148,8 @@ def test_simfit2 ( ) :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_simfit2 () 
+    with timing ("simfit-2", logger) :  
+        test_simfit2 () 
 
 # =============================================================================
 ##                                                                      The END 

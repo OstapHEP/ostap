@@ -30,6 +30,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+root_version = ROOT.ROOT.GetROOT().GetVersionInt()
+# =============================================================================
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )
 m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 3 , 3.2 )
@@ -530,8 +532,13 @@ def test_psxps_BBsym () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+
+    from ostap.core.meta_info import root_version_int
+    if root_version_int >= 62200 :
+        logger.warning("test_db: test is disabled for ROOT verison %s" % root_version_int )
+        return
+    
+    with timing ( 'Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
@@ -544,19 +551,18 @@ def test_db() :
 if '__main__' == __name__ :
     
     from ostap.utils.timing import timing
-    with timing ('test_const'       ) : test_const       ()          
-    with timing ('test_p2xp2'       ) : test_p2xp2       ()          
-    with timing ('test_p1xp1_BB'    ) : test_p1xp1_BB    ()          
-    with timing ('test_p1xp1_BBss'  ) : test_p1xp1_BBss  ()          
-    with timing ('test_p1xp1_BBsym' ) : test_p1xp1_BBsym ()          
-    with timing ('test_pbxpb_BB'    ) : test_pbxpb_BB    ()          
-    with timing ('test_pbxpb_BBs'   ) : test_pbxpb_BBs   ()          
-    with timing ('test_pbxpb_BBsym' ) : test_pbxpb_BBsym ()          
-    with timing ('test_psxps_BBs'   ) : test_psxps_BBs   ()          
-    with timing ('test_psxps_BBsym' ) : test_psxps_BBsym ()          
+    with timing ('test_const'       , logger ) : test_const       ()          
+    with timing ('test_p2xp2'       , logger ) : test_p2xp2       ()          
+    with timing ('test_p1xp1_BB'    , logger ) : test_p1xp1_BB    ()          
+    with timing ('test_p1xp1_BBss'  , logger ) : test_p1xp1_BBss  ()          
+    with timing ('test_p1xp1_BBsym' , logger ) : test_p1xp1_BBsym ()          
+    with timing ('test_pbxpb_BB'    , logger ) : test_pbxpb_BB    ()          
+    with timing ('test_pbxpb_BBs'   , logger ) : test_pbxpb_BBs   ()          
+    with timing ('test_pbxpb_BBsym' , logger ) : test_pbxpb_BBsym ()          
+    with timing ('test_psxps_BBs'   , logger ) : test_psxps_BBs   ()          
+    with timing ('test_psxps_BBsym' , logger ) : test_psxps_BBsym ()          
 
-
-    with timing ( 'Save to DB'     ) : test_db ()          
+    with timing ('Save to DB' ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

@@ -298,8 +298,9 @@ def _tt_project_ ( tree               ,
     ## 
     hname = histo 
     if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
-    elif isinstance ( histo , str       ) : 
-        h = ROOT.gROOT.FindObject ( hname )
+    elif isinstance ( histo , str       ) :
+        groot = ROOT.ROOT.GetROOT()
+        h     = groot.FindObject ( hname )
         if h and isinstance ( h , ROOT.TH1 ) : histo = h
 
     ## reset it!
@@ -353,14 +354,15 @@ def _tt_project_ ( tree               ,
 
     ## the basic case 
     with ROOTCWD() :
-        ROOT.gROOT.cd ()
+        groot = ROOT.ROOT.GetROOT() 
+        groot.cd ()
         ## make projection
         ## print 'HERE:   %s/%s' %  ( hname , type ( hname ) ) 
         result = tree.Project ( hname , what , cuts , *args[:-1] )
         if   isinstance ( histo , ROOT.TH1 ) :
             return result, histo
         elif isinstance ( histo , str      ) :
-            h = ROOT.gROOT.FindObject ( hname )
+            h = groot.FindObject ( hname )
             if h : return result, h
 
     return result, histo

@@ -883,7 +883,8 @@ class FUNC(XVar) :
             #
             ## Draw the frame!
             #
-            if not ROOT.gROOT.IsBatch() :
+            groot = ROOT.ROOT.GetROOT()
+            if not groot.IsBatch() :
                 with rootWarning (): frame.draw ( kwargs.pop ( 'draw_options','' ) )
             
             if kwargs :

@@ -20,6 +20,7 @@ import ostap.fitting.models        as     Models
 from   ostap.fitting.morphing_pdf  import Morphing1D_pdf, Morphing2D_pdf 
 from   ostap.utils.utils           import vrange
 from   builtins                    import range
+from   ostap.utils.timing          import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -58,8 +59,8 @@ def test_morphing1 () :
     logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
 # ============================================================================
-## def test_morphing2 () :
-if 1 < 2 :
+def test_morphing2 () :
+## if 1 < 2 :
     
     pdf11 = Models.Gauss_pdf ( 'G11' , xvar = mass , mean =  8 , sigma = 1 )
     pdf12 = Models.Gauss_pdf ( 'G12' , xvar = mass , mean = 10 , sigma = 1 )
@@ -96,9 +97,10 @@ if 1 < 2 :
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass 
-    ## test_morphing1   () 
-    ## test_morphing2   () 
+    with timing ("Morphing1"   , logger ) :  
+        test_morphing1   () 
+    with timing ("Morphing2"   , logger ) :  
+        test_morphing2   () 
     
 # =============================================================================
 ##                                                                      The END 

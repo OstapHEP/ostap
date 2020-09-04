@@ -952,7 +952,7 @@ def _new_init_ ( t ,  *args )  :
     targs = tuple ( largs )
 
     ## use old constructor 
-    t._old_init_ ( *targs ) 
+    return t._old_init_ ( *targs ) 
 
 # =============================================================================
 ## set parameter for polynomial/spline functions

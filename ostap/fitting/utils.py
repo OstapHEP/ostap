@@ -51,7 +51,8 @@ from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        is_good_number               )
 from   ostap.logger.utils     import roo_silent
 from   sys                    import version_info as python_version 
-from   ostap.math.random_ext  import ve_gauss, poisson  
+from   ostap.math.random_ext  import ve_gauss, poisson
+from   ostap.core.meta_info   import root_version_int 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -192,6 +193,7 @@ class NameDuplicates(object) :
     def __exit__   ( self , *_     ) :
         self.allow ( self.__backup )
 # =============================================================================
+
 
 # =============================================================================
 ## keep the list of local loggers  
@@ -520,7 +522,7 @@ class MakeVar ( object ) :
             elif kup in ( 'ASYMPTOTIC'       ,
                           'ASYMPTOTICERR'    ,
                           'ASYMPTOTICERROR'  ,
-                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= ROOT.gROOT.GetVersionInt() :
+                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= root_version_int :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -532,7 +534,7 @@ class MakeVar ( object ) :
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
             elif kup in ( 'BATCH'            ,
-                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= ROOT.gROOT.GetVersionInt() :
+                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= root_version_int :
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )                                
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Extended ( a ) )                

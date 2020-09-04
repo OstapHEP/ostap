@@ -294,13 +294,12 @@ class SQLiteShelf(SqliteDict):
         self.__sizes         = {}
 
         if self.flag in (  'w' , 'n' ) :
-            meta = meta_info()
             dct  = collections.OrderedDict() 
-            dct  [ 'Created by'                  ] = meta.User
+            dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
-            dct  [ 'Created with Ostap version'  ] = meta.Ostap
-            dct  [ 'Created with Python version' ] = meta.Python
-            dct  [ 'Created with ROOT version'   ] = meta.ROOT 
+            dct  [ 'Created with Ostap version'  ] = meta_info.Ostap
+            dct  [ 'Created with Python version' ] = meta_info.Python
+            dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__' ] = dct
@@ -527,18 +526,15 @@ class SQLiteShelf(SqliteDict):
         """
 
         if self.flag == 'c' : 
-            meta = meta_info () 
             dct = self.get ( '__metainfo__' , {} )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
-            dct  [ 'Updated by'                  ] = meta.User 
-            dct  [ 'Updated with Ostap version'  ] = meta.Ostap 
-            dct  [ 'Updated with Python version' ] = meta.Python 
-            dct  [ 'Updated with ROOT version'   ] = meta.ROOT   
+            dct  [ 'Updated by'                  ] = meta_info.User 
+            dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
+            dct  [ 'Updated with Python version' ] = meta_info.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT   
             self [ '__metainfo__' ] = dct
 
-            
         return SqliteDict.close ( self )
-
         
     ## context manager
     def __enter__ ( self      ) :

@@ -95,7 +95,8 @@ __all__     = (
     'frexp10'        , ## similar to math.frexp but woith radix=10
     ) 
 # =============================================================================
-import ROOT, cppyy, sys 
+import ROOT, cppyy, sys
+from   ostap.core.meta_info import root_version_int 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -213,7 +214,6 @@ def _tmg_str_ ( self , fmt = ' %+11.4g') :
 
 ROOT.TMatrix.__repr__  = _tmg_str_
 ROOT.TMatrix.__str__   = _tmg_str_
-
 
     
 # =============================================================================
@@ -372,13 +372,25 @@ SPD.__setitem__ = _spd_setitem_
 # =============================================================================
 # Improve operations with std.complex 
 # =============================================================================
-COMPLEX  = cpp.std.complex('double'      )
-COMPLEXf = cpp.std.complex('float'       )
-COMPLEXl = cpp.std.complex('long double' )
+COMPLEX  = cpp.std.complex ( 'double'      )
+COMPLEXf = cpp.std.complex ( 'float'       )
+COMPLEXl = cpp.std.complex ( 'long double' )
 # =============================================================================
-def _cmplx_to_complex_ ( s ) :
-    """Convert C++ complex to Python's complex"""
-    return  complex    ( s.real() , s.imag() )
+if root_version_int < 62200 : 
+    def _real_ ( s ) : return s.real ()
+    def _imag_ ( s ) : return s.imag ()
+    def _cmplx_to_complex_ ( s ) :
+        """Convert C++ complex to Python's complex"""
+        return  complex    ( s.real () , s.imag () )
+else : 
+    def _real_ ( s ) : return s.real 
+    def _imag_ ( s ) : return s.imag 
+    def _cmplx_to_complex_ ( s ) :
+        """Convert C++ complex to Python's complex"""
+        return  complex    ( s.real , s.imag  )
+
+# =============================================================================
+
 
 # =============================================================================
 def _cmplx_negate_     ( s ) :
@@ -386,25 +398,23 @@ def _cmplx_negate_     ( s ) :
     >>> v  = ...
     >>> v1 = -v
     """
-    return -complex    ( s.real() , s.imag() )
+    return -complex    ( s )
 
 # =============================================================================
 def _cmplx_abs_        ( s ) :
     """Absolute value
     >>> print abs(v) 
     """
-    import math
-    sr = s.real()
-    si = s.imag()
-    return math.sqrt( sr * sr + si * si ) 
+    import math 
+    return math.sqrt ( s.norm () )
 
 # =============================================================================
 def _cmplx_norm_       ( s ) :
     """Norm (squared absolute value)
     >>> print v.norm()
     """
-    sr = s.real()
-    si = s.imag()
+    sr = _real_ ( s ) 
+    si = _imag_ ( s ) 
     return sr * sr + si * si
 
 # =============================================================================
@@ -412,65 +422,64 @@ def _cmplx_conjugate_  ( s ) :
     """Get complex conjugated
     >>> vc = v.conjugate() 
     """
-    return complex     ( s.real() , -s.imag() )
+    return complex ( _real_ ( s )  , - _imag_  ( s )  )
     
 # =============================================================================
 def _cmplx_add_        ( s , o ) :
     """add complex values 
     >>> r = v + other  
     """
-    return o + complex ( s.real() , s.imag() )
+    return o + complex ( s )
 
 # =============================================================================
 def _cmplx_mul_        ( s , o ) :
     """multiply  complex values 
     >>> r = v * other  
     """
-    return o * complex ( s.real() , s.imag() )
+    return o * complex ( s  )
 
 # =============================================================================
 def _cmplx_div_        ( s , o ) :
     """divide complex values 
     >>> r = v / other  
     """
-    return (1.0/o) * complex ( s.real() , s.imag() )
+    return ( 1.0 / o ) * complex ( s )
 
 # =============================================================================
 def _cmplx_rdiv_       ( s , o ) :
     """divide complex values 
     >>> r = other / v 
     """
-    return o       * ( 1.0 / complex ( s.real() , s.imag() ) )
+    return o           * ( 1.0 / complex ( s ) )
 
 # =============================================================================
 def _cmplx_sub_        ( s , o ) :
     """subtract complex values 
     >>> r = v - other 
     """
-    return (-o   ) + complex ( s.real() , s.imag() )
+    return (-o   ) + complex ( s )
 
 # =============================================================================
 def _cmplx_rsub_       ( s , o ) :
     """subtract complex values 
     >>> r = other - v 
     """
-    return   o     - complex ( s.real() , s.imag() )
+    return   o     - complex ( s )
 
 # =============================================================================
 def _cmplx_pow_  ( s , o ) :
     """power function 
     >>> r = v ** other  
     """
-    if isinstance ( o , COMPLEX ) :
-        o = complex ( o.real() , o.imag() ) 
-    return complex ( s.real() , s.imag() ) ** o
+    if isinstance ( o , COMPLEX ) : o = complex ( o ) 
+    return complex ( s ) ** o
 
 # =============================================================================
 def _cmplx_rpow_  ( s , o ) :
     """power function 
     >>> r = other **v  
     """
-    return o ** complex ( s.real() , s.imag() )
+    return o ** complex ( s )
 
 
 # =============================================================================
@@ -479,8 +488,8 @@ def _cmplx_eq_    ( s , o ) :
     >>> r = v == other  
     """
     if isinstance ( o, COMPLEX ) :
-        return s.real() == o.real() and s.imag() == o.imag()
-    return complex( s.real() , s.imag() ) == o
+        return _real_ ( s ) == _real_ ( o ) and _imag_ ( s ) == _imag_ ( o )
+    return complex ( s ) == o
 
 # =============================================================================
 def _cmplx_ne_    ( s , o ) :
@@ -488,34 +497,69 @@ def _cmplx_ne_    ( s , o ) :
     >>> r = v != other  
     """
     if isinstance ( o, COMPLEX ) :
-        return s.real() != o.real() or  s.imag() != o.imag()
-    return complex( s.real() , s.imag() ) != o 
+        return _real_ ( s ) != _real_ ( o ) or _imag_ ( s ) != _imag_ ( o )
+    return complex ( s ) != o 
 
 # =============================================================================
-def _cmplx_iadd_ ( s , o ) :
-    x = s + o
-    s.real(x.real)
-    s.imag(x.imag)
-    
-# =============================================================================
-def _cmplx_isub_ ( s , o ) :
-    x = s - o
-    s.real(x.real)
-    s.imag(x.imag)
+if root_version_int < 62200  :
+    # =========================================================================
+    def _cmplx_iadd_ ( s , o ) :
+        x = s + o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s    
+    # =========================================================================
+    def _cmplx_isub_ ( s , o ) :
+        x = s - o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+    def _cmplx_imul_ ( s , o ) :
+        x = s * o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+    def _cmplx_idiv_ ( s , o ) :
+        x = s / o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+else :
+    # =========================================================================
+    def _cmplx_iadd_ ( s , o ) :
+        x = s + o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_isub_ ( s , o ) :
+        x = s - o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_imul_ ( s , o ) :
+        x = s * o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_idiv_ ( s , o ) :
+        x = s / o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t ) 
+        return s
+    # =========================================================================
 
+        
 # =============================================================================
-def _cmplx_imul_ ( s , o ) :
-    x = s * o
-    s.real(x.real)
-    s.imag(x.imag)
-
-# =============================================================================
-def _cmplx_idiv_ ( s , o ) :
-    x = s / o
-    s.real(x.real)
-    s.imag(x.imag)
-
-# =============================================================
 for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     
     if not hasattr ( CMPLX , '_old_init_' ) : 
@@ -536,7 +580,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
                 
         CMPLX.__init__    = _cmplx_new_init_
         
-    CMPLX.__complex__ = _cmplx_to_complex_
+    CMPLX.__complex__  = _cmplx_to_complex_
     
     CMPLX.__add__      = _cmplx_add_
     CMPLX.__mul__      = _cmplx_mul_
@@ -556,8 +600,8 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     CMPLX.__isub__     = _cmplx_isub_
     CMPLX.__itruediv__ = _cmplx_idiv_
 
-    CMPLX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
-    CMPLX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
+    CMPLX.__repr__    = lambda s : "%s" % complex ( s )
+    CMPLX.__str__     = lambda s : "%s" % complex ( s )
     CMPLX.__abs__     = _cmplx_abs_
     CMPLX.__pow__     = _cmplx_pow_
     CMPLX.__rpow__    = _cmplx_rpow_
@@ -567,7 +611,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     CMPLX.__ne__      =  _cmplx_ne_
     
     if not hasattr ( CMPLX , 'cpp_conj' ) :
-        CMPLX.cpp_conj = lambda s : CMPLX ( s.real() , -s.imag() )
+        CMPLX.cpp_conj = lambda s : CMPLX ( _real_ ( s ) , -_imag_ ( s ) )
     
     CMPLX.norm        = _cmplx_norm_
     CMPLX.conjugate   = _cmplx_conjugate_
@@ -608,7 +652,7 @@ _decorated_classes_  = (
     )
 
 # =============================================================================
-## C++ version of frexp woith radix 10 
+## C++ version of frexp with radix 10 
 cpp_frexp10 = Ostap.Math.frexp10 
 # =============================================================================
 ## get mantissa (0.1<=m<1) and exponent for radix10
@@ -645,5 +689,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The  END
+##                                                                     The  END
 # =============================================================================

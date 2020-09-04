@@ -18,6 +18,7 @@ import ostap.fitting.models     as     Models
 from   ostap.core.core          import cpp, VE, dsID, Ostap
 from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
+from   ostap.utils.timing       import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -170,10 +171,17 @@ def test_vars3 () :
 if '__main__' == __name__ :
 
 
-    test_pdf   ()
-    test_vars1 ()
-    test_vars2 ()
-    test_vars3 ()
+    with timing ("PDF"   , logger ) :  
+        test_pdf   ()
+        
+    with timing ("Vars1" , logger ) :  
+        test_vars1 ()
+        
+    with timing ("Vars2" , logger ) :        
+        test_vars2 ()
+        
+    with timing ("Vars3" , logger ) :        
+        test_vars3 ()
 
 # =============================================================================
 ##                                                                      The END 

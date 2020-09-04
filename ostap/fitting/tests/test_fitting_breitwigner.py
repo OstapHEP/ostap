@@ -197,10 +197,15 @@ def test_breitwigner_phi_ps () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ##  pass 
-    test_breitwigner_rho    ()
-    test_breitwigner_phi    ()
-    test_breitwigner_phi_ps ()
+    ##  pass
+    with  timing ( "Breit-Wigner Rho"    , logger ) :  
+        test_breitwigner_rho    ()
+        
+    with  timing ( "Breit-Wigner Phi"    , logger ) :  
+        test_breitwigner_phi    ()
+        
+    with  timing ( "Breit-Wigner Phi+PS" , logger ) :  
+        test_breitwigner_phi_ps ()
     
     
 # =============================================================================

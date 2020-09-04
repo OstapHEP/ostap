@@ -11,6 +11,7 @@
 // ============================================================================
 // ROOT 
 // ============================================================================
+#include "RVersion.h"
 #include "TPython.h"
 // ============================================================================
 // Ostap
@@ -139,7 +140,13 @@ Ostap::Models::PyPdf::clone ( const char* name ) const
                             Ostap::StatusCode(500)           ) ;
   }
   /// create "pdf"-item 
-  PyObject*  pycl = TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
+  PyObject*  pycl =
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+       TPython::CPPInstance_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
+#else
+       TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
+#endif
+  ///
   if ( !pycl ) 
   {
     PyErr_Print();
@@ -562,7 +569,13 @@ Ostap::Functions::PyVar::clone ( const char* name ) const
                             Ostap::StatusCode(500)           ) ;
   }
   /// create "pyvar"-item 
-  PyObject*  pycl = TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false) ;  
+  PyObject*  pycl = 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+       TPython::CPPInstance_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
+#else
+       TPython::ObjectProxy_FromVoidPtr ( cl , cl->IsA()->GetName() , false ) ;  
+#endif
+
   if ( !pycl ) 
   {
     PyErr_Print();
@@ -758,8 +771,6 @@ ClassImp(Ostap::Models::PyPdf)
 ClassImp(Ostap::Models::PyPdf2)
 ClassImp(Ostap::Functions::PyVar)
 ClassImp(Ostap::Functions::PyVar2)
-
-
 // ============================================================================
 //                                                                      The END
 // ============================================================================

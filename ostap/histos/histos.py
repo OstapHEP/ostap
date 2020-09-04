@@ -64,13 +64,15 @@ def _h_new_init_ ( self , *args ) :
     """Modified TH* constructor:
     - ensure that created object/histogram goes to ROOT main memory
     """
-    with ROOTCWD() :
-        ROOT.gROOT.cd() 
-        self._old_init_   ( *args )
-        self.SetDirectory ( ROOT.gROOT )  ## NB! 
+    with ROOTCWD () :
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
+        init = self._old_init_   ( *args )
+        self.SetDirectory ( groot )  ## NB! 
         ## optionally:
         if not self.GetSumw2() : self.Sumw2()
-
+        return init 
+    
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
 #  - it automatically assign unique ID
@@ -87,12 +89,13 @@ def _h_new_clone_ ( self , name = '' , title = ''  ) :
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID()
+    if not name : name = hID ()
     #
     with ROOTCWD() :
-        ROOT.gROOT.cd() 
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
         nh = self._old_clone_ ( name )
-        nh.SetDirectory ( ROOT.gROOT ) ## ATTENTION!
+        nh.SetDirectory ( groot )
         ## optionally 
         if not nh.GetSumw2() : nh.Sumw2()
         
@@ -114,9 +117,9 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
 
     if hasattr ( h , '_new_init_' ) and hasattr ( h , '_old_init_' ) : pass
     else : 
-        h._old_init_  =  h.__init__ 
-        h._new_init_  = _h_new_init_
-        h.__init__    = _h_new_init_
+        h._old_init_ =  h.__init__ 
+        h._new_init_ = _h_new_init_
+        ## h.__init__   = _h_new_init_  
 
 # =============================================================================
 # Decorate histogram axis and iterators 

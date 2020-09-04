@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-#                                   1.4.9.1 (Jun 01, 2020, 12:23 [UTC])
+#                                   1.5.99.0 (Sep 04, 2020, 15:07 [UTC])
 #     .oooooo.                .                        
 #    d8P'  `Y8b             .o8                        
 #   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
@@ -25,30 +25,39 @@
 __all__ = (
     'banner'       , ## Ostap banner 
     'version'      , ## Ostap version 
+    'version_int'  , ## Ostap version as integer 
     'version_info' , ## version info as named tuple
     'build_date'   , ## Ostap build/reelase date (as string)
     'build_time'   , ## Ostap build/release time (as datetime)
     )
 # =============================================================================
 ## the  actual version of Ostap 
-__version__ = "1.4.9.1"
-__date__    = "Jun 01, 2020, 12:23 [UTC]"
+__version__ = "1.5.99.0"
+__date__    = "Sep 04, 2020, 15:07 [UTC]"
 # =============================================================================
 import datetime 
 from   collections import namedtuple
 # =============================================================================
 version      = __version__
-VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak'))
-version_info = VersionInfo ( 1 , 4 , 9 , 1 )
+VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
+version_info = VersionInfo ( 1 ,
+                             5 ,
+                             99 ,
+                             0 )
 build_date   = __date__
-build_time   = datetime.datetime.utcfromtimestamp ( 1591014212 )
+build_time   = datetime.datetime.utcfromtimestamp ( 1599232040 )
+version_int  = version_info.tweak                   +\
+               version_info.patch             * 100 +\
+               version_info.minor       * 100 * 100 +\
+               version_info.major * 100 * 100 * 100 
+               
 # =============================================================================
 ##
 import ostap.fixes.fixes
 # =============================================================================
 ## Banner
 banner = r"""
-                                        1.4.9.1 (Jun 01, 2020, 12:23 [UTC])
+                                        1.5.99.0 (Sep 04, 2020, 15:07 [UTC])
      .oooooo.                .
     d8P'  `Y8b             .o8
    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.

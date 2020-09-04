@@ -15,6 +15,7 @@ from   __future__        import print_function
 # ============================================================================= 
 import ROOT, random 
 import ostap.fitting.minuit
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,8 +28,7 @@ else :
 ## trivial FCN 
 def fcn ( npar ,  gin , f , par , iflag ) :
     """Trivial FCN
-    """
-    
+    """    
     s = 0
     n = npar[0]
     
@@ -41,6 +41,11 @@ def fcn ( npar ,  gin , f , par , iflag ) :
 # =============================================================================
 def test_minuit ( ) :
     
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_minuit: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     minuit = ROOT.TMinuit( 5 )
     minuit.SetFCN ( fcn  )
     
@@ -82,12 +87,12 @@ def test_minuit ( ) :
         ml , mh = minuit.minErr ( i )
         if ml < mh  : line += logger.info ( "; minos errors are (%+g,%+g)" % (-ml,mh) )
         logger.info ( line )
-
         
 # =============================================================================
 if  '__main__' == __name__ :
 
-    test_minuit () 
+    with timing ( "minuit" , logger ) : 
+        test_minuit () 
     
 # =============================================================================
 ##                                                                      The END 

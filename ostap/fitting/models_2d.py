@@ -39,7 +39,8 @@ from   ostap.core.core       import cpp, Ostap
 from   ostap.math.base       import iszero
 from   ostap.fitting.utils   import Phases
 from   ostap.fitting.fit2d   import PDF2, Flat2D
-from   ostap.fitting.signals import Gauss_pdf, CB2_pdf 
+from   ostap.fitting.signals import Gauss_pdf, CB2_pdf
+from   ostap.core.meta_info  import root_info
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
@@ -1602,7 +1603,7 @@ class RooKeys2D_pdf(PDF2) :
 # =============================================================================
 # some tiny decoration of underlying classes 
 # =============================================================================
-_rv = ROOT.gROOT.GetVersionInt() // 10000
+root_major = root_info.major 
 def _2d_get_pars_ ( self ) :
     """
     Get parameters of underlying positive Berstein polynomial
@@ -1621,8 +1622,8 @@ def _2d_get_pars_ ( self ) :
         for i in range ( 0 , b.nX() + 1 ) :
             for j in range ( 0 , b.nY() + 1 ) :
                 
-                if _rv < 6 : m[i][j] = b.par(i,j)
-                else       : m[i, j] = b.par(i,j)
+                if  root_major < 6 : m[i][j] = b.par(i,j)
+                else               : m[i, j] = b.par(i,j)
                     
         return m 
         

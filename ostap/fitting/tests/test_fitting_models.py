@@ -21,6 +21,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
+from   ostap.utils.timing   import timing
 from   builtins             import range
 # =============================================================================
 # logging 
@@ -31,14 +32,16 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 
 ## book very simple data set
 varset0  = ROOT.RooArgSet  ( mass )
+
 dataset0 = ROOT.RooDataSet ( dsID() , 'Test Data set-0' , varset0 )  
 
-mmin,mmax = mass.minmax()
+mmin , mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
@@ -219,7 +222,7 @@ def test_needham() :
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
                                       mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 ) , 
+        background = Models.Bkg_pdf ('BkgMATT', xvar = mass , power = 0 ) , 
         S = S , B = B 
         )
     
@@ -1115,10 +1118,16 @@ def test_rasingcosine () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
+
+    from   ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_db: test is disabled for ROOT version %s" % root_version_int )
+        return 
+    
+    logger.info ( 'Saving all objects into DBASE' )
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
         db['dataset'  ] = dataset0
         for m in models : db['model:' + m.name ] = m
@@ -1128,41 +1137,123 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_gauss          () ## simple Gaussian PDF                       + background 
-    test_crystalball    () ## Crystal Ball                              + background
-    test_crystalball_RS () ## right-side Crystal Ball                   + background  
-    test_crystalball_DS () ## double side Crystal Ball                  + background 
-    test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    test_apollonios     () ## Apollonios function                       + background 
-    test_apollonios2    () ## modified Apollonios function              + background 
-    test_bifurcated     () ## bifurcated Gaussian function              + background 
-    test_2gauss         () ## double     Gaussian function              + background 
-    test_gengauss_v1    () ## generalized Gaussian function V1          + background 
-    test_gengauss_v2    () ## generalized Gaussian function V2          + background 
-    test_skewgauss      () ## skew gaussian                             + background 
-    test_qgauss         () ## q-Gaussian function                       + background 
-    test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
-    test_studentT       () ## Student-t shape                           + background 
-    test_bifstudentT    () ## Bifurcated Student-t shape                + background 
-    test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
-    test_johnsonSU      () ## Johnson-SU distribution                   + background 
-    test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
-    test_sech           () ## Sech (1/cosh)  distribution               + background 
-    test_losev          () ## Asymmetric hyperbilic secant distribution + background 
-    test_logistic       () ## Logistic distribution                     + background 
-    test_voigt          () ## Voigt profile                             + background 
-    test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
-    test_bw             () ## Breit-Wigner(+resolution)                 + background 
-    test_slash          () ## Slash-function                            + background 
-    test_rasingcosine   () ## Raising Cosine                            + background 
-    test_laplace        () ## Laplace-function                            + background 
+    ## simple Gaussian PDF                       + background
+    with timing ('test_gauss'          , logger ) :
+        test_gauss          () 
+        
+    ## Crystal Ball                              + background
+    with timing ('test_crystalball'    , logger ) :
+        test_crystalball    () 
+        
+    ## right-side Crystal Ball                   + background
+    with timing ('test_crystalball_RS' , logger ) :
+        test_crystalball_RS () 
+
+    ## double side Crystal Ball                  + background
+    with timing ('test_crystalball_DS' , logger ) :
+        test_crystalball_DS () 
+
+    ## Needham function (CB with alpha=f(sigma)) + background 
+    with timing ('test_needham'        , logger ) :
+        test_needham        ()
+
+    ## Apollonios function                       + background 
+    with timing ('test_apollonios'     , logger ) :
+        test_apollonios     () 
+
+    ## modified Apollonios function              + background
+    with timing ('test_apolloniois2'   , logger ) :
+        test_apollonios2    () 
+
+    ## bifurcated Gaussian function              + background
+    with timing ('test_bifurcated'     , logger ) :
+        test_bifurcated     () 
+
+    ## double     Gaussian function              + background
+    with timing ('test_2gauss'         , logger ) :
+        test_2gauss         () 
+
+    ## generalized Gaussian function V1          + background
+    with timing ('test_gengauss_v1'    , logger ) :
+        test_gengauss_v1    () 
+        
+    ## generalized Gaussian function V2          + background
+    with timing ('test_gengauss_v2'    , logger ) :
+        test_gengauss_v2    () 
+    
+    ## skew gaussian                             + background
+    with timing ('test_skewgauss'      , logger ) :
+        test_skewgauss      () 
+        
+    ## q-Gaussian function                       + background
+    with timing ('test_qgauss'         , logger ) :
+        test_qgauss         () 
+
+    ## Bukin - skew Gaussian core with exponential tails  + background         
+    with timing ('test_bukun'          , logger ) :
+        test_bukin          ()
+        
+    ## Student-t shape                           + background 
+    with timing ('test_studentT'       , logger ) :
+        test_studentT       () 
+    
+    ## Bifurcated Student-t shape                + background
+    with timing ('test_bifstudentT'    , logger ) :
+        test_bifstudentT    ()
+        
+    ## Sinh-Asinh distribution                   + background
+    with timing ('test_sinhasinh'      , logger ) :
+        test_sinhasinh      () 
+    
+    ## Johnson-SU distribution                   + background 
+    with timing ('test_johnsonSU'      , logger ) :
+        test_johnsonSU      () 
+
+    ## Modified Gaussian used by ATLAS/Zeus      + background 
+    with timing ('test_atlas'          , logger ) :
+        test_atlas          () 
+        
+    ## Sech (1/cosh)  distribution               + background    
+    with timing ('test_sech'           , logger )  : 
+        test_sech           ()
+
+    ## Asymmetric hyperbilic secant distribution + background         
+    with timing ('test_losev'          , logger ) :
+        test_losev          () 
+
+    ## Logistic distribution                     + background 
+    with timing ('test_logistic'       , logger ) :
+        test_logistic       () 
+
+    ## Voigt profile                             + background
+    with timing ('test_voigt'          , logger ) :
+        test_voigt          () 
+    
+    ## Pseudo-Voigt(approximation to Voigt)      + background
+    with timing ('test_pvoigt'         , logger ) :
+        test_pvoigt         () 
+        
+    ## Breit-Wigner(+resolution)                 + background 
+    with timing ('test_bw'             , logger ) :
+        test_bw             () 
+
+    ## Slash-function                            + background 
+    with timing ('test_slash'          , logger ) :
+        test_slash          () 
+
+    ## Raising Cosine                            + background 
+    with timing ('test_rasingcosine'   , logger ) :
+        test_rasingcosine   () 
+
+    ## Laplace-function                            + background 
+    with timing ('test_laplace'        , logger ) :
+        test_laplace        () 
     
     ## check finally that everything is serializeable:
-    test_db ()
+    with timing ('test_db'             , logger ) :
+        test_db ()
 
-    ##pass 
          
-
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

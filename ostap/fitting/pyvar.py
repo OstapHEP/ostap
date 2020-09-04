@@ -103,7 +103,7 @@ else                       : logger = getLogger ( __name__              )
 #       dx =  (x-x0)/sigma
 #       return  math.exp ( 0.5* dx ** 2 ) / math.sqrt ( 2*math.pi*sigma )
 #
-#   ## varibales 
+#   ## variables 
 #   x     = RooRealVar( ... )
 #   m0    = RooRealVar( ... )
 #   sigma = RooRealVar( ... )
@@ -176,7 +176,7 @@ class PyVAR (object) :
             
         ## finally set the variable!
         self.__var   = pyvar
-
+        
     @property
     def var     ( self ) :
         """``var'': the actual C++ RooAbsReal object"""
@@ -184,7 +184,7 @@ class PyVAR (object) :
     
     @property
     def name    ( self ) :
-        """``name'' : the name of the varibale"""
+        """``name'' : the name of the variable"""
         return self.var.GetName()
     
     @property
@@ -199,7 +199,7 @@ class PyVAR (object) :
         return self.var.varlist ()
     
     # =========================================================================
-    ## get a value of certain variale
+    ## get a value of certain variable
     #  @code
     #  pdf = ...
     #  a = pdf.variable ( 'a' )

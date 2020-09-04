@@ -22,8 +22,9 @@ __all__     = (
     "print_stats"    , ## print statistics of toys 
     )
 # =============================================================================
-from   builtins          import range
 import ROOT
+from   builtins          import range
+#
 # =============================================================================
 # logging 
 # =============================================================================
@@ -218,10 +219,11 @@ def make_toys ( pdf                ,
     from collections import defaultdict 
     results = defaultdict(list) 
 
+    
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
-
+                
         ## 1. reset PDF parameters 
         pdf.load_params ( None , fix_pars  , silent = silent )
         pdf.load_params ( None , init_pars , silent = silent )
@@ -241,8 +243,8 @@ def make_toys ( pdf                ,
             
             ## 4. save results 
             rpf = r.params ( float_only = True ) 
-            for i in rpf : 
-                results [ i ].append ( rpf[i][0] ) 
+            for p in rpf : 
+                results [ p ].append ( rpf [ p ][0] ) 
                 
             for v in more_vars :
                 func  = more_vars[v] 
@@ -252,11 +254,10 @@ def make_toys ( pdf                ,
         del dataset
         del r
 
-        
     ## make a final statistics 
     from   ostap.core.core        import SE 
     stats = defaultdict(SE)
-    
+
     for par in results :
         pars = results [ par ]
         mvar = par in more_vars 
@@ -269,7 +270,9 @@ def make_toys ( pdf                ,
 
     if progress or not silent : print_stats ( stats , nToys )
     
+
     return results, stats 
+
 
 # =============================================================================
 ## make <code>ntoys</code> pseudoexperiments

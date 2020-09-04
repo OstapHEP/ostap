@@ -340,8 +340,9 @@ class Style(object):
 
         _fillopt = False
         if   isinstance ( fillcolor , integer_types ) and 0 < fillcolor :
-            self.__fillcolor = fillcolor 
-            cc = ROOT.gROOT.GetColor ( fillcolor )
+            self.__fillcolor = fillcolor
+            groot = ROOT.ROOT.GetROOT() 
+            cc    = groot.GetColor ( fillcolor )
             if cc and 1.0 == cc.GetAlpha () :
                 ## add tranparency
                 fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , transparency ) 

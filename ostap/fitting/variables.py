@@ -29,9 +29,9 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random, array 
-from   ostap.core.core  import VE, hID 
+from   ostap.core.core  import VE, hID
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
-                                       integer_types , string_types )   
+                                       integer_types , string_types )
 # =============================================================================
 # logging 
 # =============================================================================
@@ -712,7 +712,7 @@ def  total_ratio ( var1 , var2 ) :
     assert isinstance ( var2 , ROOT.RooAbsReal,\
                         "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
     
-    name     =  var1.name ,  var2.name 
+    name     = var1.name ,  var2.name 
     total    = add_var   ( var1 , var2 ,
                            name  = 'Total_%s_%s'               % names ,
                            title = 'Total yields of %s and %s' % names )

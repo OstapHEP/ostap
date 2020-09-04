@@ -20,6 +20,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -127,7 +128,8 @@ def test_splot () :
 
 if '__main__' == __name__ :
 
-    test_splot        () 
+    with timing ( "sPlot" , logger ) :  
+        test_splot        () 
     
 # =============================================================================
 ##                                                                      The END 

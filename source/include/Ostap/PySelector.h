@@ -4,9 +4,20 @@
 // ============================================================================
 // Include files
 // ============================================================================
-// ROOT
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
 // ============================================================================
 #include "TPySelector.h"
+// ============================================================================
+#else 
+// ============================================================================
+#include "TPyArg.h"
+#include "TSelector.h"
+// ============================================================================
+#endif 
 // ============================================================================
 // Forward declaratios
 // ============================================================================
@@ -16,28 +27,79 @@ class TChain ;            // ROOT
 namespace Ostap
 {
   // ==========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+  typedef TPySelector ROOT_Selector ;
+#else 
+  typedef   TSelector ROOT_Selector ;
+#endif
+  // ==========================================================================
   /** @class Selector PySelector.h Ostap/PySelector.h
    *  Helper class for implementation of "python TSelector".
    *  The fix has been kindly provided by Wim Lavrijsen
    *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
    *  @date   2011-01-21
    */
-  class Selector : public  TPySelector
+  // ==========================================================================
+  class Selector : public ROOT_Selector
   {
     // ========================================================================
   public:
     // ========================================================================
-    ClassDef(Ostap::Selector, 1) ;
+    ClassDef(Ostap::Selector, 2) ;
     // ========================================================================
   public:
     // ========================================================================
     /// constructor 
-    Selector
-    ( TTree*    tree = 0 , 
-      PyObject* self = 0 ) ;
+    // ========================================================================
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+    // ========================================================================
+    Selector ( PyObject* self           , 
+               TTree*    tree = nullptr ) ;
+    // ========================================================================
+#else 
+    // ========================================================================
+    Selector ( TTree*    tree = nullptr ) ;
+    // ========================================================================
+#endif 
     // ========================================================================
     /// destructor
     virtual ~Selector() ;
+    // ========================================================================
+  public: // the basic innterface 
+    // ========================================================================
+    /// init 
+    void   Init           ( TTree*   tree       ) override ;
+    /// begin 
+    void   Begin          ( TTree*   tree       ) override ;
+    /// initialize the slave 
+    void   SlaveBegin     ( TTree*   tree       ) override ;
+    /// process 
+    Bool_t Process        ( Long64_t entry      ) override ;
+    /// notify 
+    Bool_t Notify         ()                      override ;
+    /// teminnate the slave 
+    void   SlaveTerminate ()                      override ;
+    /// terminate
+    void   Terminate      ()                      override ;
+    /// get entry 
+    Int_t  GetEntry       ( Long64_t entry      , 
+                            Int_t    getall = 0 ) override ;
+    /// Version 
+    Int_t  Version        () const                override ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /// get the tree 
+    TTree* tree() const ;
+    ///  set the tree 
+    void   set_tree  ( TTree* tree ) ;
+    // ========================================================================
+  private: 
+    // ========================================================================
+    /// the tree 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+    TTree* m_tree { nullptr } ; // the tree 
+#endif
     // ========================================================================
   } ;
   // ==========================================================================

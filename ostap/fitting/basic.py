@@ -46,8 +46,9 @@ from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phase
                                         fit_status , cov_qual , H1D_dset , get_i  )
 from   ostap.fitting.funbasic  import FUNC
 from   ostap.utils.cidict      import select_keys
-from   ostap.fitting.roocmdarg import check_arg
+from   ostap.fitting.roocmdarg import check_arg, nontrivial_arg
 import ostap.histos.histos 
+from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -317,7 +318,8 @@ class PDF (FUNC) :
         #
         opts = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
         opts = self.parse_args ( dataset , *opts , **kwargs )
-        if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
+        if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
+            self.info ('fitTo options: %s ' % list ( opts ) )
 
         ## play a bit with the binning cache for convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
@@ -715,7 +717,8 @@ class PDF (FUNC) :
             #
             ## Draw the frame!
             #
-            if not ROOT.gROOT.IsBatch() :
+            groot = ROOT.ROOT.GetROOT()
+            if not groot.IsBatch() :
                 with rootWarning (): frame.draw( kwargs.pop ( 'draw_options','' ) )
             
             residual =  kwargs.pop ( 'residual' , False )
@@ -1030,8 +1033,9 @@ class PDF (FUNC) :
                 
         
 
-        ## draw it! 
-        if not ROOT.gROOT.IsBatch() :
+        ## draw it!
+        groot = ROOT.ROOT.GetROOT()        
+        if not groot.IsBatch() :
             with rootWarning ():
                 if draw : frame.draw ( kwargs.get('draw_options', '' ) )
 
@@ -2846,7 +2850,6 @@ class Sum1D(PDF) :
 
 
 # =============================================================================
-_ROOT_VERSION = ROOT.gROOT.GetVersionInt() 
     
 # =============================================================================
 ## Helper function to create the PDF/PDF2/PDF3
@@ -2856,15 +2859,16 @@ def make_pdf ( pdf , args , name = '' ) :
     """Helper function to create the PDF/PDF2/PDF3
     """
     
-    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), 'make_pdf: Invalid type %s' % type ( pdf )
+    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), \
+           'make_pdf: Invalid type %s' % type ( pdf )
     
     name = name if name else "PDF_from_%s" % pdf.name
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) :
-        if 62000 <= _ROOT_VERSION : 
+        if 62000 <= root_version_int : 
             pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
         else :
-            raise TypeError("RooWrapperPdf is not available for ROOT %s" % _ROOT_VERSION )
+            raise TypeError("make_pdf: RooWrapperPdf is not available for ROOT %s" % root_version_int )
         
     num = len ( args )
     if   1 == num :

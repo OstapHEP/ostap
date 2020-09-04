@@ -309,8 +309,9 @@ if arguments.Profile :
 # =============================================================================
 ## set ROOT into batch mode 
 # =============================================================================
-ROOT.gROOT.SetBatch ( arguments.batch )
-if ROOT.gROOT.IsBatch() : logger.info ('Batch processing is activated') 
+groot = ROOT.ROOT.GetROOT() 
+groot.SetBatch ( arguments.batch )
+if groot.IsBatch() : logger.info ('Batch processing is activated') 
 
 import ostap.fixes.fixes 
 
@@ -412,11 +413,12 @@ PARAMETERS     = []
 def _load_macro_ ( macro , silent = True ) :
     """Load ROOT macro"""
     logger.debug  ("Try to load macro '%s'" % macro )
+    groot = ROOT.ROOT.GetROOT() 
     if silent :
         from ostap.logger.utils import rootError
-        with rootError() : sc = ROOT.gROOT.LoadMacro ( macro )
+        with rootError() : sc = groot.LoadMacro ( macro )
     else :
-        sc = ROOT.gROOT.LoadMacro ( macro )
+        sc = groot.LoadMacro ( macro )
         
     if sc :
         # - Interactive mode: print traceback and continue

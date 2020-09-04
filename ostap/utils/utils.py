@@ -334,13 +334,15 @@ class Batch(object) :
     ## contex manahger: ENTER
     def __enter__ ( self ) :
         import ROOT
-        self.old_state = ROOT.gROOT.IsBatch()
-        if self.old_state != self.__batch : ROOT.gROOT.SetBatch ( self.__batch ) 
+        groot = ROOT.ROOT.GetROOT()
+        self.old_state = groot.IsBatch()
+        if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
         import ROOT
-        if self.old_state != ROOT.gROOT.IsBatch() : ROOT.gROOT.SetBatch( self.old_state ) 
+        groot = ROOT.ROOT.GetROOT()
+        if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
 
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state

@@ -39,7 +39,7 @@ mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 varset0   = ROOT.RooArgSet  ( mass )
 dataset   = ROOT.RooDataSet ( dsID() , 'Test Data set-0' , varset0 )  
 
-mmin,mmax = mass.minmax()
+mmin , mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
@@ -170,7 +170,12 @@ class PyGauss2(MASS,PyPDF2) :
 ## pygauss PDF
 # =============================================================================
 def test_pygauss() :
-    
+
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_pygauss: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     logger.info ('Test PyGauss:  simple Gaussian signal' )
     
     gauss   = PyGauss( 'PyGauss'   , xvar = mass )
@@ -190,6 +195,11 @@ def test_pygauss() :
 # =============================================================================
 def test_pygauss_AI() :
     
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_pygauss_AI: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     logger.info ('Test PyGaussAI:  simple Gaussian signal with  analytical integral' )
     
     gauss   = PyGauss( 'PyGaussAI' , xvar = mass )
@@ -206,6 +216,11 @@ def test_pygauss_AI() :
 
 def test_pygauss2 () :
     
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_pygauss2: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     ## the function
     def function ( x , m , s ) :
         dx = ( x - m ) / s        
@@ -226,17 +241,17 @@ def test_pygauss2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
+
     
     ## simple Gaussian PDF
-    with timing ("PyGauss    : ") : test_pygauss        ()
+    with timing ("PyGauss    ", logger ) : test_pygauss        ()
     
-
     ## simple Gaussian PDF with analytical integral 
-    with timing ("PyGaussAI  : ") : test_pygauss_AI  ()
-
+    with timing ("PyGaussAI  ", logger ) : test_pygauss_AI  ()
+    
     ## simple Gaussian PDF
-    with timing ("PyGauss2   : ") : test_pygauss2       ()
-
+    with timing ("PyGauss2   ", logger ) : test_pygauss2       ()
+    
     
 # =============================================================================
 ##                                                                      The END 

@@ -81,7 +81,6 @@ vars    = ROOT.RooArgList ( x , a , b , c , x0 )
 # =============================================================================
 # use RooFormulaVar to parameterise efficiency:
 def test_formula () :
-## if 1 < 2 :
     
     effFunc = ROOT.RooFormulaVar ( "effFunc" , "a+0.5*b*(1+tanh((x-x0)*c))" , vars )
     
@@ -95,7 +94,11 @@ def test_formula () :
 
 # =============================================================================
 def test_pyvar () :
-## if 1 < 2 : 
+
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_pyvar: test is disabled for ROOT verison %s" % root_version_int )
+        return 
 
     from ostap.fitting.pyvar import PyVAR
     class MyVar(PyVAR) :
@@ -128,6 +131,11 @@ def test_pyvar () :
 # =============================================================================
 def test_pyvar2 () :
 
+    from ostap.core.meta_info import root_version_int 
+    if root_version_int >= 62200 :
+        logger.warning("test_pyvar2: test is disabled for ROOT verison %s" % root_version_int )
+        return 
+
     from ostap.fitting.pyvar import PyVAR2
 
     
@@ -146,9 +154,10 @@ def test_pyvar2 () :
 # =============================================================================
 if '__main__' == __name__ :
     
-    with timing ('RooFormulaVar : ') : test_formula ()
-    with timing ('PyVAR         : ') : test_pyvar   ()
-    with timing ('PyVAR2        : ') : test_pyvar2  ()
+    with timing ('RooFormulaVar ', logger ) : test_formula ()
+    
+    with timing ('PyVAR         ', logger ) : test_pyvar   ()
+    with timing ('PyVAR2        ', logger ) : test_pyvar2  ()
 
 
 # =============================================================================
