@@ -11,8 +11,6 @@ gcc7_lcg95:build:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
 gcc7_lcg95:test:
-  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-  variables:
     CMTCONFIG: x86_64-centos7-gcc7-opt
     LCG: LCG_95
   stage: test
