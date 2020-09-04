@@ -11,7 +11,6 @@ gcc7_lcg95:build:
   script:
     - "#!/usr/bin/env bash"
     - "./scripts/bootstrap ${LCG}  ${CMTCONFIG}" 
-    - "cd .."
   artifacts:
     paths:
       - build
@@ -22,10 +21,11 @@ gcc7_lcg95:test:
     LCG: LCG_95
   script:
     - "#!/usr/bin/env bash"
-    - "ls ."
     - "./scripts/test ${LCG}  ${CMTCONFIG}"
-    - "cd .."
   needs:
     - job: gcc7_lcg95:build
       artifacts: true
+  artifacts:
+    paths:
+      - build
 
