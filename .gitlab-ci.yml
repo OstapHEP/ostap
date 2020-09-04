@@ -1,9 +1,10 @@
 stages:
   - build
   - test
-image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
 gcc7_lcg95:build:
   stage: build
+
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
   variables:
     CMTCONFIG: x86_64-centos7-gcc7-opt
     LCG: LCG_95
@@ -11,6 +12,9 @@ gcc7_lcg95:build:
     - "#!/usr/bin/env bash"
     - "./scripts/bootstrap ${LCG}  ${CMTCONFIG}" 
     - "cd .."
+  artifacts:
+    paths:
+      - build
 gcc7_lcg95:test:
   stage: test
   variables:
@@ -21,4 +25,7 @@ gcc7_lcg95:test:
     - "ls ."
     - "./scripts/test ${LCG}  ${CMTCONFIG}"
     - "cd .."
+  needs:
+    - job: gcc7_lcg95:build
+      artifacts: true
 
