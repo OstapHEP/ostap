@@ -8,13 +8,13 @@ gcc7_lcg95:build:
     CMTCONFIG: x86_64-centos7-gcc7-opt
     LCG: LCG_95
   script:
-    - #!/usr/bin/env bash
-    - ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
-    - cd ..
+    - "#!/usr/bin/env bash"
+    - "./scripts/bootstrap ${LCG}  ${CMTCONFIG}" 
+    - "cd .."
   stage: test
   script:
-    - #!/usr/bin/env bash
-    - ls .
-    - ./scripts/test ${LCG}  ${CMTCONFIG} 
-    - cd ..
+    - "#!/usr/bin/env bash"
+    - "ls ."
+    - "./scripts/test ${LCG}  ${CMTCONFIG}"
+    - "cd .."
 
