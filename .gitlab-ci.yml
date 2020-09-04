@@ -1,6 +1,6 @@
 stages:
   - build
-#  - test
+  - test
 gcc7_lcg95:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -10,6 +10,11 @@ gcc7_lcg95:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 gcc8_lcg96b:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -19,6 +24,11 @@ gcc8_lcg96b:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 gcc8_lcg96py3:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -28,6 +38,11 @@ gcc8_lcg96py3:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 gcc8_lcg97py3:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -37,6 +52,11 @@ gcc8_lcg97py3:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 gcc8_lcg97:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -46,6 +66,11 @@ gcc8_lcg97:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 gcc9_lcg97:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -55,6 +80,11 @@ gcc9_lcg97:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 cl8_lcg97:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -64,6 +94,11 @@ cl8_lcg97:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
+
 cl8_lcg97:
   stage: build
   image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
@@ -73,3 +108,7 @@ cl8_lcg97:
   script:
     #!/usr/bin/env bash
     ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+  stage: test
+  script:
+    #!/usr/bin/env bash
+    ./scripts/test ${LCG}  ${CMTCONFIG} 
