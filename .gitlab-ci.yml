@@ -22,6 +22,7 @@ gcc7_lcg95:test:
   script:
     - "#!/usr/bin/env bash"
     - "./scripts/test ${LCG}  ${CMTCONFIG}"
+  allow_failure: true
   needs:
     - job: gcc7_lcg95:build
       artifacts: true
