@@ -14,7 +14,7 @@ gcc7_lcg95:build:
   stage: test
   script:
     #!/usr/bin/env bash
-    ls 
+    ls .
     ./scripts/test ${LCG}  ${CMTCONFIG} 
     cd ..
 
