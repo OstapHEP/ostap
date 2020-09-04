@@ -1,5 +1,75 @@
 stages:
   - build
 #  - test
-include: templates/lcg-97.gitlab-ci.yaml
-
+gcc7_lcg95:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc7-opt
+    LCG: LCG_95
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+gcc8_lcg96b:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc8-opt
+    LCG: LCG_96b
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+gcc8_lcg96py3:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc8-opt
+    LCG: LCG_96bpython3
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+gcc8_lcg97py3:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc8-opt
+    LCG: LCG_97python3
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+gcc8_lcg97:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc8-opt
+    LCG: LCG_97
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+gcc9_lcg97:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc9-opt
+    LCG: LCG_97
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+cl8_lcg97:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-clang8-opt
+    LCG: LCG_97
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
+cl8_lcg97:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-clang8-opt
+    LCG: LCG_97python3
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
