@@ -162,7 +162,7 @@ def test_simple_selector ()  :
         logger.warning("test_simple_selector: test is disabled for ROOT verison %s" % root_version_int )
         return 
         
-    from ostap.fitting.selectors import Selector
+    from ostap.fitting.pyselectors import Selector
     
     class MySel(Selector) :
         
@@ -218,7 +218,7 @@ def test_selector_with_cuts ()  :
         logger.warning("test_selector_with_cuts: test is disabled for ROOT verison %s" % root_version_int )
         return 
 
-    from ostap.fitting.selectors import SelectorWithCuts 
+    from ostap.fitting.pyselectors import SelectorWithCuts 
     
     class MySel2 (SelectorWithCuts) :
         

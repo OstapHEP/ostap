@@ -102,8 +102,8 @@ else :
 #
 ## make reweighting iterations
 # 
-from   ostap.tools.reweight     import Weight, makeWeights, WeightingPlot, W2Data
-from   ostap.fitting.selectors  import SelectorWithVars, Variable 
+from   ostap.tools.reweight         import Weight, makeWeights, WeightingPlot, W2Data
+from   ostap.fitting.pyselectors    import SelectorWithVars, Variable 
 import ostap.parallel.parallel_fill
 
 # =============================================================================
@@ -224,5 +224,5 @@ mc_density  .draw ('e1 same')
 time.sleep(10)
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -71,11 +71,11 @@ class  FillTask(Task) :
         all = 0 == first and ( nevents < 0 or ll <= nevents )
         
         if self.trivial and all : 
-            import ostap.fitting.selectors
+            import ostap.fitting.pyselectors
             self.__output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
             return self.__output 
 
-        from   ostap.fitting.selectors import SelectorWithVars
+        from   ostap.fitting.pyselectors import SelectorWithVars
         
         ## use selector  
         selector = SelectorWithVars ( self.variables ,

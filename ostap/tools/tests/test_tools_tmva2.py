@@ -142,7 +142,7 @@ if os.path.exists ( trainer.output_file ) :
 
 ## prepare dataset with TMVA result
 
-from ostap.fitting.selectors import SelectorWithVars, Variable     
+from ostap.fitting.pyselectors import SelectorWithVars, Variable     
 ## 1) Book RooDataset                 
 variables = [
     Variable( 'var1' , 'variable#1' ) ,

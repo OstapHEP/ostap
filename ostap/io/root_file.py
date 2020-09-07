@@ -1011,6 +1011,42 @@ class REOPEN(object) :
                 r = self.tfile.ReOpen ('READ' ) 
                 if r < 0 : logger.error ("Can't reopen the file for READ!")            
 
+
+from ostap.core.core import _rd_valid_
+
+# ==============================================================================
+## length of the directory :  (recursive) number of keys
+#  @code
+#  rdir = ...
+#  len(rdir) 
+#  @endcode  
+def  _rd_len_ ( rdir ) :
+    """Length of the directory : (recursive) number of keys
+    >>> rdir = ...
+    >>> len(rdir) 
+    """
+    
+    if not rdir : return 0
+    
+    with ROOTCWD() :
+        ##
+        rdir.cd() 
+        lst = rdir.GetListOfKeys()
+
+        nkeys = lst.GetSize() if valid_pointer ( lst  ) else 0
+
+        for item in lst :
+
+            inam = item.GetName()
+            idir = rdir.GetDirectory ( inam )            
+
+            if idir and not idir is rdir :
+                nkeys += _rd_len_ ( idir  ) 
+    return nkeys
+
+
+ROOT.TDirectory.__len__ = _rd_len_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TFile       ,

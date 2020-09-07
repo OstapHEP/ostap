@@ -147,7 +147,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
 
 ## prepare dataset with TMVA result
 
-from ostap.fitting.selectors import SelectorWithVars, Variable     
+from ostap.fitting.pyselectors import SelectorWithVars, Variable     
 ## 1) Book RooDataset                 
 variables = [
     Variable( 'var1' , 'variable#1' ) ,

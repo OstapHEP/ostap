@@ -44,41 +44,27 @@ list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 
+if (Python_VERSION VERSION_LESS "3.3")
+  list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
+endif() 
+
+set (PREFIX ${CMAKE_INSTALL_PREFIX}/ )
+
 foreach(filename ${allfiles})
 
    string(REPLACE FAKEfakeFAKEfake ququququ   test_name ${filename} )
+   string(REPLACE FAKEfakeFAKEfake ququququ   testname  ${filename} )
 
-   string(REPLACE fitting/param       fitting_param       test_name ${test_name})
-   string(REPLACE trees/param         trees_param         test_name ${test_name})
-   string(REPLACE histos/param        histos_param        test_name ${test_name})
-   string(REPLACE math/param          math_param          test_name ${test_name})
-   
-   string(REPLACE fitting/utils       fitting_utils       test_name ${test_name})
-   string(REPLACE logger/utils        logger_utils        test_name ${test_name})
-   string(REPLACE utils/utils         utils_utils         test_name ${test_name})
-   string(REPLACE core/utils          core_utils          test_name ${test_name})
+    string(REPLACE ${PREFIX} ""  testname   ${testname})
+    string(REPLACE "\.py" ""     testname   ${testname})
+    string(REPLACE "/" ";"       testname   ${testname})
+    list(SUBLIST testname 2 3 testname ) 
+    list( JOIN  testname "_" testname ) 
+    string(CONCAT testname ostap.runit_ ${testname})
 
-   string(REPLACE fitting/basic       fitting_basic       test_name ${test_name})
-   string(REPLACE utils/basic         utils_basic         test_name ${test_name})
+    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
 
-   string(REPLACE fitting/funcs       fitting_funcs       test_name ${test_name})
-   string(REPLACE trees/funcs         trees_funcs         test_name ${test_name})
-
-   string(REPLACE fitting/models      fitting_models      test_name ${test_name})
-   string(REPLACE math/models         math_models         test_name ${test_name})
-
-   string(REPLACE fitting/convolution fitting_convolution test_name ${test_name})
-   string(REPLACE math/convolution    math_convolution    test_name ${test_name})
-
-   get_filename_component(tname ${test_name} NAME_WE)
-   ##string(PREPEND tname test_runit_)
-   string(CONCAT tname ostap.test_runit_ ${tname})
-
-   ##MESSAGE ( 'test' ${tname} "---" ${test_name} "---" ${filename} ) 
-
-   add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
-
-   set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ) 
+    set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ) 
 
 endforeach() 
 

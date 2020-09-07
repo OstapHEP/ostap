@@ -1,6 +1,8 @@
 ## New features 
   1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
   1. Make few important steps towards ROOT 6.23/01 ("New PYROOT"). Full  adaptation is not yet achieved, there   are some pending problems with effective inheritance from C++ classes (namely `TSelector`, `PyPDF`, `PyVAR`, ...). There are also some puzzling  crashes... 
+  1. rename  tests, make test selection more transparent and easy to navigate back 
+  1. rename `ostap/fitting/selectors.py` to `ostap/fitting/pyselectors.py` to avoid the name clash for python3 
   
 ## Backward incompatible changes: 
 

@@ -52,8 +52,9 @@ __all__     = (
     'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
-import ROOT,cppyy, time, os,sys ## attention here!!
-cpp = cppyy.gbl
+import ROOT, cppyy, time, os,sys ## attention here!!
+from ostap.core.core import cpp 
+## cpp = cppyy.gbl
 ROOT_RooFit_ERROR = 4 
 # =============================================================================
 # logging 

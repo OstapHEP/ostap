@@ -93,6 +93,7 @@ def _mn_exec_ ( self , command , *args ) :
     Simple wrapper for ROOT.TMinuit.mnexcm function
     - see ROOT.TMinuit.mnexcm    
     """
+    logger.info ( 'I  AM MCEXEC %s %s' % (   command , str ( args ) ) ) 
     if not  args : args = 0 ,
     
     from array import array
@@ -100,7 +101,10 @@ def _mn_exec_ ( self , command , *args ) :
     #
     ierr = ctypes.c_int ( 0 ) 
     ##
+    logger.info ( 'I  AM MNCEXEC(1) %s %s' % ( command , str ( args )  ) ) 
+    logger.info ( 'I  AM MNCEXEC(2) %s %s' % ( arglist , len(arglist)  ) ) 
     self.mnexcm ( command , arglist , len ( arglist ) , ierr )
+    logger.info ( 'I  AM MNCEXEC(3) %s %s' % ( arglist , len(arglist)  ) ) 
     #
     return int ( ierr.value )
 
@@ -118,7 +122,7 @@ def _mn_show_ ( self , what = 'PAR' , *args ) :
     if not args : args = [ 0 ]
     ##
     what = what.upper()
-    whar = what.replace ( 'SHOW',' ' )
+    what = what.replace ( 'SHOW', ' ' )
     return _mn_exec_ ( self , 'SHOW ' + what , *args )
 
 ROOT.TMinuit.show = _mn_show_
@@ -229,12 +233,10 @@ def _mn_add_par_ ( self    , name      ,
     if hasattr ( start , 'value' ) : start = start . value()
     if hasattr ( step  , 'value' ) : step  = step  . value()
     ## 
-    if step < 0 : step = abs ( 0.01 * start ) 
+    if step < 0 :
+        if low < high : step = 1.e-3 *     ( high - low ) 
+        else          : step = 1.e-2 * abs ( start      ) 
     ##
-    from array import array
-    starts  = array ( 'd' , 1 * [ start ] )
-    steps   = array ( 'd' , 1 * [ step  ] )
-    #
     ipar    = len         ( self )
     ##
     ierr = ctypes.c_int ( 0 ) 

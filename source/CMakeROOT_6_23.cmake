@@ -17,18 +17,26 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
  
 message ('-Python2 version: ' ${PY2VERSION_ROOT} ) 
 message ('-Python3 version: ' ${PY3VERSION_ROOT} ) 
-   
+
+add_library ( root_pyroot INTERFACE IMPORTED) 
 if     (PY2VERSION_ROOT)
   find_package(Python2 ${PY2VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+  set(Python_VERSION ${Python2_VERSION}  )
   if  (Python2_FOUND)
-    message ( "Python2 version: " ${PYTHON2_VERSION} )
-  endif()  
+    message ( "Python version: " ${Python3_VERSION} '/' ${Python_VERSION})
+  else()
+    message ( "Python2 is NOT FOUND!" ) 
+  endif()
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT2;Python2::Python")
 elseif (PY3VERSION_ROOT)
   find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
-  message (PY3 found ${Python3_FOUND})
+  set(Python_VERSION ${Python3_VERSION}  )
   if  (Python3_FOUND)
-    message ( "Python3 version: " ${Python3_VERSION} )
+    message ( "Python version: " ${Python3_VERSION} '/' ${Python_VERSION})
+  else()
+    message ( "Python3 is NOT FOUND!" ) 
   endif()  
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;Python3::Python")
 endif () 
 
 
@@ -73,8 +81,8 @@ include(${ROOT_USE_FILE})
 function( MAKE_DICT name header selection )
    REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection})
    add_library( ${name}Dict MODULE ${name}.cxx)
-   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::GenVector ROOT::PyROOT2)
-   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::GenVector ROOT::PyROOT2 )
+   add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot)
+   target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::GenVector root_pyroot )
 endfunction( MAKE_DICT )
 
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${GSL_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR})
@@ -109,8 +117,8 @@ target_compile_features (ostap PUBLIC cxx_std_11 )
 message ( C++11 ) 
 endif() 
 
-target_link_libraries   (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector ROOT::ROOTTPython ROOT::PyROOT2 ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame ROOT::Core GSL::gsl Python2::Python )
-###add_dependencies (ostap ROOT::ROOTVecOps ROOT::ROOTDataFrame ROOT::RooFit ROOT::MathMore ROOT::ROOTTPython ROOT::PyROOT2 ROOT::Core GSL::gsl Python2::Python )
+target_link_libraries   (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector ROOT::ROOTTPython root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame ROOT::Core GSL::gsl )
+###add_dependencies (ostap ROOT::ROOTVecOps ROOT::ROOTDataFrame ROOT::RooFit ROOT::MathMore ROOT::ROOTTPython root_pyroot ROOT::Core GSL::gsl )
 
 target_include_directories (ostap
     PUBLIC 
@@ -124,8 +132,10 @@ target_include_directories (ostap
 
 get_target_property(incdirs1 ROOT::MathMore INTERFACE_INCLUDE_DIRECTORIES)
 message ( INCDIRS1 ${incdirs1} )
-get_target_property(incdirs2 ROOT::PyROOT2  INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(incdirs2 root_pyroot    INTERFACE_INCLUDE_DIRECTORIES)
 message ( INCDIRS2 ${incdirs2} )
+get_target_property(incdirs3 root_pyroot    INTERFACE_LINK_LIBRARIES)
+message ( INCDIRS3 ${incdirs3} )
 
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${incdirs1} ${PYTHON_INCLUDE_DIRS} )
 
