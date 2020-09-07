@@ -16,6 +16,9 @@ set(OSTAP_VERSION_TWEAK 0)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
+message ( " CMAKE version:" ${CMAKE_VERSION} ) 
+message ( " OSTAP version:" ${OSTAP_VERSION} )
+
 set(OSTAP_PYTHON_SITE_DIR "")
 
 # Use compiler from PATH, not the system one
