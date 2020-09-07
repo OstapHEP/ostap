@@ -70,7 +70,6 @@ else :
     logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
 
     
-    
 # =============================================================================
 if '__main__' == __name__ :
     
