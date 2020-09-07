@@ -53,22 +53,10 @@ set (PREFIX ${CMAKE_INSTALL_PREFIX}/ )
 foreach(filename ${allfiles})
 
     string(REPLACE FAKEfakeFAKEfake ququququ   testname  ${filename} )
-    string(REPLACE ${PREFIX} ""  testname   ${testname})
-    string(REPLACE "\.py" ""     testname   ${testname})
-
-if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.12" )
-
-    string(REPLACE "/" ";"       testname   ${testname})
-    list  (SUBLIST testname 2 3  testname ) 
-    list  (JOIN    testname "_"  testname ) 
-
-else() 
-
-    string(REPLACE "/" "_"       testname   ${testname})
-
-endif()
-
-    string(CONCAT  testname ostap.runit_    ${testname})
+    string(REPLACE ${PREFIX} ""  testname ${testname})
+    string(REPLACE "\.py" ""     testname ${testname})
+    string(REPLACE "/" "_"       testname ${testname})
+    string(CONCAT  testname ostap.runit   ${testname})
 
     add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
 
