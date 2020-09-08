@@ -533,11 +533,6 @@ def test_psxps_BBsym () :
 # =============================================================================
 def test_db() :
 
-    from ostap.core.meta_info import root_version_int
-    if root_version_int >= 62200 :
-        logger.warning("test_db: test is disabled for ROOT version %s" % root_version_int )
-        return
-    
     with timing ( 'Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y

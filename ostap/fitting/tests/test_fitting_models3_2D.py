@@ -137,11 +137,6 @@ def test_model_13 () :
 # =============================================================================
 def test_db() :
 
-    from ostap.core.meta_info import root_version_int 
-    if root_version_int >= 62200 :
-        logger.warning("test_db: test is disabled for ROOT version %s" % root_version_int )
-        return 
-
     logger.info('Saving all objects into DBASE')
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x

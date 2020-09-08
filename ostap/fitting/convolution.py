@@ -219,7 +219,7 @@ class Convolution_pdf(PDF) :
             self.__old_pdf = pdf 
             xvar = pdf.xvar
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and xvar :
-            self.__old_pdf = Generic1D_pdf  ( pdf , xvar )
+            self.__old_pdf = Generic1D_pdf  ( pdf , xvar , name = '%s%s' % ( name , pdf.name )  )
         else :
             raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
