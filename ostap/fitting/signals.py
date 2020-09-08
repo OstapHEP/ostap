@@ -3224,8 +3224,11 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
                    gamma     = None ,
                    the_phis  = None ) :
 
-        assert isinstance ( breitwigner , Ostap.Math.BWPS ),\
-               'Invalid type for breitwigner %s' %  type ( breitwigner )
+        if   isinstance ( breitwigner , Ostap.Math.BWPS ) : pass
+        elif isinstance ( breitwigner , tuple ) :
+            breitwigner = Ostap.Math.BWPS  ( *breitwigner )
+        else :
+            raise ArgumentError("BWPS_pdf: Invalidd type of breitwigner") 
         
         ## initialize the base classes 
         BreitWigner_pdf.__init__  ( self ,
@@ -3236,10 +3239,16 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
                                     gamma       = gamma  )
         
         Phases.__init__ ( self , breitwigner.npars () , the_phis ) 
-        
+
+        ## make "original" BW-pdf 
+        self.__bw_pdf = BreitWigner_pdf ( name        = self.name + '_orig' ,
+                                          breitwigner = self.breitwigner    ,
+                                          xvar        = self.xvar           ,
+                                          m0          = self.m0             ,
+                                          gamma       = self.gamma          )
         self.__bwps = breitwigner
         
-        ## finally create PDF
+        ## finally create PDF        
         self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
                                        'BWPS(%s)' % name ,
                                        self.xvar         ,
@@ -3250,14 +3259,21 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
             
         ## save configuration
         self.config = {
-            'name'        : self.name        ,
-            'xvar'        : self.xvar        , 
-            'breitwigner' : self.breitwigner , 
-            'm0'          : self.mean        ,
-            'gamma'       : self.gamma       ,
-            'the_phis'    : self.phis        }
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  , 
+            'breitwigner' : ( self.bwps.breit_wigner () ,
+                              self.bwps.phase_space  () ,
+                              self.bwps.use_rho      () ,
+                              self.bwps.use_N2       () ) ,                               
+            'm0'          : self.mean  ,
+            'gamma'       : self.gamma ,
+            'the_phis'    : self.phis  }
         
-        
+    @property
+    def bw_pdf  ( self ) :
+        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional phase space  factors)"""
+        return self.__bw_pdf
+    
     @property
     def bwps ( self ) :
         """The Breit-Wigner function (BWPS) itself"""
@@ -3309,9 +3325,12 @@ class Flatte_pdf(MASSMEAN) :
                                  mean       = m0  ,
                                  mean_name  = 'm0_%s'      % name ,
                                  mean_title = '#m_{0}(%s)' % name )
+
+        self.__my_case = 0 
+        if   all_args ( self.mean , m0g1 , g2og1 ) : self.__my_case = 1 
+        elif all_args ( self.mean ,   g1 , g2    ) : self.__my_case = 2
             
-        assert all_args ( m0 , m0g1 , g2og1 ) or \
-               all_args ( m0 ,   g1 , g2    ) , 'Invalid combination of arguments!'
+        assert self.case in  ( 1 , 2 ), 'Invalid combination of (m0g1,g2og1:g1,g2)arguments!'
         
         self.__flatte = flatte
             
@@ -3320,7 +3339,7 @@ class Flatte_pdf(MASSMEAN) :
                                          '#Gamma_{0}(%s)' % name ,
                                          gamma0 , gamma0 , 0 , gamma0 )
         
-        if  g1 is None and g2 is None :
+        if  1 == self.case : 
             
             self.__m0g1 = self.make_var  ( m0g1                     ,
                                            'm0g1_%s'          % name ,
@@ -3335,9 +3354,7 @@ class Flatte_pdf(MASSMEAN) :
             self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
             self.__g2 = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
             
-        elif g1 is None : raise TypeError ( 'Flatte_pdf: g1 is not specified!' ) 
-        elif g2 is None : raise TypeError ( 'Flatte_pdf: g2 is not specified!' ) 
-        else :
+        elif 2 == self.case :
             
             self.__g1 =  self.make_var  ( g1                 ,
                                           'g1_%s'     % name ,
@@ -3363,7 +3380,7 @@ class Flatte_pdf(MASSMEAN) :
             self.flatte  )
 
         ## save the configuration
-        self.config = {
+        cnf = {
             'name'        : self.name    ,
             'flatte'      : self.flatte  ,
             'xvar'        : self.xvar    ,
@@ -3371,13 +3388,16 @@ class Flatte_pdf(MASSMEAN) :
             'gamma0'      : self.gamma0  ,
             }
         
-        if g1 is None and g2 is None : 
-            self.config.update ( { 'm0g1'  : self.m0g1  , 
-                                   'g2og1' : self.g2og1 } )
-        else : 
-            self.config.update ( { 'g1'    : self.g1    ,
-                                   'g2'    : self.g2    } )
-            
+        if   1 == self.case : cnf.update ( { 'm0g1' : self.m0g1 , 'g2og1' : self.g2og1 } )
+        elif 2 == self.case : cnf.update ( { 'g1'   : self.g1   , 'g2'    : self.g2    } )
+
+        self.config = cnf
+        
+    @property
+    def case  (self ) :
+        """``case'' : How the input argument are  specified: 1: (m0g1,g2og1) vs 2: (g1,g2) """
+        return self.__my_case
+    
     @property
     def m0 ( self ) :
         """``m0''-parameter for Flatte-function (same as ``mean'')"""
@@ -3467,6 +3487,13 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
                    gamma0   = None   ,   ## gamma0 
                    the_phis = None   ) : ##
         
+        if   isinstance ( flatte , Ostap.Math.BWPS ) : pass
+        elif isinstance ( flatte , tuple ) :
+            flatte = Ostap.Math.BWPS  ( *flatte )
+        else :
+            raise ArgumentError("FlattePS_pdf: Invalidd type of flatte") 
+        
+
         assert isinstance ( flatte, Ostap.Math.BWPS ),\
                'Invalid type for breitwigner %s' %  type ( flatte )
         
@@ -3483,7 +3510,25 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
                                gamma0 = gamma0   )
         
         Phases.__init__ ( self , flatte.npars () , the_phis )
-        
+
+        ## store the "original"" Flatte PDF 
+        if  1 ==  self.case : 
+            self.__flatte_pdf = Flatte_pdf ( name   = self.name + "_orig" ,
+                                             flatte = self.flatte ,  
+                                             xvar   = self.xvar   ,
+                                             m0     = self.m0     ,
+                                             m0g1   = self.m0g1   ,
+                                             g2og1  = self.g2og1  ,
+                                             gamma0 = self.gamma0 )
+        elif 2 ==  self.case : 
+            self.__flatte_pdf = Flatte_pdf ( name   = self.name + "_orig" ,
+                                             flatte = self.flatte ,  
+                                             xvar   = self.xvar   ,
+                                             m0     = self.m0     ,
+                                             g1     = self.g1     ,
+                                             g2     = self.g2     ,
+                                             gamma0 = self.gamma0 )
+            
         self.__bwps   = flatte
   
         self.__g_list = ROOT.RooArgList ( self.g1 , self.g2 , self.gamma0 )
@@ -3498,22 +3543,28 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
                                        self.bwps         ) 
         
         ## save the configuration
-        self.config = {
+        cnf = {
             'name'        : self.name    ,
-            'flatte'      : self.flatte  ,
+            'flatte'      : ( self.bwps.breit_wigner () ,
+                              self.bwps.phase_space  () ,
+                              self.bwps.use_rho      () ,
+                              self.bwps.use_N2       () ) ,                               
             'xvar'        : self.xvar    ,
             'm0'          : self.m0      ,
             'gamma0'      : self.gamma0  ,
             'the_phis'    : self.phis    , 
             }
         
-        if g1 is None and g2 is None : 
-            self.config.update ( { 'm0g1'  : self.m0g1  , 
-                                   'g2og1' : self.g2og1 } )
-        else : 
-            self.config.update ( { 'g1'    : self.g1    ,
-                                   'g2'    : self.g2    } )
-       
+        if   1 == self.case : cnf.update ( { 'm0g1' : self.m0g1 , 'g2og1' : self.g2og1 } )
+        elif 2 == self.case : cnf.update ( { 'g1'   : self.g1   , 'g2'    : self.g2    } )
+
+        self.config = cnf
+
+    @property
+    def flatte_pdf  ( self ) :
+        """``flatte_pdf'' : ``original'' Flatte pdf (no additional phase space  factors)"""
+        return self.__flatte_pdf
+    
     @property
     def bwps ( self ) :
         """The Breit-Wigner function (BWPS) itself"""

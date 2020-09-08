@@ -43,7 +43,7 @@ def test_minuit ( ) :
     
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_minuit: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_minuit: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     minuit = ROOT.TMinuit( 5 )

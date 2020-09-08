@@ -41,14 +41,15 @@ list(SORT               allfiles)
 list(REMOVE_DUPLICATES  allfiles)
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
-list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
+## list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 
 if (Python_VERSION VERSION_LESS "3.3")
   list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
 endif() 
 
-set (PREFIX ${CMAKE_INSTALL_PREFIX}/ )
+set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
+message (prefix " " ${PREFIX} ) 
 
 foreach(filename ${allfiles})
 
@@ -56,7 +57,7 @@ foreach(filename ${allfiles})
     string(REPLACE ${PREFIX} ""  testname ${testname})
     string(REPLACE "\.py" ""     testname ${testname})
     string(REPLACE "/" "_"       testname ${testname})
-    string(CONCAT  testname ostap.runit   ${testname})
+    string(CONCAT  testname ostap.runit_  ${testname})
 
     add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
 

@@ -72,11 +72,11 @@ def all_args ( *args ) :
     """
     ## try to find 
     for a in args :
-        if   isinstance ( a , arg_types )      : pass
+        if   isinstance ( a , arg_types ) : pass
         elif isinstance ( a , tuple     ) and \
              1 <= len ( a ) <= 3          and \
-             all_numerics ( *a ) : pass
-        else                                   : return False 
+             all_numerics ( *a )          : pass
+        else                              : return False 
         
     return True 
 

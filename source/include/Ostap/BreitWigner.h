@@ -61,7 +61,7 @@ namespace Ostap
        *    - the first  daughter mass
        *    - the second daughter mass
        */
-      typedef double (*rho_fun) ( double , double , double , double ) ;
+      typedef std::function<double(double,double,double,double)> rho_fun ;
       // ======================================================================
       /** parameterization for \f$\rho(\omega)\f$-function from (A.1)
        *  J.D.Jackson,
@@ -463,9 +463,7 @@ namespace Ostap
       /// description 
       std::string m_description ;
       // ======================================================================
-    } ;
-
-   
+    } ;   
     // =========================================================================
     /** @class ChannelGamma
      *  Description of the channel with generic mass-dependent width 
@@ -577,8 +575,6 @@ namespace Ostap
       std::string m_description ;
       // ======================================================================
     } ;
-    
-
     // =========================================================================
     /** @class ChannelQ
      *  Description of the very simple S-wave channel
@@ -1260,7 +1256,7 @@ namespace Ostap
       BreitWigner ( const double         m0       ,
                     const ChannelBW&     channel ) ;
       /// copy constructor
-      BreitWigner ( const BreitWigner&  bw ) = default ;
+      BreitWigner ( const BreitWigner&  bw ) ;
       /// move constructor
       BreitWigner (       BreitWigner&& bw ) = default ;
       // ======================================================================
@@ -1482,7 +1478,7 @@ namespace Ostap
                const double mB2   = 493.7 , 
                const double g0    = 0     ) ; // the constant width for "other" decays
       /// copy constructor 
-      Flatte ( const Flatte&  right ) = default ;
+      Flatte ( const Flatte&  right ) ;
       /// move constructor 
       Flatte (       Flatte&& right ) = default ;
       // ======================================================================
@@ -1653,12 +1649,9 @@ namespace Ostap
       {
       public:
         // ====================================================================
-        /// default constructor
-        Jackson () ;
         /// constructor from enum
-        Jackson ( const Ostap::Math::FormFactors::JacksonRho rho ) ;
-        /// constructor from rho-function
-        Jackson (       Ostap::Math::FormFactors::rho_fun    rho ) ;
+        Jackson ( const Ostap::Math::FormFactors::JacksonRho rho = 
+                  Ostap::Math::FormFactors::Jackson_0 ) ;
         /// virtual destructor
         virtual ~Jackson  () ;
         /// clone method ("virtual constructor")
@@ -1667,9 +1660,9 @@ namespace Ostap
         /** the only important method the squared ratio 
          *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
          */
-        double operator() ( const double m  , const double m0 ,
-                            const double m1 , const double m2 ) const override;
-        // ====================================================================
+      double operator() ( const double m  , const double m0 ,
+                          const double m1 , const double m2 ) const override;
+      // ====================================================================
         /// describe the formfactor 
         std::string describe () const override { return m_what ; }
         // ====================================================================
@@ -1678,10 +1671,10 @@ namespace Ostap
         // ====================================================================
       private:
         // ====================================================================
-        /// the finction itself
-        Ostap::Math::FormFactors::rho_fun m_rho  ; // the finction itself
+        /// the function itself
+        Ostap::Math::FormFactors::JacksonRho m_rho  ;
         /// print it 
-        std::string                       m_what ;
+        std::string                          m_what ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -1757,21 +1750,36 @@ namespace Ostap
         // ====================================================================
       public: 
         // ====================================================================
-        /** constructor from the generic object, unique tag and desription
+        /** constructor from the generic object, unique tag and description
          *  @param ff  the formfactor 
          *  @param tag the unique tag 
          *  @param description  description 
          */
-        GenericFF ( const formfactor&  ff                        ,
+        template <class FORMFACTOR>
+        GenericFF ( FORMFACTOR         ff                        ,
                     const std::size_t  tag                       , 
-                    const std::string& description = "GenericFF" ) ;
+                    const std::string& description = "GenericFF" )
+          : FormFactor() 
+          , m_ff          ( ff  ) 
+          , m_tag         ( tag ) 
+          , m_description ( description )
+        {}
         /// copy constrictor 
-        GenericFF ( const GenericFF&  f ) =  default ;
+        GenericFF ( const GenericFF&  f ) = default ;
         /// move constrictor 
-        GenericFF (       GenericFF&& f ) =  default ;
+        GenericFF (       GenericFF&& f ) = default ;
         // ====================================================================
         /// clone operaion
-        GenericFF* clone() const override ; // clone operaion
+        GenericFF* clone () const override ; // clone operaion
+        // ====================================================================
+      public:
+        // ====================================================================
+        template <class FORMFACTOR>
+        static inline GenericFF 
+        create ( FORMFACTOR         ff                        ,
+                 const std::size_t  tag                       , 
+                 const std::string& description = "GenericFF" )
+        { return GenericFF ( ff   ,  tag , description ) ; }
         // ====================================================================
       public:
         // ====================================================================
@@ -1798,6 +1806,37 @@ namespace Ostap
         std::size_t m_tag         ; // unique tag/label
         /// description 
         std::string m_description ;
+        // ====================================================================
+      } ;
+      // ======================================================================
+      /** @class NoFormFactor
+       *  "No-formfactor" 
+       */
+      class NoFormFactor : public Ostap::Math::FormFactor
+      {
+        // ====================================================================
+      public:
+        // ====================================================================
+        /// constructor from enum and barrier factor
+        NoFormFactor () ;
+        /// virtual destructor
+        virtual ~NoFormFactor() ;
+        /// clone method ("virtual constructor")
+        NoFormFactor* clone() const   override;
+        // ====================================================================
+        /** the only important method the squared ratio 
+         *  of formfactors \f$  \frac{F^2(m)}{F^2(m_0)} \$
+         */
+        double operator() ( const double /* m  */ , 
+                            const double /* m0 */ ,
+                            const double /* m1 */ , 
+                            const double /* m2 */ ) const override { return 1 ; }
+        // ====================================================================
+        /// describe the formfactor 
+        std::string describe () const override ;
+        // ====================================================================
+        // unique tag/label
+        std::size_t tag      () const override ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -2422,8 +2461,8 @@ namespace Ostap
     public :
       // ======================================================================
       /// constructor with gamma and pion mass
-      ChannelGS ( const double gamma ,
-                  const double mpi   ) ;
+      ChannelGS ( const double gamma = 150 ,
+                  const double mpi   = 139 ) ;
       /// clone method
       ChannelGS* clone() const override ;
       // ======================================================================
@@ -2618,7 +2657,7 @@ namespace Ostap
       /** constructor from Breit-Wigner, Phase-space and flags 
        *  @param bw Breit-Wigner shape 
        *  @param ps phase-space function 
-       *  @param use_rho  use rho-fuction from Breit-Wigner 
+       *  @param use_rho  use rho-function from Breit-Wigner 
        *  @param use_N2   use N2-function from Breit-Wigner 
        */
       BWPS ( const Ostap::Math::BW&            bw      , 
@@ -2629,7 +2668,7 @@ namespace Ostap
       /** constructor from Breit-Wigner, phase-space and flags 
        *  @param bw Breit-Wigner shape 
        *  @param ps phase-space function 
-       *  @param use_rho  use rho-fuction from Breit-Wigner 
+       *  @param use_rho  use rho-function from Breit-Wigner 
        *  @param use_N2   use N2-function from Breit-Wigner 
        */
       BWPS ( const Ostap::Math::BW&            bw      , 
@@ -2641,6 +2680,11 @@ namespace Ostap
       BWPS ( const BWPS&  ) ;
       /// move constructor 
       BWPS (       BWPS&& ) = default ;
+      // =======================================================================
+    public: 
+      // ======================================================================
+      ///  fictive public default constructor (needed for serialization)
+      BWPS() {};
       // =======================================================================
     public: 
       // ======================================================================
@@ -2721,13 +2765,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// use rho-factor from BreitWigner ? 
-      bool                              m_rho { true } ;
+      bool                              m_rho { true    } ;
       /// use N2-factor from BreitWigner ? 
-      bool                              m_N2  { true } ;
+      bool                              m_N2  { true    } ;
       /// Breit-wigner 
-      std::unique_ptr<Ostap::Math::BW>  m_bw ;
+      std::unique_ptr<Ostap::Math::BW>  m_bw  { nullptr } ;
       /// Phasespace * pol 
-      Ostap::Math::PhaseSpacePol        m_ps ;
+      Ostap::Math::PhaseSpacePol        m_ps  {} ;
       // ======================================================================
     private:
       // ======================================================================

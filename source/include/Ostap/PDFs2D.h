@@ -99,7 +99,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -184,7 +184,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -294,7 +294,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -407,7 +407,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -518,7 +518,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -632,7 +632,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -741,7 +741,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -853,7 +853,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -956,7 +956,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -1049,7 +1049,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -1141,7 +1141,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -1228,7 +1228,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================
@@ -1314,7 +1314,7 @@ namespace Ostap
       // ======================================================================
       RooSpan<double> evaluateBatch 
       ( std::size_t begin     , 
-        std::size_t batchSize ) const ;
+        std::size_t batchSize ) const override ;
       // ======================================================================
 #endif
       // ======================================================================

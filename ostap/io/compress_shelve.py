@@ -374,7 +374,7 @@ class CompressShelf(shelve.Shelf,object):
         else :
             import fnmatch
             good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
-        
+
         keys_ = self.keys()
         for k in sorted ( keys_ ) :
             if good ( k ) : yield k
@@ -417,6 +417,7 @@ class CompressShelf(shelve.Shelf,object):
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
+
         if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
@@ -430,6 +431,7 @@ class CompressShelf(shelve.Shelf,object):
         
         for k in keys :
 
+            
             ## kk = key.encode ( self.keyencoding ) ] )            
             ## ss = len ( self.dict [ k ] ) ##  compressed size 
             ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
@@ -442,21 +444,23 @@ class CompressShelf(shelve.Shelf,object):
             else :
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
 
-            otype = ''
-            try :
-                if load : ot = type ( self       [ k ] )
-                else    : ot = type ( self.cache [ k ] )
-                otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
-            except KeyError :
-                pass
 
             rawitem = self.__get_raw_item__ ( k )
-            if isinstance ( rawitem , Item ) : timetag = rawitem.time
-            else                             : timetag = '' 
-            
+            if isinstance ( rawitem , Item ) :
+                timetag = rawitem.time
+                kobj    = rawitem.payload 
+            else                             :
+                timetag = ''
+                kobj    = rawitem  
+
+            ot   = type ( kobj )
+            if   hasattr ( ot , '__cpp_name__' ) : otype = ot.__cpp_name__ 
+            elif hasattr ( ot , '__cppname__'  ) : otype = ot.__cppname__
+            else                                 : otype = ot.__name__ 
+
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
-
+            
         
         import ostap.logger.table as T
         t      = type( self ).__name__
@@ -599,10 +603,11 @@ class CompressShelf(shelve.Shelf,object):
         """ ``get-and-uncompress-item'' from dbase
         >>> value = dbase['item'] 
         """
+
         try:            
             value = self.cache [ key ]
         except KeyError:            
-            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
+            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] ) 
             if self.writeback : self.cache [ key ] = value
             
         return value
@@ -678,9 +683,9 @@ class CompressShelf(shelve.Shelf,object):
         return CU.tempfile ( suffix = suffix , prefix = prefix, dir = dir , date = date ) 
 
     # ========================================================================
-    ## guess the name of the database from the list of (incmpressed files)
+    ## guess the name of the database from the list of (uncompressed files)
     @classmethod
-    def dbase_name ( cls , files  ) :
+    def dbase_name ( cls , files ) :
         """ Guess the name of the database from the list of (uncompressed files)
         """
         

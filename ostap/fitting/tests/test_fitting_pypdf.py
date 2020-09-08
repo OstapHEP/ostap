@@ -173,7 +173,7 @@ def test_pygauss() :
 
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_pygauss: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_pygauss: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     logger.info ('Test PyGauss:  simple Gaussian signal' )
@@ -197,7 +197,7 @@ def test_pygauss_AI() :
     
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_pygauss_AI: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_pygauss_AI: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     logger.info ('Test PyGaussAI:  simple Gaussian signal with  analytical integral' )
@@ -218,7 +218,7 @@ def test_pygauss2 () :
     
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_pygauss2: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_pygauss2: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     ## the function

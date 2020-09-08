@@ -97,7 +97,7 @@ def test_pyvar () :
 
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_pyvar: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_pyvar: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     from ostap.fitting.pyvar import PyVAR
@@ -133,7 +133,7 @@ def test_pyvar2 () :
 
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_pyvar2: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_pyvar2: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     from ostap.fitting.pyvar import PyVAR2

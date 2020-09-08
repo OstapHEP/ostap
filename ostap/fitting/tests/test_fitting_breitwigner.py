@@ -19,6 +19,8 @@ from   ostap.logger.utils   import rooSilent
 import ostap.io.zipshelve   as     DBASE
 from   ostap.utils.timing   import timing 
 from   builtins             import range
+
+import pickle 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -48,6 +50,7 @@ m0_f0    = 980   * MeV
 m0g1_f0  = 0.165 * GeV**2 * 4.21 
 g2og1_f0 = 1/4.21 
 
+models   = set() 
 
 def test_breitwigner_rho () : 
 
@@ -90,6 +93,13 @@ def test_breitwigner_rho () :
     f1.draw ()
     f2.draw ( 'same' )
     f3.draw ( 'same' )
+
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
+    models.add ( model1 )
+    models.add ( model2 )
+    models.add ( model3 )
     
 
 # =============================================================================
@@ -110,13 +120,16 @@ def test_breitwigner_phi () :
     bw2.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 4 )
     bw3.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 5 )
 
-    logger.info ("bw1 fraction %s" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info ("bw2 fraction %s" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info ("bw3 fraction %s" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw1 fraction %.4f" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw2 fraction %.4f" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw3 fraction %.4f" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
 
 # =============================================================================
 def test_breitwigner_phi_ps () : 
-## if 1 < 2 :
     
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
@@ -139,9 +152,9 @@ def test_breitwigner_phi_ps () :
     f2.draw ( 'same' , linecolor = 4 )
     f3.draw ( 'same' , linecolor = 5 )
 
-    logger.info (" f1 fraction %s" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info (" f2 fraction %s" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info (" f3 fraction %s" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info (" f1 fraction %.4f" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info (" f2 fraction %.4f" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info (" f3 fraction %.4f" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
 
     mass    = ROOT.RooRealVar  ('mass' , 'm(KK)' , 0.96 * GeV , 1.5 * GeV ) 
     
@@ -194,6 +207,38 @@ def test_breitwigner_phi_ps () :
     fr4.draw('same')
     fr5.draw('same')
     
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
+
+    models.add ( flatte )
+    models.add ( flatte_ps )
+
+    models.add ( f1     )
+    models.add ( f2     )
+    models.add ( f3     )
+    models.add ( p1     )
+    models.add ( p2     )
+    models.add ( p3     )
+    models.add ( f0_980 )
+    models.add ( f0_ps  )
+
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
+        for i, m in enumerate ( models ) :
+            db ['model/%2d: %s' % ( i , type ( m ) ) ] = m
+        db['models'   ] = models
+        db.ls() 
+
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -207,7 +252,10 @@ if '__main__' == __name__ :
     with  timing ( "Breit-Wigner Phi+PS" , logger ) :  
         test_breitwigner_phi_ps ()
     
-    
+    ## check finally that everything is serializeable:
+    with timing ('test_db'             , logger ) :
+        test_db ()
+
 # =============================================================================
 ##                                                                      The END  
 # =============================================================================

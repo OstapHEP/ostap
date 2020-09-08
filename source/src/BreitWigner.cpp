@@ -178,67 +178,42 @@ double Ostap::Math::Jackson::jackson_A7
 // ============================================================================
 Ostap::Math::FormFactor::~FormFactor (){}
 // ============================================================================
-// default constructor
-// ============================================================================
-Ostap::Math::FormFactors::Jackson::Jackson() 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( nullptr ) 
-  , m_what ( "" )
-{}
-// ============================================================================
 // constructor from enum
 // ============================================================================
 Ostap::Math::FormFactors::Jackson::Jackson
 ( const Ostap::Math::FormFactors::JacksonRho rho ) 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( nullptr     )
+  : Ostap::Math::FormFactor()
+  , m_rho  ( rho         )
   , m_what ( "Jackson()" ) 
 {
-  switch ( rho )
+  switch ( m_rho )
   {
   case   Ostap::Math::FormFactors::Jackson_0  :
-    m_rho  = &Ostap::Math::Jackson::jackson_0  ; 
-    m_what = "Jackson(Jackson_0)" ;
+    m_what = "Jackson(Jackson_0)"  ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A2 :
-    m_rho  = &Ostap::Math::Jackson::jackson_A2 ; 
     m_what = "Jackson(Jackson_A2)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A3 :
-    m_rho  = &Ostap::Math::Jackson::jackson_A3 ; 
     m_what = "Jackson(Jackson_A3)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A4 :
-    m_rho = &Ostap::Math::Jackson::jackson_A4 ; 
     m_what = "Jackson(Jackson_A4)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A5 :
-    m_rho = &Ostap::Math::Jackson::jackson_A5 ;
     m_what = "Jackson(Jackson_A5)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A7 :
-    m_rho = &Ostap::Math::Jackson::jackson_A7 ; 
     m_what = "Jackson(Jackson_A7)" ;
     break ;
-  default         :
-    m_rho = nullptr ; 
+  default : ;
   }
-  //
 }
 // ============================================================================
 // unique tag/label
 // ============================================================================
 std::size_t Ostap::Math::FormFactors::Jackson::tag      () const
 { return std::hash<std::string>{} ( m_what ) ; }
-// ============================================================================
-// constructor from function itself 
-// ============================================================================
-Ostap::Math::FormFactors::Jackson::Jackson
-( const Ostap::Math::FormFactors::rho_fun rho ) 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( rho                ) 
-  , m_what ( "Jackson(rho_fun)" )    
-{ if ( !m_rho ) { m_rho = &Ostap::Math::Jackson::jackson_0 ; } }
 // ============================================================================
 // virtual destructor 
 // ============================================================================
@@ -255,10 +230,21 @@ Ostap::Math::FormFactors::Jackson:: clone() const
 double Ostap::Math::FormFactors::Jackson::operator() 
   ( const double m  , const double m0 ,
     const double m1 , const double m2 ) const
-{ 
-  return nullptr == m_rho ? ( m / m0 )  : ( m / m0 ) * 
-    ( (*m_rho) ( m  , m0 , m1 , m2 ) / 
-      (*m_rho) ( m0 , m0 , m1 , m2 ) ) ; 
+{
+  return 
+    Ostap::Math::FormFactors::Jackson_0 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_0   ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A2 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A2  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A3 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A3  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A4 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A4  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A5 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A5  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A7 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A7  ( m , m0 , m1 , m2 ) : 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_0   ( m , m0 , m1 , m2 ) ;
 }
 // ============================================================================
 // Blatt-Weisskopf formfactors 
@@ -380,22 +366,6 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
 { return std::hash_combine ( m_what , m_L , m_b ) ; }
 // ============================================================================
-/* constructor from the generic object, unique tag and desription
- *  @param ff  the formfactor 
- *  @param tag the unique tag 
- *  @param description  description 
- */
-// ============================================================================
-Ostap::Math::FormFactors::GenericFF::GenericFF
-( const Ostap::Math::FormFactors::GenericFF::formfactor& ff          ,
-  const std::size_t                                      tag         , 
-  const std::string&                                     description ) 
-  : Ostap::Math::FormFactor() 
-  , m_ff  ( ff )
-  , m_tag ( std::hash_combine ( description , tag , std::string ( "GenericFF" ) ) ) 
-  , m_description ( description ) 
-{}
-// ============================================================================
 // clone operation 
 // ============================================================================
 Ostap::Math::FormFactors::GenericFF*
@@ -403,6 +373,35 @@ Ostap::Math::FormFactors::GenericFF::clone() const
 { return new Ostap::Math::FormFactors::GenericFF ( *this ) ; }
 // ============================================================================
 
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor::NoFormFactor () 
+  : FormFactor() 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor::~NoFormFactor () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor*
+Ostap::Math::FormFactors::NoFormFactor::clone() const 
+{ return new NoFormFactor() ; }
+// ===========================================================================
+// unique tag/label
+// ============================================================================
+std::size_t Ostap::Math::FormFactors::NoFormFactor::tag      () const
+{ return std::hash<std::string>{} ( describe () ) ; }
+// ============================================================================
+// describe the formfactor
+// ============================================================================
+std::string Ostap::Math::FormFactors::NoFormFactor::describe () const
+{ return "NoFomrFactor"; }
+// ============================================================================
+
+   
 
             
 
@@ -692,7 +691,7 @@ Ostap::Math::Channel::Channel
   const unsigned short          L     )
   : ChannelCW    ( gamma , m1 , m2 ) 
   , m_L          ( L        )
-  , m_formfactor ( nullptr  ) 
+  , m_formfactor ( new Ostap::Math::FormFactors::NoFormFactor () )
 {}
 // ============================================================================
 /*  constructor from all parameters and no formfactor
@@ -1338,6 +1337,15 @@ Ostap::Math::BreitWigner::BreitWigner
   : BW ( m0 , c )
 {}
 // ============================================================================
+/// copy constructor 
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner  
+( const Ostap::Math::BreitWigner& bw ) 
+  : BW ( bw ) 
+{}
+// ============================================================================
+
+// ============================================================================
 // clone it 
 // ============================================================================
 Ostap::Math::BreitWigner*
@@ -1533,14 +1541,25 @@ Ostap::Math::Flatte::Flatte
   add ( ChannelFlatte ( 1  , mB1 , mB2 ) ) ;
   add ( ChannelCW     ( g0 , mA1 , mA1 ) ) ;
   //
-  const double g1 = std::abs ( m0g1  / m0   ) ;
+  const double g1 = std::abs ( m0g1    / m0 ) ;
   const double g2 = std::abs ( g2og1 ) * g1   ;
+  //
+  Ostap::Assert ( 3 ==   nChannels()            , 
+                  "Invalid number of channels!" , 
+                  "Ostap:Math::Flatte::Flatte"  ) ;
   //
   m_channels[0] -> setGamma0 ( g1 ) ;
   m_channels[1] -> setGamma0 ( g2 ) ;
   m_channels[2] -> setGamma0 ( g0 ) ;
   //
 }
+// ============================================================================
+// copy contructor
+// ============================================================================
+Ostap::Math::Flatte::Flatte 
+( const Ostap::Math::Flatte& fl ) 
+  : BW ( fl ) 
+{}
 // ============================================================================
 Ostap::Math::Flatte*
 Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; }

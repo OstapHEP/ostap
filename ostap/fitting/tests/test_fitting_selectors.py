@@ -159,7 +159,7 @@ def test_simple_selector ()  :
 
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_simple_selector: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_simple_selector: test is disabled for ROOT version %s" % root_version_int )
         return 
         
     from ostap.fitting.pyselectors import Selector
@@ -215,7 +215,7 @@ def test_selector_with_cuts ()  :
 
     from ostap.core.meta_info import root_version_int 
     if root_version_int >= 62200 :
-        logger.warning("test_selector_with_cuts: test is disabled for ROOT verison %s" % root_version_int )
+        logger.warning("test_selector_with_cuts: test is disabled for ROOT version %s" % root_version_int )
         return 
 
     from ostap.fitting.pyselectors import SelectorWithCuts 
