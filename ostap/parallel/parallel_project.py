@@ -122,8 +122,6 @@ class ProjectTask(Task) :
                                            what     = self.what  , cuts  = self.cuts  ,
                                            options  = ''         ,
                                            nentries = nevents    , firstentry = first )            
-        del item
-        
         return self.__output 
         
     ## merge results 
@@ -135,8 +133,8 @@ class ProjectTask(Task) :
             filtered      = self.__output[0] + result[0]            
             self.__output[1].Add ( result[1] )
             self.__output = filtered, self.__output[1]
-            
-        result[1].Delete () 
+
+        ## result[1].Delete () 
             
     ## get the results 
     def results (  self ) :

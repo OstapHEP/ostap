@@ -169,19 +169,19 @@ def test_kisa2 () :
     with timing('%d files in sequence %s' % ( nf , len( data.chain )  ) ) :
         selector = SelectorWithVars  (
             variables = variables ,
-            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+            selection = '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = False
             )
         chain =  data.chain[:nf]
         st = chain.process ( selector , silent = False , shortcut = True )
         ds = selector.data
         del selector 
-    logger.info ( 'Dataset:\n%s' % ds )
+    logger.info ( 'Dataset (sequential):\n%s' % ds.table()  )
     
     with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
         selector = SelectorWithVars  (
             variables = variables ,
-            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+            selection = '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = True 
             )
         st = data.chain.pprocess ( selector               ,
@@ -191,8 +191,7 @@ def test_kisa2 () :
                                    ppservers  = ppservers )
         ds = selector.data 
         del selector 
-    logger.info ( 'Dataset:\n%s' % ds )
-
+    logger.info ( 'Dataset (paralell):\n%s' % ds.table () )
 
 ## # =============================================================================
 ## def test_kisa3 () :
@@ -241,5 +240,5 @@ if '__main__' == __name__ :
     
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

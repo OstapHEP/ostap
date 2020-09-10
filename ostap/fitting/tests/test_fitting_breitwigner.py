@@ -19,8 +19,6 @@ from   ostap.logger.utils   import rooSilent
 import ostap.io.zipshelve   as     DBASE
 from   ostap.utils.timing   import timing 
 from   builtins             import range
-
-import pickle 
 # =============================================================================
 # logging 
 # =============================================================================
