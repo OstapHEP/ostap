@@ -383,7 +383,7 @@ def pretty_2ve ( value         ,
            'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
 
     from ostap.math.ve          import VE
-    from ostap.core.ostap_types import integer_types 
+    from ostap.core.ostap_types import integer_types, num_types  
 
     v = value 
     e = max ( abs ( eh ), abs ( el ) )
