@@ -52,8 +52,7 @@ __all__     = (
     'DisplayTree'        , ## display tree-like structures 
     )
 # =============================================================================
-import ROOT, cppyy, time, os,sys ## attention here!!
-## cpp = cppyy.gbl
+import ROOT, time, os , sys ## attention here!!
 ROOT_RooFit_ERROR = 4 
 # =============================================================================
 # logging 
@@ -321,7 +320,8 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
     >>> s , n = pretty_ve ( number ) 
     """
     
-    from ostap.math.ve import VE
+    from ostap.math.ve          import VE
+    from ostap.core.ostap_types import integer_types 
     
     v =           value.value ()
     e = max ( 0 , value.error () )
@@ -381,6 +381,9 @@ def pretty_2ve ( value         ,
            'Invalid eh    parameter %s/%s'   % ( eh    , type ( eh    ) )      
     assert isinstance ( el       , num_types     ),\
            'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
+
+    from ostap.math.ve          import VE
+    from ostap.core.ostap_types import integer_types 
 
     v = value 
     e = max ( abs ( eh ), abs ( el ) )

@@ -67,14 +67,15 @@ def make_parser () :
         "-t" , "--timeout"  ,
         dest    = 'Timeout' ,
         type    =  int      , 
-        help    = 'Timeout for SSH connection' ,
+        help    = 'Timeout for SSH connection [default: %(default)s]' ,
+        default = 7200 
         )
     
     parser.add_argument (
         "remotes" ,
         metavar = 'Remotes' ,
         nargs   = '+'       , 
-        help    = "Remote hosts, */auto/config -> use ostap-configuration " )
+        help    = "Remote hosts [*/auto/config] -> take from ostap-configuration" )
     
     return parser 
 
