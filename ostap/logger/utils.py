@@ -375,6 +375,9 @@ def pretty_2ve ( value         ,
                  width     = 8 ,
                  precision = 6 ) :
     
+    from ostap.math.ve          import VE
+    from ostap.core.ostap_types import integer_types, num_types  
+
     assert isinstance ( value     , num_types     ),\
            'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
     assert isinstance ( eh       , num_types     ),\
@@ -382,8 +385,6 @@ def pretty_2ve ( value         ,
     assert isinstance ( el       , num_types     ),\
            'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
 
-    from ostap.math.ve          import VE
-    from ostap.core.ostap_types import integer_types, num_types  
 
     v = value 
     e = max ( abs ( eh ), abs ( el ) )
