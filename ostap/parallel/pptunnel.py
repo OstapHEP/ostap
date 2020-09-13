@@ -89,7 +89,7 @@ class ppServer(object) :
         self.tunnel.connect ( self.remote_host )
 
         logger.debug ('Create SSH tunnel: %s' %  self.tunnel )
-
+            
         self.__local_port   = self.tunnel._lport 
         self.__remote_port  = self.tunnel._rport 
                                   
@@ -157,8 +157,9 @@ class ppServer(object) :
             r =  copier.response()
             if r : logger.error ('SPC: response from %s : %s' % ( copier , r ) ) 
             del copier
-            self.__script = os.path.join ( self.__tmpdir , os.path.basename ( script ) )  
+            self.__script = os.path.join ( self.__tmpdir , os.path.basename ( script ) )
             logger.verbose ('SCP: script      %s:%s is copied' %  ( self.remote_host , self.__script ) )
+                
 
         self.__profile = None 
         if profile :
@@ -241,8 +242,7 @@ class ppServer(object) :
                     self.session ( command = command )
                     self.session.launch   ()
                     r = self.session.response()
-                    if r : logger.info ( '%s : %s : %s' %  ( self.remote_host , command , r ) )
-                    
+                    if r : logger.info ( '%s : %s : %s' %  ( self.remote_host , command , r ) )                    
                 logger.debug ( 'Kill remote process %s:%s' % ( self.remote_host , self.__pid ) )
                 PC.kill ( self.__pid , self.remote_host )
             except OSError :
