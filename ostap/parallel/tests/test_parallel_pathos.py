@@ -34,8 +34,8 @@ except ImportError :
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
-## simple    function that created and  fill a histogram
-def make_histos ( item ) :
+## simple function that creates and  fills a histogram
+def make_histo ( item ) :
     """Simple    function that creates and  fills a histogram
     """
     i, n = item 
@@ -46,9 +46,9 @@ def make_histos ( item ) :
 
 
 # =============================================================================
-## test parallel processing with pathos
+## test parallel processing with pathos: ProcessPool
 def test_pathos () :
-    """Test parallel processnig with pathos 
+    """Test parallel processnig with pathos: ProcessPool
     """
     if not dill :
         logger.error ( "test_pathos: dill is not available" )
@@ -66,15 +66,18 @@ def test_pathos () :
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
-    from pathos.pools import ParallelPool
-    pool = ParallelPool ( ncpus ) 
+    from pathos.pools import ProcessPool as Pool
+
+    pool = Pool ( ncpus )
+    logger.info ( "test_pathos   : Pool is %s" % ( type ( pool ).__name__ ) )
+    
     pool.restart ( True ) 
 
     ## start 25 jobs, and for each job create the histogram with 1000 entries 
     inputs = 25 * [ 1000 ]
 
-    # jobs = pool. imap ( make_histos ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
-    jobs = pool.uimap ( make_histos ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    # jobs = pool. imap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -92,13 +95,123 @@ def test_pathos () :
     time.sleep  ( 2 )
 
     return result 
+
+# =============================================================================
+## @class MakeHisto
+#  class that creates and fill a histogram 
+class MakeHisto(object)  :
+    """Class that creates and fill a histogram"""
+    def process (  self , *args ) :
+        return make_histo ( *args )
     
+# =============================================================================
+## test parallel processing with pathos : ParallelPool 
+def test_pathos_pp_1 () :
+    """Test parallel processnig with pathos: ParallelPool  
+    """
+    if not dill :
+        logger.error ( "test_pathos_pp_1: dill is not available" )
+        return
+        
+    if not pathos :
+        logger.error ( "test_pathos_pp_1: pathos is not available" )
+        return 
+        
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        logger.warning ("test_pathos_pp_1 is disabled for Python %s" % vi )
+        return
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ParallelPool as Pool 
+
+    pool = Pool ( ncpus )   
+    logger.info ( "test_pathos_pp_1: Pool is %s" %  ( type ( pool ).__name__ ) )
+
+    pool.restart ( True ) 
+
+    ## start 25 jobs, and for each job create the histogram with 1000 entries 
+    inputs = 25 * [ 1000 ]
+
+    jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+# =============================================================================
+## test parallel processing with pathos : ParallelPool 
+def test_pathos_pp_2 () :
+    """Test parallel processnig with pathos: ParallelPool  
+    """
+    if not dill :
+        logger.error ( "test_pathos_pp_2: dill is not available" )
+        return
+        
+    if not pathos :
+        logger.error ( "test_pathos_pp_2: pathos is not available" )
+        return 
+        
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        logger.warning ("test_pathos_pp_2 is disabled for Python %s" % vi )
+        return
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ParallelPool as Pool 
+
+    pool = Pool ( ncpus )   
+    logger.info ( "test_pathos_pp_1: Pool is %s" %  ( type ( pool ).__name__ ) )
+
+    pool.restart ( True ) 
+
+    ## start 25 jobs, and for each job create the histogram with 1000 entries 
+    inputs = 25 * [ 1000 ]
+
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh.process  ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
 
 # =============================================================================
 if '__main__' == __name__ :
 
     ## pass
-    test_pathos  () 
+    test_pathos      () 
+    test_pathos_pp_1 () 
+    test_pathos_pp_2 () 
 
         
 # =============================================================================

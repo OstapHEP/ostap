@@ -26,9 +26,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.chi2fit' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-from ostap.math.ve import VE,cpp 
-cpp   = cppyy.gbl
-Ostap = cpp.Ostap
+from ostap.math.ve import VE , Ostap  
 C2FIT = Ostap.Math.Chi2Fit
 
 C2FIT . __str__  = lambda s : s.toString ()

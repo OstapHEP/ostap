@@ -37,7 +37,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.math_ve' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.math.ve    import VE
-from   ostap.math.base  import cpp, iszero, isequal
+from   ostap.math.base  import Ostap, iszero, isequal
 from   ostap.core.ostap_types import num_types, is_integer 
 
 _ln2_i = 1/math.log(2.0)                 ## useful constant 
@@ -187,10 +187,10 @@ def tanh ( x ) :
     if fun : return fun()
     return math.tanh ( x )
 
-_erf_   = cpp.Ostap.Math.erf 
-_erfc_  = cpp.Ostap.Math.erfc
-_erfi_  = cpp.Ostap.Math.erfi
-_erfcx_ = cpp.Ostap.Math.erfcx
+_erf_   = Ostap.Math.erf 
+_erfc_  = Ostap.Math.erfc
+_erfi_  = Ostap.Math.erfi
+_erfcx_ = Ostap.Math.erfcx
 
 # =============================================================================
 ## define ``erf'' function 
@@ -313,7 +313,7 @@ def lgamma ( x ) :
     if fun : return fun()
     return math.lgamma ( x )
 
-_igamma_ = cpp.Ostap.Math.igamma 
+_igamma_ = Ostap.Math.igamma 
 # =============================================================================
 ## define ``igamma'' function
 #  \f$ f(x) = \frac{1}{\Gamma(x)}\f$
@@ -327,7 +327,7 @@ def igamma ( x ) :
     if fun : return fun()
     return _igamma_ ( x )
 
-_sech_ = cpp.Ostap.Math.sech 
+_sech_ = Ostap.Math.sech 
 # =============================================================================
 ## define ``sech'' function 
 def sech ( x ) :
@@ -338,7 +338,7 @@ def sech ( x ) :
     if fun : return fun()
     return _sech_ ( x )
 
-_probit_ = cpp.Ostap.Math.probit  
+_probit_ = Ostap.Math.probit  
 # =============================================================================
 ## define ``probit'' function 
 #  @see https://en.wikipedia.org/wiki/Probit
@@ -350,7 +350,7 @@ def probit ( x ) :
     if fun : return fun()
     return _probit_ ( x )
 
-_fma_ = cpp.Ostap.Math.fma
+_fma_ = Ostap.Math.fma
 # =============================================================================
 ## evaluate fma(x,y,z) = x*y+x 
 #  @param y    (INPUT) the parameter 
@@ -381,7 +381,7 @@ def fma ( x , y , z , cxy = 0 , cxz = 0 , cyz = 0 ) :
     _z = VE ( z )
     return _fma_ ( _x , _y , _z , cxy , cxz , cyz )
 
-_hypot_ = cpp.Ostap.Math.hypot
+_hypot_ = Ostap.Math.hypot
 # =============================================================================
 ## evaluate hypot(x,y) = sqrt(x*x+y*y)
 #   \f$ \sqrt( x^2 + y^2 ) \f$
@@ -398,7 +398,7 @@ def hypot ( x , y , c = 0 ) :
     return _hypot_ ( _x , _y , c )
 
 
-_pochhammer = cpp.Ostap.Math.pochhammer
+_pochhammer = Ostap.Math.pochhammer
 # =============================================================================
 ## \overload calculate Pochhammer's  symbol
 #  \f[ (x)^n = x ( x + 1) ( x + 1 ) ... ( x + n - 1 ) = \Pi^{k-1}_{k=0} (x + k) \f]
@@ -425,7 +425,7 @@ def pochhammer ( x , n ) :
     
     return _pochhammer ( _x , n ) 
 
-_gauss_pdf_ = cpp.Ostap.Math.gauss_pdf
+_gauss_pdf_ = Ostap.Math.gauss_pdf
 # =============================================================================
 ## calculate the standard gaussian PDF
 #  @param x x-value
@@ -441,7 +441,7 @@ def gauss_pdf( x , mu = 0.0 , sigma = 1.0 ) :
     y =  VE ( x ) 
     return _gauss_pdf_ ( y if 0 < y.cov2() else y.value () , mu , sigma )
 
-_gauss_cdf_ = cpp.Ostap.Math.gauss_cdf
+_gauss_cdf_ = Ostap.Math.gauss_cdf
 # =============================================================================
 ## calculate the standard gaussian CDF
 #  @param x x-value

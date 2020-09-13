@@ -47,8 +47,8 @@ class GslIgnore(ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self ) :
-        import ROOT,cppyy 
-        self.handler = cppyy.gbl.Ostap.Utils.GslIgnore
+        from ostap.core.core import Ostap 
+        self.handler = Ostap.Utils.GslIgnore
         super(GslIgnore,self).__init__()
 # =============================================================================
 ## @class GslError
@@ -63,8 +63,8 @@ class GslError(ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self ) :
-        import ROOT,cppyy 
-        self.handler = cppyy.gbl.Ostap.Utils.GslError   
+        from ostap.core.core import Ostap 
+        self.handler = Ostap.Utils.GslError   
         super(GslError,self).__init__()
         
 # =============================================================================
@@ -80,8 +80,8 @@ class GslException (ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self ) : 
-        import ROOT,cppyy 
-        self.handler = cppyy.gbl.Ostap.Utils.GslException 
+        from ostap.core.core import Ostap 
+        self.handler = Ostap.Utils.GslException 
         super(GslException,self).__init__()
 
 # =============================================================================
@@ -156,8 +156,7 @@ def setHandler ( handler ) :
     from   ostap.logger.logger import getLogger
     logger = getLogger( 'ostap.utils.gsl' )
     #
-    import ROOT,cppyy 
-    Ostap  = cppyy.gbl.Ostap
+    from ostap.core.core import Ostap 
     #
     global _global_gls_handler
     if   not  handler : _setHandler ( handler )

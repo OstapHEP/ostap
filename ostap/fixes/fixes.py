@@ -20,22 +20,24 @@ from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.fixes.fixes')
 else                      : logger = getLogger ( __name__           ) 
 # =============================================================================
-cpp = cppyy.gbl 
-## suppress welcome message from RooFit
-from ostap.logger.utils import mute
-with mute() :
-    v = ROOT.RooRealVar()
-    del v
+## print 'FIXES! before '
+## cpp = cppyy.gbl 
+## ## suppress welcome message from RooFit
+## from ostap.logger.utils import mute
+## with mute( True , True ) :
+##     v = ROOT.RooRealVar()
+##     del v
+## print 'FIXES! after!'
     
-try :
-    enabled = ROOT.ROOT.IsImplicitMTEnabled ()
-    if enabled : logger.debug ("ImplicitMT is  enabled")
-    else       : logger.debug ("ImplicitMT is disabled")
-except AttributeError :
-    ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
-    ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
-    ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
-    logger.info ("``Enable/Disable''Implicit MT is not available") 
+## try :
+##     enabled = ROOT.ROOT.IsImplicitMTEnabled ()
+##     if enabled : logger.debug ("ImplicitMT is  enabled")
+##     else       : logger.debug ("ImplicitMT is disabled")
+## except AttributeError :
+##     ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
+##     ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
+##     ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
+##     logger.info ("``Enable/Disable''Implicit MT is not available") 
 
 
 # =============================================================================

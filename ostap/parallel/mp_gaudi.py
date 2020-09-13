@@ -15,9 +15,9 @@ excluded_varnames = ['HOSTNAME', 'SSH_CLIENT', 'SSH_CONNECTION', 'DISPLAY']
 import sys, os, time, copy
 
 
-from ostap.utils.progress_bar import progress_bar
-from ostap.logger.logger      import getLogger
-from ostap.parallel.task      import Task, Statistics ,  StatMerger 
+from ostap.utils.progress_bar  import progress_bar
+from ostap.logger.logger       import getLogger
+from ostap.parallel.task       import Task, Statistics ,  StatMerger 
 logger  = getLogger('ostap.parallel.mp_gaudi')
 
 # =============================================================================

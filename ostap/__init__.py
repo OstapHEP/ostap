@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-#                                   1.5.99.0 (Sep 04, 2020, 15:07 [UTC])
+#                                   1.5.99.0 (Sep 13, 2020, 13:46 [UTC])
 #     .oooooo.                .                        
 #    d8P'  `Y8b             .o8                        
 #   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
@@ -33,7 +33,7 @@ __all__ = (
 # =============================================================================
 ## the  actual version of Ostap 
 __version__ = "1.5.99.0"
-__date__    = "Sep 04, 2020, 15:07 [UTC]"
+__date__    = "Sep 13, 2020, 13:46 [UTC]"
 # =============================================================================
 import datetime 
 from   collections import namedtuple
@@ -45,7 +45,7 @@ version_info = VersionInfo ( 1 ,
                              99 ,
                              0 )
 build_date   = __date__
-build_time   = datetime.datetime.utcfromtimestamp ( 1599232040 )
+build_time   = datetime.datetime.utcfromtimestamp ( 1600004784 )
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\
@@ -57,7 +57,7 @@ import ostap.fixes.fixes
 # =============================================================================
 ## Banner
 banner = r"""
-                                        1.5.99.0 (Sep 04, 2020, 15:07 [UTC])
+                                        1.5.99.0 (Sep 13, 2020, 13:46 [UTC])
      .oooooo.                .
     d8P'  `Y8b             .o8
    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.

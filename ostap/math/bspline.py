@@ -46,9 +46,9 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math  
-from    ostap.core.core      import cpp, Ostap, funID
-from    ostap.core.ostap_types     import is_integer
-from    ostap.math.base      import iszero, isequal, signum, doubles
+from    ostap.core.core        import Ostap, funID
+from    ostap.core.ostap_types import is_integer
+from    ostap.math.base        import iszero, isequal, signum, doubles
 import  ostap.math.bernstein 
 # =============================================================================
 # logging 
@@ -58,7 +58,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.bspline' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 ## short name 
-BSpline = cpp.Ostap.Math.BSpline
+BSpline = Ostap.Math.BSpline
 # =============================================================================
 ## get control polygon for BSpline
 def control_polygon ( bs )  :

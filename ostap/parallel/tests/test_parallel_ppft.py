@@ -43,30 +43,46 @@ def make_histo  ( i , n ) :
     for i in range ( n ) : h1.Fill ( random.gauss (  4 ,  1 ) )
     return h1 
 
+# ===================================================================================
+## @class MakeHisto
+#  helper class to create a fill histoghrams
+class MakeHisto(object) :
+    """Helper class to create a fill histoghrams
+    """
+    def process ( self , i , n ) :
+        import ROOT
+        import random
+        h1 = ROOT.TH1F ( 'h%d' %  i , '' , 100 , 0 , 10 )
+        for i in range ( n ) : h1.Fill ( random.gauss (  4 ,  1 ) )
+        return h1 
+    def __call__ ( self , i , n ) :
+        return self.process ( i , n ) 
+
+mh = MakeHisto()
+
 # =============================================================================
-## test parallel python 
-def test_ppft() :
-    """Test parallel python
+## test parallel python with function 
+def test_ppft_1 () :
+    """Test parallel python (function)
     """
 
     if not dill :
-        logger.error ( "test_ppft: dill is not available" )
+        logger.error ( "test_ppft_1: dill is not available" )
         return 
     if not ppft :
-        logger.error ( "test_ppft: ppft is not available" )
+        logger.error ( "test_ppft_1: ppft is not available" )
         return 
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_ppft is disabled for Python %s" % vi )
+        logger.warning ("test_ppft_1 is disabled for Python %s" % vi )
         return
     
     job_server = ppft.Server()
     
     ## start 100 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 100 * [ 1000 ]
+    inputs = 50 * [ 100 ]
     
-    ## submit the jobs 
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) , () , () ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
     result = None 
@@ -84,13 +100,54 @@ def test_ppft() :
     time.sleep  ( 2 )
 
     return result 
-    
 
+
+# =============================================================================
+## test parallel python with functor
+def test_ppft_2() :
+    """Test parallel python  (functor) 
+    """
+    if not dill :
+        logger.error ( "test_ppft_2: dill is not available" )
+        return 
+    if not ppft :
+        logger.error ( "test_ppft_2: ppft is not available" )
+        return 
+        
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        logger.warning ("test_ppft_2 is disabled for Python %s" % vi )
+        return
+    
+    job_server = ppft.Server()
+    
+    ## start 100 jobs, and for each job create the histogram with 1000 entries 
+    inputs = 50 * [ 100 ]
+
+    mh = MakeHisto() 
+    jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) , () , () ) ) for ( i , n ) in enumerate  ( inputs ) ]
+
+    result = None 
+    for input, job in progress_bar ( jobs ) :
+        histo = job()
+        if not result : result = histo
+        else          :
+            result.Add ( histo ) 
+            del histo 
+
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+    
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_ppft () 
-
+    test_ppft_1 () 
+    test_ppft_2 () 
         
 # =============================================================================
 ##                                                                      The END 

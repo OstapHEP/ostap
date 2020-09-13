@@ -28,7 +28,6 @@ and it has limitations related to the pickling.
 The upgraded module relies on <code>pathos</code> suite that
 has very attractive functionality and solve the issues with pickling
 @see https://github.com/uqfoundation/pathos
-
 """
 # =============================================================================
 __version__ = '$Revision$'
@@ -37,11 +36,12 @@ __date__    = '2016-02-23'
 __all__     = (
     'Task'          , ## the base class for task
     'GenericTask'   , ## the generic ``templated'' task
+    'FuncTask'      , ## the simple ``function'' task
     'Statistics'    , ## helper class to collect statistics 
     'StatMerger'    , ## helper class to merge   statistics
     'TaskMerger'    , ## simple merger for task results
     'task_executor' , ## helper function to execute Task  
-    'func_executor' , ## helper function to execute callable 
+    'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
 import operator, abc  
@@ -63,9 +63,9 @@ else                      : logger = getLogger ( __name__               )
 #  - <code>environment</code>: additional environmental variables 
 #  - <code>append_to</code>: append some path-like enviroment varibales 
 #  - <code>prepend_to</code>: prepend some path-like enviroment varibales 
-#  - <code>dot_in_path</code>: shoud the '.' be added to sysy.path?
+#  - <code>dot_in_path</code>: shoud the '.' be added to sys.path?
 #  @author Pere MATO Pere.Meto@cern.ch
-class Task ( object ) :
+class Task(object) :
     """ Basic base class to encapsulate any processing that is
     going to be processed in parallel.
     User class must inherit from it and implement the methods
@@ -159,6 +159,10 @@ class Task ( object ) :
     def environment ( self ) :
         """``environment'' : additional environment for the job"""
         return self.__environment
+    
+    @environment.setter
+    def environment ( self , value ) :
+        self.__environment.update (value ) 
     
     @property
     def append_to ( self ) :
@@ -264,6 +268,78 @@ class GenericTask(Task) :
         - Signature: output = processor ( item ) 
         """
         return self.__processor
+    @property
+    def merger     ( self ) :
+        """``merger'' : the actual fuction to merge results
+        - Signature: updated_output = merger ( old_output , new_output )         
+        """
+        return self.__merger
+    @property
+    def initializer ( self ) :
+        """``initializer'' : the actual fuction to initialize local output  
+        - Signature: output = initializer() 
+        """
+        return self.__initializer
+
+# =============================================================================
+## Simple task to execute the callable object/function  
+class FuncTask(Task) :
+    """Simple task for parallel processing.
+    - func        : function 
+    - merger      : updated_output = merger      ( old_output , new_output )
+    - initializer :         output = initializer (      )  
+    - directory   : change to this directory  (if it exists) 
+    - environment : additional environment for the job 
+    - append_to   : additional variables to be ''appended''
+    - prepend_to  : additional variables to be ''prepended''
+    """
+    def __init__ ( self                ,
+                   func                ,
+                   merger      = None  ,
+                   initializer = tuple ,
+                   directory   = None  ,
+                   environment = {}    ,
+                   append_to   = {}    ,
+                   prepend_to  = {}    ) :
+        
+        self.__function    = func
+        self.__merger      = merger
+        self.__output      = None
+
+        self.__initializer = initializer
+        self.__output      = None
+        
+        self.directory     = directory
+        self.environment  . update ( environment ) 
+        self.append_to    . update ( append_to   ) 
+        self.prepend_to   . update ( prepend_to  ) 
+
+    # =========================================================================
+    ## local initialization (executed once in parent process)
+    def initialize_local   ( self ) :
+        """Local initialization (executed once in parent process)"""
+        self.__output = self.initializer () if self.initializer else None 
+        
+    # =========================================================================
+    ## the main   processing method 
+    def process ( self , jobid , *params ) :
+        result = self.__function ( jobid , *params )
+        self.__output = result 
+        return result
+
+    # =========================================================================
+    ## merge results 
+    def merge_results ( self , result ) :
+        """Merge processing results"""
+        if  self.merger : 
+            self.__output = self.merger ( self.__output , result )
+    
+    # =========================================================================
+    ## get the final  results
+    def results ( self ) :
+        """Get the final (merged) results"""
+        return self.__output
+
     @property
     def merger     ( self ) :
         """``merger'' : the actual fuction to merge results
@@ -453,14 +529,14 @@ class StatMerger(object) :
 
 
 # =============================================================================
-## Merge task results 
+## Merge/combine task results 
 #  @code
 #  merger = TaskMerger()
 #  jobs   = pool.uimap  ( .... )
 #  for result , stat in jobs :
 #      merger += result
 #  merged = merger.result 
-#  @encode 
+#  @encode
 class TaskMerger(object) :
     """Merge task resuls
     >>> merger = TaskMerger()
@@ -469,13 +545,13 @@ class TaskMerger(object) :
     ...    merger += result 
     ... merged = merger.result
     """
-    def __init__ ( self , merger = operator.iadd , init = None  ) :
+    def __init__ ( self , merger = operator.add , init = None  ) :
         
         self.__merger = merger
         self.__result = init    
-        
+        self.__nmerged = 0 
     # ========================================================================= 
-    ## Merge task results
+    ## Merge/combine  task results
     #  @code
     #  merger = TaskMerger()
     #  jobs   = pool.uimap  ( .... )
@@ -491,7 +567,7 @@ class TaskMerger(object) :
         ...    merger += result 
         ... merged = merger.result
         """
-        self.merge  ( result ) 
+        self.merge ( result ) 
         return self
     
     # ========================================================================= 
@@ -503,7 +579,7 @@ class TaskMerger(object) :
     #      merger.merge ( result )
     #  merged = merger.result
     #  @encode 
-    def merge    ( self , result ) :
+    def merge ( self , result ) :
         """Merge task results
         >>> merger = TaskMerger()
         >>> jobs   = pool.uimap  ( .... )
@@ -519,16 +595,31 @@ class TaskMerger(object) :
             self.__result += result 
         elif hasattr ( self.__result , '__add__'  ) or hasattr ( result , '__radd__' ) :
             self.__result  = self.__result +  result
+        elif hasattr ( self.__result , 'append'   ) :
+            self.__result.append  ( result ) 
+        elif hasattr ( self.__result , 'add'      ) :
+            self.__result.add     ( result ) 
         else :
             raise TypeError ( 'TaskMerger: no merge is defined for %s and %s' % ( type ( self.__result ) , type ( result ) ) )
+
+        self.__nmerged += 1
         
         return self
         
     @property
     def result  ( self ) :
-        """``result'' : get the merged results"""
+        """``result'' : the merged results"""
         return self.__result
     
+    @property
+    def nmerged  ( self ) :
+        """``nmerged'' : number of merged results"""
+        return self.__nmerged
+
+    def __nonzero__ ( self ) : return 0 < self.__nmerged
+    def __bool__    ( self ) : return 0 < self.__nmerged
+    def __len__     ( self ) : return     self.__nmerged
+
 # =============================================================================
 ## helper function to execute the task and collect statistic
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
@@ -540,7 +631,7 @@ def task_executor ( item ) :
     use python decorators here :-(
     - see Task 
     """
-    
+
     ## unpack
     task  = item [ 0  ]
     jobid = item [ 1  ] 
@@ -598,8 +689,8 @@ def task_executor ( item ) :
         
     with Statistics ()  as stat :    
         result = task.process ( jobid , *args ) 
-        return result , stat
-
+        return jobid , result , stat
+    
 # =============================================================================
 ## helper function to execute the function and collect stattistic
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
@@ -609,20 +700,20 @@ def func_executor ( item ) :
     - unfornately due to limitation of ``parallel python'' one cannot
     use python decorators here :-(
     """
-
     ## unpack
     fun   = item [ 0  ]
     jobid = item [ 1  ] 
-    args  = item [ 2: ] 
-    
+    args  = item [ 2: ]
+
     with Statistics ()  as stat :
-        return fun ( jobid , *args ) , stat 
+        return jobid , fun ( jobid , *args ) , stat 
     
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
-    docme ( __name__ , logger = logger )    
+    docme ( __name__ , logger = logger )
+    
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

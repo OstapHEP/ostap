@@ -16,7 +16,7 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from ostap.parallel.task      import Task, GenericTask
+from ostap.parallel.task  import Task, GenericTask
 try :
     from ostap.parallel.mp_pathos import WorkManager 
 except ImportError :
@@ -28,7 +28,7 @@ import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
 ## simple    function that created and  fill a histogram
-def make_histos ( jobid , n ) :
+def make_histo  ( jobid , n ) :
     """Simple    function that creates and  fills a histogram
     """
     import ROOT, random 
@@ -45,6 +45,10 @@ def merge_histos  ( h1 , h2 ) :
         return h1
     return h2 
 
+# =============================================================================
+## start 10 jobs, and for each job create the histogram with 100 entries 
+inputs = tuple ( 10 * [ 100 ] ) 
+
 # ==============================================================================
 ## simple task to create and fill historgam 
 class HTask(Task) :
@@ -54,34 +58,59 @@ class HTask(Task) :
     def initialize_local  ( self )          : self.__histo = None
     def process  ( self  , jobid , n ) :        
         import ROOT, random 
-        h1 = make_histos ( jobid , n )
+        h1 = ROOT.TH1F ( 'h%d' %  jobid , '' , 100 , 0 , 10 )
+        ## for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
         self.__histo = h1 
         return self.__histo 
-    def merge_results ( self , result ) : 
+    def merge_results ( self , result ) :        
         if not self.__histo : self.__histo = result
         else                : self.__histo.Add ( result ) 
     def results ( self ) :
         return self.__histo
 
 # =============================================================================
-## test parallel processing with mp_pathos
+## test parallel processing with mp_pathos & task 
 def test_mp_pathos () :
     """Test parallel processnig with mp_pathos
     """
 
+    logger.info ("test_mp_pathos")
     if not WorkManager :
         logger.error ("test_mp_pathos: cannot import WorkManager")
         return 
         
-    ## start 25 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 25 * [ 1000 ]
+    ## start 10 jobs, and for each job create the histogram with 100 entries 
+    inputs = 10 * [ 1000 ]
 
-    task     = HTask() 
     manager  = WorkManager ( silent = False )
 
-    manager.process ( task ,  inputs ) 
+    task     = HTask() 
+    result   = manager.process ( task ,  inputs ) 
+    
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
 
-    result = task.results() 
+    return result 
+    
+# =============================================================================
+## test parallel processing with mp_pathos using generic task 
+def test_mp_pathos_generic () :
+    """Test parallel processnig with mp_paths + GenericTask
+    """
+
+    logger.info ("test_mp_pathos_generic")
+    if not WorkManager :
+        logger.error ("test_mp_pathos_generic: cannot import WorkManager")
+        return 
+    
+    manager  = WorkManager ( silent = False )
+    
+    task     = GenericTask ( processor = make_histo   ,
+                             merger    = merge_histos )    
+    result   = manager.process ( task ,  inputs ) 
     
     logger.info ( "Histogram is %s" % result )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
@@ -91,28 +120,71 @@ def test_mp_pathos () :
 
     return result 
 
-    
 # =============================================================================
-## test parallel processing with mp_pathos using generic task 
-def test_mp_pathos_generic () :
-    """Test parallel processnig with mp_paths + GenericTask
+## test parallel processing with mp_pathos (pp) /  function 
+def test_mp_pathos_pp_1 () :
+    """Test parallel processnig with mp_pathos  (pp) / function
     """
 
+    logger.info ("test_mp_pathos_pp_1")
     if not WorkManager :
-        logger.error ("test_mp_pathos: cannot import WorkManager")
+        logger.error ("test_mp_pathos_1: cannot import WorkManager")
+        return 
+        
+    manager  = WorkManager ( silent = False , pp = True )
+    result   = manager.process ( make_histo ,  inputs )
+
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+# =============================================================================
+## test parallel processing with mp_pathos (pp) /  task
+def test_mp_pathos_pp_2 () :
+    """Test parallel processnig with mp_pathos  (pp) / task
+    """
+
+    logger.info ("test_mp_pathos_pp_2")
+    if not WorkManager :
+        logger.error ("test_mp_pathos_2: cannot import WorkManager")
+        return 
+    
+    manager  = WorkManager ( silent = False , pp = True )
+
+    task     = HTask() 
+    result   = manager.process ( task ,  inputs ) 
+    
+    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+# =============================================================================
+## test parallel processing with mp_pathos using generic task with parallel python
+def test_mp_pathos_pp_generic () :
+    """Test parallel processnig with mp_paths + GenericTask with parallel python
+    """
+
+    logger.info ("test_mp_pathos_pp_generic")
+    if not WorkManager :
+        logger.error ("test_mp_pathos_pp_generic: cannot import WorkManager")
         return 
 
-    ## start 25 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 25 * [ 1000 ]
+    inputs = tuple ( 200 * [ 100 ] ) 
     
-    task     = GenericTask( processor = make_histos  ,
-                            merger    = merge_histos )
-    
-    manager  = WorkManager ( silent = False )
-
-    manager.process ( task ,  inputs ) 
-
-    result = task.results() 
+    manager  = WorkManager ( silent = False     ,
+                             ## ppservers = '*' , 
+                             pp = True
+                             )
+    task     = GenericTask ( processor = make_histo , merger  = merge_histos )
+    result   = manager.process ( task ,  inputs ) 
     
     logger.info ( "Histogram is %s" % result )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
@@ -125,9 +197,12 @@ def test_mp_pathos_generic () :
 
 # =============================================================================
 if '__main__' == __name__ :
-
-    test_mp_pathos         () 
-    test_mp_pathos_generic () 
+    
+    test_mp_pathos            ()
+    test_mp_pathos_generic    () 
+    test_mp_pathos_pp_1       () 
+    test_mp_pathos_pp_2       () 
+    test_mp_pathos_pp_generic () 
 
         
 # =============================================================================

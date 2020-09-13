@@ -50,11 +50,13 @@ namespace Ostap
     private: 
       // ======================================================================
       // the file itself 
-      std::unique_ptr<std::ostream>   m_file     ; // the file itself 
+      std::unique_ptr<std::ostream>   m_file        ; // the file itself 
       /// is the file owned?
-      bool                            m_own      ; // is the file owned?
-      std::unique_ptr<std::streambuf> m_buffer   ;
-      std::streambuf*                 m_keep     ; // keep the standard buffer 
+      bool                            m_own         ; // is the file owned?
+      std::unique_ptr<std::streambuf> m_buffer_cout ;
+      std::unique_ptr<std::streambuf> m_buffer_cerr ;
+      std::streambuf*                 m_keep_cout   ; // keep the standard buffer 
+      std::streambuf*                 m_keep_cerr   ; // keep the standard buffer 
       // ======================================================================
     };
     // ========================================================================

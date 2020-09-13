@@ -92,7 +92,11 @@ __all__     = (
     'vInts'          , ## std::vector<int>
     'vLongs'         , ## std::vector<long>
     ##
-    'frexp10'        , ## similar to math.frexp but woith radix=10
+    'frexp10'        , ## similar to math.frexp but woith radix=10,
+    ## 
+    'cpp'            , ## C++ global  namespace 
+    'Ostap'          , ## C++ namespace Ostap 
+    'std'            , ## C++ namespace Ostap
     ) 
 # =============================================================================
 import ROOT, cppyy, sys
@@ -106,23 +110,25 @@ else                       : logger = getLogger ( __name__          )
 # =============================================================================
 ## get global C++ namespace
 cpp = cppyy.gbl
-
 ## C++ namespace Gaudi
 std = cpp.std
-
 ## C++ namespace Ostap
 Ostap = cpp.Ostap
 
-iszero   = Ostap.Math.Zero     ('double')()
-isequal  = Ostap.Math.Equal_To ('double')()
-isint    = Ostap.Math.isint 
-islong   = Ostap.Math.islong
-
+from ostap.logger.utils import ROOTIgnore
+from ostap.logger.mute  import mute
+logger.debug ("Suppress error/warnings from ROOT")
+with ROOTIgnore ( ROOT.kWarning + 1 ) : 
+    with mute ( True  , True ) : _ = ROOT.RooRealVar() 
+    iszero   = Ostap.Math.Zero     ('double')()
+    isequal  = Ostap.Math.Equal_To ('double')()
+    isint    = Ostap.Math.isint 
+    islong   = Ostap.Math.islong
+    
 vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
-
 
 # =============================================================================
 ##  get the sign of the number 

@@ -571,7 +571,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func  = cpp.Ostap.Math.Polynomial ( degree , xmin , xmax ) 
+    func  = Ostap.Math.Polynomial ( degree , xmin , xmax ) 
     #
     my = h1.accumulate().value()/h1.bins()
     func.setPar( 0, my )
@@ -618,12 +618,12 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.BSpline ( xmin , xmax , knots , degree )
+        func = Ostap.Math.BSpline ( xmin , xmax , knots , degree )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.BSpline ( _knots , degree )
+        func = Ostap.Math.BSpline ( _knots , degree )
         
     ##
     from ostap.fitting.param import H_fit 
@@ -663,7 +663,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.Positive ( N , xmin , xmax )
+    func = Ostap.Math.Positive ( N , xmin , xmax )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -702,7 +702,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.PositiveEven ( N , xmin , xmax )
+    func = Ostap.Math.PositiveEven ( N , xmin , xmax )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -742,7 +742,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func  = cpp.Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
+    func  = Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -782,7 +782,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.Convex ( N , xmin , xmax , increasing , convex )
+    func = Ostap.Math.Convex ( N , xmin , xmax , increasing , convex )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -821,7 +821,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , True )
+    func = Ostap.Math.ConvexOnly ( N , xmin , xmax , True )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -860,7 +860,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , False )
+    func = Ostap.Math.ConvexOnly ( N , xmin , xmax , False )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -903,12 +903,12 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
+        func = Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.PositiveSpline ( _knots , degree )
+        func = Ostap.Math.PositiveSpline ( _knots , degree )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -955,12 +955,12 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
+        func = Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.MonotonicSpline ( knots , degree , increasing )
+        func = Ostap.Math.MonotonicSpline ( knots , degree , increasing )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -1010,12 +1010,12 @@ def _h1_cspline_ ( h1                   ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
+        func = Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
+        func   = Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
@@ -1064,12 +1064,12 @@ def _h1_convexspline_ ( h1                 ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
+        func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( mn , mx ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , True )
+        func   = Ostap.Math.ConvexOnlySpline ( _knots , order , True )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -1118,12 +1118,12 @@ def _h1_concavespline_ ( h1               ,
     #
     #
     if isinstance ( knots , integer_types ) :
-        func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
+        func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , False )
+        func   = Ostap.Math.ConvexOnlySpline ( _knots , order , False )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
@@ -1654,7 +1654,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , (tuple,list) ) : 
         ## create the spline with uniform binning 
-        PS     = cpp.Ostap.Math.PositiveSpline
+        PS     = Ostap.Math.PositiveSpline
         spline = PS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] )
     #
     from ostap.fitting.background import PSpline_pdf
@@ -1685,7 +1685,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) :
         ## create the spline with uniform binning 
-        MS     = cpp.Ostap.Math.MonotonicSpline
+        MS     = Ostap.Math.MonotonicSpline
         spline = MS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] )
         #
     from ostap.fitting.background import MSpline_pdf
@@ -1715,7 +1715,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , (tuple,list) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexSpline
+        CS     = Ostap.Math.ConvexSpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] , spline[3] )
     #
     from ostap.fitting.background import CSpline_pdf
@@ -1746,7 +1746,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexOnlySpline
+        CS     = Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , True )
         #
     from ostap.fitting.background import CPSpline_pdf
@@ -1777,7 +1777,7 @@ def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexOnlySpline
+        CS     = Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , False )
         #
     from ostap.fitting.background import CPSpline_pdf

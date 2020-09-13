@@ -46,8 +46,8 @@ __all__ = (
     )
 # ===============================================================================
 import ROOT,           math
-from   ostap.math.ve   import cpp, VE
-from   ostap.math.base import frexp10 
+from   ostap.math.ve   import VE
+from   ostap.math.base import Ostap , frexp10 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -60,8 +60,8 @@ else                       : logger = getLogger ( __name__                 )
 ## round to nearest integer, rounds half integers to nearest even integer 
 #  It is just a simple wrapper around boost::numeric::converter 
 #  @see Ostap::Math::round 
-cpp_round   = cpp.Ostap.Math.round
-cpp_round_N = cpp.Ostap.Math.round_N 
+cpp_round   = Ostap.Math.round
+cpp_round_N = Ostap.Math.round_N 
 
 # =============================================================================
 ## get ``mantissa'' (1<=m<10) and exponent for radix10

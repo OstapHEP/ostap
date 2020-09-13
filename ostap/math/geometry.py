@@ -23,12 +23,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.geometry' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
 from ostap.core.ostap_types import num_types
+from ostap.math.base        import Ostap
 
-## global C++ namespace 
-cpp = cppyy.gbl 
-
-## C++ namespace Ostap 
-Ostap = cpp.Ostap
 
 ## ROOT::Math namespace
 _RM = ROOT.ROOT.Math

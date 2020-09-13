@@ -200,7 +200,12 @@ class ProgressBar(object):
     >>> for i in progress_bar  ( range(10000 ) ) :
     ...       ... do something here ... 
     """
-    def __init__(self, min_value = 0, max_value = 100, width=110 ,**kwargs):
+    def __init__( self            , 
+                  max_value = 100 ,
+                  width     = 110 ,
+                  min_value = 0   ,
+                  output    = sys.stdout , 
+                  **kwargs ):
 
         tty = isatty()
         
@@ -218,7 +223,8 @@ class ProgressBar(object):
         self.span     = max ( max_value - min_value , 1 )
         self.last     = '' 
         ##
-
+        self.output   = output
+        ## 
         ncols         = columns () - 12
         self.width    = ncols if ncols > 10 else width
         
@@ -230,7 +236,7 @@ class ProgressBar(object):
         self._hashes  = -1 
         self.__end    = None 
         
-        self.update_amount( self.min )
+        self.update_amount ( self.min )
         self.build_bar ()
         self.show      ()
         self.__start  = time.time ()
@@ -238,12 +244,12 @@ class ProgressBar(object):
     def increment_amount(self, add_amount = 1):
         return self if self.silent else self.update_amount ( self.amount + add_amount )
 
-    def update_amount(self, new_amount = None):
+    def update_amount(self, new_amount = None ):
         """Update self.amount with 'new_amount', and then rebuild& show the bar 
         """
         if self.silent : return self   ## REALLY SILENT 
         ## 
-        if not new_amount: new_amount = self.amount
+        if new_amount is None : new_amount = self.amount
         if new_amount < self.min: new_amount = self.min
         if new_amount > self.max: new_amount = self.max
         self.amount = new_amount
@@ -254,8 +260,14 @@ class ProgressBar(object):
             if self.build_bar() : self.show()
         ##
         if not self.silent :
+            
+            dmin = self.amount - self.min
+            dmax = self.max    - self.amount
+            
             if   self.amount - self.min    < 10 : self.show ()
             elif self.max    - self.amount < 10 : self.show ()
+
+            
         ##
         return self
 
@@ -312,7 +324,7 @@ class ProgressBar(object):
             else : 
                 self.bar = allright ( self.char * num_hashes ) + ' ' * ( all_full - num_hashes )
  
-        percent_str  = str(percent_done) + "%"
+        percent_str  = str ( percent_done ) + "%"
         
         self.bar     = '[ ' + self.bar + ' ] ' + infostr ( percent_str ) 
         
@@ -325,22 +337,22 @@ class ProgressBar(object):
         return self if self.silent else self.increment_amount ( i )
     
     def __str__(self):
-        return str(self.bar)
+        return str  ( self.bar )
 
     def show ( self ) :
         if not self.silent and self.bar != self.last :   
-            if self.prefix : sys.stdout.write( self.prefix ) 
-            sys.stdout.write( self.bar + self.r ) 
-            sys.stdout.flush()
+            if self.prefix : self.output.write( self.prefix ) 
+            self.output.write ( self.bar + self.r ) 
+            self.output.flush ()
             self.last = self.bar  
         
     def end  ( self  ) :
         if not self.silent :
             if self.__end is None : self.__end = time.time () 
             self.build_bar()
-            if self.prefix : sys.stdout.write( self.prefix ) 
-            sys.stdout.write ( self.bar + '\n' ) 
-            sys.stdout.flush()
+            if self.prefix : self.output.write( self.prefix ) 
+            self.output.write ( self.bar + '\n' ) 
+            self.output.flush()
         self.silent = True
         
     def __enter__ ( self      ) :

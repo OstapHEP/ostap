@@ -25,9 +25,9 @@ __all__     = (
     'VVE' ,  # vector of values with errors
     )
 # ============================================================================= 
-import ROOT, cppyy
-from   ostap.math.base import iszero, isequal
-from   builtins import range
+import ROOT
+from   ostap.math.base import Ostap, std , iszero, isequal
+from   builtins        import range
 # ============================================================================= 
 # logging 
 # ============================================================================= 
@@ -35,10 +35,6 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.ve' )
 else                       : logger = getLogger ( __name__        )
 # ============================================================================= 
-
-cpp       = cppyy.gbl
-std       = cpp.std 
-Ostap     = cpp.Ostap
 
 VE        = Ostap.Math.ValueWithError
 VVE       = std.vector ( VE )

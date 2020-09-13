@@ -61,10 +61,7 @@ __all__     = (
     )
 # =============================================================================
 import math, sys, os 
-import ROOT
-import cppyy
-cpp = cppyy.gbl
-std = cpp.std
+import ROOT, cppyy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -74,7 +71,7 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-from   ostap.math.base      import ( Ostap    ,
+from   ostap.math.base      import ( Ostap    , std     , cpp ,  
                                      iszero   , isequal ,
                                      isint    , islong  ,
                                      inrange  , strings , 
@@ -86,6 +83,7 @@ from   ostap.math.ve        import VE
 from   ostap.stats.counters import SE , WSE 
 from   builtins             import range
 # =============================================================================
+
 ## @var global ROOT/gROOT object 
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2

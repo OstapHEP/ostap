@@ -79,9 +79,9 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math  
-from    ostap.core.core  import cpp, Ostap, funID
+from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer
-from    ostap.math.base  import iszero, isequal, signum  
+from    ostap.math.base        import iszero, isequal, signum  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -90,7 +90,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.bernstein' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## short name 
-Bernstein = cpp.Ostap.Math.Bernstein
+Bernstein = Ostap.Math.Bernstein
 # =============================================================================
 ## get control polygon for Bernstein polynomial   
 def control_polygon ( bp )  :

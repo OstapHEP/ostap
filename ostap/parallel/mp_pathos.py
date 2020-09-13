@@ -36,7 +36,6 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'WorkManager' , ## task manager
-    'ppServer'    , ## helper class to start remote ppserver (for parallel python)
     )
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -52,7 +51,6 @@ import dill
 import ppft
 import multiprocess 
 import pathos.core              as PC
-import pathos.secure            as PS
 import pathos.multiprocessing
 import pathos.parallel
 # =============================================================================
@@ -65,11 +63,27 @@ def get_pps ( pool ) :
     return pathos.parallel.__STATE.get ( pool._id , None )
 
 # =============================================================================
-from ostap.parallel.task       import ( Task          , TaskMerger    , 
-                                        Statistics    , StatMerger    ,
-                                        task_executor , func_executor ) 
+from ostap.parallel.task import ( Task          , TaskMerger    , 
+                                  Statistics    , StatMerger    ,
+                                  task_executor , func_executor )
+
 # =============================================================================
-from ostap.utils.utils import get_open_fds
+from ostap.utils.utils    import get_open_fds  
+
+# =============================================================================
+## helper function to execute the function and collect stattistic
+#  (unfornately due to limitation of <code>parallel python</code> one cannot
+#  use decorators here :-(
+def func_executor2 ( *items ) :
+    """Helper function to execute the task and collect job execution statistic
+    - unfornately due to limitation of ``parallel python'' one cannot
+    use python decorators here :-(
+    """
+    ## print ( 'EXECUTOR!', ) 
+    return 1, 1
+
+def pptask ( *args ) :
+    return 1 , 1 
 
 # =============================================================================
 ## @class WorkManager
@@ -96,6 +110,9 @@ class WorkManager ( object ) :
                   ppservers = ()           ,
                   silent    = False        , **kwargs ) :
 
+        from ostap.utils.cidict import cidict
+        kwa = cidict ( **kwargs ) 
+
         if   isinstance ( ncpus , int ) and 0 <= ncpus : self.ncpus = ncpus
         else :
             from pathos.helpers import cpu_count
@@ -109,24 +126,34 @@ class WorkManager ( object ) :
         local_host = socket.getfqdn ().lower()  
  
         from ostap.core.ostap_types    import string_types 
-        if isinstance ( ppservers , string_types ) and ppservers.lower() in ( 'config' , 'auto' , '*' ) : 
+        if isinstance ( ppservers , string_types ) and \
+               ppservers.lower() in ( 'config' , 'auto' , '*' ) : 
             from ostap.parallel.utils import get_ppservers
             ppservers = get_ppservers ( local_host )
 
-        if ppservers :
+        ## use Paralell python if ppservers are specified or explicit flag
+        if ppservers or kwa.pop ( 'PP' , False ) or kwa.pop ( 'Parallel' , False ) :
 
-            ## remove duplicates (if any) 
+            ## remove duplicates (if any) - do not sort! 
             pps = []
             for p in ppservers :
                 if p not in pps : 
-                    pps.append ( p ) 
-            ppservers = tuple ( pps ) 
+                    pps.append ( p )
+            ppservers = tuple ( pps )
+
+            ## check alive remote hosts 
+            from ostap.parallel.utils import good_pings 
+            alive     = good_pings ( *ppservers )
+            if len ( alive ) != len ( ppservers ) :
+                dead = list ( set ( ppservers ) - set ( alive ) )
+                logger.warning ("Dead remote hosts: %s" % dead ) 
+            ppservers = alive
             
-            environment = kwargs.pop ( 'environment' , ''   )
-            script      = kwargs.pop ( 'script'      , None )
-            profile     = kwargs.pop ( 'profile'     , None ) 
-            secret      = kwargs.pop ( 'secret'      , None )
-            timeout     = kwargs.pop ( 'timeout'     , 7200 )
+            environment = kwa.pop ( 'environment' , ''   )
+            script      = kwa.pop ( 'script'      , None )
+            profile     = kwa.pop ( 'profile'     , None ) 
+            secret      = kwa.pop ( 'secret'      , None )
+            timeout     = kwa.pop ( 'timeout'     , 7200 )
             
             if script :
                 assert os.path.exists ( script ) and os.path.isfile ( script ) ,\
@@ -136,6 +163,7 @@ class WorkManager ( object ) :
                 from ostap.utils.utils import gen_password 
                 secret = gen_password ( 16 )
 
+            from ostap.parallel.pptunnel import ppServer 
             ppsrvs = [ ppServer ( remote                    ,
                                   environment = environment ,
                                   script      = script      ,
@@ -224,7 +252,7 @@ class WorkManager ( object ) :
 
 
     # =========================================================================
-    ## process callable object or Task :
+    ## process Task or callable object :
     #  - process <code>Task</code>:
     #  @code
     #  class MyTask(Task) : ....
@@ -291,52 +319,58 @@ class WorkManager ( object ) :
 
         if isinstance ( task , Task ) :
             kwargs.pop ( 'merger' , None ) 
-            return self.__process_task ( task , chunks , **kwargs ) 
+            return self.__process_task  ( task , chunks , **kwargs  ) 
 
-        ## mergers for statistics 
+        ## else :
+        ##     from ostap.parallel.task import FuncTask 
+        ##     merger         = kwargs.pop ( 'merger' ) 
+        ##     task = FuncTask ( task , merger )
+        ##     return self._process_task   ( task , chunks , **kwargs  ) 
+            
+        ## mergers for statistics & results
+        merger         = TaskMerger ()
         merged_stat    = StatMerger ()
         merged_stat_pp = StatMerger ()
-        merger         = kwargs.pop ( 'merger' , TaskMerger ( ) ) 
 
-        
         njobs = sum  ( len(c) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
         with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
 
             while chunks :
-                
+
                 chunk = chunks.pop() 
                 
                 from itertools import repeat , count 
                 jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
-                jobs      = self.pool.uimap ( func_executor , jobs_args  )
-                del jobs_args 
                 
-                for result , stat in jobs :
+                jobs      = self.pool.uimap ( func_executor  , jobs_args  )
+
+                del jobs_args 
+
+                for jobid , result , stat in jobs :
+                    
                     bar         += 1
                     merged_stat += stat
                     merger      += result 
 
-                    del result
-                    del stat 
-                    
                 merged_stat_pp += self.get_pp_stat()  
                 self.pool.close ()
                 self.pool.join  ()
+                self.pool.clear ()
 
-        ## finalize task 
-        what.finalize ()
+        ## print statistics 
         self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
-        ## 
-        return merger.results 
+        ##
+        return merger.result 
 
     # ===================================================================================
     ## helper internal method to process the task with chunks of data 
     def __process_task  ( self , task , chunks , **kwargs ) :
         """Helper internal method to process the task with chunks of data 
         """
+            
         assert isinstance ( task , Task ), 'Invalid task type  %s' % type (  task ) 
         
         from timeit import  default_timer as _timer
@@ -361,20 +395,20 @@ class WorkManager ( object ) :
                 jobs_args = zip ( repeat ( task ) , count () , chunk )
 
                 self.pool.restart ( True )
+                
                 jobs      = self.pool.uimap ( task_executor , jobs_args  )
+                
                 del jobs_args 
                 
-                for result , stat in jobs :
+                for jobid , result , stat in jobs :
                     bar         += 1
                     merged_stat += stat
                     task.merge_results ( result )
 
-                    del result
-                    del stat 
-                    
                 merged_stat_pp += self.get_pp_stat()
                 self.pool.close ()
                 self.pool.join  ()
+                self.pool.clear ()
 
         task.finalize () 
         self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )

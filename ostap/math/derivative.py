@@ -67,11 +67,11 @@ if not 0.75 < _eps_ * 2**52 < 1.25 :
     import warnings
     warnings.warn ('"epsilon" in not in the expected range!Math could be suboptimal')
 # =============================================================================
-from ostap.math.base  import cpp , iszero , isequal
+from ostap.math.base        import Ostap, iszero , isequal
 from ostap.core.ostap_types import num_types , is_integer
-from ostap.math.ve    import VE 
+from ostap.math.ve          import VE 
 # =============================================================================
-_next_double_ = cpp.Ostap.Math.next_double
+_next_double_ = Ostap.Math.next_double
 _mULPs_       = 1000 
 def _delta_ ( x , ulps = _mULPs_ ) :
     n1 = _next_double_ ( x ,  ulps )
@@ -82,12 +82,12 @@ def _delta_ ( x , ulps = _mULPs_ ) :
 # Four versions:
 
 ## use dot_fma from ostap            ## 17.7s
-dot_fma = cpp.Ostap.Math.dot_fma  
+dot_fma = Ostap.Math.dot_fma  
 import array
 ARRAY   = lambda x : array.array ( 'd' , x )
 
 # (2) use dot based on Kahan summation  ## 17.5s 
-# dot_fma = cpp.Ostap.Math.dot_kahan
+# dot_fma = Ostap.Math.dot_kahan
 # import array 
 # ARRAY =  lambda x : array.array ( 'd' , x )
 # (3) use numpy variant                 ## 17.9s

@@ -36,8 +36,11 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'get_ppservers'    , ## get list of PP-servers  
-    'get_remote_conf'  , ## get PP-configuration for remote PP-server 
+    'get_remote_conf'  , ## get PP-configuration for remote PP-server
+    'ping'             , ## ping remote host
+    'good_pings'       , ## get alive hosts 
     )
+
 # =============================================================================
 from builtins import range
 # =============================================================================
@@ -45,7 +48,7 @@ from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
 else                      : logger = getLogger ( __name__               ) 
 # =============================================================================
-## Get the PP-configuration for the remote host form the configuration file 
+## Get the PP-configuration for the remote host from the configuration file 
 #  @code
 #  env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
 #  @endcode
@@ -160,7 +163,6 @@ def get_ppservers  ( local_host = '' ) :
     return tuple ( ppsvc )
                 
 
-
 # =============================================================================
 ## Get the maximum size of jobs chunk
 #  for large number of parallel jobs one often gets error
@@ -211,7 +213,7 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
 #  jobid = ...
 #  random_random ( jobid ) 
 #  @endcode
-def random_random ( jobid ) :
+def random_random ( jobid , *args ) :
     """Random number setting for parallel jobs
     - python
     - ROOT.gRandom
@@ -224,7 +226,8 @@ def random_random ( jobid ) :
     ##
     random.seed ()
     ##
-    jhid = os.getpid () , os.getppid() , socket.getfqdn () , jobid , os.uname () , time.time () 
+    jhid = os.getpid () , os.getppid() , socket.getfqdn () , jobid , os.uname () , time.time ()
+    jhid = jhid , ( id ( ROOT ) , id ( sys ) , id ( random ) ) , hash ( args ) 
     jhid = hash ( jhid ) 
     ##
     if sys.version_info.major < 3 : random.jumpahead ( jhid )
@@ -233,7 +236,7 @@ def random_random ( jobid ) :
         for j in range ( njumps ) : random.uniform ( 0 , 1 )
 
     ## sleep a bit (up to one second) 
-    time.sleep ( random.uniform ( 0.1 , 1.0 ) )
+    time.sleep ( random.uniform ( 0.01 , 1.0 ) )
     
     ## now  initialize ROOT
     ROOT.gRandom.SetSeed ()
@@ -241,9 +244,51 @@ def random_random ( jobid ) :
     ## ... and Roofit
     ROOT.RooRandom.randomGenerator().SetSeed()
     
-    return random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
-
+    state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
     
+
+# =============================================================================
+## ping the remote host 
+def ping ( host ) :
+    """Ping the host
+    """
+    logger.debug ( "Ping for %s" % host ) 
+    import subprocess , shlex 
+    command = "ping -c 1 -w 1 %s" % host 
+    args    = shlex.split( command )
+    try:
+        subprocess.check_call ( args                     ,
+                                stdout = subprocess.PIPE ,
+                                stderr = subprocess.PIPE )
+        return True 
+    except subprocess.CalledProcessError:
+        return False 
+
+ 
+# =============================================================================
+## get avive remote hosts (hosts with a good ping)
+#  @code
+#  good = good_pings ( '...' , '...' , '...' , '...' ) 
+#  @endocde 
+def good_pings ( *remotes ) :
+    """Get alive remote hosts (hosts with a good ping)
+    >>> good = good_pings ( '...' , '...' , '...' , '...' ) 
+    """
+    from ostap.core.ostap_types import string_types
+    
+    good = [] 
+    for rem in remotes :
+
+        remo = rem 
+        if isinstance ( rem , string_types )  : remo = [ rem ]
+        
+        for remote in remo  :
+            user , at , host = remote.rpartition('@')
+            host , _  , port = host.partition   (':')
+            if ping ( host ) : good.append ( host )
+            
+    return tuple ( good ) 
+
 # =============================================================================
 if '__main__' == __name__ :
     
