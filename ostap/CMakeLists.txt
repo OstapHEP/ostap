@@ -66,5 +66,6 @@ foreach(filename ${allfiles})
 
 endforeach() 
 
+install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  DESTINATION . )
 
 ## nosetests -w ../ostap/tools --exe --processes=16  --process-timeout=2000 -I '.*chopping.*'

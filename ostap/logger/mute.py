@@ -385,6 +385,9 @@ silence     = mute     # ditto
 # =============================================================================
 if '__main__' == __name__ :
     
+    from   ostap.logger.logger    import getLogger
+    logger = getLogger ('ostap.logger.mute')
+    
     from ostap import banner
     logger.info ( __file__  + '\n' + banner )
     logger.info ( 80*'*'   )
