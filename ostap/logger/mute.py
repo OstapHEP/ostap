@@ -22,7 +22,13 @@ __all__     = (
     'mute_py'            , ## suppress stdout/strerr Python printout 
     'silence_py'         , ## ditto 
     'mute'               , ## context manager to suppress stdout/strerr printout 
-    'silence'            , ## ditto 
+    'silence'            , ## ditto
+    ##
+    'TeeCpp'             , ## context manager (t ee   for C/C++  code) 
+    'TeePy'              , ## context manager (tee    for python code) 
+    'MuteC'              , ## context manager (mute   for C/C++  code) 
+    'MutePy'             , ## context manager (mute   for python code) 
+    'OutputC'            , ## context manager (output for C/C++  code) 
     )
 # =============================================================================
 import sys, os ## attention here!!

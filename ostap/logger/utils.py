@@ -66,7 +66,9 @@ from   ostap.logger.logger    import logVerbose,  logDebug, logInfo, logWarning,
 from   ostap.utils.utils      import RootError2Exception, rootException
 from   ostap.logger.mute      import ( mute   , mute_py ,
                                        tee_py , tee_cpp ,
-                                       output , silence , silence_py ) 
+                                       output , silence , silence_py ,
+                                       MuteC  , MutePy  ,
+                                       TeeCpp , TeePy   , OutputC    )
 # =============================================================================
 ## very simple context manager to suppress RooFit printout
 #
