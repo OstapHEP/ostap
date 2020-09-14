@@ -18,6 +18,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+import ostap.histos.histos
+from   ostap.utils.progress_bar import progress_bar 
+# =============================================================================
 try : 
     import dill 
 except ImportError :
@@ -31,9 +34,6 @@ except ImportError :
     pathos = None
     
 # =============================================================================
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
-# =============================================================================
 ## simple function that creates and  fills a histogram
 def make_histo ( item ) :
     """Simple    function that creates and  fills a histogram
@@ -44,6 +44,16 @@ def make_histo ( item ) :
     for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
     return h1 
 
+# =============================================================================
+## @class MakeHisto
+#  class that creates and fill a histogram 
+class MakeHisto(object)  :
+    """Class that creates and fill a histogram"""
+    def process (  self , *args ) :
+        return make_histo ( *args )
+
+## start 10 jobs, and for each job create the histogram with 1000 entries 
+inputs = 10 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
@@ -63,6 +73,16 @@ def test_pathos () :
         logger.warning ("test_pathos is disabled for Python %s" % vi )
         return
 
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        logger.warning ("test_pathos is disabled for Python %s" % vi )
+        return
+    
+    from ostap.core.meta_info import root_version_int  as rv 
+    if rv <= 62200 :
+        logger.warning ("test_pathos is disabled for ROOT %s" % rv )
+        return
+        
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
@@ -73,11 +93,10 @@ def test_pathos () :
     
     pool.restart ( True ) 
 
-    ## start 25 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 25 * [ 1000 ]
-
     # jobs = pool. imap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
-    jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    # jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -88,7 +107,7 @@ def test_pathos () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -96,14 +115,6 @@ def test_pathos () :
 
     return result 
 
-# =============================================================================
-## @class MakeHisto
-#  class that creates and fill a histogram 
-class MakeHisto(object)  :
-    """Class that creates and fill a histogram"""
-    def process (  self , *args ) :
-        return make_histo ( *args )
-    
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_1 () :
@@ -132,10 +143,9 @@ def test_pathos_pp_1 () :
 
     pool.restart ( True ) 
 
-    ## start 25 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 25 * [ 1000 ]
 
-    jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -146,7 +156,7 @@ def test_pathos_pp_1 () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -182,8 +192,6 @@ def test_pathos_pp_2 () :
 
     pool.restart ( True ) 
 
-    ## start 25 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 25 * [ 1000 ]
 
     mh   = MakeHisto() 
     jobs = pool.uimap ( mh.process  ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
@@ -197,7 +205,7 @@ def test_pathos_pp_2 () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -208,7 +216,6 @@ def test_pathos_pp_2 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## pass
     test_pathos      () 
     test_pathos_pp_1 () 
     test_pathos_pp_2 () 

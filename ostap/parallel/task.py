@@ -690,7 +690,7 @@ def task_executor ( item ) :
     with Statistics ()  as stat :    
         result = task.process ( jobid , *args ) 
         return jobid , result , stat
-    
+        
 # =============================================================================
 ## helper function to execute the function and collect stattistic
 #  (unfornately due to limitation of <code>parallel python</code> one cannot

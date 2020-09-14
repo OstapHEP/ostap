@@ -37,7 +37,7 @@ def make_histo  ( jobid , n ) :
     return h1 
 
 # =============================================================================
-## simple "merger" for historgams 
+## simple "merger" for histograms
 def merge_histos  ( h1 , h2 ) :
     """Simple ``merger'' for historgams"""
     if h1 :
@@ -59,7 +59,7 @@ class HTask(Task) :
     def process  ( self  , jobid , n ) :        
         import ROOT, random 
         h1 = ROOT.TH1F ( 'h%d' %  jobid , '' , 100 , 0 , 10 )
-        ## for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
+        for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
         self.__histo = h1 
         return self.__histo 
     def merge_results ( self , result ) :        
@@ -78,7 +78,12 @@ def test_mp_pathos () :
     if not WorkManager :
         logger.error ("test_mp_pathos: cannot import WorkManager")
         return 
-        
+    
+    from ostap.core.meta_info import root_version_int  as rv 
+    if rv <= 62200 :
+        logger.warning ("test_mp_pathos is disabled for ROOT %s" % rv )
+        return
+
     ## start 10 jobs, and for each job create the histogram with 100 entries 
     inputs = 10 * [ 1000 ]
 
@@ -87,7 +92,7 @@ def test_mp_pathos () :
     task     = HTask() 
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -106,13 +111,18 @@ def test_mp_pathos_generic () :
         logger.error ("test_mp_pathos_generic: cannot import WorkManager")
         return 
     
+    from ostap.core.meta_info import root_version_int  as rv 
+    if rv <= 62200 :
+        logger.warning ("test_mp_pathos_generic is disabled for ROOT %s" % rv )
+        return
+
     manager  = WorkManager ( silent = False )
     
     task     = GenericTask ( processor = make_histo   ,
                              merger    = merge_histos )    
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -134,7 +144,7 @@ def test_mp_pathos_pp_1 () :
     manager  = WorkManager ( silent = False , pp = True )
     result   = manager.process ( make_histo ,  inputs )
 
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -158,7 +168,7 @@ def test_mp_pathos_pp_2 () :
     task     = HTask() 
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -177,8 +187,6 @@ def test_mp_pathos_pp_generic () :
         logger.error ("test_mp_pathos_pp_generic: cannot import WorkManager")
         return 
 
-    inputs = tuple ( 200 * [ 100 ] ) 
-    
     manager  = WorkManager ( silent = False     ,
                              ## ppservers = '*' , 
                              pp = True
@@ -186,7 +194,7 @@ def test_mp_pathos_pp_generic () :
     task     = GenericTask ( processor = make_histo , merger  = merge_histos )
     result   = manager.process ( task ,  inputs ) 
     
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
