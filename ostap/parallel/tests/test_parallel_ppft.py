@@ -17,8 +17,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_parallel_ppft' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
 try : 
-    import dill, ppft
+    import dill
 except ImportError :
     logger.error('Can not import dill')
     dill = None    
@@ -60,6 +61,10 @@ class MakeHisto(object) :
 
 mh = MakeHisto()
 
+## start 15 jobs, and for each job create the histogram with 100 entries 
+inputs = 15 * [ 100 ]
+
+
 # =============================================================================
 ## test parallel python with function 
 def test_ppft_1 () :
@@ -74,14 +79,12 @@ def test_ppft_1 () :
         return 
         
     vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_ppft_1 is disabled for Python %s" % vi )
+    if 3<= vi.major and 6 <= vi.minor : 
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_ppft_1 is disabled for Python %s" % vip )
         return
     
     job_server = ppft.Server()
-    
-    ## start 100 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 50 * [ 100 ]
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) , () , () ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
@@ -93,7 +96,7 @@ def test_ppft_1 () :
             result.Add ( histo ) 
             del histo 
 
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -116,14 +119,12 @@ def test_ppft_2() :
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_ppft_2 is disabled for Python %s" % vi )
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_ppft_2 is disabled for Python %s" % vip )
         return
     
     job_server = ppft.Server()
     
-    ## start 100 jobs, and for each job create the histogram with 1000 entries 
-    inputs = 50 * [ 100 ]
-
     mh = MakeHisto() 
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) , () , () ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
@@ -135,7 +136,7 @@ def test_ppft_2() :
             result.Add ( histo ) 
             del histo 
 
-    logger.info ( "Histogram is %s" % result )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 

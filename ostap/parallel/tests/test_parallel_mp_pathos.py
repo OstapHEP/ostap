@@ -83,10 +83,13 @@ def test_mp_pathos () :
     if rv <= 62200 :
         logger.warning ("test_mp_pathos is disabled for ROOT %s" % rv )
         return
-
-    ## start 10 jobs, and for each job create the histogram with 100 entries 
-    inputs = 10 * [ 1000 ]
-
+    
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_mp_pathos is disabled for Python %s" % vip )
+        return
+ 
     manager  = WorkManager ( silent = False )
 
     task     = HTask() 
@@ -115,6 +118,12 @@ def test_mp_pathos_generic () :
     if rv <= 62200 :
         logger.warning ("test_mp_pathos_generic is disabled for ROOT %s" % rv )
         return
+    
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_mp_pathos_generic is disabled for Python %s" % vip )
+        return
 
     manager  = WorkManager ( silent = False )
     
@@ -141,6 +150,12 @@ def test_mp_pathos_pp_1 () :
         logger.error ("test_mp_pathos_1: cannot import WorkManager")
         return 
         
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_mp_pathos_pp_1 is disabled for Python %s" % vip )
+        return
+
     manager  = WorkManager ( silent = False , pp = True )
     result   = manager.process ( make_histo ,  inputs )
 
@@ -163,6 +178,12 @@ def test_mp_pathos_pp_2 () :
         logger.error ("test_mp_pathos_2: cannot import WorkManager")
         return 
     
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_mp_pathos_pp_2 is disabled for Python %s" % vip )
+        return
+
     manager  = WorkManager ( silent = False , pp = True )
 
     task     = HTask() 
@@ -186,6 +207,12 @@ def test_mp_pathos_pp_generic () :
     if not WorkManager :
         logger.error ("test_mp_pathos_pp_generic: cannot import WorkManager")
         return 
+
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_mp_pathos_pp_generic is disabled for Python %s" % vip )
+        return
 
     manager  = WorkManager ( silent = False     ,
                              ## ppservers = '*' , 

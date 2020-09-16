@@ -70,12 +70,8 @@ def test_pathos () :
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_pathos is disabled for Python %s" % vi )
-        return
-
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_pathos is disabled for Python %s" % vi )
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_pathos is disabled for Python %s" % vip )
         return
     
     from ostap.core.meta_info import root_version_int  as rv 
@@ -130,7 +126,8 @@ def test_pathos_pp_1 () :
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_pathos_pp_1 is disabled for Python %s" % vi )
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_pathos_pp_1 is disabled for Python %s" % vip )
         return
 
     from pathos.helpers import cpu_count
@@ -179,7 +176,8 @@ def test_pathos_pp_2 () :
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_pathos_pp_2 is disabled for Python %s" % vi )
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_pathos_pp_2 is disabled for Python %s" % vip )
         return
 
     from pathos.helpers import cpu_count

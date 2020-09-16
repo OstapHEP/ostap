@@ -62,7 +62,8 @@ def test_multiprocess () :
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
-        logger.warning ("test_multiprocess is disabled for Python %s" % vi )
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test_multiprocess is disabled for Python %s" % vip )
         return
     
     ncpus = multiprocess.cpu_count() 
