@@ -1,5 +1,3 @@
-string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
-string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
@@ -50,7 +48,6 @@ if (Python_VERSION VERSION_LESS "3.3")
 endif() 
 
 set (PREFIX ${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ )
-message (prefix " " ${PREFIX} ) 
 
 foreach(filename ${allfiles})
 

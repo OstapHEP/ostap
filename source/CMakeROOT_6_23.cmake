@@ -1,5 +1,7 @@
 find_package(ROOT 6 CONFIG REQUIRED )
 
+message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+
 # =============================================================================
 ## Locate proper Python/PythonLibs 
 find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config)
@@ -39,6 +41,7 @@ elseif (PY3VERSION_ROOT)
   set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;Python3::Python")
 endif () 
 
+set(PYTHON_VERSION ${Python_VERSION}  )
 
 # =============================================================================
 ## Locate GSL 
@@ -69,6 +72,11 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/build.config"
+)
+                                                           
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
   "${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h"

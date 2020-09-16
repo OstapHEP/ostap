@@ -1,10 +1,17 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+message ( "----> CMAKE  version   : " ${CMAKE_VERSION} ) 
 
-## ## try to ccache when available 
-## find_program(CCACHE_PROGRAM ccache)
-## if(CCACHE_PROGRAM)
-##     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
-## endif()
+string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
+string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
+
+cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
+cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
+
+if ( ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10" ) 
+   cmake_host_system_information(RESULT OSTAP_OS_NAME    QUERY OS_NAME)
+   cmake_host_system_information(RESULT OSTAP_OS_VERSION QUERY OS_VERSION)
+   cmake_host_system_information(RESULT OSTAP_OS_RELEASE QUERY OS_RELEASE)
+endif() 
 
 project(ostap LANGUAGES CXX)
 include(CTest)
@@ -16,8 +23,7 @@ set(OSTAP_VERSION_TWEAK 0)
 
 set(OSTAP_VERSION ${OSTAP_VERSION_MAJOR}.${OSTAP_VERSION_MINOR}.${OSTAP_VERSION_PATCH}.${OSTAP_VERSION_TWEAK})
 
-message ( " CMAKE version:" ${CMAKE_VERSION} ) 
-message ( " OSTAP version:" ${OSTAP_VERSION} )
+message ( "----> OSTAP  version   : " ${OSTAP_VERSION} )
 
 set(OSTAP_PYTHON_SITE_DIR "")
 
@@ -56,4 +62,5 @@ set (CPACK_PACKAGE_VERSION_PATCH "${OSTAP_VERSION_PATCH}")
 set (CPACK_PACKAGE_VERSION_TWEAK "${OSTAP_VERSION_TWEAK}")
 set (CPACK_PACKAGE_ICON           ${CMAKE_CURRENT_SOURCE_DIR}/docs/ostap.jpg )
 include (CPack)
+
 

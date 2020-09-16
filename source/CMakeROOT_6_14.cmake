@@ -4,6 +4,12 @@
 ## find_package(ROOT 6 CONFIG REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 find_package(ROOT 6 CONFIG REQUIRED COMPONENTS Smatrix Core MathCore MathMore Minuit2 GenVector Hist Matrix RIO TMVA Tree Thread TreePlayer RooFit RooFitCore PyROOT)
 
+if (ROOT_FOUND) 
+message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+message ( "----> ROOT   include   : " ${ROOT_INCLUDE_DIRS} )
+message ( "----> ROOT   libraries : " ${ROOT_LIBRARIES} )
+endif()
+
 # =============================================================================
 ## Locate GSL 
 ## since we are using MathMore, GSL *must be* somewhere around
@@ -23,7 +29,12 @@ if ( NOT EXISTS "${GSL_ROOT_DIR}" )
 endif()
 
 find_package(GSL REQUIRED GSL_ROOT_DIR)
-
+if (GSL_FOUND) 
+message ( "----> GSL    version   : " ${GSL_VERSION} )
+message ( "----> GSL    include   : " ${GSL_INCLUDE_DIRS} )
+message ( "----> GSL    libraries : " ${GSL_LIBRARIES} )
+else()
+endif() 
 # =============================================================================
 ## Locate Python/PythonLibs 
 ## since we are using MathMore, GSL *must be* somewhere around
@@ -33,16 +44,43 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
                  OUTPUT_VARIABLE PYVERSION_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
+if ( ${CMAKE_VERSION}  VERSION_LESS "3.12") 
+   find_package(Python ${PYVERSION_ROOT} COMPONENTS Interpreter Development )
+   message ( "----> Python version   : " ${Python_VERSION}      )
+   message ( "----> Python include   : " ${Python_INCLUDE_DIRS} )
+   message ( "----> Python libraries : " ${Python_LIBRARIES}    )
+   set( PYTHON_INCLUDE_DIRS ${Python_INCLUDE_DIRS} )
+   set( PYTHON_LIBRARIES    ${Python_LIBRARIES}    )
+   set( PYTHON_VERSION      ${Python_VERSION}      )
+elseif ( ${PYVERSION_ROOT} VERSION_LESS "3.0" ) 
+   find_package(Python2 ${PYVERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+   message ( "----> Python version   : " ${Python2_VERSION}      )
+   message ( "----> Python include   : " ${Python2_INCLUDE_DIRS} )
+   message ( "----> Python libraries : " ${Python2_LIBRARIES}    )
+   set( PYTHON_INCLUDE_DIRS ${Python2_INCLUDE_DIRS} )
+   set( PYTHON_LIBRARIES    ${Python2_LIBRARIES}    )
+   set( PYTHON_VERSION      ${Python2_VERSION}      )
+else() 
+   find_package(Python3 ${PYVERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+   message ( "----> Python version   : " ${Python3_VERSION}      )
+   message ( "----> Python include   : " ${Python3_INCLUDE_DIRS} )
+   message ( "----> Python libraries : " ${Python3_LIBRARIES}    )
+   set( PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS} )
+   set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
+   set( PYTHON_VERSION      ${Python3_VERSION}      )
+endif() 
 
-
-find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
-find_package(PythonLibs                     REQUIRED )
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-register")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/build.config"
+)
 
 configure_file (
   "${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap/Config.h.in"
@@ -101,6 +139,7 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     DESTINATION in
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/build.config      DESTINATION lib           )
 
 install(EXPORT ostap-export
   FILE         OstapTargets.cmake

@@ -1,0 +1,12 @@
+# OSTAP build configuration 
+# OSTAP  version : @OSTAP_VERSION@ 
+# ROOT   version : @ROOT_VERSION@
+# PYTHON version : @PYTHON_VERSION@ 
+# GSL    version : @GSL_VERSION@ 
+# Build          : @OSTAP_BUILD_TIMESTAMP@ at @OSTAP_DOMAIN@
+# System         : @CMAKE_HOST_SYSTEM_NAME@.@CMAKE_HOST_SYSTEM_PROCESSOR@
+# OS name        : @OSTAP_OS_NAME@
+# OS release     : @OSTAP_OS_RELEASE@
+# OS version     : @OSTAP_OS_VERSION@
+# C++ compiler   : @CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@ 
+# C++ compiler   : @CMAKE_CXX_COMPILER@ 

@@ -257,6 +257,9 @@ def interpolate ( func , abscissas , spline , *args ) :
 
     from ostap.math.interpolation import points 
     table = points ( func , abscissas )
+
+    ## print ( "Table", type ( table ) , table.size () ) 
+    
     sc    = Ostap.Math.Interpolation.bspline ( table , bs )
     if sc.isFailure () : raise TypeError("Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
     
