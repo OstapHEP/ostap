@@ -137,7 +137,7 @@ class  CleanUp(object) :
         for o in values :
             if o and isinstance ( o ,  str ) :
                 self._tmpdirs.add ( o )
-                logger.debug ( 'temporary directory     added %s' % o )
+                logger.verbose ( 'temporary directory     added %s' % o )
                 
     @property 
     def tmpfiles ( self ) :
@@ -150,7 +150,7 @@ class  CleanUp(object) :
         for o in other :
             if o and isinstance ( o , str ) : 
                 self._tmpfiles.add ( o )
-                logger.debug ( 'temporary file          added %s' % o )
+                logger.verbose ( 'temporary file          added %s' % o )
 
     @property
     def trash ( self ) :
@@ -175,7 +175,7 @@ class  CleanUp(object) :
                 prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )
             tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
             CleanUp._tmpdirs.add ( tmp )
-            logger.debug ( 'temporary directory requested %s' % tmp   )
+            logger.verbose ( 'temporary directory requested %s' % tmp   )
             return tmp        
 
     
@@ -197,7 +197,7 @@ class  CleanUp(object) :
             _file.close()
             os.unlink(fname)
             assert not os.path.exists ( fname )
-            logger.debug ( 'temporary file      requested %s' % fname )
+            logger.verbose  ( 'temporary file      requested %s' % fname )
             return fname
 
     @staticmethod
@@ -217,7 +217,7 @@ class  CleanUp(object) :
         """Protect the temporary from removal"""        
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
             CleanUp._protected.add ( fname ) 
-            logger.debug  ( 'the file is protected: %s ' % fname )
+            logger.verbose ( 'the file is protected: %s ' % fname )
             
     @staticmethod
     def remove_file ( fname ) :
@@ -226,7 +226,7 @@ class  CleanUp(object) :
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
 
             if fname in CleanUp._protected :
-                logger.debug  ( 'do not remove the protected file : %s ' % fname )
+                logger.verbose ( 'do not remove the protected file : %s ' % fname )
                 return False
 
             logger.verbose ( 'remove temporary file : %s' % fname )

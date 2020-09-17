@@ -38,11 +38,11 @@ __all__     = (
     'get_ppservers'    , ## get list of PP-servers  
     'get_remote_conf'  , ## get PP-configuration for remote PP-server
     'ping'             , ## ping remote host
-    'good_pings'       , ## get alive hosts 
+    'good_pings'       , ## get alive hosts
+    'get_local_port'    , ## get local port number 
     )
-
 # =============================================================================
-from builtins import range
+from   builtins import range
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
@@ -288,6 +288,52 @@ def good_pings ( *remotes ) :
             if ping ( host ) : good.append ( host )
             
     return tuple ( good ) 
+
+# =============================================================================
+_patterns = []
+
+# ============================================================================
+## get the local port number from expressions:
+#  valid expressions (leading and trailing spacdes are ignored)
+#   - positive integer number
+#   - ' positive-integer-number '
+#   - ' localhost:positive-integer-number ' ##  case insensitive 
+#   - ' positive-integer-number:localhost ' ##  case insensitive 
+def get_local_port ( expression ) :    
+    """Get the local port number from expressions
+    Valid expressions (leading and trailing spacdes are ignored)
+    - positive integer-number
+    - `'  positive-integer-number  '`
+    - `'  localhost:positive-integer-number  '` ##  case insensitive 
+    - `'  positive-integer-number:localhost  '` ##  case insensitive 
+
+    """
+    from ostap.core.ostap_types import string_types, integer_types
+    
+    if isinstance ( expression , integer_types ) and 0 < expression :
+        return expression
+
+    if not _patterns :
+        
+        import re
+        _patterns.append ( re.compile ( r'\A(\d+)\Z'            , re.I ) ) 
+        _patterns.append ( re.compile ( r'\Alocalhost:(\d+)\Z'  , re.I ) ) 
+        _patterns.append ( re.compile ( r'\A\A(\d+):localhost\Z', re.I ) ) 
+        
+    if isinstance ( expression , string_types ) :
+
+        expr = expression.strip().lower()
+        for pattern in _patterns :
+
+            match = pattern.match ( expr )
+            if not match : continue
+            
+            port = int ( match.group ( 1 ) )
+            if 0 < port : return port            ## RETURN 
+
+    return None 
+                    
+# =============================================================================
 
 # =============================================================================
 if '__main__' == __name__ :

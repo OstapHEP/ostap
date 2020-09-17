@@ -14,7 +14,8 @@ __version__ = '$Revision$'
 __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
-    'ppServer' , ## helper class to start remote ppserver (for parallel python)
+    'ppServer'     , ## helper class to start remote ppserver (for parallel python)
+    'show_tunnels' , ## show the table of tunnels 
     )
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -66,6 +67,7 @@ class ppServer(object) :
 
         self.__session = None
         self.__pid     = 0
+        self.__active  = False
         
         ## split user@remote
         remote_user , at , remote = remote.rpartition('@')
@@ -88,31 +90,33 @@ class ppServer(object) :
         self.__tunnel       = PS.Tunnel  ( 'SSH-tunnel %s' %  self.remote_host  )
         self.tunnel.connect ( self.remote_host )
 
-        logger.debug ('Create SSH tunnel: %s' %  self.tunnel )
-            
+        logger.debug ('Create SSH tunnel : %s' %  self.tunnel )
+        
         self.__local_port   = self.tunnel._lport 
         self.__remote_port  = self.tunnel._rport 
                                   
         ## SSH session
         self.__session      = PS.Pipe ( 'SSH-session' , host = self.remote_host )  
 
-        logger.debug ('Create SSH session: %s'%  self.session )
+        logger.debug ('Create SSH session: %s' % self.session )
         
-        import logging
-        verbose = logging.root.manager.disable <= logging.DEBUG 
-        self.session.verbose = verbose
-        self.tunnel .verbose = verbose 
-        del logging
+        # import logging
+        # verbose = logging.root.manager.disable <= logging.DEBUG 
+        # self.session.verbose = verbose
+        # self.tunnel .verbose = verbose 
+        # del logging
 
-        # ==================================================================
-        # Get configuration information for the given remote host
-        if ( not environment ) or ( not script ) or ( not profile ) :
-            from ostap.parallel.utils import get_remote_conf 
-            e , s , p = get_remote_conf ( remote ) 
-            if e and not environment : environment = e
-            if s and not script      : script      = s
-            if p and not profile     : profile     = p 
-
+        from ostap.logger.logger import keepLevel 
+        with keepLevel () : 
+            # =================================================================
+            # Get configuration information for the given remote host
+            if ( not environment ) or ( not script ) or ( not profile ) :
+                from ostap.parallel.utils import get_remote_conf 
+                e , s , p = get_remote_conf ( remote ) 
+                if e and not environment : environment = e
+                if s and not script      : script      = s
+                if p and not profile     : profile     = p
+        
         if script :
             if os.path.exists ( script ) and os.path.isfile ( script ) : pass
             else :
@@ -121,18 +125,21 @@ class ppServer(object) :
                                   
         ## temporary directory on remote host 
         self.__tmpdir = None 
-        if environment or script or profile : 
+        if environment or script or profile :
+            logger.verbose( 'A:Create remote temporary directory at %s' % self.remote_host ) 
             self.session  ( command =  'mktemp -d -t pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
             self.session.launch()
             r = self.session.response()
             if r and 1 < len ( r ) : 
                 self.__tmpdir = r [:-1] 
-                logger.verbose ('Created remote temporary directory %s:%s' % ( self.remote_host , self.__tmpdir ) ) 
+                logger.debug   ('Created remote temporary directory %s:%s' % ( self.remote_host , self.__tmpdir ) ) 
             else :
                 logger.error   ('Cannot create remote temporary directory at %s' % self.remote_host ) 
-                
+
         self.__environment = None
         if  environment :
+            ee = environment.replace  ( '\n' , '\n env> ' )
+            logger.verbose ( "Processing the environment:\n env> %s" % ee ) 
             import ostap.utils.cleanup as CU
             tmpfile = CU.CleanUp.tempfile ( prefix = 'env-' , suffix = '.sh' )
             with open ( tmpfile , 'w' ) as tf :
@@ -146,10 +153,11 @@ class ppServer(object) :
             if r : logger.error ('SCP: response from %s : %s' % ( copier , r ) ) 
             del copier
             self.__environment = os.path.join ( self.__tmpdir , os.path.basename ( tmpfile ) )
-            logger.verbose ('SCP: environment %s:%s is copied' % ( self.remote_host , self.__environment ) )
+            logger.debug ('Environment %s is copied to %s:%s ' % ( tmpfile , self.remote_host , self.environment ) )
             
         self.__script = None 
         if  script and os.path.exists ( script ) and os.path.isfile ( script ) :
+            logger.verbose  ("Processing the script %s" % script )             
             copier      = PS.Copier ( 'SSH-copier' )
             destination = "%s:%s" % ( self.__remote_host , self.__remote_tmpdir )
             copier( source = script , destination = destination )
@@ -158,11 +166,11 @@ class ppServer(object) :
             if r : logger.error ('SPC: response from %s : %s' % ( copier , r ) ) 
             del copier
             self.__script = os.path.join ( self.__tmpdir , os.path.basename ( script ) )
-            logger.verbose ('SCP: script      %s:%s is copied' %  ( self.remote_host , self.__script ) )
+            logger.debug ('Script      %s is copied to %s:%s' %  ( script , self.remote_host , self.__script ) )
                 
-
         self.__profile = None 
         if profile :
+            logger.verbose ("Processing the profile %s" % profile )             
             self.session  ( command =  '[ -f %s ] && echo "1" || echo "0" ' %  profile  )
             self.session.launch()
             r = self.session.response()
@@ -171,7 +179,7 @@ class ppServer(object) :
             except :
                 pass
             if self.__profile :
-                logger.verbose ("Profile %s:%s is found"     %  ( self.remote_host , profile ) )
+                logger.debug   ("Profile %s:%s is found"     %  ( self.remote_host , profile ) )
             else : 
                 logger.warning ("Profile %s:%s is NOT found" %  ( self.remote_host , profile ) )
 
@@ -193,59 +201,70 @@ class ppServer(object) :
         else             : 
             commands.append ( 'ppserver -p %-7d'                       %   self.remote_port  ) 
             pattern = '[P,p]ython *.*ppserver *-p *%d'                 %   self.remote_port 
-
-            
-        command = ' && '.join ( commands ) 
+    
+        command = ' && '.join ( commands )
         self.session ( command = command , background = True , options = '-f' ) 
         self.session.launch()
         r = self.session.response()
         if r : logger.error ('SERVER:response from %s : %s' % ( self.session , r ) )
+        logger.debug ( 'Command launched at %s: %s' % ( self.remote_host , command ) )   
+        logger.verbose ( "Use regex at %s to locate PID:'%s'" % ( self.remote_host , pattern ) ) 
 
-
+        ## get remote PID 
         for i in range ( 15 ) :
             try :
                 import time 
                 time.sleep ( 1 )
                 self.__pid = PC.getpid ( pattern , self.remote_host )
-                logger.verbose ('PID for remote ppserver is %s:%d' % ( self.remote_host , self.__pid ) )
+                logger.debug ('PID for remote ppserver is %s:%d' % ( self.remote_host , self.__pid ) )
             except OSError : pass
             if self.__pid > 0 : break 
         else :
-            logger.warning ('Cannot acquire PID for remote ppserver at %s:%s' % ( self.remote_host , self.remote_port ) )
+            logger.error ('Cannot acquire PID for remote ppserver at %s:%s' % ( self.remote_host , self.remote_port ) )
 
         sys.stdout.flush () ## needed? 
         sys.stdin .flush () ## needed ?
 
-        logger.debug   ( "%s" % self )
-        logger.verbose ( command     )
-
         if not silent : 
             logger.info ( 'Tunnel: %6d -> %s:%s pid:%-6d' % ( self.local_port , self.remote_host , self.remote_port , self.pid ) )
-            
-    def start ( self ) : return self
+        else  : logger.debug   ( "Tunnel:%s" % self )
+
+        self.start ()
+
+    ##  start it 
+    def start ( self ) :
+        if not self.active : 
+            self.add_tunnel ( self.stamp )
+            self.__active = True  
+        return self
+    
     def end   ( self ) :
 
         sys.stdout.flush () ## needed ?
         sys.stdin .flush () ## needed ? 
         
-        import logging
-        verbose = logging.root.manager.disable <= logging.DEBUG 
-        del logging
-        
-        if self.session : self.session.verbose = verbose 
-        if self.tunnel  : self.tunnel .verbose = verbose 
+        ## import logging
+        ## verbose = logging.root.manager.disable <= logging.DEBUG 
+        ## del logging        
+        ## if self.session : self.session.verbose = verbose 
+        ## if self.tunnel  : self.tunnel .verbose = verbose 
+
+        ## import logging
+        ## print 'DISABLE', logging.root.manager.disable 
         
         if self.__pid :
             try  :
                 if self.session :  # and verbose :
                     command = 'kill -s SIGUSR1 %d ' % self.__pid 
+                    self.session.verbose = False
                     self.session ( command = command )
                     self.session.launch   ()
                     r = self.session.response()
-                    if r : logger.info ( '%s : %s : %s' %  ( self.remote_host , command , r ) )                    
-                logger.debug ( 'Kill remote process %s:%s' % ( self.remote_host , self.__pid ) )
+                    if r : logger.error (' Sending signal: %s : %s : %s' %  ( self.remote_host , command , r ) )
+                logger.debug ( 'Killing remote process %s:%s' % ( self.remote_host , self.__pid ) )
                 PC.kill ( self.__pid , self.remote_host )
             except OSError :
+                logger.warning ( 'Failure to kill remote process %s:%s' % ( self.remote_host , self.__pid ) )
                 pass
         self.__pid = None
 
@@ -254,33 +273,48 @@ class ppServer(object) :
             commands = []
             if self.__environment : commands.append ( 'rm -f %s' %  self.__environment )
             if self.__script      : commands.append ( 'rm -f %s' %  self.__script      )
-            if self.__tmpdir      : commands.append ( 'rmdir --ignore-fail-on-non-empty %s' %  self.__tmpdir ) 
+            if self.__tmpdir      : commands.append ( 'rmdir --ignore-fail-on-non-empty %s' %  self.__tmpdir )
+            ##
             if commands :
                 command = ' ; '.join ( commands )
-                self.session ( command = command ) 
+                logger.debug  ('Remove remote files at %s using "%s"' % ( self.remote_host , command ))
+                self.session.verbose = False  
+                self.session ( command = command )
                 self.session.launch()
                 r = self.session.response () 
-                if r : logger.verbose ( "Response: %s" % r )                
+                if r : logger.warning ( "Response for %s is  %s" % ( command  , r ) )                 
             
         if self.session :
-            logger.debug ( 'Kill session      %s' % self.session ) 
+            self.session.verbose = False  
+            logger.debug ( 'kill ssh-session %s' % self.remote_host )
             self.session.kill      () 
 
+            
         if self.tunnel  :
-            logger.debug ( 'Disconnect tunnel %s' % self.tunnel  ) 
+            logger.debug ( 'Disconnect tunnel %s ->%s' % ( self.local , self.remote ) )  
+            self.tunnel.verbose  = False 
             self.tunnel.disconnect ()
 
         self.__tunnel  = None
         self.__session = None
-
+        self.__active  = False
+        
+        self.remove_tunnel ( self.stamp )
+        
+    @property
+    def active( self ) :
+        """```running'' : is ppserver active?"""
+        return self.__active  
+        
     ## CONTEXT MANAGER: empty
-    def __enter__ ( self      ) : return self.start ()
+    def __enter__ ( self      ) : return self 
 
     ## CONTEX MANAGER: exit 
     def __exit__  ( self, *_  ) : return self.end   () 
 
     ## delete, close and cleanup 
-    def __del__   ( self )      :        self.end   ()
+    def __del__   ( self )      :
+        if self.active : self.end   ()
 
     # =========================================================================
     ## Readable printout: representation of ppServer/Tunnel
@@ -346,7 +380,50 @@ class ppServer(object) :
         """``remote'' : remote server/tunnel address"""
         return "%s:%s" % ( self.__remote_host , self.__remote_port )
 
+    @property
+    def  stamp  ( self ) :
+        """``stamp'' : (local,remote) pair for the tunnel"""
+        return self.local, self.remote
 
+    ## list of open tunnels 
+    _open_pptunnels = []
+
+    @classmethod 
+    def add_tunnel ( klass , stamp  ) :
+        klass._open_pptunnels.append ( stamp )
+
+    @classmethod 
+    def remove_tunnel ( klass , stamp ) :
+        if stamp in klass._open_pptunnels :
+            klass._open_pptunnels.remove ( stamp ) 
+    @classmethod
+    def open_pptunnels ( klass ) :
+        return klass._open_pptunnels
+    
+
+# =============================================================================
+## show currently opened tunnels
+def show_tunnels ( tunnels = None ) :
+    """Show currently opened tunnels
+    """
+    
+    if tunnels is None : tunnels = ppServer.open_pptunnels
+
+    rows = [  ( "local port"  , 'remote host:port' ) ]
+    
+    for tunnel in tunnels :
+        
+        if isinstance ( tunnel , ppServer ) : row = tunnel.stamp 
+        else                                : row = tunnel
+        
+        rows.append ( row )
+        
+    import ostap.logger.table as Table
+    table = Table.table (
+        rows , title = 'Opened %d ssh/pp-tunnels' % len ( tunnels ) , prefix = '# ')
+    logger.info ( 'Opened %dssh/pp-tunnels\n%s' %  ( len  ( tunnels ) , table ) )
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

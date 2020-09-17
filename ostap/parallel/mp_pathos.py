@@ -63,27 +63,12 @@ def get_pps ( pool ) :
     return pathos.parallel.__STATE.get ( pool._id , None )
 
 # =============================================================================
-from ostap.parallel.task import ( Task          , TaskMerger    , 
-                                  Statistics    , StatMerger    ,
-                                  task_executor , func_executor )
+from ostap.parallel.task  import ( Task          , TaskMerger    , 
+                                   Statistics    , StatMerger    ,
+                                   task_executor , func_executor )
 
 # =============================================================================
-from ostap.utils.utils    import get_open_fds  
-
-# =============================================================================
-## helper function to execute the function and collect stattistic
-#  (unfornately due to limitation of <code>parallel python</code> one cannot
-#  use decorators here :-(
-def func_executor2 ( *items ) :
-    """Helper function to execute the task and collect job execution statistic
-    - unfornately due to limitation of ``parallel python'' one cannot
-    use python decorators here :-(
-    """
-    ## print ( 'EXECUTOR!', ) 
-    return 1, 1
-
-def pptask ( *args ) :
-    return 1 , 1 
+from ostap.parallel.utils import get_local_port  
 
 # =============================================================================
 ## @class WorkManager
@@ -140,14 +125,23 @@ class WorkManager ( object ) :
                 if p not in pps : 
                     pps.append ( p )
             ppservers = tuple ( pps )
+            
+            ## check local ports
+            local_ports = []
+            remotes     = []
 
+            for p in ppservers :
+                port = get_local_port ( p )
+                if port : local_ports.append ( "localhost:%d" % port )
+                else    : remotes.append     ( p ) 
+                
             ## check alive remote hosts 
             from ostap.parallel.utils import good_pings 
-            alive     = good_pings ( *ppservers )
-            if len ( alive ) != len ( ppservers ) :
-                dead = list ( set ( ppservers ) - set ( alive ) )
+            alive     = good_pings ( *remotes )
+            if len ( alive ) != len ( remotes ) :
+                dead = list ( set ( remotes ) - set ( alive ) )
                 logger.warning ("Dead remote hosts: %s" % dead ) 
-            ppservers = alive
+            remotes = alive
             
             environment = kwa.pop ( 'environment' , ''   )
             script      = kwa.pop ( 'script'      , None )
@@ -163,15 +157,16 @@ class WorkManager ( object ) :
                 from ostap.utils.utils import gen_password 
                 secret = gen_password ( 16 )
 
-            from ostap.parallel.pptunnel import ppServer 
+            from ostap.parallel.pptunnel import ppServer, show_tunnels  
             ppsrvs = [ ppServer ( remote                    ,
                                   environment = environment ,
                                   script      = script      ,
                                   profile     = profile     ,
                                   secret      = secret      ,
                                   timeout     = timeout     ,
-                                  silent      = silent      ) for remote in ppservers ]
+                                  silent      = silent      ) for remote in remotes ]
             
+
             ppbad  = [ p for p in ppsrvs if not p.pid ]
             ppgood = [ p for p in ppsrvs if     p.pid ]
             
@@ -191,13 +186,18 @@ class WorkManager ( object ) :
                 import pathos.parallel as PP
                 _ds = PP.pp.Server.default_secret 
                 PP.pp.Server.default_secret = secret 
-                
+
+            ## add remote connections to the list of local ports 
+            for p in self.ppservers : local_ports.append ( p.local )
+            self.__locals = tuple ( local_ports ) 
+
             from pathos.pools import ParallelPool 
             self.__pool      = ParallelPool ( ncpus = self.ncpus , servers = self.locals  )
 
             ## end of the trick
-            PP.pp.Server.default_secret = _ds 
-                                    
+            PP.pp.Server.default_secret = _ds
+            if not silent and self.ppservers : show_tunnels ( self.ppservers )
+            
         else :
             
             ## from pathos.multiprocessing import ProcessPool 
@@ -208,7 +208,7 @@ class WorkManager ( object ) :
         ps = ps.replace( '<pool ' , '' ).replace  ('>','').replace ('servers','remotes')
         for p in self.ppservers : ps = ps.replace ( p.local , p.remote )
         if not silent : logger.info ( 'WorkManager is %s' % ps )
-        
+
         self.stats  = {}
         self.silent = True if silent else  False 
 
@@ -225,7 +225,7 @@ class WorkManager ( object ) :
     @property
     def locals  ( self ) :
         """``locals'' : list of (local) tunnel ports"""
-        return tuple (  ( p.local for p in self.ppservers ) )
+        return self.__locals 
     
     @property
     def remotes ( self ) :

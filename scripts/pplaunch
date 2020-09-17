@@ -11,12 +11,16 @@
 # =============================================================================
 from __future__ import print_function 
 # =============================================================================
-"""Helper script to launch pp-server on remote host.
-It builds the SSH   tunnel to remote host, setup the environment
-and finally launch pp-server on remote host
+"""Launch pp-server on remote hosts via ssh-tunnel
+- SSH tunnels to remote hosts are created
+- remote hosts are configured
+- pp-servers start at remote hosts
 """
 # =============================================================================
-__all__ = () 
+__all__ = ()
+# =============================================================================
+import ROOT 
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 # =============================================================================
 ## create the argument parser 
 def make_parser () :
@@ -27,13 +31,18 @@ def make_parser () :
                               description = __doc__ )
     
     group1 = parser.add_mutually_exclusive_group()    
-    group1.add_argument ( 
+    parser.add_argument ( 
         "-q" , "--quiet"       ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
         help    = "Quite processing [default: %(default)s]" ,
+        )    
+    group1.add_argument ( 
+        "-d" , "--debug"     ,
+        dest    = 'Debug'    , 
+        action  = 'store_true' ,
+        help    = "Debug processing [default: %(default)s]" ,
         )
-    
     group1.add_argument ( 
         "--verbose"     ,
         dest    = 'Verbose'    , 
@@ -83,17 +92,23 @@ if '__main__' == __name__ :
     
     # =============================================================================
     from ostap.logger.logger import getLogger
-    logger = getLogger ( 'pplaunch' )
+    logger = getLogger ( 'ostap.pplaunch' )
     # =============================================================================
-    
+
+    logger.info ( "Launch remote pp-server via ssh tunnel")
+        
     parser = make_parser() 
     
     import sys, os 
     args = sys.argv[1:]
+
     
     config = parser.parse_args ( args )
-    logger.debug ( 'Configuration:%s ' % config) 
 
+    if not config.Quiet :
+        logger.info ( "Launch remote pp-server via ssh tunnel:\n%s" % __doc__ )
+    
+    logger.debug ( 'Configuration:%s ' % config) 
 
     remotes = config.remotes 
     if 1 == len ( remotes ) :
@@ -103,11 +118,11 @@ if '__main__' == __name__ :
             from ostap.parallel.utils import get_ppservers
             import socket
             local_host = socket.getfqdn ().lower()  
-            remotes = get_ppservers ( local_host )
+            remotes    = get_ppservers ( local_host )
             assert remotes, 'No remotes are extracted from configuration'
 
     remotes = tuple ( remotes )
-    if config.Verbose :
+    if config.Verbose or config.Debug :
         logger.info ( "List of remote hosts: %s" % list ( remotes ) )
                       
     ## check alive remote hosts 
@@ -119,63 +134,120 @@ if '__main__' == __name__ :
         remotes = tuple ( alive ) 
 
     assert remotes, 'No valid remote hosts are defined!'
-    if config.Verbose :
+    if config.Verbose or config.Debug :
         logger.info ( "List of good remote hosts: %s" % list ( remotes ) )
-    
-    kwargs  = {}
-    
+
+    kwargs = {} 
     if config.Config :
         assert os.path.exist  ( config.Config ) and \
                os.path.isfile ( config.Config ), \
-               "Non exsicting config scrips %s is specifid " % config.Config
-
-        kwargs [ 'script' ] = config.Script
-        if config.Verbose :
-            logger.info ( "Configurtaion script: %s" % config.Script )
+               "Invalid config scrips %s is specifid " % config.Config        
+        kwargs [ 'script' ] = config.Config
+        if config.Verbose or config.Debug :
+            logger.info ( "Configuration script: %s" % config.Script )
         
     if config.Profile :
         kwargs [ 'profile' ] = config.Profile
-        if config.Verbose :
-            logger.info ( "Configurtaion script: %s" % config.Script )
-            
-    if not config.Secret is None :
-        kwargs [ 'secret' ] = config.Secret
-        if config.Verbose :
-            logger.info ( "Secret: %s" % config.Secret )
+        if config.Verbose or config.Debug :
+            logger.info ( "Configuration script: %s" % config.Script )
 
+    secret = config.Secret
+    if not secret :
+        from ostap.utils.utils import gen_password 
+        secret = gen_password ( 6 )
+        logger.debug ( 'Secret if auto-generated: %s' % secret ) 
+        kwargs [ 'secret' ] = secret 
+        if config.Verbose or config.Debug:
+            logger.info ( "Secret: %s" %  secret  )
+        
     if config.Timeout and 0 < config.Timeout :
         kwargs [ 'timeout' ] = config.Timeout
-        if config.Verbose :
+        if config.Verbose or config.Debug:
             logger.info ( "Timeout: %s" % config.Timeout )
             
     kwargs [ 'silent' ] = config.Quiet
-    if config.Verbose : logger.info ( "Kwrgs: %s" % kwargs  )
+    if config.Verbose or config.Debug:
+        logger.info ( "Confiration: %s" % kwargs  )
     
-    from ostap.parallel.pptunnel import ppServer
+    from ostap.parallel.pptunnel import ppServer, show_tunnels 
     
     ppservers = []
 
-    if config.Verbose : 
+    if   config.Verbose : 
         from ostap.logger.utils import logVerbose as Context 
+    elif config.Debug   : 
+        from ostap.logger.utils import logDebug   as Context 
     else :
         from ostap.logger.utils import NoContext  as Context 
-        
+
+    from ostap.logger.colorized import attention
+    message = '\n' + attention( "Press <ENTER> to terminate pp-tunnels> " ) + '\n'
+    
+    silent = 4 < len ( remotes ) and  not config.Quiet and ( config.Verbose or config.Debug )  
+    from ostap.utils.progress_bar import progress_bar 
+    
+    if not silent :
+        strrem = str ( remotes )
+        if len ( strrem ) < 50 :
+            logger.info ( "Launching %s pp-tunnels: %s" % ( len  ( remotes ) , list ( remotes ) ) ) 
+        else : 
+            logger.info ( "Launching %s pp-tunnels at remote hosts:" % len  ( remotes ) )
+            logger.info ( "%s"                                       % list ( remotes ) )
+            
     if 3 <= sys.version_info.major :
 
         from contextlib              import ExitStack
         with Context() , ExitStack() as stack :
-            for remote in remotes : 
+            for remote in progress_bar ( remotes , silent = silent ) : 
                 ppsvc = ppServer ( remote , **kwargs )
+                if not ppsvc.pid :
+                    del ppsvc
+                    continue 
                 stack.enter_context ( ppsvc ) 
                 ppservers.append ( ppsvc )
-            input (" Press any key to stop " )
-            
+
+            if not ppservers : logger.fatal ("No valid pp-tunnels created!")  
+            else : 
+                show_tunnels ( ppservers ) 
+                local_ports = [ p.local_port  for p in ppservers ]
+
+                logger.info (80*'*')
+                logger.info ("Tunnels: secret='%s', ppservers=%s" % ( secret , local_ports ) )
+                logger.info (80*'*')
+                
+                input ( message )
+                    
     else :
 
-        with Context() : 
-            ppservers = [ ppServer ( remote , **kwargs ) for remote in remotes ]
-            raw_input (" Press any key to stop " )            
-            while ppservers : ppservers.pop() 
+        with Context() :                
+            for remote in progress_bar ( remotes , silent = silent ) : 
+                ppsvc = ppServer ( remote , **kwargs )
+                if not ppsvc.pid :
+                    del ppsvc
+                    continue 
+                ppservers.append ( ppsvc )
+                
+            if not ppservers : logger.fatal ("No valid pp-tunnels created!")  
+            else : 
+
+                show_tunnels ( ppservers ) 
+                local_ports = [ p.local_port  for p in ppservers ]
+                
+                logger.info (80*'*')
+                logger.info ("Tunnels: secret='%s', ppservers=%s" % ( secret , local_ports ) )
+                logger.info (80*'*')
+                
+                raw_input ( message )
+
+            if not silent :
+                logger.info ('Terminating %d pp-tunnels' % len ( ppservers ) )
+                logger.info ("%s" % [ "%s->%s" % ( p.local_port , p.remote ) for p in ppservers ] ) 
+            for ppsvc in progress_bar ( ppservers , silent = silent ) :
+                ppsvc.end()
+                
+    
+    while ppservers : ppservers.pop()
+    logger.info (80*'*')
 
 # =============================================================================
 ##                                                                      The END 
