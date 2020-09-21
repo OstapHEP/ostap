@@ -87,7 +87,7 @@ class StatVarTask(Task) :
         return self.__output 
         
     ## merge results 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         
         from ostap.stats.counters import WSE
 

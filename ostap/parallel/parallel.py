@@ -58,15 +58,15 @@ if 3 == python_version.major and 7 >= python_version.minor :
 if  'GAUDIMP' != worker :
     
     try :
-        from ostap.parallel.mp_pathos import WorkManager 
+        from ostap.parallel.parallel_pathos import WorkManager 
         logger.debug ('Use TaskManager from ostap.parallel.pathos')
     except ImportError :
-        from ostap.parallel.mp_gaudi  import WorkManager 
+        from ostap.parallel.parallel_gaudi  import WorkManager 
         logger.info  ('Use TaskManager from GaudiMP.Parallel'     )
 
 else :
     
-    from ostap.parallel.mp_gaudi  import WorkManager 
+    from ostap.parallel.parallel_gaudi  import WorkManager 
     logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
 
     

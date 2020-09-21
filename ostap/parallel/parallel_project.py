@@ -125,7 +125,7 @@ class ProjectTask(Task) :
         return self.__output 
         
     ## merge results 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid ) :
 
         import ostap.histos.histos
         if not self.__output : self.__output =  result

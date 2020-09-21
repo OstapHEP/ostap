@@ -39,9 +39,11 @@ __all__     = (
     'get_remote_conf'  , ## get PP-configuration for remote PP-server
     'ping'             , ## ping remote host
     'good_pings'       , ## get alive hosts
-    'get_local_port'    , ## get local port number 
+    'get_local_port'   , ## get local port number
+    'pool_context'     , ## useful conitext for the pathos's Pools
     )
 # =============================================================================
+import sys
 from   builtins import range
 # =============================================================================
 from ostap.logger.logger    import getLogger
@@ -334,7 +336,51 @@ def get_local_port ( expression ) :
     return None 
                     
 # =============================================================================
+## Context manager for Pathos pools
+#  @code
+#  with PoolContext ( pool ) :
+#  ...   
+#  @encode
+class PoolContext(object) :
+    """Context manager for Pathos pools
+    >>> with PoolContext ( pool ) :
+    >>> ...   
+    """
+    def __init__ ( self , pool ) :
+        self.__pool = pool
+        
+    def __enter__ ( self )   :
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        self.__pool.restart ( True )
+        return self.__pool
+    
+    def __exit__  ( self , *_) :
+        self.__pool.close ()
+        self.__pool.join  ()
+        self.__pool.clear ()
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        
+    @property
+    def pool  ( self ) :
+        """``pool'' the actual Pathos pool"""
+        return self.__pool 
 
+
+# =============================================================================
+## Context manager for Pathos pools
+#  @code
+#  with pool_context ( pool ) :
+#  ...   
+#  @encode
+def pool_context  ( pool ) :
+    """Context manager for Pathos pools
+    >>> with pool_context ( pool ) :
+    >>> ...   
+    """    
+    return  PoolContext ( pool )
+    
 # =============================================================================
 if '__main__' == __name__ :
     

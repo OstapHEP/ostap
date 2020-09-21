@@ -31,6 +31,15 @@ __all__ = (
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
     ##
+    'threshold'      , ## current global threshold 
+    'enabled'        , ## is givel level allowed by the global thresholds?
+    'enabledVerbose' , ## is VERBOSE  level allowed by the global thresholds?
+    'enabledDebug'   , ## is DEBUG    level allowed by the global thresholds?
+    'enabledInfo'    , ## is INFO     level allowed by the global thresholds?
+    'enabledWarning' , ## is WARNING  level allowed by the global thresholds?
+    'enabledError'   , ## is ERROR    level allowed by the global thresholds?
+    'enabledFatal'   , ## is FATAL    level allowed by the global thresholds?
+    ##
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
 # =============================================================================
@@ -114,7 +123,67 @@ else :
         level    = 1                   ,
         format   = logging_file_format ,
         datefmt  = logging_date_format )
+
+# =============================================================================
+## Get current global threshold
+def threshold()  :
+    """Get current global threshold
+    """
+    return logging.root.manager.disable
+
+# =============================================================================
+## Are prints at the givel level enabled?
+def enabled  ( level ) :
+    """Are prints at the givel level enabled?
+    """
+    return threshold() < level
+
+# =============================================================================
+## Are VERBOSE  prints  enabled? 
+def enabledVerbose() :
+    """Are VERBOSE  prints  enabled?
+    """
+    return enabled ( logging.VERBOSE ) 
+
+# =============================================================================
+## Are DEBUG  prints  enabled? 
+def enabledDebug() :
+    """Are DEBUG prints  enabled?
+    """
+    return enabled ( logging.DEBUG ) 
+
+# =============================================================================
+## Are INFO  prints  enabled? 
+def enabledInfo () :
+    """Are INFO prints  enabled?
+    """
+    return enabled ( logging.INFO ) 
+
+# =============================================================================
+## Are WARNING  prints  enabled? 
+def enabledWarning () :
+    """Are WARNING prints  enabled?
+    """
+    return enabled ( logging.WARNING ) 
+
+# =============================================================================
+## Are ERROR prints  enabled? 
+def enabledError  () :
+    """Are ERROR prints  enabled?
+    """
+    return enabled ( logging.ERROR ) 
+
+
+# =============================================================================
+## Are FATAL prints  enabled? 
+def enabledFatal  () :
+    """Are FATAL prints  enabled?
+    """
+    return enabled ( logging.CRITICAL ) 
+
+
     
+
 # =============================================================================
 ## get configured logger
 #  @code

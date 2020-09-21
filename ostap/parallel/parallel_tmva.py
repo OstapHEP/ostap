@@ -59,7 +59,7 @@ class AddTMVA(Task) :
         return self.__output 
         
     ## merge results/datasets 
-    def merge_results ( self , result) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output = result
         else :
             s = set()

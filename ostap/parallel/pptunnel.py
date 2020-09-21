@@ -18,7 +18,7 @@ __all__     = (
     'show_tunnels' , ## show the table of tunnels 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
+from ostap.logger.logger import getLogger, keepLevel, enabledVerbose 
 if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.pptunnel' )
 else                      : logger = getLogger ( __name__                   ) 
 # =============================================================================
@@ -106,7 +106,6 @@ class ppServer(object) :
         # self.tunnel .verbose = verbose 
         # del logging
 
-        from ostap.logger.logger import keepLevel 
         with keepLevel () : 
             # =================================================================
             # Get configuration information for the given remote host
@@ -126,7 +125,7 @@ class ppServer(object) :
         ## temporary directory on remote host 
         self.__tmpdir = None 
         if environment or script or profile :
-            logger.verbose( 'A:Create remote temporary directory at %s' % self.remote_host ) 
+            logger.verbose( 'Creating remote temporary directory at %s' % self.remote_host ) 
             self.session  ( command =  'mktemp -d -t pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
             self.session.launch()
             r = self.session.response()
@@ -138,8 +137,9 @@ class ppServer(object) :
 
         self.__environment = None
         if  environment :
-            ee = environment.replace  ( '\n' , '\n env> ' )
-            logger.verbose ( "Processing the environment:\n env> %s" % ee ) 
+            ##
+            logger.verbose ( "Processing the environment:\n%s" % environment  ) 
+            ##
             import ostap.utils.cleanup as CU
             tmpfile = CU.CleanUp.tempfile ( prefix = 'env-' , suffix = '.sh' )
             with open ( tmpfile , 'w' ) as tf :
@@ -153,11 +153,16 @@ class ppServer(object) :
             if r : logger.error ('SCP: response from %s : %s' % ( copier , r ) ) 
             del copier
             self.__environment = os.path.join ( self.__tmpdir , os.path.basename ( tmpfile ) )
-            logger.debug ('Environment %s is copied to %s:%s ' % ( tmpfile , self.remote_host , self.environment ) )
+            logger.debug ('Environment is copied to %s:%s ' % ( self.remote_host , self.environment ) )
             
         self.__script = None 
         if  script and os.path.exists ( script ) and os.path.isfile ( script ) :
-            logger.verbose  ("Processing the script %s" % script )             
+            logger.verbose  ("Processing the script %s" % scriot )
+            with open ( script , 'r' ) as f :
+                for line in f :
+                    if not line : continue 
+                    logger.verbose  ( line[:-1] )
+            ## 
             copier      = PS.Copier ( 'SSH-copier' )
             destination = "%s:%s" % ( self.__remote_host , self.__remote_tmpdir )
             copier( source = script , destination = destination )
@@ -180,8 +185,23 @@ class ppServer(object) :
                 pass
             if self.__profile :
                 logger.debug   ("Profile %s:%s is found"     %  ( self.remote_host , profile ) )
-            else : 
-                logger.warning ("Profile %s:%s is NOT found" %  ( self.remote_host , profile ) )
+                if enabledVerbose() :
+                    copier = PS.Copier ( 'SSH-copier' )
+                    import ostap.utils.cleanup as CU
+                    tmpdir = CU.CleanUp.tempdir ()
+                    source = "%s:%s" %  ( self.__remote_host , self.__profile )
+                    copier ( source = source , destination = tmpdir )
+                    copier.launch()
+                    r =  copier.response()
+                    if r : logger.error ('SPC: response from %s : %s' % ( copier , r ) ) 
+                    del copier
+                    local_profile = os.path.join ( tmpdir , os.path.basename ( self.__profile ) )
+                    with open ( local_profile , 'r' ) as f :
+                        for line in f :
+                            if not line : continue
+                            logger.vernose ( line[:-1] )
+                else : 
+                    logger.error ("Profile %s:%s is NOT found" %  ( self.remote_host , profile ) )
 
         commands = []
         if self.__profile     : commands.append ( ' source %s ' % profile            )

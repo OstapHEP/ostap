@@ -172,7 +172,7 @@ from ostap.logger.colorized import allright, infostr
 #
 #  With helper function:
 #  @code 
-#  for i in progress_bar  ( range(10000 ) ) :
+#  for i in progress_bar  ( range ( 10000 ) ) :
 #      .. do something here ...
 #  @endcode 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -496,8 +496,7 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     """
     import collections 
     if   max_value is None  \
-           and isinstance ( iterable , collections.Iterable ) \
-           and isinstance ( iterable , collections.Sized    ) :
+           and isinstance ( iterable , collections.Sized      ) :
         max_value = len ( iterable ) 
     elif max_value is None and hasattr ( iterable , '__len__' ) :
         max_value = len ( iterable )
@@ -508,10 +507,11 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     elif max_value <  1    : bar = RunningBar  ( **kwargs )
     else                   : bar = ProgressBar ( max_value = max_value , **kwargs ) 
 
-    with bar : 
+    with bar :
+        bar.show () 
         for i in iterable :
-            bar += 1
             yield i
+            bar += 1
                         
 # =============================================================================
 ## simple test 

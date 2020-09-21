@@ -29,7 +29,7 @@ from   ostap.parallel.parallel import Task, WorkManager
 #  parallel adding of new branch for looong TChains
 #  @see ostap/trees/trees.py
 class AddBranch(Task) :
-    """Add new branch  to loooong TChain in parallel
+    """Add new branch to loooong TChain in parallel
     """
     def __init__          ( self , branch_name  , function ) :
         self.branch_name = branch_name
@@ -54,7 +54,7 @@ class AddBranch(Task) :
         return self.__output 
         
     ## merge results/datasets 
-    def merge_results( self , result) :
+    def merge_results( self , result , jobid = -1 ) :
         
         if not  self.__output : self.__output = result
         else :

@@ -59,7 +59,7 @@ class AddChopping(Task) :
         return self.__output 
 
     ## merge results/datasets 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output = result
         else :
             s = set()
@@ -101,7 +101,7 @@ class ChopperTraining(Task) :
         return self.__output
     
     ## merge results/datasets 
-    def merge_results ( self , result) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
         else :
             weights  = list ( self.__output[0] ) + list ( result[0] ) 

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # ============================================================================
-## @file test_parallel_ppft.py
+## @file test_parallel_pp.py
 # Oversimplified script for parallel execution using Parallel Python
-# @see https://github.com/uqfoundation/pathos
-# @see https://github.com/uqfoundation/ppft
+# @see https://www.parallelpython.com/examples.php#CALLBACK
 # ============================================================================
 """ Oversimplified script for parallel execution using Parallel Python
+- see https://www.parallelpython.com/examples.php#CALLBACK
 """
 from   __future__        import print_function
 import ROOT, time, sys 
@@ -14,29 +14,20 @@ import ROOT, time, sys
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_parallel_ppft' )
+    logger = getLogger ( 'test_parallel_pp' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-try : 
-    import dill
-except ImportError :
-    logger.error('Can not import dill')
-    dill = None    
-# =============================================================================
-try : 
-    import ppft
-except ImportError :
-    logger.error('Can not import ppft')
-    ppft = None
+import pp
+
     
 # =============================================================================
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
-## simple  function that creates and  fills a histogram 
+## simple    function that created and  fill a histogram 
 def make_histo  ( i , n ) :
-    """Simple    function that creates and fills a histogram
+    """Simple    function that creates and  fills a histogram
     """
     import ROOT
     import random
@@ -46,19 +37,19 @@ def make_histo  ( i , n ) :
 
 # ===================================================================================
 ## @class MakeHisto
-#  helper class to create and fill histograms
+#  helper class to create a fill histograms
 class MakeHisto(object) :
-    """Helper class to create and fill histoghrams
+    """Helper class to create a fill histoghrams
     """
     def process  ( self ,   *params ) :
         return make_histo ( *params )
     def __call__ ( self ,   *params ) :
         return make_histo ( *params )
-    
+
 mh  = MakeHisto  ()
 
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ]
+## start 10 jobs, and for each job create the histogram with 100 entries 
+inputs = 10 * [ 100 ]
 
 
 # ===============================================================================
@@ -77,26 +68,14 @@ def uimap  ( jobs ) :
             
 # =============================================================================
 ## test parallel python with with plain function 
-def test_ppft_function () :
+def test_pp_function () :
     """Test parallel python with plain function
     """
-    logger =    getLogger ("ostap.test_ppft_function")
-    logger.info ('Test job submission with %s' %  ppft ) 
-                  
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
-    if not ppft :
-        logger.error ( "ppdf is not available" )
-        return 
-    
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor : 
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
-    
-    job_server = ppft.Server()
+    logger =    getLogger ("ostap.test_pp_function")
+    logger.info ('Test job submission with %s' %  pp ) 
+                      
+
+    job_server = pp.Server()
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
     
@@ -120,27 +99,13 @@ def test_ppft_function () :
 
 # =============================================================================
 ## test parallel python with object method  
-def test_ppft_method() :
+def test_pp_method() :
     """Test parallel python with object method  
     """
-    logger =    getLogger ("ostap.test_ppft_method")
-    logger.info ('Test job submission with %s' %  ppft ) 
-    
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
-    if not ppft :
-        logger.error ( "ppft is not available" )
-        return 
-        
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_ppft_2 is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
-    
-    job_server = ppft.Server()
-    
+    logger =    getLogger ("ostap.test_pp_method")
+    logger.info ('Test job submission with %s' %  pp ) 
+            
+    job_server = pp.Server()    
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
     result = None 
@@ -161,37 +126,24 @@ def test_ppft_method() :
 
     return result 
 
-
 # =============================================================================
 ## test parallel python with callable 
-def test_ppft_callable () :
+def test_pp_callable () :
     """Test parallel python with callable  
     """
-    logger = getLogger ("ostap.test_ppft_callable")
-    logger.info ('Test job submission with %s' %  ppft ) 
+    logger = getLogger ("ostap.test_pp_callable")
+    logger.info ('Test job submission with %s' %  pp ) 
     
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
-    if not ppft :
-        logger.error ( "ppft is not available" )
-        return 
         
     logger.warning ("test is disabled for UNKNOWN REASON")
     return
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
+    job_server = pp.Server()
     
-    job_server = ppft.Server()
-    
-    jobs = [ ( i , job_server.submit ( mh.__call__  , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
+    jobs = [ ( i , job_server.submit ( mh.__call__ , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
 
     result = None 
-    for input, job in progress_bar ( jobs ) :
+    for input, job in progress_bar ( uimap ( jobs ) , max_value = len ( jobs ) ) :
         histo = job()
         if not result : result = histo
         else          :
@@ -209,9 +161,9 @@ def test_ppft_callable () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_ppft_function () 
-    test_ppft_method   () 
-    test_ppft_callable () 
+    test_pp_function () 
+    test_pp_method   () 
+    test_pp_callable () 
     
 # =============================================================================
 ##                                                                      The END 

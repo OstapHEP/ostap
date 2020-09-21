@@ -122,7 +122,7 @@ class  ToysTask(Task) :
         return self.results() 
 
     ## merge results/datasets 
-    def merge_results ( self, result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         
         if result :
             results , stat = result

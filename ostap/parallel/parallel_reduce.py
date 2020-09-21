@@ -77,7 +77,7 @@ class  ReduceTask(Task) :
         return Chain ( name = cname ,  files = [ cfile ] ) , rt.table 
     
     ## merge results/datasets 
-    def merge_results ( self, result ) :
+    def merge_results ( self, result , jobid = -1 ) :
         
         if result :
             if not self.__output : self.__output = result 

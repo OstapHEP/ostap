@@ -18,19 +18,16 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+from   itertools                import count   
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
-# =============================================================================
-try : 
-    import dill 
-except ImportError :
-    logger.error('Can not import dill')
-    dill = None    
+from   ostap.parallel.utils     import pool_context
+
 # =============================================================================
 try : 
     import pathos
 except ImportError :
-    logger.error('Can not import pathos')
+    logger.error ('Can not import pathos')
     pathos = None
     
 # =============================================================================
@@ -49,48 +46,184 @@ def make_histo ( item ) :
 #  class that creates and fill a histogram 
 class MakeHisto(object)  :
     """Class that creates and fill a histogram"""
-    def process (  self , *args ) :
+    def process  ( self , *args ) :
         return make_histo ( *args )
-
+    def __call__ ( self , *args ) :
+        return self.process ( *args ) 
+    
 ## start 10 jobs, and for each job create the histogram with 1000 entries 
-inputs = 10 * [ 100 ]
+inputs = 5 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
-def test_pathos () :
+def test_pathos_mp_function () :
     """Test parallel processnig with pathos: ProcessPool
     """
-    if not dill :
-        logger.error ( "test_pathos: dill is not available" )
-        return
-        
+    logger = getLogger("ostap.test_pathos_mp_function")
     if not pathos :
-        logger.error ( "test_pathos: pathos is not available" )
+        logger.error ( "pathos is not available" )
         return 
-        
+    
+    logger.info ('Test job submission with %s' %  pathos ) 
+            
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
         vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_pathos is disabled for Python %s" % vip )
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
         return
     
-    from ostap.core.meta_info import root_version_int  as rv 
-    if rv <= 62200 :
-        logger.warning ("test_pathos is disabled for ROOT %s" % rv )
-        return
-        
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
     
     from pathos.pools import ProcessPool as Pool
 
     pool = Pool ( ncpus )
-    logger.info ( "test_pathos   : Pool is %s" % ( type ( pool ).__name__ ) )
+    logger.info ( "Pool is %s" % ( type ( pool ).__name__ ) )
+
+    with pool_context   ( pool ) : 
+        
+        jobs = pool.uimap ( make_histo ,  zip ( count() , inputs ) )
+        
+        result = None 
+        for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+            if not result  : result = h
+            else           : result.Add ( h )
+                
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+# =============================================================================
+## test parallel processing with pathos: ProcessPool
+def test_pathos_mp_callable  () :
+    """Test parallel processnig with pathos: ProcessPool
+    """
+    logger = getLogger("ostap.test_pathos_mp_callable")             
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return 
+        
+    logger.info ('Test job submission with %s' %  pathos ) 
+
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+        return
+    
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ProcessPool as Pool
+
+    pool = Pool ( ncpus )
+    logger.info ( "Pool is %s" % ( type ( pool ).__name__ ) )
     
     pool.restart ( True ) 
+    
+    jobs = pool.uimap ( make_histo ,  zip ( count() , inputs ) )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
 
-    # jobs = pool. imap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
-    # jobs = pool.uimap ( make_histo ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+
+# =============================================================================
+## test parallel processing with pathos : ParallelPool 
+def test_pathos_pp_function () :
+    """Test parallel processnig with pathos: ParallelPool  
+    """
+    logger = getLogger("test_pathos_pp_function") 
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return 
+        
+    logger.info ('Test job submission with %s' %  pathos ) 
+
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+        return
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ParallelPool as Pool 
+
+    pool = Pool ( ncpus )   
+    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
+
+    pool.restart ( True ) 
+
+
+    mh   = MakeHisto() 
+    jobs = pool.uimap ( make_histo,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    pool.clear ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
+
+# =============================================================================
+## test parallel processing with pathos : ParallelPool 
+def test_pathos_pp_callable () :
+    """Test parallel processnig with pathos: ParallelPool  
+    """
+    logger = getLogger("test_pathos_pp_callable") 
+    logger.info ('Test job submission with %s' %  pathos ) 
+
+    if not pathos :
+        logger.error ( "pathos is not available" )
+        return 
+        
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+        return
+
+    from pathos.helpers import cpu_count
+    ncpus = cpu_count  ()
+    
+    from pathos.pools import ParallelPool as Pool 
+
+    pool = Pool ( ncpus )   
+    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
+
+    pool.restart ( True ) 
+
+
     mh   = MakeHisto() 
     jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
@@ -103,7 +236,7 @@ def test_pathos () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -113,21 +246,20 @@ def test_pathos () :
 
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
-def test_pathos_pp_1 () :
+def test_pathos_pp_method () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    if not dill :
-        logger.error ( "test_pathos_pp_1: dill is not available" )
-        return
-        
+    logger = getLogger("test_pathos_pp_method ")
     if not pathos :
-        logger.error ( "test_pathos_pp_1: pathos is not available" )
+        logger.error ( "pathos is not available" )
         return 
-        
+    
+    logger.info ('Test job submission with %s' %  pathos ) 
+    
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
         vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_pathos_pp_1 is disabled for Python %s" % vip )
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
         return
 
     from pathos.helpers import cpu_count
@@ -136,13 +268,12 @@ def test_pathos_pp_1 () :
     from pathos.pools import ParallelPool as Pool 
 
     pool = Pool ( ncpus )   
-    logger.info ( "test_pathos_pp_1: Pool is %s" %  ( type ( pool ).__name__ ) )
+    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
 
     pool.restart ( True ) 
 
-
     mh   = MakeHisto() 
-    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    jobs = pool.uimap ( mh.process , [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -153,7 +284,7 @@ def test_pathos_pp_1 () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
@@ -163,22 +294,24 @@ def test_pathos_pp_1 () :
 
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
-def test_pathos_pp_2 () :
+def test_pathos_pp_callable () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    if not dill :
-        logger.error ( "test_pathos_pp_2: dill is not available" )
-        return
-        
+    logger = getLogger("test_pathos_pp_callable")         
     if not pathos :
-        logger.error ( "test_pathos_pp_2: pathos is not available" )
-        return 
-        
+        logger.error ( "pathos is not available" )
+        return
+    
+    logger.info ('Test job submission with %s' %  pathos ) 
+    
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
         vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_pathos_pp_2 is disabled for Python %s" % vip )
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
         return
+
+    logger.warning ("test is disabled for UNKNOWN REASON")
+    return
 
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
@@ -186,13 +319,13 @@ def test_pathos_pp_2 () :
     from pathos.pools import ParallelPool as Pool 
 
     pool = Pool ( ncpus )   
-    logger.info ( "test_pathos_pp_1: Pool is %s" %  ( type ( pool ).__name__ ) )
+    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
 
     pool.restart ( True ) 
 
 
     mh   = MakeHisto() 
-    jobs = pool.uimap ( mh.process  ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    jobs = pool.uimap ( mh ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -203,22 +336,25 @@ def test_pathos_pp_2 () :
     pool.join  ()
     pool.clear ()
     
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
     time.sleep  ( 2 )
 
     return result 
+
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pathos      () 
-    test_pathos_pp_1 () 
-    test_pathos_pp_2 () 
+    test_pathos_mp_function ()
+    test_pathos_mp_callable ()
+    test_pathos_pp_function ()
+    test_pathos_pp_method   ()
+    test_pathos_pp_callable ()
 
-        
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

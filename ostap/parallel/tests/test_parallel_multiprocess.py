@@ -18,6 +18,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+from   itertools                import count   
+# =============================================================================
 try : 
     import dill 
 except ImportError :
@@ -44,26 +46,48 @@ def make_histos ( item ) :
     for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
     return h1 
 
-## start 10 jobs, and for each job create the histogram with 100 entries 
-inputs = 10 * [ 100 ]
+
+# ===================================================================================
+## @class MakeHisto
+#  helper class to create a fill histograms
+class MakeHisto(object) :
+    """Helper class to create a fill histograms
+    """
+    def process  ( self , item ) :
+        i, n = item 
+        import ROOT, random 
+        h1 = ROOT.TH1F ( 'h%d' %  i , '' , 100 , 0 , 10 )
+        for i in range ( n ) : h1.Fill ( random.gauss (  5 ,  1 ) )
+        return h1
+    def __call__ ( self ,  item ) :
+        return self.process ( item )
+
+mh  = MakeHisto  ()
+
+
+## start 5 jobs, and for each job create the histogram with 100 entries 
+inputs = 5 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with multiprocess
-def test_multiprocess () :
+def test_multiprocess_function () :
     """Test parallel processnig with multiprocess
     """
+    logger =    getLogger ("ostap.test_multiprocess_function")
+    logger.info ('Test job submission with %s' %  multiprocess ) 
+    
     if not dill :
-        logger.error ( "test_multiprocess: dill is not available" )
+        logger.error ( "dill is not available" )
         return
         
     if not multiprocess :
-        logger.error ( "test_multiprocess: multiprocess is not available" )
+        logger.error ( "multiprocess is not available" )
         return 
         
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
         vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_multiprocess is disabled for Python %s" % vip )
+        logger.warning ("test is disabled for Python %s (dill issue)" % vip )
         return
     
     ncpus = multiprocess.cpu_count() 
@@ -71,9 +95,8 @@ def test_multiprocess () :
     from multiprocess import Pool
     
     pool = Pool  ( ncpus ) 
-
-
-    jobs = pool.imap_unordered ( make_histos ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    
+    jobs = pool.imap_unordered ( make_histos , zip ( count() ,  inputs ) )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -90,12 +113,61 @@ def test_multiprocess () :
     time.sleep  ( 2 )
 
     return result 
+
+
+# =============================================================================
+## test parallel processing with multiprocess
+def test_multiprocess_callable  () :
+    """Test parallel processnig with multiprocess
+    """
+    logger =    getLogger ("ostap.test_multiprocess_callable")
+    logger.info ('Test job submission with %s' %  multiprocess ) 
+    
+    if not dill :
+        logger.error ( "dill is not available" )
+        return
+        
+    if not multiprocess :
+        logger.error ( "multiprocess is not available" )
+        return 
+        
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill issue)" % vip )
+        return
+
+    
+    ncpus = multiprocess.cpu_count() 
+    
+    from multiprocess import Pool
+    
+    pool = Pool  ( ncpus ) 
+    
+    jobs = pool.imap_unordered ( mh , zip ( count() ,  inputs ) )
+    
+    result = None 
+    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
+        if not result  : result = h
+        else           : result.Add ( h )
+
+    pool.close ()
+    pool.join  ()
+    
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
+    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+    
+    result.Draw (   ) 
+    time.sleep  ( 2 )
+
+    return result 
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## pass
-    test_multiprocess () 
+    test_multiprocess_function () 
+    test_multiprocess_callable () 
 
         
 # =============================================================================

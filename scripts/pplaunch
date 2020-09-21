@@ -31,7 +31,7 @@ def make_parser () :
                               description = __doc__ )
     
     group1 = parser.add_mutually_exclusive_group()    
-    parser.add_argument ( 
+    group1.add_argument ( 
         "-q" , "--quiet"       ,
         dest    = 'Quiet'      , 
         action  = 'store_true' ,
@@ -182,8 +182,11 @@ if '__main__' == __name__ :
 
     from ostap.logger.colorized import attention
     message = '\n' + attention( "Press <ENTER> to terminate pp-tunnels> " ) + '\n'
+
+    ## show progress bar? 
+    progress = 4 < len ( remotes ) and config.Quiet and ( not congif.Verbose and not config.Debug ) 
+    silent   = not progress
     
-    silent = 4 < len ( remotes ) and  not config.Quiet and ( config.Verbose or config.Debug )  
     from ostap.utils.progress_bar import progress_bar 
     
     if not silent :
