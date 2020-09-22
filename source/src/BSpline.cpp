@@ -2995,19 +2995,19 @@ Ostap::Math::Interpolation::bspline
  *  @return status code 
  */
 // ============================================================================
-#include <iostream> 
 Ostap::StatusCode 
 Ostap::Math::Interpolation::bspline 
 ( std::vector< std::pair<double,double> > xy ,
   Ostap::Math::BSpline&                   bs ) 
-{  
+{
   const unsigned  short N = xy.size() ;
   // mismatch for number of input parameters 
   if ( N != bs.npars() ) { return 110 ; }             // RETURN 110 
   //
   std::stable_sort ( xy.begin() , xy.end() ) ;
   //
-  gsl_matrix      * m = gsl_matrix_alloc ( N , N );
+  gsl_matrix      *m = gsl_matrix_alloc ( N , N );
+  if ( nullptr == m )   { return  131 ; }            /// RETURN 131
   // 
   const double xmin = bs.xmin () ;
   const double xmax = bs.xmax () ;
@@ -3026,10 +3026,6 @@ Ostap::Math::Interpolation::bspline
       const double bij = bs.bspline ( i , xj ) ;
       if  ( i == j && s_zero ( bij ) )
       { 
-        std::cout 
-          << " i=" << i 
-          << " j=" << j
-          << " b=" << bij << std::endl ;
         gsl_matrix_free  ( m ) ;  
         return 111             ;  // RETURN 111 
       }
@@ -3038,10 +3034,22 @@ Ostap::Math::Interpolation::bspline
   }
   //
   gsl_vector      *x = gsl_vector_alloc      ( N ) ;
+  if ( nullptr == x ) 
+  {
+    gsl_matrix_free      ( m ) ;
+    return   132 ;                          // RETURN 132 
+  }
+  //
   for (  unsigned short i = 0 ; i < N ; ++i ) 
   { gsl_vector_set ( x , i , xy[i].second ) ;  }
   //
   gsl_permutation *p = gsl_permutation_alloc ( N  );
+  if ( nullptr == p ) 
+  {
+    gsl_matrix_free      ( m ) ;
+    gsl_vector_free      ( x ) ;
+    return   133 ;                          //  RETURN 133 
+  }
   //
   // make LU decomposition 
   int       signum = 0 ;
