@@ -16,6 +16,7 @@
 // Local
 // ============================================================================
 #include "Exception.h"
+#include "GSL_helpers.h"
 // ============================================================================
 /** @file 
  *  Implementation file for class Ostap::Math::BSpline 
@@ -2961,10 +2962,6 @@ Ostap::Math::crossing_points
     _crossing_points_2_ ( b ) ;
 }
 // ============================================================================
-//  Here we'll use GSL
-// ============================================================================
-#include "gsl/gsl_linalg.h"
-// ============================================================================
 /* create the interpolation spline 
  *  @param xy (INPUT)   vector of data 
  *  @param bs (UPDATE) the spline 
@@ -3006,8 +3003,9 @@ Ostap::Math::Interpolation::bspline
   //
   std::stable_sort ( xy.begin() , xy.end() ) ;
   //
-  gsl_matrix      *m = gsl_matrix_alloc ( N , N );
-  if ( nullptr == m )   { return  131 ; }            /// RETURN 131
+  Ostap::GSL_Matrix m { N , N }  ;
+  if ( !m.matrix() ) { return 141 ; }
+  
   // 
   const double xmin = bs.xmin () ;
   const double xmax = bs.xmax () ;
@@ -3024,59 +3022,29 @@ Ostap::Math::Interpolation::bspline
       { xj = Ostap::Math::next_double ( xmax , -s_ulps ) ; }
       //
       const double bij = bs.bspline ( i , xj ) ;
-      if  ( i == j && s_zero ( bij ) )
-      { 
-        gsl_matrix_free  ( m ) ;  
-        return 111             ;  // RETURN 111 
-      }
-      gsl_matrix_set (  m , j , i , bij  ) ; 
+      if  ( i == j && s_zero ( bij ) ) {  return 111 ; }  // RETURN 111 
+      /// set matrix 
+      m.set ( j , i , bij  ) ; 
     } 
   }
   //
-  gsl_vector      *x = gsl_vector_alloc      ( N ) ;
-  if ( nullptr == x ) 
-  {
-    gsl_matrix_free      ( m ) ;
-    return   132 ;                          // RETURN 132 
-  }
+  Ostap::GSL_Vector x { N } ;
+  if ( !x.vector()       ) { return 142 ; }
   //
-  for (  unsigned short i = 0 ; i < N ; ++i ) 
-  { gsl_vector_set ( x , i , xy[i].second ) ;  }
+  for ( unsigned short i = 0 ; i < N ; ++i ) { x.set ( i , xy[i].second ) ;  }
   //
-  gsl_permutation *p = gsl_permutation_alloc ( N  );
-  if ( nullptr == p ) 
-  {
-    gsl_matrix_free      ( m ) ;
-    gsl_vector_free      ( x ) ;
-    return   133 ;                          //  RETURN 133 
-  }
+  Ostap::GSL_Permutation p { N };
+  if ( !p.permutation () ) { return 143 ; }
   //
   // make LU decomposition 
   int       signum = 0 ;
-  const int e1     = gsl_linalg_LU_decomp ( m , p , &signum  );
-  if ( e1 )
-  {
-    gsl_permutation_free ( p ) ;
-    gsl_matrix_free      ( m ) ;
-    gsl_vector_free      ( x ) ;
-    return 120 + e1 ;                       // RETURN 120 + e 
-  }
+  const int e1     = gsl_linalg_LU_decomp ( m.matrix () , p.permutation () , &signum  );
+  if ( e1 )               { return 120 + e1 ; }// RETURN 120 + e }
   //
-  const int e2 = gsl_linalg_LU_svx ( m , p , x ) ;
-  if ( e2 )
-  {
-    gsl_permutation_free ( p ) ;
-    gsl_matrix_free      ( m ) ;
-    gsl_vector_free      ( x ) ;
-    return 130 + e2 ;                        // RETURN 130 + e
-  }
+  const int e2 = gsl_linalg_LU_svx        ( m.matrix () , p.permutation () , x.vector () ) ;
+  if ( e2 )               { return 130 + e2 ;  } // RETURN 130 + e
   //
-  for (  unsigned short i = 0 ; i < N ; ++i ) 
-  { bs.setPar ( i , gsl_vector_get ( x , i ) ) ; }
-  //
-  gsl_permutation_free ( p ) ;
-  gsl_matrix_free      ( m ) ;
-  gsl_vector_free      ( x ) ;
+  for (  unsigned short i = 0 ; i < N ; ++i ) { bs.setPar ( i , x.get ( i ) ) ; }
   //
   return Ostap::StatusCode::SUCCESS ;
 }
