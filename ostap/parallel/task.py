@@ -35,6 +35,7 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'Task'          , ## the base class for task
+    'TaskManager'   , ## the base class for task-manager 
     'GenericTask'   , ## the generic ``templated'' task
     'FuncTask'      , ## the simple ``function'' task
     'Statistics'    , ## helper class to collect statistics 
@@ -45,8 +46,8 @@ __all__     = (
     )
 # =============================================================================
 from   ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.task' )
-else                      : logger = getLogger ( __name__               )
+if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
+else                      : logger = getLogger ( __name__              )
 # =============================================================================
 import operator, abc  
 from   itertools   import repeat, count 
@@ -725,9 +726,9 @@ def func_executor ( item ) :
 
 
 # ============================================================================
-## @class Manager
+## @class TaskManager
 #   Abstract base class for the work manager for parallel processing  
-class Manager(object) :
+class TaskManager(object) :
     """Abstract base class for the work manager for paralell processing 
     """
     

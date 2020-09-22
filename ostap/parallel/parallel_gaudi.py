@@ -18,7 +18,8 @@ from   itertools                 import repeat , count
 # =============================================================================
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.logger.logger       import getLogger
-from   ostap.parallel.task       import Manager, Task, Statistics ,  StatMerger 
+from   ostap.parallel.task       import ( TaskManager , Task       ,
+                                          Statistics  , StatMerger )
 # =============================================================================
 logger  = getLogger('ostap.parallel.parallel_gaudi')
 # =============================================================================
@@ -60,7 +61,7 @@ class pool_context :
         sys.stderr .flush ()
  
 # =============================================================================
-class WorkManager(Manager) :
+class WorkManager(TaskManager) :
     """ Class to in charge of managing the tasks and distributing them to
         the workers. They can be local (using other cores) or remote
         using other nodes in the local cluster """
@@ -72,11 +73,16 @@ class WorkManager(Manager) :
                   silent    = False        , **kwargs ) :
 
         ##
-        if not isinstance ( ncpus , int ) and 0 <= ncpus :
-            ncpus = MP.cpu_count()
-            
+        if isinstance ( ncpus , int ) and 1 <= ncpus : pass
+        else                                         : ncpus = MP.cpu_count()
+
+        if pp        :
+            logger.warning ( "WorkManager: option ``pp'' is ignored" )
+        if ppservers :
+            logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
+        
         ## initialize the base class 
-        Manager.__init__  ( self , ncpus = ncpus , silent = silent )
+        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent )
         
         
         self.pool   = MP.Pool ( self.ncpus )
@@ -87,7 +93,7 @@ class WorkManager(Manager) :
     #  @param jobs_args the arguments, one entry per job 
     #  @return iterator to results 
     #  @code
-    #  mgr  = WorManager  ( .... )
+    #  mgr  = WorkManager  ( .... )
     #  job  = ...
     #  args = ...
     #  for result in mgr.iexecute ( func , args ) :
@@ -100,7 +106,7 @@ class WorkManager(Manager) :
     #  - no merging of results  
     def iexecute ( self , job , jobs_args , progress = False ) :
         """Process the bare `executor` function
-        >>> mgr  = WorManager  ( .... )
+        >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
         >>> args = ...
         >>> for result in mgr.iexecute ( job , args ) :

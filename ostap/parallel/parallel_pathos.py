@@ -47,7 +47,7 @@ from   itertools                import repeat , count
 from   collections              import Sized
 # =============================================================================
 from   ostap.utils.progress_bar import progress_bar
-from   ostap.parallel.task      import ( Manager       ,
+from   ostap.parallel.task      import ( TaskManager   ,
                                          Task          , TaskMerger    , 
                                          Statistics    , StatMerger    ,
                                          task_executor , func_executor )
@@ -80,7 +80,7 @@ def get_pps ( pool ) :
 #  @endcode 
 #  @author Pere MATO Pere.Meto@cern.ch
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-class WorkManager (Manager) :
+class WorkManager (TaskManager) :
     """ Class to in charge of managing the tasks and distributing them to
     the workers. They can be local (using other cores) or remote
     using other nodes in the local cluster
@@ -98,7 +98,7 @@ class WorkManager (Manager) :
             ncpus = cpu_count ()
             
         ## initialize the base class 
-        Manager.__init__ ( self, ncpus =  ncpus , silent = silent )
+        TaskManager.__init__ ( self, ncpus =  ncpus , silent = silent )
         
         from ostap.utils.cidict import cidict
         kwa = cidict ( **kwargs ) 
@@ -261,7 +261,7 @@ class WorkManager (Manager) :
     #  @param jobs_args the arguments, one entry per job 
     #  @return iterator to results 
     #  @code
-    #  mgr  = WorManager  ( .... )
+    #  mgr  = WorkManager  ( .... )
     #  job  = ...
     #  args = ...
     #  for result in mgr.iexecute ( func , args ) :
@@ -274,7 +274,7 @@ class WorkManager (Manager) :
     #  - no merging of results  
     def iexecute ( self , job , jobs_args , progress = False ) :
         """Process the bare `executor` function
-        >>> mgr  = WorManager  ( .... )
+        >>> mgr  = WorkManager  ( .... )
         >>> job  = ...
         >>> args = ...
         >>> for result in mgr.iexecute ( job , args ) :

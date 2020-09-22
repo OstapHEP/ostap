@@ -178,8 +178,7 @@ def test_parallel_significance_toys ( ) :
     for p in stats :
         logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
 
-    h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )
-    
+    h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )    
     for r in results ['S'  ] : h_S .Fill ( r )
     
     for h in ( h_S ,  ) :

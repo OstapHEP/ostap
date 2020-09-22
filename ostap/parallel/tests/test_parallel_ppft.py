@@ -19,12 +19,6 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 try : 
-    import dill
-except ImportError :
-    logger.error('Can not import dill')
-    dill = None    
-# =============================================================================
-try : 
     import ppft
 except ImportError :
     logger.error('Can not import ppft')
@@ -83,9 +77,6 @@ def test_ppft_function () :
     logger =    getLogger ("ostap.test_ppft_function")
     logger.info ('Test job submission with %s' %  ppft ) 
                   
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
     if not ppft :
         logger.error ( "ppdf is not available" )
         return 
@@ -126,9 +117,6 @@ def test_ppft_method() :
     logger =    getLogger ("ostap.test_ppft_method")
     logger.info ('Test job submission with %s' %  ppft ) 
     
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
     if not ppft :
         logger.error ( "ppft is not available" )
         return 
@@ -136,7 +124,7 @@ def test_ppft_method() :
     vi = sys.version_info
     if 3<= vi.major and 6 <= vi.minor :
         vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test_ppft_2 is disabled for Python %s (dill/ROOT issue)" % vip )
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
         return
     
     job_server = ppft.Server()
@@ -170,9 +158,6 @@ def test_ppft_callable () :
     logger = getLogger ("ostap.test_ppft_callable")
     logger.info ('Test job submission with %s' %  ppft ) 
     
-    if not dill :
-        logger.error ( "dill is not available" )
-        return 
     if not ppft :
         logger.error ( "ppft is not available" )
         return 

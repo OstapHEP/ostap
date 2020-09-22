@@ -19,7 +19,6 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 import pp
-
     
 # =============================================================================
 import ostap.histos.histos
@@ -48,8 +47,8 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 10 jobs, and for each job create the histogram with 100 entries 
-inputs = 10 * [ 100 ]
+## start 5 jobs, and for each job create the histogram with 100 entries 
+inputs = 5 * [ 100 ]
 
 
 # ===============================================================================
@@ -74,6 +73,11 @@ def test_pp_function () :
     logger =    getLogger ("ostap.test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
                       
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+        return
 
     job_server = pp.Server()
     
@@ -87,7 +91,7 @@ def test_pp_function () :
             result.Add ( histo ) 
             del histo 
 
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     job_server.print_stats()
@@ -104,6 +108,12 @@ def test_pp_method() :
     """
     logger =    getLogger ("ostap.test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
+
+    vi = sys.version_info
+    if 3<= vi.major and 6 <= vi.minor :
+        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+        return
             
     job_server = pp.Server()    
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -116,7 +126,7 @@ def test_pp_method() :
             result.Add ( histo ) 
             del histo 
 
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     job_server.print_stats()
@@ -150,7 +160,7 @@ def test_pp_callable () :
             result.Add ( histo ) 
             del histo 
 
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
+    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
     result.Draw (   ) 
