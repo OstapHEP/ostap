@@ -158,7 +158,7 @@ if old_PyROOT :
     ## Start master processing
     #  @see TPySelector::Begin
     #  @see Ostap::Selector::Begin
-    def Selector_Begin      ( self , tree ) :
+    def Selector_Begin      ( self , tree = ROOT.nullptr  ) :
         """Start master processing
         - see ROOT.TPySelector.Begin
         - see Ostap.Selector.Begin
@@ -173,7 +173,7 @@ if old_PyROOT :
         - see ROOT.TPySelector.SlaveBegin
         - see Ostap.Selector.SlaveBegin
         """
-        assert valid_pointter ( tree ) , 'SlaveBegin: ivalid TTree*'
+        assert valid_pointer ( tree ) , 'SlaveBegin: ivalid TTree*'
         pass
     # =========================================================================
     ## Initialize
@@ -327,7 +327,7 @@ if old_PyROOT :
     SelectorWithCuts.Version        = Selector_Version
     SelectorWithCuts.Terminate      = Selector_Terminate
     SelectorWithCuts.SlaveTerminate = Selector_SlaveTerminate
-    SelectorWithCuts.Process        = SelectorWithCutc_Process 
+    SelectorWithCuts.Process        = SelectorWithCuts_Process 
 
     
 # =============================================================================
@@ -1133,11 +1133,11 @@ class SelectorWithVars(SelectorWithCuts) :
     # ===========================================================
     ## Start master processing
     #  @see Ostap::SelectorWithCuts::Begin
-    def Begin          ( self , tree ) :
+    def Begin          ( self , tree = ROOT.nullptr ) :
         """Start master processing
         - see Ostap::SelectorWithCuts::Begin
         """
-        
+
         ## reset the formula 
         self.reset_formula ( tree ) 
 

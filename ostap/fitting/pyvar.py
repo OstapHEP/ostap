@@ -113,25 +113,25 @@ if old_PyROOT :
         """
         def __init__ ( self             ,
                        name             ,   ## the name 
-                       variables = []   ,   ## all variables 
+                       vars      = []   ,   ## all variables 
                        title     = ''   ,   ## the title 
                        pyvar     = None ) : ## helper 
             
-            assert variables or ( pyvar and isinstance ( pyvar , Ostap.Functions.PyVar ) ),\
-                   "Invaild configuration of PyVAR: %s/%s" % ( variables , pypdf ) 
+            assert vars or ( pyvar and isinstance ( pyvar , Ostap.Functions.PyVar ) ),\
+                   "Invaild configuration of PyVAR: %s/%s" % ( vars , pypdf ) 
             
             if not pyvar :
                 
                 ## convert to RooArgList if needed 
-                self.__pyvars  = variables        
+                self.__pyvars  = vars        
                 if not title : title = "PyVAR(%s)"  % name
                 
-                if not isinstance ( variables , ROOT.RooArgList ) :
+                if not isinstance ( vars , ROOT.RooArgList ) :
                     vv = ROOT.RooArgList ()
-                    for v in variables :
+                    for v in vars :
                         if not v in vv :  vv.add ( v )
-                variables = vv 
-                self.__pyvars = variables
+                    vars = vv 
+                self.__pyvars = vars
                 pyvar = Ostap.Functions.PyVar ( self , name , title , self.__pyvars  )
                 ROOT.SetOwnership ( pyvar , False )
                 

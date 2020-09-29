@@ -10,7 +10,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels conda-forge
   - conda config --add channels anaconda
-  - conda create -q -n testenv python=3.7  cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3
+  - conda create -q -n testenv python=3.7 cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3
   - export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
   - source activate testenv
   - pip install coverage coveralls  

@@ -163,7 +163,7 @@ def test_pyVAR () :
             
             return eff ( _x , _a , _b , _c , _x0 )
         
-    myEff2  = MyEff2 ( 'myEff2' , variables = vars , title = 'title' )
+    myEff2  = MyEff2 ( 'myEff2' , vars = vars , title = 'title' )
     the_fun = myEff2.var
     
     with timing ("Using-PyVAR" , logger ) :
