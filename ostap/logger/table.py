@@ -266,11 +266,10 @@ if __name__ == '__main__' :
     
     logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' ) ) 
     logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' ) ) 
-    logger.info ( 'The table woth prefix is \n%s' %
+    logger.info ( 'The table with prefix is \n%s' %
                   table     ( table_data , 'Title' , prefix = '# ' ) ) 
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
-    
     
     
 # =============================================================================

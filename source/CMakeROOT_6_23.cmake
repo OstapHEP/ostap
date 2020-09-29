@@ -17,19 +17,26 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
 
 ## message ('ROOT libraries: ' ${ROOT_LIBRARIES} )
  
-message ('-Python2 version: ' ${PY2VERSION_ROOT} ) 
-message ('-Python3 version: ' ${PY3VERSION_ROOT} ) 
+
+message ('PY2VERSION_ROOT:' ${PY2VERSION_ROOT} )
+message ('PY3VERSION_ROOT:' ${PY3VERSION_ROOT} )
 
 add_library ( root_pyroot INTERFACE IMPORTED) 
 if     (PY2VERSION_ROOT)
   find_package(Python2 ${PY2VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
   set(Python_VERSION ${Python2_VERSION}  )
   if  (Python2_FOUND)
-    message ( "Python version: " ${Python3_VERSION} '/' ${Python_VERSION})
+    message ( "Python version: " ${Python2_VERSION} '/' ${Python_VERSION})
   else()
     message ( "Python2 is NOT FOUND!" ) 
   endif()
-  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT2;Python2::Python")
+  message ( "----> Python version   : " ${Python2_VERSION}      )
+  message ( "----> Python include   : " ${Python2_INCLUDE_DIRS} )
+  message ( "----> Python libraries : " ${Python2_LIBRARIES}    )
+  set( PYTHON_INCLUDE_DIRS ${Python2_INCLUDE_DIRS} )
+  set( PYTHON_LIBRARIES    ${Python2_LIBRARIES}    )
+  set( PYTHON_VERSION      ${Python2_VERSION}      )
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT2;ROOT::ROOTTPython;Python2::Python")
 elseif (PY3VERSION_ROOT)
   find_package(Python3 ${PY3VERSION_ROOT} COMPONENTS Interpreter Development NumPy)
   set(Python_VERSION ${Python3_VERSION}  )
@@ -38,10 +45,22 @@ elseif (PY3VERSION_ROOT)
   else()
     message ( "Python3 is NOT FOUND!" ) 
   endif()  
-  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;Python3::Python")
+  message ( "----> Python version   : " ${Python3_VERSION}      )
+  message ( "----> Python include   : " ${Python3_INCLUDE_DIRS} )
+  message ( "----> Python libraries : " ${Python3_LIBRARIES}    )
+  set( PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS} )
+  set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
+  set( PYTHON_VERSION      ${Python3_VERSION}      )
+  set_target_properties( root_pyroot PROPERTIES INTERFACE_LINK_LIBRARIES "ROOT::PyROOT3;ROOT::ROOTTPython;Python3::Python")
 endif () 
 
-set(PYTHON_VERSION ${Python_VERSION}  )
+
+message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+                   
+get_target_property( pyincdirc root_pyroot INTERFACE_INCLUDE_DIRECTORIES)
+##get_target_property( pyincdirc   root_pyroot  INTERFACE_LINK_LIBRARIES)
+message ('ppincdirc'  ${pyincdirc} ) 
+ 
 
 # =============================================================================
 ## Locate GSL 
@@ -125,17 +144,14 @@ target_compile_features (ostap PUBLIC cxx_std_11 )
 message ( C++11 ) 
 endif() 
 
-target_link_libraries   (ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector ROOT::ROOTTPython root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame ROOT::Core GSL::gsl )
-###add_dependencies (ostap ROOT::ROOTVecOps ROOT::ROOTDataFrame ROOT::RooFit ROOT::MathMore ROOT::ROOTTPython root_pyroot ROOT::Core GSL::gsl )
+target_link_libraries  ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
 
 target_include_directories (ostap
     PUBLIC 
         $<INSTALL_INTERFACE:include>    
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python2_INCLUDE_DIRS} 
-## ${GSL_INCLUDE_DIRS} 
-## /cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev3python3/Fri/vdt/0.4.3/x86_64-centos7-gcc9-opt/include/
+        ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
 )
 
 get_target_property(incdirs1 ROOT::MathMore INTERFACE_INCLUDE_DIRECTORIES)
@@ -148,8 +164,34 @@ message ( INCDIRS3 ${incdirs3} )
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${incdirs1} ${PYTHON_INCLUDE_DIRS} )
 
 ## ## make dictionaries 
-MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
+## MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
+## REFLEX_BUILD_DICTIONARY ( ostap src/dict/Ostap.hh SELECTION src/dict/Ostap.xml )
+## ROOT_GENERATE_DICTIONARY( G__ostapDict ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
+##                          LINKDEF      ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml
+##                          MODULE       ostap )
+## 
 
+REFLEX_GENERATE_DICTIONARY( ostap     ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.hh 
+                            SELECTION ${CMAKE_CURRENT_SOURCE_DIR}/src/dict/Ostap.xml )
+
+add_library           ( ostapDict MODULE ostap.cxx)
+add_dependencies      ( ostapDict ostap-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+target_link_libraries ( ostapDict               ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+
+
+## REFLEX_GENERATE_DICTIONARY( ${name} ${header} SELECTION ${selection})
+## add_library( ${name}Dict MODULE ${name}.cxx)
+## add_dependencies(${name}Dict ${name}-dictgen ostap ROOT::MathMore ROOT::GenVector root_pyroot)
+## target_link_libraries   ( ${name}Dict ostap ROOT::MathMore ROOT::GenVector root_pyroot )
+## endfunction
+
+
+## add_library      (ostapDict SHARED G__ostapDict.cxx )
+## add_dependencies (ostapDict ostap  G__ostapDict ) 
+## target_include_directories (G__ostapDict
+##         PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+## )
+## 
 ## For clang we need to define __MATH_LONG_DOUBLE_CONSTANTS for
 ## defining M_El, M_PIl math constants.
 ## set(COMPILE_DEFINITIONS -D__MATH_LONG_DOUBLE_CONSTANTS)
@@ -157,14 +199,17 @@ MAKE_DICT (ostap src/dict/Ostap.hh src/dict/Ostap.xml )
 ## set_target_properties(ostap ostapDict PROPERTIES
 ## SUFFIX ".so"
 ## COMPILE_DEFINITIONS __MATH_LONG_DOUBLE_CONSTANTS)
-
+## 
 install ( TARGETS ostap     EXPORT   ostap-export 
                             LIBRARY  DESTINATION lib 
                             INCLUDES DESTINATION include )
 
 install ( TARGETS ostapDict LIBRARY  DESTINATION lib )
 
-install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     DESTINATION include       )
+install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
+                    DESTINATION include       
+                    FILES_MATCHING PATTERN "*.h" 
+                    PATTERN  "*#*" EXCLUDE )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           )

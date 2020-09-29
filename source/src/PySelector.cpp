@@ -1,10 +1,5 @@
-// $Id$
 // ============================================================================
 // Include files 
-// ============================================================================
-// STD&STL
-// ============================================================================
-#include <iostream>
 // ============================================================================
 // ROOT 
 // ============================================================================
@@ -26,22 +21,24 @@
  *  @date   2011-01-21
  */
 // ============================================================================
-// ClassImp(Ostap::Selector) ;
+ClassImp(Ostap::Selector) ;
 // ============================================================================
 // constructor 
 // ============================================================================
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
 // ============================================================================
 Ostap::Selector::Selector ( PyObject* self , 
                             TTree*    tree ) 
   : ROOT_Selector ( tree , self )
+  , m_event { 0 }
 {}
 // ============================================================================
 #else
 // ============================================================================
 Ostap::Selector::Selector ( TTree* tree ) 
   : ROOT_Selector ()
-  , m_tree    ( tree ) 
+  , m_event { 0 }
+  , m_tree  ( tree ) 
 {}
 // ============================================================================
 #endif
@@ -55,9 +52,7 @@ Ostap::Selector::~Selector(){}
 void   Ostap::Selector::Init
 ( TTree*   tree       )
 {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0) 
-  m_tree = tree ;
-#endif 
+  set_tree ( tree ) ;
   ROOT_Selector::Init ( tree ) ;
 }
 // ============================================================================
@@ -66,9 +61,7 @@ void   Ostap::Selector::Init
 void   Ostap::Selector::Begin 
 ( TTree*   tree       )
 {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0) 
-  m_tree = tree ;
-#endif 
+  set_tree ( tree ) ;
   ROOT_Selector::Begin ( tree ) ;
 }
 // ============================================================================
@@ -77,32 +70,46 @@ void   Ostap::Selector::Begin
 void   Ostap::Selector::SlaveBegin   
 ( TTree*   tree       ) 
 {
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0) 
-  m_tree = tree ;
-#endif 
+  set_tree ( tree ) ;
   ROOT_Selector::SlaveBegin ( tree ) ;
 } 
 // ============================================================================
 // process 
 // ============================================================================
-Bool_t Ostap::Selector::Process
-( Long64_t entry ) 
-{ return ROOT_Selector::Process ( entry ) ; }
+Bool_t Ostap::Selector::Process ( Long64_t entry ) 
+{ 
+  // increment number of processed events  
+  increment_event() ;
+  //
+  if ( Ostap::Selector::GetEntry ( entry ) <= 0 ) 
+  {
+    Abort ( "" , TSelector::kAbortFile ) ;
+    return false ; 
+  }
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  //
+  return ROOT_Selector::Process ( entry ) ; 
+  //
+#else 
+  //
+  return process_entry () ;
+  //
+#endif 
+  //
+}
 // ============================================================================
 // notify 
 // ============================================================================
-Bool_t Ostap::Selector::Notify ()
-{ return ROOT_Selector::Notify ()  ; }
+Bool_t Ostap::Selector::Notify         () { return ROOT_Selector::Notify ()  ; }
 // ============================================================================
 // teminnate the slave 
 // ============================================================================
-void   Ostap::Selector::SlaveTerminate () 
-{ ROOT_Selector::SlaveTerminate () ; }
+void   Ostap::Selector::SlaveTerminate () { ROOT_Selector::SlaveTerminate () ; }
 // ============================================================================
 /// terminate
 // ============================================================================
-void   Ostap::Selector::Terminate ()
-{ ROOT_Selector::Terminate () ; }
+void   Ostap::Selector::Terminate      () { ROOT_Selector::Terminate () ; }
 // ============================================================================
 // get entry 
 // ============================================================================
@@ -110,32 +117,49 @@ Int_t  Ostap::Selector::GetEntry
 ( Long64_t entry  , 
   Int_t    getall ) 
 {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  //
   return ROOT_Selector::GetEntry ( entry , getall ) ;
+  //
 #else 
+  //
   return  m_tree ? m_tree->GetTree()->GetEntry ( entry , getall ) : 0 ;
+  //
 #endif 
+  //
 }
 // ============================================================================
 // version
 // ============================================================================
 Int_t Ostap::Selector::Version()const 
 {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  //
   return ROOT_Selector::Version ()  ;
+  //
 #else 
+  //
   return  2 ; // NB! note 2 here!!!
+  //
 #endif 
+  //
 }
 // ============================================================================
 // get the tree 
 // ============================================================================
-TTree* Ostap::Selector::tree() const
+TTree* Ostap::Selector::get_tree () const
 {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  //
   return ROOT_Selector::fChain ;
+  //
 #else 
+  //
   return  m_tree ;
+  //
 #endif 
 }
 // ============================================================================
@@ -143,11 +167,17 @@ TTree* Ostap::Selector::tree() const
 // ============================================================================
 void Ostap::Selector::set_tree  ( TTree* tree ) 
 {
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  //
   ROOT_Selector::fChain = tree ;
+  //
 #else 
+  //
   m_tree = tree ;
+  //
 #endif 
+  //
 }
 // ============================================================================
 /*  helper function to use TTree::Process in python 
@@ -163,7 +193,7 @@ void Ostap::Selector::set_tree  ( TTree* tree )
  *  @date   2011-01-21
  */
 // ============================================================================
-long Ostap::Process::process
+long Ostap::Utils::process
 ( TTree*             tree     ,
   TSelector*         selector )
 {
@@ -185,7 +215,7 @@ long Ostap::Process::process
  *  @date   2013-02-10
  */
 // ============================================================================
-long Ostap::Process::process
+long Ostap::Utils::process
 ( TTree*              tree      ,
   TSelector*          selector  , 
   const unsigned long events    , 
@@ -208,7 +238,7 @@ long Ostap::Process::process
  *  @date   2011-01-21
  */
 // ============================================================================
-long Ostap::Process::process
+long Ostap::Utils::process
 ( TChain*            chain    ,
   TSelector*         selector )
 {
@@ -230,7 +260,7 @@ long Ostap::Process::process
  *  @date   2011-01-21
  */
 // ============================================================================
-long Ostap::Process::process
+long Ostap::Utils::process
 ( TChain*             chain    ,
   TSelector*          selector ,
   const unsigned long events   ,

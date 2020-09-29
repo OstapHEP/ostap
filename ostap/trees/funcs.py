@@ -26,7 +26,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.core import Ostap, valid_pointer
+from   ostap.core.core      import Ostap, valid_pointer
+from   ostap.core.meta_info import old_PyROOT 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -42,8 +43,10 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
     """
     def __init__ ( self , tree = None ) :
         ## initialize the base class
-        if tree is None : tree = ROOT.nullptr  
-        Ostap.Functions.PyFuncTree.__init__ ( self , self , tree )
+        if tree is None : tree = ROOT.nullptr
+        ##
+        if old_PyROOT : super (FuncTree,self).__init__ ( self , tree )
+        else          : super (FuncTree,self).__init__ (        tree )
         
     @property
     def the_tree ( self ) :
@@ -66,7 +69,8 @@ class FuncData(Ostap.Functions.PyFuncData) :
     def __init__ ( self , data = None ) :
         ## initialize the base class
         if  data is None : data = ROOT.nullptr 
-        Ostap.Functions.PyFuncData.__init__ ( self , self , data  ) 
+        if old_PyROOT : super (FuncData,self).__init__ ( self , data )
+        else          : super (FuncData,self).__init__ (        data )
         
     @property
     def the_data ( self ) :
@@ -96,7 +100,7 @@ class PyTreeFunction(FuncTree) :
     def __init__ ( self , the_function , tree = None ) :
         """Constructor from the function/callable and (optional) tree"""
         if tree is None : tree = ROOT.nullptr 
-        FuncTree.__init__ ( self , tree  )
+        super(PyTreeFunction,self).__init__ ( tree  )
         assert callable   ( the_function ), \
                'PyTreeFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
         self.__function = the_function
@@ -108,7 +112,7 @@ class PyTreeFunction(FuncTree) :
     
     ## the only one method, delegate to the function  
     def evaluate  ( self ) :
-        tree = self.the_tree
+        tree = self.the_tree   
         return self.__function ( tree )
     
 # =============================================================================
@@ -127,7 +131,7 @@ class PyDataFunction(FuncData) :
     """
     def __init__ ( self , the_function , data = None ) :        
         if data is None : data = ROOT.nullptr 
-        FuncData.__init__ ( self , data  )
+        super(PyDataFunction,self).__init__ ( self , data  )
         assert callable   ( the_function ), \
                'PyDataFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
         self.__function = the_function
@@ -139,8 +143,8 @@ class PyDataFunction(FuncData) :
     
     ## the only one method, delegate to the function  
     def evaluate  ( self ) :
-        data = self.the_data
-        return self.__function ( tree )
+        data = self.the_data 
+        return self.__function ( data  )
 
 # =================================================================================
 ## create the Ostap.ITreeFunc obejct from python function/callable

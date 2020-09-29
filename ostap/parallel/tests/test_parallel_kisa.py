@@ -156,7 +156,6 @@ def test_kisa2 () :
     from sys import version_info  as python_version
     if  python_version.major < 3 :
         variables.append ( Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) )
-
     
     ppservers = () ## 'lxplus051' , )
     ## ppservers = 'auto'

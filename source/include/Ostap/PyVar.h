@@ -4,10 +4,6 @@
 // ============================================================================
 // Include files
 // ============================================================================
-// Python
-// ============================================================================
-#include "Python.h"
-// ============================================================================
 // ROOT/RooFit
 // ============================================================================
 #include "RooAbsReal.h"
@@ -16,7 +12,8 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "PyCallable.h"
+#include "Ostap/OstapPyROOT.h"
+#include "Ostap/PyCallable.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -34,9 +31,11 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      ClassDef ( Ostap::Functions::PyVar , 1 ) ;
+      ClassDef ( Ostap::Functions::PyVar , 2 ) ;
       // ======================================================================
     public: 
+      // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
       // ======================================================================
       /** Standard constructor
        *  @param self python object 
@@ -48,6 +47,20 @@ namespace Ostap
                const char*       name      , 
                const char*       title     ,
                const RooArgList& variables ) ;
+      // ======================================================================
+#else 
+      // ======================================================================
+      /** Standard constructor
+       *  @param name      the obkect name 
+       *  @param title     the objkect title
+       *  @param variables the list of variables 
+       */
+      PyVar ( const char*       name      , 
+              const char*       title     ,
+              const RooArgList& variables ) ;
+      // ======================================================================
+#endif 
+      // ======================================================================
       /// Copy constructor
       PyVar ( const PyVar& right , const char* name = 0 ) ;
       /// virtual destructor
@@ -76,15 +89,20 @@ namespace Ostap
       double variable ( const          char*  name ) const ;
       // =====================================================================
       /// get all   parameters in a form of list
-      const RooListProxy& variables () const { return m_variables    ; }
-      const RooListProxy& params    () const { return   variables () ; }
+      const RooArgList& variables () const { return m_variables    ; }
+      const RooArgList& params    () const { return   variables () ; }
       /// get all   parameters in a form of list
-      const RooListProxy& varlist   () const { return   variables () ; }
+      const RooArgList& varlist   () const { return   variables () ; }
       // ======================================================================
     private:
       // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+      // ======================================================================
       /// python's  "self"
       PyObject*    m_self      { nullptr } ; // python's  "self"
+      // ======================================================================
+#endif  
+      // ======================================================================
       /// the list of variables/parameters 
       RooListProxy m_variables {} ; // the list of variables/parameters 
       // ======================================================================      

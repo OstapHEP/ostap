@@ -169,7 +169,7 @@ def test_mspline () :
     
     logger.info ("Test positive decreasing spline of order 3 with 2 inner knots ")
     spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
-    model  = Models.MSpline_pdf ( 'S3' , x , spline )
+    model  = Models.MSpline_pdf ( 'M3' , x , spline )
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
@@ -212,11 +212,6 @@ def test_cspline () :
 # =============================================================================
 def test_db() :
 
-    from ostap.core.meta_info import root_version_int 
-    if root_version_int >= 62200 :
-        logger.warning("test_db: test is disabled for ROOT version %s" % root_version_int )
-        return 
-    
     logger.info('Saving all objects into DBASE')    
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 

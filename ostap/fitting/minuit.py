@@ -93,7 +93,6 @@ def _mn_exec_ ( self , command , *args ) :
     Simple wrapper for ROOT.TMinuit.mnexcm function
     - see ROOT.TMinuit.mnexcm    
     """
-    logger.info ( 'I  AM MCEXEC %s %s' % (   command , str ( args ) ) ) 
     if not  args : args = 0 ,
     
     from array import array
@@ -101,10 +100,7 @@ def _mn_exec_ ( self , command , *args ) :
     #
     ierr = ctypes.c_int ( 0 ) 
     ##
-    logger.info ( 'I  AM MNCEXEC(1) %s %s' % ( command , str ( args )  ) ) 
-    logger.info ( 'I  AM MNCEXEC(2) %s %s' % ( arglist , len(arglist)  ) ) 
     self.mnexcm ( command , arglist , len ( arglist ) , ierr )
-    logger.info ( 'I  AM MNCEXEC(3) %s %s' % ( arglist , len(arglist)  ) ) 
     #
     return int ( ierr.value )
 

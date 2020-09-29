@@ -71,6 +71,8 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
+## ROOT.ROOT.EnableThreadSafety()
+
 from   ostap.math.base      import ( Ostap    , std     , cpp ,  
                                      iszero   , isequal ,
                                      isint    , islong  ,

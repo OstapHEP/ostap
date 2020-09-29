@@ -40,7 +40,7 @@ namespace Ostap
   public:
     // ========================================================================
     /// constructor 
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0) 
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
     // ========================================================================
     SelectorWithCuts
     ( PyObject*          self           , 
@@ -77,12 +77,15 @@ namespace Ostap
   public:
     // ========================================================================    
     /// make formula cuts 
-    bool make_formula ( TTree*   tree  ) ;
+    bool make_formula  ( TTree*   tree  ) ;
     /// check the entry 
-    bool good_entry   ( Long64_t entry ) ;
+    bool good_entry    ( Long64_t entry ) ;
     // ========================================================================
-    /// process a good entry 
-    virtual bool process_entry () ;
+    /// reset formula unisy new tree 
+    void reset_formula ( TTree*   tree  ) ;
+    // ========================================================================
+    /// process a good entry
+    bool process_entry () override ;
     // ========================================================================
   public:
     // ========================================================================    
@@ -99,9 +102,11 @@ namespace Ostap
     Ostap::Formula*    formula () const { return fMyFormula.get() ; }
     /// get the formula
     const std::string& cuts    () const { return fMyCuts ; }
-    /// event counter (useless for PROOF, useful for interactive python) 
-    unsigned long long event   () const { return m_event ; }
-    /// event counter (useless for PROOF, useful for interactive python) 
+    /** good event counter 
+     *  - useless for PROOF
+     *  - useful for interactive python
+     *  incremented in Ostap::SelectorWithCuts::Process 
+     */
     unsigned long long good    () const { return m_good  ; }
     // ========================================================================
   private:
@@ -109,8 +114,6 @@ namespace Ostap
     /// the selection formula 
     std::string                        fMyCuts    ; 
     std::unique_ptr<Ostap::Formula>    fMyFormula ;
-    /// event counter 
-    unsigned long long  m_event { 0 } ; // event counter: useless for PROOF
     /// event counter 
     unsigned long long  m_good  { 0 } ; // event counter: useless for PROOF
     // ========================================================================    

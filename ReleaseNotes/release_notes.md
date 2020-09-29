@@ -4,6 +4,8 @@
   1. rename  tests, make test selection more transparent and easy to navigate back 
   1. rename `ostap/fitting/selectors.py` to `ostap/fitting/pyselectors.py` to avoid the name clash for python3 
   1. add helper script `pplaunch` to launch remote pp-servers via ssh tunnels
+  1. update `PyVar`, `PyVar2`, `PyPdf`,`PyPdf2`
+  1. (almost) complete update for new PyROOT 
   
 ## Backward incompatible changes: 
 

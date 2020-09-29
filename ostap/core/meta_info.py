@@ -22,11 +22,13 @@ __all__     = (
     #
     'root_version_int'     , ## version of ROOT   (as int) 
     'ostap_version_int'    , ## version of ROOT   (as int) 
-    'python_version_int'   , ## verison of PYTHON (as int)
+    'python_version_int'   , ## version of PYTHON (as int)
     #
     'ostap_info'           , ## Ostap version info 
     'root_info'            , ## ROOT version info 
-    'python_info'          , ## Python version info 
+    'python_info'          , ## Python version info
+    #
+    'old_PyROOT'           , ## do we use "old" PyROOT ? 
     )
 # =============================================================================
 from collections import namedtuple 
@@ -51,6 +53,7 @@ python_version_int = sys.version_info.micro              + \
 groot = ROOT.ROOT.GetROOT()
 root_version     = groot.GetVersion    ()
 root_version_int = groot.GetVersionInt ()
+old_PyROOT       = root_version_int < 62200
 
 root_major       = divmod ( root_version_int                       , 100**2 ) [0]
 root_minor       = divmod ( root_version_int - root_major * 100**2 , 100    ) [0]
@@ -62,6 +65,7 @@ meta_info        = MetaInfo ( user           ,
                               python_version ,
                               root_version   )
 python_info     = sys.version_info
+
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -45,7 +45,8 @@ add_subdirectory(source)
 add_subdirectory(ostap)
 add_subdirectory(examples)
 add_subdirectory(scripts)
-add_subdirectory(docs)
+## add_subdirectory(docs)
+
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
 
 ### where to put the libraries

@@ -235,7 +235,6 @@ __all__ = (
     ##
     'Convolution_pdf'   , ## generic convolution PDF
     ##
-    'PyPDF'              , ## helper class to implement ``pure-python'' PDF 
     )
 # =============================================================================
 import ROOT, math
@@ -271,8 +270,6 @@ logger.debug ("Import adjustment           models from ``adjust''"       )
 from ostap.fitting.adjust        import *  
 logger.debug ("Import modifiers                   from ``modifiers''"    )
 from ostap.fitting.modifiers     import *
-logger.debug ("Import PyPDF                       from ``pypdf''"        )
-from ostap.fitting.pypdf         import PyPDF
 logger.debug ("Import functions                   from ``roofuncs''"     )
 from ostap.fitting.roofuncs      import * 
 

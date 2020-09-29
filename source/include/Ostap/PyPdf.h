@@ -13,7 +13,8 @@
 // ============================================================================
 // Ostap
 // ============================================================================
-#include "PyCallable.h"
+#include "Ostap/OstapPyROOT.h"
+#include "Ostap/PyCallable.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -31,9 +32,11 @@ namespace Ostap
     {
     public: 
       // ======================================================================
-      ClassDef(Ostap::Models::PyPdf, 1) ;
+      ClassDef(Ostap::Models::PyPdf, 2 ) ;
       // ======================================================================
     public:
+      // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
       // ======================================================================
       /** Standard constructor
        *  @param self python partner for this instance 
@@ -45,6 +48,20 @@ namespace Ostap
               const char*       name      , 
               const char*       title     ,
               const RooArgList& variables );
+      // ======================================================================
+#else 
+      // ======================================================================
+      /** Standard constructor
+       *  @param name      the name of PDF 
+       *  @param title     the title  of PDF 
+       *  @param variables all variables 
+       */
+      PyPdf ( const char*       name      , 
+              const char*       title     ,
+              const RooArgList& variables );
+      // ======================================================================
+#endif
+      // ======================================================================
       /// copy  constructor 
       PyPdf ( const PyPdf& right , const char* name = nullptr ) ;
       /// virtual destructor 
@@ -103,10 +120,22 @@ namespace Ostap
       /// move the function from protected to public integrface 
       Bool_t matchArgs ( const RooArgSet& refVars ) const ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// helper function to be redefined in python  
+      virtual int    get_analytical_integral () const ;
+      /// helper function to be redefined in python  
+      virtual double     analytical_integral () const ;
+      // ======================================================================
     private:
       // ======================================================================  
-      // python partner
-      PyObject*    m_self      { nullptr } ; // python partner 
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+      // ======================================================================
+      /// python's  "self"
+      PyObject*    m_self      { nullptr } ; // python's  "self"
+      // ======================================================================
+#endif  
+      // ======================================================================
       /// all variables as list of variables 
       RooListProxy m_varlist {} ; // all variables as list of variables 
       // ======================================================================  
