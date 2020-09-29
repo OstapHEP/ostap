@@ -18,8 +18,8 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python3-version
 ## message ('ROOT libraries: ' ${ROOT_LIBRARIES} )
  
 
-message ('PY2VERSION_ROOT:' ${PY2VERSION_ROOT} )
-message ('PY3VERSION_ROOT:' ${PY3VERSION_ROOT} )
+## message ('PY2VERSION_ROOT:' ${PY2VERSION_ROOT} )
+## message ('PY3VERSION_ROOT:' ${PY3VERSION_ROOT} )
 
 add_library ( root_pyroot INTERFACE IMPORTED) 
 if     (PY2VERSION_ROOT)
@@ -55,11 +55,11 @@ elseif (PY3VERSION_ROOT)
 endif () 
 
 
-message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+## message ( "----> ROOT   version   : " ${ROOT_VERSION} )
                    
-get_target_property( pyincdirc root_pyroot INTERFACE_INCLUDE_DIRECTORIES)
-##get_target_property( pyincdirc   root_pyroot  INTERFACE_LINK_LIBRARIES)
-message ('ppincdirc'  ${pyincdirc} ) 
+## get_target_property( pyincdirc root_pyroot INTERFACE_INCLUDE_DIRECTORIES)
+## get_target_property( pyincdirc   root_pyroot  INTERFACE_LINK_LIBRARIES)
+## message ('ppincdirc'  ${pyincdirc} ) 
  
 
 # =============================================================================
@@ -81,9 +81,12 @@ if ( NOT EXISTS "${GSL_ROOT_DIR}" )
 endif()
 
 find_package(GSL REQUIRED GSL_ROOT_DIR COMPONENTS gsl)
-message ('GSL version:'     ${GSL_VERSION})
-message ('GSL includes:'    ${GSL_INCLUDE_DIRS})
-message ('GSL libraries:'   ${GSL_LIBRARIES})
+if (GSL_FOUND) 
+message ( "----> GSL    version   : " ${GSL_VERSION} )
+message ( "----> GSL    include   : " ${GSL_INCLUDE_DIRS} )
+message ( "----> GSL    libraries : " ${GSL_LIBRARIES} )
+else()
+endif() 
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   #message(STATUS "YES" "${CMAKE_CXX_COMPILER_ID}")
@@ -135,13 +138,13 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
 
 if     ( ${CXX17_ROOT} STREQUAL "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_17 )
-message ( C++17 ) 
+## message ( C++17 ) 
 elseif ( ${CXX17_ROOT} STREQUALS "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_14 )
-message ( C++14 ) 
+## message ( C++14 ) 
 elseif ( ${CXX11_ROOT} STREQUALS "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_11 )
-message ( C++11 ) 
+## message ( C++11 ) 
 endif() 
 
 target_link_libraries  ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
@@ -154,12 +157,12 @@ target_include_directories (ostap
         ${CMAKE_CURRENT_SOURCE_DIR}/src ${Python_INCLUDE_DIRS} 
 )
 
-get_target_property(incdirs1 ROOT::MathMore INTERFACE_INCLUDE_DIRECTORIES)
-message ( INCDIRS1 ${incdirs1} )
-get_target_property(incdirs2 root_pyroot    INTERFACE_INCLUDE_DIRECTORIES)
-message ( INCDIRS2 ${incdirs2} )
-get_target_property(incdirs3 root_pyroot    INTERFACE_LINK_LIBRARIES)
-message ( INCDIRS3 ${incdirs3} )
+## get_target_property(incdirs1 ROOT::MathMore INTERFACE_INCLUDE_DIRECTORIES)
+## message ( INCDIRS1 ${incdirs1} )
+## get_target_property(incdirs2 root_pyroot    INTERFACE_INCLUDE_DIRECTORIES)
+## message ( INCDIRS2 ${incdirs2} )
+## get_target_property(incdirs3 root_pyroot    INTERFACE_LINK_LIBRARIES)
+## message ( INCDIRS3 ${incdirs3} )
 
 ## include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${incdirs1} ${PYTHON_INCLUDE_DIRS} )
 
@@ -207,8 +210,11 @@ install ( TARGETS ostap     EXPORT   ostap-export
 install ( TARGETS ostapDict LIBRARY  DESTINATION lib )
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap     
-                    DESTINATION include       
-                    FILES_MATCHING PATTERN "*.h" 
+                    DESTINATION include 
+                    FILES_MATCHING
+                    PATTERN "*.h"
+                    PATTERN "*.hpp"
+                    PATTERN "*.icpp"
                     PATTERN  "*#*" EXCLUDE )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
