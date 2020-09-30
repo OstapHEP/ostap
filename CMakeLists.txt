@@ -1,8 +1,10 @@
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 message ( "----> CMAKE  version   : " ${CMAKE_VERSION} ) 
 
+
 string(TIMESTAMP OSTAP_BUILD_TIMESTAMP   "%b %d, %Y, %H:%M [UTC]" UTC)
 string(TIMESTAMP OSTAP_BUILD_UTCUNIX     "%s"                     UTC)
+
 
 cmake_host_system_information(RESULT OSTAP_HOSTNAME QUERY HOSTNAME)
 cmake_host_system_information(RESULT OSTAP_DOMAIN   QUERY FQDN    )
