@@ -1,4 +1,5 @@
 ## New features 
+
   1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
   1. Make few important steps towards ROOT 6.23/01 ("New PYROOT"). Full  adaptation is not yet achieved, there   are some pending problems with effective inheritance from C++ classes (namely `TSelector`, `PyPDF`, `PyVAR`, ...). There are also some puzzling  crashes... 
   1. rename  tests, make test selection more transparent and easy to navigate back 
@@ -6,7 +7,9 @@
   1. add helper script `pplaunch` to launch remote pp-servers via ssh tunnels
   1. update `PyVar`, `PyVar2`, `PyPdf`,`PyPdf2`
   1. (almost) complete update for new PyROOT 
-  
+  1. fix `test_fitting_minuit_weighted` - thanks to Dima Golubkov
+  1. make more  coherent treatment of ROOT issues 
+   
 ## Backward incompatible changes: 
 
 ## Bug fixes:

@@ -531,6 +531,9 @@ class MakeVar ( object ) :
                 elif       dataset and     dataset.isWeighted() and not a :
                     self.warning ('parse_args: AsymptoticError-flag is False for     weighted dataset')                    
 
+                if a and root_version_int < 62006 :
+                    self.warning ("``Asymptotic=True'' will crash if Title!=Name (ROOT-10668)")
+                    
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
             elif kup in ( 'BATCH'            ,

@@ -84,10 +84,9 @@ def test_multiprocess_function () :
         logger.error ( "multiprocess is not available" )
         return 
         
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill issue)" % vip )
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
         return
     
     ncpus = multiprocess.cpu_count() 
@@ -131,12 +130,10 @@ def test_multiprocess_callable  () :
         logger.error ( "multiprocess is not available" )
         return 
         
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill issue)" % vip )
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
         return
-
     
     ncpus = multiprocess.cpu_count() 
     

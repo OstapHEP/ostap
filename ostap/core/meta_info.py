@@ -37,9 +37,10 @@ RootInfo = namedtuple ( 'RootInfo'  , ( 'major' , 'minor' , 'patch'           ) 
 
 # =============================================================================
 import sys, getpass, socket, ROOT 
-from   ostap import version      as ostap_version
-from   ostap import version_info as ostap_info  
-from   ostap import version_int  as ostap_version_int 
+from   ostap             import version      as ostap_version
+from   ostap             import version_info as ostap_info  
+from   ostap             import version_int  as ostap_version_int 
+# =============================================================================
 
 user           = "%s@%s" % ( getpass.getuser() , socket.getfqdn () )
 python_version = '%d.%d.%d' % ( sys.version_info.major ,
@@ -53,7 +54,7 @@ python_version_int = sys.version_info.micro              + \
 groot = ROOT.ROOT.GetROOT()
 root_version     = groot.GetVersion    ()
 root_version_int = groot.GetVersionInt ()
-old_PyROOT       = root_version_int < 62200
+old_PyROOT       = groot.GetVersionInt () < 62200
 
 root_major       = divmod ( root_version_int                       , 100**2 ) [0]
 root_minor       = divmod ( root_version_int - root_major * 100**2 , 100    ) [0]

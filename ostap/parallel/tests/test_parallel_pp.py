@@ -72,13 +72,12 @@ def test_pp_function () :
     """
     logger =    getLogger ("ostap.test_pp_function")
     logger.info ('Test job submission with %s' %  pp ) 
-                      
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
 
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
+        return
+    
     job_server = pp.Server()
     
     jobs = [ ( i , job_server.submit ( make_histo , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -109,10 +108,9 @@ def test_pp_method() :
     logger =    getLogger ("ostap.test_pp_method")
     logger.info ('Test job submission with %s' %  pp ) 
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
         return
             
     job_server = pp.Server()    

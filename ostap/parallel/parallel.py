@@ -47,12 +47,10 @@ if not worker :
         if not  worker in workers : worker = ''
 
 # ===============================================================================
-from sys import version_info  as python_version
-
-if 3 == python_version.major and 7 >= python_version.minor :
-    ## for python 3.6 dill fails to serialize ROOT objects
+from ostap.core.known_issues import DILL_ROOT_issue
+if DILL_ROOT_issue  :
     worker = 'GAUDIMP'
-    
+
 # ===============================================================================
 
 if  'GAUDIMP' != worker :

@@ -81,10 +81,9 @@ def test_ppft_function () :
         logger.error ( "ppdf is not available" )
         return 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor : 
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
         return
     
     job_server = ppft.Server()
@@ -121,10 +120,9 @@ def test_ppft_method() :
         logger.error ( "ppft is not available" )
         return 
         
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    from ostap.core.known_issues import DILL_ROOT_issue
+    if DILL_ROOT_issue : 
+        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
         return
     
     job_server = ppft.Server()
@@ -165,12 +163,6 @@ def test_ppft_callable () :
     logger.warning ("test is disabled for UNKNOWN REASON")
     return
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
-    
     job_server = ppft.Server()
     
     jobs = [ ( i , job_server.submit ( mh.__call__  , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]

@@ -1,50 +1,40 @@
-# File: GaudiMP/Parallel.py
-# Author: Pere Mato (pere.mato@cern.ch)
-
-""" GaudiMP.Parallel module.
-    This module provides 'parallel' processing support for GaudiPyhton.
-    It is adding some sugar on top of public domain packages such as
-    the 'multiprocessing' or the 'pp' packages. The interface can be made
-    independent of the underlying implementation package.
-    Two main class are defined: Task and WorkManager
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+# @file ostap/parallel/parallel_gaudi.py
+# This is a modified verison of the
+# original <code>GaudiMP.Parallel</code> module coded by Pere MATO
+# @author Pere Mato (pere.mato@cern.ch)
+# 
+# =============================================================================
 """
-from   __future__        import print_function
-__all__ = [ 'Task','WorkManager' ]
-excluded_varnames = ['HOSTNAME', 'SSH_CLIENT', 'SSH_CONNECTION', 'DISPLAY']
-# ============================================================================
+This is a modified verison of the `GaudiMP.Parallel` module by Pere MATO
+
+GaudiMP.Parallel module:
+- This module provides 'parallel' processing support for GaudiPyhton.
+It is adding some sugar on top of public domain packages such as
+the 'multiprocessing' or the 'pp' packages. The interface can be made
+independent of the underlying implementation package.
+Two main class are defined: Task and WorkManager
+"""
+# =============================================================================
+__all__ = (
+    'Task'        , ## Base class for Task 
+    'WorkManager' , ## Task-manager 
+    )
+# =============================================================================
 import sys, os, time
 from   collections               import Sized
 from   itertools                 import repeat , count
-# =============================================================================
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.logger.logger       import getLogger
-from   ostap.parallel.task       import ( TaskManager , Task       ,
-                                          Statistics  , StatMerger )
+from   ostap.parallel.task       import Task, TaskManager 
 # =============================================================================
 logger  = getLogger('ostap.parallel.parallel_gaudi')
 # =============================================================================
 
 # =============================================================================
-vi = sys.version_info
-if 3 <= vi.major and 6 <= vi.minor :
-    import multiprocessing     as MP 
-else : 
-    try: 
-        import multiprocess    as MP
-    except ImportError :
-        import multiprocessing as MP 
-# =============================================================================
-
-## def _prefunction( f, task , jobid , item) :
-##     return f( ( task , jobid , item ) )
-## def _ppfunction ( args ) :
-##     #--- Unpack arguments
-##     task, jobid , item = args
-##     with Statistics() as stat : 
-##         task.initialize_remote ( jobid )
-##         result = task.process  ( jobid , item )
-##         stat.stop()
-##         return result , stat
+import multiprocessing     as MP
 
 # =============================================================================
 class pool_context :
@@ -82,8 +72,7 @@ class WorkManager(TaskManager) :
             logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
         ## initialize the base class 
-        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent )
-        
+        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent )        
         
         self.pool   = MP.Pool ( self.ncpus )
 
@@ -130,7 +119,7 @@ class WorkManager(TaskManager) :
             for result in progress_bar ( jobs , max_value = njobs , silent = silent ) :
                 yield result                
 
-    # ===========================================================================
+    # ========================================================================-
     ## get PP-statistics if/when posisble 
     def get_pp_stat ( self ) : 
         """Get PP-statistics if/when posisble 
@@ -143,6 +132,7 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )    
     logger.info ("Module ``%s'' is used for multiprocessing" % MP.__name__ )
-    
-    
-# == EOF ====================================================================================
+        
+# =============================================================================
+##                                                                      The END 
+# =============================================================================
