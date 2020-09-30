@@ -9,7 +9,15 @@
   1. (almost) complete update for new PyROOT 
   1. fix `test_fitting_minuit_weighted` - thanks to Dima Golubkov
   1. make more  coherent treatment of ROOT issues 
-   
+  1. fix `minuit` for new PyROOT  (signature of `FCN` is different!)
+  1. minor update for `minuit` : from now allow access  by parameter name:
+```
+minuit        = ...
+minuit['p2']  = 10 
+minuit.minos   ('p1','p2',...)
+minuit.release ('p3')
+
+```   
 ## Backward incompatible changes: 
 
 ## Bug fixes:

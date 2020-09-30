@@ -263,13 +263,13 @@ def rootWarning ( level = 1 ) :
     return ROOTIgnore ( ROOT.kWarning + level )
 
 # =============================================================================
-## nice printout of the floating number (string + exponent)
+## Nice printout of the floating number (string + exponent)
 #  @code
 #  s , n = pretty_float ( number ) 
 #  @endcode
 #  @return nice stirng and the separate exponent 
 def pretty_float ( value , width = 8 , precision = 6 ) :
-    """N Nice printout of the floating number
+    """Nice printout of the floating number
     - return nice string and the separate exponent 
     >>> s , n = pretty_float ( number ) 
     """
@@ -285,37 +285,48 @@ def pretty_float ( value , width = 8 , precision = 6 ) :
     v  = value 
     av = abs ( v ) 
     if   100 <= av < 1000 :
-        fmt2 = '%%+%d.%df' % ( width , precision - 2 )
-        return fmt2 % v , None
+        fmt2 = '%%+0%d.%df' % ( width , precision - 2 )
+        return fmt2 % v , 0 
     elif 10  <= av < 100  :
-        fmt1 = '%%+%d.%df' % ( width , precision - 1 )
-        return fmt1 % v , None 
+        fmt1 = '%%+0%d.%df' % ( width , precision - 1 )
+        return fmt1 % v , 0  
     elif 1   <= av < 10   :
-        fmt0 = '%%+%d.%df' % ( width , precision     )
-        return fmt0 % v , None 
+        fmt0 = '%%+0%d.%df' % ( width , precision     )
+        return fmt0 % v , 0  
+    elif 0.1 <= av < 1    :
+        fmt0 = '%%+0%d.%df' % ( width , precision     )
+        return fmt0 % v , 0  
     
-    from  ostap.math.base        import frexp10 
-    v_a , v_e = frexp10 ( av )
+    from  ostap.math.base        import frexp10, iszero    
+    if iszero ( av ) :
+        fmt0 = '%%+0%d.%df' % ( width , precision )
+        return fmt0 % v , 0  
     
-    v_a *= 10
+    v_a , v_e = frexp10 ( v )
+    if 0 == v_e and iszero ( v_a  ) :
+        fmt0 = '%%+0%d.%df' % ( width , precision )
+        return fmt0 % v , 0 
+            
+    v_a *= 10 
     v_e -=  1 
 
     n , r = divmod  ( v_e , 3 )
-    if 0 != r : 
-        r -= 3
-        n += 1
         
     ra = v_a * ( 10**r )
 
-    fmt0 = '%%+%d.%df' % ( width , precision     )
-    return fmt0 % ( ra ) , 3 * n
+    ## assert 1 <= abs ( ra ) < 1000 , 'Something wrong happens here...%s' % ra 
+
+    s , p = pretty_float ( ra , width , precision )
+
+    return s, p + 3 * n
+
 
 # ===============================================================================
 ## nice printout of the ValueWithError obejct  ( string + exponent)
 #  @code
 #  s , n = pretty_ve ( number ) 
 #  @endcode
-#  @return nice stirng and the separate exponent 
+#  @return nice string and the separate exponent 
 def pretty_ve ( value , width = 8 , precision = 6 ) :
     """Nice printout of the ValueWithError obejct  ( string + exponent)
     - return nice stirng and the separate exponent 
@@ -337,32 +348,34 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
     av = max ( abs ( v ) ,  e )
 
     if   100 <= av < 1000 :
-        fmt2 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 2 , width , precision - 2 )
-        return fmt2 % ( v , e ) , None
+        fmt2 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 2 , width , precision - 2 )
+        return fmt2 % ( v , e ) , 0 
     elif 10  <= av < 100  :
-        fmt1 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
-        return fmt1 % ( v , e ) , None 
+        fmt1 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
+        return fmt1 % ( v , e ) , 0 
     elif 1   <= av < 10   :
-        fmt0 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
-        return fmt0 % ( v , e ) , None 
+        fmt0 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        return fmt0 % ( v , e ) , 0  
 
-    from  ostap.math.base        import frexp10 
+    from  ostap.math.base        import frexp10, iszero 
+    if iszero ( av ) :
+        fmt0 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        return fmt0 % ( 0 , 0 ) , 0  
+
     v_a , v_e = frexp10 ( av )
 
-    v /= 10**(v_e-1)
-    e /= 10**(v_e-1)
+    v   /= 10**(v_e-1)  
+    e   /= 10**(v_e-1)
+    v_e -= 1 
     
-    v_e -= 1     
     n , r = divmod  ( v_e , 3 )    
-    if 0 != r : 
-        r -= 3
-        n += 1
 
     v *= 10**r
     e *= 10**r 
 
-    fmt0 = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
-    return fmt0 % ( v  , e ) , 3 * n
+    s , p = pretty_ve ( VE ( v , e * e ) , width, precision )
+    
+    return s , p + 3 * n 
 
 
 # ===============================================================================
@@ -387,7 +400,6 @@ def pretty_2ve ( value         ,
     assert isinstance ( el       , num_types     ),\
            'Invalid el    parameter %s/%s'   % ( el    , type ( el    ) )      
 
-
     v = value 
     e = max ( abs ( eh ), abs ( el ) )
 
@@ -402,38 +414,39 @@ def pretty_2ve ( value         ,
     elif eh >= 0 and el < 0 :
         eh , el = eh , abs ( el )
     
-    av = max ( abs ( v ) ,  e )
+    av = max ( abs ( v ) , e )
 
     if   100 <= av < 1000 :
-        fmt2  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
-        return fmt2 % ( v , eh , el ) , None 
+        fmt2  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        return fmt2 % ( v , eh , el ) , 0  
     elif 10  <= av < 100  :
-        fmt1  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
-        return fmt1 % ( v , eh , el ) , None 
+        fmt1  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        return fmt1 % ( v , eh , el ) , 0
     elif 1   <= av < 10   :
-        fmt0  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
-        return fmt0 % ( v , eh , el ) , None 
+        fmt0  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt0 % ( v , eh , el ) , 0 
 
-    from  ostap.math.base        import frexp10 
+    from  ostap.math.base        import frexp10, iszero
+    if iszero ( av ) :
+        fmt0  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt0 % ( 0 , 0 , 0) , 0 
+                
     v_a , v_e = frexp10 ( av )
 
-    v  /= 10**(v_e-1)
-    eh /= 10**(v_e-1)
-    el /= 10**(v_e-1)
-    
-    v_e -= 1     
+    v   /= 10**(v_e-1)
+    eh  /= 10**(v_e-1)
+    el  /= 10**(v_e-1)
+    v_e -= 1
+
     n , r = divmod  ( v_e , 3 )    
-    if 0 != r : 
-        r -= 3
-        n += 1
 
     v  *= 10**r
     eh *= 10**r 
     el *= 10**r 
 
-    fmt0  = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
-    return fmt0 % ( v , eh , el ) , 3 * n
-
+    s , p = pretty_2ve ( v , eh , el , width , precision )
+    
+    return s , p + 3 * n 
 
 # =============================================================================
 ## format list of strings into multicolumn string
