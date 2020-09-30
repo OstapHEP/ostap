@@ -41,18 +41,22 @@ if ( CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT )
   set ( CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install CACHE PATH "..." FORCE )
 endif ( )
 
+
 add_subdirectory(source)
 add_subdirectory(ostap)
 add_subdirectory(examples)
 add_subdirectory(scripts)
 ## add_subdirectory(docs)
 
+
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR})
+
 
 ### where to put the libraries
 set(LIBRARY_OUTPUT_PATH    "${CMAKE_BINARY_DIR}/lib")
 ### where to put the executables
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
+
 
 # build a CPack driven installer package
 include (InstallRequiredSystemLibraries)
@@ -63,5 +67,3 @@ set (CPACK_PACKAGE_VERSION_PATCH "${OSTAP_VERSION_PATCH}")
 set (CPACK_PACKAGE_VERSION_TWEAK "${OSTAP_VERSION_TWEAK}")
 set (CPACK_PACKAGE_ICON           ${CMAKE_CURRENT_SOURCE_DIR}/docs/ostap.jpg )
 include (CPack)
-
-
