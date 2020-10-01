@@ -127,7 +127,7 @@ class ppServer(object) :
                                   
         ## temporary directory on remote host 
         self.__tmpdir = None 
-        if environment or script or profile or not self.silent or True :
+        if environment or script or profile or ( not self.silent ) or True :
             self.logger.verbose( 'Creating remote temporary directory' ) 
             self.session  ( command =  'TMPDIR=${TMPDIR} mktemp -d -t $(whoami)-pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
             self.session.launch()
