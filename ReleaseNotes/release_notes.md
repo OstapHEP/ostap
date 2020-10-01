@@ -16,8 +16,9 @@ minuit        = ...
 minuit['p2']  = 10 
 minuit.minos   ('p1','p2',...)
 minuit.release ('p3')
-
 ```   
+  1. update `pptunnel` + `pplaunch` with better and more informative output 
+
 ## Backward incompatible changes: 
 
 ## Bug fixes:

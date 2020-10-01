@@ -168,7 +168,9 @@ def test_pathos_pp_function () :
     
     from pathos.pools import ParallelPool as Pool 
 
-    pool = Pool ( ncpus )   
+    pool = Pool ( ncpus ,
+                  secret='xxOGew', ppservers=[22602]
+                  )
     logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
 
     pool.restart ( True ) 
@@ -348,11 +350,11 @@ def test_pathos_pp_callable () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_pathos_mp_function ()
-    test_pathos_mp_callable ()
+    # test_pathos_mp_function ()
+    # test_pathos_mp_callable ()
     test_pathos_pp_function ()
-    test_pathos_pp_method   ()
-    test_pathos_pp_callable ()
+    # test_pathos_pp_method   ()
+    # test_pathos_pp_callable ()
 
 
 # =============================================================================

@@ -167,7 +167,7 @@ if '__main__' == __name__ :
             
     kwargs [ 'silent' ] = config.Quiet
     if config.Verbose or config.Debug:
-        logger.info ( "Confiration: %s" % kwargs  )
+        logger.info ( "Configuration: %s" % kwargs  )
     
     from ostap.parallel.pptunnel import ppServer, show_tunnels 
     
