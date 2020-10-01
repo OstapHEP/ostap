@@ -49,6 +49,35 @@ namespace Ostap
               const char*       title     ,
               const RooArgList& variables );
       // ======================================================================
+      /** Standard constructor
+       *  @param self python partner for this instance 
+       *  @param name      the name of PDF 
+       *  @param variables all variables 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf ( PyObject*          self      , 
+              const std::string& name      , 
+              const RooArgList&  variables ,
+              const std::string& title = "" ) 
+        : PyPdf ( self         , 
+                  name.c_str() , 
+                  title.empty() ?  name.c_str () : title.c_str() , 
+                  variables ) 
+      {}
+      // ======================================================================
+      /** Standard constructor
+       *  @param self python partner for this instance 
+       *  @param variables all variables 
+       *  @param name      the name of PDF 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf ( PyObject*          self      , 
+              const RooArgList&  variables ,
+              const std::string& name      , 
+              const std::string& title = "" ) 
+        : PyPdf ( self , name , variables , title ) 
+      {}
+      // ======================================================================
 #else 
       // ======================================================================
       /** Standard constructor
@@ -59,6 +88,30 @@ namespace Ostap
       PyPdf ( const char*       name      , 
               const char*       title     ,
               const RooArgList& variables );
+      // ======================================================================
+      /** Standard constructor
+       *  @param name      the name of PDF 
+       *  @param variables all variables 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf ( const std::string& name       , 
+              const RooArgList&  variables  , 
+              const std::string& title = "" ) 
+        : PyPdf ( name.c_str() , 
+                  title.empty() ? name.c_str() : title.c_str() , 
+                  variables ) 
+      {} 
+      // ======================================================================
+      /** Standard constructor
+       *  @param variables all variables 
+       *  @param name      the name of PDF 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf ( const RooArgList&  variables  , 
+              const std::string& name       ,
+              const std::string& title = "" ) 
+        : PyPdf ( name , variables , title ) 
+      {}
       // ======================================================================
 #endif
       // ======================================================================
@@ -164,15 +217,44 @@ namespace Ostap
     public:
       // ======================================================================
       /** Standard constructor
-       *  @param self python partner for this instance 
        *  @param name      the name of PDF 
        *  @param title     the title  of PDF 
+       *  @param function  callable function
        *  @param variables all variables 
        */
-      PyPdf2 ( const char*      name      , 
-               const char*      title     ,
-               PyObject*        function  , 
+      PyPdf2 ( const char*       name      , 
+               const char*       title     ,
+               PyObject*         function  , 
                const RooArgList& variables );
+      // =======================================================================
+      /** Standard constructor
+       *  @param name      the name of PDF 
+       *  @param function  callable function
+       *  @param variables all variables 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf2 ( const std::string& name       , 
+               PyObject*          function   ,
+               const RooArgList&  variables  ,
+               const std::string& title = "" )
+        : PyPdf2 ( name.c_str() , 
+                   title.empty() ? name.c_str() : title.c_str() , 
+                   function     ,  
+                   variables    )
+      {}      
+      // =======================================================================
+      /** Standard constructor
+       *  @param name      the name of PDF 
+       *  @param function  callable function
+       *  @param variables all variables 
+       *  @param title     the title  of PDF 
+       */
+      PyPdf2 ( const std::string& name       , 
+               const RooArgList&  variables  ,
+               PyObject*          function   ,
+               const std::string& title = "" )
+        : PyPdf2 ( name , function , variables , title ) 
+      {}
       /// copy  constructor 
       PyPdf2 ( const PyPdf2& right , const char* name = nullptr ) ;
       /// virtual destructor 

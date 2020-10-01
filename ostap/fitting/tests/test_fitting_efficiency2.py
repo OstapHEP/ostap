@@ -12,7 +12,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random, math 
+import ROOT, random, math, time  
 import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID,    Ostap 
@@ -60,7 +60,7 @@ def eff0 ( x ) :
 
 emax       = 1.0
 
-for i in range ( 2000 ) :
+for i in range ( 1000 ) :
     
     xv = random.uniform ( xmin , xmax )
     
@@ -77,17 +77,13 @@ np     = 20
 dx     = (xmax-xmin)/np 
 points = [ dx * i for i in range ( np + 1 ) ]
 
-a       = ROOT.RooRealVar    ( 'a'  , 'a'  , 0.09 , 0.0  , 0.2 )
-b       = ROOT.RooRealVar    ( 'b'  , 'b'  , 0.50 , 0.1  , 0.9 )
-c       = ROOT.RooRealVar    ( 'c'  , 'c'  , 0.05 , 0.01 , 5   )
-x0      = ROOT.RooRealVar    ( 'x0' , 'x0' , 4    , 1    , 9   )
+a       = ROOT.RooRealVar    ( 'a'  , 'a'  , A  , 0.0     , 2 * A  )
+b       = ROOT.RooRealVar    ( 'b'  , 'b'  , B  , 0.5 * B , 2 * B  )
+c       = ROOT.RooRealVar    ( 'c'  , 'c'  , C  , 0.1 * C , 5 * C  )
+x0      = ROOT.RooRealVar    ( 'x0' , 'x0' , X0 , X0 - 2  , X0 + 2 )
 
 vars    = ROOT.RooArgList ( x , a , b , c , x0 ) 
 vars2   = ROOT.RooArgList ( x , a , b , c , x0 ) 
-
-#x0.fix ( X0 )
-#c .fix ( C  )
-#b .fix ( B  )
 
 # =================================================================================
 ## make comparison table 
@@ -115,20 +111,41 @@ def test_formula () :
     """
     logger = getLogger("test_formula") 
     
+
     ## create RooFormularVar 
     effFunc = ROOT.RooFormulaVar ( "effFunc" , "a+0.5*b*(1+tanh((x-x0)*c))" , vars )
     
     with timing ("Using-RooFormularVar" , logger ) :
         
         eff1 = Efficiency1D( 'E1' , effFunc , cut  = acc , xvar = x )
-        r1 = eff1.fitTo ( ds )
-        r1 = eff1.fitTo ( ds )
-        f1 = eff1.draw  ( ds , nbins = 20 )
+
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
         
         logger.info ( "Fit result using-RooFormularVar \n%s" % r1.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using  RooFormulaVar)\n%s" % make_table (
             eff1 , title = 'using RooFormulaVer') )
-        
+
+    time.sleep(2)
+    
 # =============================================================================
 ## use PyVAR stuff
 #  @attention For *OLD* PyROOT only!
@@ -152,14 +169,14 @@ def test_pyVAR () :
         """Local ``pythonic'' variable
         """
         def  evaluate ( self ) :
-            
+
             vlist = self.varlist
             
-            _x  = float ( vlist[0] )
-            _a  = float ( vlist[1] ) 
-            _b  = float ( vlist[2] ) 
-            _c  = float ( vlist[3] ) 
-            _x0 = float ( vlist[4] ) 
+            _x  = float ( vlist [ 0 ] )
+            _a  = float ( vlist [ 1 ] ) 
+            _b  = float ( vlist [ 2 ] ) 
+            _c  = float ( vlist [ 3 ] ) 
+            _x0 = float ( vlist [ 4 ] ) 
             
             return eff ( _x , _a , _b , _c , _x0 )
         
@@ -168,15 +185,35 @@ def test_pyVAR () :
     
     with timing ("Using-PyVAR" , logger ) :
         
+        
         eff2 = Efficiency1D( 'E2' , the_fun , cut  = acc , xvar = x )
-        r2   = eff2.fitTo ( ds )
-        r2   = eff2.fitTo ( ds )
-        f2   = eff2.draw  ( ds , nbins = 20 )
+        
+        a .fix ( A )
+        b .fix ( B )
+        c .value = C
+        x0.value = X0
 
+        r2   = eff2.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r2   = eff2.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r2   = eff2.fitTo ( ds , silent = True )
+        
         logger.info ( "Fit result using-PyVAR \n%s" % r2.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using PyVAR)\n%s" % make_table (
             eff2 , title = 'using PyVAR') )
 
+    time.sleep(2)
+    
 # =============================================================================
 ## use PyVAR2
 def test_pyVAR2 () :
@@ -193,13 +230,32 @@ def test_pyVAR2 () :
         
         eff3 = Efficiency1D( 'E3' , myEff3.var , cut  = acc , xvar = x )
         
-        r3 = eff3.fitTo ( ds )
-        r3 = eff3.fitTo ( ds )
-        f3 = eff3.draw  ( ds , nbins = 20 )
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
+        
+        r3   = eff3.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r3   = eff3.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r3   = eff3.fitTo ( ds , silent = True )
+
     
         logger.info ( "Fit result using-PyVAR2 \n%s"     % r3.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using PyVAR2)\n%s" % make_table (
             eff3 , title = 'using PyVAR2') )
+
+    time.sleep(2)
 
 # =============================================================================
 ## use PyVar stuff
@@ -213,7 +269,7 @@ def test_pyVar () :
     
     if old_PyROOT :
         logger.warning ("test is enabled only for *NEW* PyROOT!")
-        return 
+        return
     
     # =========================================================================
     ## @class MyEff4
@@ -251,14 +307,34 @@ def test_pyVar () :
     with timing ("Using-PyVar" , logger ) :
         
         eff4 = Efficiency1D( 'E4' , the_fun , cut  = acc , xvar = x )
-        r4   = eff4.fitTo ( ds )
-        r4   = eff4.fitTo ( ds )
-        f4   = eff4.draw  ( ds , nbins = 20 )
+
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
         
+        r4   = eff4.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r4   = eff4.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r4   = eff4.fitTo ( ds , silent = True )
+
+
         logger.info ( "Fit result using-PyVar \n%s"      % r4.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using  PyVar)\n%s" % make_table (
             eff4 , title = 'using PyVar') )
     
+    time.sleep(2)
+
 # =============================================================================
 if '__main__' == __name__ :
     
