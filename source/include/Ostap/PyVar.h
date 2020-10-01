@@ -94,7 +94,7 @@ namespace Ostap
        */
       PyVar ( const std::string& name       , 
               const RooArgList&  variables  , 
-              const std::sring&  title = "" )
+              const std::string& title = "" )
         : PyVar ( name.c_str() , 
                   title.empty() ? name.c_str() : title.c_str() , 
                   variables  ) 
@@ -107,7 +107,7 @@ namespace Ostap
        */
       PyVar ( const RooArgList&  variables  , 
               const std::string& name       , 
-              const std::sring&  title = "" ) 
+              const std::string& title = "" ) 
         : PyVar  ( name , variables , title ) 
       {}
       // ======================================================================
