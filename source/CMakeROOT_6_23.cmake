@@ -145,20 +145,6 @@ target_compile_features (ostap PUBLIC cxx_std_11 )
 endif() 
 
 target_link_libraries   ( ostap ROOT::MathMore ROOT::ROOTVecOps ROOT::GenVector root_pyroot ROOT::RooFit ROOT::Hist ROOT::Tree ROOT::TreePlayer ROOT::RIO ROOT::TMVA ROOT::ROOTDataFrame GSL::gsl )
-target_compile_features ( ostap PUBLIC cxx_constexpr                   )
-target_compile_features ( ostap PUBLIC cxx_variadic_templates          )
-target_compile_features ( ostap PUBLIC cxx_delegating_constructors     ) 
-target_compile_features ( ostap PUBLIC cxx_defaulted_move_initializers )
-target_compile_features ( ostap PUBLIC cxx_decltype                    )
-target_compile_features ( ostap PUBLIC cxx_decltype_auto               )
-target_compile_features ( ostap PUBLIC cxx_deleted_functions           )
-target_compile_features ( ostap PUBLIC cxx_final                       )
-target_compile_features ( ostap PUBLIC cxx_lambdas                     )
-target_compile_features ( ostap PUBLIC cxx_inheriting_constructors     )
-target_compile_features ( ostap PUBLIC cxx_override                    )
-target_compile_features ( ostap PUBLIC cxx_range_for                   )
-target_compile_features ( ostap PUBLIC cxx_static_assert               )
-target_compile_features ( ostap PUBLIC cxx_right_angle_brackets        )
 
 target_include_directories (ostap
     PUBLIC 

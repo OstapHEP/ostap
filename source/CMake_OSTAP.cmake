@@ -101,3 +101,21 @@ add_library(ostap SHARED src/format.cpp
                          src/hcubature.cpp                         
                          src/pcubature.cpp
                         )
+
+target_compile_features ( ostap PUBLIC cxx_constexpr                      )
+target_compile_features ( ostap PUBLIC cxx_variadic_templates             )
+target_compile_features ( ostap PUBLIC cxx_delegating_constructors        ) 
+target_compile_features ( ostap PUBLIC cxx_defaulted_move_initializers    )
+target_compile_features ( ostap PUBLIC cxx_decltype                       )
+target_compile_features ( ostap PUBLIC cxx_decltype_auto                  )
+target_compile_features ( ostap PUBLIC cxx_deleted_functions              )
+target_compile_features ( ostap PUBLIC cxx_final                          )
+target_compile_features ( ostap PUBLIC cxx_lambdas                        )
+target_compile_features ( ostap PUBLIC cxx_inheriting_constructors        )
+target_compile_features ( ostap PUBLIC cxx_override                       )
+target_compile_features ( ostap PUBLIC cxx_range_for                      )
+target_compile_features ( ostap PUBLIC cxx_static_assert                  )
+target_compile_features ( ostap PUBLIC cxx_right_angle_brackets           )
+target_compile_features ( ostap PUBLIC cxx_nullptr                        )
+target_compile_features ( ostap PUBLIC cxx_auto_type                      )
+target_compile_features ( ostap PUBLIC cxx_aggregate_default_initializers )
