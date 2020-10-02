@@ -28,7 +28,7 @@ __all__     = (
     'root_info'            , ## ROOT version info 
     'python_info'          , ## Python version info
     #
-    'old_PyROOT'           , ## do we use "old" PyROOT ? 
+    'old_PyROOT'           , ## do we use "old" PyROOT ?
     )
 # =============================================================================
 from collections import namedtuple 
@@ -66,7 +66,6 @@ meta_info        = MetaInfo ( user           ,
                               python_version ,
                               root_version   )
 python_info     = sys.version_info
-
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -16,20 +16,24 @@ __date__    = "2020-05-16"
 __version__ = "$Revision:$" 
 # =============================================================================
 __all__ = (
-    'whichdb'  , ## guess database type  
-    'dbopen'   , ## open database
-    'Item'     , ## item: named tuple (time,payload)
+    'whichdb'    , ## guess database type  
+    'dbopen'     , ## open database
+    'Item'       , ## item: named tuple (time,payload)
+    'use_bsddb3' , ## make use of bsbdb3 ?  
     )
 # =============================================================================
-import sys, os, collections  
-from   ostap.logger.logger import getLogger
+import sys, os, collections
+from   ostap.logger.logger  import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
 else                      : logger = getLogger ( __name__                   )
 # =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
-if  sys.version_info.major < 3 :   ## PYTHON2 
+
+# =============================================================================
+## python2 
+if 2 == sys.version_info.major 
 
     import anydbm 
     from whichdb              import whichdb   as _whichdb
@@ -120,22 +124,24 @@ if  sys.version_info.major < 3 :   ## PYTHON2
         return anydbm.open ( file , flag , mode )  
 
 
-else :                              ## PYTHON3   
+else :                              ## 3.3 <= python
 
     
     ## for python3 <code>bdsdb</code> is not a part of the standard library
     ##  make a try to use <code>bdsdb3</code>
-    
-    
+        
     try :
         import bsddb3
+        use_bsddb3 = True 
     except ImportError :
-        bsddb3 = None
+        bsddb3     = None
+        use_bsddb3 = False
         
     from ostap.io.sqlitedict  import issqlite3 
     from ostap.io.sqlitedict  import SqliteDict
 
-    if bsddb3 :
+    if bsddb3 and use_bdsdb3 :
+        
         ## <code>bdsdb3</code> is available, try to use it as a defauld database 
 
         import dbm, io, struct 
