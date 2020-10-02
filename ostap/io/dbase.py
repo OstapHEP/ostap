@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file compress_dbase.py
+# @file ostap/io/dbase.py
 # 
 # Helper module to use databases
 #
@@ -24,8 +24,8 @@ __all__ = (
 # =============================================================================
 import sys, os, collections
 from   ostap.logger.logger  import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
-else                      : logger = getLogger ( __name__                   )
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
+else                      : logger = getLogger ( __name__         )
 # =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
@@ -105,25 +105,29 @@ if 2 == sys.version_info.major :
         - Actually it is a bit extended  form of `dbm.open` that  accounts for `sqlite3`
         """
         
-        result = whichdb ( file  ) if 'n' not in flag  else None
-        
+        result = whichdb ( file ) if 'n' not in flag  else None
+
+        db = None 
         if result is None :
             
-            # db doesn't exist or 'n' flag was specified to create a new db
-            
+            # db doesn't exist or 'n' flag was specified to create a new db    
             if 'c' in flag or 'n' in flag:
                 
                 # file doesn't exist and the new flag was used so use bsddb3                     
-                return anydbm.open ( file , flag , mode )  
+                db = anydbm.open ( file , flag , mode )
             
             raise anydbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
         
         elif result is 'sqlite3' :
             
-            return SqliteDict ( filename = file , flag = flag , **kwargs )
-        
-        return anydbm.open ( file , flag , mode )  
+            db = SqliteDict ( filename = file , flag = flag , **kwargs )
 
+        ## use ANYDBM 
+        if db is None : db = anydbm.open ( file , flag , mode )
+            
+        logger.debug ("Open DBASE %s of type %s/%s" % ( file , whichdb ( file ) , type ( db ) ) ) 
+        return db 
+        
 
 else :                              ## 3.3 <= python
 
@@ -263,31 +267,33 @@ else :                              ## 3.3 <= python
             - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3` and `sqlite3`
             """
             
-            result = whichdb ( file  ) if 'n' not in flag  else None
-            
+            result = whichdb ( file ) if 'n' not in flag  else None
+
+            db = None 
             if result is None :
                 
                 # db doesn't exist or 'n' flag was specified to create a new db
-                
                 if 'c' in flag or 'n' in flag:
                     
                     # file doesn't exist and the new flag was used so use bsddb3 
-                    
-                    return bsddb3.hashopen ( file , flag , mode ) 
+                    db = bsddb3.hashopen ( file , flag , mode ) 
                 
                 raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
             elif result in ( 'bsddb' , 'dbhash' , 'bsddb3' , 'bsddb185' ) :
                 
-                return bsddb3.hashopen ( file , flag , mode ) 
+                db = bsddb3.hashopen ( file , flag , mode ) 
 
             elif result is 'sqlite3' :
                 
-                return SqliteDict ( filename = file , flag = flag , *kwargs )
-                                    
-            return dbm.open ( file , flag , mode )  
+                db = SqliteDict ( filename = file , flag = flag , *kwargs )
 
-        
+            ## use DBM
+            if db is None : db = dbm.open ( file , flag , mode )  
+
+            logger.debug ("Open DBASE %s of type %s/%s" % ( file , whichdb ( file ) , type ( db ) ) ) 
+            return db 
+
     else :
         
         import dbm
@@ -355,8 +361,9 @@ else :                              ## 3.3 <= python
             - Actually it is a bit extended  form of `dbm.open` that  accounts for `sqlite3`
             """
             
-            result = whichdb ( file  ) if 'n' not in flag  else None
-            
+            result = whichdb ( file ) if 'n' not in flag  else None
+
+            db = None 
             if result is None :
                 
                 # db doesn't exist or 'n' flag was specified to create a new db
@@ -364,15 +371,19 @@ else :                              ## 3.3 <= python
                 if 'c' in flag or 'n' in flag:
                     
                     # file doesn't exist and the new flag was used so use bsddb3                     
-                    return dbm.open ( file , flag , mode )  
+                    db = dbm.open ( file , flag , mode )  
                 
                 raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
             elif result is 'sqlite3' :
                 
-                return SqliteDict ( filename = name , flag = flag , **kwargs )
-                                    
-            return dbm.open ( file , flag , mode )  
+                db = SqliteDict ( filename = name , flag = flag , **kwargs )
+
+            ##  use DBM  
+            if db is None : db = dbm.open ( file , flag , mode )
+        
+            logger.debug ("Open DBASE %s of type %s/%s" % ( file , whichdb ( file ) , type ( db ) ) ) 
+            return db 
 
         
 # =============================================================================
