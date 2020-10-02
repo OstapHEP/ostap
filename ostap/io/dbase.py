@@ -115,8 +115,9 @@ if 2 == sys.version_info.major :
                 
                 # file doesn't exist and the new flag was used so use bsddb3                     
                 db = anydbm.open ( file , flag , mode )
-            
-            raise anydbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
+                
+            else :
+                raise anydbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
         
         elif result is 'sqlite3' :
             
@@ -277,8 +278,10 @@ else :                              ## 3.3 <= python
                     
                     # file doesn't exist and the new flag was used so use bsddb3 
                     db = bsddb3.hashopen ( file , flag , mode ) 
-                
-                raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
+
+                else :
+                    
+                    raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
             elif result in ( 'bsddb' , 'dbhash' , 'bsddb3' , 'bsddb185' ) :
                 
@@ -372,8 +375,10 @@ else :                              ## 3.3 <= python
                     
                     # file doesn't exist and the new flag was used so use bsddb3                     
                     db = dbm.open ( file , flag , mode )  
-                
-                raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
+
+                else :
+                    
+                    raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
             elif result is 'sqlite3' :
                 
