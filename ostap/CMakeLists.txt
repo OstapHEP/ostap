@@ -1,6 +1,93 @@
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/__init__.py.in ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py) 
 
+macro(find_python_module module)
+	string(TOUPPER ${module} module_upper)
+	if(NOT PY_${module_upper})
+		if    (ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
+			set(PY_${module}_FIND_REQUIRED TRUE)
+		elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "REQUIRED")
+			set(PY_${module}_FIND_REQUIRED TRUE)
+		endif()
+		if    (ARGC GREATER 1 AND ARGV1 STREQUAL "QUIET")
+			set(PY_${module}_FIND_QUIETLY TRUE)
+		elseif(ARGC GREATER 2 AND ARGV2 STREQUAL "QUIET")
+			set(PY_${module}_FIND_QUIETLY TRUE)
+		endif()
+		# A module's location is usually a directory, but for binary modules
+		# it's a .so file.
+		execute_process(COMMAND "${PYTHON_EXECUTABLE}" -c 
+			"import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
+			RESULT_VARIABLE _${module}_status 
+			OUTPUT_VARIABLE _${module}_location
+			ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+		if(NOT _${module}_status)
+			set(PY_${module_upper} ${_${module}_location} CACHE STRING 
+				"Location of Python module ${module}")
+		endif(NOT _${module}_status)
+	endif(NOT PY_${module_upper})
+	find_package_handle_standard_args(PY_${module} DEFAULT_MSG PY_${module_upper} )
+	## find_package_handle_standard_args(PY_${module}   REQUIRED_VARS PY_${module_upper} )
+endmacro(find_python_module)
+
+
+find_python_module ( numpy QUIET )
+if ( NOT ${PY_numpy_FOUND} )
+message ( "----> warning (optional)          numpy is NOT found!" ) 
+endif()
+
+find_python_module ( scipy QUIET )
+if ( NOT ${PY_scipy_FOUND} )
+message ( "----> warning (optional)          scipy is NOT found!" ) 
+endif()
+
+if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+## Check for PATHOS & friends
+
+find_python_module ( pathos        QUIET )
+find_python_module ( ppft          QUIET )
+find_python_module ( multiprocess  QUIET )
+find_python_module ( dill          QUIET )
+
+if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
+
+message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
+
+else()
+
+if ( NOT ${PY_pathos_FOUND} )
+message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
+endif()
+
+if ( NOT ${PY_dill_FOUND} )
+message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
+endif()
+
+if ( NOT ${PY_multiprocess_FOUND} )
+message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
+endif()
+
+if ( NOT ${PY_ppft_FOUND} )
+message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
+endif()
+
+endif()
+
+endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+
+find_python_module ( terminaltables QUIET )
+if ( NOT ${PY_terminaltables_FOUND} )
+message ( "----> (warning) (optional) terminaltables is NOT found!" ) 
+endif()
+
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3" )
+find_python_module ( bsddb3 QUIET )
+if ( NOT ${PY_bsddb3_FOUND} )
+message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
+endif()
+endif()
+
+
 execute_process(
   COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
   from distutils import sysconfig as sc
