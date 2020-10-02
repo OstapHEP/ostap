@@ -2794,6 +2794,139 @@ std::size_t Ostap::Math::BWPS::tag () const
                               m_rho , m_N2 ) ; }
 
 
+
+// ============================================================================
+/*  constructor from Breit-Wigner, Phase-space and flags 
+ *  @param bw Breit-Wigner shape 
+ *  @param M  mass of the "mother" particle 
+ *  @param m1 mass of the 1st      particle 
+ *  @param m2 mass of the 2nd      particle 
+ *  @param m0 mass of the 3rd      particle 
+ *  @param L  the orbital momentum between  
+ *  system of 1st and 2nd particles and the 3rd particle
+ */
+// ============================================================================
+Ostap::Math::BW3L::BW3L
+( const Ostap::Math::BW& bw , 
+  const double           M  ,   
+  const double           m1 ,         
+  const double           m2 ,       
+  const double           m3 ,       
+  const unsigned short   L  ) 
+  : m_bw ( bw.clone() ) 
+  , m_M  ( M  ) 
+  , m_m1 ( m1 ) 
+  , m_m2 ( m2 ) 
+  , m_m3 ( m3 ) 
+  , m_L  ( L  ) 
+  , m_p0 ( 1  )
+  , m_workspace () 
+{
+  Ostap::Assert ( 0 <  M           ,
+                  "Invalid mother mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m1          , 
+                  "Invalid 1st    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m2          ,
+                  "Invalid 2nd    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m3          , 
+                  "Invalid 3rd    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( m1 + m2 + m3 < M , 
+                  "Invalid combination of masses" , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( m_bw -> threshold () < M - m3 , 
+                  "Inconsistent BW-threshold"     , "Ostap:Math::BW3L" ) ;
+  // cache:
+  const double xmid = 0.5 * ( xmin () + xmax () ) ;
+  m_p0 = Ostap::Math::PhaseSpace2::q ( m_M , xmid , m_m3  ) ;
+  //
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Math::BW3L::BW3L 
+( const Ostap::Math::BW3L& right )
+  : m_bw  ( right.m_bw->clone () )   
+  , m_M   ( right.m_M  ) 
+  , m_m1  ( right.m_m1 ) 
+  , m_m2  ( right.m_m2 ) 
+  , m_m3  ( right.m_m3 ) 
+  , m_L   ( right.m_L  ) 
+  , m_p0  ( right.m_p0 )
+  , m_workspace()
+{}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::BW3L::evaluate   ( const double x ) const 
+{
+  if ( x <= xmin() || x >= xmax() ) { return 0 ; }           // RETURN
+  //
+  const double p  = Ostap::Math::PhaseSpace2::q ( m_M , x , m_m3  ) ;
+  if ( p <= 0                     ) { return 0 ; }          //  RETURN
+  //
+  return (*m_bw)(x) * std::pow ( p / m_p0 , 2 * m_L + 1 ) ;
+}
+// ============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BW3L::integral() const 
+{ return integral ( xmin () , xmax () ) ; }
+// =============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BW3L::integral
+( const double x_low  , 
+  const double x_high ) const 
+{
+  if       ( s_equal ( x_high , x_low ) ) { return 0 ; } 
+  else if  (           x_high < x_low   ) { return -1 * integral ( x_high , x_low ) ; }
+  //
+  const double x_mn = xmin () ;
+  const double x_mx = xmax () ;
+  //
+  if  ( x_mx < x_low || x_mn > x_high ) { return 0 ; }
+  //
+  const double xlow  = std::max ( x_mn , x_low  ) ;
+  const double xhigh = std::min ( x_mx , x_high ) ;
+  //
+  if ( xhigh <= xlow ) { return 0 ; }
+  //
+  if ( ( xhigh - xlow ) > 0.2 * ( x_mx - x_mn ) ) 
+  {
+    const double xmid = 0.5 * ( xlow + xhigh ) ;
+    return integral ( xlow , xmid ) + integral ( xmid , xhigh ) ; 
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<BW3L> s_integrator {} ;
+  static char s_message [] = "Integral(BW3P)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      xlow    , xhigh     ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      m_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// unique label/tag 
+// ============================================================================
+std::size_t Ostap::Math::BW3L::tag () const 
+{ return std::hash_combine ( std::string ( "BW3L" ) , 
+                             m_bw->tag () , m_M , m_m1 , m_m2  , m_m3 , m_L ) ; }
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -2780,6 +2780,149 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class BW3L
+     *  Breit-Wigner function modulated with \f$ p^{2L+1}\f$`factor
+     *  - it can approximate the mass distrbition from 3-body decays   
+     *    e.g.  \f$ \eta^{\prime)  \rigtharrow \left(\rho^0 
+     *               \rigtharrow \pi^+ \pi^-\right)\gamma \f$~decays
+     *    or similar  configurations  
+     * 
+     *  \f[ f(x) \equiv F_{\mathrm{BW}}(x) p(x|M_0,m_3)^{2L+1} \f]
+     *  - \f$ p(x|M,m_3) \f$ is a momentumm of the 3rd particle, \f$P_3\f$ 
+     *       in the \f$ P \rightarrow \left( P_{\mathrm{BW}} \rightharrow 
+     *      P_1 P_2 \right) P_3 \f$ decay chain
+     *  - \f$ M \f$ is a (fixed) mass of "mother" particle \f$P\f$
+     *  - \f$ m_1\f$ is a (fixed) mass of 1st particle \f$P_1\f$
+     *  - \f$ m_2\f$ is a (fixed) mass of 2nd particle \f$P_2\f$
+     *  - \f$ m_3\f$ is a (fixed) mass of 3rd particle \f$P_3\f$
+     *  - \f$ x \equiv m_{23} \f$ is a mass intermediate Breit-Wigner particle \f$P_{\mathrm{BW}}\f$
+     *  - \f$ L \f$  is an orbital momentum between \f$ P_{\mathrm{BW}}\f$ and \f$ P_3\f$
+     * 
+     *  It is assumed that  \f$ m_1\f$  and \f$ m_2\f$ parameters 
+     *  are in agreement with the Breit-Wigner definition 
+     */
+    class BW3L
+    {
+    public:
+      // ======================================================================
+      /** constructor from Breit-Wigner, Phase-space and flags 
+       *  @param bw Breit-Wigner shape 
+       *  @param M  mass of the "mother" particle 
+       *  @param m1 mass of the 1st      particle 
+       *  @param m2 mass of the 2nd      particle 
+       *  @param m0 mass of the 3rd      particle 
+       *  @param L  the orbital momentum between  
+       *  system of 1st and 2nd particles and the 3rd particle
+       */
+      BW3L ( const Ostap::Math::BW& bw , 
+             const double           M  ,   
+             const double           m1 ,         
+             const double           m2 ,       
+             const double           m3 ,       
+             const unsigned short   L  ) ;
+      // ======================================================================
+      /// copy constructor 
+      BW3L ( const BW3L&  ) ;
+      /// move constructor 
+      BW3L (       BW3L&& ) = default ;
+      // =======================================================================
+    public: 
+      // ======================================================================
+      ///  fictive public default constructor (needed for serialization)
+      BW3L() {};
+      // =======================================================================
+    public: 
+      // ======================================================================
+      /// evaluate the function 
+      double evaluate   ( const double x ) const ;
+      /// evaluat ethe function 
+      double operator() ( const double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      inline const Ostap::Math::BW& breit_wigner() const { return *m_bw.get() ; }
+      inline       Ostap::Math::BW& breit_wigner()       { return *m_bw.get() ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get an integral 
+      double integral () const ;
+      /// get an integral 
+      double integral ( const double xmin , const double xmax ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double xmin () const { return std::max ( m_bw->threshold() , m_m1 + m_m2 ) ; }
+      double xmax () const { return                                m_M  - m_m3   ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the mass of mother pareticle 
+      double M  () const { return m_M ; } // get  mass of mother particle 
+      /// get the mass of 1st daughter particle 
+      double m1 () const { return m_m1 ; } // get mass of 1st daughter particle 
+      /// get the mass of 2nd daughter particle 
+      double m2 () const { return m_m2 ; } // get mass of 2nd daughter particle 
+      /// get the mass of 3rd daughter particle 
+      double m3 () const { return m_m3 ; } // get mass of 3rd daughter particle 
+      /// get the orbital momentum between (1,2) and (3) 
+      unsigned short L () const { return m_L ; } // get the orbital momentum between (1,2) and (3)
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the  gamma for the certain channel 
+      double gamma    ( const unsigned short i ) const 
+      { return m_bw->gamma ( i ) ; }
+      /// set the gamma for the certain decay
+      bool   setGamma ( const unsigned short i , const double value ) 
+      { return m_bw->setGamma ( i , value ) ; }
+      /// get the total gamma 
+      double    gamma () const { return m_bw->gamma() ; }
+      /// set the total gamma 
+      bool   setGamma ( const double value ) 
+      { return m_bw->setGamma ( value ) ; }
+      /// get number of channels 
+      unsigned int nChannels() const { return m_bw->nChannels ()  ; }
+      /// pole position 
+      double       m0     ()   const { return m_bw->m0()     ; }
+      /// set pole position 
+      bool      setM0     ( const double x ) { return m_bw->setM0 ( x ) ; }
+      // get the amplitude 
+      std::complex<double> amplitude ( const double m ) const 
+      { return m_bw->amplitude  ( m ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// some unique tag 
+      std::size_t tag() const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// Breit-wigner 
+      std::unique_ptr<Ostap::Math::BW>  m_bw  { nullptr } ;
+      /// mass of mother particle 
+      double          m_M  { 1   } ; // mass of mother particle 
+      /// mass of 1st daughter particle 
+      double          m_m1 { 0   } ; // mass of 1st daughter particle 
+      /// mass of 2nd daughter particle 
+      double          m_m2 { 0   } ; // mass of 2nd daughter particle 
+      /// mass of 3rd daughter particle 
+      double          m_m3 { 0   } ; // mass of 3rd daughter particle 
+      /// orbital momentum between (1,2) and (3) 
+      unsigned  short m_L  { 0   } ; // orbital momentum between (1,2) and (3) 
+      // =======================================================================
+      /** momentum of 3rd daughter at
+       *   \f$ m^{\ast}_{12} = \frac{1}{2}(m_{12}^{\mathrm{min}} + m_{12}^{\mathrm{max}})\f$ 
+       */
+      double          m_p0 { 0.5 } ; // momentum of 3rd daughter at some mid-point
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace      m_workspace {} ; // integration workspace
+      // ======================================================================
+    }; 
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

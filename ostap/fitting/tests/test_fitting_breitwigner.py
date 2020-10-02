@@ -11,7 +11,7 @@
 # ============================================================================= 
 from   __future__        import print_function
 # ============================================================================= 
-import ROOT, random
+import ROOT, time 
 import ostap.fitting.roofit 
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import Ostap, std, VE, dsID
@@ -37,6 +37,8 @@ m_pi     = 139 *  MeV
 m_rho    = 770 * MeV
 g_rho    = 150 * MeV
 
+m_etap   = 958 *  MeV 
+
 m_phi    = 1019.46 * MeV
 g_phi    =   4.249 * MeV
 m_K      = 493.677 * MeV
@@ -50,8 +52,15 @@ g2og1_f0 = 1/4.21
 
 models   = set() 
 
-def test_breitwigner_rho () : 
-
+# =============================================================================
+## Different rho0 parameterizations 
+def test_breitwigner_rho () :
+    """Different rho0 parameterizations
+    """
+    
+    logger  = getLogger ( "test_breitwigner_rho" )
+    logger.info ( "Rho0 shapes" ) 
+                  
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Rho0 ( m_rho ,   g_rho , m_pi )
     
@@ -99,9 +108,16 @@ def test_breitwigner_rho () :
     models.add ( model2 )
     models.add ( model3 )
     
+    time.sleep ( 2 ) 
 
 # =============================================================================
+## Different phi0 parameterizations 
 def test_breitwigner_phi () : 
+    """Different phi0 parameterizations
+    """
+    
+    logger  = getLogger ( "test_breitwigner_phi" )
+    logger.info ( "Phi0 shapes" ) 
 
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
@@ -125,10 +141,18 @@ def test_breitwigner_phi () :
     models.add ( bw1    )
     models.add ( bw2    )
     models.add ( bw3    )
+    
+    time.sleep ( 2 ) 
 
 # =============================================================================
+## Phi  shapes woth    phase space   corrections 
 def test_breitwigner_phi_ps () : 
+    """Phi  shapes woth    phase space   corrections 
+    """
     
+    logger  = getLogger ( "test_breitwigner_phi_ps" )
+    logger.info ( "Phi0 shapes with phase space corrections" ) 
+
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
 
@@ -221,11 +245,48 @@ def test_breitwigner_phi_ps () :
     models.add ( f0_980 )
     models.add ( f0_ps  )
 
+    time.sleep ( 2 ) 
+
+# =============================================================================
+## Rho0 shape from eta'  decays
+def test_breitwigner_rho_more () : 
+    """Rho0 shape from eta'  decays
+    """
+    
+    logger  = getLogger ( "test_breitwigner_rho_more" )
+    logger.info ( "Rho0 shape from eta'  decays" ) 
+
+    ## Rho-profile with Gounaris-Sakurai lineshape
+    ch4 = Ostap.Math.ChannelGS   ( g_rho , m_pi ) 
+    bw4 = Ostap.Math.BreitWigner ( m_rho , ch4  )
+
+    ## Rho-profile from eta' decays
+    bw5 = Ostap.Math.BW3L        ( bw4 , m_etap , m_pi , m_pi , 0 , 1 )
+    
+    
+    mass    = ROOT.RooRealVar  ('mass' , 'm(pipi)' , 200 * MeV , 1.6 * GeV ) 
+
+    model4 = Models.BreitWigner_pdf ( 'BW4' , bw4 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
+    model5 = Models.BW3L_pdf        ( 'BW5' , bw5 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
+
+    f4 = model4.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
+    f5 = model5.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
+    
+    f5.draw ()
+    f4.draw ( 'same' )
+
+    models.add ( bw4    )
+    models.add ( bw5    )
+    models.add ( model4 )
+    models.add ( model5 )
+
+    time.sleep ( 2 ) 
 
 # =============================================================================
 ## check that everything is serializable
-# =============================================================================
 def test_db() :
+    """check that everything is serializable
+    """
 
     
     logger.info ( 'Saving all objects into DBASE' )
@@ -240,19 +301,14 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ##  pass
-    with  timing ( "Breit-Wigner Rho"    , logger ) :  
-        test_breitwigner_rho    ()
-        
-    with  timing ( "Breit-Wigner Phi"    , logger ) :  
-        test_breitwigner_phi    ()
-        
-    with  timing ( "Breit-Wigner Phi+PS" , logger ) :  
-        test_breitwigner_phi_ps ()
-    
+ 
+    test_breitwigner_rho      ()        
+    test_breitwigner_phi      ()       
+    test_breitwigner_phi_ps   ()
+    test_breitwigner_rho_more ()
+
     ## check finally that everything is serializeable:
-    with timing ('test_db'             , logger ) :
-        test_db ()
+    test_db ()
 
 # =============================================================================
 ##                                                                      The END  

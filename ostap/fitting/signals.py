@@ -60,7 +60,7 @@ PDF to describe ``wide'' peaks
 Special stuff:
 
   - Voigt & PseudoVoigt
-  - BW23L
+  - BW3L
 
 """
 # =============================================================================
@@ -105,13 +105,12 @@ __all__ = (
     'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
     'LASS_pdf'               , ## kappa-pole
     'Bugg_pdf'               , ## sigma-pole
-    'Swanson_pdf'            , ## Swanson's S-wave cusp 
     ##
     'Voigt_pdf'              , ## Voigt-profile
     'PseudoVoigt_pdf'        , ## PseudoVoigt-profile
-    'BW23L_pdf'              , ## BW23L
     'BWMC_pdf'               , ## BWMC
     'BWPS_pdf'               , ## BWPS
+    'BW3L_pdf'               , ## BW3L
     'FlattePS_pdf'           , ## Flatte-PS 
     #
     )
@@ -3121,90 +3120,6 @@ class BWI_pdf (BreitWigner_pdf) :
         """The background phase"""
         return self.__phi
 
-
-# =============================================================================
-## @class BW23L_pdf
-#  The shape of Breit-Wigner resonace from 2-body decays, e.f.
-#  @see Ostap::Models::BW23L 
-#  @see Ostap::Math::BW23L
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-08-25
-class BW23L_pdf(MASS) :
-    """The shape of Breit-Wigner resonance from 3-body decays, e.f. X -> ( A B ) C
-    In this case the phase space factors can be modified by the  orbital momentum
-    between (AB) and C-systems    
-
-    """
-    def __init__ ( self               ,
-                   name               ,
-                   breitwigner        , ## Ostap::Math::BW23L object
-                   xvar               ,
-                   m0          = None , 
-                   gamma       = None ) : 
-        
-        #
-        ## initialize the base
-        # 
-        MASS.__init__  ( self , name , xvar                ,
-                         mean        = m0                  ,
-                         sigma       = gamma               ,
-                         mean_name   = 'm0_%s'      % name ,
-                         mean_title  = '#m_{0}(%s)' % name ,
-                         sigma_name  = 'gamma_%s'   % name ,
-                         sigma_title = '#gamma(%s)' % name )
-        
-        self.__gamma = self.sigma
-        
-        #
-        ## define the actual BW-shape using
-        #      Ostap::Math::BW23L object
-        #
-        self.__breitwigner = breitwigner  ## Ostap::Math::BW23L object
-        
-        ## create PDF 
-        self.pdf = Ostap.Models.BW23L ( 
-            "rbw23_"    + name ,
-            "RBW23(%s)" % name ,
-            self.xvar          ,
-            self.mean          ,
-            self.gamma         ,
-            self.breitwigner   )
-
-        ## save the configuration
-        self.config = {
-            'name'        : self.name          ,
-            'breitwigner' : self.breitwigner   ,
-            'xvar'        : self.xvar          ,
-            'm0'          : self.m0            ,
-            'gamma'       : self.gamma         ,
-            }
-
-    @property
-    def m0 ( self ) :
-        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
-        return self.mean
-    @m0.setter
-    def m0 ( self , value ) :
-        self.mean = value 
-
-    @property
-    def gamma ( self ) :
-        """Gamma-parameter for Breit-Wigner ``2-from-3'' function"""
-        return self.__gamma
-    @gamma.setter
-    def gamma ( self, value ) :
-        value = float ( value )
-        assert 0 < gamma , "``gamma'' must be positive"
-        self.__gamma.setVal ( value ) 
-
-    @property
-    def breitwigner ( self ) :
-        """The Breit-Wigner function itself"""
-        return self.__breitwigner
-
-models.append ( BW23L_pdf )
-
-
 # =============================================================================
 ## @class BWPS
 #  Breit-Wigner function modulated with extra phase-space and polynomial factors
@@ -3281,6 +3196,104 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
 
     
 models.append ( BWPS_pdf )
+
+
+
+# =============================================================================
+## @class BW3L_pdf
+#  Breit-Wigner function modulated with \f$ p^{2L+1}\f$ factor
+#   - it can approximate the mass distrbition from 3-body decays
+# e.g.  \f$ \eta^{\prime)  \rigtharrow \left(\rho^0 
+#               \rigtharrow \pi^+ \pi^-\right)\gamma \f$~decays
+#    or similar  configurations  
+# 
+# \f[ f(x) \equiv F_{\mathrm{BW}}(x) p(x|M_0,m_3)^{2L+1} \f]
+#  - \f$ p(x|M,m_3) \f$ is a momentumm of the 3rd particle, \f$P_3\f$ 
+#       in the \f$ P \rightarrow \left( P_{\mathrm{BW}} \rightharrow 
+#      P_1 P_2 \right) P_3 \f$ decay chain
+#  - \f$ M \f$ is a (fixed) mass of "mother" particle \f$P\f$
+#  - \f$ m_1\f$ is a (fixed) mass of 1st particle \f$P_1\f$
+#  - \f$ m_2\f$ is a (fixed) mass of 2nd particle \f$P_2\f$
+#  - \f$ m_3\f$ is a (fixed) mass of 3rd particle \f$P_3\f$
+#  - \f$ x \equiv m_{23} \f$ is a mass intermediate Breit-Wigner particle \f$P_{\mathrm{BW}}\f$
+#  - \f$ L \f$  is an orbital momentum between \f$ P_{\mathrm{BW}}\f$ and \f$ P_3\f$
+# 
+#  It is assumed that  \f$ m_1\f$  and \f$ m_2\f$ parameters 
+#  are in agreement with the Breit-Wigner definition 
+#  @see Ostap::Models::BW3L
+#  @see Ostap::Math::BW3L
+class BW3L_pdf(BreitWigner_pdf) :
+    """ Breit-Wigner function modulated with  p^{2L+1} factor
+    - it can approximate the mass distrbition from 3-body decays
+    e.g. ( eta'  ->  ( rho0 -> pi+ pi- ) gamma ) decay or similar  configurations
+    
+    - see Ostap.Models.BW3L
+    - see Ostap.Math.BW3L
+    """
+    
+    def __init__ ( self             ,
+                   name             ,
+                   breitwigner      , ## Ostap::Math::BW3L object
+                   xvar             ,
+                   m0        = None ,
+                   gamma     = None ) : 
+
+        if   isinstance ( breitwigner , Ostap.Math.BW3L ) : pass
+        elif isinstance ( breitwigner , tuple ) :
+            breitwigner = Ostap.Math.BW3L  ( *breitwigner )
+        else :
+            raise ArgumentError("BW3L_pdf: Invalidd type of breitwigner") 
+        
+        ## initialize the base classes 
+        BreitWigner_pdf.__init__  ( self ,
+                                    name ,
+                                    breitwigner = breitwigner.breit_wigner () , 
+                                    xvar        = xvar   ,
+                                    m0          = m0     ,
+                                    gamma       = gamma  )
+        
+        ## make "original" BW-pdf 
+        self.__bw_pdf = BreitWigner_pdf ( name        = self.name + '_orig' ,
+                                          breitwigner = self.breitwigner    ,
+                                          xvar        = self.xvar           ,
+                                          m0          = self.m0             ,
+                                          gamma       = self.gamma          )
+        self.__bw3l = breitwigner
+        
+        ## finally create PDF        
+        self.pdf = Ostap.Models.BW3L ( 'bw3l_%s'  + name ,
+                                       'BW3:(%s)' % name ,
+                                       self.xvar         ,
+                                       self.m0           ,
+                                       self.gamma        ,
+                                       self.bw3l         ) 
+            
+        ## save configuration
+        self.config = {
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  , 
+            'breitwigner' : ( self.bw3l.breit_wigner () ,
+                              self.bw3l.M  () ,
+                              self.bw3l.m1 () ,
+                              self.bw3l.m2 () ,
+                              self.bw3l.m3 () ,
+                              self.bw3l.L  () ) , 
+            'm0'          : self.mean  ,
+            'gamma'       : self.gamma }
+        
+    @property
+    def bw_pdf  ( self ) :
+        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional factors)"""
+        return self.__bw_pdf
+    
+    @property
+    def bw3l ( self ) :
+        """The Breit-Wigner function (BW3L) itself"""
+        return self.__bw3l
+
+    
+models.append ( BW3L_pdf )
+
 
 # =============================================================================
 ## @class Flatte_pdf
@@ -3878,92 +3891,92 @@ class Bugg_pdf(MASS) :
         
 models.append ( Bugg_pdf )
 
-# =============================================================================
-## @class Swanson_pdf
-#  S-wave cusp
-#  @see LHCb-PAPER-2016-019, Appendix
-#  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
-#  @see http://arxiv.org/abs/1504.07952
-#  @see Ostap::Models::Swanson
-#  @see Ostap::Math::Swanson
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2016-06-12
-class Swanson_pdf(PDF) :
-    """ S-wave cusp
-    - LHCb-PAPER-2016-019, Appendix
-    - E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
-    - http://arxiv.org/abs/1504.07952
-    """
-    def __init__ ( self              ,
-                   name              ,
-                   swanson           , ## Ostap::Math::Swanson objects 
-                   xvar              ,
-                   beta0    = None   ) : 
-        #
-        ## initialize the base
-        #
-        if   isinstance ( xvar , ROOT.TH1   ) :
-            m_title = xvar.GetTitle ()            
-            xvar    = xvar.xminmax  ()
-        elif isinstance ( xvar , ROOT.TAxis ) :
-            xvar    = xvar.GetXmin() , mass.GetXmax()
+## # =============================================================================
+## ## @class Swanson_pdf
+## #  S-wave cusp
+## #  @see LHCb-PAPER-2016-019, Appendix
+## #  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
+## #  @see http://arxiv.org/abs/1504.07952
+## #  @see Ostap::Models::Swanson
+## #  @see Ostap::Math::Swanson
+## #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+## #  @date 2016-06-12
+## class Swanson_pdf(PDF) :
+##     """ S-wave cusp
+##     - LHCb-PAPER-2016-019, Appendix
+##     - E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
+##     - http://arxiv.org/abs/1504.07952
+##     """
+##     def __init__ ( self              ,
+##                    name              ,
+##                    swanson           , ## Ostap::Math::Swanson objects 
+##                    xvar              ,
+##                    beta0    = None   ) : 
+##         #
+##         ## initialize the base
+##         #
+##         if   isinstance ( xvar , ROOT.TH1   ) :
+##             m_title = xvar.GetTitle ()            
+##             xvar    = xvar.xminmax  ()
+##         elif isinstance ( xvar , ROOT.TAxis ) :
+##             xvar    = xvar.GetXmin() , mass.GetXmax()
             
-        ## create the variable 
-        if isinstance ( xvar , tuple ) and 2 == len(mass) :  
-            xvar = self.make_var ( xvar       , ## var 
-                             m_name     , ## name 
-                             m_title    , ## title/comment
-                             *mass      , ## min/max 
-                             fix = None ) ## fix ? 
-        elif isinstance ( xvar , ROOT.RooAbsReal ) :
-            xvar = self.make_var ( xvar       , ## var 
-                             m_name     , ## name 
-                             m_title    , ## title/comment
-                             fix = None ) ## fix ? 
-        else :
-            raise AttributeError("Swanson: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+##         ## create the variable 
+##         if isinstance ( xvar , tuple ) and 2 == len(mass) :  
+##             xvar = self.make_var ( xvar       , ## var 
+##                              m_name     , ## name 
+##                              m_title    , ## title/comment
+##                              *mass      , ## min/max 
+##                              fix = None ) ## fix ? 
+##         elif isinstance ( xvar , ROOT.RooAbsReal ) :
+##             xvar = self.make_var ( xvar       , ## var 
+##                              m_name     , ## name 
+##                              m_title    , ## title/comment
+##                              fix = None ) ## fix ? 
+##         else :
+##             raise AttributeError("Swanson: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
             
-        PDF.__init__  ( self , name , xvar , None , None    ) 
+##         PDF.__init__  ( self , name , xvar , None , None    ) 
         
-        self.__swanson = swanson 
-        beta_max       = max ( swanson.mmin() , swanson.cusp() )
-        self.__beta0   = self.make_var ( beta0 , 
-                                   'b0_swanson_%s'   % name ,
-                                   'b0_swanson(%s)'  % name ,
-                                   beta0 , 
-                                   0 , beta_max )
-        ## create PDF 
-        self.pdf = Ostap.Models.Swanson ( 
-            "Swanson_"    + name ,
-            "Swanson(%s)" % name ,
-            self.xvar    ,
-            self.beta0   ,
-            self.swanson )
+##         self.__swanson = swanson 
+##         beta_max       = max ( swanson.mmin() , swanson.cusp() )
+##         self.__beta0   = self.make_var ( beta0 , 
+##                                    'b0_swanson_%s'   % name ,
+##                                    'b0_swanson(%s)'  % name ,
+##                                    beta0 , 
+##                                    0 , beta_max )
+##         ## create PDF 
+##         self.pdf = Ostap.Models.Swanson ( 
+##             "Swanson_"    + name ,
+##             "Swanson(%s)" % name ,
+##             self.xvar    ,
+##             self.beta0   ,
+##             self.swanson )
         
-        ## save the configuration
-        self.config = {
-            'name'        : self.name      ,
-            'swanson'     : self.swanson   ,
-            'xvar'        : self.xvar      ,
-            'beta0'       : self.beta0     ,
-            }
+##         ## save the configuration
+##         self.config = {
+##             'name'        : self.name      ,
+##             'swanson'     : self.swanson   ,
+##             'xvar'        : self.xvar      ,
+##             'beta0'       : self.beta0     ,
+##             }
     
-    @property
-    def beta0 ( self ) :
-        """``beta0''-parameter for Swanson function"""
-        return self.__beta0
-    @beta0.setter
-    def beta0 ( self, value ) :
-        value = float ( value )
-        self.__beta0.setVal ( value ) 
+##     @property
+##     def beta0 ( self ) :
+##         """``beta0''-parameter for Swanson function"""
+##         return self.__beta0
+##     @beta0.setter
+##     def beta0 ( self, value ) :
+##         value = float ( value )
+##         self.__beta0.setVal ( value ) 
 
-    @property
-    def swanson ( self ) :
-        """``swanson''-function itself for Swanson PDF"""
-        return self.__swanson
+##     @property
+##     def swanson ( self ) :
+##         """``swanson''-function itself for Swanson PDF"""
+##         return self.__swanson
 
-models.append ( Swanson_pdf )
+## models.append ( Swanson_pdf )
 
 
 # =============================================================================

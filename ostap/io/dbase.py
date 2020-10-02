@@ -32,8 +32,8 @@ Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
 
 # =============================================================================
-## python2 
-if 2 == sys.version_info.major 
+## python2 : bdsdb is a part of Python
+if 2 == sys.version_info.major : 
 
     import anydbm 
     from whichdb              import whichdb   as _whichdb

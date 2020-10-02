@@ -32,7 +32,7 @@ namespace Ostap
    *  Naturally "wide" models:
    *
    *  - BreitWigner, Rho0, Kstar, Phi, ...
-   *  - BreitWigner from 3-body decay of mother particle: BW23L
+   *  - BreitWigner from 3-body decay of mother particle: BW3L
    *  - LASS (kappa pole)
    *  - Bugg (sigma pole)
    *  - Voigt
@@ -505,7 +505,87 @@ namespace Ostap
       RooListProxy m_phis  {} ;
       // ======================================================================
     };
-
+    // ========================================================================
+    /** @class BW3L
+     *  @see Ostap::Math::BW3L
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  BW3L : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDef(Ostap::Models::BW3L , 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from all parameters
+      BW3L ( const char*                name   ,
+             const char*                title  ,
+             RooAbsReal&                x      ,
+             RooAbsReal&                m0     ,
+             RooAbsReal&                gamma  ,
+             const Ostap::Math::BW3L&   bwps   ) ;
+      /// constructor from all parameters
+      BW3L ( const char*                name   ,
+             const char*                title  ,
+             RooAbsReal&                x      ,
+             RooAbsReal&                m0     ,
+             RooArgList&                gamma  ,
+             const Ostap::Math::BW3L&   bwps   ) ;
+      /// "copy" constructor 
+      BW3L ( const BW3L& , const char* name = 0 ) ;
+      /// virtual destructor 
+      virtual ~BW3L() ;
+      /// clone method
+      BW3L* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// fictive public constructor, needed for  (de)serialization
+      BW3L (){} ; //  = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the function 
+      const Ostap::Math::BW3L& bw3l      () const { setPars() ; return m_bw3l ; }
+      const Ostap::Math::BW3L& function  () const { setPars() ; return m_bw3l ; }
+      // ======================================================================      
+      /// get the amplitude 
+      std::complex<double>     amplitude () const ;
+      // ======================================================================      
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    protected: 
+      // ======================================================================
+      /// the function  itself 
+      mutable Ostap::Math::BW3L m_bw3l ; // the function  itself 
+      // ======================================================================
+    protected : 
+      // ======================================================================
+      RooRealProxy m_x     {} ;
+      RooRealProxy m_m0    {} ;
+      RooListProxy m_gamma {} ;
+      // ======================================================================
+    };
     // ========================================================================
     /** @class Voigt
      *  "Voigt"-function

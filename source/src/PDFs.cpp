@@ -690,12 +690,120 @@ Ostap::Models::BWPS::amplitude () const
 
 
 
-
-
-
-
-
-
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BW3L::BW3L 
+( const char*              name  , 
+  const char*              title ,
+  RooAbsReal&              x     ,
+  RooAbsReal&              m0    ,
+  RooAbsReal&              gamma ,
+  const Ostap::Math::BW3L& bw3l  ) 
+  : RooAbsPdf  (name ,title ) 
+    //
+  , m_x      ( "x"    , "Observable" , this , x     ) 
+  , m_m0     ( "m0"   , "Peak"       , this , m0    ) 
+  , m_gamma  ( "g"    , "Width"      , this )
+    //
+  , m_bw3l   ( bw3l ) 
+{
+  m_gamma.add ( gamma ) ;
+  //
+  Ostap::Assert ( ::size ( m_gamma ) == m_bw3l.nChannels() , 
+                  "#channels mismatch"  , 
+                  "Ostap::Models::BW3L" ) ;
+}
+// ============================================================================
+// constructor from all parameters 
+// ============================================================================
+Ostap::Models::BW3L::BW3L
+( const char*              name  , 
+  const char*              title ,
+  RooAbsReal&              x     ,
+  RooAbsReal&              m0    ,
+  RooArgList&              gamma ,
+  const Ostap::Math::BW3L& bw3l  ) 
+  : RooAbsPdf  (name ,title ) 
+    //
+  , m_x      ( "x"    , "Observable" , this , x  ) 
+  , m_m0     ( "m0"   , "Peak"       , this , m0 ) 
+  , m_gamma  ( "g"    , "Width"      , this )
+    //
+  , m_bw3l   ( bw3l ) 
+{
+  ::copy_real ( gamma , m_gamma , "Invalid gamma parameter!" , "Ostap::Models::BWPS" ) ;
+  Ostap::Assert ( ::size ( m_gamma ) == m_bw3l.nChannels  () , 
+                  "#channels mismatch"      , 
+                  "Ostap::Models::BW3L" ) ;
+}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::Models::BW3L::BW3L
+( const Ostap::Models::BW3L& right , 
+  const char*                name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_x      ( "x"    , this , right.m_x      ) 
+  , m_m0     ( "m0"   , this , right.m_m0     ) 
+  , m_gamma  ( "g"    , this , right.m_gamma  )
+    //
+  , m_bw3l   ( right.m_bw3l )   
+{}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::BW3L::~BW3L(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::BW3L*
+Ostap::Models::BW3L::clone ( const char* name ) const 
+{ return new Ostap::Models::BW3L(*this,name) ; }
+// ============================================================================
+void Ostap::Models::BW3L::setPars () const 
+{
+  //
+  m_bw3l.setM0    ( m_m0  ) ;
+  //
+  const unsigned short nc = m_bw3l.nChannels ();
+  for ( unsigned short i = 0 ; i < nc ; ++i ) 
+  { m_bw3l.setGamma ( i , ::get_par ( i , m_gamma ) ) ; }
+  //
+}
+// ============================================================================
+// get the amplitude 
+// ============================================================================
+std::complex<double> 
+Ostap::Models::BW3L::amplitude () const
+{ setPars () ; return m_bw3l.amplitude ( m_x ) ; }
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::BW3L::evaluate() const 
+{ setPars() ; return  m_bw3l  ( m_x ) ; }
+// ============================================================================
+Int_t Ostap::Models::BW3L::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::BW3L::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ) {}
+  //
+  setPars() ;
+  return m_bw3l.integral ( m_x.min ( rangeName ) , m_x.max ( rangeName ) ) ;
+}
+// ============================================================================
 
 // ============================================================================
 //         Voigt
@@ -8173,6 +8281,7 @@ ClassImp(Ostap::Models::BreitWigner        )
 ClassImp(Ostap::Models::BreitWignerMC      ) 
 ClassImp(Ostap::Models::BWI                ) 
 ClassImp(Ostap::Models::BWPS               ) 
+ClassImp(Ostap::Models::BW3L               ) 
 ClassImp(Ostap::Models::Flatte             ) 
 ClassImp(Ostap::Models::LASS               ) 
 ClassImp(Ostap::Models::Voigt              ) 
