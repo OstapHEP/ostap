@@ -30,6 +30,7 @@ else                      : logger = getLogger ( __name__                   )
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
+use_bsddb3  = False
 
 # =============================================================================
 ## python2 : bdsdb is a part of Python
@@ -129,13 +130,21 @@ else :                              ## 3.3 <= python
     
     ## for python3 <code>bdsdb</code> is not a part of the standard library
     ##  make a try to use <code>bdsdb3</code>
+
+    if sys.version_info < (3,3) :
         
-    try :
-        import bsddb3
-        use_bsddb3 = True 
-    except ImportError :
         bsddb3     = None
-        use_bsddb3 = False
+        use_bdsdb3 = None
+        
+    else  :
+
+        try :
+            import bsddb3
+            use_bsddb3 = True 
+        except ImportError :
+            bsddb3     = None
+            use_bsddb3 = False
+
         
     from ostap.io.sqlitedict  import issqlite3 
     from ostap.io.sqlitedict  import SqliteDict
