@@ -1,5 +1,11 @@
 find_package(ROOT 6 CONFIG REQUIRED )
 
+if (ROOT_FOUND) 
+message ( "----> ROOT   version   : " ${ROOT_VERSION} )
+message ( "----> ROOT   include   : " ${ROOT_INCLUDE_DIRS} )
+message ( "----> ROOT   libraries : " ${ROOT_LIBRARIES} )
+endif()
+
 # =============================================================================
 ## Locate Python/PythonLibs 
 find_program(ROOT_CONFIG_EXECUTABLE NAMES root-config )        
@@ -7,8 +13,41 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --python-version
                  OUTPUT_VARIABLE PYVERSION_ROOT
                  OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
-find_package(PythonLibs                     REQUIRED )
+if ( ${CMAKE_VERSION}  VERSION_LESS "3.12") 
+   find_package(PythonInterp ${PYVERSION_ROOT} REQUIRED )
+   find_package(PythonLibs                     REQUIRED )
+   message ( "----> Python version    : " ${PYTHON_VERSION_STRING}      )
+   message ( "----> Python executable : " ${PYTHON_EXECUTABLE}   )
+   message ( "----> Python include    : " ${PYTHON_INCLUDE_DIRS} )
+   message ( "----> Python libraries  : " ${PYTHON_LIBRARIES}    )
+   ## set( PYTHON_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS} )
+   ## set( PYTHON_LIBRARIES    ${PYTHON_LIBRARIES}    )
+   set( PYTHON_VERSION      ${PYTHON_VERSION_STRING}     PARENT_SCOPE)
+   set( PYTHON_EXECUTABLE   ${PYTHON_EXECUTABLE}         PARENT_SCOPE)
+elseif ( ${PYVERSION_ROOT} VERSION_LESS "3.0" ) 
+   find_package(Python2 ${PYVERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+   message ( "----> Python version    : " ${Python2_VERSION}      )
+   message ( "----> Python executable : " ${Python2_EXECUTABLE}   )
+   message ( "----> Python include    : " ${Python2_INCLUDE_DIRS} )
+   message ( "----> Python libraries  : " ${Python2_LIBRARIES}    )
+   set( PYTHON_INCLUDE_DIRS ${Python2_INCLUDE_DIRS} )
+   set( PYTHON_LIBRARIES    ${Python2_LIBRARIES}    )
+   set( PYTHON_VERSION      ${Python2_VERSION}      )
+   set( PYTHON_VERSION      ${Python2_VERSION}      PARENT_SCOPE)
+   set( PYTHON_EXECUTABLE   ${Python2_EXECUTABLE}   PARENT_SCOPE)
+else() 
+   find_package(Python3 ${PYVERSION_ROOT} COMPONENTS Interpreter Development NumPy)
+   message ( "----> Python version    : " ${Python3_VERSION}      )
+   message ( "----> Python executable : " ${Python3_EXECUTABLE}   )
+   message ( "----> Python include    : " ${Python3_INCLUDE_DIRS} )
+   message ( "----> Python libraries  : " ${Python3_LIBRARIES}    )
+   set( PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS} )
+   set( PYTHON_LIBRARIES    ${Python3_LIBRARIES}    )
+   set( PYTHON_VERSION      ${Python3_VERSION}      PARENT_SCOPE)
+   set( PYTHON_EXECUTABLE   ${Python3_EXECUTABLE}   PARENT_SCOPE)
+endif() 
+
+
 
 ## message ('ROOT   version:' ${ROOT_VERSION})
 ## message ('PYTHON version:' ${PYTHONLIBS_VERSION_STRING})
