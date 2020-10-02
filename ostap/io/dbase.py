@@ -33,7 +33,7 @@ Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 use_bsddb3  = False
 
 # =============================================================================
-## python2 : bdsdb is a part of Python
+## python2 : bsddb is a part of Python
 if 2 == sys.version_info.major : 
 
     import anydbm 
@@ -128,13 +128,13 @@ if 2 == sys.version_info.major :
 else :                              ## 3.3 <= python
 
     
-    ## for python3 <code>bdsdb</code> is not a part of the standard library
-    ##  make a try to use <code>bdsdb3</code>
+    ## for python3 <code>bsddb</code> is not a part of the standard library
+    ##  make a try to use <code>bsddb3</code>
 
     if sys.version_info < (3,3) :
         
         bsddb3     = None
-        use_bdsdb3 = None
+        use_bsddb3 = None
         
     else  :
 
@@ -149,9 +149,9 @@ else :                              ## 3.3 <= python
     from ostap.io.sqlitedict  import issqlite3 
     from ostap.io.sqlitedict  import SqliteDict
 
-    if bsddb3 and use_bdsdb3 :
+    if bsddb3 and use_bsddb3 :
         
-        ## <code>bdsdb3</code> is available, try to use it as a defauld database 
+        ## <code>bsddb3</code> is available, try to use it as a defauld database 
 
         import dbm, io, struct 
         
@@ -167,7 +167,7 @@ else :                              ## 3.3 <= python
         # database using that module may still fail.
         # 
         #  - Actually it is a bit extended  form of <code>dbm.whichdb</code>
-        #   that accounnt for  <code>bdsdb3</code> and <code>sqlite3</code>
+        #   that accounnt for  <code>bsddb3</code> and <code>sqlite3</code>
         def whichdb ( filename  ) :
             """Guess which db package to use to open a db file.
 
