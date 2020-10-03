@@ -151,26 +151,37 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
+        if in_range2  and  not in_range3:
+            in_range = 'aux3_rng12_%s' % self.name
+        elif not in_range2  and in_range3:
+            in_range = 'aux3_rng13_%s' % self.name
+        elif in_range2  and in_range3:
+            in_range = 'aux3_rng123_%s' % self.name
+
+
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            range_name = 'aux3_rng12_%s' % self.name
             with rooSilent ( 3 ) :
-                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+                self.yvar.setRange ( in_range, in_range2[0] , in_range2[1] )
                 if dataset:
-                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
-            in_range2  = range_name 
+                    dataset.get_var(self.yvar.GetName()).setRange ( in_range, in_range2[0] , in_range2[1] )
+#            in_range2  = range_name 
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            range_name = 'aux3_rng13_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                self.zvar.setRange ( in_range , in_range3[0] , in_range3[1] )
                 if dataset:
-                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
-            in_range3  = range_name 
+                    dataset.get_var(self.zvar.GetName()).setRange ( in_range, in_range3[0] , in_range3[1] )
+     #       in_range3  = range_name 
 
-        in_range = []
-        if in_range2 : in_range.append ( in_range2 )
-        if in_range3 : in_range.append ( in_range3 )
-        in_range = tuple ( in_range )
+       
+      #  if in_range2 and in_range3: 
+       #     in_range= in_range3 
+       # elif in_range2:
+       #     in_range=  in_range2 
+       # elif in_range3:
+       #     in_range= in_range3 
+
+       
         
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
@@ -212,28 +223,27 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw2 ( dataset , nbins = 100 , in_range1 = 'QUQU1') ## draw results
         
         """
-        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            range_name = 'aux3_rng21_%s' % self.name
-            with rooSilent ( 3 ) : 
-                self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )  
-                if dataset:
-                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
 
-            in_range1  = range_name
+        if in_range1  and  not in_range3:
+            in_range = 'aux3_rng21_%s' % self.name
+        elif not in_range1  and in_range3:
+            in_range = 'aux3_rng23_%s' % self.name
+        elif in_range1  and in_range3:
+            in_range = 'aux3_rng213_%s' % self.name
+
+        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( in_range , in_range1[0] , in_range1[1] )  
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( in_range , in_range1[0] , in_range1[1] )
+
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            range_name = 'aux3_rng23_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                self.zvar.setRange ( in_range, in_range3[0] , in_range3[1] )
                 if dataset:
-                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
+                    dataset.get_var(self.zvar.GetName()).setRange (in_range , in_range3[0] , in_range3[1] )
 
-            in_range3  = range_name 
-
-        in_range = []
-        if in_range1 : in_range.append ( in_range1 )
-        if in_range3 : in_range.append ( in_range3 )
-        in_range = tuple ( in_range )
         
         return self.draw ( drawvar  = self.yvar , 
                            dataset  = dataset   ,
@@ -274,28 +284,26 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
-        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            range_name = 'aux3_rng31_%s' % self.name
-            with rooSilent ( 3 ) : 
-                self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )       
-                if dataset:
-                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
 
-            in_range1  = range_name 
+        if in_range1  and  not in_range2:
+            in_range = 'aux3_rng31_%s' % self.name
+        elif not in_range1  and in_range2:
+            in_range = 'aux3_rng32_%s' % self.name
+        elif in_range1  and in_range2:
+            in_range = 'aux3_rng312_%s' % self.name
+
+        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( in_range ,  in_range1[0] , in_range1[1] )       
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( in_range , in_range1[0] , in_range1[1] )
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            range_name = 'aux3_rng32_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )    
+                self.yvar.setRange ( in_range , in_range2[0] , in_range2[1] )    
                 if dataset:
-                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
+                    dataset.get_var(self.yvar.GetName()).setRange ( in_range , in_range2[0] , in_range2[1] )
 
-            in_range2  = range_name 
-
-        in_range = []
-        if in_range1 : in_range.append ( in_range1 )
-        if in_range2 : in_range.append ( in_range2 )
-        in_range = tuple ( in_range )
         
         return self.draw ( drawvar  = self.zvar , 
                            dataset  = dataset   ,
