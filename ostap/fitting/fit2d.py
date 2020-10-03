@@ -270,7 +270,6 @@ class PDF2 (PDF,FUNC2) :
         """
         Make 1D-plot:
         """
-
         if   drawvar in ( 'x'  , 'X' , '1' , 1 , self.xvar.name ) : drawvar = self.xvar
         elif drawvar in ( 'y'  , 'Y' , '2' , 2 , self.yvar.name ) : drawvar = self.yvar
 
@@ -292,15 +291,15 @@ class PDF2 (PDF,FUNC2) :
                   dataset.get_var(drawvar.GetName()).setRange ( range_name , low , high )
                 in_range = range_name
     
-        if in_range and not isinstance ( in_range , list_types ) :
-            in_range = in_range ,
-            
+  #      if in_range and not isinstance ( in_range , list_types ) :
+   #         in_range = in_range ,
+        
         if in_range :
-            options_cut     = tuple ( [  ROOT.RooFit.CutRange        ( i ) for i in in_range ] )
+            options_cut     =tuple ( [ ROOT.RooFit.CutRange        ( in_range ),])
             newargs [ 'data_options' ] = self.draw_option ( 'data_options' , **newargs ) + options_cut
             
         if in_range : 
-            options_project = tuple ( [  ROOT.RooFit.ProjectionRange ( i ) for i in in_range ] )
+            options_project =  tuple (  [ROOT.RooFit.ProjectionRange ( in_range ) ,] )
             for key in  ( 'total_fit_options'           ,
                           #
                           'signal_options'              ,
