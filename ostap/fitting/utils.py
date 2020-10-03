@@ -42,7 +42,7 @@ __all__     = (
     "NameDuplicates"    , ## allow/disallow name duplicates 
     )
 # =============================================================================
-import ROOT, math, string
+import ROOT, math, string, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core        import Ostap, rootID, VE, items_loop
@@ -276,6 +276,15 @@ class MakeVar ( object ) :
         self.__pdf_names.add ( value )     
         self.__name = value
 
+    # =============================================================================
+    ## generate some unique name
+    @classmethod 
+    def generate_name ( cls , prefix = '' ) :    
+        name = prefix  
+        while name in cls.__pdf_names or name in cls.__var_names or not name :
+            name = prefix + '_' + ''.join ( ( random.choice ( string.letters ) for i in range ( 6 ) )  )
+        return name
+    
     # =============================================================================
     ## create/modify  the variable
     #  Helper function for creation/modification/adjustment of variable

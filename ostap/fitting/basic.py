@@ -334,7 +334,7 @@ class PDF (FUNC) :
                 xv.setBins (        nb1         , 'cache' )
                 self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
-        if dataset.isWeighted () : 
+        if dataset.isWeighted () and dataset.isNonPoissonWeighted()  : 
             sw = check_arg ( 'sumw2'      , *opts )
             ae = check_arg ( 'asymptotic' , *opts )
             if not sw and not ae : 

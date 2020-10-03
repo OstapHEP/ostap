@@ -49,8 +49,8 @@ class H_fit(object) :
     def npars    ( self ) : return self._hfit.npars () 
     def pars     ( self ) : return self._hfit.pars  ()
     #
-    def draw     ( self , *args ) : return sef.fun.Draw( *args ) 
-    def Draw     ( self , *args ) : return sef.fun.Draw( *args )
+    def draw     ( self , *args ) : return self.fun.Draw( *args ) 
+    def Draw     ( self , *args ) : return self.fun.Draw( *args )
     
     def fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
     def Fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 

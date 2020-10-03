@@ -137,27 +137,42 @@ import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger    import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.param' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities for Histo objects')
 # =============================================================================
-from ostap.core.core     import cpp, VE, funID, Ostap
-from ostap.math.param    import ( legendre_sum      ,
-                                  chebyshev_sum     ,
-                                  fourier_sum       ,
-                                  cosine_sum        ,
-                                  bezier_sum        ,
-                                  bernstein_sum     , 
-                                  beziereven_sum    ,
-                                  bernsteineven_sum )
-from ostap.core.ostap_types    import integer_types, long_type
+from ostap.core.core        import cpp, VE, funID, Ostap
+from ostap.math.param       import ( legendre_sum      ,
+                                     chebyshev_sum     ,
+                                     fourier_sum       ,
+                                     cosine_sum        ,
+                                     bezier_sum        ,
+                                     bernstein_sum     , 
+                                     beziereven_sum    ,
+                                     bernsteineven_sum )
+from ostap.core.ostap_types import integer_types, long_type
+from collections            import namedtuple 
+                        
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
 # =============================================================================
-
+## result of the historgam  parameterisation based on TH1::Fit 
+ParamFITInfo = namedtuple( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
+                                              'fitobject' ,   ## Fittting object 
+                                              'funobject' ,   ## original function object 
+                                              'fitresult' ,   ## result of TH1::Fit
+                                              'norm'      ) ) ## normalization factor
+# =============================================================================
+## result of the historgam  parameterisation based on RooFit
+ParamPDFInfo = namedtuple( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
+                                              'pdf'       ,   ## Fit PDF 
+                                              'funobject' ,   ## the function object 
+                                              'norm'      ,   ## normalization factor 
+                                              'pdffun'    ,   ## PDF_fun object
+                                              'plot'      ) ) ## RooPlot object 
 # =============================================================================
 ## represent 1D-histo as polynomial sum 
 def _h1_param_sum_ ( h1              ,
@@ -238,7 +253,9 @@ def _h1_param_sum_ ( h1              ,
         bfit.fitnorm = r[0]
         norm         = r[0]
         
-    return bfit.fun , bfit , b , bfit.fitresult, norm 
+    params = ParamFITInfo ( bfit.fun , bfit , b , bfit.fitresult , norm ) 
+    h1._param_FIT_info = params 
+    return params
 
 # =============================================================================
 ## represent 1D-histo as Bernstein polynomial
@@ -1187,26 +1204,32 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
     """Parameterize positive histogram with certain PDF
     """
     ##
-    mn,mx = h1.minmax()
+    mn , mx = h1.minmax()
     if mn.value() < 0 or mx.value() <= 0 :
         raise AttributeError("Histo goes to negative %s/%s" % ( mn , mx ) )
     ##
     if not hasattr ( h1 , 'xvar' ) :
         h1.xvar = ROOT.RooRealVar ( 'x' + h1.GetName() , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
 
-    ## create pdf 
-    pdf  = pdf_type     ( 'pdf_' + h1.GetName() , h1.xvar , *pars )
+    ## create pdf
+    from ostap.fitting.utils import MakeVar 
+    name = MakeVar.generate_name (  'pdf_' + h1.GetName() )
+    ##
+    pdf  = pdf_type     ( name , h1.xvar , *pars )
     ## fit the histogram 
-    r,f  = pdf.fitHisto ( h1 , *args, **kwargs )
+    r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
     ##
     func = pdf.pdf.function()
     ##
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
-    norm = VE (  h1.integrate().value() , 0 ) 
-    return r , pdf , func , norm , pdf_fun, f  
-
+    norm = VE ( h1.integrate().value() , 0 )
+    ##
+    params = ParamPDFInfo ( r , pdf , func , norm , pdf_fun , f )
+    h1._param_PDF_info = params
+    return params 
+    
 # =============================================================================
 ## parameterize/fit histogram with the positive polynomial
 #  @code
@@ -2149,5 +2172,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
