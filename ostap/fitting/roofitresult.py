@@ -515,11 +515,18 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     """
 
     from  ostap.fitting.utils    import fit_status, cov_qual
-    rows = [] 
-    if r.status() :
-        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) ) , '' 
+    rows = []
+
+    ##  1. fit status
+    status = r.status() 
+    if status :
+        row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) , '' 
         rows.append ( row )
-        
+    else :
+        row = 'Status'  , '' , allright  ( fit_status ( status ) ) , '' 
+        rows.append ( row )
+
+    ## 2. minumum NLL
     s , n = pretty_float ( r.minNll() )
     if n : n = '[10^%+d]' % n
     else : n = '' 
@@ -880,5 +887,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

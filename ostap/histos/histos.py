@@ -7179,6 +7179,44 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
     t.density = _h_density_
 
 # =============================================================================
+## Fill the histogram from iterable/generator/...
+#  @code
+#
+#  h1 = ... ## 1D historgam 
+#  h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#  
+#  h2  = ... ## 2D historgam#
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  h3  = ... ## 2D historgam#
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  @endcode 
+def _h_fill_loop_ ( histo , filler ) :
+    """Fill the histogram from iterable/generator/...
+    >>> 
+    >>> h1 = ... ## 1Dhistorgam 
+    >>> h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h2  = ... ## 2D-historgam
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h3  = ... ## 3D-historgam
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    """
+    
+    for item in filler :
+        histo.Fill ( *item ) 
+
+    return histo 
+
+ROOT.TH1.fill_loop = _h_fill_loop_
+
+# =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,
     #
@@ -7729,7 +7767,9 @@ _new_methods_   = (
     ROOT.TH1F.dumpAsText     ,
     #
     ROOT.TH1F.transform_X_numbers  ,
-    ROOT.TH1F.transform_X_function 
+    ROOT.TH1F.transform_X_function ,
+    ##
+    ROOT.TH1   . fill_loop   , 
     )
 
 # =============================================================================

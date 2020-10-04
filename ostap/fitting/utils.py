@@ -87,6 +87,7 @@ def cov_qual ( status ) : return _cov_qual_.get( status , "%s" % status )
 # - status = 4    : Reached call limit
 # - status = 5    : Any other failure
 _fit_status_ = {
+    0    : ' 0/success' ,
     1    : ' 1/Covariance was made pos defined',
     2    : ' 2/Hesse is invalid',
     3    : ' 3/Edm is above max',

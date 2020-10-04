@@ -44,9 +44,13 @@ __all__     = (
     'rootException'      , ## context manager to perform ROOT Error -> C++/Python exception
     'RootError2Exception', ## context manager to perform ROOT Error -> C++/Python exception
     ##
-    'pretty_float'       , ## printpouit of the floatig number 
-    'pretty_ve'          , ## printpouit of the value with error 
-    'pretty_2ve'         , ## printpouit of the value with asymmetric errors 
+    'pretty_float'       , ## pretty print of the floatig number 
+    'pretty_ve'          , ## pretty print of the value with error 
+    'pretty_2ve'         , ## pretty print of the value with asymmetric errors
+    ##
+    'fmt_pretty_float'   , ## format for pretty print of the floatig number 
+    'fmt_pretty_ve'      , ## format for pretty print of the value with error 
+    'fmt_pretty_2ve'     , ## format for pretty print of the value with asymmetric errors 
     ##
     'multicolumn'        , ## format the list of strings into multicolumn block
     'DisplayTree'        , ## display tree-like structures 
@@ -262,16 +266,17 @@ def rootWarning ( level = 1 ) :
     """
     return ROOTIgnore ( ROOT.kWarning + level )
 
+
 # =============================================================================
-## Nice printout of the floating number (string + exponent)
+## Format for nice printout of the floating number (string + exponent)
 #  @code
-#  s , n = pretty_float ( number ) 
+#  fmt , n = fmt_pretty_float ( number ) 
 #  @endcode
-#  @return nice stirng and the separate exponent 
-def pretty_float ( value , width = 8 , precision = 6 ) :
-    """Nice printout of the floating number
-    - return nice string and the separate exponent 
-    >>> s , n = pretty_float ( number ) 
+#  @return format for nice string and the separate exponent 
+def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
+    """Format for nice printout of the floating number
+    - return format for nice string and the separate exponent 
+    >>> fmt , n = fmt_pretty_float ( number ) 
     """
     from   ostap.core.ostap_types import integer_types, num_types  
 
@@ -279,33 +284,32 @@ def pretty_float ( value , width = 8 , precision = 6 ) :
            'Invalid value parameter %s/%s'   % ( value , type ( value ) )      
     assert isinstance ( width     , integer_types ) and \
            isinstance ( precision , integer_types ) and 2 <= precision < width, \
-           "Invalid width/precision parameters %s/%s" % ( width , precision ) 
-
+           "Invalid width/precision parameters %s/%s" % ( width , precision )
     
     v  = value 
     av = abs ( v ) 
     if   100 <= av < 1000 :
         fmt2 = '%%+0%d.%df' % ( width , precision - 2 )
-        return fmt2 % v , 0 
+        return fmt2 , 0 
     elif 10  <= av < 100  :
         fmt1 = '%%+0%d.%df' % ( width , precision - 1 )
-        return fmt1 % v , 0  
+        return fmt1 , 0  
     elif 1   <= av < 10   :
         fmt0 = '%%+0%d.%df' % ( width , precision     )
-        return fmt0 % v , 0  
+        return fmt0 , 0  
     elif 0.1 <= av < 1    :
         fmt0 = '%%+0%d.%df' % ( width , precision     )
-        return fmt0 % v , 0  
+        return fmt0 , 0  
     
     from  ostap.math.base        import frexp10, iszero    
     if iszero ( av ) :
         fmt0 = '%%+0%d.%df' % ( width , precision )
-        return fmt0 % v , 0  
+        return fmt0 , 0  
     
     v_a , v_e = frexp10 ( v )
     if 0 == v_e and iszero ( v_a  ) :
         fmt0 = '%%+0%d.%df' % ( width , precision )
-        return fmt0 % v , 0 
+        return fmt0 , 0 
             
     v_a *= 10 
     v_e -=  1 
@@ -314,23 +318,21 @@ def pretty_float ( value , width = 8 , precision = 6 ) :
         
     ra = v_a * ( 10**r )
 
-    ## assert 1 <= abs ( ra ) < 1000 , 'Something wrong happens here...%s' % ra 
+    fmt , p = fmt_pretty_float ( ra , width , precision )
 
-    s , p = pretty_float ( ra , width , precision )
-
-    return s, p + 3 * n
+    return fmt , p + 3 * n
 
 
 # ===============================================================================
-## nice printout of the ValueWithError obejct  ( string + exponent)
+## Formats nice printout of the ValueWithError object  ( string + exponent)
 #  @code
-#  s , n = pretty_ve ( number ) 
+#  fmt, fmt_v , fmt_e  , n = fmt_pretty_ve ( number ) 
 #  @endcode
-#  @return nice string and the separate exponent 
-def pretty_ve ( value , width = 8 , precision = 6 ) :
-    """Nice printout of the ValueWithError obejct  ( string + exponent)
-    - return nice stirng and the separate exponent 
-    >>> s , n = pretty_ve ( number ) 
+#  @return formats nice string and the separate exponent 
+def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
+    """Formats for nice printout of the ValueWithError object  ( string + exponent)
+    - return formats for nice stirng and the separate exponent 
+    >>> fmt , fmt_v , fmt_e , n = pretty_ve ( number ) 
     """
     
     from ostap.math.ve          import VE
@@ -348,19 +350,27 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
     av = max ( abs ( v ) ,  e )
 
     if   100 <= av < 1000 :
-        fmt2 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 2 , width , precision - 2 )
-        return fmt2 % ( v , e ) , 0 
+        fmtv = '%%+0%d.%df' % ( width , precision - 2 )
+        fmte = '%%-0%d.%df' % ( width , precision - 2 )
+        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 2 , width , precision - 2 )
+        return fmt , fmtv , fmte , 0 
     elif 10  <= av < 100  :
-        fmt1 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
-        return fmt1 % ( v , e ) , 0 
+        fmtv = '%%+0%d.%df' % ( width , precision - 1  )   
+        fmte = '%%-0%d.%df' % ( width , precision - 1 )   
+        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
+        return fmt , fmtv , fmte , 0 
     elif 1   <= av < 10   :
-        fmt0 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
-        return fmt0 % ( v , e ) , 0  
+        fmtv = '%%+0%d.%df' % ( width , precision     )
+        fmte = '%%-0%d.%df' % ( width , precision     )
+        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0  
 
     from  ostap.math.base        import frexp10, iszero 
     if iszero ( av ) :
-        fmt0 = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
-        return fmt0 % ( 0 , 0 ) , 0  
+        fmtv = '%%+0%d.%df' % ( width , precision     )
+        fmte = '%%-0%d.%df' % ( width , precision     )
+        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0  
 
     v_a , v_e = frexp10 ( av )
 
@@ -373,22 +383,21 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
     v *= 10**r
     e *= 10**r 
 
-    s , p = pretty_ve ( VE ( v , e * e ) , width, precision )
-    
-    return s , p + 3 * n 
+    fmt , fmtv , fmte  , p = fmt_pretty_ve ( VE ( v , e * e ) , width, precision )    
+    return fmt , fmtv , fmte , p + 3 * n 
 
 
 # ===============================================================================
-## nice printout of the object with asymmetric  errors   ( string + exponent)
+## Formats for nice printout of the object with asymmetric  errors   ( string + exponent)
 #  @code
-#  s , n = pretty_2ve ( number , ehigh , elow ) 
+#  fmt , fmtv , fmte , n = fmt_pretty_2ve ( number , ehigh , elow ) 
 #  @endcode
-#  @return nice string and the separate exponent 
-def pretty_2ve ( value         ,
-                 eh            ,
-                 el            ,
-                 width     = 8 ,
-                 precision = 6 ) :
+#  @return formats for nice string and the separate exponent 
+def fmt_pretty_2ve ( value         ,
+                     eh            ,
+                     el            ,
+                     width     = 8 ,
+                     precision = 6 ) :
     
     from ostap.math.ve          import VE
     from ostap.core.ostap_types import integer_types, num_types  
@@ -417,19 +426,27 @@ def pretty_2ve ( value         ,
     av = max ( abs ( v ) , e )
 
     if   100 <= av < 1000 :
-        fmt2  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
-        return fmt2 % ( v , eh , el ) , 0  
-    elif 10  <= av < 100  :
-        fmt1  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
-        return fmt1 % ( v , eh , el ) , 0
+        fmtv  = '%%+0%d.%df' %  ( width , precision - 2 )
+        fmte  = '%%-0%d.%df' %  ( width , precision - 2 )
+        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        return fmt , fmtv , fmte , 0  
+    elif 10  <= av < 100  :        
+        fmtv  = '%%+0%d.%df' %  ( width , precision - 1 )
+        fmte  = '%%-0%d.%df' %  ( width , precision - 1 )
+        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        return fmt , fmtv  , fmte , 0
     elif 1   <= av < 10   :
-        fmt0  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
-        return fmt0 % ( v , eh , el ) , 0 
+        fmtv  = '%%+0%d.%df' %  ( width , precision     )
+        fmte  = '%%-0%d.%df' %  ( width , precision     )
+        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0 
 
     from  ostap.math.base        import frexp10, iszero
     if iszero ( av ) :
-        fmt0  = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
-        return fmt0 % ( 0 , 0 , 0) , 0 
+        fmtv  = '%%+0%d.%df' %  ( width , precision     )
+        fmte  = '%%-0%d.%df' %  ( width , precision     )
+        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0 
                 
     v_a , v_e = frexp10 ( av )
 
@@ -444,9 +461,66 @@ def pretty_2ve ( value         ,
     eh *= 10**r 
     el *= 10**r 
 
-    s , p = pretty_2ve ( v , eh , el , width , precision )
+    fmt , fmtv  , fmte  , p = fmt_pretty_2ve ( v , eh , el , width , precision )
     
-    return s , p + 3 * n 
+    return fmt , fmtv , fmte  , p + 3 * n 
+
+
+# =============================================================================
+## Nice printout of the floating number (string + exponent)
+#  @code
+#  s , n = pretty_float ( number ) 
+#  @endcode
+#  @return nice stirng and the separate exponent 
+def pretty_float ( value , width = 8 , precision = 6 ) :
+    """Nice printout of the floating number
+    - return nice string and the separate exponent 
+    >>> s , n = pretty_float ( number ) 
+    """
+    fmt , n = fmt_pretty_float ( value , width , precision )
+    return  fmt % ( value / 10**n ) , n 
+
+# ===============================================================================
+## nice printout of the ValueWithError object  ( string + exponent)
+#  @code
+#  s , n = pretty_ve ( number ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def pretty_ve ( value , width = 8 , precision = 6 ) :
+    """Nice printout of the ValueWithError object  ( string + exponent)
+    - return nice stirng and the separate exponent 
+    >>> s , n = pretty_ve ( number ) 
+    """
+
+    fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision )
+    
+    v =           value.value ()
+    e = max ( 0 , value.error () )
+    
+    return fmt % ( v , e ) , n 
+
+# ===============================================================================
+## nice printout of the object with asymmetric  errors   ( string + exponent)
+#  @code
+#  s , n = pretty_2ve ( number , ehigh , elow ) 
+#  @endcode
+#  @return nice string and the separate exponent 
+def pretty_2ve ( value         ,
+                 eh            ,
+                 el            ,
+                 width     = 8 ,
+                 precision = 6 ) :
+
+    assert 0 <= eh or 0 <= el, 'Both errors cannot be negative!'
+    
+    if   eh < 0  and el < 0 :
+        eh , el =   el , eh
+    elif eh >= 0 and el < 0 :
+        eh , el = eh , abs ( el )
+
+    fmt , fmtv , fmte , n = fmt_pretty_2ve ( value , eh , el , width , precision )
+    
+    return fmt  % ( value , eh , el ) , n
 
 # =============================================================================
 ## format list of strings into multicolumn string

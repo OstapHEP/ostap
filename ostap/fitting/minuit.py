@@ -912,31 +912,6 @@ def _mn_table_ ( self , title =  '' , prefix = '' ) :
     return   table ( rows ,  title = title  , prefix = prefix ) 
 
 
-    ## for i in self :
-    ##     name = ROOT.TString() 
-    ##     self.mnpout ( i , name , val , err , low , up , idx )
-        
-    ##     if 0 <= idx.value :            
-    ##         name  = str ( name )
-
-    ##         fixed = err <= 0
-
-    ##         if  fixed :
-    ##             value     = val
-    ##             minos_neg = ''
-    ##             minos_pos = ''
-
-    ##         if low < up : pass
-    ##         else        :
-    ##             low = ''
-    ##             up  = ''
-                
-    ##         if not  fixed :  value = VE ( val , err * err )
-    ##         else :
-    ##             value = val ## fixed 
-                
-        
-        
 
 ROOT.TMinuit .table = _mn_table_
               

@@ -109,56 +109,74 @@ class PDF_fun(object):
     >>> print 'MEDIAN  : %s' % median  ( fun , 0 , 1 )
     """
     ##
-    def __init__ ( self , pdf , xvar , xmin = None , xmax = None ) :
+    def __init__ ( self , pdf , xvar , xmin = None , xmax = None , norm = 1 ) :
         
-        self.pdf     = pdf
+        self.__pdf     = pdf
+        self.__norm    = float ( norm )  
 
         ## ostap stuff: 
         if not isinstance ( pdf , ROOT.RooAbsPdf ) :
             if hasattr ( self.pdf , 'pdf' ) :
-                self.pdf_ = pdf 
-                self.pdf  = pdf.pdf
+                self.__pdf_ =   pdf 
+                self.__pdf  = pdf.pdf
 
-        self.xvar    = xvar
-
-        self._xmin   = None 
-        self._xmax   = None
+        self.__xvar   = xvar
+        self.__xmin   = None 
+        self.__xmax   = None
         
-        if not xmin is None : self._xmin = xmin 
-        if not xmax is None : self._xmax = xmax
+        if not xmin is None : self.__xmin = xmin 
+        if not xmax is None : self.__xmax = xmax
 
         if hasattr ( xvar , 'getMin' ) :
-            if self._xmin is None : self._xmin = xvar.getMin()
-            else                  : self._xmin = max ( self._xmin , xvar.getMin() )
+            if self.__xmin is None : self.__xmin = xvar.getMin()
+            else                   : self.__xmin = max ( self.__xmin , xvar.getMin() )
             
         if hasattr ( xvar , 'getMax' ) :
-            if self._xmax is None : self._xmax = xvar.getMax()
-            else                  : self._xmax = min ( self._xmax , xvar.getMax() )
+            if self.__xmax is None : self.__xmax = xvar.getMax()
+            else                   : self.__xmax = min ( self.__xmax , xvar.getMax() )
             
-        if self._xmin is None :
+        if self.__xmin is None :
             raise AttributeError ( "xmin can't be deduced from  input arguments" )
-        if self._xmax is None :
+
+        if self.__xmax is None :
             raise AttributeError ( "xmax can't be deduced from  input arguments" )
         
-        if self._xmin > self._xmax :
-            self._xmin , self._xmax = self._xmax , self._xmin
-            
-    def xmin     ( self ) : return self._xmin
-    def xmax     ( self ) : return self._xmax
+        if self.__xmin > self.__xmax :
+            self.__xmin , self.__xmax = self.__xmax , self.__xmin
+
+    @property
+    def pdf ( self ) :
+        """``pdf'' : get the actual RooAbsPdf
+        """
+        return self.__pdf
+    @property
+    def norm ( self ) :
+        """``norm'' : additional normalization factor
+        """
+        return self.__norm
+
+    @property
+    def xvar ( self ) :
+        """``xvar'': x-variable
+        """
+        return self.__xvar
+    
+    def xmin     ( self ) : return self.__xmin
+    def xmax     ( self ) : return self.__xmax
     
     ## the main method 
     def __call__ ( self , x , pars = [] ) :
 
         ## for ROOT.TF1
-        if   hasattr ( x , '__len__' ) and hasattr( x , 'getitem' ) and not len( x )   : x = x[0]
-        elif hasattr ( x , '__len__' ) and hasattr( x , 'getitem' ) and 0 != x.size()  : x = x[0]
+        if   hasattr ( x , '__len__' ) and hasattr( x , 'getitem' ) and not len( x )   : x = x [ 0 ]
+        elif hasattr ( x , '__len__' ) and hasattr( x , 'getitem' ) and 0 != x.size()  : x = x [ 0 ]
         
         ## try to be efficient 
-        if not self._xmin <= x <= self._xmax : return 0 
+        if not self.__xmin <= x <= self.__xmax : return 0 
         
-        with SETVAR( self.xvar ) :
-            self.xvar.setVal ( x )
-            return self.pdf.getVal()
+        with SETVAR ( self.__xvar ) :
+            self.__xvar.setVal ( x )
+            return self.__pdf.getVal() * self.__norm 
 
 
 
