@@ -151,6 +151,7 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
+        in_range=None
         if in_range2  and  not in_range3:
             in_range = 'aux3_rng12_%s' % self.name
         elif not in_range2  and in_range3:
@@ -223,6 +224,7 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw2 ( dataset , nbins = 100 , in_range1 = 'QUQU1') ## draw results
         
         """
+        in_range=None
 
         if in_range1  and  not in_range3:
             in_range = 'aux3_rng21_%s' % self.name
@@ -284,6 +286,7 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
+        in_range=None
 
         if in_range1  and  not in_range2:
             in_range = 'aux3_rng31_%s' % self.name
