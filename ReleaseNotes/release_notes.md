@@ -19,6 +19,8 @@ minuit.release ('p3')
 ```   
   1. update `pptunnel` + `pplaunch` with better and more informative output 
   1. add `Ostap::Math::BW3L`, `Ostap::Models::BW3L`,  `BW3L_pdf` and extend  test `ostap/fitting/tests/tests_fitting_breiwigner.py` - resurrected version of the Breit-Wigner profile from 3-body decays 
+  1. add check for `more_itertools`, provide   replacement for `chunked` when `more_itertools`  is not available 
+
 
 ## Backward incompatible changes: 
 

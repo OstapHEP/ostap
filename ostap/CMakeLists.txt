@@ -80,6 +80,16 @@ if ( NOT ${PY_terminaltables_FOUND} )
 message ( "----> (warning) (optional) terminaltables is NOT found!" ) 
 endif()
 
+find_python_module ( more_itertools QUIET )
+if ( NOT ${PY_more_itertools_FOUND} )
+message ( "----> (warning) (optional) more_itertools is NOT found!" ) 
+endif()
+
+find_python_module ( psutil QUIET )
+if ( NOT ${PY_more_psutil_FOUND} )
+message ( "----> (warning) (optional) psutils        is NOT found!" ) 
+endif()
+
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3" )
 find_python_module ( bsddb3 QUIET )
 if ( NOT ${PY_bsddb3_FOUND} )

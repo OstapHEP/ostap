@@ -782,7 +782,8 @@ class TaskManager(object) :
         """
         
         job_chunk = kwargs.pop ( 'chunk_size', 10000 )
-        from more_itertools import chunked        
+        
+        from ostap.parallel.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )
 
         if isinstance ( task , Task ) :

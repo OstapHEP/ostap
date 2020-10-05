@@ -321,7 +321,8 @@ class WorkManager (TaskManager) :
                 s.time  = stat.time
                 smpp   += s
         return smpp
-            
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

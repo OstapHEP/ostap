@@ -38,6 +38,9 @@ Dependencies
    - nice format of tables 
          - in particular for nice printout for `TTree`, `TChain`, `RooDataSet`, ... ;
    - `ostap` offers a home-made replacement with a bit reduced functionalty.  
+- _desirable_: [more_itertoos]
+   - `chunked` stuff is used in parallelization for spliting jobs into chunks 
+   - `ostap` offers a home-made replacement  
 - _optional_ (only for python3) : [bsddb3]
    - python interface to Berkeley DB (`libdb` needs to be installed!)
    
@@ -58,4 +61,5 @@ The possible  setup options are described  [here](INSTALL.md)
 [ppt]: https://github.com/uqfoundation/ppft
 [multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
 [terminaltables]: https://pypi.org/project/terminaltables
+[more_itertools]: https://pypi.org/project/more-itertools/
 [bsddb3]: https://pypi.org/project/bsddb3/
