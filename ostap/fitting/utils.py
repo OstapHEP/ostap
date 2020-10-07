@@ -42,7 +42,7 @@ __all__     = (
     "NameDuplicates"    , ## allow/disallow name duplicates 
     )
 # =============================================================================
-import ROOT, math, string, random 
+import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   ostap.core.core        import Ostap, rootID, VE, items_loop
@@ -57,6 +57,12 @@ from   ostap.core.meta_info   import root_version_int
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+try :
+    from string import ascii_letters
+except ImportError :
+    from string import letters as ascii_letters
+    
 # =============================================================================
 ## MINUIT covariance matrix status:
 # - status = -1 :  not available (inversion failed or Hesse failed)
@@ -283,7 +289,7 @@ class MakeVar ( object ) :
     def generate_name ( cls , prefix = '' ) :    
         name = prefix  
         while name in cls.__pdf_names or name in cls.__var_names or not name :
-            name = prefix + '_' + ''.join ( ( random.choice ( string.letters ) for i in range ( 6 ) )  )
+            name = prefix + '_' + ''.join ( ( random.choice (  ascii_letters ) for i in range ( 6 ) )  )
         return name
     
     # =============================================================================
