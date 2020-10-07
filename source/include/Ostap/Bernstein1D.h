@@ -425,7 +425,7 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      std::vector<long double> m_rs  ;
+      std::vector<double> m_rs  ;
       std::vector<long double> m_v1  ;
       std::vector<long double> m_v2  ;
       std::vector<long double> m_aux ;
@@ -1266,6 +1266,46 @@ namespace Ostap
     // ========================================================================
     /// Swapping function for positive convex/concave polynomials 
     inline void swap ( ConvexOnly&    a , ConvexOnly&    b ) { a.swap ( b ) ; }
+    // ========================================================================
+    namespace Utils 
+    {
+      // ======================================================================
+      /** get "positive-pseudo-roots" for the positive polynomial in 
+       *  a form by S.Karlin and L.S. Shapley 
+       *  such choice  of roots gives flat polynomial.
+       *  The choice of roots is motivated by two identities 
+       *  \f[ \begin{array}{l}  
+       *       T^2_{\mathrm{n}}(x) + \left(1-x^2\right) U^2_{\mathrm{n-1}}(x) = 1 \\ 
+       *     \left(1+x\right)V^2_{\mathrm{n}}(x) + \left(1-x\right) W^2_{\mathrm{n}}(x) = 1
+       *     \end{array}\f]
+       *  where 
+       *   -  \f$ T_{\mathrm{n}} \f$ is chebyshev polynomial of the 1st  kind,
+       *   -  \f$ U_{\mathrm{n}} \f$ is chebyshev polynomial of the 2nd  kind,
+       *   -  \f$ V_{\mathrm{n}} \f$ is chebyshev polynomial of the 3rd  kind,
+       *   -  \f$ W_{\mathrm{n}} \f$ is chebyshev polynomial of the 4th  kind
+       *
+       *  With such "pseudo-roots" one  has 
+       *  - for even N: \f$ \alpha   B_1(s) + (1-alpha) x ( 1 - x ) B_2(s) = 1 \f$
+       *  - for odd N : \f$ \alpha x B_1(s) + (1-alpha)   ( 1 - x ) B_2(s) = 1 \f$  
+       *
+       *  where \f$ B_1(x)\f$ is a normalized polynomial that has 
+       *  roots  \f$ r_0, r_0, r_2, r_2, ... \f$, and 
+       *  B_2(x) is a normalized polynomial that as root
+       *  \f$ r_1, r_1, r_3, r_3, ...\f$
+       * 
+       *  - The positivity is calculated for \f$ 0 \le x \le 1\f$ interval 
+       *  - All  pseudo-rootsbelons to this interval 
+       *  - \f$ B_{1,2}(s)\f$ are normalized as \f$ \int_0^1 B_i dx = 1 \f$
+       *
+       *  @param N  (NIPUT) polynomial degree 
+       *  @param pproots (UPDATE) positive pseudo-roots 
+       *  @return parameter \f$ \alpha \f$
+       */
+      double positive_pseudo_roots 
+      ( const unsigned short N       , 
+        std::vector<double>& pproots ) ;
+      // ======================================================================
+    }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

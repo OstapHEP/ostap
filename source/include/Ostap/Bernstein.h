@@ -9,6 +9,7 @@
 #include <cmath>
 #include <vector>
 #include <complex>
+#include <array>
 #include <algorithm>
 // ============================================================================
 // Ostap
@@ -250,7 +251,7 @@ namespace Ostap
       /** construct Bernstein polynomial from its roots
        *
        *  Polinomial has a form
-       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
@@ -266,7 +267,7 @@ namespace Ostap
       /** construct Bernstein polynomial from its roots
        *
        *  Polinomial has a form
-       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
@@ -959,7 +960,7 @@ namespace Ostap
     double right_line_hull ( const Ostap::Math::Bernstein& b ) ;
   } 
   // ==========================================================================
-}
+} //                                                The end of namespace  Ostap 
 // ============================================================================
 // some  specific interpolation part 
 // ============================================================================
@@ -1396,6 +1397,64 @@ namespace Ostap
                   const double                  xmax ) ;
       // ======================================================================      
     } //                            end of namespace Ostap::Math::Interpolation
+    // ========================================================================
+    /** Convert the linear polynomial \f$ p(x) = ax+b \f$ into Bernstein form 
+     *  \f$ b(x) = \alpha_0 ( 1 - x ) + \alpha_1 x \f$
+     *  @param a coefficient \f$ a \$ for \f$ p(x) = ax+b\f$
+     *  @param b coefficient \f$ b \$ for \f$ p(x) = ax+b\f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 \f$
+     */ 
+    // inline std::array<double,2> 
+    // inline std::tuple<double,double>
+    inline std::vector<double>
+    poly_to_bernstein 
+    ( const double a , 
+      const double b ) { return {{ b , a + b }} ; }
+    // ========================================================================
+    /** Convert the quadratic polynomial \f$ p(x) = ax^2+bx+c \f$ into Bernstein form 
+     *  \f$ b(x) = \alpha_0  (1-x)^2 + \alpha_1 2x(1-x) + \alpha_2  x^2\f$
+     *  @param a coefficient \f$ a \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @param b coefficient \f$ b \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @param c coefficient \f$ c \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 , \aalpha_2\f$
+     */ 
+    // inline std::array<double,3> 
+    // inline std::tuple<double,double,double>
+    inline std::vector<double>
+    poly_to_bernstein 
+    ( const double a , 
+      const double b ,
+      const double c ) { return {{ c , b + 2 * c , a + b + c }} ; }
+    // ========================================================================
+    /** Create Bernstein coefficients for the linear polynomial 
+     *  \f$ p(x) = x-x_0 = \alpha_0 (1-x) + \alpha_1 x \f$  
+     *  @param x0 root of linear polynomial \f$ p(x) = x - x0 \f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 \f$
+     */ 
+    // inline std::array<double,2> 
+    // inline std::tuple<double,double>
+    inline std::vector<double>
+    bernstein_from_roots 
+    ( const double x0 ) 
+    { return {{ -x0 , 1 - x0 }}; }
+    // ========================================================================
+    /** Create Bernstein coefficients for the quadratic polynomial 
+     *  \f$ p(x) = (x-x_0)(x-x_1) = \alpha_0 (1-x)^2 + \alpha_1 2x(1-x) + \alpha_2 x^2\f$
+     *  @param x0 root of quadratic polynomial \f$ p(x) = (x - x_0)(x-x_1) \f$
+     *  @param x1 root of quadratic polynomial \f$ p(x) = (x - x_0)(x-x_1) \f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 , \alpha_2 \f$
+     */ 
+    // inline std::array<double,3> 
+    // inline std::tuple<double,double,double>
+    inline std::vector<double>
+    bernstein_from_roots 
+    ( const double x0 ,
+      const double x1 ) 
+    { 
+      const double s = x0 + x1 ;
+      const double p = x0 * x1 ;
+      return {{ 1 + p - s , p - 0.5 * s , p }}; 
+    }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

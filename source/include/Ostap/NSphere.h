@@ -15,8 +15,16 @@ namespace Ostap
   {
     // ==========================================================================
     /** @class NSphere Ostap/NSphere.h
-     *  "N-sphere" of parameters 
-     *  @author Vanya Belyaev
+     *  "N-sphere" of parameters: useful class to get 
+     *   certain combinations of normalized/constrained variables     
+     *   parameterized with several angular-like phase parameters       
+     *
+     *  Useful cases:
+     *  - Get n-parameters \f$ \x_i f$, such \f$ \sum x_i^2 = 1 \f$
+     *  - Get n-parameters \f$ \x_i f$, such \f$0 \le x_i < 1\f$ and  \f$ \sum x_i = 1 \f$
+     *  - Get n-parameters \f$ \x_i f$, such \f$ 0 \le ... \le x_i \le x_{i+1} \le ..  \le 1 \f$ 
+     *
+     *  @author Vanya BELYAEV   Ivan.Belyaev@itep.ru 
      *  @date   2014-01-21
      */
     class NSphere 
@@ -42,6 +50,19 @@ namespace Ostap
       NSphere  ( const std::vector<double>& phases      ,
                  const unsigned short       rotated     ) ;
       // =======================================================================
+      /** Standard constructor with deltas 
+       *  @param phases  vector of phases 
+       *  @param deltas  rotation deltas 
+       */
+      NSphere  ( const std::vector<double>& phases ,
+                 const std::vector<double>& deltas ) ;
+      // =======================================================================
+      /** constructor from deltas 
+       *  @param deltas  rotation deltas 
+       */
+      NSphere  ( const std::string&       /* fake */ ,
+                 const std::vector<double>& deltas ) ;
+      // =======================================================================
       /** Standard constructor
        *  @param phases  vector of phases 
        */
@@ -56,18 +77,19 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      unsigned int   nX      () const { return nPhi() + 1       ; } 
+      unsigned int   nX      () const { return nPhi () + 1      ; } 
       unsigned int   nPhi    () const { return m_sin_phi.size() ; } 
-      unsigned short rotated () const { return m_rotated        ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get x_i coefficient:               0 <= i < nX  
-      inline double x        ( const unsigned short index ) const ;      
-      /// get x_i coefficient squared        0 <= i < nX 
-      inline double x2       ( const unsigned short index ) const ;
+      inline double x        ( const unsigned short index ) const ;
+      // get x_i coefficient squared        0 <= i < nX 
+      inline double x2       ( const unsigned short index ) const 
+      { const double xi = x ( index ) ; return xi * xi ; }
+      // get x_i coefficient squared        0 <= i < nX 
       inline double xsquared ( const unsigned short index ) const 
-      { return x2 ( index ) ; }
+      { const double xi = x ( index ) ; return xi * xi ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -82,8 +104,6 @@ namespace Ostap
       double phase     ( const unsigned short index ) const 
       { return index < nPhi() ? m_phases  [index] : 0.0 ; }
       // ======================================================================
-      double par       ( const unsigned short index ) const 
-      { return phase ( index ) ; }
       /// get all phases 
       const std::vector<double>& phases  () const { return m_phases  ; }
       // get all   sines 
@@ -105,10 +125,13 @@ namespace Ostap
       // ======================================================================
     public: // "par"-like interface
       // ======================================================================
-      /// number of phases 
+      /// number of parameters/phases 
       unsigned short             npars   () const { return nPhi()    ; }
-      /// get all phases 
+      /// get all parameters/phases 
       const std::vector<double>& pars    () const { return phases()  ; }
+      /// get the parameter/phase 
+      double par       ( const unsigned short index ) const 
+      { return phase ( index ) ; }
       // ======================================================================
       /** set new value for phi(i)      
        *  @param index (input) the index (0 <= index < nPhi)
@@ -130,8 +153,11 @@ namespace Ostap
       // ======================================================================
       /// get biases to equalize the data 
       double delta    ( const unsigned short index ) const  
-      { return m_rotated && ( index < nPhi() ) ? m_delta [index] : 0.0 ; }
+      { return index < nPhi() ? m_delta [ index ] : 0.0 ; }
       // ======================================================================
+      /// get the phase biases 
+      const std::vector<double>& deltas () const { return m_delta ; }
+      // ======================================================================      
     public:
       // ======================================================================
       /// copy assignement 
@@ -144,10 +170,16 @@ namespace Ostap
       /// swap two spheres 
       void swap ( NSphere& right ) ; // swap two spheres 
       // ======================================================================
+    public:
+      // ======================================================================
+      /** convert n-coordinates \f$ x_i \f$ into (n-1) phases \f$ \phi_i\f$  
+       *  @param  x vector  in n-dimensional space 
+       *  @return spherical phases
+       */
+      static std::vector<double> phis ( const std::vector<double>& x ) ;
+      // ======================================================================
     private:
       // ======================================================================
-      /// bias to equalize the x_i 
-      unsigned short      m_rotated ; // rotated sphere ?
       /// the phase biases for rotated sphere 
       std::vector<double> m_delta   ; // the phase biases for rotated sphere 
       /// the phases  
@@ -169,34 +201,23 @@ namespace Ostap
 // get x_i coefficient:  0 <= i < nX  
 // ============================================================================
 inline double Ostap::Math::NSphere::x 
-( const unsigned short indx ) const 
+( const unsigned short index ) const 
 {
   //
-  const unsigned int nx = nX() ;
-  if      ( nx <= indx       ) { return 0                ; } // invalid 
-  else if ( nx  == 1         ) { return 1                ; } // trivial
-  else if ( nx  == 1u + indx ) { return m_cos_phi[0]     ; } // trivial
+  const unsigned int nx = nX () ;
+  if      ( nx <= index ) { return 0               ; } // invalid 
+  else if ( nx == 1     ) { return 1               ; } // trivial
+  else if ( 0  == index ) { return m_cos_phi [ 0 ] ; } // trivial
   //
-  const unsigned int index = nX() - indx - 1 ;
+  const bool last = ( index + 1 == nx ) ;
   //
-  // get index as phi 
+  long double xi = 1.0 ;
+  for ( unsigned short j = 0 ; j < index ; ++j ) { xi *= m_sin_phi[j] ; }
   //
-  double xi = 1.0 ;
-  for  ( unsigned short j = 0 ; j < index ; ++j ) { xi *= m_sin_phi[j] ; }
-  //
-  return index == nPhi() ? xi : xi * m_cos_phi[index] ;
+  return last ? xi : xi * m_cos_phi [ index ] ;
 }
 // ============================================================================
-// get x_i coefficient squared        0 <= i < nX 
-// ============================================================================
-inline double Ostap::Math::NSphere::x2 
-( const unsigned short index ) const  
-{
-  const double xi = x ( index ) ;
-  return xi * xi ;
-}
-// ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 #endif // OSTAP_NSPHERE_H
 // ============================================================================

@@ -8,18 +8,21 @@
 #include <climits>
 #include <cassert>
 #include <numeric>
+#include <tuple>
 // ============================================================================
 // Ostap 
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/Choose.h"
 #include "Ostap/Bernstein1D.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 // Local
 // ============================================================================
 #include "Exception.h"
 #include "local_math.h"
 #include "bernstein_utils.h"
+#include "syncedcache.h"
 // ============================================================================
 /** @file 
  *  Implementation file for functions, related to Bernstein's polynomnials 
@@ -28,6 +31,70 @@
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
+// ============================================================================
+namespace
+{
+  // ==========================================================================
+  /** @var s_PHASE2  
+   *  useful delta-phase for 2D-positive polynomials 
+   */
+  const long double s_PHASE2 = std::asin ( std::sqrt ( 1.0L / 3.0L ) ) ;
+  // ==========================================================================
+  /** @var s_PHASE2  
+   *  useful delta-phase for 2D-positive polynomials 
+   */
+  const std::vector<double> s_PHASES2 ( 1 , s_PHASE2) ;   
+  // ==========================================================================
+  
+  // ==========================================================================
+  typedef std::tuple<double,std::vector<double> >  PPROOTS ;
+  const PPROOTS& deltas_for_pproots  ( const unsigned short N ) 
+  {
+    //
+    typedef std::map<unsigned short, PPROOTS> MAP   ;
+    typedef SyncedCache<MAP>                  CACHE ;
+    // 
+    // ========================================================================
+    //
+    static CACHE s_cache {} ;
+    // ========================================================================
+    { // look into the cache ==================================================
+      CACHE::Lock lock { s_cache.mutex() } ;
+      auto it = s_cache->find  ( N ) ;
+      if ( s_cache->end() != it ) {  return it->second ; }  // AVOID calculation
+      // ======================================================================
+    } // ======================================================================
+    // ========================================================================
+    
+    std::vector<double> pproots ( N + 1 ) ;
+    double alpha = Ostap::Math::Utils::positive_pseudo_roots ( N , pproots ) ;
+    pproots.push_back ( 1 ) ;
+    //
+    std::adjacent_difference ( pproots.begin() , pproots.end() , pproots.begin() );
+    //
+    std::transform ( pproots.begin() , 
+                     pproots.end()   , 
+                     pproots.begin() , 
+                     [] (  const double x ) -> double 
+                     { return std::sqrt ( std::max ( x , 0.0 ) ) ; } ) ;
+    // ========================================================================
+    // convert x to   phis 
+    pproots = Ostap::Math::NSphere::phis ( pproots ) ;
+    //
+    alpha = std::acos ( std::sqrt ( alpha ) ) ;
+    //    
+    PPROOTS result = std::make_tuple ( alpha , pproots ) ;
+    // ========================================================================
+    { // update the cache =====================================================
+      CACHE::Lock lock  { s_cache.mutex() } ;
+      // update the cache
+      s_cache->insert ( std::make_pair ( N , result ) ) ;
+      auto it = s_cache->find  ( N ) ;
+      return it->second ;
+    } // ======================================================================
+  }
+  // ==========================================================================
+}
 // ============================================================================
 // Bernstein EVEN 
 // ============================================================================
@@ -133,6 +200,56 @@ Ostap::Math::BernsteinEven::__truediv__   ( const double value ) const
 // ============================================================================
 // POSITIVE 
 // ============================================================================
+double Ostap::Math::Utils::positive_pseudo_roots 
+( const unsigned short N       , 
+  std::vector<double>& pproots )
+{
+  //
+  if      ( 2 >  N ) { pproots = {{}}      ; return 1.0   ; }
+  else if ( 2 == N ) { pproots = {{ 0.5 }} ; return 1.0/3 ; }
+  //
+  pproots.resize ( N - 1 ) ;
+  //
+  const unsigned short K    =         N / 2   ;
+  const bool           even =  ( 0 == N % 2 ) ;
+  //
+  if  ( even ) 
+  {
+    // roots here are K roots of T_{K} and (K-1) roots of U_{K-1}
+    for ( unsigned short n = 0 ; n < N - 1 ; ++n ) 
+    {
+      const unsigned short k = n / 2 ;
+      const double pp = 0 == n % 2 ? 
+        - std::cos ( ( 2 * k + 1 ) * M_PIl / ( 2 * K ) ) :
+        - std::cos ( (     k + 1 ) * M_PIl / (     K ) ) ; 
+      pproots [ n ] = 0.5 * ( pp + 1 ) ;
+    }
+  }
+  else 
+  {
+    // roots here are K roots of V_{K} and K roots of W_{K}
+    for ( unsigned short n = 0 ; n < N - 1 ; ++n ) 
+    {
+      const unsigned short k = n / 2 ;
+      const double pp = ( 0 == n % 2 ) ? 
+        std::cos ( ( 2 * K - 2 * k     ) * M_PIl / ( 2 * K + 1 ) ) :
+        std::cos ( ( 2 * K - 2 * k - 1 ) * M_PIl / ( 2 * K + 1 ) ) ;
+      pproots [ n ] = 0.5 * ( pp + 1 ) ;
+    }  
+  }
+  //
+  if  ( even ) 
+  {
+    //
+    const double mu    = 1 / ( 1.0 - N * N )     ;
+    const double kappa = ( 1 + mu ) / ( 1 - mu ) ;
+    const double alpha = kappa / ( 1 + kappa )   ;
+    //
+    return alpha ;
+  }
+  //
+  return 0.5 ; 
+}
 
 // ============================================================================
 // constructor from the order
@@ -142,34 +259,41 @@ Ostap::Math::Positive::Positive
   const double              xmin  ,
   const double              xmax  )
   : m_bernstein ( N , xmin , xmax )
-  , m_sphereA   ( 1                      ) 
-  , m_sphereR   ( std::max ( 1 , N - 1 ) )
-  , m_rs        ( std::max ( 1 , N - 1 ) , 0.0  ) 
+  , m_sphereA   ( 0 == N ? 0 :     1 ) 
+  , m_sphereR   ( N <  2 ? 0 : N - 1 )
+  , m_rs        ( N <  2 ? 0 : N - 1 , 0.0 ) 
   , m_v1        ( N + 1 , 0.0 ) 
   , m_v2        ( N + 1 , 0.0 ) 
   , m_aux       ( N + 1 , 0.0 ) 
 {
+  if ( 2 <= N ) 
+  {
+    double              alpha ;
+    std::vector<double> pp    ;
+    std::tie ( alpha , pp ) = deltas_for_pproots ( N ) ;
+    m_sphereR = NSphere ( "" , pp ) ;
+    m_sphereA = NSphere ( "" , {{ alpha }}  ) ; 
+  }
+  //
   updateBernstein () ;
 }
-// // ============================================================================
-// // constructor from the list of phases 
-// // ============================================================================
+// ============================================================================
+// constructor from the list of parameters/phases 
+// ============================================================================
  Ostap::Math::Positive::Positive
  ( const std::vector<double>& pars ,
    const double               xmin ,
    const double               xmax )
    : m_bernstein ( pars.size() , xmin , xmax )
    , m_sphereA   ( 1 ) 
-   , m_sphereR   (std::max ( 1 , int(pars.size())- 1 )) 
-  , m_rs        ( std::max ( 1 , int(pars.size())- 1 ) , 0.0  ) 
-  , m_v1        ( pars.size() + 1 , 0.0 ) 
-  , m_v2        ( pars.size() + 1 , 0.0 ) 
-  , m_aux       ( pars.size() + 1 , 0.0 ) 
+   , m_sphereR   ( std::max ( 1 , int(pars.size())- 1 )) 
+   , m_rs        ( std::max ( 1 , int(pars.size())- 1 ) , 0.0  ) 
+   , m_v1        ( pars.size() + 1 , 0.0 ) 
+   , m_v2        ( pars.size() + 1 , 0.0 ) 
+   , m_aux       ( pars.size() + 1 , 0.0 ) 
  {
-    for ( unsigned short  i = 0 ; i < pars.size() ; ++i ){
-      setPar(i,pars[i]);
-    }
-
+   for ( unsigned short  i = 0 ; i < pars.size() ; ++i )
+   { setPar ( i , pars [ i ] ) ; }
    updateBernstein () ;
  }
 // // ============================================================================
@@ -184,6 +308,8 @@ Ostap::Math::Positive::Positive
 // {
 //   updateBernstein () ;
 // }
+
+
 // =============================================================================
 // update bernstein coefficients
 // =============================================================================
@@ -198,50 +324,60 @@ bool Ostap::Math::Positive::updateBernstein ()
   const long double    norm = m_bernstein.npars() / 
     ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
   //
-  // few simple cases 
+  // few simple cases, treated explicitely  
   //
   if       ( 0 == o ) { return m_bernstein.setPar ( 0 , norm ) ; }
   else if  ( 1 == o )  
   {
-    const bool updated0 = m_bernstein.setPar ( 0 , m_sphereA.x2 ( 0 ) * norm ) ;
+    /// get alpha and beta from A-sphere 
+    const long double alpha     = m_sphereA . x2 ( 0 ) ;
+    const long double beta      = 1 - alpha ;
+    ///
+    const bool updated0 = m_bernstein.setPar ( 0 , alpha * norm ) ;
     update              = updated0 || update ;
-    const bool updated1 = m_bernstein.setPar ( 1 , m_sphereA.x2 ( 1 ) * norm ) ;
+    const bool updated1 = m_bernstein.setPar ( 1 , beta  * norm ) ;
     update              = updated1 || update ;
     //
     return updated0 || updated1 ;
   }
   else if  ( 2 == o )
   {
-    // get the root from R-sphere 
-    const long double r  = m_sphereR.x2 ( 0 ) ;
-    const long double ri = 1 - r ;
     /// get alpha and beta from A-sphere 
-    long double alpha     = m_sphereA . x2 ( 0 ) ;
-    long double beta      = m_sphereA . x2 ( 1 ) ;
+    const long double alpha     = m_sphereA . x2 ( 0 ) ;
+    const long double beta      = m_sphereA . x2 ( 1 ) ;
+    //
+    // get the root from R-sphere 
+    const long double r         = m_sphereR . x2 ( 0 ) ;
     ///
-    const long double c0 =   r  * r  * alpha ;
-    const long double c1 = - r  * ri * alpha ;
-    const long double c2 =   ri * ri * alpha ;
+    std::array<long double,3> v2 = { { 0.0 , 0.0 , 0.0 } } ;
+    Ostap::Math::Utils::bernstein2_from_roots ( r , r , v2 ) ;
     //
-    const bool updated1 = m_bernstein.setPar ( 0 , c0              ) ;
-    const bool updated2 = m_bernstein.setPar ( 1 , c1 + 0.5 * beta ) ;
-    const bool updated3 = m_bernstein.setPar ( 2 , c2              ) ;
+    const long double sv = v2 [ 0 ] + v2 [ 1 ] + v2 [ 2 ] ;
+    const long double na = 3 * alpha / sv ;
     //
-    m_bernstein *= ( norm / ( c0 + c1 + c2 + 0.5 * beta ) ) ;
+    const long double c0 = v2 [ 0 ] * na              ;
+    const long double c1 = v2 [ 1 ] * na  + 3  * beta ;
+    const long double c2 = v2 [ 2 ] * na              ;
+    //
+    const bool updated1 = m_bernstein.setPar ( 0 , c0 ) ;
+    const bool updated2 = m_bernstein.setPar ( 1 , c1 ) ;
+    const bool updated3 = m_bernstein.setPar ( 2 , c2 ) ;
     //
     return updated1 || updated2 || updated3 ;
+    //
   }
   // ==========================================================================
   // generic case 
   // ==========================================================================
   /// get alpha and beta from A-sphere 
   const long double alpha     = m_sphereA . x2 ( 0 ) ;
-  const long double beta      = m_sphereA . x2 ( 1 ) ;
+  const long double beta      = 1 - alpha ;
   ///
   /// get root-parameters from R-sphere and integrate them to get the roots 
   const unsigned nR = m_rs.size() ;
   for ( unsigned short iR = 0 ; iR < nR ; ++iR ) { m_rs [ iR ] = m_sphereR.x2 ( iR ) ; }
   std::partial_sum ( m_rs.begin() , m_rs.end () , m_rs.begin() ) ;
+  
   ///
   const bool even = ( 0 == o % 2 );
   //
@@ -254,51 +390,41 @@ bool Ostap::Math::Positive::updateBernstein ()
   //
   if ( even )
   {
-    m_v1 [ 0 ] = alpha ;                                           n1 = 1 ;    
-    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = 0.5 *beta ; m_v2 [ 2 ] = 0 ; n2 = 3 ;
+    m_v1 [ 0 ] = alpha                                      ; n1 = 1 ;    
+    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = beta ; m_v2 [ 2 ] = 0 ; n2 = 3 ;
   }
   else 
   {
-    m_v1 [ 0 ] = beta  ; m_v1 [ 1 ] = 0     ; n1 = 2 ;
-    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = alpha ; n2 = 2 ;
+    m_v1 [ 0 ] = alpha ; m_v1 [ 1 ] = 0                         ; n1 = 2 ;
+    m_v2 [ 0 ] = 0     ; m_v2 [ 1 ] = beta                      ; n2 = 2 ;
   }
   //
   for ( unsigned short iR = 0 ; iR < nR ; ++iR ) 
   {
-    const long double r  = m_rs [ iR ] ;
-    const long double ri = 1 - r ;
-    //
-    br[ 0 ] =   r  * r ;
-    br[ 1 ] =  -r  * ri ;
-    br[ 2 ] =   ri * ri ;
+    const long double r  = m_rs [ iR ] ;    
+    Ostap::Math::Utils::bernstein2_from_roots ( r , r , br ) ;
     //
     if ( 0 == iR % 2 ) 
     {
-      Ostap::Math::Utils::b_multiply 
-        ( m_v1.begin () , m_v1.begin () + n1 , br.begin () , br.end () , m_aux.begin () );
+      Ostap::Math::Utils::b_multiply ( m_v1.begin () , m_v1.begin () + n1 , br , m_aux.begin () );
       n1  += 2 ;
       std::swap  ( m_v1 , m_aux ) ;
     }
     else 
     {
-      Ostap::Math::Utils::b_multiply 
-        ( m_v2.begin () , m_v2.begin () + n2 , br.begin () , br.end () , m_aux.begin () );
+      Ostap::Math::Utils::b_multiply ( m_v2.begin () , m_v2.begin () + n2 , br , m_aux.begin () );
       n2  += 2 ;
       std::swap  ( m_v2 , m_aux ) ;      
     }
-    //
   }
   //
   const unsigned short nP = m_bernstein.npars() ;
-  for ( unsigned short iP = 0 ; iP < nP ; ++iP )
-  { update |= m_bernstein.setPar ( iP , m_v1 [ iP ] + m_v2 [ iP ] ) ; }
   //
-  if ( update ) 
-  {
-    const long double s1 = std::accumulate ( m_bernstein.pars() . begin () , 
-                                             m_bernstein.pars() . end   () , 0.0L ) ;
-    m_bernstein *= norm / s1 ;
-  }
+  const long double s1 = nP * alpha / std::accumulate ( m_v1.begin () , m_v1.end() , 0.0L ) ;
+  const long double s2 = nP * beta  / std::accumulate ( m_v2.begin () , m_v2.end() , 0.0L ) ;
+  //
+  for ( unsigned short iP = 0 ; iP < nP ; ++iP )
+  { update |= m_bernstein.setPar ( iP , m_v1 [ iP ] * s1 + m_v2 [ iP ] * s2 ) ; }
   //
   return update ;
 }
@@ -370,6 +496,8 @@ Ostap::Math::PositiveEven::PositiveEven
 {
   updateBernstein () ;
 }
+
+
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================

@@ -93,5 +93,8 @@
 
     <class name = "Ostap::ROOT_Selector"/>
 
+    <class function = "Ostap::Math::poly_to_bernstein"     />  
+    <class function = "Ostap::Math::bernstein_from_roots"  />  
+
   </exclusion>  
 </lcgdict>

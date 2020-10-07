@@ -283,7 +283,7 @@ Ostap::Math::Bernstein::Bernstein
 // ============================================================================
 /* construct Bernstein polynomial from its roots
  *  Polinomial has a form
- *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
  *  @param xmin   low  edge for Bernstein polynomial
  *  @param xmax   high edge for Bernstein polynomial
  *  @param rroots the list of real  roots of the polinomial
@@ -300,8 +300,8 @@ Ostap::Math::Bernstein::Bernstein
   , m_xmax ( std::max ( xmin , xmax ) )
 {
   // temporary  storage 
-  std::vector<double>  vtmp ( npars() , 0.0 ) ;
-  std::array<double,2> v1   { { 0 , 0 } } ;
+  std::vector<double>       vtmp ( npars() , 0.0 ) ;
+  std::array<long double,2> v1   { { 0 , 0 } } ;
   //
   m_pars[0]        = 1 ;
   unsigned short m = 1 ;
@@ -309,30 +309,19 @@ Ostap::Math::Bernstein::Bernstein
   for  ( const double r : roots_real )
   {
     const double tr = t ( r ) ;
-    if      ( s_zero  ( tr     ) ) { v1 [ 0 ] =    0 ; v1 [ 1 ] =       1 ; }
-    else if ( s_equal ( tr , 1 ) ) { v1 [ 0 ] =    1 ; v1 [ 1 ] =       0 ; }
-    else                           { v1 [ 0 ] = - tr ; v1 [ 1 ] =  1 - tr ; }
-    //
-    Ostap::Math::Utils::b_multiply 
-      ( m_pars.begin() , m_pars.begin() + m , v1.begin() , v1.end() , vtmp.begin() ) ;
+    Ostap::Math::Utils::bernstein1_from_roots ( tr , v1 ) ;
+    Ostap::Math::Utils::b_multiply ( m_pars.begin() , m_pars.begin() + m , v1 , vtmp.begin() ) ;
     std::swap  ( m_pars , vtmp ) ;
     ++m ;
   }
   //
-  std::array<double,3> v2 { { 0 , 0 , 0 }}  ;
+  std::array<long double,3> v2 { { 0 , 0 , 0 }}  ;
+  const double idx = 1.0 / ( m_xmax - m_xmin ) ;
   for  ( std::complex<double> r : roots_complex ) 
   {
-    const double a = t ( r.real () ) ;
-    const double b =     r.imag ()   ;
-    const double n = a * a + b * b   ;
-    //
-    v2 [ 0 ] = n             ;
-    v2 [ 1 ] = n - a         ;
-    v2 [ 2 ] = 1 + n - 2 * a ;
-    //
-    Ostap::Math::Utils::b_multiply
-      ( m_pars.begin() , m_pars.begin() + m , v2.begin() , v2.end() , vtmp.begin() ) ;
-    std::swap  ( m_pars , vtmp ) ;
+    Ostap::Math::Utils::bernstein2_from_roots ( ( r - m_xmin ) * idx , v2 ) ;
+    Ostap::Math::Utils::b_multiply ( m_pars.begin() , m_pars.begin() + m , v2 , vtmp.begin() ) ;
+    std::swap ( m_pars , vtmp ) ;
     m += 2 ;
   }
   //
@@ -341,7 +330,7 @@ Ostap::Math::Bernstein::Bernstein
 /*  construct Bernstein polynomial from its roots
  *
  *  Polinomial has a form
- *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+ *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
  *
  *  @param xmin low  edge for Bernstein polynomial
  *  @param xmax high edge for Bernstein polynomial

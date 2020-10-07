@@ -194,6 +194,9 @@ namespace Ostap
       static inline double integral   ( const double xlow  , 
                                         const double xhigh ) ;  
       // ======================================================================      
+      /// get the value of the integral between -1 and 1 
+      static inline double integral   ( ) ;  
+      // ======================================================================      
     public:
       // ======================================================================      
       /// get the array of roots 
@@ -222,6 +225,9 @@ namespace Ostap
                                         const double xhigh ) 
       { return xhigh - xlow ;} 
       // ======================================================================      
+      /// get the value of the integral between -1 and 1  
+      static inline double integral   () { return 2 ; }
+      // ======================================================================      
     public:
       // ======================================================================      
       /// get roots 
@@ -249,6 +255,9 @@ namespace Ostap
       static inline double integral   ( const double xlow  , 
                                         const double xhigh ) 
       { return 0.5 * ( xhigh - xlow ) * ( xhigh + xlow ) ; }
+      // ======================================================================      
+      /// get the value of the integral between -1 and 1  
+      static inline double integral   () { return 0 ; }
       // ======================================================================      
     public: 
       // ======================================================================      
@@ -298,14 +307,19 @@ namespace Ostap
           Chebyshev_<N-1>::evaluate ( xlow  ) ) / ( 2 * ( N - 1 ) ) ;         
     }
     // ========================================================================
-
+    /// get the value of the integral between -1 and 1 
+    template <unsigned int N >
+    inline double Chebyshev_<N>::integral ( ) 
+    { return 1 == N % 2 ? 0 : 2.0 / ( 1.0 - N * N ) ; }
+    // ========================================================================
+    
     // ========================================================================
     //  Chebyshev 2nd kind 
     // ========================================================================
     template <unsigned int N> class  ChebyshevU_ ;
     // ========================================================================
     /** @class ChebychevU_
-     *  Efficient evaluator of Chebyshev polynomial of the secon kind 
+     *  Efficient evaluator of Chebyshev polynomial of the second kind 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
@@ -1058,6 +1072,10 @@ namespace Ostap
       /// get integral between low and high 
       double integral   ( const double low  , 
                           const double high ) const ;
+      // ======================================================================
+      /// get the integral between -1 and 1  
+      double integral   () const 
+      { return 1 == m_N % 2 ? 0.0 : 2.0 / ( 1.0 - m_N * m_N ) ; }
       // ======================================================================
     public: // roots & extrema 
       // ======================================================================
