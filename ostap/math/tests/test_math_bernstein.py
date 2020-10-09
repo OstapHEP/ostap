@@ -44,6 +44,8 @@ def test_solve ():
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
     
+    logger.info ( "Bernstein: %s" % bs ) 
+    
     ##  find roots of Bernstein  polynomial     
     rr = bs.solve()
     logger.info ('Roots found : [%s]' %  ( ', '.join ( "%.6f" % r for r in rr  )  ) )
@@ -181,7 +183,7 @@ def test_elevatereduce () :
             check_equality ( y  , ye  , 'Invalid elevate' , 1.e-6 )
             check_equality ( y  , yr  , 'Invalid reduce'  , 1.e-6 )
             
-    logger.info ('Elevate/reduce is OK' )
+    logger.info ('Elevate/reduce  is OK' )
 
 # ==============================================================================
 ## test  for polynomials 
@@ -400,7 +402,7 @@ def test_integration () :
         if 0 < ds < abs ( dd ) * 10**6 :
             raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
-    logger.info ('Integration    is OK' )
+    logger.info ('Integration     is OK' )
 
 # =============================================================================
 ## test transformations
@@ -450,23 +452,24 @@ def test_transformation () :
             check_equality ( bv , ls ( x1 ) , 'Invalid Bernstein->Legendre  transformation' )
             check_equality ( bv , bl ( x1 ) , 'Invalid Bernstein<-Legendre  transformation' )
             
-    logger.info ('Transformation is OK' )
+    logger.info ('Transformation  is OK' )
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_poly           ()
-    test_even           ()
-    test_monotonic      ()
-    test_convex         () 
-    test_convexonly     ()
     test_solve          ()
     test_nroots         ()
     test_interpolation  ()
     test_division       ()
     test_elevatereduce  ()
+    test_poly           ()
+    test_even           ()
+    test_monotonic      ()
+    test_convex         () 
+    test_convexonly     ()
     test_integration    ()
     test_transformation ()
+
 
 # =============================================================================
 ##                                                                      The END 

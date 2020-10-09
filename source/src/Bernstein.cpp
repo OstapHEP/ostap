@@ -68,8 +68,10 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::PolySum ( std::forward<std::vector<double> >( ps ) )
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
-  , m_aux  ( this->degree() + 2 ) 
-{}
+  , m_aux  () 
+{
+  m_aux.resize ( degree() + 2 ) ;
+}
 // ============================================================================
 // constructor  from Bernstein polynomial from *different* domain
 // ============================================================================
@@ -302,7 +304,7 @@ Ostap::Math::Bernstein::Bernstein
   , m_aux  ( this->degree() + 2 ) 
 {
   // temporary  storage 
-  std::vector<double>       vtmp ( npars() , 0.0 ) ;
+  std::vector<double>       vtmp ( npars () , 0.0 ) ;
   std::array<long double,2> v1   { { 0 , 0 } } ;
   //
   m_pars[0]        = 1 ;
@@ -443,7 +445,8 @@ Ostap::Math::Bernstein::indefinite_integral
     { (*ic) += C ; }
   }
   //
-  return Ostap::Math::Bernstein ( m_aux.begin() , m_aux.end  () , m_xmin , m_xmax ) ;
+  return Ostap::Math::Bernstein ( m_aux.begin() , 
+                                  m_aux.begin() + npars() + 1 , m_xmin , m_xmax ) ;
 }
 // ============================================================================
 double Ostap::Math::Bernstein::integral ( const double low  ,
@@ -469,11 +472,12 @@ double Ostap::Math::Bernstein::integral ( const double low  ,
   // make integration: 
   //
   m_aux [ 0 ] = 0 ;
-  std::partial_sum ( m_pars.begin () , m_pars.end   () ,  m_aux.begin() + 1 ) ;
+  std::partial_sum ( m_pars.begin () , m_pars.end () , m_aux.begin() + 1 ) ;
   Ostap::Math::scale ( m_aux , ( m_xmax - m_xmin ) / npars() ) ;
   //
   const Ostap::Math::Bernstein b_int ( m_aux.begin () ,
-                                       m_aux.end   () , m_xmin , m_xmax ) ;
+                                       m_aux.begin () + npars() + 1 , 
+                                       m_xmin , m_xmax ) ;
   //
   return b_int ( xhigh ) - b_int ( xlow ) ;
 }
@@ -482,10 +486,13 @@ Ostap::Math::Bernstein
 Ostap::Math::Bernstein::derivative () const 
 {
   //
-  std::adjacent_difference ( m_pars.begin () , m_pars.end() , m_aux.begin () ) ;
-  Ostap::Math::scale ( m_aux , ( npars() - 1 )/ ( m_xmax - m_xmin ) ) ;
+  if ( degree () < 1 ) { return Bernstein ( 0 , m_xmin , m_xmax ) ; }
   //
-  return Ostap::Math::Bernstein ( m_aux.begin() + 1 , m_aux.begin() + npars () , m_xmin  , m_xmax ) ;
+  std::adjacent_difference ( m_pars.begin () , m_pars.end() , m_aux.begin () ) ;
+  Ostap::Math::scale ( m_aux , ( npars () - 1 )/ ( m_xmax - m_xmin ) ) ;
+  //
+  return Ostap::Math::Bernstein ( m_aux.begin () + 1        , 
+                                  m_aux.begin () + npars () , m_xmin  , m_xmax ) ;
 }
 // ============================================================================
 double Ostap::Math::Bernstein::derivative ( const double x   ) const 
@@ -501,7 +508,8 @@ double Ostap::Math::Bernstein::derivative ( const double x   ) const
   const double t1 = 1 - t0  ;
   //
   return Ostap::Math::Utils::casteljau 
-    ( m_aux.begin() + 1 , m_aux.begin () + npars() , t0 , t1 ) * 
+    ( m_aux.begin () + 1        , 
+      m_aux.begin () + npars () , t0 , t1 ) * 
     ( npars () - 1 ) / ( m_xmax - m_xmin ) ;
 }
 // ============================================================================
@@ -526,7 +534,7 @@ double Ostap::Math::Bernstein::evaluate ( const double x ) const
   //
   // start de casteljau algorithm:
   //
-  std::copy( m_pars.begin() , m_pars.end() , m_aux.begin() ) ;
+  std::copy ( m_pars.begin() , m_pars.end() , m_aux.begin() ) ;
   return Ostap::Math::Utils::casteljau ( m_aux.begin ()            , 
                                          m_aux.begin () + npars () , t0 , t1 ) ;
 }
@@ -1453,7 +1461,8 @@ Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::LegendreSum& poly )  
   : Ostap::Math::PolySum ( poly.degree () ) 
   , m_xmin ( poly.xmin() ) 
-  , m_xmax ( poly.xmax() ) 
+  , m_xmax ( poly.xmax() )
+  , m_aux  ( degree () + 2 ) 
 {
   for ( unsigned short i = 0 ; i < npars() ; ++i ) 
   { 
@@ -1473,6 +1482,7 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::PolySum ( poly.degree () ) 
   , m_xmin ( poly.xmin() ) 
   , m_xmax ( poly.xmax() ) 
+  , m_aux  ( degree () + 2 ) 
 {
   //
   for ( unsigned short i = 0 ; i < npars() ; ++i ) 
@@ -1494,6 +1504,7 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::PolySum ( poly.degree () ) 
   , m_xmin ( poly.xmin() ) 
   , m_xmax ( poly.xmax() ) 
+  , m_aux  ( degree () + 2 ) 
 {
   //
   const unsigned short np = npars() ;

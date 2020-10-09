@@ -765,6 +765,7 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::PolySum ( first , last )
   , m_xmin ( std::min ( xmin, xmax ) )
   , m_xmax ( std::max ( xmin, xmax ) )
+  , m_aux  ( degree () + 2 ) 
 {}
 // ============================================================================
 /*  construct Bernstein interpolant
@@ -797,6 +798,7 @@ Ostap::Math::Bernstein::Bernstein
   : Ostap::Math::PolySum ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) -1 ) 
   , m_xmin ( std::min ( xmin , xmax ) )
   , m_xmax ( std::max ( xmin , xmax ) )
+  , m_aux  ( degree () + 2 ) 
 {
   const unsigned int N  = std::distance ( xbegin , xend ) ;
   //
