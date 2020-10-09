@@ -112,6 +112,15 @@ namespace Ostap
                   RooAbsReal&        b          ,
                   const RooArgList&  pars       ) ;
       // ======================================================================
+      /// constructor from the variable, range and list of coefficients
+      Monotonic ( const std::string& name       ,
+                  const std::string& title      ,
+                  RooAbsReal&        xvar       ,
+                  const bool         increasing , 
+                  const double       xmin       , 
+                  const double       xmax       ,
+                  const RooArgList&  pars       ) ;
+      // ======================================================================
       /// copy constructor 
       Monotonic ( const Monotonic& right , 
                   const char*      name = nullptr ) ;

@@ -1291,10 +1291,6 @@ namespace Ostap
                    ITERATOR end   )
         : m_pars ( begin , end )
       {}
-      /// copy constructor  
-      /// Parameters ( const Parameters&  ) = default ;
-      /// move constructor  
-      /// Parameters (       Parameters&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1307,19 +1303,35 @@ namespace Ostap
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool setPar          ( const unsigned short k , const double value ) ;
+      bool setPar          ( const unsigned short k , const double value ) 
+      { return k < m_pars.size() ?  _setPar ( k , value ) : false ; }
       /** set k-parameter
        *  @param k index
        *  @param value new value 
-       *  @return true iof parameter is actually changed 
+       *  @return true if parameter is actually changed 
        */
       bool setParameter    ( const unsigned short k , const double value )
       { return setPar      ( k , value ) ; }
+      /** set several/all parameters at once 
+       *  @param begin  start itertaor for the sequence of coefficients 
+       *  @param end    end   iterator for the sequence of coefficients 
+       *  @return true if at least one parameter is actually changed 
+       */
+      template <class ITERATOR>
+      inline bool setPars ( ITERATOR begin  , 
+                            ITERATOR end    ) ;
+      /** set several/all parameters at once 
+       *  @param pars (NIPUT) vector of parameters 
+       *  @return true if at least one parameter is actually changed 
+       */
+      inline bool setPars ( const std::vector<double>& pars ) 
+      { return setPars ( pars.begin() , pars.end() ) ; }
+      // ======================================================================
       /// get the parameter value
       double  par          ( const unsigned short k ) const
       { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
       /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
+      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }      
       /// get all parameters:
       const std::vector<double>& pars () const { return m_pars ; }
       // ======================================================================
@@ -1335,12 +1347,36 @@ namespace Ostap
       /// swap two parameter sets 
       void swap ( Parameters& right ) ;
       // ======================================================================
+    private:
+      // ======================================================================
+      /** set k-parameter
+       *  @param k index
+       *  @param value new value 
+       *  @return true if parameter is actually changed 
+       */
+      bool _setPar ( const unsigned short k , const double value ) ;
+      // ======================================================================
     protected :
       // ======================================================================
       /// parameters 
       std::vector<double> m_pars ; //  vector of parameters 
       // ======================================================================
     } ;
+    // ========================================================================
+    /** set several/all parameters at once 
+     *  @param pars (NIPUT) vector of parameters 
+     *  @return true if at least one parameter is actually changed 
+     */
+    template <class ITERATOR>
+    inline bool Parameters::setPars ( ITERATOR begin  , 
+                                      ITERATOR end    ) 
+    {
+      bool update = false ;
+      const unsigned int   N = m_pars.size()  ;
+      for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
+      { update = _setPar ( k  , *begin ) | update ; }
+      return update ;
+    }
     // ========================================================================
     /** @class PolySum
      *  Base class for polynomial sums 

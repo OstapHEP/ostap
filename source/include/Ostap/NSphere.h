@@ -142,6 +142,22 @@ namespace Ostap
                         const double         value ) 
       { return setPhase ( index , value ) ; }
       // ======================================================================
+      /** set several/all parameters at once 
+       *  @param begin  start itertaor for sequence of coefficients 
+       *  @param end    end  titertaor for sequence of coefficients 
+       *  @return true if at least one parameter is actually changed 
+       */
+      template <class ITERATOR>
+      bool setPars ( ITERATOR begin  , 
+                     ITERATOR end    ) ;
+      // ======================================================================
+      /** set several/all parameters at once 
+       *  @param pars (NIPUT) vector of parameters 
+       *  @return true if at least one parameter is actually changed 
+       */
+      inline bool setPars ( const std::vector<double>& pars ) 
+      { return setPars ( pars.begin() , pars.end() ) ; }
+      // ======================================================================
     public:
       // ======================================================================
       ///  sphere "size" 
@@ -215,6 +231,21 @@ inline double Ostap::Math::NSphere::x
   for ( unsigned short j = 0 ; j < index ; ++j ) { xi *= m_sin_phi[j] ; }
   //
   return last ? xi : xi * m_cos_phi [ index ] ;
+}
+// ============================================================================
+/** set several/all parameters at once 
+ *  @param pars (NIPUT) vector of parameters 
+ *  @return true if at least one parameter is actually changed 
+ */
+template <class ITERATOR>
+inline bool Ostap::Math::NSphere::setPars ( ITERATOR begin  , 
+                                            ITERATOR end    ) 
+{
+  bool update = false ;
+  const unsigned int   N = nPhi ()  ;
+  for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
+  { update = setPar ( k  , *begin ) | update ; }
+  return update ;
 }
 // ============================================================================
 //                                                                      The END 

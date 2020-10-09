@@ -318,16 +318,6 @@ namespace Ostap
       // ======================================================================
       /// Is it a constant function:   \f$ f^{\prime} \equiv 0 \f$ ?
       bool   constant   () const ;
-      /// Is it a decreasing function: \f$ f^{\prime} \le 0 \f$ ?
-      bool   decreasing () const ;
-      /// Is it a increasing function: \f$ f^{\prime} \ge 0 \f$ ?
-      bool   increasing () const ;
-      /// Is it a monotonical function ?
-      bool   monotonic  () const { return increasing () || decreasing () ; }
-      /// Is it a convex   function: \f$ f^{\prime\prime}\ge 0 \f$ ?
-      bool   convex     () const ;
-      /// Is it a concave  function: \f$ f^{\prime\prime}\le 0 \f$ ?
-      bool   concave    () const ;
       // ======================================================================
     public: // convert from local to global variables
       // ======================================================================
@@ -567,6 +557,11 @@ namespace Ostap
       double m_xmin  ;                             // the left edge of interval
       /// the right edge of interval
       double m_xmax  ;                             // the right edge of interval
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// auxillary storage used for de calsteljo algorithm 
+      mutable std::vector<long double> m_aux ;             // auxillary storage
       // ======================================================================
     };
     // ========================================================================

@@ -205,7 +205,7 @@ double Ostap::Math::Utils::positive_pseudo_roots
   std::vector<double>& pproots )
 {
   //
-  if      ( 2 >  N ) { pproots = {{}}      ; return 1.0   ; }
+  if      ( 2 >  N ) { pproots = {{     }} ; return 1.0   ; }
   else if ( 2 == N ) { pproots = {{ 0.5 }} ; return 1.0/3 ; }
   //
   pproots.resize ( N - 1 ) ;
@@ -262,17 +262,15 @@ Ostap::Math::Positive::Positive
   , m_sphereA   ( 0 == N ? 0 :     1 ) 
   , m_sphereR   ( N <  2 ? 0 : N - 1 )
   , m_rs        ( N <  2 ? 0 : N - 1 , 0.0 ) 
-  , m_v1        ( N + 1 , 0.0 ) 
-  , m_v2        ( N + 1 , 0.0 ) 
-  , m_aux       ( N + 1 , 0.0 ) 
+  , m_v1        ( N <  2 ? 0 : N + 1 , 0.0 ) 
+  , m_v2        ( N <  2 ? 0 : N + 1 , 0.0 ) 
+  , m_aux       ( N <  2 ? 0 : N + 1 , 0.0 ) 
 {
   if ( 2 <= N ) 
   {
-    double              alpha ;
-    std::vector<double> pp    ;
-    std::tie ( alpha , pp ) = deltas_for_pproots ( N ) ;
-    m_sphereR = NSphere ( "" , pp ) ;
-    m_sphereA = NSphere ( "" , {{ alpha }}  ) ; 
+    const PPROOTS& pp = deltas_for_pproots ( N ) ;
+    m_sphereR = NSphere ( "" ,    std::get<1> ( pp )    ) ;
+    m_sphereA = NSphere ( "" , {{ std::get<0> ( pp ) }} ) ; 
   }
   //
   updateBernstein () ;
@@ -284,32 +282,17 @@ Ostap::Math::Positive::Positive
  ( const std::vector<double>& pars ,
    const double               xmin ,
    const double               xmax )
-   : m_bernstein ( pars.size() , xmin , xmax )
-   , m_sphereA   ( 1 ) 
-   , m_sphereR   ( std::max ( 1 , int(pars.size())- 1 )) 
-   , m_rs        ( std::max ( 1 , int(pars.size())- 1 ) , 0.0  ) 
-   , m_v1        ( pars.size() + 1 , 0.0 ) 
-   , m_v2        ( pars.size() + 1 , 0.0 ) 
-   , m_aux       ( pars.size() + 1 , 0.0 ) 
+   : m_bernstein ( pars.size  () , xmin , xmax )
+   , m_sphereA   ( pars.empty () ?  0 : 1 ) 
+   , m_sphereR   ( pars.size  () <  2 ? 0 : pars.size () - 1 )
+   , m_rs        ( pars.size  () <  2 ? 0 : pars.size () - 1 , 0.0 ) 
+   , m_v1        ( pars.size  () <  2 ? 0 : pars.size () + 1 , 0.0 ) 
+   , m_v2        ( pars.size  () <  2 ? 0 : pars.size () + 1 , 0.0 ) 
+   , m_aux       ( pars.size  () <  2 ? 0 : pars.size () + 1 , 0.0 ) 
  {
-   for ( unsigned short  i = 0 ; i < pars.size() ; ++i )
-   { setPar ( i , pars [ i ] ) ; }
+   for ( unsigned short  i = 0 ; i < pars.size() ; ++i ) { setPar ( i , pars [ i ] ) ; }
    updateBernstein () ;
  }
-// // ============================================================================
-// // constructor from the sphere with coefficients  
-// // ============================================================================
-// Ostap::Math::Positive::Positive
-// ( const Ostap::Math::NSphere& sphere , 
-//   const double                xmin   , 
-//   const double                xmax   )
-//   : m_bernstein ( sphere.dim() , xmin , xmax )
-//   , m_sphere    ( sphere ) 
-// {
-//   updateBernstein () ;
-// }
-
-
 // =============================================================================
 // update bernstein coefficients
 // =============================================================================
@@ -353,11 +336,11 @@ bool Ostap::Math::Positive::updateBernstein ()
     Ostap::Math::Utils::bernstein2_from_roots ( r , r , v2 ) ;
     //
     const long double sv = v2 [ 0 ] + v2 [ 1 ] + v2 [ 2 ] ;
-    const long double na = 3 * alpha / sv ;
+    const long double na = alpha * norm / sv ;
     //
-    const long double c0 = v2 [ 0 ] * na              ;
-    const long double c1 = v2 [ 1 ] * na  + 3  * beta ;
-    const long double c2 = v2 [ 2 ] * na              ;
+    const long double c0 = v2 [ 0 ] * na                ;
+    const long double c1 = v2 [ 1 ] * na  + beta * norm ;
+    const long double c2 = v2 [ 2 ] * na                ;
     //
     const bool updated1 = m_bernstein.setPar ( 0 , c0 ) ;
     const bool updated2 = m_bernstein.setPar ( 1 , c1 ) ;
@@ -418,13 +401,15 @@ bool Ostap::Math::Positive::updateBernstein ()
     }
   }
   //
+  const long double s1 = norm * alpha / std::accumulate ( m_v1.begin () , m_v1.end() , 0.0L ) ;
+  const long double s2 = norm * beta  / std::accumulate ( m_v2.begin () , m_v2.end() , 0.0L ) ;
+  //
   const unsigned short nP = m_bernstein.npars() ;
-  //
-  const long double s1 = nP * alpha / std::accumulate ( m_v1.begin () , m_v1.end() , 0.0L ) ;
-  const long double s2 = nP * beta  / std::accumulate ( m_v2.begin () , m_v2.end() , 0.0L ) ;
-  //
   for ( unsigned short iP = 0 ; iP < nP ; ++iP )
-  { update |= m_bernstein.setPar ( iP , m_v1 [ iP ] * s1 + m_v2 [ iP ] * s2 ) ; }
+  { 
+    const bool updated = m_bernstein.setPar ( iP , m_v1 [ iP ] * s1 + m_v2 [ iP ] * s2 ) ; 
+    update = updated || update ;
+  }
   //
   return update ;
 }
@@ -444,9 +429,13 @@ double Ostap::Math::Positive::integral
 std::vector<double> Ostap::Math::Positive::pars  () const
 {
   std::vector<double> r ( npars() , 0.0 ) ;
-  r [ 0 ] = m_sphereA.par( 0 ) ;
-  const std::vector<double>& p = m_sphereR.pars () ;
-  std::copy  ( p.begin() , p.end() , r.begin() + 1 ) ;
+  std::vector<double>::iterator t = r.begin() ;
+  //
+  const std::vector<double>& pa = m_sphereA.pars() ;
+  t = std::copy ( pa.begin () , pa.end() , t ) ;
+  const std::vector<double>& pr = m_sphereA.pars() ;
+  t = std::copy ( pr.begin () , pr.end() , t ) ;
+  //
   return r  ;  
 }
    
@@ -583,9 +572,11 @@ Ostap::Math::Monotonic::Monotonic
   const double              xmin       ,
   const double              xmax       , 
   const bool                increasing ) 
-  : m_bernstein  ( N , xmin , xmax ) 
-  , m_sphere     ( N , 3           )
+  : m_bernstein  ( N                  , xmin , xmax ) 
+  , m_positive   ( 1 <= N ? N - 1 : 0 , xmin , xmax ) 
+  , m_sphere     ( 1 <= N ?     1 : 0 )
   , m_increasing ( increasing      )  
+  , m_aux        ( N + 1 ) 
 {
   updateBernstein () ;
 }
@@ -597,10 +588,13 @@ Ostap::Math::Monotonic::Monotonic
   const double               xmin       ,
   const double               xmax       ,
   const bool                 increasing ) 
-  : m_bernstein  ( pars.size () , xmin , xmax ) 
-  , m_sphere     ( pars , 3   ) 
-  , m_increasing ( increasing )  
+  : m_bernstein  ( pars.size()    , xmin , xmax ) 
+  , m_positive   ( 1 <= pars.size() ? pars.size () - 1 : 0 , xmin , xmax ) 
+  , m_sphere     ( 1 <= pars.size() ?                1 : 0 )
+  , m_increasing ( increasing       )  
+  , m_aux        ( pars.size () + 1 ) 
 {
+  for ( unsigned short i = 0 ; i < pars.size() ; ++i ) { setPar ( i , pars [ i ] ) ; }
   updateBernstein () ;
 }
 // ============================================================================
@@ -609,24 +603,43 @@ Ostap::Math::Monotonic::Monotonic
 bool Ostap::Math::Monotonic::updateBernstein ()
 {
   //
-  bool   update = false ;
+  bool update = false ;
   //
-  // get sphere coefficients 
-  std::vector<double> v ( m_sphere.nX() ) ;
-  for ( unsigned short ix = 0 ; ix < m_sphere.nX() ; ++ix ) 
-  { v[ix] = m_sphere.x2 ( ix ) * ( ix + 1 ) ; }
+  const unsigned short o = degree() ;
+  const long double    norm = m_bernstein.npars() / 
+    ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
   //
-  // integrate them and to get new coefficients
-  if   ( m_increasing ) { std::partial_sum ( v. begin() , v. end() ,  v. begin() ) ; }
-  else                  { std::partial_sum ( v.rbegin() , v.rend() ,  v.rbegin() ) ; }
+  if      ( 0 == o ) { return m_bernstein.setPar ( 0 , norm ) ; }
+  else if ( 1 == o ) 
+  {
+    /// get alpha from sphere 
+    long double a = m_sphere . x2 ( 0 ) ;
+    const long double alpha = m_increasing ? a / ( 1 + a ) : 1 / ( 1 + a ) ;
+    const long double beta  = 1 - alpha     ;
+    const bool updated0 = m_bernstein.setPar ( 0 , alpha * norm ) ;
+    update              = updated0 || update ;
+    const bool updated1 = m_bernstein.setPar ( 1 , beta  * norm ) ;
+    update              = updated1 || update ;
+    return updated1 || updated1 ;
+  }
+  // 
+  // generic case  
   //
-  const double isum = m_bernstein.npars() 
-    / std::accumulate ( v.begin() , v.end() , 0.0 ) 
-    / ( m_bernstein.xmax() -  m_bernstein.xmin () ) ;
+  // get alpha and beta from sphere 
+  const long double alpha  = m_sphere . x2 ( 0 ) ;
+  const long double beta   = 1 - alpha ;
   //
-  for ( unsigned short ix = 0 ; ix < m_sphere.nX() ; ++ix ) 
+  const std::vector<double>& ppars = m_positive.bernstein().pars() ;
+  if ( m_increasing ) { std::partial_sum ( ppars. begin () , ppars. end () , m_aux. begin () + 1 ) ; }
+  else                { std::partial_sum ( ppars.rbegin () , ppars.rend () , m_aux.rbegin () + 1 ) ; }
+  //
+  const unsigned short nx = m_aux.size() ;
+  const double s1 = alpha * norm / std::accumulate ( m_aux.begin() , m_aux.end() , 0.0 ) ;
+  const double s2 = beta  * norm / nx    ;
+  //
+  for ( unsigned short i = 0 ; i < nx ; ++i ) 
   { 
-    const bool updated = m_bernstein.setPar ( ix , v [ix] * isum ) ; 
+    const bool updated = m_bernstein.setPar ( i , s2 + s1 * m_aux [ i ] ) ; 
     update = updated || update ;
   }
   //
@@ -658,6 +671,19 @@ double Ostap::Math::Monotonic::integral
     s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
     m_bernstein.integral ( low , high )  ; 
 }
+// ============================================================================
+// get all parameters (phases on sphere)
+// ============================================================================
+std::vector<double> Ostap::Math::Monotonic::pars  () const
+{
+  std::vector<double> r { m_positive.pars() } ; 
+  const std::vector<double>& pa = m_sphere  .pars() ;
+  r.insert ( r.begin() , pa.begin() , pa.end() ) ;
+  return r  ;  
+}
+
+
+
 // ============================================================================
 // constructor from the order
 // ============================================================================
