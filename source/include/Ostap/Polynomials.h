@@ -1374,7 +1374,7 @@ namespace Ostap
       bool update = false ;
       const unsigned int   N = m_pars.size()  ;
       for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-      { update = _setPar ( k  , *begin ) | update ; }
+      { update = _setPar ( k  , *begin ) || update ; }
       return update ;
     }
     // ========================================================================

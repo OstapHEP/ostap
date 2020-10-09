@@ -140,7 +140,7 @@ namespace Ostap
        */
       bool setPar     ( const unsigned short index , 
                         const double         value ) 
-      { return setPhase ( index , value ) ; }
+      { return index < m_phases.size() ? setPhase ( index , value ) : false ; }
       // ======================================================================
       /** set several/all parameters at once 
        *  @param begin  start itertaor for sequence of coefficients 
@@ -244,7 +244,7 @@ inline bool Ostap::Math::NSphere::setPars ( ITERATOR begin  ,
   bool update = false ;
   const unsigned int   N = nPhi ()  ;
   for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-  { update = setPar ( k  , *begin ) | update ; }
+  { update = setPar ( k , *begin ) || update ; }
   return update ;
 }
 // ============================================================================
