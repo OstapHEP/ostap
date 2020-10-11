@@ -178,7 +178,7 @@ ParamPDFInfo = namedtuple ( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
 def _h1_param_sum_ ( h1              ,
                      fun_obj         ,
                      fit_type        ,  
-                     opts  = 'SQ0I'  ,
+                     opts  = 'SQ0'   ,
                      xmin  = inf_neg ,
                      xmax  = inf_pos ,
                      fixes = ()      ) :
@@ -210,11 +210,19 @@ def _h1_param_sum_ ( h1              ,
     if not opts                : opts  = 'S'
     if not 'S' in opts.upper() : opts += 'S'
     
+    if len ( h1 ) < 100 and not 'I' in opts.upper() :
+        logger.info ("param_sum: add fitting option 'I' ") 
+        opts += 'I'
+        
+    if h1.GetXaxis().IsVariableBinSize() and not 'I' in opts.upper() :
+        logger.info ("param_sum: add fitting option 'I' ") 
+        opts += 'I'
+        
     ## fitting options:
     fopts = opts,'',xmin,xmax 
 
     ## fix parameters 
-    for i,v in fixes :
+    for i , v in fixes :
         fun.FixParameter ( i , v )
         
     if hasattr ( bfit , 'norm' ) and bfit.norm() :

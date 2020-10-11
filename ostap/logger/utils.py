@@ -289,21 +289,21 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
     v  = value 
     av = abs ( v ) 
     if   100 <= av < 1000 :
-        fmt2 = '%%+0%d.%df' % ( width , precision - 2 )
+        fmt2 = '%%+%d.%df' % ( width , precision - 2 )
         return fmt2 , 0 
     elif 10  <= av < 100  :
-        fmt1 = '%%+0%d.%df' % ( width , precision - 1 )
+        fmt1 = '%%+%d.%df' % ( width , precision - 1 )
         return fmt1 , 0  
     elif 1   <= av < 10   :
-        fmt0 = '%%+0%d.%df' % ( width , precision     )
+        fmt0 = '%%+%d.%df' % ( width , precision     )
         return fmt0 , 0  
     elif 0.1 <= av < 1    :
-        fmt0 = '%%+0%d.%df' % ( width , precision     )
+        fmt0 = '%%+%d.%df' % ( width , precision     )
         return fmt0 , 0  
     
     from  ostap.math.base        import frexp10, iszero    
     if iszero ( av ) :
-        fmt0 = '%%+0%d.%df' % ( width , precision )
+        fmt0 = '%%+%d.%df' % ( width , precision )
         return fmt0 , 0  
     
     v_a , v_e = frexp10 ( v )
@@ -350,26 +350,32 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
     av = max ( abs ( v ) ,  e )
 
     if   100 <= av < 1000 :
-        fmtv = '%%+0%d.%df' % ( width , precision - 2 )
-        fmte = '%%-0%d.%df' % ( width , precision - 2 )
-        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 2 , width , precision - 2 )
+        fmtv = '%%+%d.%df' % ( width , precision - 2 )
+        fmte = '%%-%d.%df' % ( width , precision - 2 )
+        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 2 , width , precision - 2 )
         return fmt , fmtv , fmte , 0 
     elif 10  <= av < 100  :
-        fmtv = '%%+0%d.%df' % ( width , precision - 1  )   
-        fmte = '%%-0%d.%df' % ( width , precision - 1 )   
-        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
+        fmtv = '%%+%d.%df' % ( width , precision - 1  )   
+        fmte = '%%-%d.%df' % ( width , precision - 1 )   
+        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
         return fmt , fmtv , fmte , 0 
     elif 1   <= av < 10   :
-        fmtv = '%%+0%d.%df' % ( width , precision     )
-        fmte = '%%-0%d.%df' % ( width , precision     )
-        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        fmtv = '%%+%d.%df' % ( width , precision     )
+        fmte = '%%-%d.%df' % ( width , precision     )
+        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
         return fmt , fmtv , fmte , 0  
+    elif 0.1 <= av < 1     :
+        fmtv = '%%+%d.%df' % ( width , precision     )
+        fmte = '%%-%d.%df' % ( width , precision     )
+        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0  
+
 
     from  ostap.math.base        import frexp10, iszero 
     if iszero ( av ) :
-        fmtv = '%%+0%d.%df' % ( width , precision     )
-        fmte = '%%-0%d.%df' % ( width , precision     )
-        fmt  = '( %%+0%d.%df +/- %%-0%d.%df )' % ( width , precision     , width , precision     )
+        fmtv = '%%+%d.%df' % ( width , precision     )
+        fmte = '%%-%d.%df' % ( width , precision     )
+        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
         return fmt , fmtv , fmte , 0  
 
     v_a , v_e = frexp10 ( av )
@@ -426,26 +432,31 @@ def fmt_pretty_2ve ( value         ,
     av = max ( abs ( v ) , e )
 
     if   100 <= av < 1000 :
-        fmtv  = '%%+0%d.%df' %  ( width , precision - 2 )
-        fmte  = '%%-0%d.%df' %  ( width , precision - 2 )
-        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 2 )
+        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
         return fmt , fmtv , fmte , 0  
     elif 10  <= av < 100  :        
-        fmtv  = '%%+0%d.%df' %  ( width , precision - 1 )
-        fmte  = '%%-0%d.%df' %  ( width , precision - 1 )
-        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
+        fmte  = '%%-%d.%df' %  ( width , precision - 1 )
+        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
         return fmt , fmtv  , fmte , 0
     elif 1   <= av < 10   :
-        fmtv  = '%%+0%d.%df' %  ( width , precision     )
-        fmte  = '%%-0%d.%df' %  ( width , precision     )
-        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        fmt   = '( %%+%d.%df +/%%-0%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        return fmt , fmtv , fmte , 0 
+    elif 0.1 <= av < 1    :
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        fmt   = '( %%+%d.%df +/%%-0%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
         return fmt , fmtv , fmte , 0 
 
     from  ostap.math.base        import frexp10, iszero
     if iszero ( av ) :
-        fmtv  = '%%+0%d.%df' %  ( width , precision     )
-        fmte  = '%%-0%d.%df' %  ( width , precision     )
-        fmt   = '( %%+0%d.%df +/%%-0%d.%df -/%%-0%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        fmtv  = '%%+%d.%df' %  ( width , precision     )
+        fmte  = '%%-%d.%df' %  ( width , precision     )
+        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
         return fmt , fmtv , fmte , 0 
                 
     v_a , v_e = frexp10 ( av )
@@ -494,10 +505,10 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
 
     fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision )
     
-    v =           value.value ()
-    e = max ( 0 , value.error () )
+    v =           value.value ()   
+    e = max ( 0 , value.error () ) 
     
-    return fmt % ( v , e ) , n 
+    return fmt % ( v / 10**n , e / 10**n ) , n 
 
 # ===============================================================================
 ## nice printout of the object with asymmetric  errors   ( string + exponent)
@@ -520,7 +531,7 @@ def pretty_2ve ( value         ,
 
     fmt , fmtv , fmte , n = fmt_pretty_2ve ( value , eh , el , width , precision )
     
-    return fmt  % ( value , eh , el ) , n
+    return fmt  % ( value / 10**n , eh / 10**n , el / 10**n ) , n
 
 # =============================================================================
 ## format list of strings into multicolumn string

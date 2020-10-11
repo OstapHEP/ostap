@@ -162,18 +162,17 @@ def _fit_table_ ( rfit , title = '' , prefix = '' ) :
             v     = VE ( value , error * error )
             ##
             fmt , fmtv , fmte , n = fmt_pretty_ve  ( v )
-            s = fmt % ( value , error )
+            s = fmt % ( value / 10**n , error / 10**n )
             nv = n 
         if n : n = '[10^%+d]' % n
         else : n = '' 
         pname = "%-2d: %s"% ( i , pname )
 
-        row = pname , n , '  ' + s 
-            
+        row = pname , n , '  ' + s             
         if not fixed and rfit.HasMinosError( i ) :
             if fmte : 
-                error_low  = fmte % ( rfit.LowerError ( i ) / 10**nv ) 
-                error_up   = fmte % ( rfit.UpperError ( i ) / 10**nv )
+                error_low  = fmte   % ( rfit.LowerError ( i ) / 10**nv ) 
+                error_up   = fmte   % ( rfit.UpperError ( i ) / 10**nv )
             else : 
                 error_low  = "%+8g" % ( rfit.LowerError ( i ) / 10**nv ) 
                 error_up   = "%+8g" % ( rfit.UpperError ( i ) / 10**nv ) 
