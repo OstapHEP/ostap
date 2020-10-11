@@ -1021,7 +1021,11 @@ namespace Ostap
      *  @param y (INPUT) the second sequence
      *  @return   "dot" product of two sequences 
      */
-    template <unsigned int N, class TYPE1, class TYPE2>
+    template <unsigned int N, 
+              class TYPE1 , 
+              class TYPE2 , 
+              typename = std::enable_if<std::is_convertible<TYPE1,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<TYPE2,long double>::value> >
     inline double dot_kahan
     ( const std::array<TYPE1,N>& x , 
       const std::array<TYPE2,N>& y )  
@@ -1033,7 +1037,12 @@ namespace Ostap
      *  @param y (INPUT) begin-iterator for the second sequence 
      *  @return   "dot" product of two sequences 
      */
-    template <class TYPE,unsigned int N, class ITERATOR> 
+    template <class TYPE     ,
+              unsigned int N , 
+              class ITERATOR , 
+              typename = std::enable_if<std::is_convertible<TYPE,long double>::value>       , 
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
+              typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
     inline double dot_kahan 
     ( TYPE(&x)[N] , 
       ITERATOR y  ) { return dot_kahan ( x , x + N , y ) ; }
@@ -1044,7 +1053,11 @@ namespace Ostap
      *  @param y (INPUT) the second sequence 
      *  @return   "dot" product of two sequences 
      */
-    template <class TYPE1, class TYPE2, unsigned int N> 
+    template <class TYPE1, 
+              class TYPE2, 
+              unsigned int N ,
+              typename = std::enable_if<std::is_convertible<TYPE1,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<TYPE2,long double>::value> >
     inline double dot_kahan
     ( TYPE1(&x)[N] , 
       TYPE2(&y)[N] ) { return dot_kahan ( x , x + N , y ) ; }
@@ -1062,18 +1075,50 @@ namespace Ostap
       const double*      y ) { return dot_kahan ( x , x + N , y ) ; }
     // ========================================================================
     /// simple scaling of elements of non-constant sequence        
-    template <class ITERATOR, typename SCALAR>
+    template <class ITERATOR  , 
+              typename SCALAR ,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
+              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
     void scale ( ITERATOR first  ,
                  ITERATOR last   , 
                  SCALAR   factor )
     { for ( ; first != last ; ++first ) { (*first) *= factor ; } }
     // ========================================================================
     /// shift all elements of non-constant sequence        
-    template <class ITERATOR, typename SCALAR>
+    template <class    ITERATOR, 
+              typename SCALAR  ,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
+              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
     void shift ( ITERATOR first  ,
                  ITERATOR last   , 
                  SCALAR   factor )
     { for ( ; first != last ; ++first ) { (*first) += factor ; } }
+    // ========================================================================
+    /// simple scale and shift of elements of non-constant sequence        
+    template <class    ITERATOR, 
+              typename SCALAR  ,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type     ,
+              typename = std::enable_if<std::is_convertible<value_type,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value>     >
+    void scale_and_shift ( ITERATOR first ,
+                           ITERATOR last  , 
+                           SCALAR   scale ,
+                           SCALAR   shift )
+    { for ( ; first != last ; ++first ) 
+      { (*first) = std::fma ( *first , scale , shift ) ; } }
+    // ========================================================================
+    /// scale & shift all elements of vector 
+    template <class TYPE     , 
+              class ALLOCATOR, 
+              class SCALAR   , 
+              typename = std::enable_if<std::is_convertible<TYPE  ,long double>::value> , 
+              typename = std::enable_if<std::is_convertible<SCALAR,long double>::value> >    
+    inline void scale_and_shift ( std::vector<TYPE,ALLOCATOR>& vct , 
+                                  SCALAR scale , 
+                                  SCALAR shift ) 
+    { scale_and_shift ( vct.begin() , vct.end() , scale , shift ) ; }
     // ========================================================================
     /// simple scaling of exponents for all elements of non-constant sequence        
     template <class ITERATOR>

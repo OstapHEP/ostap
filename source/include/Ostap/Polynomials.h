@@ -7,6 +7,8 @@
 // STD& STL 
 // ============================================================================
 #include <functional>
+#include <type_traits>
+#include <initializer_list>
 #include <vector>
 #include <cmath>
 // ============================================================================
@@ -1286,7 +1288,9 @@ namespace Ostap
       /// constructor from  the list of parameters 
       Parameters (       std::vector<double>&& pars   ) ;
       /// templated constructor from the sequnce of parameters 
-      template <class ITERATOR>
+      template <typename ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
       Parameters ( ITERATOR begin , 
                    ITERATOR end   )
         : m_pars ( begin , end )
@@ -1395,7 +1399,9 @@ namespace Ostap
       /// constructor from vector of parameters 
       PolySum (       std::vector<double>&& pars ) ;
       /// constructor from sequence of parameters 
-      template <class ITERATOR>
+      template <typename ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
         PolySum ( ITERATOR begin , 
                   ITERATOR end   )
         : Parameters ( begin , end )
@@ -1439,11 +1445,13 @@ namespace Ostap
                    const double               low    =  -1  , 
                    const double               high   =   1  ) ;
       /// template constructor from sequence of parameters 
-      template <class ITERATOR>
-        Polynomial ( ITERATOR                 first , 
-                     ITERATOR                 last  , 
-                     const double             xmin  , 
-                     const double             xmax  ) 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Polynomial ( ITERATOR                 first , 
+                   ITERATOR                 last  , 
+                   const double             xmin  , 
+                   const double             xmax  ) 
         : Ostap::Math::PolySum ( first , last ) 
         , m_xmin ( std::min ( xmin, xmax ) )
         , m_xmax ( std::max ( xmin, xmax ) )

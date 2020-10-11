@@ -289,22 +289,46 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from the order
+      /** constructor from the order
+       *  @param N    degree of polynomial
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Positive ( const unsigned short        N     =  1 ,
                  const double                xmin  =  0 ,
                  const double                xmax  =  1 ) ;
       // ======================================================================
-      /// constructor from N phases
+      /** constructor from N parameters/phases 
+       *  @param phases  list of parameters/phase 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Positive ( const std::vector<double>&  phases     ,
                  const double                xmin  =  0 ,
                  const double                xmax  =  1 ) ;
+      // ======================================================================
+      /** constructor from the sequence of   parameters 
+       *  @param begin  start-iterator for sequence of coefficients 
+       *  @param end     start-iterator for sequence of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      template<typename ITERATOR,
+               typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      Positive ( ITERATOR     begin    , 
+                 ITERATOR     end      , 
+                 const double xmin = 0 ,
+                 const double xmax = 1 ) 
+        : Positive ( std::distance ( begin , end ) , xmin , xmax ) 
+      { setPars ( begin , end ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
       double operator () ( const double x ) const { return m_bernstein ( x ) ; }
       // ======================================================================
-    public:
+    public: // PAR-interface 
       // ======================================================================
       /// get number of parameters (==degree)
       unsigned short npars () const { return m_bernstein.degree () ; }
@@ -342,9 +366,10 @@ namespace Ostap
       inline bool setPars ( ITERATOR begin , 
                             ITERATOR end   ) 
       {
+        const auto NN = std::distance ( begin  , end ) ;
         const unsigned short nA = m_sphereA.npars () ;
-        const bool updatedA = m_sphereA.setPars ( begin      , end ) ;
-        const bool updatedR = m_sphereR.setPars ( begin + nA , end ) ;
+        const bool updatedA =           m_sphereA.setPars ( begin      , end ) ;
+        const bool updatedR = nA < NN ? m_sphereR.setPars ( begin + nA , end ) : false ;
         return updatedA || updatedR ? updateBernstein ( ) : false ;
       }
       // ======================================================================
@@ -734,19 +759,46 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from the order
+      /** constructor from the order
+       *  @param N    degree of polynomial
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       *  @param increasing  increasing  or decreasing ?
+       */
       Monotonic
       ( const unsigned short       N          =    1 ,
         const double               xmin       =    0 ,
         const double               xmax       =    1 ,
         const bool                 increasing = true ) ;
       // ======================================================================
-      /// constructor from N phases
+      /** constructor from N parameters/phases 
+       *  @param phases  list of parameters/phase 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       *  @param increasing  increasing  or decreasing ?
+       */
       Monotonic
       ( const std::vector<double>& pars              ,
         const double               xmin       =    0 ,
         const double               xmax       =    1 ,
         const bool                 increasing = true ) ;
+      // ======================================================================
+      /** constructor from the sequence of parameters 
+       *  @param begin  start-iterator for sequence of coefficients 
+       *  @param end     start-iterator for sequence of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      template<typename ITERATOR,
+               typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      Monotonic ( ITERATOR     begin             , 
+                  ITERATOR     end               , 
+                  const double xmin       = 0    ,
+                  const double xmax       = 1    , 
+                  const bool   increasing = true ) 
+        : Monotonic ( std::distance (  begin , end ) , xmin , xmax , increasing ) 
+      { setPars  ( begin , end ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -794,9 +846,10 @@ namespace Ostap
       inline bool setPars ( ITERATOR begin , 
                             ITERATOR end   ) 
       {
+        const auto NN = std::distance ( begin  , end ) ;
         const unsigned short nS = m_sphere.npars () ;
-        const bool updatedS = m_sphere  .setPars ( begin      , end ) ;
-        const bool updatedP = m_positive.setPars ( begin + nS , end ) ;
+        const bool updatedS =           m_sphere  .setPars ( begin      , end ) ;
+        const bool updatedP = nS < NN ? m_positive.setPars ( begin + nS , end ) : false ;
         return updatedS || updatedP ? updateBernstein ( ) : false ;
       }
       // ======================================================================
@@ -966,15 +1019,33 @@ namespace Ostap
     /** @class Convex
      *  The "positive" polynomial of order N with
      *  fixed sign of first and second derivatives
-     *  Actually it is a sum of basic bernstein polynomials with
-     *  non-negative coefficients
+     *
+     *  Conceptually, the monotonic increasing convex polynomial is parameterised as 
+     *  \f[ C^{(I)}_n (x) = \cos^2 \phi_0 A \int_0^x \int_0^y P_{n-2}(z) dz dy + \sin^2 \phi_0 I_1(x) \f]
+     *  where \f$P_n(x)\f$ is a positive polynomial and 
+     *  \f$ I_n(x)\f$ is positive monotonically increasing polynomial 
+     *
+     *  The parameters \f$ \phi_i \f$ where \f$ 0 \le i < N \f$, are 
+     *  -  parameter \f$ \phi_0 \f$ is used to parameterize 
+     *  -  parameter \f$ \phi_1 \f$ is used to parameterize \f$ I_1 (x) \f$ 
+     *  -  parameters \f$ \phi_{2...}\f$ ar eused to parameterize \f$ P_{n-1}(x)\f$ 
+     *
+     *  @see Ostap::Math::Monotonic 
+     *  @see Ostap::Math::Positive
+     *  @see Ostap::Math::Bernstein 
      */
     class Convex 
     {
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from the order
+      /** constructor from the order
+       *  @param N  degree of polynomial 
+       *  @param xmin  low-edge 
+       *  @param xmax  high-edge 
+       *  @param increasing increasing or decreasing ? 
+       *  @param convex     convex or concave? 
+       */
       Convex
       ( const unsigned short       N          =    1 ,
         const double               xmin       =    0 ,
@@ -982,7 +1053,13 @@ namespace Ostap
         const bool                 increasing = true ,
         const bool                 convex     = true ) ;
       // ======================================================================
-      /// constructor from N phases
+      /** constructor from parameters/phases 
+       *  @param pars list of parameters/phases 
+       *  @param xmin  low-edge 
+       *  @param xmax  high-edge 
+       *  @param increasing increasing or decreasing ? 
+       *  @param convex     convex or concave? 
+       */ 
       Convex
       ( const std::vector<double>& pars              ,
         const double               xmin       =    0 ,
@@ -990,6 +1067,26 @@ namespace Ostap
         const bool                 increasing = true ,
         const bool                 convex     = true ) ;
       // ======================================================================
+      /** constructor from the sequence of parameters 
+       *  @param begin  start-iterator for sequence of coefficients 
+       *  @param end     start-iterator for sequence of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       *  @param increasing increasing or decreasing ? 
+       *  @param convex     convex or concave? 
+       */
+      template<typename ITERATOR,
+               typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+               typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      Convex ( ITERATOR     begin             , 
+               ITERATOR     end               , 
+               const double xmin       = 0    ,
+               const double xmax       = 1    , 
+               const bool   increasing = true ,
+               const bool   convex     = true )
+        : Convex ( std::distance (  begin , end ) , xmin , xmax , increasing , convex ) 
+      { setPars  ( begin , end ) ; }
+    // ======================================================================
     public:
       // ======================================================================
       /// get the value
@@ -998,11 +1095,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars () const { return m_sphere.nPhi () ; }
+      std::size_t npars () const { return m_bernstein.degree() ; }
       /// set k-parameter
       bool setPar       ( const unsigned short k , const double value ) 
-      { 
-        const bool update = m_sphere.setPhase ( k , value ) ;
+      {
+        const unsigned short nA = m_sphereA .npars () ;
+        const unsigned short nI = m_sphereI .npars () ;
+        const unsigned short nP = m_positive.npars () ;
+        const bool update = 
+          k < nA           ? m_sphereA .setPar ( k           , value ) :
+          k < nA + nI      ? m_sphereI .setPar ( k - nA      , value ) : 
+          k < nA + nI + nP ? m_positive.setPar ( k - nA - nI , value ) : false ;
         return update ? updateBernstein () : false ;
       }
       /// set k-parameter
@@ -1010,9 +1113,43 @@ namespace Ostap
       { return setPar   ( k , value ) ; }
       /// get the parameter value
       double  par       ( const unsigned short k ) const
-      { return m_sphere.par ( k ) ; }
-      /// get all parameters (phases on sphere)
-      const std::vector<double>& pars  () const { return m_sphere   .pars () ; }
+      {
+        const unsigned short nA = m_sphereA .npars () ;
+        const unsigned short nI = m_sphereI .npars () ;
+        const unsigned short nP = m_positive.npars () ;
+        return
+          k < nA           ? m_sphereA .par ( k      ) : 
+          k < nA + nI      ? m_sphereI .par ( k - nA ) :
+          k < nA + nI + nP ? m_positive.par ( k - nA ) : 0.0 ;
+      }
+      // ================================================================
+      /** set several/all parameters at once 
+       *  @param begin  start itertaor for the sequence of coefficients 
+       *  @param end    end   itertaor for the sequence of coefficients 
+       *  @return true if at least one parameter is actually changed 
+       */
+      template <class ITERATOR>
+      inline bool setPars ( ITERATOR begin , 
+                            ITERATOR end   ) 
+      {
+        const auto NN = std::distance ( begin  , end ) ;
+        const unsigned short nA = m_sphereA .npars () ;
+        const unsigned short nI = m_sphereI .npars () ;
+        const bool updatedA =                m_sphereA .setPars ( begin           , end ) ;
+        const bool updatedI = nA      < NN ? m_sphereI .setPars ( begin + nA      , end ) : false ;
+        const bool updatedP = nA + nI < NN ? m_positive.setPars ( begin + nA + nI , end ) : false ;
+        return updatedA || updatedI || updatedP ? updateBernstein ( ) : false ;
+      }
+      // ======================================================================
+      /** set several/all parameters at once 
+       *  @param pars (NIPUT) vector of parameters 
+       *  @return true if at least one parameter is actually changed 
+       */
+      inline bool setPars ( const std::vector<double>& pars ) 
+      { return setPars ( pars.begin() , pars.end() ) ; }
+      // ======================================================================
+      /// get all parameters (by value) 
+      std::vector<double>        pars  () const ;
       /// get bernstein coefficients
       const std::vector<double>& bpars () const { return m_bernstein.pars () ; }
       // ======================================================================
@@ -1048,7 +1185,7 @@ namespace Ostap
       //// constant 
       bool constant   () const { return m_bernstein.constant () ; }
       // ======================================================================
-     public:
+    public:
       // ======================================================================
       /// get the minimal value of function
       double fun_min () const ; // get the minimal value of function
@@ -1069,8 +1206,10 @@ namespace Ostap
       // ======================================================================
       /// get the underlying Bernstein polynomial
       const Ostap::Math::Bernstein& bernstein () const { return m_bernstein ; }
-      /// get the parameter sphere
-      const Ostap::Math::NSphere&   sphere    () const { return m_sphere    ; }
+      /// get the parameter sphere: alpha  & beta 
+      const Ostap::Math::NSphere&   asphere   () const { return m_sphereA   ; }
+      /// get the parameter sphere: linear integration "constant"
+      const Ostap::Math::NSphere&   isphere   () const { return m_sphereI   ; }
       /// get the indefinite integral
       Bernstein indefinite_integral ( const double C = 0 ) const
       { return m_bernstein.indefinite_integral ( C ) ; }
@@ -1116,9 +1255,12 @@ namespace Ostap
       void swap ( Convex& right ) 
       {
         Ostap::Math::swap ( m_bernstein  , right.m_bernstein  ) ;
-        Ostap::Math::swap ( m_sphere     , right.m_sphere     ) ;
+        Ostap::Math::swap ( m_positive   , right.m_positive   ) ;
+        Ostap::Math::swap ( m_sphereA    , right.m_sphereA    ) ;
+        Ostap::Math::swap ( m_sphereI    , right.m_sphereI    ) ;
         std::swap         ( m_increasing , right.m_increasing ) ;
         std::swap         ( m_convex     , right.m_convex     ) ;
+        std::swap         ( m_aux        , right.m_aux        ) ;
       } 
       // ======================================================================
     private :
@@ -1128,14 +1270,20 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-      /// the actual bernstein polynomial
-      Ostap::Math::Bernstein m_bernstein  ; // the actual bernstein polynomial
-      /// parameters sphere
-      Ostap::Math::NSphere   m_sphere     ;
-      /// increasing ?
-      bool                   m_increasing ; // increasing ?
-      /// convex ?
-      bool                   m_convex     ; // convex ?
+      /// the actual Bernstein polynomial
+      Ostap::Math::Bernstein           m_bernstein  ; // the actual bernstein polynomial
+      /// helper posivity polymnomial 
+      Ostap::Math::Positive            m_positive   ; // helper positive polymnomial
+      /// parameters sphere: alpha & beta 
+      Ostap::Math::NSphere             m_sphereA    ; // alpha & beta 
+      /// parameters sphere: integration linear function 
+      Ostap::Math::NSphere             m_sphereI    ;
+      /// increasing or decreasing ?
+      bool                             m_increasing ; // increasing or decreasing?
+      /// convex or concave ?
+      bool                             m_convex     ; // convex or concave ?
+      /// helper worklspace 
+      mutable std::vector<long double> m_aux        ; // helper workspace 
       // ======================================================================
     } ;
     // ========================================================================
@@ -1173,6 +1321,7 @@ namespace Ostap
     /// Swapping function for positive monotonic convex/concave polynomials 
     inline void swap ( Convex&        a , Convex&        b ) { a.swap ( b ) ; }
     // ========================================================================
+
     /** @class ConvexOnly
      *  The "positive" polynomial of order N with
      *  fixed sign the second derivatives
@@ -1247,7 +1396,7 @@ namespace Ostap
       bool convex     () const { return degree () < 2 ||  m_convex     ; }
       /// convex     ?
       bool concave    () const { return degree () < 2 || !m_convex     ; }
-      //// constant  ? 
+      //// constant 
       bool constant   () const { return m_bernstein.constant   () ; }
       // ======================================================================
     public:

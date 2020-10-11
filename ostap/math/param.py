@@ -215,7 +215,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     csum = Ostap.Math.ChebyshevSum ( N , xmin , xmax )
     
     ## transform x to local variable -1<t<1 
-    tx   = lambda x : lsum.t ( x )
+    tx   = lambda x : csum.t ( x )
 
     import math 
     _cos = math.cos
@@ -232,7 +232,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
         
         c_n = 0.0
         for k in range ( 0, N  ) :
-            c_n += fk[k] * _cos( _piN * n * ( k + 0.5 ) )
+            c_n += fk [ k ] * _cos ( _piN * n * ( k + 0.5 ) )
             
         if 0 == n : c_n *= 0.5
         csum.setPar ( n , c_n * scale ) 
@@ -439,7 +439,7 @@ bernstein_sum = bezier_sum
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-03
 def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
-    """Make a function/histiogram representation in terms of Bezier sum
+    """Make a function/histogram representation in terms of Bezier sum
     (sum of Bernstein Polynomials)
     >>> func = lambda x : x * x
     >>> fsum = beziereven_sum ( func , 2 , -1 , 1 )
@@ -456,7 +456,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     
     npars = bsum.bernstein().npars() 
     ## constants 
-    b_i   = npars *[0.0]
+    b_i   = npars * [ 0.0 ]
     
     xmid  = 0.5 * ( xmin + xmax ) 
     ## symmetric function: f(xmid-x)=f(xmid+x) 
@@ -495,7 +495,7 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     ## fill result with symmetrized coefficients 
     last = npars - 1 
     for i in bsum :
-        bsum.setPar( i , 0.5 * ( b_i[ i ] + b_i [ last - i ] ) ) 
+        bsum.setPar( i , 0.5 * ( b_i [ i ] + b_i [ last - i ] ) ) 
         
     return bsum
 

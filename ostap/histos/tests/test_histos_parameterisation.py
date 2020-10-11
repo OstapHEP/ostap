@@ -148,9 +148,9 @@ def test_bernsteineven_sum() :
     logger = getLogger("test_bernsteineven_sum")
 
     with timing ( 'Bernstein-(even)-sum[6]' , logger ) :
-        params  = [ h.bernsteineven_sum ( 6 ) for h in histos ]
+        params  = [ h.bernsteineven_sum ( 6 ) for h in histos[4:] ]
     
-    for h , f in zip ( histos , params ) :
+    for h , f in zip ( histos[4:] , params ) :
         h.draw()
         f.draw('same')
         logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )

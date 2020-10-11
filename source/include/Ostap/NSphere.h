@@ -243,7 +243,7 @@ inline bool Ostap::Math::NSphere::setPars ( ITERATOR begin  ,
 {
   bool update = false ;
   const unsigned int   N = nPhi ()  ;
-  for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
+  for ( unsigned short k ; k < N && begin != end ; ++k, ++begin ) 
   { update = setPar ( k , *begin ) || update ; }
   return update ;
 }

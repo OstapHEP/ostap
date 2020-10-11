@@ -53,10 +53,7 @@ Ostap::Math::Bernstein::Bernstein
 ( const std::vector<double>& pars ,
   const double               xmin ,
   const double               xmax )
-  : Ostap::Math::PolySum ( pars ) 
-  , m_xmin ( std::min ( xmin , xmax ) )
-  , m_xmax ( std::max ( xmin , xmax ) )
-  , m_aux  ( this->degree() + 2 ) 
+  : Bernstein ( pars.begin() , pars.end() ,  xmin , xmax ) 
 {}
 // ============================================================================
 // constructor from the list of  coefficients

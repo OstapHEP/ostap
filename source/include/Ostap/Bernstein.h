@@ -83,29 +83,57 @@ namespace Ostap
                   const double                xmin  = 0 ,
                   const double                xmax  = 1 ) ;
       // ======================================================================
-      /// constructor from N+1 coefficients
+      /** constructor from N+1 coefficients
+       *  @param pars list of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( const std::vector<double>&  pars      ,
                   const double                xmin  = 0 ,
                   const double                xmax  = 1 ) ;
       // ======================================================================
-      /// constructor from N+1 coefficients
+      /** constructor from N+1 coefficients
+       *  @param pars list of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( std::vector<double>&& pars      ,
                   const double          xmin  = 0 ,
                   const double          xmax  = 1 ) ;
       // ======================================================================
-      /// construct the basic bernstein polinomial  B(k,N)
+      /** construct the basic bernstein polinomial  B(k,N)
+       *  @param basic the basci Bernstein polynomial \f$ B^k_n\f$
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein  ( const Basic&              basic     ,
                    const double              xmin  = 0 ,
                    const double              xmax  = 1 ) ;
       // ======================================================================
-      /// template constructor from sequence of parameters
-      template <class ITERATOR>
-      Bernstein ( ITERATOR                 first ,
-                  ITERATOR                 last  ,
-                  const double             xmin  ,
-                  const double             xmax  ) ;
+      /** templated constructor from the sequence of parameters
+       *  @param first begin-iterator for the sequnce of parameters 
+       *  @param last  end-iterator for the sequnce of parameters 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      Bernstein ( ITERATOR     first     ,
+                  ITERATOR     last      ,
+                  const double xmin  = 0 ,
+                  const double xmax  = 1 ) 
+        : Ostap::Math::PolySum  ( first , last )
+        , m_xmin ( std::min ( xmin, xmax ) )
+        , m_xmax ( std::max ( xmin, xmax ) )
+        , m_aux  ( degree () + 2 )
+      {}
       // ======================================================================
-      /// constructor  from Bernstein polynomial from *different* domain
+      /** constructor  from Bernstein polynomial from *different* domain
+       *  @param poly Bernstein polynomial 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( const Bernstein& poly ,
                   const double     xmin ,
                   const double     xmax ) ;
@@ -754,21 +782,7 @@ namespace Ostap
 // ============================================================================
 // implementation of templated stuff 
 // ============================================================================
-// template constructor from sequence of parameters
-// ============================================================================
-template <class ITERATOR>
-Ostap::Math::Bernstein::Bernstein
-( ITERATOR                 first ,
-  ITERATOR                 last  ,
-  const double             xmin  ,
-  const double             xmax  )
-  : Ostap::Math::PolySum ( first , last )
-  , m_xmin ( std::min ( xmin, xmax ) )
-  , m_xmax ( std::max ( xmin, xmax ) )
-  , m_aux  ( degree () + 2 ) 
-{}
-// ============================================================================
-/*  construct Bernstein interpolant
+/*  Construct Bernstein interpolant
  *  @param xbegin start of vector of abscissas
  *  @param xend   end   of vector of abscissas
  *  @param ybegin start if vector of function values (the same size)
@@ -795,10 +809,7 @@ Ostap::Math::Bernstein::Bernstein
   const double xmax   , 
   XADAPTER     xvalue , 
   YADAPTER     yvalue )
-  : Ostap::Math::PolySum ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) -1 ) 
-  , m_xmin ( std::min ( xmin , xmax ) )
-  , m_xmax ( std::max ( xmin , xmax ) )
-  , m_aux  ( degree () + 2 ) 
+  : Bernstein ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) - 1 , xmin , xmax ) 
 {
   const unsigned int N  = std::distance ( xbegin , xend ) ;
   //

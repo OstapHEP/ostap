@@ -160,19 +160,19 @@ inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
 # =============================================================================
 ## result of the historgam  parameterisation based on TH1::Fit 
-ParamFITInfo = namedtuple( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
-                                              'fitobject' ,   ## Fittting object 
-                                              'funobject' ,   ## original function object 
-                                              'fitresult' ,   ## result of TH1::Fit
-                                              'norm'      ) ) ## normalization factor
+ParamFITInfo = namedtuple ( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
+                                               'fitobject' ,   ## Fittting object 
+                                               'funobject' ,   ## original function object 
+                                               'fitresult' ,   ## result of TH1::Fit
+                                               'norm'      ) ) ## normalization factor
 # =============================================================================
 ## result of the historgam  parameterisation based on RooFit
-ParamPDFInfo = namedtuple( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
-                                              'pdf'       ,   ## Fit PDF 
-                                              'funobject' ,   ## the function object 
-                                              'norm'      ,   ## normalization factor 
-                                              'pdffun'    ,   ## PDF_fun object
-                                              'plot'      ) ) ## RooPlot object 
+ParamPDFInfo = namedtuple ( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
+                                               'pdf'       ,   ## Fit PDF 
+                                               'funobject' ,   ## the function object 
+                                               'norm'      ,   ## normalization factor 
+                                               'pdffun'    ,   ## PDF_fun object
+                                               'plot'      ) ) ## RooPlot object 
 # =============================================================================
 ## represent 1D-histo as polynomial sum 
 def _h1_param_sum_ ( h1              ,
@@ -207,8 +207,8 @@ def _h1_param_sum_ ( h1              ,
             fun.SetParameter ( i + 1 , 0  )
             fun.SetParLimits ( i + 1 , -1.75 * pi  , 1.75 * pi ) 
             
-    if not opts                   : opts  = 'S'
-    if 0 > opts.upper().find('S') : opts += 'S'
+    if not opts                : opts  = 'S'
+    if not 'S' in opts.upper() : opts += 'S'
     
     ## fitting options:
     fopts = opts,'',xmin,xmax 
@@ -223,19 +223,43 @@ def _h1_param_sum_ ( h1              ,
         r  = fun.Fit( h1 , opts+'0Q', '', xmin , xmax )
         fun.ReleaseParameter(0)
         
+    import ostap.fitting.fitresult
+    from   ostap.fitting.utils      import fit_status
+    from   ostap.logger.colorized  import attention
+
     r = fun.Fit( h1 , *fopts )
-        
-    if 0 != r.Status() :
-        logger.info ( 'Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+    
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name = type ( b ) . __name__
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.debug   ( 'Fit status is %s [%s]\n%s' % ( status , b_name ,  rtable ) )
         if hasattr ( bfit , 'norm' ) and bfit.norm() : 
             fun.FixParameter ( 0 , _integral_ )
             for i in range ( 0 , b.npars() ) : fun.SetParameter ( i + 1 , 0  )
             r = fun.Fit( h1 , *fopts )
             fun.ReleaseParameter ( 0 )
-        r = fun.Fit( h1 , *fopts )
+        r = fun.Fit ( h1 , *fopts )
+
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.info    ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.debug   ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
+        if hasattr ( bfit , 'norm' ) and bfit.norm() : 
+            fun.FixParameter ( 0 , _integral_ )
+            for i in range ( 0 , b.npars() ) : fun.SetParameter ( i + 1 , 0  )
+            r = fun.Fit( h1 , *fopts )
+            fun.ReleaseParameter ( 0 )
+        r = fun.Fit ( h1 , *fopts )
             
-    if 0 != r.Status() :
-        logger.warning ( 'Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.warning ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.debug   ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
         r = fun.Fit( h1, *fopts )        
         if hasattr ( bfit , 'norm' ) and bfit.norm() : 
             fun.FixParameter ( 0 , _integral_ )
@@ -243,15 +267,20 @@ def _h1_param_sum_ ( h1              ,
             r = fun.Fit(h1, *fopts)
             fun.ReleaseParameter( 0 )
         r = fun.Fit ( h1 , *fopts )
-        if 0 != r.Status() :
-            logger.error ('Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.error   ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.info    ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
 
     bfit.fitresult = r
     
-    norm = VE(1,0)
+    norm = VE ( 1 , 0 )
     if hasattr ( bfit , 'norm' ) and bfit.norm() : 
-        bfit.fitnorm = r[0]
-        norm         = r[0]
+        bfit.fitnorm = r [ 0 ]
+        norm         = r [ 0 ]
         
     params = ParamFITInfo ( bfit.fun , bfit , b , bfit.fitresult , norm ) 
     h1._param_FIT_info = params 
@@ -358,7 +387,7 @@ def _h1_bernsteineven_ ( h1 , halfdegree , opts = 'SQ0' , xmin = inf_neg , xmax 
 def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Chebyshev sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.chebyshev ( 5 )  ## make a fit... 
 
     >>> tf1        = b[0]    ## TF1 object
@@ -383,7 +412,7 @@ def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_p
 # =============================================================================
 ## represent 1D-histo as Legendre polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.legendre ( 5 )     ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -399,7 +428,7 @@ def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_p
 def _h1_legendre_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Legendre sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.legendre ( 5 )  ## make a fit...
 
     >>> tf1        = b[0]    ## TF1 object
@@ -472,7 +501,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 # =============================================================================
 ## represent 1D-histo as Fourier polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.fourier ( 3 )      ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -488,7 +517,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Fourier sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.fourier ( 3 )  ## make a fit... 
         
     >>> tf1        = b[0]    ## TF1 object
@@ -515,7 +544,7 @@ def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg 
 # =============================================================================
 ## represent 1D-histo as cosine Fourier polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.cosine ( 3 )       ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -531,7 +560,7 @@ def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg 
 def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Cosine Fourier sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.cosine ( 3 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -558,7 +587,7 @@ def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as plain vanilla polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.polinomial ( 5 )  ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -573,7 +602,7 @@ def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg ,
 #  @endcode 
 def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as plain vanilla polynomial    
-    >>> h = ... # the historgam    
+    >>> h = ... # the histogram    
     >>> b = h.polinomial ( 5 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -600,7 +629,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
 # =============================================================================
 ## represent 1D-histo as B-spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.bSpline ( degree = 3 , innerknots = 3  )
 #  b = h.bSpline ( degree = 3 , innerknots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -616,7 +645,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
 #  @endcode 
 def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as B-spline polynomial    
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.bSpline ( degree = 3 , knots = 3  )
     >>> b = h.bSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
@@ -650,7 +679,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as POSITIVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.positive     ( 5 ) ## 5 is degree
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -665,7 +694,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 #  @endcode 
 def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Positive Bernstein polynomial
-    >>> h = ...              ## the historgam
+    >>> h = ...              ## the histogram
     >>> b = h.positive ( 5 ) ## 5 is degree
     
     >>> tf1        = b[0]    ## TF1 object
@@ -688,7 +717,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
 # =============================================================================
 ## represent 1D-histo as POSITIVE EVEN bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.positiveeven ( 2 ) ## 2 is half-degree
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -704,7 +733,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
 def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Positive Even Bernstein polynomial
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.positiveeven ( 2 ) ## 2 is half-degree
     
     >>> tf1        = b[0] ## TF1 object
@@ -728,7 +757,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 # =============================================================================
 ## represent 1D-histo as MONOTONIC bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.monotonic ( 5 , increasing = True )
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -744,7 +773,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Monotonic Bernstein polynomial
     
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.monotonic ( 5 , increasing = True )
     
     >>> tf1        = b[0] ## TF1 object
@@ -768,7 +797,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
 # =============================================================================
 ## represent 1D-histo as MONOTONIC CONVEX/CONCAVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convex ( 5 , increasing = True , convex = False )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -783,7 +812,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
 #  @endcode 
 def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Monotonic Convex/Concave  Bernstein polynomial    
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.convex ( 5 , increasing = True , convex = False )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -795,7 +824,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
     >>> x = ...
     >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
     >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
@@ -808,7 +837,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
 # =============================================================================
 ## represent 1D-histo as CONVEX bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convexpoly ( 5 )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -823,7 +852,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
 #  @endcode 
 def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Convex Bernstein polynomial
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.convexpoly ( 5 )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -846,7 +875,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
 # =============================================================================
 ## represent 1D-histo as CONCAVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.concavepoly ( 5 )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -862,7 +891,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
 def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Concave  Bernstein polynomial
 
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.concavepoly ( 5 )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -885,7 +914,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
 # =============================================================================
 ## represent 1D-histo as positive B-spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b  = h.pSpline ( degree = 3 , knots = 3  )
 #  b  = h.pSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -902,7 +931,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
 def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive B-spline 
     
-    >>> h  = ... # the historgam
+    >>> h  = ... # the histogram
     >>> b  = h.pSpline ( degree = 3 , knots = 3  )
     >>> b  = h.pSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 
@@ -933,7 +962,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as positive monotonic spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.mSpline ( degree = 3 , knots = 3  , increasing = True  )
 #  b = h.mSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ] )
 #  b = h.mSpline ( degree = 3 , knots = 3  , increasing = False )
@@ -951,7 +980,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive monotonic  spline 
     
-    >>> h  = ... # the historgam
+    >>> h  = ... # the histogram
     
     >>> b  = h.mSpline ( degree = 3 , knots = 3  , increasing = True  )
     >>> b  = h.mSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ] )
@@ -985,7 +1014,7 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
 # =============================================================================
 ## represent 1D-histo as monotonic convex/concave spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
 #  b = h.cSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -1009,7 +1038,7 @@ def _h1_cspline_ ( h1                   ,
                    xmax       = inf_pos ) :
     """Represent histo as positive monotonic convex/concave spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
     >>> b = h.cSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 
@@ -1041,7 +1070,7 @@ def _h1_cspline_ ( h1                   ,
 # =============================================================================
 ## represent 1D-histo as positive convex spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convexSpline ( degree = 3 , knots = 3 )
 #  b = h.convexSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -1063,7 +1092,7 @@ def _h1_convexspline_ ( h1                 ,
                         xmax     = inf_pos ) :
     """Represent histo as positive convex spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.convexSpline ( degree = 3 , knots = 3 )
     >>> b = h.convexSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
@@ -1094,7 +1123,7 @@ def _h1_convexspline_ ( h1                 ,
 # =============================================================================
 ## represent 1D-histo as positive concave spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.concaveSpline ( degree = 3 , knots = 3 )
 #  b = h.concaveSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 #
@@ -1116,7 +1145,7 @@ def _h1_concavespline_ ( h1               ,
                          xmax   = inf_pos ) :
     """Represent histo as positive convcave spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.concaveSpline ( degree = 3 , knots = 3 )
     >>> b = h.concaveSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
