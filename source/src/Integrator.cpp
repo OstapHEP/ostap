@@ -276,8 +276,22 @@ double Ostap::Math::Integrator::cauchy_pv
   //
   const double dx = std::min ( std::abs ( c - xmin ) , std::abs ( c - xmax ) ) / 4 ;
   //
+  const double scale  = 
+    std::abs ( f1 ( c - dx ) ) + 
+    std::abs ( f1 ( c      ) ) + 
+    std::abs ( f1 ( c + dx ) ) ;  
+  //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
-  auto F = integrator.make_function( &f1 ) ;
+  //
+  function1 FF = std::cref ( f1 ) ;
+  bool scaled  = false ;
+  if ( 0 != scale && !s_zero ( scale ) && !s_equal ( scale , 1.0 ) )
+  {
+    const double iscale  = 1.0 / scale ;
+    scaled = true ;
+    FF = [&f1,iscale]  ( const double x ) -> double { return f1 ( x ) * iscale ; } ;
+  }
+  auto F = integrator.make_function( &FF ) ;
   //
   int    ierror ;
   double result ;
@@ -296,6 +310,8 @@ double Ostap::Math::Integrator::cauchy_pv
       __FILE__          ,   // the file 
       __LINE__          ,   // the line 
       tag               ) ; // tag/label 
+  //
+  if  ( scaled ) { result /=  scale ; }
   //
   auto f2 = std::cref ( f1 ) ;
   auto ff = [f2,c]  ( const double  x ) -> double 

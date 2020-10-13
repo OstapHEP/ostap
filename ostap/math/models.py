@@ -406,7 +406,9 @@ Ostap.Math.BW              . amp = _amp_
 ## Ostap.Math.Swanson         . amp = _amp_
 
 for m in  ( Ostap.Math.Flatte ,
-            Ostap.Math.BW     ) :
+            Ostap.Math.BW     ,
+            Ostap.Math.BWPS   ,
+            Ostap.Math.BW3L   ) :
     m.amp       = _amp_ 
     m.amp_real  = _amp_re_ 
     m.amp_imag  = _amp_im_ 
