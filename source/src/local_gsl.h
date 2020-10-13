@@ -63,6 +63,14 @@ namespace
    */
   const double s_PRECISION_TAIL = 1.e-5 ;
   // ===========================================================================
+  /** @var s_PRECISION_QAWC
+   *  the default QAWC precision for various calculations,
+   *  in particular GSL integration
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_PRECISION_QAWC  = 1.e-7 ;
+  // ==========================================================================
 }
 // ============================================================================
 //                                                                     The END 

@@ -302,8 +302,8 @@ double Ostap::Math::Integrator::cauchy_pv
       c - dx , c + dx   ,   // low and high integration edges 
       c                 ,   // Cauchy's point 
       workspace ( ws )  ,   // workspace 
-      s_PRECISION       ,   // absolute precision 
-      s_PRECISION       ,   // relative precision 
+      s_PRECISION_QAWC  ,   // absolute precision 
+      s_PRECISION_QAWC  ,   // relative precision 
       -1                ,   // limit 
       s_message         ,   // reason of failure 
       __FILE__          ,   // the file 
