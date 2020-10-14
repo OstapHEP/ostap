@@ -34,7 +34,7 @@ Ostap::Math::Integrator::Integrator
  *  \f[ r = \int_{x_{min}}^{x_{max}} f_1(x) dx \f]
  *  @param f1 the function 
  *  @param xmin lower integration edge 
- *  @param xmax uppr  integration edge
+ *  @param xmax upper integration edge
  *  @return the value of the integral 
  */
 // =============================================================================
@@ -45,6 +45,25 @@ double Ostap::Math::Integrator::integrate
   const Ostap::Math::WorkSpace&      ws   , 
   const std::size_t                  tag  ) 
 {
+  //
+  if ( s_equal ( xmin , xmax ) ) { return 0 ; }
+  //
+  // // rescale ? 
+  // const double xmid = 0.5 * ( xmin +  xmax ) ;
+  // const double s = std::abs ( xmax - xmin ) *
+  //   ( std::abs ( f1 ( xmin ) ) + 
+  //     std::abs ( f1 ( xmid ) ) _
+  //     std::abs ( f1 ( xmax ) ) ) / 3.0 ;
+  // //
+  // if ( 0 != s && !s_zero ( s ) && ( s < 0.1.e-3 || s > 1.e+3 ) )
+  // {
+  //   auto f2        =  std::cref ( f1 ) ;
+  //   const double S = 1/s ;
+  //   // scaled function 
+  //   auto fs        = [&f2,s] ( const double x ) -> double { return S * f2 ( x ) } ;
+  //   return s * integrate ( fs , xmin , xmax , ws , std::hash_combine ( tag , s ) ) ;
+  // }
+  //
   static const Ostap::Math::GSL::Integrator1D<function1> integrator {} ;
   auto F = integrator.make_function( &f1 ) ;
   //

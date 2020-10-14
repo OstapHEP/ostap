@@ -82,8 +82,8 @@ namespace Ostap
           const double               xlow                 ,           // low integration edge 
           const double               xhigh                ,           // high integration edge 
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = 1.e-8   ,           // absolute precision
-          const double               rprecision = 1.e-8   ,           // relative precision
+          const double               aprecision = s_PRECISION ,       // absolute precision
+          const double               rprecision = s_PRECISION ,       // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
@@ -132,8 +132,8 @@ namespace Ostap
         Result gaqi_integrate   
         ( const gsl_function*        func                 ,       // the function
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -177,8 +177,8 @@ namespace Ostap
         ( const gsl_function*        func                 ,       // the function
           const double               xlow                 ,       // low integration edge 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -224,8 +224,8 @@ namespace Ostap
         ( const gsl_function*        func                 ,       // the function
           const double               xhigh                ,       // high integration edge 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -272,8 +272,8 @@ namespace Ostap
           const double               xhigh                ,       // high integration edge 
           const std::vector<double>& pnts                 ,       // knowns singular points 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -327,8 +327,8 @@ namespace Ostap
           const double               xhigh                ,       // high integration edge 
           const double               c                    ,       // Cauchy's point
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -380,8 +380,8 @@ namespace Ostap
           const double               xlow                 ,       // low integration edge 
           const double               xhigh                ,       // high integration edge 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -427,8 +427,8 @@ namespace Ostap
         ( const std::size_t          tag                  ,
           const gsl_function*        func                 ,       // the function
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -474,8 +474,8 @@ namespace Ostap
           const gsl_function*        func                 ,       // the function
           const double               xlow                 ,       // low integration edge 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -522,8 +522,8 @@ namespace Ostap
           const gsl_function*        func                 ,       // the function
           const double               xhigh                ,       // upper integration edge 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -572,8 +572,8 @@ namespace Ostap
           const double               xhigh                ,       // high integration edge 
           const std::vector<double>& pnts                 ,       // knowns singular points 
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 
@@ -627,8 +627,8 @@ namespace Ostap
           const double               xhigh                ,       // high integration edge 
           const double               c                    ,       // Cauchy's point
           gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
+          const double               aprecision = s_PRECISION ,   // absolute precision
+          const double               rprecision = s_PRECISION ,   // relative precision
           int                        limit      = -1      ,       // limit 
           const char*                reason     = nullptr ,       // message 
           const char*                file       = nullptr ,       // file name 

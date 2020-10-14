@@ -2764,6 +2764,27 @@ class BreitWigner_pdf(MASS) :
         """The Breit-Wigner function  itself"""
         return self.__breitwigner
 
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
 models.append ( BreitWigner_pdf )
 
 
@@ -3004,6 +3025,28 @@ class BWMC_pdf(MASS) :
     def fractions ( self ) :
         """``fractions''  : branching fractions for different decay channels"""
         return self.__fractions
+
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
 
 models.append ( BWMC_pdf )
 
@@ -3473,6 +3516,28 @@ class Flatte_pdf(MASSMEAN) :
     def flatte ( self ) :
         """The Flatte function itself"""
         return self.__flatte
+
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw    = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
 
 models.append ( Flatte_pdf )                          
 

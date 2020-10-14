@@ -1341,10 +1341,6 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-      
-
-
-    // ========================================================================
     /** @class BreitWignerMC
      *  function to describe Breit-Wigner signal with several channels,
      *  including Flatte's behaviour 
@@ -2135,8 +2131,8 @@ namespace Ostap
     
     // ========================================================================
     /** @class Channel23L 
-     *  helper class to represent resonances in (12) sysmem from M->1+2+3 decays
-     *  where the orbital momentum betwee (12)  and (2) is known. 
+     *  helper class to represent resonances in (12) system from M->1+2+3 decays
+     *  where the orbital momentum between (12)  and (2) is known. 
      *(
      *  - \f$ N_a(s)       \f$ delegated to original channel 
      *  - \f$ D_a(s)       \f$ delegates to the original   channel 
@@ -2162,7 +2158,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// the first main method: numerator.
+      /// the first main method: numerator
       double               N2 
       ( const double s  , 
         const double m0 ) const override { return m_channel -> N2 ( s , m0 ) ; }
@@ -2630,7 +2626,7 @@ namespace Ostap
     /** @class BWPS
      *  Breit-Wigner function modulated with some phase-space function
      *  - it can approximate the distorted Breit-Wigner shapes 
-     *    from multibidy decays 
+     *    from multibody decays 
      *
      *  \f[ f(x) \equiv F_{\mathrm{BW}}(x) \Phi_{l,n}(x)  P_k(x) \f]
      *  - \f$ \Phi_{l,n} \f$  is a phase-space function 

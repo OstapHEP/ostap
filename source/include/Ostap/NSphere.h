@@ -225,7 +225,7 @@ inline double Ostap::Math::NSphere::x
   else if ( nx == 1     ) { return 1               ; } // trivial
   else if ( 0  == index ) { return m_cos_phi [ 0 ] ; } // trivial
   //
-  const bool last = ( index + 1 == nx ) ;
+  const bool last = ( index + 1u == nx ) ;
   //
   long double xi = 1.0 ;
   for ( unsigned short j = 0 ; j < index ; ++j ) { xi *= m_sin_phi[j] ; }
