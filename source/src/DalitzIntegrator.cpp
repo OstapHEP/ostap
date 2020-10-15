@@ -296,7 +296,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
   //
   const double f_norm = s_zero ( f_avg ) ? 1.0 : 1.0 / f_avg ;
   //
-  function2 fun = [s,M,&d,&f2,f_norm] ( const double x1  , const double x2 ) -> double
+  function2 fun = [s,M,&d,&f2,f_norm] ( const double x1 , const double x2 ) -> double
     {
       double s1, s2 ;                     
       std::tie ( s1 , s2 ) = d.x2s ( s , x1 , x2 ) ;
@@ -318,7 +318,7 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
       s_MESSAGE2  , 
       __FILE__    ,
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag() ) ) ; // tag/label
+      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag() , n1 , n2 ) ) ; // tag/label
   //
   return result / f_norm ;
 }
@@ -346,7 +346,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   //
   if      ( s_equal ( smax ,  smin ) ) { return 0 ; }
   else if (           smax < smin    ) 
-  { return -1 * integrate_ss1 ( std::cref ( f3 ) , s2 , smax , smin , d ) ; }
+  { return -1 * integrate_ss1 ( std::cref ( f3 ) , s2 , smax , smin , d , tag , n1 , n2 ) ; }
   //
   if ( s2   <= d.s2_min () ||
        smax <= d.sqsumm () || 
@@ -355,7 +355,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double mins = d.sqsumm() + s2 - d.s2_min () ;
   if      ( smax <= mins ) { return 0 ; }
   else if ( smin <  mins )
-  { return integrate_ss1 ( std::cref ( f3 ) , s2 , mins , smax , d ) ; }
+  { return integrate_ss1 ( std::cref ( f3 ) , s2 , mins , smax , d , tag , n1 , n2 ) ; }
   //
   const double y1_min = smin ;
   const double y1_max = smax ;
@@ -385,7 +385,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double f_norm = s_zero ( f_avg ) ? 1.0 : 1.0 / f_avg ;
   //
   //
-  function2  fun = [&d,s2,&f3,f_norm] ( const double y1  , const double y2 ) -> double
+  function2  fun = [&d,s2,&f3,f_norm] ( const double y1 , const double y2 ) -> double
     {
       double s, s1 ;
       std::tie ( s , s1 ) = d.y2s ( s2 , y1 , y2 ) ;
@@ -408,7 +408,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
       s_MESSAGE2  , 
       __FILE__    , 
       __LINE__    , 
-      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag ()) ) ; // tag/label
+      0 == tag ? tag : std::hash_combine ( f_norm , tag , d.tag () , n1 , n2 ) ) ; // tag/label
   //
   return result / f_norm ;
 }
@@ -436,7 +436,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
        s2   >= d.s2_max ( smax ) ) { return 0 ; }
   //
   const double smin = d.sqsumm() + s2 - d.s2_min() ;
-  if ( smax  <= smin ) { return 0 ; }
+  if ( smax <= smin ) { return 0 ; }
   //
   return integrate_ss1 ( std::cref ( f3 ) , s2 , smin , smax , d , tag , n1 , n2 ) ;
 }

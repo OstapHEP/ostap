@@ -36,7 +36,7 @@ namespace
     return (gsl_integration_workspace*) _ws ;
   }
   // ==========================================================================
-  // get size of GSL-wporkspace 
+  // get size of GSL-workspace 
   // ==========================================================================
   /** @var s_SIZE
    *  the workspace size parameter for GSL-integration
@@ -46,7 +46,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE  = 1000 ;
+  const std::size_t s_SIZE  = 2000 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,
@@ -56,8 +56,24 @@ namespace
    */
   const double s_PRECISION  = 1.e-8 ;
   // ==========================================================================
+  /** @var s_APRECISION
+   *  the default absolute precision for various calculations,
+   *  in particular GSL integration
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION  = s_PRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION
+   *  the default relative precision for various calculations,
+   *  in particular GSL integration
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION  = s_PRECISION ;
+  // ==========================================================================
   /** @var s_PRECISION_TAIL
-   *  the low-relative precision for tails in GSL integration
+   *  the low-relative precision for "tails" in GSL integration
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
@@ -70,6 +86,22 @@ namespace
    *  @date 2010-05-23
    */
   const double s_PRECISION_QAWC  = 1.e-7 ;
+  // ==========================================================================
+  /** @var s_APRECISION_QAWC
+   *  the default absolute QAWC precision for various calculations,
+   *  in particular GSL integration
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_QAWC  = s_PRECISION_QAWC ;
+  // ==========================================================================
+  /** @var s_EPRECISION_QAWC
+   *  the default relative QAWC precision for various calculations,
+   *  in particular GSL integration
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_QAWC  = s_PRECISION_QAWC ;
   // ==========================================================================
 }
 // ============================================================================
