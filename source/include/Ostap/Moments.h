@@ -145,7 +145,8 @@ namespace  Ostap
     // ========================================================================
     /// initialize the helper array of binomial coefficients
     template <unsigned short N>
-    constexpr std::array<unsigned long long,N+1> Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
+    constexpr std::array<unsigned long long,N+1> 
+    Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
     // ========================================================================
     /// increment with some value
     template <unsigned short N>
@@ -1043,7 +1044,7 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 >
       static inline VE kurtosis ( const WMoment_<N>& m ) 
       {
-        if ( m.size() < 3 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
+        if ( m.size() < 4 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
         const auto n = m.nEff () ;
         const double m4 = m.moment ( 4 ) ;
         const double m2 = m.moment ( 2 ) ;

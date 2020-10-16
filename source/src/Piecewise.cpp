@@ -31,6 +31,14 @@ namespace
   // ==========================================================================
 }
 // ============================================================================
+// default constructor : create constant function
+// ============================================================================
+Ostap::Math::Piecewise::Piecewise 
+( const double value ) 
+  : m_edges() 
+  , m_funcs ( 1 , FPAIR ( []( const double /* x */ ) -> double { return 1 ; } , value ) )
+{}
+// ============================================================================
 /*  add new function, defined for  \f$ x\ge x_i\$ 
  *  @attention xi must be larger than any previosly aded ranges!
  *  @param xi value of \f$ x_i \f$
