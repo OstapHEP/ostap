@@ -32,7 +32,7 @@ namespace Ostap
     class Bernstein : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Bernstein , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Bernstein , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -97,7 +97,7 @@ namespace Ostap
     class Monotonic : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Monotonic , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Monotonic , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -177,7 +177,7 @@ namespace Ostap
     class Convex : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Convex  , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Convex  , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -248,7 +248,7 @@ namespace Ostap
     class ConvexOnly : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::ConvexOnly  , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::ConvexOnly  , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================

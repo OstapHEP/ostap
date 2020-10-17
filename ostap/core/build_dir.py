@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 ## @file ostap/core/build_dir.py
-#  Create build directoru fro ROOT
-#  - check environment varibale   OSTAP_BUILD_DIR
+#  Create build directoru for ROOT
+#  - check environment variable   OSTAP_BUILD_DIR
 #  - check the configurtaion file, section [General], field BUILD_DIR
 #  - use the temporary directory
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

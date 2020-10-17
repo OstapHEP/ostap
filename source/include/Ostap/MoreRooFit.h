@@ -36,7 +36,7 @@ namespace Ostap
     class Addition : public RooAddition
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Addition , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Addition , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -85,7 +85,7 @@ namespace Ostap
     class Product : public RooProduct
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -134,7 +134,7 @@ namespace Ostap
     class Subtraction : public Addition
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Subtraction , 1 ) ;  // Difference of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Subtraction , 1 ) ;  // Difference of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -186,7 +186,7 @@ namespace Ostap
     class OneVar : public RooAbsReal 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::OneVar , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::OneVar , 1 ) ;  
       // ========================================================================
     public:
       // ========================================================================
@@ -218,7 +218,7 @@ namespace Ostap
     class FunOneVar : public OneVar  
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::FunOneVar , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::FunOneVar , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -303,7 +303,7 @@ namespace Ostap
     class TwoVars : public OneVar
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::TwoVars , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::TwoVars , 1 ) ;  
       // ========================================================================
     public:
       // ========================================================================
@@ -336,7 +336,7 @@ namespace Ostap
     class FunTwoVars : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::FunTwoVars , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::FunTwoVars , 1 ) ;  
       // ========================================================================
     public: 
       // ======================================================================
@@ -461,7 +461,7 @@ namespace Ostap
     class Division final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Division , 2 ) ;  // ratio of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Division , 2 ) ;  // ratio of RooAbsReal objects
       // ========================================================================
     public:
       // ======================================================================
@@ -517,7 +517,7 @@ namespace Ostap
     class Fraction final : public TwoVars
     {
       // ======================================================================
-      ClassDef(Ostap::MoreRooFit::Fraction , 2 ) ;  // Fraction 
+      ClassDefOverride(Ostap::MoreRooFit::Fraction , 2 ) ;  // Fraction 
       // ======================================================================
     public:
       // ======================================================================
@@ -574,7 +574,7 @@ namespace Ostap
     class Asymmetry final : public TwoVars 
     {
       // ======================================================================
-      ClassDef(Ostap::MoreRooFit::Asymmetry , 2 ) ;  // Relative difference 
+      ClassDefOverride(Ostap::MoreRooFit::Asymmetry , 2 ) ;  // Relative difference 
       // ======================================================================
     public:
       // ======================================================================
@@ -634,7 +634,7 @@ namespace Ostap
     class Power final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Power , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Power , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -694,7 +694,7 @@ namespace Ostap
     class Abs final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Abs , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Abs , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -757,7 +757,7 @@ namespace Ostap
     class Exp final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Exp , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Exp , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -817,7 +817,7 @@ namespace Ostap
     class Log final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Log , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Log , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -877,7 +877,7 @@ namespace Ostap
     class Log10 final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Log10 , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Log10 , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -937,7 +937,7 @@ namespace Ostap
     class Erf final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Erf , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Erf , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -997,7 +997,7 @@ namespace Ostap
     class Erfc final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Erfc , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Erfc , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1057,7 +1057,7 @@ namespace Ostap
     class Gamma final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Gamma , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Gamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1117,7 +1117,7 @@ namespace Ostap
     class LGamma final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::LGamma , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::LGamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1177,7 +1177,7 @@ namespace Ostap
     class IGamma final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::IGamma , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::IGamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1237,7 +1237,7 @@ namespace Ostap
     class Sin final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Sin , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Sin , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1297,7 +1297,7 @@ namespace Ostap
     class Cos final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Cos , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Cos , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1357,7 +1357,7 @@ namespace Ostap
     class Tan final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Tan , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Tan , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1417,7 +1417,7 @@ namespace Ostap
     class Sinh final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Sinh , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Sinh , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1477,7 +1477,7 @@ namespace Ostap
     class Cosh final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Cosh , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Cosh , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1537,7 +1537,7 @@ namespace Ostap
     class Tanh final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Tanh , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Tanh , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1597,7 +1597,7 @@ namespace Ostap
     class Sech final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Sech , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Sech , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1657,7 +1657,7 @@ namespace Ostap
     class Atan2 final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Atan2 , 2 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Atan2 , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -1717,7 +1717,7 @@ namespace Ostap
     class Id final : public OneVar 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Id , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Id , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================

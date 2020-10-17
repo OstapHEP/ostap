@@ -1293,5 +1293,40 @@ Ostap::Math::barrier_g
 
 
 // ============================================================================
-// The END 
+/* Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
+ * 
+ * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
+ *  \f$ V_2(m; \mu,\Gamma,\sigma) \equiv  S_2(m;\mu,\Gamma)\ast G(\delta m;\sigma)\f$ 
+ *  where 
+ *  - \f$ S_2 = \frac{1}{\pi}\frac{\mu\Gamma}{ (m^2-\mu^2)^2 + \mu^2\Gamma^2 } \f$    
+ *  - \f$ G(\delta m ; \sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} 
+ *     \mathrm{e}^{-\frac{1}{2} \left( \frac{\delta m }{\sigma} \right)^2} \f$$
+ *  
+ *  \f$ V_2(m; \mu,\Gamma,\sigma = \frac{H_2(a,u_1,u_2)}{2\sqrt{\pi}\sigma^2}\f$, where 
+ *  - \f$ u_1 = \frac{m-\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ u_2 = \frac{m+\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ a   = \frac{\mu\Gamma}{2\sigma^2} \f$
+ *
+ *  \f[ H_2(a,u_1,u_2) = 
+ *   \frac{a}{\pi} \int_{-\infty}{+\infty}  
+ *    \frac{dt}{  (u_1-t)^2(u_2-t0^2 + a^2 } \f] 
+ * @see Kycia, Radoslaw A.; Jadach, Stanislaw. 
+ *      "Relativistic Voigt profile for unstable particles in high energy physics". 
+ *      Journal of Mathematical Analysis and Applications. 463 (2): 1040–1051 
+ *      arXiv:1711.09304. doi:10.1016/j.jmaa.2018.03.065. ISSN 0022-247X.
+ * @see https://arxiv.org/abs/1711.09304
+ */
+// ============================================================================
+double Ostap::Math::H2 ( const double a  , 
+                         const double u1 , 
+                         const double u2 ) 
+{
+  if ( a  < 0 ) { return H2 ( std::abs ( a ) , u1 , u2 ) ; }
+  return 0 ;
+}
+
+
+
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

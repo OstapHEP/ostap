@@ -51,7 +51,7 @@ namespace Ostap
         this->add ( args... ) ;
       }
       // ======================================================================
-      /// default constructor : create constant function
+      /// default constructor : create a constant function
       Piecewise ( const double value = 0 ) ;
       // ======================================================================
       Piecewise ( const Piecewise&  ) = default ;

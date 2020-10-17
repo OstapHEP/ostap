@@ -360,7 +360,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   const double y1_min = smin ;
   const double y1_max = smax ;
   //
-  // "Average value" of the function over n1xn2 points 
+  // "Average value" of the function over n1 x n2 points 
   double f_avg = 1 ;
   if ( 0 < n1 && 0 < n2 ) 
   { 
@@ -397,7 +397,7 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   /// get the  integrator
   const auto F = s_DI22.make_function ( &fun , y1_min , y1_max  , -1  , 1 ) ;
   //
-  int    ierror  =  0 ;
+  int     ierror =  0 ;
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_DI22.cubature
