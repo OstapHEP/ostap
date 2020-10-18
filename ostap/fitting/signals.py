@@ -2549,7 +2549,12 @@ class Voigt_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m0 , sigma ) 
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = m0                  ,
+                         sigma       = sigma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ) 
+                         
 
         limits_gamma = ()
         if  self.xminmax() :

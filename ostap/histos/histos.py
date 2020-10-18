@@ -7216,6 +7216,61 @@ def _h_fill_loop_ ( histo , filler ) :
 
 ROOT.TH1.fill_loop = _h_fill_loop_
 
+
+# ==============================================================================
+## split the historgam into <code>n</code> sub-histograms 
+#  @code
+#  h1 = ...
+#  histos = h1.split(10) 
+#  @endcode 
+def _h1_split1_ ( h1 , n ) :
+    """Split the histogram into `n` sub-histograms
+    >>> h1 = ...
+    >>> histos = h1.split(10) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of sub-histograms %s' % n
+    
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import divide as _divide 
+    bins   = _divide ( n , range ( 1 , N ) )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] + 1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+# ==============================================================================
+## split the historgam into sub-histograms with at most <code>n</code> bins 
+#  @code
+#  h1 = ...
+#  histos = h1.split_bins(10) 
+#  @endcode 
+def _h1_split2_ ( h1 , n ) :
+    """Split the historgam into sub-histograms with at most <code>n</code> bins 
+    >>> h1 = ...
+    >>> histos = h1.split_bins ( 10 ) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of bins  %s' % n
+
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import chunked as _chunked
+    bins   = _chunked ( range ( 1 , N ) , n )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] +1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+for h in ( ROOT.TH1F , ROOT.TH1D ) :
+    h.split      = _h1_split1_
+    h.split_bins = _h1_split2_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1   ,
@@ -7769,7 +7824,10 @@ _new_methods_   = (
     ROOT.TH1F.transform_X_numbers  ,
     ROOT.TH1F.transform_X_function ,
     ##
-    ROOT.TH1   . fill_loop   , 
+    ROOT.TH1   . fill_loop   ,
+    
+    ROOT.TH1F  . split       ,
+    ROOT.TH1F  . split_bins  ,
     )
 
 # =============================================================================

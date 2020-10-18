@@ -783,7 +783,7 @@ class TaskManager(object) :
         
         job_chunk = kwargs.pop ( 'chunk_size', 10000 )
         
-        from ostap.parallel.utils import chunked 
+        from ostap.utils.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )
 
         if isinstance ( task , Task ) :
@@ -794,7 +794,7 @@ class TaskManager(object) :
         return result 
 
     # ===================================================================================
-    ## Helper internal method for parallel processiing of
+    ## Helper internal method for parallel processing of
     #  the plain function with chunks of data
     def __process_func ( self , task , chunks  , **kwargs ) :
         """Helper internal method for parallel processiing of

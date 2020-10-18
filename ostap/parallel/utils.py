@@ -40,8 +40,7 @@ __all__     = (
     'ping'             , ## ping remote host
     'good_pings'       , ## get alive hosts
     'get_local_port'   , ## get local port number
-    'pool_context'     , ## useful conitext for the pathos's Pools
-    'chunked'          , ## split jobs into chunks 
+    'pool_context'     , ## useful context for the pathos's Pools
     )
 # =============================================================================
 import sys
@@ -382,79 +381,6 @@ def pool_context  ( pool ) :
     """    
     return  PoolContext ( pool )
 
-try :
-    
-    from more_itertools import chunked
-    
-except ImportError :
-    
-    from itertools import islice
-    from functools import partial
-    
-    # =========================================================================
-    ## Return first *n* items of the iterable as a list
-    #  @code 
-    #  take(3, range(10))  ## [0, 1, 2]
-    #  take(5, range(3))   ## [0, 1, 2]
-    #  @endcode
-    # 
-    #  The function is copied from more_itertools 
-    def take(n, iterable):
-        """Return first *n* items of the iterable as a list.
-        
-        >>> take(3, range(10))
-        [0, 1, 2]
-        >>> take(5, range(3))
-        [0, 1, 2]
-        
-        Effectively a short replacement for ``next`` based iterator consumption
-        when you want more than one item, but less than the whole iterator.
-        
-        """
-        return list(islice(iterable, n))
-    
-    # =========================================================================
-    ## Break *iterable* into lists of length *n*:
-    #  @code
-    #  list(chunked([1, 2, 3, 4, 5, 6], 3)) ## [[1, 2, 3], [4, 5, 6]]
-    #  @endcode
-    #  If the length of *iterable* is not evenly divisible by *n*, the last
-    #  returned list will be shorter:
-    #  @code 
-    #  list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3)) ## [[1, 2, 3], [4, 5, 6], [7, 8]]
-    #  @endcode 
-    #  <code>chunked</code> is useful for splitting up a computation on a large number
-    #  of keys into batches, to be pickled and sent off to worker processes. One
-    #  example is operations on rows in MySQL, which does not implement
-    #  server-side cursors properly and would otherwise load the entire dataset
-    #  into RAM on the client.
-    # 
-    #  The function is copied from more_itertools 
-    def chunked(iterable, n):
-        """Break *iterable* into lists of length *n*:
-        
-        >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
-        [[1, 2, 3], [4, 5, 6]]
-        
-        If the length of *iterable* is not evenly divisible by *n*, the last
-        returned list will be shorter:
-        
-        >>> list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3))
-        [[1, 2, 3], [4, 5, 6], [7, 8]]
-        
-        To use a fill-in value instead, see the :func:`grouper` recipe.
-        
-        :func:`chunked` is useful for splitting up a computation on a large number
-        of keys into batches, to be pickled and sent off to worker processes. One
-        example is operations on rows in MySQL, which does not implement
-        server-side cursors properly and would otherwise load the entire dataset
-        into RAM on the client.
-        
-        """
-        return iter(partial(take, n, iter(iterable)), [])
-    
-
-    
 # =============================================================================
 if '__main__' == __name__ :
     

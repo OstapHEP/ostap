@@ -58,7 +58,7 @@ __all__     = (
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
-    'counted'            , ## decorator to create 'counted'-function
+    'counted'            d ## decorator to create 'counted'-function
     ##
     'cmd_exists'         , ## check the existence of the certain command/executable
     ##
@@ -70,8 +70,13 @@ __all__     = (
     ## 
     'log_range'          , ## helper loop over values between xmin and xmax in log
     ## 
-    'lrange'             , ## helper loop over values between xmin and xmax in log   
-   )
+    'lrange'             , ## helper loop over values between xmin and xmax in log
+    ##
+    'chunked'            , ## break *iterable* into chunks of length *n*:
+    'divide'             , ## divide the elements from *iterable* into *n* parts
+    'grouper'            , ## collect data into fixed-length chunks or blocks"
+    )
+
 # =============================================================================
 import ROOT, time, os , sys, math ## attention here!!
 from   builtins            import range
@@ -785,6 +790,169 @@ def gen_password ( len = 12 ) :
     ## 
     return result
 
+
+# =============================================================================
+
+try :
+    
+    from more_itertools import chunked, divide 
+    
+except ImportError :
+    
+    from itertools import islice
+    from functools import partial
+    
+    # =========================================================================
+    ## Return first *n* items of the iterable as a list
+    #  @code 
+    #  take(3, range(10))  ## [0, 1, 2]
+    #  take(5, range(3))   ## [0, 1, 2]
+    #  @endcode
+    #
+    #  The function is copied from <code>more_itertools</code> 
+    def take(n, iterable):
+        """Return first *n* items of the iterable as a list.
+        
+        >>> take(3, range(10))
+        [0, 1, 2]
+        >>> take(5, range(3))
+        [0, 1, 2]
+        
+        Effectively a short replacement for ``next`` based iterator consumption
+        when you want more than one item, but less than the whole iterator.
+        
+        - the function is copied from `more_itertools`
+        """
+        return list(islice(iterable, n))
+    
+    # =========================================================================
+    ## Break *iterable* into lists of length *n*:
+    #  @code
+    #  list(chunked([1, 2, 3, 4, 5, 6], 3)) ## [[1, 2, 3], [4, 5, 6]]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, the last
+    #  returned list will be shorter:
+    #  @code 
+    #  list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3)) ## [[1, 2, 3], [4, 5, 6], [7, 8]]
+    #  @endcode 
+    #  <code>chunked</code> is useful for splitting up a computation on a large number
+    #  of keys into batches, to be pickled and sent off to worker processes. One
+    #  example is operations on rows in MySQL, which does not implement
+    #  server-side cursors properly and would otherwise load the entire dataset
+    #  into RAM on the client.
+    # 
+    #  The function is copied from <code>more_itertools</code>
+    def chunked(iterable, n):
+        """Break *iterable* into lists of length *n*:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
+        [[1, 2, 3], [4, 5, 6]]
+        
+        If the length of *iterable* is not evenly divisible by *n*, the last
+        returned list will be shorter:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3))
+        [[1, 2, 3], [4, 5, 6], [7, 8]]
+        
+        To use a fill-in value instead, see the :func:`grouper` recipe.
+        
+        :func:`chunked` is useful for splitting up a computation on a large number
+        of keys into batches, to be pickled and sent off to worker processes. One
+        example is operations on rows in MySQL, which does not implement
+        server-side cursors properly and would otherwise load the entire dataset
+        into RAM on the client.
+        
+        - the function is copied from `more_itertools`
+        """
+        return iter(partial(take, n, iter(iterable)), [])
+
+    # =========================================================================
+    ## Divide the elements from *iterable* into *n* parts, maintaining order.
+    #  @code 
+    #  >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+    #  >>> list(group_1)
+    #  ...    [1, 2, 3]
+    #  >>> list(group_2)
+    #  ... [4, 5, 6]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, then the
+    #  length of the returned iterables will not be identical:
+    #  @code 
+    #  >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+    #  >>> [list(c) for c in children]
+    #  ... [[1, 2, 3], [4, 5], [6, 7]]
+    #  @endcode
+    # 
+    # If the length of the iterable is smaller than n, then the last returned
+    # iterables will be empty:
+    # @code
+    # >>> children = divide(5, [1, 2, 3])
+    # >>> [list(c) for c in children]
+    # ... [[1], [2], [3], [], []]
+    # @endcode
+    # 
+    # This function will exhaust the iterable before returning and may require
+    # significant storage. If order is not important, see :func:`distribute`,
+    # which does not first pull the iterable into memory.
+    #
+    # The function is copied from <code>more_itertools</code>
+    def divide ( n , iterable):
+        """Divide the elements from *iterable* into *n* parts, maintaining
+        order.
+        
+        >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+        >>> list(group_1)
+        [1, 2, 3]
+        >>> list(group_2)
+        [4, 5, 6]
+        
+        If the length of *iterable* is not evenly divisible by *n*, then the
+        length of the returned iterables will not be identical:
+        
+        >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+        >>> [list(c) for c in children]
+        [[1, 2, 3], [4, 5], [6, 7]]
+        
+        If the length of the iterable is smaller than n, then the last returned
+        iterables will be empty:
+        
+        >>> children = divide(5, [1, 2, 3])
+        >>> [list(c) for c in children]
+        [[1], [2], [3], [], []]
+        
+        This function will exhaust the iterable before returning and may require
+        significant storage. If order is not important, see :func:`distribute`,
+        which does not first pull the iterable into memory.
+        
+        - the function is copied from `more_itertools`
+        """
+        if n < 1:
+            raise ValueError('n must be at least 1')
+
+        seq = tuple(iterable)
+        q, r = divmod(len(seq), n)
+        
+        ret = []
+        for i in range(n):
+            start = (i * q) + (i if i < r else r)
+            stop = ((i + 1) * q) + (i + 1 if i + 1 < r else r)
+            ret.append(iter(seq[start:stop]))
+            
+        return ret
+        
+if ( 3 , 0 ) <= python_version :
+    from itertools import zip_longest
+else :
+    from itertools import izip_longest as zip_longest
+
+# =============================================================================
+## Collect data into fixed-length chunks or blocks"
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -794,5 +962,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*' ) 
             
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
