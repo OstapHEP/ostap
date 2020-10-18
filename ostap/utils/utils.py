@@ -58,7 +58,7 @@ __all__     = (
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
-    'counted'            d ## decorator to create 'counted'-function
+    'counted'            , ## decorator to create 'counted'-function
     ##
     'cmd_exists'         , ## check the existence of the certain command/executable
     ##
