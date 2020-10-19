@@ -1467,7 +1467,7 @@ namespace Ostap
        */
       Flatte ( const double m0    = 980   ,
                const double m0g1  = 165   ,
-               const double g2og1 = 4.21  , // dimensinless 
+               const double g2og1 = 4.21  ,   // dimensionless 
                const double mA1   = 139.6 ,
                const double mA2   = 139.6 ,
                const double mB1   = 493.7 ,

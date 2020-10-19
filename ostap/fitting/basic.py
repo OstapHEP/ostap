@@ -744,8 +744,8 @@ class PDF (FUNC) :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )
-                if 0 < binw : self.info ( 'chi2/ndf: %s, binwidth: %s' %  ( frame.chi2ndf , binw ) )
-                else        : self.info ( 'chi2/ndf: %s' %                  frame.chi2ndf          )
+                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
+                else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
                 
             if not residual and not pull:
                 return frame

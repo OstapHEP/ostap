@@ -638,7 +638,7 @@ class TaskMerger(object) :
 
 # =============================================================================
 ## helper function to execute the task and collect statistic
-#  (unfornately due to limitation of <code>parallel python</code> one cannot
+#  (unfortunately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 #  @see Task 
 def task_executor ( item ) :

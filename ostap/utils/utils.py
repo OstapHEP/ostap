@@ -75,6 +75,8 @@ __all__     = (
     'chunked'            , ## break *iterable* into chunks of length *n*:
     'divide'             , ## divide the elements from *iterable* into *n* parts
     'grouper'            , ## collect data into fixed-length chunks or blocks"
+    ##
+    'checksum_files'     , ## get SHA512 sum for sequence of files 
     )
 
 # =============================================================================
@@ -952,6 +954,36 @@ def grouper(iterable, n, fillvalue=None):
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+
+# ========================================================================================
+## calculate SHA512-checksum for the files
+#  @see hashlib
+#  @see hashlib.sha512
+#  @code
+#  s =  checksum_files ( 'a.txt', 'b.bin' ) 
+#  @endcode
+#  Non-existing files are ignored 
+#  @param files  list of filenames
+#  @return checksum for these files 
+def checksum_files ( *files ) :
+    """Calculate SHA512-checksum for the files
+    >>> s =  checksum_files ( 'a.txt', 'b.bin' ) 
+    Non-existing files are ignored 
+    - see `hashlib`
+    - see `hashlib.sha512`
+    """
+    import hashlib 
+    hash_obj = hashlib.sha512 ()
+    for fname in files :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) : 
+            with open ( fname , "rb" ) as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_obj.update(chunk)
+                    
+    return hash_obj.hexdigest()
+
+
 
 # =============================================================================
 if '__main__' == __name__ :
