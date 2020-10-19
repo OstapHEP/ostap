@@ -334,26 +334,36 @@ class ppServer(object) :
             ##
             if commands :
                 command = ' ; '.join ( commands )
-                self.logger.debug  ('Remove remote files using "%s"' % command )
-                self.session.verbose = False  
-                self.session ( command = command )
-                self.session.launch()
-                r = self.session.response () 
-                if r : self.logger.warning ( "Response for %s is  %s" % ( command  , r ) )                 
-            
+                try : 
+                    self.logger.debug  ('Remove remote files using "%s"' % command )
+                    self.session.verbose = False  
+                    self.session ( command = command )
+                    self.session.launch()
+                    r = self.session.response () 
+                    if r : self.logger.warning ( "Response for %s is %s" % ( command  , r ) )                 
+                except :
+                    self.logger.warning ( 'Failure to remove remote files "%s" ' % command )
+                    
         if self.session :
-            self.session.verbose = False  
             self.logger.debug ( 'kill SSH-session %s' )
-            self.session.kill      () 
-
+            try: 
+                self.session.verbose = False  
+                self.session.kill      () 
+            except :
+                self.logger.warning ( 'Failure to kill remote session')
+                pass 
+            self.__session = None
             
         if self.tunnel  :
             self.logger.debug ( 'Disconnect SSH-tunnel %s -> %s' % ( self.local , self.remote ) )  
-            self.tunnel.verbose  = False 
-            self.tunnel.disconnect ()
-
-        self.__tunnel  = None
-        self.__session = None
+            try : 
+                self.tunnel.verbose  = False
+                self.tunnel.disconnect ()
+            except :
+                self.logger.warning ( 'Failure to disconnect tunnel')
+                pass 
+            self.__tunnel  = None
+            
         self.__active  = False
         
         self.remove_tunnel ( self.stamp )

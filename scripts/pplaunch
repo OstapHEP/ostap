@@ -9,8 +9,6 @@
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 # =============================================================================
-from __future__ import print_function 
-# =============================================================================
 """Launch pp-server on remote hosts via ssh-tunnel
 - SSH tunnels to remote hosts are created
 - remote hosts are configured
@@ -95,19 +93,19 @@ if '__main__' == __name__ :
     logger = getLogger ( 'ostap.pplaunch' )
     # =============================================================================
 
-    logger.info ( "Launch remote pp-server via ssh tunnel")
         
     parser = make_parser() 
     
     import sys, os 
     args = sys.argv[1:]
 
-    
     config = parser.parse_args ( args )
 
     if not config.Quiet :
-        logger.info ( "Launch remote pp-server via ssh tunnel:\n%s" % __doc__ )
-    
+        logger.info ( "Launch remote pp-server via ssh tunnel:\n%s" % __doc__ ) 
+    else : 
+        logger.info ( "Launch remote pp-server via ssh tunnel")
+   
     logger.debug ( 'Configuration:%s ' % config) 
 
     remotes = config.remotes 
