@@ -100,8 +100,6 @@ def tf1  ( self                 ,
 
     if title is None : title = str ( self ) 
     fun.SetTitle ( title ) 
-
-    title = ke
     ##
     return fun 
 
