@@ -98,8 +98,8 @@ def tf1  ( self                 ,
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
 
-    if title is None : title = str ( self ) 
-    fun.SetTitle ( title ) 
+    ## if title is None : title = str ( self ) 
+    ## fun.SetTitle ( title ) 
     ##
     return fun 
 
@@ -157,8 +157,8 @@ def tf2 ( self ,
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
     #
-    if title is None : title = str ( self ) 
-    fun.SetTitle ( title ) 
+    ## if title is None : title = str ( self ) 
+    ## fun.SetTitle ( title ) 
     #
     return fun 
 
