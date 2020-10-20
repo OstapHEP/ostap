@@ -89,12 +89,14 @@ class Task(object) :
     def __new__( cls , *args , **kwargs):
         obj = super( Task , cls).__new__( cls )
         ## define the local trash 
-        
+
         obj.__directory   = None
         obj.__environment = {}
         obj.__prepend_to  = {}
         obj.__append_to   = {}
         obj.__dot_in_path = None
+        obj.__batch       = None  
+        obj.__batch_set   = False
         
         return obj
 
@@ -185,6 +187,21 @@ class Task(object) :
     @dot_in_path.setter 
     def dot_in_path ( self , value ) :
         self.__dot_in_path = value
+
+    @property
+    def batch_set ( self ) :
+        """``batch_set'' : is ``batch'' property actiovated?"""
+        return self.__batch_set
+    
+    @property
+    def batch ( self ) :
+        """``batch'' : use Batch mode for processing?"""
+        return self.__batch
+
+    @batch.setter
+    def batch ( self , value ) :
+        self.__batch     = True if value else False
+        self.__batch_set = True
         
 # =============================================================================
 ## @class GenericTask
@@ -700,12 +717,21 @@ def task_executor ( item ) :
         sys.path  = ['.'] + sys.path
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
         
-    ## perform remote  inialization (if needed) 
-    task.initialize_remote ( jobid ) 
+    if task.batch_set :
+        from ostap.utils.utils import Batch     as batch_context 
+    else :
+        from ostap.utils.utils import NoContext as batch_context 
+
+    ## use batch context 
+    with batch_context ( task.batch ) :
         
-    with Statistics ()  as stat :    
-        result = task.process ( jobid , *args ) 
-        return jobid , result , stat
+        ## perform remote  inialization (if needed) 
+        task.initialize_remote ( jobid ) 
+        
+        with Statistics ()  as stat :    
+            result = task.process ( jobid , *args ) 
+            return jobid , result , stat
+
         
 # =============================================================================
 ## helper function to execute the function and collect stattistic
@@ -720,11 +746,13 @@ def func_executor ( item ) :
     fun   = item [ 0  ]
     jobid = item [ 1  ] 
     args  = item [ 2: ]
-
-    with Statistics ()  as stat :
-        return jobid , fun ( jobid , *args ) , stat 
-
-
+    
+    from ostap.utils.utils import batch 
+    with batch ( True ) :
+        
+        with Statistics ()  as stat :
+            return jobid , fun ( jobid , *args ) , stat 
+        
 # ============================================================================
 ## @class TaskManager
 #   Abstract base class for the work manager for parallel processing  

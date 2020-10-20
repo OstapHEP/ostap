@@ -72,7 +72,7 @@ def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
     """
     if not logging.root.handlers : logging.basicConfig()
-    logging.root.verbose (msg, *args, **kwargs)
+    logging.root.verbose ( msg , *args , **kwargs )
 
 # =============================================================================
 # add method 'verbose' to logger 
@@ -111,7 +111,7 @@ from ostap.utils.basic import isatty
 
 # =============================================================================
 ## The basic configuration 
-if isatty() :
+if isatty () :
     logging.basicConfig (
         ## level    = logging.NOTSET      ,
         level    = 1                   ,

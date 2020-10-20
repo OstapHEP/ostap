@@ -973,7 +973,7 @@ def checksum_files ( *files ) :
     - see `hashlib`
     - see `hashlib.sha512`
     """
-    import hashlib 
+    import hashlib
     hash_obj = hashlib.sha512 ()
     for fname in files :
         if os.path.exists ( fname ) and os.path.isfile ( fname ) : 
