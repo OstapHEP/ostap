@@ -58,10 +58,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -135,10 +135,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -207,10 +207,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -277,10 +277,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================

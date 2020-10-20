@@ -72,7 +72,8 @@ def tf1  ( self                 ,
     args     = kwargs.pop ( 'args'     , ()   )
     npx      = kwargs.pop ( 'npx'      , 250  )
     callme   = kwargs.pop ( 'callable' , self ) 
-
+    title    = kwargs.pop ( 'title'    , None )
+    
     if hasattr ( self , '_wo1' ) and callme is not self._wo1.callme :
         del self._wo1 
         
@@ -96,7 +97,11 @@ def tf1  ( self                 ,
     
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-    fun.SetNpx ( npx )
+
+    if title is None : title = str ( self ) 
+    fun.SetTitle ( title ) 
+
+    title = ke
     ##
     return fun 
 
@@ -118,6 +123,7 @@ def tf2 ( self ,
     """
     ##
     callme   = kwargs.pop ( 'callable' , self ) 
+    title    = kwargs.pop ( 'title'    , self ) 
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
     if not self._wo2                 : self._wo2 = _WO2_ ( callme )
@@ -152,6 +158,9 @@ def tf2 ( self ,
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
+    #
+    if title is None : title = str ( self ) 
+    fun.SetTitle ( title ) 
     #
     return fun 
 
