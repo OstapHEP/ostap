@@ -435,93 +435,110 @@ bool Ostap::Math::ChannelBW::setGamma0 ( const double value )
   return true ;
 }
 // ============================================================================
-
-// // ============================================================================
-// // Generic Breit-Wigner channel 
-// // ============================================================================
-// Ostap::Math::ChannelGeneric::ChannelGeneric
-// ( const double                                 gamma       , 
-//   const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
-//   const Ostap::Math::ChannelGeneric::Fun_D&    fD          , 
-//   const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
-//   const double                                 sthreshold  , 
-//   const std::size_t                            tag         ,
-//   const std::string&                           description )
-//   : ChannelBW     ( gamma       ) 
-//   , m_fN2         ( fN2         ) 
-//   , m_fD          ( fD          ) 
-//   , m_frho        ( frho        ) 
-//   , m_sthreshold  ( sthreshold  ) 
-//   , m_tag         ( tag         )
-//   , m_description ( description )
-// {}
-// // ============================================================================
-// // Generic Breit-Wigner channel 
-// // ============================================================================
-// Ostap::Math::ChannelGeneric::ChannelGeneric
-// ( const double                                 gamma       , 
-//   const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
-//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
-//   const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
-//   const double                                 sthreshold  , 
-//   const std::size_t                            tag         ,
-//   const std::string&                           description ) 
-//   : ChannelBW     ( gamma       ) 
-//   , m_fN2         ( fN2         ) 
-//   , m_fD          () 
-//   , m_frho        ( frho        ) 
-//   , m_sthreshold  ( sthreshold  ) 
-//   , m_tag         ( tag         )
-//   , m_description ( description )
-// {
-//   m_fD = [fD]( const double s , const double m0 ) -> std::complex<double>
-//     { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
-// }
-// // ============================================================================
-// // Generic Breit-Wigner channel 
-// // ============================================================================
-// Ostap::Math::ChannelGeneric::ChannelGeneric
-// ( const double                                 gamma       , 
-//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
-//   const double                                 sthreshold  , 
-//   const std::size_t                            tag         ,
-//   const std::string&                           description )
-//   : ChannelBW     ( gamma       ) 
-//   , m_fN2         () 
-//   , m_fD          () 
-//   , m_frho        () 
-//   , m_sthreshold  ( sthreshold  ) 
-//   , m_tag         ( tag         )
-//   , m_description ( description )
-// {
-//   m_fN2  = [fD]          ( const double s , const double    m0    ) -> double
-//     { return                        fD ( s , m0 )          ; } ;
-//   m_fD   = [fD]          ( const double s , const double m0 ) -> std::complex<double>
-//     { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
-//   m_frho = [sthreshold]  ( const double s , const double /* mn */ ) -> double 
-//     { return s <= sthreshold ? 0.0 : 1.0 ; }                 ;  
-// }
-// // ============================================================================
-// // clone method 
-// // ============================================================================
-// Ostap::Math::ChannelGeneric*
-// Ostap::Math::ChannelGeneric::clone () const
-// { return new Ostap::Math::ChannelGeneric ( *this ) ; }
-// // ============================================================================
-// // unique tag for this lineshape 
-// // ============================================================================
-// std::size_t Ostap::Math::ChannelGeneric::tag () const
-// { return std::hash_combine  ( std::string ( "ChannelGeneric" ) ,
-//                               gamma0      () , 
-//                               m_sthreshold   , 
-//                               m_description  , 
-//                               m_tag          ) ; }
-// // ===========================================================================
-// // describe the channel 
-// // ============================================================================
-// std::string Ostap::Math::ChannelGeneric::describe() const
-// { return m_description ; }
-// // ============================================================================
+/*  get the single channel amplitude
+ *  \f[ \mathcal{A} =\left( m_0^2 - s - i D (s,m_0) \right)^{-1} \f] 
+ *  @param s   \f$ s  \f$ -parameter
+ *  @param m0  \f$ m_0\f$-parameter  
+ *  @return amplitude 
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::ChannelBW::amplitude 
+( const double s , 
+  const double m0 ) const 
+{ 
+  const std::complex<double> d = m0 * m0 - s - s_j * D ( s , m0 ) ;
+  return 1.0 / d ;
+}
+// ============================================================================
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,23,1)
+// ============================================================================
+// Generic Breit-Wigner channel 
+// ============================================================================
+Ostap::Math::ChannelGeneric::ChannelGeneric
+( const double                                 gamma       , 
+  const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
+  const Ostap::Math::ChannelGeneric::Fun_D&    fD          , 
+  const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
+  const double                                 sthreshold  , 
+  const std::size_t                            tag         ,
+  const std::string&                           description )
+  : ChannelBW     ( gamma       ) 
+  , m_fN2         ( fN2         ) 
+  , m_fD          ( fD          ) 
+  , m_frho        ( frho        ) 
+  , m_sthreshold  ( sthreshold  ) 
+  , m_tag         ( tag         )
+  , m_description ( description )
+{}
+// ============================================================================
+// Generic Breit-Wigner channel 
+// ============================================================================
+Ostap::Math::ChannelGeneric::ChannelGeneric
+( const double                                 gamma       , 
+  const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
+  Ostap::Math::ChannelGeneric::Fun_DR          fD          , 
+  const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
+  const double                                 sthreshold  , 
+  const std::size_t                            tag         ,
+  const std::string&                           description ) 
+  : ChannelBW     ( gamma       ) 
+  , m_fN2         ( fN2         ) 
+  , m_fD          () 
+  , m_frho        ( frho        ) 
+  , m_sthreshold  ( sthreshold  ) 
+  , m_tag         ( tag         )
+  , m_description ( description )
+{
+  m_fD = [fD]( const double s , const double m0 ) -> std::complex<double>
+    { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
+}
+// ============================================================================
+// Generic Breit-Wigner channel 
+// ============================================================================
+Ostap::Math::ChannelGeneric::ChannelGeneric
+( const double                                 gamma       , 
+  Ostap::Math::ChannelGeneric::Fun_DR          fD          , 
+  const double                                 sthreshold  , 
+  const std::size_t                            tag         ,
+  const std::string&                           description )
+  : ChannelBW     ( gamma       ) 
+  , m_fN2         () 
+  , m_fD          () 
+  , m_frho        () 
+  , m_sthreshold  ( sthreshold  ) 
+  , m_tag         ( tag         )
+  , m_description ( description )
+{
+  m_fN2  = [fD]          ( const double s , const double    m0    ) -> double
+    { return                        fD ( s , m0 )          ; } ;
+  m_fD   = [fD]          ( const double s , const double m0 ) -> std::complex<double>
+    { return std::complex<double> ( fD (  s , m0 ) , 0.0 ) ; } ;
+  m_frho = [sthreshold]  ( const double s , const double /* mn */ ) -> double 
+    { return s <= sthreshold ? 0.0 : 1.0 ; }                 ;  
+}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::Math::ChannelGeneric*
+Ostap::Math::ChannelGeneric::clone () const
+{ return new Ostap::Math::ChannelGeneric ( *this ) ; }
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelGeneric::tag () const
+{ return std::hash_combine  ( std::string ( "ChannelGeneric" ) ,
+                              gamma0      () , 
+                              m_sthreshold   , 
+                              m_description  , 
+                              m_tag          ) ; }
+// ===========================================================================
+// describe the channel 
+// ============================================================================
+std::string Ostap::Math::ChannelGeneric::describe() const
+{ return m_description ; }
+// ============================================================================
+#endif 
 
 
 

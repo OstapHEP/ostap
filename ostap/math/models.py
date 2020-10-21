@@ -335,12 +335,12 @@ def f3_draw ( self , opts ='' , **kwargs ) :
 
 # =============================================================================
 ## get the regular complex value for amplitude 
-def _amp_ ( self , x ) :
+def _amp_ ( self , x , *a ) :
     """ Get the complex value for amplitude
     >>> fun
     >>> a = fun.amp ( x )    
     """
-    v = self.amplitude ( x )
+    v = self.amplitude ( x , *a )
     return complex( v.real () , v.imag () ) 
 
 
@@ -350,12 +350,12 @@ def _amp_ ( self , x ) :
 #  f = ...
 #  r = f.amp_real ( x ) 
 # @endcode
-def _amp_re_ ( self, x ) :
+def _amp_re_ ( self, x , *a ) :
     """Get   the real part of amplitude
     >>> f = ...
     >>> r = f.amp_real ( x )     
     """
-    return complex ( self.amp ( x ) ).real 
+    return complex ( self.amp ( x , *a ) ).real 
     
 # ==============================================================================
 ## get the imaginary part of amplitude
@@ -363,12 +363,12 @@ def _amp_re_ ( self, x ) :
 #  f = ...
 #  r = f.amp_imag ( x ) 
 # @endcode
-def _amp_im_ ( self, x ) :
+def _amp_im_ ( self, x , *a ) :
     """Get   the imaginary part of amplitude
     >>> f = ...
     >>> r = f.amp_imag ( x )     
     """    
-    return complex ( self.amp ( x ) ).imag
+    return complex ( self.amp ( x , *a ) ).imag
 
 # ==============================================================================
 ## get the phase of amplitude
@@ -376,12 +376,12 @@ def _amp_im_ ( self, x ) :
 #  f = ...
 #  r = f.amp_phase ( x ) 
 # @endcode
-def _amp_phase_ ( self, x ) :
+def _amp_phase_ ( self, x , *a ) :
     """Get   the phase of amplitude
     >>> f = ...
     >>> r = f.amp_phase ( x )     
     """    
-    return cmath.phase (  complex ( self.amp ( x ) ) )
+    return cmath.phase (  complex ( self.amp ( x , *a ) ) )
 
 # =============================================================================
 ## build the Argand diagram/graph 
@@ -389,7 +389,7 @@ def _amp_phase_ ( self, x ) :
 #  f = ...
 #  g = f.argand ( x , xmin = ...  , xmax = ... ) 
 #  @@endcode 
-def _amp_argand_ ( self , xmin , xmax , npx =  500 ) : 
+def _amp_argand_ ( self , xmin , xmax , npx =  500 , args = () ) : 
     """Build the Argand diagram/graph 
     >>> f = ...
     >>> g = f.argand ( x , xmin = ...  , xmax = ... ) 
@@ -398,7 +398,7 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 ) :
     from ostap.utils.utils import vrange
     g = ROOT.TGraph  ( npx + 1 ) 
     for i , x in enumerate ( vrange ( xmin , xmax , npx ) ) :
-        a = complex ( self.amp ( x ) )        
+        a = complex ( self.amp ( x , *args ) )        
         g[i] = a.real, a.imag
     return g
 
@@ -406,16 +406,17 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 ) :
 ## Ostap.Math.LASS            . amp = _amp_
 ## Ostap.Math.LASS23L         . amp = _amp_
 ## Ostap.Math.Bugg23L         . amp = _amp_
-Ostap.Math.Flatte          . amp = _amp_
+## Ostap.Math.Flatte          . amp = _amp_
 ## Ostap.Math.Flatte2         . amp = _amp_
 ## Ostap.Math.Flatte23L       . amp = _amp_
-Ostap.Math.BW              . amp = _amp_
+## Ostap.Math.BW              . amp = _amp_
 ## Ostap.Math.Swanson         . amp = _amp_
 
-for m in  ( Ostap.Math.Flatte ,
-            Ostap.Math.BW     ,
-            Ostap.Math.BWPS   ,
-            Ostap.Math.BW3L   ) :
+for m in  ( Ostap.Math.Flatte    ,
+            Ostap.Math.BW        ,
+            Ostap.Math.BWPS      ,
+            Ostap.Math.BW3L      ,
+            Ostap.Math.ChannelBW ) :
     m.amp       = _amp_ 
     m.amp_real  = _amp_re_ 
     m.amp_imag  = _amp_im_ 

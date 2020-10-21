@@ -23,6 +23,8 @@ minuit.release ('p3')
   1. update `Ostap::Math::NSphere` and `Ostap::Math::Positive` such that for null-parameters the reusltin poisitve function is a constant. The trick is based on properties of Chebyshev polynomials of 1st,. 2nd, 3rd and 4th kind.   
   1. `ostap.logger.table` add parameter `alignment` that specifies the column alignment.
   1. `ostap.parallel.task` add parameter `batch`, that allows to execute the tasks in `batch` mode 
+  1. re-add  generic BReit-wigner channel `Ostap::Math::ChannelGeneric` (for ROOT>=6.23/01 only) 
+  1. add method `amplitude` for `Ostap::Math::ChannelBW`
 
 ## Backward incompatible changes: 
 
