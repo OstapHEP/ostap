@@ -175,134 +175,135 @@ namespace Ostap
       // =======================================================================      
     } ;
     //==========================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,23,1)
-    // =========================================================================
-    /** @class ChannelGeneric
-     *  Generic description of the channel. 
-     *  \f[ \begin{array}{lcl}
-     *   N^2(s,m_0)      & = & m_0 \Gamma_0 f_{N^2}(s,m_0) \\
-     *   D (s,m_0)       & = & m_0 \Gamma_0 f_{D}(s,m_0)   \\
-     *  \varrho (s, m_n) & = & \Theta\left(s-s_{\mathrm{threshold}}\right) f_{\varrho}(s,m_n)
-     *  \end{array}\,,\f]
-     *  where \f$ f_{N^2}\f$,  \f$ f_{D}\f$ and \f$ f_{\varrho}\f$ are provdied externally
-     */
-    class ChannelGeneric : public ChannelBW 
-    {
-    public:
-      // =======================================================================
-      /** @typedef Fun_N2 
-       *  the function type for \f$ N^2(s,m_0)\f$
-       */
-      typedef std::function<double(double,double)>                 Fun_N2  ;
-      // =======================================================================
-      /** @typedef Fun_D 
-       *  the function type for \f$ D(s,m_0)\f$
-       */
-      typedef std::function<std::complex<double>(double,double)>   Fun_D   ;
-      // =======================================================================
-      /** @typedef Fun_DR 
-       *  the (real-valued) type function type for \f$ D(s,m_0)\f$
-       */
-      typedef std::function<double(double,double)>                 Fun_DR  ;
-      // ======================================================================
-      /** @typedef Fun_rho 
-       *  the function type for \f$ \varrho(s,m_n) \f$
-       */
-      typedef std::function<double(double,double)>                 Fun_rho ;
-      // ======================================================================
-    public : 
-      // ======================================================================
-      /// full constructor with all functions specified
-      ChannelGeneric ( const double       gamma                   , 
-                       const Fun_N2&      fN2                     , 
-                       const Fun_D&       fD                      , 
-                       const Fun_rho&     frho                    , 
-                       const double       sthreshold              , 
-                       const std::size_t  tag                     ,
-                       const std::string& description = "Generic" ) ;    
-      // ======================================================================= 
-      /// Constructor  with only real-valued functions 
-      ChannelGeneric ( const double       gamma                   , 
-                       const Fun_N2&      fN2                     , 
-                       Fun_DR             fDr                     , 
-                       const Fun_rho&     frho                    , 
-                       const double       sthreshold              , 
-                       const std::size_t  tag                     ,
-                       const std::string& description = "Generic" ) ;
-      // =======================================================================
-      /// short constructor  with real-valued functions 
-      ChannelGeneric ( const double       gamma                   ,
-                       Fun_DR             fDr                     , 
-                       const double       sthreshold              , 
-                       const std::size_t  tag                     ,
-                       const std::string& description = "Generic" ) ;
-      // =======================================================================
-      ///  copy constructor
-      ChannelGeneric ( const ChannelGeneric& right ) = default ;
-      // =======================================================================
-      /// clone method
-      ChannelGeneric*  clone() const override ; // clone method
-      // =======================================================================
-    public:
-      // =======================================================================
-      template <typename... ARGS>
-      static inline ChannelGeneric
-      create ( const double gamma ,
-               ARGS ...     args  ) { return ChannelGeneric ( gamma , args ... ) ; }
-      // =======================================================================
-    public:
-      // =======================================================================
-      /** squared  numerator for the amplitude 
-       * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s,m_0)\f]
-       */
-      double               N2
-      ( const double s  , 
-        const double m0 ) const override { return m0 * gamma0 () * m_fN2 ( s , m0 ) ; }      
-      // ======================================================================
-      /** term in the denominator for the amplitide
-       * \f[ D (s,m_0) = m_0 \Gamma0 f_{D}(s,m_0)\f]
-       */
-      // ======================================================================
-      std::complex<double> D    
-      ( const double s  , 
-        const double m0 ) const override { return m0 * gamma0 () * m_fD  ( s , m0 ) ; }
-      // ======================================================================
-      /** get the phase space factor  \f$ \varrho(s) \f$
-       *  optionally normalized at the point \f$ m_n \f$ 
-       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{\mathrm{threshold}}\right) f_{\varrho}(s,m_n)\f] 
-       */
-      double rho_s 
-      ( const double s  , 
-        const double mn ) const override 
-      { return s <= m_sthreshold ? 0.0 : m_frho ( s , mn ) ; }
-      /// get the opening threshold \f$ s_{\mathrm{threshold}} \$ for the channel 
-      double s_threshold () const override { return m_sthreshold ; }
-      // =======================================================================
-    public: //  helper methods 
-      // =======================================================================
-      /// unique tag/label  
-      std::size_t tag       () const override ;
-      /// describe the channel 
-      std::string describe  () const override ;
-      // =======================================================================
-    private :
-      // =======================================================================
-      /// function N2 
-      Fun_N2  m_fN2             ; // function N2 
-      /// function D
-      Fun_D   m_fD              ; // function D
-      /// function rho
-      Fun_rho m_frho            ; // function rho
-      /// s-threhold 
-      double  m_sthreshold      ; // s-threhold 
-      /// unique tag 
-      std::size_t m_tag         ; // unique tag 
-      /// description 
-      std::string m_description ; // description 
-      // =======================================================================
-    } ;
-    // =========================================================================
-#endif 
+// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,23,1)
+//     // =========================================================================
+//     /** @class ChannelGeneric
+//      *  Generic description of the channel. 
+//      *  \f[ \begin{array}{lcl}
+//      *   N^2(s,m_0)      & = & m_0 \Gamma_0 f_{N^2}(s,m_0) \\
+//      *   D (s,m_0)       & = & m_0 \Gamma_0 f_{D}(s,m_0)   \\
+//      *  \varrho (s, m_n) & = & \Theta\left(s-s_{\mathrm{threshold}}\right) f_{\varrho}(s,m_n)
+//      *  \end{array}\,,\f]
+//      *  where \f$ f_{N^2}\f$,  \f$ f_{D}\f$ and \f$ f_{\varrho}\f$ are provdied externally
+//      */
+//     class ChannelGeneric : public ChannelBW 
+//     {
+//     public:
+//       // =======================================================================
+//       /** @typedef Fun_N2 
+//        *  the function type for \f$ N^2(s,m_0)\f$
+//        */
+//       typedef std::function<double(double,double)>                 Fun_N2  ;
+//       // =======================================================================
+//       /** @typedef Fun_D 
+//        *  the function type for \f$ D(s,m_0)\f$
+//        */
+//       typedef std::function<std::complex<double>(double,double)>   Fun_D   ;
+//       // =======================================================================
+//       /** @typedef Fun_DR 
+//        *  the (real-valued) type function type for \f$ D(s,m_0)\f$
+//        */
+//       typedef std::function<double(double,double)>                 Fun_DR  ;
+//       // ======================================================================
+//       /** @typedef Fun_rho 
+//        *  the function type for \f$ \varrho(s,m_n) \f$
+//        */
+//       typedef std::function<double(double,double)>                 Fun_rho ;
+//       // ======================================================================
+//     public : 
+//       // ======================================================================
+//       /// full constructor with all functions specified
+//       ChannelGeneric ( const double       gamma                   , 
+//                        const Fun_N2&      fN2                     , 
+//                        const Fun_D&       fD                      , 
+//                        const Fun_rho&     frho                    , 
+//                        const double       sthreshold              , 
+//                        const std::size_t  tag                     ,
+//                        const std::string& description = "Generic" ) ;    
+//       // ======================================================================= 
+//       /// Constructor  with only real-valued functions 
+//       ChannelGeneric ( const double       gamma                   , 
+//                        const Fun_N2&      fN2                     , 
+//                        Fun_DR             fDr                     , 
+//                        const Fun_rho&     frho                    , 
+//                        const double       sthreshold              , 
+//                        const std::size_t  tag                     ,
+//                        const std::string& description = "Generic" ) ;
+//       // =======================================================================
+//       /// short constructor  with real-valued functions 
+//       ChannelGeneric ( const double       gamma                   ,
+//                        Fun_DR             fDr                     , 
+//                        const double       sthreshold              , 
+//                        const std::size_t  tag                     ,
+//                        const std::string& description = "Generic" ) ;
+//       // =======================================================================
+//       ///  copy constructor
+//       ChannelGeneric ( const ChannelGeneric& right ) = default ;
+//       // =======================================================================
+//       /// clone method
+//       ChannelGeneric*  clone() const override ; // clone method
+//       // =======================================================================
+//     public:
+//       // =======================================================================
+//       template <typename... ARGS>
+//       static inline ChannelGeneric
+//       create ( const double gamma ,
+//                ARGS ...     args  ) { return ChannelGeneric ( gamma , args ... ) ; }
+//       // =======================================================================
+//     public:
+//       // =======================================================================
+//       /** squared  numerator for the amplitude 
+//        * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s,m_0)\f]
+//        */
+//       double               N2
+//       ( const double s  , 
+//         const double m0 ) const override { return m0 * gamma0 () * m_fN2 ( s , m0 ) ; }      
+//       // ======================================================================
+//       /** term in the denominator for the amplitide
+//        * \f[ D (s,m_0) = m_0 \Gamma0 f_{D}(s,m_0)\f]
+//        */
+//       // ======================================================================
+//       std::complex<double> D    
+//       ( const double s  , 
+//         const double m0 ) const override { return m0 * gamma0 () * m_fD  ( s , m0 ) ; }
+//       // ======================================================================
+//       /** get the phase space factor  \f$ \varrho(s) \f$
+//        *  optionally normalized at the point \f$ m_n \f$ 
+//        * \f[ \varrho (s, m_n) = \Theta\left(s-s_{\mathrm{threshold}}\right) f_{\varrho}(s,m_n)\f] 
+//        */
+//       double rho_s 
+//       ( const double s  , 
+//         const double mn ) const override 
+//       { return s <= m_sthreshold ? 0.0 : m_frho ( s , mn ) ; }
+//       /// get the opening threshold \f$ s_{\mathrm{threshold}} \$ for the channel 
+//       double s_threshold () const override { return m_sthreshold ; }
+//       // =======================================================================
+//     public: //  helper methods 
+//       // =======================================================================
+//       /// unique tag/label  
+//       std::size_t tag       () const override ;
+//       /// describe the channel 
+//       std::string describe  () const override ;
+//       // =======================================================================
+//     private :
+//       // =======================================================================
+//       /// function N2 
+//       Fun_N2  m_fN2             ; // function N2 
+//       /// function D
+//       Fun_D   m_fD              ; // function D
+//       /// function rho
+//       Fun_rho m_frho            ; // function rho
+//       /// s-threhold 
+//       double  m_sthreshold      ; // s-threhold 
+//       /// unique tag 
+//       std::size_t m_tag         ; // unique tag 
+//       /// description 
+//       std::string m_description ; // description 
+//       // =======================================================================
+//     } ;
+//     // =========================================================================
+// #endif
+
     // =========================================================================
     /** @class ChannelCW
      *  Trivial "constant-width" channel 
@@ -2151,8 +2152,8 @@ namespace Ostap
      *  helper class to represent resonances in (12) system from M->1+2+3 decays
      *  where the orbital momentum between (12)  and (2) is known. 
      *(
-     *  - \f$ N_a(s)       \f$ delegated to original channel 
-     *  - \f$ D_a(s)       \f$ delegates to the original   channel 
+     *  - \f$ N_a(s)       \f$ delegates to original channel 
+     *  - \f$ D_a(s)       \f$ delegates to the original channel 
      *  - \f$ \varrho_a(s) \f$ phase space 23L 
      */
     class Channel23L: public ChannelBW 
