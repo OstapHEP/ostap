@@ -151,11 +151,11 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
-        in_range=None
-        if in_range2  and  not in_range3:
-            in_range = 'aux3_rng12_%s' % self.name
-        elif not in_range2  and in_range3:
-            in_range = 'aux3_rng13_%s' % self.name
+        in_range = None
+        if in_range2        and  not in_range3 :
+            in_range = 'aux3_rng12_%s'  % self.name
+        elif not in_range2  and      in_range3 :
+            in_range = 'aux3_rng13_%s'  % self.name
         elif in_range2  and in_range3:
             in_range = 'aux3_rng123_%s' % self.name
 
@@ -400,24 +400,24 @@ class PDF3 (PDF2,FUNC3) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( 10000 ) ## generate dataset
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample =   True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
                    binning  = {}    ,
-                   sample   = False , 
+                   sample   = True  , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( 10000 ) ## generate dataset
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
         nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  

@@ -473,7 +473,7 @@ class CompressShelf(shelve.Shelf,object):
         if maxlen + 3 <= len ( title ) :
             title = '<.>' + title [ -maxlen : ] 
 
-        table = T.table ( table , title = title , prefix = '# ' )
+        table = T.table ( table , title = title , prefix = '# ' , alignment = 'llcc')
         ll    = getLogger ( n )
         line  = 'Database %s:%s|%s #keys: %d size: %s' % ( t , ap , self.dbtype , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )

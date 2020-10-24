@@ -106,6 +106,16 @@ except ImportError :
     - see https://github.com/giampaolo/psutil"""
     logger.error ( message ) 
 # =============================================================================        
+try :
+    import more_itertools 
+    logger.info  ( "more_itertools is imported from %s" % more_itertools.__file__ )     
+except ImportError :
+    message = """more_itertools cannot be imported! 
+    more_itertools is recommended for more efficient job splitting
+    - There is a local replacement for ``chunked/divide/grouper''
+    https://github.com/more-itertools/more-itertools"""
+    logger.error ( message ) 
+# =============================================================================        
     
 
 # =============================================================================

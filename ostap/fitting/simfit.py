@@ -1094,23 +1094,23 @@ class SimFit ( MakeVar ) :
     #  model  = ....
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self                  , 
                    nEvents               , 
                    varset        = None  ,
                    args          = ()    ,
                    binning       = {}    ,
-                   sample        = False , 
+                   sample        = True  , 
                    category_args = {}    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
 
         labels = self.sample.labels()

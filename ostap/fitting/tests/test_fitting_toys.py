@@ -56,36 +56,24 @@ def test_toys ( ) :
     - fill distributions of pulls 
     """
 
-    
-    logger.info('HERE-1-START')
-    
     results , stats = Toys.make_toys  (
         pdf         = gen_gauss ,
         nToys       = 1000      ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  } ,
+        gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
         fit_config  = { 'silent'  : True } ,
         init_pars   = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
         silent      = True , 
         progress    = True )
 
-    logger.info ('HERE-1-0')
-
     for p in stats :
         logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
-
-    logger.info ( 'HERE-1-1' )
 
     ## make histos:
     
     h_mean       = ROOT.TH1F ( 'h1' , 'mean of Gauss ' , 100 ,  0    ,  0.80 )
-
-    logger.info ('HERE-1-1.5')
-    
     h_sigma      = ROOT.TH1F ( 'h2' , 'sigma of Gauss' , 100 ,  0.05 ,  0.15 )
     
-    logger.info ('HERE-1-2')
-
     for r in results [ 'mean_GG'  ] : h_mean  .Fill ( r ) 
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
@@ -114,7 +102,7 @@ def test_toys2 ( ) :
         fit_pdf     = fit_gauss ,
         nToys       = 1000      ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  } ,
+        gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
         fit_config  = { 'silent'  : True } ,
         gen_pars    = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
         fit_pars    = { 'mean_GF' : 0.4 , 'sigma_GF' : 0.1 } ,
@@ -153,10 +141,8 @@ def test_significance_toys ( ) :
     - fill distributions for fit results
     """
     
-
     ## only background hypothesis
     bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
-
     
     signal   = Models.Gauss_pdf  ( 'S'   , xvar = mass , mean = 0.5 , sigma = 0.1 )
 
@@ -173,7 +159,7 @@ def test_significance_toys ( ) :
         fit_pdf     = model     ,
         nToys       = 1000      ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents'  : 100 , 'sample'   : True } ,
+        gen_config  = { 'nEvents'  : 100 , 'sample' : True } ,
         fit_config  = { 'silent'   : True } ,
         gen_pars    = { 'tau_BKG'  : 0.   } , ## initial values for generation 
         fit_pars    = { 'B' : 100         ,

@@ -388,24 +388,24 @@ class PDF2 (PDF,FUNC2) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( 10000 ) ## generate dataset
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self             ,  
                    nEvents          ,
                    varset   = None  ,
                    binning  = {}    ,
-                   sample   = False , 
+                   sample   = True  , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( 10000 ) ## generate dataset
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , extended =  =   True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
         nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  

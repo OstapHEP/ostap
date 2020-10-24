@@ -45,6 +45,7 @@ __all__     = (
 import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
+from   builtins               import range 
 from   ostap.core.core        import Ostap, rootID, VE, items_loop
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types ,
@@ -1398,7 +1399,7 @@ class MakeVar ( object ) :
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
-        if   isinstance ( nevents , num_types ) and 0  < nevents :
+        if   isinstance ( nevents , num_types ) and 0 < nevents :
             return poisson ( nevents )
         elif isinstance ( nevents , VE ) and \
                  ( ( 0 <= nevents.cov2 () and 0 < nevents                       ) or 

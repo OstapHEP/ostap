@@ -85,8 +85,8 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () ) :
 
     hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
     rformats = [ " {:^%d} " % widths [ c ] for c in range ( nc ) ]
-    
-    for i , a in  zip ( range ( nc ) , alignment ) :  
+
+    for i , a in  zip ( range ( nc ) , alignment ) :
         if a and isinstance ( a , str ) :
             al = a.lower() 
             if   al in left  :
@@ -207,7 +207,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () ) :
         return add_prefix ( table_instance.table , prefix ) 
 
     ## use the local replacement 
-    return the_table ( rows , title , prefix )
+    return the_table ( rows , title , prefix , alignment = alignment )
     
 # =============================================================================
 ## get the true  table width 

@@ -34,7 +34,7 @@ else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Utilities to run fitting toys')
 # ==============================================================================
-## Technical transformation  to the dictionaty :  { 'name' : float_value }
+## Technical transformation  to the dictionary :  { 'name' : float_value }
 def vars_transform ( vars ) :
     """Technical transformation to the dictionary :  `{ 'name' : float_value }`
     """
@@ -61,7 +61,7 @@ def print_stats (  stats , ntoys = '???' ) :
     """print statistics of pseudoexperiments
     """
     
-    table = [ ( '' , '#', 'mean' , 'rms' , '%11s / %-11s' % ( 'min' , 'max' ) ) ] 
+    table = [ ( 'Parameter' , '#', 'mean' , 'rms' , '%11s / %-11s' % ( 'min' , 'max' ) ) ] 
     keys = stats.keys()
     keys = sorted ( keys )
 
@@ -69,7 +69,7 @@ def print_stats (  stats , ntoys = '???' ) :
         n      = "{:^11}".format ( c.nEntries() )
         mean   = c.mean ()
         mean   = "%+11.4g +- %-11.4g" % ( mean.value() , mean.error() )
-        rms    = "%-11.4g"            % c.rms ()
+        rms    = "%11.4g"             % c.rms ()
         minmax = "%+11.4g / %-+11.4g" % ( c.min() , c.max () ) 
         return p , n , mean , rms  , minmax 
         
@@ -85,7 +85,8 @@ def print_stats (  stats , ntoys = '???' ) :
         table.append (  make_row ( c )  )
         
     import ostap.logger.table as Table
-    table = Table.table ( table , title = "Results of %s toys" % ntoys , prefix = "# " )
+    table = Table.table ( table , title = "Results of %s toys" % ntoys ,
+                          alignment = 'lcccc' , prefix = "# " )
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
     
 # ==============================================================================
@@ -161,7 +162,7 @@ def make_toys ( pdf                ,
     >>> pdf = ...
     ... results, stats = make_toys ( pdf     , ## PDF  to use 
     ...                 1000                 , ## number of toys 
-    ...                 [ 'mass' ]           , ## varibales in dataset 
+    ...                 [ 'mass' ]           , ## variables in dataset 
     ...                 { 'nEvents' : 5000 } , ## configuration of `pdf.generate`
     ...                 { 'ncpus'   : 2    } , ## configuration of `pdf.fitTo`
     ...                 { 'mean' : 0.0 , 'sigma' : 1.0 } ## parameters to use for generation 
@@ -219,7 +220,6 @@ def make_toys ( pdf                ,
     from collections import defaultdict 
     results = defaultdict(list) 
 
-    
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
@@ -249,23 +249,25 @@ def make_toys ( pdf                ,
             for v in more_vars :
                 func  = more_vars[v] 
                 results [v] .append ( func ( r , pdf ) )
-                
+
+            results [ '#' ] .append ( len ( dataset ) )
+            
         dataset.clear()
         del dataset
         del r
 
     ## make a final statistics 
-    from   ostap.core.core        import SE 
+    from   ostap.core.core        import SE, VE  
     stats = defaultdict(SE)
 
     for par in results :
         pars = results [ par ]
         mvar = par in more_vars 
-        if not mvar : a0 = fix_all [ par ]
+        if not mvar : a0 = fix_all.get ( par , None  )
         for v in pars : 
             v0 = float ( v )         
             stats     [ par             ] +=   v0
-            if not mvar : 
+            if not mvar and not a0 is None and isinstance ( v , VE ) and 0 < v.error() : 
                 stats [ 'pull:%s' % par ] += ( v0 - a0 ) / v.error()
 
     if progress or not silent : print_stats ( stats , nToys )
@@ -428,17 +430,19 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
-        ## skip invalid fits 
-        if r.status () : continue
+        ## ok ? 
+        if r and 0 == r.status () :
 
-        ## 5. save results 
-        rpf = r.params ( float_only = True ) 
-        for i in rpf : 
-            results [ i ].append ( rpf[i][0] ) 
-
-        for v in more_vars :
-            func  = more_vars[v] 
-            results [ v ] .append ( func ( r , fit_pdf ) )
+            ## 5. save results 
+            rpf = r.params ( float_only = True ) 
+            for i in rpf : 
+                results [ i ].append ( rpf[i][0] ) 
+                
+            for v in more_vars :
+                func  = more_vars[v] 
+                results [ v ] .append ( func ( r , fit_pdf ) )
+                
+            results [ '#' ] .append ( len ( dataset ) )
 
         dataset.clear()
         del dataset

@@ -26,6 +26,8 @@ minuit.release ('p3')
   1. re-add  generic Breit-wigner channel `Ostap::Math::ChannelGeneric` (for ROOT>=6.23/01 only) 
   1. add method `amplitude` for `Ostap::Math::ChannelBW`
   1. re-remove  generic Breit-wigner channel `Ostap::Math::ChannelGeneric`
+  1. change the default `sample` argument for `PDF.generate` from `False` to `True`
+  1. tiny fix for the table column alignment 
 
 ## Backward incompatible changes: 
 
