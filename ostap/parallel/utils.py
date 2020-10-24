@@ -215,7 +215,7 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
 #  jobid = ...
 #  random_random ( jobid ) 
 #  @endcode
-def random_random ( jobid , *args ) :
+def random_random ( *jobid ) :
     """Random number setting for parallel jobs
     - python
     - ROOT.gRandom
@@ -228,8 +228,9 @@ def random_random ( jobid , *args ) :
     ##
     random.seed ()
     ##
-    jhid = os.getpid () , os.getppid() , socket.getfqdn () , jobid , os.uname () , time.time ()
-    jhid = jhid , ( id ( ROOT ) , id ( sys ) , id ( random ) ) , hash ( args ) 
+    jhid = jobid
+    jhid = jhid , os.getpid () , os.getppid() , socket.getfqdn () , os.uname () , time.time ()
+    jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )   
     jhid = hash ( jhid ) 
     ##
     if sys.version_info.major < 3 : random.jumpahead ( jhid )
