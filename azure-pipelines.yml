@@ -79,5 +79,14 @@ jobs:
     vmImage:  'ubuntu-16.04'
     dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: '/dev3/latest'
-    CMTCONFIG: 'x86_64-centos7-gcc8-opt'
+    CMTCONFIG: 'x86_64-centos7-gcc9-opt'
     artifact: 'test_cs7_dev3'
+
+ - template: template-pipelines.yml  # Template reference
+   parameters:
+    name: cs7_dev4
+    vmImage:  'ubuntu-16.04'
+    dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
+    LCG: '/dev4/latest'
+    CMTCONFIG: 'x86_64-centos7-gcc9-opt'
+    artifact: 'test_cs7_dev4'
