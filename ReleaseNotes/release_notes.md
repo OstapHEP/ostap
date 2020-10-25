@@ -28,6 +28,7 @@ minuit.release ('p3')
   1. re-remove  generic Breit-wigner channel `Ostap::Math::ChannelGeneric`
   1. change the default `sample` argument for `PDF.generate` from `False` to `True`
   1. tiny fix for the table column alignment 
+  1. add `#include <string>` for `NSphere.h` - for  certain configuration it prevents compile error (thanks to Abdul-Kerim Gusseinov) 
 
 ## Backward incompatible changes: 
 

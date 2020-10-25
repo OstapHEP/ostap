@@ -1090,7 +1090,7 @@ class PDF (FUNC) :
         return self.pdf.createNLL ( dataset , *opts ) , sf 
 
     # =========================================================================
-    ## get NLL/profile-graph for the variable, using the specified bscissas
+    ## get NLL/profile-graph for the variable, using the specified abscissas
     #  @code
     #  pdf   = ...
     #  graph = pdf.graph_nll ( 'S'                      ,

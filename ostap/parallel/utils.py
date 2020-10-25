@@ -229,7 +229,9 @@ def random_random ( *jobid ) :
     random.seed ()
     ##
     jhid = jobid
-    jhid = jhid , os.getpid () , os.getppid() , socket.getfqdn () , os.uname () , time.time ()
+    jhid = jhid , os.getpid () , os.getppid() , os.uname()
+    jhid = jhid , socket.getfqdn ()
+    jhid = jhid , time.time ()
     jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )   
     jhid = hash ( jhid ) 
     ##
