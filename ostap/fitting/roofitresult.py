@@ -140,7 +140,6 @@ def _rfr_corr_  ( self , var1 , var2 ) :
     if var1 in self.constPars() : return 0.0
     if var2 in self.constPars() : return 0.0
     #
-    print ('asking for', var1, var2) 
     return self.correlation ( var1 , var2 ) 
 
 # =============================================================================

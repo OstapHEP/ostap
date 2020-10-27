@@ -56,13 +56,15 @@ def test_toys ( ) :
     - fill distributions of pulls 
     """
 
+    logger = getLogger ( 'test_toys' )
+    
     results , stats = Toys.make_toys  (
         pdf         = gen_gauss ,
         nToys       = 1000      ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
-        fit_config  = { 'silent'  : True } ,
-        init_pars   = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
+        gen_config  = { 'nEvents' : 200  , 'sample'  : True } ,
+        fit_config  = { 'silent'  : True , 'refit'    : 5   } ,
+        init_pars   = { 'mean_GG' : 0.4  , 'sigma_GG' : 0.1 } ,
         silent      = True , 
         progress    = True )
 
@@ -96,6 +98,8 @@ def test_toys2 ( ) :
     - store  fit results
     - fill distributions of fit results
     """    
+
+    logger = getLogger ( 'test_toys2' )
 
     results , stats = Toys.make_toys2 (
         gen_pdf     = gen_gauss ,
@@ -141,6 +145,8 @@ def test_significance_toys ( ) :
     - fill distributions for fit results
     """
     
+    logger = getLogger ( 'test_significance_toys' )
+    
     ## only background hypothesis
     bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
     
@@ -181,17 +187,13 @@ def test_significance_toys ( ) :
         logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
         time.sleep  ( 1 )
 
-    
-            
+                
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ("Toys"              , logger ) :  
-        test_toys  () 
-    with timing ("Toys2"             , logger ) :  
-        test_toys2 () 
-    with timing ("Significance toys" , logger ) :  
-        test_significance_toys ( ) 
+    test_toys  () 
+    test_toys2 () 
+    test_significance_toys ( ) 
     
 
 # =============================================================================

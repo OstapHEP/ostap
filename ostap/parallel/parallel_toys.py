@@ -47,7 +47,8 @@ class  ToysTask(Task) :
                    gen_config         ,
                    fit_config = {}    ,
                    init_pars  = {}    ,
-                   more_vars  = {}    ,                  
+                   more_vars  = {}    ,
+                   accept_fun = None  , 
                    silent     = True  ,
                    progress   = False ) :
         
@@ -58,7 +59,8 @@ class  ToysTask(Task) :
         self.fit_config = fit_config
         self.init_pars  = init_pars 
         self.more_vars  = more_vars  
-
+        self.accept_fun = accept_fun 
+        
         self.silent     = silent
         self.progress   = progress 
         
@@ -113,6 +115,7 @@ class  ToysTask(Task) :
                                            fit_config = self.fit_config , 
                                            init_pars  = self.init_pars  ,
                                            more_vars  = self.more_vars  ,
+                                           accept_fun = self.accept_fun ,
                                            silent     = self.silent     ,
                                            progress   = self.progress   )
         
@@ -169,7 +172,8 @@ class  ToysTask2(ToysTask) :
                    fit_config = {}    ,
                    gen_pars   = {}    ,
                    fit_pars   = {}    ,
-                   more_vars  = {}    ,                  
+                   more_vars  = {}    ,
+                   accept_fun = None  , 
                    silent     = True  ,
                    progress   = False ) :
 
@@ -180,6 +184,7 @@ class  ToysTask2(ToysTask) :
                             fit_config = fit_config ,
                             init_pars  = gen_pars   ,
                             more_vars  = more_vars  ,
+                            accept_fun = accept_fun ,
                             silent     = silent     ,
                             progress   = progress   )
                           
@@ -214,6 +219,7 @@ class  ToysTask2(ToysTask) :
                                             gen_pars   = self.gen_pars   ,
                                             fit_pars   = self.fit_pars   ,             
                                             more_vars  = self.more_vars  ,
+                                            accept_fun = self.accept_fun ,
                                             silent     = self.silent     ,
                                             progress   = self.progress   )
                 
@@ -265,6 +271,7 @@ def parallel_toys ( pdf                       ,
                     gen_config                , ## parameters for <code>pdf.generate</code>   
                     fit_config = {}           , ## parameters for <code>pdf.fitTo</code>
                     init_pars  = {}           ,
+                    accept_fun = None         , ## accept function (fit-result, pdf, dataset)  
                     more_vars  = {}           ,
                     silent     = True         ,
                     progress   = False        ,
@@ -323,7 +330,6 @@ def parallel_toys ( pdf                       ,
     
     assert isinstance ( nToys  , integer_types ) and 0 < nToys  ,\
                'Jobid %s: Invalid "nToys"  argument %s/%s' % ( jobid , nToys  , type ( nToys  ) )
-
     
     assert isinstance ( nSplit , integer_types ) and 0 < nSplit ,\
                'Jobid %s: Invalid "nSplit" argument %s/%s' % ( jobid , nSplit , type ( nSplit ) )
@@ -337,6 +343,7 @@ def parallel_toys ( pdf                       ,
                                 fit_config = fit_config ,
                                 init_pars  = init_pars  ,
                                 more_vars  = more_vars  ,
+                                accept_fun = accept_fun ,
                                 silent     = silent     ,
                                 progress   = progress   )
     
@@ -375,6 +382,7 @@ def parallel_toys ( pdf                       ,
                           fit_config = fit_config     ,
                           init_pars  = toy_init_pars  ,
                           more_vars  = more_vars      ,
+                          accept_fun = accept_fun     ,
                           silent     = silent         ,
                           progress   = progress       )
                           
@@ -452,6 +460,7 @@ def parallel_toys2(
     gen_pars   = {}           ,
     fit_pars   = {}           ,
     more_vars  = {}           ,
+    accept_fun = None         , ## accept function (fit-result, pdf, dataset)
     silent     = True         ,
     progress   = False        ,
     ncpus      = 'autodetect' ,   
@@ -530,6 +539,7 @@ def parallel_toys2(
             gen_pars   = gen_pars   ,
             fit_pars   = fit_pars   ,
             more_vars  = more_vars  ,
+            accept_fun = accept_fun , 
             silent     = silent     ,
             progress   = progress   )
         
@@ -570,6 +580,7 @@ def parallel_toys2(
                           gen_pars   = gen_init_pars  ,
                           fit_pars   = fit_init_pars  ,
                           more_vars  = more_vars      ,
+                          accept_fun = accept_fun     , 
                           silent     = silent         ,
                           progress   = progress       )
 

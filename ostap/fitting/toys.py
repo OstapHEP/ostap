@@ -88,7 +88,25 @@ def print_stats (  stats , ntoys = '???' ) :
     table = Table.table ( table , title = "Results of %s toys" % ntoys ,
                           alignment = 'lcccc' , prefix = "# " )
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
-    
+
+# ==============================================================================
+## Accept fit?
+#  Accept the fit result?
+#   - valid fit result
+#   - fit status is 0 (SUCCESS)
+#   - covariance matrix quality  is either 3(full accurate matrix) or -1 (unknown/externbally provided?) 
+#  @param result  fit result
+#  @param pdf     pdf
+#  @param dataset pdf
+#
+def accept_fit  ( result , pdf = None , dataset = None ) :
+    """Accept the fit result?
+    - valid fit result
+    - fit status is 0 (SUCCESS)
+    - covariance matrix quality  is either 0 or -1 
+    """
+    return result and ( 0 == result.status () ) and ( result.covQual () in ( -1 , 3 ) ) 
+
 # ==============================================================================
 ## make <code>ntoys</code> pseudoexperiments
 #
@@ -132,8 +150,9 @@ def make_toys ( pdf                ,
                 gen_config         , ## parameters for <code>pdf.generate</code>   
                 fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
                 init_pars  = {}    ,
-                more_vars  = {}    , 
-                silent     = True  ,
+                more_vars  = {}    ,
+                accept_fun = None  , ## accept function ( fit-result, pdf, dataset ) 
+                silent     = True  ,                
                 progress   = True  ) :
     """Make `ntoys` pseudoexperiments
     
@@ -182,6 +201,12 @@ def make_toys ( pdf                ,
     
     assert gen_config and 'nEvents' in gen_config,\
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
+
+    if accept_fun is None :
+        if not silent : 
+            logger.info ( "make_toys: use default ``accept_fit'' function!")
+        accept_fun = accept_fit
+    assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
     
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -220,6 +245,11 @@ def make_toys ( pdf                ,
     from collections import defaultdict 
     results = defaultdict(list) 
 
+    from   ostap.core.core        import SE, VE
+
+    fits = defaultdict ( SE )  ## fit statuses 
+    covs = defaultdict ( SE )  ## covarinace matrix quality
+    
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
@@ -238,8 +268,14 @@ def make_toys ( pdf                ,
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
-        ## ok ? 
-        if r and 0 == r.status () :
+        ## fit status 
+        fits [ r.status  () ] += 1
+
+        ## covariance matrix quality
+        covs [ r.covQual () ] += 1
+              
+        ## ok ?
+        if accept_fun ( r , pdf , dataset ) : 
             
             ## 4. save results 
             rpf = r.params ( float_only = True ) 
@@ -257,8 +293,7 @@ def make_toys ( pdf                ,
         del r
 
     ## make a final statistics 
-    from   ostap.core.core        import SE, VE  
-    stats = defaultdict(SE)
+    stats = defaultdict ( SE )
 
     for par in results :
         pars = results [ par ]
@@ -270,9 +305,14 @@ def make_toys ( pdf                ,
             if not mvar and not a0 is None and isinstance ( v , VE ) and 0 < v.error() : 
                 stats [ 'pull:%s' % par ] += ( v0 - a0 ) / v.error()
 
+    for k in fits :
+        stats ['- Status  %s' % k ] = fits [ k ]
+    for k in covs :
+        stats ['- CovQual %s' % k ] = covs [ k ]
+            
+        
     if progress or not silent : print_stats ( stats , nToys )
     
-
     return results, stats 
 
 
@@ -326,7 +366,8 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
                  fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
                  gen_pars   = {}    , ## gen-parameters to reset/use 
                  fit_pars   = {}    , ## fit-parameters to reset/use
-                 more_vars  = {}    , ## additional  results to be calculated  
+                 more_vars  = {}    , ## additional  results to be calculated
+                 accept_fun = None  , ## accept function ( fit-result, pdf, dataset ) 
                  silent     = True  ,
                  progress   = True  ) :
     """Make `ntoys` pseudoexperiments
@@ -371,6 +412,12 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     assert gen_config and 'nEvents' in gen_config,\
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
+    if accept_fun is None :
+        if not silent :
+            logger.info ( "make_toys2: use default ``accept_fit'' function!")
+        accept_fun = accept_fit
+    assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
+
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -408,6 +455,12 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     from collections import defaultdict 
     results = defaultdict(list) 
 
+    from   ostap.core.core        import SE
+    
+    fits = defaultdict ( SE )  ## fit statuses 
+    covs = defaultdict ( SE )  ## covarinace matrix quality
+
+
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
@@ -430,8 +483,14 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
-        ## ok ? 
-        if r and 0 == r.status () :
+        ## fit status 
+        fits [ r.status  () ] += 1
+
+        ## covariance matrix quality
+        covs [ r.covQual () ] += 1
+
+        ## ok ?
+        if accept_fun ( r , fit_pdf , dataset ) : 
 
             ## 5. save results 
             rpf = r.params ( float_only = True ) 
@@ -448,8 +507,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         del dataset
         
     ## make a final statistics 
-    from   ostap.core.core        import SE 
-    stats = defaultdict(SE)
+    stats = defaultdict ( SE )
     
     for par in results :
         pars = results [ par ]
@@ -457,6 +515,11 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
             v0 = float ( v )         
             stats [ par ] += v0 
             
+    for k in fits :
+        stats ['- Status  %s' % k ] = fits [ k ]
+    for k in covs :
+        stats ['- CovQual %s' % k ] = covs [ k ]
+                    
     if progress or not silent : print_stats ( stats , nToys )
 
     return results, stats 
