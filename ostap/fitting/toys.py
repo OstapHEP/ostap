@@ -90,6 +90,25 @@ def print_stats (  stats , ntoys = '???' ) :
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
 
 # ==============================================================================
+## Default function to generate the data
+#  - simple call for <code>PDF.generate</code>
+def generate_data ( pdf , varset , **config ) :
+    """Default function to generate the data
+    - simple call for `PDF.generate`
+    """
+    return pdf.generate ( varset = varset , **config )
+
+# ==============================================================================
+## Default function to perform the actual fit
+#  - simple call for <code>PDF.fitTo</code>
+def make_fit    ( pdf , dataset , **config ) :
+    """Default function to  perform the actual fit
+    - simple call for `PDF.fitTo`
+    """
+    result , _ = pdf.fitTo ( dataset , **config )
+    return result
+
+# ==============================================================================
 ## Accept fit?
 #  Accept the fit result?
 #   - valid fit result
@@ -107,8 +126,18 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
     """
     return result and ( 0 == result.status () ) and ( result.covQual () in ( -1 , 3 ) ) 
 
+
 # ==============================================================================
-## make <code>ntoys</code> pseudoexperiments
+## make <code>nToys</code> pseudoexperiments
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset = gen_fun ( pdf , ...     , **gen_config )
+#  ...  result  = fit_fun ( pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( result , pdf , dataset ) : continue
+#  .... < collect statistics here > 
+#  @endcode
 #
 #  For each experiment
 #  - generate dataset using <code>pdf</code> with variables specified
@@ -128,7 +157,7 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
 #     init_pars  = { 'mean' : 0.0 , 'sigma' : 1.0 } ) ## parameters to use for generation 
 #  @endcode 
 #
-# Derived parameters can be also   retrived via <code>more_vars</code> argument:
+# Derived parameters can be also retrived via <code>more_vars</code> argument:
 # @code
 # ratio     = lambda res,pdf : res.ratio('x','y')
 # more_vars = { 'Ratio' : ratio }
@@ -141,9 +170,17 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
 # @param gen_config configuration of <code>pdf.generate</code>
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param init_pars  redefine these parameters for each pseudoexperiment
-# @param more_vars  calculate more variables form fit-result 
+# @param more_vars  calculate more variables form fit-result
+# @param gen_fun    generator function
+# @param fit_fun    fitting   function
+# @param accept_fun accept    function
 # @param silent     silent toys?
-# @return dictionary with fit results for the toys and the dictionary of statistics  
+# @param progress   show the progress?
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def make_toys ( pdf                ,
                 nToys              , 
                 data               , ## template for dataset/variables 
@@ -151,12 +188,21 @@ def make_toys ( pdf                ,
                 fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
                 init_pars  = {}    ,
                 more_vars  = {}    ,
-                accept_fun = None  , ## accept function ( fit-result, pdf, dataset ) 
+                gen_fun    = None  , ## generator function ( pdf , varset  , **config )
+                fit_fun    = None  , ## fit       function ( pdf , dataset , **config )
+                accept_fun = None  , ## accept    function ( fit-result, pdf, dataset )
                 silent     = True  ,                
                 progress   = True  ) :
-    """Make `ntoys` pseudoexperiments
+    """Make `nToys` pseudoexperiments
+
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result , pdf , dataset ) : continue
+    >>> .... < collect statistics here > 
     
-    For each experiment:
+    For each pseudoexperiment:
 
     1. generate dataset using `pdf` with variables specified
     in `data` and configuration specified via `gen_config`
@@ -172,11 +218,14 @@ def make_toys ( pdf                ,
     - gen_config configuration of <code>pdf.generate</code>
     - fit_config configuration of <code>pdf.fitTo</code>
     - init_pars  redefine these parameters for each pseudoexperiment
-    - more_vars  dictionary of functions to define the additional results 
+    - more_vars  dictionary of functions to define the additional results
+    - gen_fun    generator function
+    - fit_fun    fitting   function
+    - accept_fun accept    function
     - silent     silent toys?
     - progress   show progress bar? 
     
-    It returns a dictionary with fit results for the toys
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
     
     >>> pdf = ...
     ... results, stats = make_toys ( pdf     , ## PDF  to use 
@@ -192,6 +241,9 @@ def make_toys ( pdf                ,
     >>> more_vars = { 'Ratio' : ratio }
     >>> r,  s = make_toys ( .... , more_vars = more_vars , ... ) 
 
+    - If `gen_fun`    is not specified `generate_data` is used 
+    - If `fit_fun`    is not specified `make_fit`      is used 
+    - If `accept_fun` is not specified `accept_fit`    is used 
     """
 
     from ostap.core.ostap_types import string_types, integer_types  
@@ -202,12 +254,27 @@ def make_toys ( pdf                ,
     assert gen_config and 'nEvents' in gen_config,\
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
 
+    ## 1. generator function? 
+    if gen_fun is None :
+        if not silent : 
+            logger.info ( "make_toys: use default ``generate_data'' function!")
+        gen_fun = generate_data 
+    assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
+    
+    ## 2. fitting function? 
+    if fit_fun is None :
+        if not silent : 
+            logger.info ( "make_toys: use default ``make_fit'' function!")
+        fit_fun = make_fit 
+    assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
+
+    ## 3. accept function? 
     if accept_fun is None :
         if not silent : 
             logger.info ( "make_toys: use default ``accept_fit'' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
-    
+        
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -259,12 +326,13 @@ def make_toys ( pdf                ,
         pdf.load_params ( None , init_pars , silent = silent )
 
         ## 2. generate dataset!  
-        dataset = pdf.generate ( varset = varset , **gen_config )  
+        ## dataset = pdf.generate ( varset = varset , **gen_config )  
+        dataset = gen_fun ( pdf , varset = varset , **gen_config )  
         if not silent :
             logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
         
-        ## 3. fit it!  
-        r , _ = pdf.fitTo ( dataset , **fitcnf )
+        ## 3. fit it!
+        r = fit_fun ( pdf , dataset , **fitcnf ) 
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
@@ -284,7 +352,7 @@ def make_toys ( pdf                ,
                 
             for v in more_vars :
                 func  = more_vars[v] 
-                results [v] .append ( func ( r , pdf ) )
+                results [ v ] .append ( func ( r , pdf ) )
 
             results [ '#' ] .append ( len ( dataset ) )
             
@@ -317,7 +385,16 @@ def make_toys ( pdf                ,
 
 
 # =============================================================================
-## make <code>ntoys</code> pseudoexperiments
+## make <code>nToys</code> pseudoexperiments
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+#  ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+#  .... < collect statistics here > 
+#  @endcode
 #
 #  For each experiment
 #  - generate dataset using <code>pdf</code> with variables specified
@@ -356,8 +433,16 @@ def make_toys ( pdf                ,
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param gen_pars   redefine these parameters for each pseudoexperiment
 # @param fit_pars   redefine these parameters for each pseudoexperiment
+# @param more_vars  calculate more variables form fit-result
+# @param gen_fun    generator function
+# @param fit_fun    fitting   function
+# @param accept_fun accept    function
 # @param silent     silent toys?
-# @return dictionary with fit results for the toys and the dictionary of statistics  
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def make_toys2 ( gen_pdf            , ## pdf to generate toys 
                  fit_pdf            , ## pdf to fit  
                  nToys              , ## number of pseudoexperiments 
@@ -367,10 +452,19 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
                  gen_pars   = {}    , ## gen-parameters to reset/use 
                  fit_pars   = {}    , ## fit-parameters to reset/use
                  more_vars  = {}    , ## additional  results to be calculated
-                 accept_fun = None  , ## accept function ( fit-result, pdf, dataset ) 
+                 gen_fun    = None  , ## generator function ( pdf , varset  , **gen_config ) 
+                 fit_fun    = None  , ## fit       function ( pdf , dataset , **fit_config ) 
+                 accept_fun = None  , ## accept    function ( fit-result, pdf, dataset     )
                  silent     = True  ,
                  progress   = True  ) :
     """Make `ntoys` pseudoexperiments
+    
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+    >>> .... < collect statistics here > 
     
     For each experiment:
 
@@ -392,8 +486,7 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     - silent     silent toys?
     - progress  show progress bar? 
     
-    It returns a dictionary with fit results for the toys
-    
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
     >>> pdf = ...
     ... results, stats = make_toys ( pdf     , ## PDF  to use 
     ...                 1000                 , ## number of toys 
@@ -412,12 +505,28 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     assert gen_config and 'nEvents' in gen_config,\
            'Number of events per toy must be specified via "gen_config" %s' % gen_config
     
+    ## 1. generator function? 
+    if gen_fun is None :
+        if not silent : 
+            logger.info ( "make_toys: use default ``generate_data'' function!")
+        gen_fun = generate_data 
+    assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
+    
+    ## 2. fitting function? 
+    if fit_fun is None :
+        if not silent : 
+            logger.info ( "make_toys: use default ``make_fit'' function!")
+        fit_fun = make_fit 
+    assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
+
+    ## 3. accept function? 
     if accept_fun is None :
-        if not silent :
-            logger.info ( "make_toys2: use default ``accept_fit'' function!")
+        if not silent : 
+            logger.info ( "make_toys: use default ``accept_fit'' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
+    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -460,7 +569,6 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     fits = defaultdict ( SE )  ## fit statuses 
     covs = defaultdict ( SE )  ## covarinace matrix quality
 
-
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
@@ -470,16 +578,15 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         gen_pdf.load_params ( None , fix_gen_pars , silent = silent )
 
         ## 2. generate dataset!
-        dataset = gen_pdf.generate ( varset = varset , **gen_config )  
-        if not silent :
-            logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
+        dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
+        if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
 
         ## 3. reset parameters of fit_pdf
         fit_pdf.load_params ( None , fix_fit_init , silent = silent )
         fit_pdf.load_params ( None , fix_fit_pars , silent = silent )
         
         ## 4. fit it!  
-        r , _ = fit_pdf.fitTo ( dataset , **fitcnf )
+        r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
         if not silent :
             logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 

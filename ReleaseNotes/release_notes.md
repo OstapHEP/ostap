@@ -29,7 +29,10 @@ minuit.release ('p3')
   1. change the default `sample` argument for `PDF.generate` from `False` to `True`
   1. tiny fix for the table column alignment 
   1. add `#include <string>` for `NSphere.h` - for  certain configuration it prevents compile error (thanks to Abdul-Kerim Gusseinov) 
-  1. Add parameter `accept_fun` for  `toys` - that allows to (re)defien the accepance criteria, the default corresponds to `accept_fit` function from `ostap.fitting.toys` module, that checks the    fit status (0) and covariance matrix status ( 3 or -1) 
+  1. Add parameter `accept_fun` for  `toys` - that allows to (re)define the accepance criteria, the default corresponds to `accept_fit` function from `ostap.fitting.toys` module, that checks the    fit status (0) and covariance matrix status ( 3 or -1)   
+  1. Add parameter `fit_fun` for  `toys` - that allows to (re)define the default "fit"-policy 
+  1. Add parameter `gen_fun` for  `toys` - that allows to (re)define the default "generation"-policy 
+  
 
 ## Backward incompatible changes: 
 

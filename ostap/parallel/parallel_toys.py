@@ -48,6 +48,8 @@ class  ToysTask(Task) :
                    fit_config = {}    ,
                    init_pars  = {}    ,
                    more_vars  = {}    ,
+                   gen_fun    = None  , 
+                   fit_fun    = None  , 
                    accept_fun = None  , 
                    silent     = True  ,
                    progress   = False ) :
@@ -58,7 +60,10 @@ class  ToysTask(Task) :
         self.gen_config = gen_config 
         self.fit_config = fit_config
         self.init_pars  = init_pars 
-        self.more_vars  = more_vars  
+        self.more_vars  = more_vars
+        
+        self.gen_fun    = gen_fun 
+        self.fit_fun    = fit_fun 
         self.accept_fun = accept_fun 
         
         self.silent     = silent
@@ -115,6 +120,8 @@ class  ToysTask(Task) :
                                            fit_config = self.fit_config , 
                                            init_pars  = self.init_pars  ,
                                            more_vars  = self.more_vars  ,
+                                           gen_fun    = self.gen_fun    , 
+                                           fit_fun    = self.fit_fun    , 
                                            accept_fun = self.accept_fun ,
                                            silent     = self.silent     ,
                                            progress   = self.progress   )
@@ -173,6 +180,8 @@ class  ToysTask2(ToysTask) :
                    gen_pars   = {}    ,
                    fit_pars   = {}    ,
                    more_vars  = {}    ,
+                   gen_fun    = None  , 
+                   fit_fun    = None  , 
                    accept_fun = None  , 
                    silent     = True  ,
                    progress   = False ) :
@@ -184,6 +193,8 @@ class  ToysTask2(ToysTask) :
                             fit_config = fit_config ,
                             init_pars  = gen_pars   ,
                             more_vars  = more_vars  ,
+                            gen_fun    = gen_fun    ,
+                            fit_fun    = fit_fun    ,
                             accept_fun = accept_fun ,
                             silent     = silent     ,
                             progress   = progress   )
@@ -219,6 +230,8 @@ class  ToysTask2(ToysTask) :
                                             gen_pars   = self.gen_pars   ,
                                             fit_pars   = self.fit_pars   ,             
                                             more_vars  = self.more_vars  ,
+                                            gen_fun    = self.gen_fun    ,
+                                            fit_fun    = self.fit_fun    ,
                                             accept_fun = self.accept_fun ,
                                             silent     = self.silent     ,
                                             progress   = self.progress   )
@@ -229,9 +242,27 @@ class  ToysTask2(ToysTask) :
 
 # ===================================================================================
 ## Run fitting toys in parallel
-# @code
-# pdf = ...
-# results , stats = parallel_toys ( pdf , ## PDF  to use 
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset = gen_fun ( pdf , ...     , **gen_config )
+#  ...  result  = fit_fun ( pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( result , pdf , dataset ) : continue
+#  .... < collect statistics here > 
+#  @endcode
+#
+#  For each experiment
+#  - generate dataset using <code>pdf</code> with variables specified
+#    in <code>data</code> and configuration specified via<code>gen_config</code>
+#    for each generation the parameters of <code>pdf</code> are reset
+#    for their initial values and values from <code>init_pars</code>
+#  - fit generated dataset  with <code>pdf</code> using configuration
+#    specified via  <code>fit_config</code>
+
+#  @code
+#  pdf = ...
+#  results , stats = parallel_toys ( pdf , ## PDF  to use 
 #     nToys      = 100000      ,          ## total number of toys
 #     nSplit     = 100         ,          ## split into <code>nSplit</code> subjobs 
 #     data       = [ 'mass' ]  ,          ## variables in dataset 
@@ -262,8 +293,15 @@ class  ToysTask2(ToysTask) :
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param init_pars  redefine these parameters for each pseudoexperiment
 # @param more_vars  calculate more variables form fit-result 
+# @param gen_fun    generator function
+# @param fit_fun    fitting   function
+# @param accept_fun accept    function
 # @param silent     silent toys?
-# @return dictionary with fit results for the toys and the dictionary of statistics  
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def parallel_toys ( pdf                       ,
                     nToys                     , ## total number of toys 
                     nSplit                    , ## split into  <code>nSplit</code> subjobs 
@@ -271,14 +309,24 @@ def parallel_toys ( pdf                       ,
                     gen_config                , ## parameters for <code>pdf.generate</code>   
                     fit_config = {}           , ## parameters for <code>pdf.fitTo</code>
                     init_pars  = {}           ,
-                    accept_fun = None         , ## accept function (fit-result, pdf, dataset)  
                     more_vars  = {}           ,
+                    gen_fun    = None         , ## generator function ( pdf , varset  , **config )
+                    fit_fun    = None         , ## fit       function ( pdf , dataset , **config )
+                    accept_fun = None         , ## accept    function ( fit-result, pdf, dataset )
                     silent     = True         ,
                     progress   = False        ,
                     ncpus      = 'autodetect' ,   
                     ppservers  = ()           ) :    
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
+
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result , pdf , dataset ) : continue
+    >>> .... < collect statistics here > 
+    
     
     For each experiment:
 
@@ -297,11 +345,14 @@ def parallel_toys ( pdf                       ,
     - gen_config configuration of <code>pdf.generate</code>
     - fit_config configuration of <code>pdf.fitTo</code>
     - init_pars  redefine these parameters for each pseudoexperiment
-    - more_vars  dictionary of functions to define the additional results 
+    - more_vars  dictionary of functions to define the additional results
+    - gen_fun    generator function
+    - fit_fun    fitting   function
+    - accept_fun accept    function    
     - silent     silent toys?
     - progress   show progress bar? 
     
-    It returns a dictionary with fit results for the toys
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
     
     >>> pdf = ...
     ... results, stats = make_toys ( pdf     , ## PDF  to use 
@@ -321,7 +372,11 @@ def parallel_toys ( pdf                       ,
     - `ncpus` :  number of local cpus to use, default is `'autodetect'`,
     that means all local processors
     - `ppservers`:  list of serevers to be used (for parallel python)
-    
+
+    - If `gen_fun`    is not specified `generate_data` is used 
+    - If `fit_fun`    is not specified `make_fit`      is used 
+    - If `accept_fun` is not specified `accept_fit`    is used 
+ 
     """
     from   ostap.core.ostap_types import integer_types 
 
@@ -343,10 +398,11 @@ def parallel_toys ( pdf                       ,
                                 fit_config = fit_config ,
                                 init_pars  = init_pars  ,
                                 more_vars  = more_vars  ,
+                                gen_fun    = gen_fun    ,
+                                fit_fun    = fit_fun    ,
                                 accept_fun = accept_fun ,
                                 silent     = silent     ,
                                 progress   = progress   )
-    
         
     import ostap.fitting.roofit
     import ostap.fitting.dataset
@@ -382,6 +438,8 @@ def parallel_toys ( pdf                       ,
                           fit_config = fit_config     ,
                           init_pars  = toy_init_pars  ,
                           more_vars  = more_vars      ,
+                          gen_fun    = gen_fun        ,
+                          fit_fun    = fit_fun        ,
                           accept_fun = accept_fun     ,
                           silent     = silent         ,
                           progress   = progress       )
@@ -400,6 +458,15 @@ def parallel_toys ( pdf                       ,
 
 # ===================================================================================
 ## Run fitting toys in parallel
+#
+#  Schematically:
+#  @code
+#  for toy in range ( nToys )  :
+#  ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+#  ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+#  ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+#  .... < collect statistics here > 
+#  @endcode
 #
 #  For each experiment
 #  - generate dataset using <code>pdf</code> with variables specified
@@ -447,8 +514,16 @@ def parallel_toys ( pdf                       ,
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param gen_pars   redefine these parameters for each pseudoexperiment
 # @param fit_pars   redefine these parameters for each pseudoexperiment
+# @param more_vars  calculate more variables form fit-result
+# @param gen_fun    generator function
+# @param fit_fun    fitting   function
+# @param accept_fun accept    function
 # @param silent     silent toys?
-# @return dictionary with fit results for the toys and the dictionary of statistics  
+# @return dictionary with fit results for the toys and the dictionary of statistics
+#
+#  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
+#  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
+#  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
 def parallel_toys2(
     gen_pdf                   , ## PDF to generate toys 
     fit_pdf                   , ## PDF to generate toys 
@@ -460,13 +535,22 @@ def parallel_toys2(
     gen_pars   = {}           ,
     fit_pars   = {}           ,
     more_vars  = {}           ,
-    accept_fun = None         , ## accept function (fit-result, pdf, dataset)
+    gen_fun    = None         , ## generator function ( pdf , varset  , **gen_config ) 
+    fit_fun    = None         , ## fit       function ( pdf , dataset , **fit_config ) 
+    accept_fun = None         , ## accept    function ( fit-result, pdf, dataset     )
     silent     = True         ,
     progress   = False        ,
     ncpus      = 'autodetect' ,   
     ppservers  = ()           ) :    
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
+    
+    -   Schematically:
+    >>> for toy in range ( nToys )  :
+    >>> ...  dataset = gen_fun ( gen_pdf , ...     , **gen_config )
+    >>> ...  result  = fit_fun ( fit_pdf , dataset , **fit_config )
+    >>> ...  if not accept_fun ( result  , fit_pdf , dataset ) : continue
+    >>> .... < collect statistics here > 
     
     For each experiment:
 
@@ -490,7 +574,7 @@ def parallel_toys2(
     - silent     silent toys?
     - progress   show progress bar? 
     
-    It returns a dictionary with fit results for the toys
+    It returns a dictionary with fit results for the toys and a dictionary of statistics
     
     >>> pdf = ...
     ... results, stats = parallel_toys2 (
@@ -514,6 +598,7 @@ def parallel_toys2(
     - `ncpus` :  number of local cpus to use, default is `'autodetect'`,
     that means all local processors
     - `ppservers`:  list of serevers to be used (for parallel python)
+
     
     """
     from   ostap.core.ostap_types import integer_types 
@@ -539,6 +624,8 @@ def parallel_toys2(
             gen_pars   = gen_pars   ,
             fit_pars   = fit_pars   ,
             more_vars  = more_vars  ,
+            gen_fun    = gen_fun    , 
+            fit_fun    = fit_fun    , 
             accept_fun = accept_fun , 
             silent     = silent     ,
             progress   = progress   )
@@ -580,6 +667,8 @@ def parallel_toys2(
                           gen_pars   = gen_init_pars  ,
                           fit_pars   = fit_init_pars  ,
                           more_vars  = more_vars      ,
+                          gen_fun    = gen_fun        , 
+                          fit_fun    = fit_fun        , 
                           accept_fun = accept_fun     , 
                           silent     = silent         ,
                           progress   = progress       )

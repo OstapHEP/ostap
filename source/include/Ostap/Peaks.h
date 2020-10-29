@@ -1622,7 +1622,7 @@ namespace Ostap
      *
      *  Note:
      *  Symmetric case of JonhsonSU distribution is
-     *  recovere by \f$\delta\rightarrow0\f$ for
+     *  recovered by \f$\delta\rightarrow0\f$ for
      *  "sinh-asinh" distribution, see
      *  Jones, M. C.; Pewsey, A. (2009).
      *  "Sinh-arcsinh distributions". Biometrika 96 (4): 761.
