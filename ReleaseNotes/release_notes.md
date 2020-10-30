@@ -32,7 +32,7 @@ minuit.release ('p3')
   1. Add parameter `accept_fun` for  `toys` - that allows to (re)define the accepance criteria, the default corresponds to `accept_fit` function from `ostap.fitting.toys` module, that checks the    fit status (0) and covariance matrix status ( 3 or -1)   
   1. Add parameter `fit_fun` for  `toys` - that allows to (re)define the default "fit"-policy 
   1. Add parameter `gen_fun` for  `toys` - that allows to (re)define the default "generation"-policy 
-  
+  1. `test_plotting_summary_graph.py` : add call for `ROOT.gPad.RedrawAxis` -  thanks to Tom Blake 
 
 ## Backward incompatible changes: 
 
