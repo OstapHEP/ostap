@@ -314,9 +314,7 @@ def parallel_toys ( pdf                       ,
                     fit_fun    = None         , ## fit       function ( pdf , dataset , **config )
                     accept_fun = None         , ## accept    function ( fit-result, pdf, dataset )
                     silent     = True         ,
-                    progress   = False        ,
-                    ncpus      = 'autodetect' ,   
-                    ppservers  = ()           ) :    
+                    progress   = False        , **kwargs ):
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
 
@@ -444,7 +442,7 @@ def parallel_toys ( pdf                       ,
                           silent     = silent         ,
                           progress   = progress       )
                           
-    wmgr  = WorkManager ( ncpus = ncpus , ppservers  = ppservers , silent = False )
+    wmgr  = WorkManager ( silent = False , **kwargs )
 
     data  = nSplit * [ nToy ]
     if nRest : data.append ( nRest )
@@ -539,9 +537,7 @@ def parallel_toys2(
     fit_fun    = None         , ## fit       function ( pdf , dataset , **fit_config ) 
     accept_fun = None         , ## accept    function ( fit-result, pdf, dataset     )
     silent     = True         ,
-    progress   = False        ,
-    ncpus      = 'autodetect' ,   
-    ppservers  = ()           ) :    
+    progress   = False        , **kwargs ) :
     """Make `ntoys` pseudoexperiments, splitting them into `nSplit` subjobs
     to be executed in parallel
     
@@ -673,7 +669,7 @@ def parallel_toys2(
                           silent     = silent         ,
                           progress   = progress       )
 
-    wmgr  = WorkManager ( ncpus = ncpus , ppservers  = ppservers , silent = False )
+    wmgr  = WorkManager ( silent = False , **kwargs )
 
     data  = nSplit * [ nToy ]
     if nRest : data.append ( nRest )

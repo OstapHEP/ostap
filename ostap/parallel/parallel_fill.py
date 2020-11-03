@@ -138,9 +138,8 @@ def pprocess ( chain               ,
                shortcut   = True   ,   ## important 
                chunk_size = 100000 ,   ## important 
                max_files  = 5      ,
-               ppservers  = ()     ,
                use_frame  =  20000 ,   ## important 
-               silent     = False  ) :
+               silent     = False  , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -165,7 +164,7 @@ def pprocess ( chain               ,
         chunk_size = -1
         
     task  = FillTask ( variables , selection , trivial , use_frame )
-    wmgr  = WorkManager ( ppservers  = ppservers  , silent    = silent    )
+    wmgr  = WorkManager ( silent     = silent     , **kwargs )
     trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
     wmgr.process( task , trees )
     del trees

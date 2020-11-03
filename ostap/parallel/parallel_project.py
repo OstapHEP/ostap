@@ -161,7 +161,7 @@ def  cproject ( chain                ,
                 first      =  0      ,
                 chunk_size = -1      ,
                 max_files  =  5      , 
-                silent     = False   ) :
+                silent     = False   , **kwargs ) :
     """Make a projection of the loooong chain into histogram
     >>> chain = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -175,7 +175,7 @@ def  cproject ( chain                ,
     ch    = Chain ( chain , first = first , nevents = nentries )
     
     task  = ProjectTask ( histo , what , cuts )
-    wmgr  = WorkManager ( silent = silent )    
+    wmgr  = WorkManager ( silent = silent , **kwargs )    
     wmgr.process ( task , ch.split ( chunk_size = chunk_size , max_files = max_files ) )
 
     ## unpack results 
@@ -218,7 +218,7 @@ def  tproject ( tree                 ,   ## the tree
                 first      =  0      ,   ## the first entry 
                 chunk_size = 1000000 ,   ## chunk size 
                 max_files  = 50      ,   ## not-used .... 
-                silent     = False   ) : ## silent processing 
+                silent     = False   , **kwargs ) : ## silent processing 
     """Make a projection of the loooong tree into histogram
     >>> tree  = ... ## large chain
     >>> histo = ... ## histogram template 
@@ -240,7 +240,7 @@ def  tproject ( tree                 ,   ## the tree
     ch    = Tree ( tree , first = first , nevents = nentries )
     
     task  = ProjectTask            ( histo , what , cuts )
-    wmgr  = WorkManager            ( silent     = silent       )
+    wmgr  = WorkManager            ( silent     = silent , **kwargs )
     wmgr.process ( task, ch.split  ( chunk_size = chunk_size ) )
     
     ## unpack results 
