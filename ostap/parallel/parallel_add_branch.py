@@ -75,7 +75,7 @@ class AddBranch(Task) :
 #  chain = ....
 #  chain.padd_new_branch ( 'new_branch' , 'px*py' ) 
 #  @endcode
-def add_new_branch ( chain , branch_name , function , verbose = True ) :
+def add_new_branch ( chain , branch_name , function , verbose = True , **kwargs ) :
     """Add new branch for loong chain in parallel
     - see ROOT.TTree.add_new_branch
     >>> chain = ....
@@ -92,7 +92,7 @@ def add_new_branch ( chain , branch_name , function , verbose = True ) :
     branches = set   ( chain.branches() )
     
     task     = AddBranch   ( branch_name ,  function  )
-    wmgr     = WorkManager ( silent = not verbose  )
+    wmgr     = WorkManager ( silent = not verbose , **kwargs )
     trees    = ch.split    ( max_files = 1  )
     
     wmgr.process ( task , trees )
