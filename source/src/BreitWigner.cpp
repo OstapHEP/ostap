@@ -2245,18 +2245,15 @@ std::string Ostap::Math::ChannelNR::describe() const
 Ostap::Math::GammaBW3::GammaBW3 
 ( const Ostap::Kinematics::Dalitz0&     dalitz , 
   Ostap::Math::GammaBW3::MatrixElement2 me2    , 
-  const std::size_t                     tag    ) 
+  const std::size_t                     tag    , 
+  const unsigned short                  n1     , 
+  const unsigned short                  n2     )
   : m_me2    ( me2    ) 
   , m_dalitz ( dalitz )
   , m_tag    ( tag    )
+  , m_n1     ( n1     )
+  , m_n2     ( n2     )
 {}
-// ============================================================================
-// Ostap::Math::GammaBW3::GammaBW3 
-// ( const Ostap::Kinematics::Dalitz0& dalitz , 
-//   const Ostap::Decays::IDecay&      decay  , 
-//   const std::size_t                 tag    ) 
-//   : GammaBW3 ( dalitz , MatrixElement2 ( Ostap::Decays::Decay ( decay ) ) , tag )
-// {}
 // ============================================================================
 // the main method 
 // ============================================================================
@@ -2265,7 +2262,7 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
   return Ostap::Math::DalitzIntegrator::integrate_s1s2 
-    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag ) / ( s * std::sqrt ( s ) ) ;
+    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / ( s * std::sqrt ( s ) ) ;
 }
 // ============================================================================
 // constructor from (partial) width

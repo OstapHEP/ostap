@@ -234,6 +234,18 @@ def tf3 ( self ,
     #
     return fun 
 
+positives = ( Ostap.Math.Positive          ,
+              Ostap.Math.PositiveEven      , 
+              Ostap.Math.Monotonic         , 
+              Ostap.Math.Convex            , 
+              Ostap.Math.ConvexOnly        , 
+              Ostap.Math.PositiveSpline    , 
+              Ostap.Math.MonotonicSpline   , 
+              Ostap.Math.ConvexSpline      ,
+              Ostap.Math.ConvexOnlySpline  ,
+              Ostap.Math.ExpoPositive      ,
+              Ostap.Math.TwoExpoPositive   ) 
+
 # =============================================================================
 ## draw the function 
 def f1_draw ( self , opts ='' , **kwargs ) :
@@ -243,28 +255,21 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     """
     
     if hasattr ( self , '_tf1' ) :
-        xmin  = kwargs.get ( 'xmin'  , None )
-        xmax  = kwargs.get ( 'xmax'  , None )
-        if   not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
+        
+        xmin  = kwargs.get ( 'xmin' , None )
+        xmax  = kwargs.get ( 'xmax' , None )
+        npx   = kwargs.get ( 'npx'  , None )
+        
+        if 'callable' in kwargs                                : del self._tf1
+        elif not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
         elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
-
-        if 'callable' in kwargs : del self._tf1
-
+        elif not npx  is None and npx  != self._tf1.GetXmax () : del self._tf1 
+        
     if not hasattr ( self , '_tf1'  ) :
         
         self._tf1        =  tf1 ( self , **kwargs )
         
-        if type(self) in ( Ostap.Math.Positive          ,
-                           Ostap.Math.PositiveEven      , 
-                           Ostap.Math.Monotonic        , 
-                           Ostap.Math.Convex            , 
-                           Ostap.Math.ConvexOnly        , 
-                           Ostap.Math.PositiveSpline    , 
-                           Ostap.Math.MonotonicSpline  , 
-                           Ostap.Math.ConvexSpline      ,
-                           Ostap.Math.ConvexOnlySpline  ,
-                           Ostap.Math.ExpoPositive      ,
-                           Ostap.Math.TwoExpoPositive   ) :                                
+        if type ( self ) in positives :
             self._tf1.SetMinimum(0)
             
     kwargs.pop ( 'xmin'     , None )

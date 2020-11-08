@@ -2326,29 +2326,25 @@ namespace Ostap
       GammaBW3 
       ( const Ostap::Kinematics::Dalitz0& dalitz     , 
         MatrixElement2                    me2        , 
-        const std::size_t                 tag    = 0 ) ;
+        const std::size_t                 tag    = 0 ,
+        const unsigned short               n1    = 0 , 
+        const unsigned short               n2    = 0 ) ;
       // =====================================================================
       /// templated constructor 
       template <class ME2> 
       GammaBW3 
-      ( const  Ostap::Kinematics::Dalitz0& dalitz , 
-        ME2                                me2    , 
-        const std::size_t                  tag    ) 
-        :  m_me2    ( me2    ) 
-        ,  m_dalitz ( dalitz ) 
-        ,  m_tag    ( tag    )
+      ( const  Ostap::Kinematics::Dalitz0& dalitz  , 
+        ME2                                me2     , 
+        const std::size_t                  tag     , 
+        const unsigned short               n1  = 0 , 
+        const unsigned short               n2  = 0 )
+        : m_me2    ( me2    ) 
+        , m_dalitz ( dalitz ) 
+        , m_tag    ( tag    )
+        , m_n1     ( n1 ) 
+        , m_n2     ( n2 )
       {}
       // ======================================================================      
-      // /** constructor from Dalitz configuration and matrix element 
-      //  *  @see Ostap::Decays::IDecay
-      //  *  @param dalitz Dalizt configriation
-      //  *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
-      //  */
-      // GammaBW3 
-      // ( const Ostap::Kinematics::Dalitz0& dalitz     , 
-      //   const Ostap::Decays::IDecay&      me2        , 
-      //   const std::size_t                 tag    = 0 ) ;
-      // // ======================================================================      
     public: // the main method 
       // ======================================================================      
       /// the main method 
@@ -2364,8 +2360,10 @@ namespace Ostap
       create 
       ( const Ostap::Kinematics::Dalitz0& dalitz     , 
         ME2                               me2        , 
-        const std::size_t                 tag    = 0 ) 
-      { return GammaBW3 ( dalitz , me2 , tag ) ; }
+        const std::size_t                 tag    = 0 ,   
+        const unsigned short              n1     = 0 , 
+        const unsigned short              n2     = 0 )
+      { return GammaBW3 ( dalitz , me2 , tag , n1 , n2 ) ; }
       // ======================================================================      
     public: //  accessors 
       // ======================================================================      
@@ -2377,16 +2375,20 @@ namespace Ostap
       /// s-threshold 
       inline double s_threshold () const { return m_dalitz.s_min () ; }
       /// tag?
-      std::size_t  tag () const { return m_tag ; }
+      std::size_t  tag          () const { return m_tag ; }
       // ======================================================================
     private:
       // ======================================================================
       /// Matrix element 
-      MatrixElement2             m_me2    {} ; // Matrix element 
+      MatrixElement2             m_me2    {   } ; // Matrix element 
       /// Dalitz configuration 
-      Ostap::Kinematics::Dalitz0 m_dalitz {} ; // Dalitz configuration       
+      Ostap::Kinematics::Dalitz0 m_dalitz {   } ; // Dalitz configuration       
       /// unique tag/key/label (if specified)
-      std::size_t                m_tag    {} ;
+      std::size_t                m_tag    {   } ;
+      /// useful for decays with narrow resonances 
+      unsigned short             m_n1     { 0 } ;
+      /// useful for decays with narrow resonances 
+      unsigned short             m_n2     { 0 } ;
       // ======================================================================
     } ;
     // ========================================================================
