@@ -2493,8 +2493,13 @@ class MASS(MASSMEAN) :
                    sigma_title = ''   ) : 
             
         ## base class 
-        MASSMEAN.__init__ ( self , name , xvar , mean )
-
+        MASSMEAN.__init__ ( self                    ,
+                            name       = name       ,
+                            xvar       = xvar       , 
+                            mean       = mean       ,
+                            mean_name  = mean_name  ,
+                            mean_title = mean_title )
+        
         self.__limits_sigma = ()        
         if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
             mn , mx   = self.xminmax()

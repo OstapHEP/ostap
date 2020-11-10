@@ -46,7 +46,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const std::size_t s_SIZE  = 2000 ;
+  const std::size_t s_SIZE  = 5000 ;
   // ==========================================================================
   /** @var s_PRECISION
    *  the default precision for various calculations,
@@ -72,6 +72,8 @@ namespace
    */
   const double s_RPRECISION  = s_PRECISION ;
   // ==========================================================================
+
+  // ==========================================================================
   /** @var s_PRECISION_TAIL
    *  the low-relative precision for "tails" in GSL integration
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
@@ -79,13 +81,87 @@ namespace
    */
   const double s_PRECISION_TAIL = 1.e-5 ;
   // ===========================================================================
-  /** @var s_PRECISION_QAWC
-   *  the default QAWC precision for various calculations,
-   *  in particular GSL integration
+
+  // ===========================================================================
+  /** @var s_APRECISION_GAQ
+   *  the default absolute precision for GAQ calculations,
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_PRECISION_QAWC  = 1.e-7 ;
+  const double s_APRECISION_GAQ  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_QAG
+   *  the default relative precision for GAQ calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_GAQ  = s_RPRECISION ;
+  // ==========================================================================
+
+  // ==========================================================================
+  /** @var s_APRECISION_GAQI
+   *  the default absolute precision for GAQI calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_GAQI  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_QAGI
+   *  the default relative precision for GAQI calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_GAQI  = 1.e-7 ;
+  // ==========================================================================
+
+  // ==========================================================================
+  /** @var s_APRECISION_GAQIU
+   *  the default absolute precision for GAQIU calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_GAQIU  = s_APRECISION_GAQI ;
+  // ==========================================================================
+  /** @var s_RPRECISION_QAGIU
+   *  the default relative precision for GAQIU calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_GAQIU  = s_RPRECISION_GAQI ;
+  // ==========================================================================
+  
+  // ==========================================================================
+  /** @var s_APRECISION_GAQIL
+   *  the default absolute precision for GAQIL calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_GAQIL  = s_APRECISION_GAQIU ;
+  // ==========================================================================
+  /** @var s_RPRECISION_QAGIL
+   *  the default relative precision for GAQIL calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_GAQIL  = s_RPRECISION_GAQIU ;
+  // ==========================================================================
+
+  // ==========================================================================
+  /** @var s_APRECISION_GAQP
+   *  the default absolute precision for GAQP calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_APRECISION_GAQP  = s_APRECISION ;
+  // ==========================================================================
+  /** @var s_RPRECISION_QAGP
+   *  the default relative precision for GAQP calculations,
+   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
+   *  @date 2010-05-23
+   */
+  const double s_RPRECISION_GAQP  = 1.e-7 ;
+  // ==========================================================================
+
   // ==========================================================================
   /** @var s_APRECISION_QAWC
    *  the default absolute QAWC precision for various calculations,
@@ -93,7 +169,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION_QAWC  = s_PRECISION_QAWC ;
+  const double s_APRECISION_QAWC  = s_APRECISION ;
   // ==========================================================================
   /** @var s_EPRECISION_QAWC
    *  the default relative QAWC precision for various calculations,
@@ -101,7 +177,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION_QAWC  = s_PRECISION_QAWC ;
+  const double s_RPRECISION_QAWC  = 2.e-7 ;
   // ==========================================================================
 }
 // ============================================================================

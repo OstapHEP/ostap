@@ -2555,7 +2555,6 @@ class Voigt_pdf(MASS) :
                          mean_name   = 'm0_%s'      % name ,
                          mean_title  = '#m_{0}(%s)' % name ) 
                          
-
         limits_gamma = ()
         if  self.xminmax() :
             mn , mx = self.xminmax() 
@@ -2689,11 +2688,11 @@ class BreitWigner_pdf(MASS) :
     >>> breit = Models.BreitWigner_pdf ( 'BW'          ,
     ...                                  bw            ,
     ...                                  xvar  = mass  ,
-    ...                                  mean  = m_X   ,
+    ...                                  m0    = m_X   ,
     ...                                  gamma = g_X   )
     
     Parameters:
-    - mean        : location Breigt-Wigner function
+    - m0          : location Breigt-Wigner function
     - gamma       : width of Breigt-Wigner function
     
     """
@@ -2705,7 +2704,7 @@ class BreitWigner_pdf(MASS) :
                    gamma       = None ) :        
         #
         ## initialize the base
-        # 
+        #
         MASS.__init__  ( self  , name  , xvar ,
                          mean        = m0                  ,
                          sigma       = gamma               ,
@@ -2713,7 +2712,7 @@ class BreitWigner_pdf(MASS) :
                          mean_title  = '#m_{0}(%s)' % name ,                         
                          sigma_name  = 'gamma_%s'   % name ,
                          sigma_title = '#Gamma(%s)' % name )
-
+        
         bw = breitwigner
         assert isinstance ( bw , Ostap.Math.BW ), \
                'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )

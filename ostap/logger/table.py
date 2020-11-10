@@ -201,8 +201,6 @@ def table ( rows , title = '' , prefix = '' , alignment = () ) :
                 elif al in right  : table_instance.justify_columns [ i ] = 'right'
                 elif al in center : table_instance.justify_columns [ i ] = 'center'
                 
-        ## table_instance.justify_columns[ 0] = 'left'
-        ## table_instance.justify_columns[ 2] = 'right'
         t = table_instance.table 
         return add_prefix ( table_instance.table , prefix ) 
 
@@ -233,7 +231,7 @@ def add_prefix ( table , prefix = '' ) :
     return prefix + table.replace ( '\n' , '\n' + prefix ) if prefix else table 
 
 # ==============================================================================
-## Aling the certain column of the table
+## Align the certain column of the table
 #  @code
 #  aligned = align_column ( table , 1 , 'left' ) 
 #  @endcode 

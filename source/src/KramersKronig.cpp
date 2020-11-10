@@ -26,7 +26,7 @@
 // =============================================================================
 double Ostap::Math::KramersKronig::operator() ( const double x ) const
 { return m_scale * m_integrator.kramers_kronig 
-    ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag ) ; }
+    ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag , m_rescale ) ; }
 // =============================================================================
 
 
