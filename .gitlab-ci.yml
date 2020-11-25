@@ -1,14 +1,18 @@
+variables:
+  IMAGE_TAG: v0  # must be kept in sync with lb-docker-run
 stages:
   - build
-#  - test
+  - test
+  - tag
 
-variables:
-  CMTCONFIG: x86_64-slc6-gcc62-opt
-
-local-build:
-  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/slc6-build:latest
-  tags:
-    - cvmfs
+# ==== Build ====
+centos7-build:
   stage: build
-  script:
-    - echo "build will be here"
+  tags:
+    - docker-image-build
+  script: "echo" # unused but this line is required by GitLab CI
+  variables:
+    FROM: gitlab-registry.cern.ch/lhcb-docker/os-base/centos7-devel:latest
+    TO: ${CI_REGISTRY_IMAGE}/centos7-build:${IMAGE_TAG}.${CI_PIPELINE_IID}
+    DOCKER_FILE: Dockerfile
+    BUILD_ARG: IMAGE_NAME=centos7-build
