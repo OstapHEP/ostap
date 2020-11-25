@@ -45,6 +45,10 @@ Docker
 We also provide Dockerfile to build the ostap image. You can run Ostap interactively using the command line or via Docker Desktop which is available on MacOS and Windows. To create the docker image from the Ostap directory run:
 
     sudo docker build --network host -t <dockerID>/ostaphep:latest .
+Or you can download image from the ostap from gitlab registry
+    
+    docker pull ostaphep/ostaphep/centos7-build
+
 Run the image iteractively:
 
     sudo docker  run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix  -v ${WORKDIR_PATH}/work_dir:/work_dir  -it <dockerID>/ostaphep:latest
