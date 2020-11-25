@@ -140,35 +140,7 @@ Double_t Ostap::Models::Poly2DPositive::analyticalIntegral
     3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Poly2DPositive::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_positive ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_positive , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_positive ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
+
 
 
 
@@ -269,35 +241,6 @@ Double_t Ostap::Models::Poly2DSymPositive::analyticalIntegral
     3 == code ? m_positive.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Poly2DSymPositive::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_positive ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_positive , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_positive ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ======================================================================
-#endif
-// ======================================================================
 
 
 
@@ -428,35 +371,6 @@ Double_t Ostap::Models::PS2DPol::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPol::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ======================================================================
-#endif
-// ======================================================================
 
 
 // ============================================================================
@@ -588,35 +502,6 @@ Double_t Ostap::Models::PS2DPol2::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPol2::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ======================================================================
-#endif
-// ======================================================================
 
 
 
@@ -751,36 +636,6 @@ Double_t Ostap::Models::PS2DPol3::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPol3::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
-
 
 
 
@@ -909,35 +764,6 @@ Double_t Ostap::Models::PS2DPolSym::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPolSym::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ======================================================================
-#endif
-// ======================================================================
 
 
 // ============================================================================
@@ -1065,35 +891,6 @@ Double_t Ostap::Models::PS2DPol2Sym::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPol2Sym::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
 
 // ============================================================================
 //  PS(x)*PS(y)*SymPolynom 
@@ -1219,35 +1016,6 @@ Double_t Ostap::Models::PS2DPol3Sym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
-// ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::PS2DPol3Sym::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
 // ============================================================================
 
 
@@ -1391,35 +1159,6 @@ Double_t Ostap::Models::ExpoPS2DPol::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::ExpoPS2DPol::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
 
 
 
@@ -1537,38 +1276,6 @@ Double_t Ostap::Models::Expo2DPol::analyticalIntegral
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Expo2DPol::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
-
-
-
 
 
 // ============================================================================
@@ -1674,35 +1381,6 @@ Double_t Ostap::Models::Expo2DPolSym::analyticalIntegral
     2 == code ? m_function.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
     3 == code ? m_function.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
-// ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Expo2DPolSym::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_function ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_function , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_function ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
 // ============================================================================
 
 
@@ -1810,35 +1488,6 @@ Double_t Ostap::Models::Spline2D::analyticalIntegral
     3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Spline2D::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_spline ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_spline , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_spline ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
 
 
 
@@ -1938,35 +1587,7 @@ Double_t Ostap::Models::Spline2DSym::analyticalIntegral
     3 == code ? m_spline.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Spline2DSym::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  //
-  if ( ex && ey ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey ) { compute_XY ( output , m_spline ,        x   , BA ( m_y ) ) ; }
-  else if (  ex && !ey ) { compute_XY ( output , m_spline , BA ( m_x ) ,        y   ) ; }
-  else                   { compute_XY ( output , m_spline ,        x   ,        y   ) ; }         
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
+
 
 
 

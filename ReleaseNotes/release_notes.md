@@ -34,6 +34,7 @@ minuit.release ('p3')
   1. Add parameter `gen_fun` for  `toys` - that allows to (re)define the default "generation"-policy 
   1. `test_plotting_summary_graph.py` : add call for `ROOT.gPad.RedrawAxis` -  thanks to Tom Blake 
   1. add `**kwargs` for all `parallel`-methods, arguments are used for `WorkManager`
+  1. remove `evaluateBatch` form all PDFs (folloiimng evolution of ROOT). We need to  gradually introduce `evaluateSpan`
 
 ## Backward incompatible changes: 
 
