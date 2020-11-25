@@ -1,4 +1,4 @@
-FROM gitlab-registry.cern.ch/lhcb-docker/os-base/centos7-devel:latest
+FROM gitlab-registry.cern.ch/lhcb-docker/os-base/centos7-devel:latest 
 MAINTAINER tatiana.ovsiannikova <tatiana.ovsiannikova@cern.ch>
 LABEL description="ostap HEP framework"
 
@@ -10,7 +10,9 @@ ENV PATH="/root/miniconda/bin:${PATH}"
 RUN echo $PATH
 RUN conda config --set always_yes yes --set changeps1 no
 RUN conda config --add channels conda-forge
-RUN conda create -q -n ostapenv coverage coveralls cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3 psutil more-itertools 
+RUN conda create -q -n ostapenv  root_base=6.20 root-binaries root-dependencies gsl  future configparser  numpy scipy pathos dill multiprocess ppft terminaltables binutils-meta c-compiler compilers cxx-compiler fortran-compiler python ipython cmake
+
+
 ADD . /ostap
 WORKDIR /ostap
 
