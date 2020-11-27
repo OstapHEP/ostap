@@ -275,6 +275,8 @@ class Convolution_pdf(PDF) :
     def old_pdf ( self ):
         """``old_pdf''  : original (non-convolved) PDF"""
         return self.__old_pdf         
+
+
     ## ## redirect any other attributes to original PDF
     ## def __getattr__ ( self , attr ) :
     ##     """Get all extra attributes from the original PDF"""

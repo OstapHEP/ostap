@@ -44,7 +44,7 @@ namespace  Ostap
     // ========================================================================
     /** @class Moment_  Ostap/Moments.h 
      *  Simple class to keep/calculate 
-     *  the suubable high-order central momentts
+     *  the high-order central momentts
      *  \f[  \mu_n \equiv \frac{1}{N} \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
      *  It implements the (single-pass) algorithm 
      *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
@@ -781,7 +781,7 @@ namespace  Ostap
     
     // ========================================================================
     /**  @class Moments 
-     *   collectionn  of static functions dealing with moments 
+     *   Collection of static functions dealing with moments 
      */
     class Moments
     {
@@ -790,7 +790,7 @@ namespace  Ostap
       // ======================================================================
     private: 
       // ======================================================================
-      /** @var s_INVALID_CENTRAL_MOMENT ; 
+      /** @var s_INVALID_MOMENT ; 
        *  the invalid value of the central moment 
        */ 
       static const double s_INVALID_MOMENT ;
@@ -973,7 +973,7 @@ namespace  Ostap
       // ======================================================================
       /** get the central moment of order \f$ N \f$  with 
        *  the estimate of the uncertainty (with \f$O(n^{-2})\f$~precision
-       *  - the error estimaet is possible only when \f$ 2N \le K \f$!
+       *  - the error estimate is possible only when \f$ 2N \le K \f$!
        *  @aparam m counter 
        *  @return moment with uncertainty for non-empty counter 
        *          <code>s_INVALID_MOMENT</code> for empty counters 

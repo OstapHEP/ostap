@@ -194,13 +194,30 @@ namespace  Ostap
     {
     public :
       // ======================================================================
-      template <class FUNCTION1, class FUNCTION2>
+      template <class FUNCTION1, 
+                class FUNCTION2>
       Multiply ( FUNCTION1    f1     ,
                  FUNCTION2    f2     ,
                  const double c  = 1 ) 
         : m_fun1 ( f1 )
         , m_fun2 ( f2 )
         , m_c    ( c  ) 
+      {}
+      // ======================================================================
+      template <class FUNCTION1> 
+      Multiply ( FUNCTION1    f1 ,
+                 const double f2 ) 
+        : m_fun1 ( f1 )
+        , m_fun2 ( [f2]( const double /* x */ ) -> double { return f2 ; } )
+        , m_c    ( 1  ) 
+      {}
+      // ======================================================================
+      template <class FUNCTION2> 
+      Multiply ( const double f1 ,
+                 FUNCTION2    f2 )
+        : m_fun1 ( [f1]( const double /* x */ ) -> double { return f1 ; } )
+        , m_fun2 ( f2 )
+        , m_c    ( 1  ) 
       {}
       // ======================================================================
       /// the main method
