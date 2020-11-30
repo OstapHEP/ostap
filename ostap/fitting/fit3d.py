@@ -157,7 +157,12 @@ class PDF3 (PDF2,FUNC3) :
         elif not in_range2  and      in_range3 :
             in_range = 'aux3_rng13_%s'  % self.name
         elif in_range2  and in_range3:
-            in_range = 'aux3_rng123_%s' % self.name
+            if  not isinstance ( in_range2 , tuple ):
+                in_range = in_range2
+            elif not isinstance ( in_range3 , tuple ):
+                in_range = in_range3
+            else:
+                in_range = 'aux3_rng123_%s' % self.name
 
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
@@ -231,7 +236,12 @@ class PDF3 (PDF2,FUNC3) :
         elif not in_range1  and in_range3:
             in_range = 'aux3_rng23_%s' % self.name
         elif in_range1  and in_range3:
-            in_range = 'aux3_rng213_%s' % self.name
+            if  not isinstance ( in_range1 , tuple ):
+                in_range = in_range1
+            elif  not isinstance ( in_range3 , tuple ):
+                in_range = in_range3
+            else:
+                in_range = 'aux3_rng213_%s' % self.name
 
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             with rooSilent ( 3 ) : 
@@ -293,7 +303,12 @@ class PDF3 (PDF2,FUNC3) :
         elif not in_range1  and in_range2:
             in_range = 'aux3_rng32_%s' % self.name
         elif in_range1  and in_range2:
-            in_range = 'aux3_rng312_%s' % self.name
+            if  not isinstance ( in_range1 , tuple ):
+                in_range = in_range1
+            elif  not isinstance ( in_range2 , tuple ):
+                in_range = in_range2
+            else:
+                in_range = 'aux3_rng312_%s' % self.name
 
         if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
             with rooSilent ( 3 ) : 
