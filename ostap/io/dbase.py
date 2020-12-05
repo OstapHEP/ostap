@@ -119,7 +119,7 @@ if 2 == sys.version_info.major :
             else :
                 raise anydbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
         
-        elif result is 'sqlite3' :
+        elif result == 'sqlite3' :
             
             db = SqliteDict ( filename = file , flag = flag , **kwargs )
 
@@ -287,7 +287,7 @@ else :                              ## 3.3 <= python
                 
                 db = bsddb3.hashopen ( file , flag , mode ) 
 
-            elif result is 'sqlite3' :
+            elif result == 'sqlite3' :
                 
                 db = SqliteDict ( filename = file , flag = flag , *kwargs )
 
@@ -380,7 +380,7 @@ else :                              ## 3.3 <= python
                     
                     raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
             
-            elif result is 'sqlite3' :
+            elif result == 'sqlite3' :
                 
                 db = SqliteDict ( filename = name , flag = flag , **kwargs )
 
@@ -392,7 +392,7 @@ else :                              ## 3.3 <= python
 
         
 # =============================================================================
-## get disk size of data-base=like object
+## get disk size of data-base-like object
 #  @code
 #  num, size = dbsize ( 'mydb' ) 
 #  @endcode  
