@@ -34,7 +34,7 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
-import ROOT, os  
+import ROOT, os, sys   
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 try :
     from cString import StringIO
@@ -618,11 +618,15 @@ if python_scripts :
 if PARAMETERS : 
     logger.info ('PARAMETERS    : %s' % PARAMETERS )
 
+
+if  sys.version_info > (3,) :
+    from importlib import reload 
+
 # =============================================================================
 if '__main__' == __name__ : logger.info ( 'ostap is ready'  ) 
 else                      : logger.info ( 'ostap is loaded' )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

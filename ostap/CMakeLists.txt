@@ -155,7 +155,7 @@ foreach(filename ${allfiles})
     string(REPLACE "/" "_"       testname ${testname})
     string(CONCAT  testname ostap.runit_  ${testname})
 
-    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
+    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python -W error ${filename} )
 
     set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ) 
 
