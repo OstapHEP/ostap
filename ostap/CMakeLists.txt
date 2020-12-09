@@ -113,6 +113,9 @@ install(DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}
 set(OSTAP_PYTHON_SITE_DIR ${OSTAP_PYTHON_SITE_LOCAL}  PARENT_SCOPE)
 
 
+
+
+
 ## senseless? 
 set( $ENV{PYTHONPATH} ${CMAKE_INSTALL_PREFIX}:$ENV{PYTHONPATH} ) 
 
@@ -120,6 +123,25 @@ set( $ENV{PYTHONPATH} ${CMAKE_INSTALL_PREFIX}:$ENV{PYTHONPATH} )
 option(RUN_TESTS "Run tests?" ON)
 
 enable_testing() 
+
+execute_process(
+  COMMAND "${PYTHON_EXECUTABLE}" -W error -c "import math"
+  OUTPUT_VARIABLE OSTAP_PYTHON_CHECK_WARNINGS
+  RESULT_VARIABLE OSTAP_PYTHON_CHECK_WARNINGS_RESULT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET)
+
+if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
+ set( OSTAP_TEST_PYTHON_WARNINGS "" ) 
+else  () 
+ set( OSTAP_TEST_PYTHON_WARNINGS " -W error " ) 
+endif () 
+
+if ( OSTAP_TEST_PYTHON_WARNINGS ) 
+ MESSAGE ( "All tests will be executed with " ${OSTAP_TEST_PYTHON_WARNINGS} " flag"  ) 
+endif() 
+
+
 file(GLOB files "${CMAKE_INSTALL_PREFIX}/${OSTAP_PYTHON_SITE_LOCAL}/ostap/*/tests/test_*.py")
 find_program(NOSE_EXECUTABLE NAMES nosetests)
 foreach(filename ${files})
@@ -128,7 +150,7 @@ foreach(filename ${files})
    if( ${NOSE_EXECUTABLE} )
      add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND ${NOSE_EXECUTABLE} ${filename} --process-timeout=5000 )
    else  () 
-     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${filename} )
+     add_test (NAME ${tname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
    endif () 
    set_tests_properties(${tname} PROPERTIES TIMEOUT 5000 ) 
 endforeach() 
@@ -137,7 +159,6 @@ list(SORT               allfiles)
 list(REMOVE_DUPLICATES  allfiles)
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/__init__\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/tests/.*\\.py$")
-## list(FILTER             allfiles EXCLUDE REGEX ".*\\/lzshelve\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/sp_.*\\.py$")
 list(FILTER             allfiles EXCLUDE REGEX ".*\\/.*#.*\\.py$")
 
@@ -155,7 +176,7 @@ foreach(filename ${allfiles})
     string(REPLACE "/" "_"       testname ${testname})
     string(CONCAT  testname ostap.runit_  ${testname})
 
-    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${filename} )
+    add_test (NAME ${testname} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND python ${OSTAP_TEST_PYTHON_WARNINGS} ${filename} )
 
     set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ) 
 
