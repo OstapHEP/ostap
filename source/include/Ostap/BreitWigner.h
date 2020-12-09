@@ -2299,10 +2299,12 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class GammaBW3 
-     *  Running width for 3-body decays 
-     * \f[ \Gamma(s) \propto  \frac{1}{s^{3/2}}
+     *  Running width/phase-space function 
+     *  for 3-body decays 
+     *  \f[ \Gamma(s) \propto \frac{1}{s}
      *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
      *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
+     *  @attention note the power of \f$s\f$ in denumerator! 
      */
     class GammaBW3
     {

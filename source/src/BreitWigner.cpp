@@ -2262,7 +2262,7 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
   return Ostap::Math::DalitzIntegrator::integrate_s1s2 
-    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / ( s * std::sqrt ( s ) ) ;
+    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / s  ;
 }
 // ============================================================================
 // constructor from (partial) width
