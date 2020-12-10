@@ -1635,8 +1635,8 @@ models.append ( BifurcatedStudentT_pdf )
 #
 #   Location & scale  parameters are the usual representation of the family of 
 #   distributions:
-#    - \f$\epsilon\f$ parameter control the skewness 
-#    - \f$\delta\f$   parameter control the kurtosis 
+#    - \f$\epsilon\f$ parameter controls the skewness 
+#    - \f$\delta\f$   parameter controls the kurtosis 
 #   Normal distribution reappears as \f$\epsilon=0\f$ and \f$\delta=1\f$ 
 #  The heavy tails correspond to \f$\delta<1\f$, 
 #  light tails correpond to \f$\delta>1\f$
@@ -1644,7 +1644,7 @@ models.append ( BifurcatedStudentT_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-02
 class SinhAsinh_pdf(MASS) :
-    """SinhAsing-function: 
+    """SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
     ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
     doi:10.1093/biomet/asp053
@@ -1751,7 +1751,7 @@ models.append ( SinhAsinh_pdf )
 #
 #  Note:
 #  Symmetric case of JonhsonSU distribution is 
-#  recovere by \f$\delta\rightarrow0\f$ for 
+#  recovered by \f$\delta\rightarrow0\f$ for 
 #  "sinh-asinh" distribution, see 
 #  Jones, M. C.; Pewsey, A. (2009). 
 #  "Sinh-arcsinh distributions". Biometrika 96 (4): 761. 

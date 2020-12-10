@@ -10,7 +10,7 @@
 #  - Bukin                               (exponential or gaussian tails)
 #  - symmetric double-sided Crystal Ball (power-law  tails)
 #  - symmetric Student-T                 (power-law  tails)
-#  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
 """Set of useful resolution models:
@@ -18,9 +18,11 @@
 - double Gaussian                     (gaussian   tails)
 - symmetric Apollonios                (exponenial tails)
 - Sech/hyperbolic  secant             (exponenial tails)-
-- Bukin                               (exponential or gaussian tails)
+- symmetric Bukin                     (exponential or gaussian tails)
 - Symmetric double-sided Crystal Ball (power-law  tails)
 - Student-T                           (power-law  tails)
+- symmetric Sinh-Asinh model          (tails can be heavy or light)
+- symmetric JohnsonSU  model          (tails can be heavy or light)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -34,7 +36,9 @@ __all__     = (
     'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
     'ResoStudentT'  , ## Student-T resolution model,
     'ResoSech'      , ## Sech/hyperbolic secant  resolution model
-    'ResoBukin'     , ## Bukin resolution model
+    'ResoBukin'     , ## symmetric Bukin resolution model
+    'ResoJohnsonSU' , ## symmetric Jonnson's SU resolution model 
+    'ResoSinhAsinh' , ## symmetric Sinh-Asinh resolution model 
     )
 # =============================================================================
 import ROOT
@@ -60,10 +64,6 @@ class ResoGauss(RESOLUTION) :
                    sigma        ,   ## the first sigma
                    fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## mean-value
-        
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )
         
         ## initialize the base
         super(ResoGauss,self).__init__( name  = name  ,
@@ -118,9 +118,6 @@ class ResoGauss2(RESOLUTION) :
                    fudge    = 1    ,   ## fudge-factor 
                    mean     = None ) : ## the mean value
         
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
         ## initialize the base 
         super(ResoGauss2,self). __init__ ( name  = name  ,
                                            xvar  = xvar  ,
@@ -209,10 +206,6 @@ class ResoApo2(RESOLUTION) :
                    fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## the mean value 
 
-        if mean is None :  mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
-            
         ##  initlialize the base 
         super(ResoApo2,self).__init__ ( name  = name  ,
                                         xvar  = xvar  ,
@@ -284,10 +277,6 @@ class ResoCB2(RESOLUTION) :
                    fudge = 1    ,   ## fudge-factor 
                    mean  = None ) : ## the mean value
 
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
-        
         ## initialize the base 
         super(ResoCB2,self).__init__ ( name  = name  ,
                                        xvar  = xvar  ,
@@ -376,10 +365,6 @@ class ResoStudentT(RESOLUTION) :
                    fudge = 1    , ## fudge parameter 
                    mean  = None ) :
         
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
-        
         ## initialize the base 
         super(ResoStudentT,self).__init__ ( name  = name  ,
                                             xvar  = xvar  ,
@@ -451,10 +436,6 @@ class ResoSech(RESOLUTION) :
                    fudge = 1    , ## fudge-factor 
                    mean  = None ) :
         
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )                 
-        
         ## initialize the base 
         super(ResoSech,self).__init__ ( name  = name  ,
                                         xvar  = xvar  ,
@@ -505,10 +486,6 @@ class ResoBukin (RESOLUTION) :
                    fudge = 1    , ## fudge-factor 
                    mean  = None ) :
         
-        if mean is None : mean = ROOT.RooConstVar(
-            'mean_%s'  % name ,
-            'mean(%s)' % name , 0 )
-        
         ## initialize the base 
         super(ResoBukin,self).__init__ ( name  = name  ,
                                          xvar  = xvar  ,
@@ -556,6 +533,223 @@ class ResoBukin (RESOLUTION) :
         """``rho''-parameter (tail) for Bukin function"""
         return self.__rho
 
+
+# =============================================================================
+## @class ResoJohnsonSU
+#
+#  Resolution model based on symmetric form of Johnson's SU distribution
+# 
+#  Johnson, N. L. (1949) 
+#  "Systems of frequency curves generated by methods of translation"
+#  Biometrika 36: 149–176 JSTOR 2332539
+#  @see https://en.wikipedia.org/wiki/Johnson_SU_distribution
+#
+#  When variable \f$x\f$ follows Johnson-SU distribution, 
+#  the variable 
+#  \f$ z = \gamma + \delta \sinh^{-1}\dfrac{ x - \xi}{\lambda} \f$
+#  follows normal distribtion with mean 0 and sigma 1.
+#
+#  @see Ostap::Math::JohnsonSU
+#  @see Ostap::Models::JohnsonSU
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2015-07-019
+class ResoJohnsonSU(RESOLUTION) :
+    """
+    Resolution model based on symmetric form of Johnson's SU distribution
+    
+    Johnson, N. L. (1949) 
+    Systems of frequency curves generated by methods of translation
+    Biometrika 36: 149–176 JSTOR 2332539
+    
+    https://en.wikipedia.org/wiki/Johnson_SU_distribution
+        
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   lambd     = None ,   ## related to sigma 
+                   delta     = 1    ,
+                   fudge     = 0    ,
+                   mean      = None ) :
+        
+        #
+        ## initialize the base
+        #
+        super ( ResoJohnsonSU, self ) .__init__ ( name        = name                 ,
+                                                  xvar        = xvar                 ,
+                                                  sigma       = lambd                ,
+                                                  mean        = mean                 ,
+                                                  fudge       = fudge                ,
+                                                  sigma_name  = 'lambda_%s'   % name ,
+                                                  sigma_title = '#lambda(%s)' % name )
+        self.__xi    = self.mean
+        self.__lambd = self.sigma
+        self.__gamma = ROOT.RooRealConstant.value ( 0 )
+        
+        self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
+    
+        self.__delta = self.make_var ( delta                 ,
+                                       'delta_%s'     % name ,
+                                       '#delta(%s)'   % name , delta ,
+                                       1 , 1.e-6 , 1000   )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.JohnsonSU (
+            "ResoJSU_"          + name ,
+            "ResoJohnsonSU(%s)" % name ,
+            self.xvar      ,
+            self.xi        ,
+            self.lambd     ,
+            self.delta     ,
+            self.gamma     )
+
+        ## save the configuration
+        self.config = {
+            'name'      : self.name    ,
+            'xvar'      : self.xvar    ,
+            'mean'      : self.mean    ,
+            'lambd'     : self.lambd   ,
+            'delta'     : self.delta   ,
+            }
+
+    @property
+    def delta ( self ) :
+        """``delta''-parameter for Johnson-SU function"""
+        return self.__delta
+    @delta.setter
+    def delta ( self, value ) :
+        value = float ( value )
+        assert   0 < value, "``delta''-parameter must be positive"
+        self.__delta.setVal ( value ) 
+
+    @property
+    def gamma ( self ) :
+        """``gamma''-parameter for Johnson-SU function"""
+        return self.__gamma
+        
+    @property
+    def xi ( self ) :
+        """``xi''-parameter (location) for Johnson-SU function (the   same as ``mean'')"""
+        return self.__xi
+    @xi.setter
+    def xi ( self, value ) :
+        value = float ( value )
+        self.__xi.setVal ( value ) 
+
+    @property
+    def lambd ( self ) :
+        """``lambda''-parameter (scale) for Johnson-SU function (the  same  as ``sigma'')"""
+        return self.__lambd
+    @lambd.setter
+    def lambd ( self, value ) :
+        value = float ( value )
+        assert   0 < value, "``lambda''-parameter must be positive"        
+        self.__lambd.setVal ( value ) 
+
+    
+# =============================================================================
+## @class ResoSinhAsinh
+#
+#  Resoltuion model based on symmetric form of "SinhAsinh" distribution
+# 
+#  @see Ostap::Math::SinhAsinh
+#  @see Ostap::Models::SinhAsinh
+#  Jones, M. C.; Pewsey, A. (2009). 
+#  "Sinh-arcsinh distributions". Biometrika 96 (4): 761. 
+#   doi:10.1093/biomet/asp053
+#   http://oro.open.ac.uk/22510
+#
+#   Location & scale  parameters are the usual representation of the family of 
+#   distributions:
+#    - \f$\epsilon\f$ parameter control the skewness 
+#    - \f$\delta\f$   parameter control the kurtosis 
+#   Normal distribution reappears as \f$\epsilon=0\f$ and \f$\delta=1\f$ 
+#  The heavy tails correspond to \f$\delta<1\f$, 
+#  light tails correpond to \f$\delta>1\f$
+#
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2020-12-10
+class ResoSinhAsinh(RESOLUTION) :
+    """ Resolution model based on symmetric form of `SinhAsinh`-function:
+    
+    see Jones, M. C.; Pewsey, A. (2009).
+    ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
+    doi:10.1093/biomet/asp053
+    http://oro.open.ac.uk/22510
+    
+    Normal distribution reappears as delta=1 
+    The heavy tails correspond to delta<1, light tails correpond to delta>1
+    
+    Parameters 
+    - mean     : location
+    - sigma    : scale 
+    - delta>0  : parameter to control the tails/kurtosis 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,
+                   delta     = 1    ,
+                   fudge     = 1    ,   ## fudge factor 
+                   mean      = None ) : ## mu 
+
+        ## initialize the base 
+        super(ResoSinhAsinh,self).__init__ ( name  = name  ,
+                                             xvar  = xvar  ,
+                                             sigma = sigma ,
+                                             mean  = mean  ,
+                                             fudge = fudge )
+        
+        ## parameter epsilon is  fixed to zero! 
+        self.__epsilon = ROOT.RooRealConstant.value ( 0 )
+        self.__delta   = self.make_var ( delta ,
+                                         'delta_%s'   % name ,
+                                         '#delta(%s)' % name , delta ,
+                                         1 , 1.e-6 , 1000   )
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.SinhAsinh (
+            "ResoSinhAsinhT_"   + name ,
+            "ResoSinhAsinh(%s)" % name ,
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr , ## ATTENTION! 
+            self.epsilon    ,
+            self.delta      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'delta'     : self.delta ,
+            'fudge'     : self.fudge ,
+            }
+
+    @property
+    def epsilon( self ) :
+        """``epsilon''-parameter for Sinh-Asinh function"""
+        return self.__epsilon
+    @property
+    def delta ( self ) :
+        """``delta-parameter'' for Sinh-Asinh function"""
+        return self.__delta
+    @delta.setter
+    def delta ( self, value ) :
+        value = float ( value )
+        assert 0  < value, "``delta''-parameter must be positive"         
+        self.__delta.setVal ( value ) 
+
+
+
+        
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -563,5 +757,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

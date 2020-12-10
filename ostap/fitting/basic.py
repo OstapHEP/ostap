@@ -2566,7 +2566,7 @@ class MASS(MASSMEAN) :
 class RESOLUTION(MASS) :
     """Helper base class  to parameterize the resolution
     - It allows setting of the ``mean'' to zero,
-    - It containg ``fudge-factor'' for the resolution parameter ``sigma''
+    - It contains ``fudge-factor'' for the resolution parameter ``sigma''
     - It simplify creation of the soft/gaussian constraint for the ``fudge-factor''    
     """
     ## constructor
@@ -2575,18 +2575,29 @@ class RESOLUTION(MASS) :
     #  @param sigma  sigma/resoltuion parameter 
     #  @param mean   "mean"-variable
     #  @param fudge  "fudge-factor" to be aplied to sigma
-    def __init__ ( self            ,
-                   name            ,
-                   xvar     = None ,
-                   sigma    = None , 
-                   mean     = None ,
-                   fudge    = 1.0  ) :
+    def __init__ ( self               ,
+                   name               ,
+                   xvar        = None ,
+                   sigma       = None , 
+                   mean        = None ,
+                   fudge       = 1.0  ,
+                   mean_name   = ''   ,
+                   mean_title  = ''   ,
+                   sigma_name  = ''   ,
+                   sigma_title = ''   ) :
+        
+        ## mean-value
+        if mean is None : mean = ROOT.RooRealConstant.value ( 0 ) 
         
         with CheckMean ( False ) :
-            super(RESOLUTION,self).__init__ ( name  = name  ,
-                                              xvar  = xvar  ,
-                                              sigma = sigma ,
-                                              mean  = mean  )
+            super(RESOLUTION,self).__init__ ( name        = name        ,
+                                              xvar        = xvar        ,
+                                              sigma       = sigma       ,
+                                              mean        = mean        ,
+                                              mean_name   = mean_name   ,
+                                              mean_title  = mean_title  ,
+                                              sigma_name  = sigma_name  ,
+                                              sigma_title = sigma_title )
             
         self.__fudge            = fudge
         
