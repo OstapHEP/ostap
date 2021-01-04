@@ -38,7 +38,8 @@ minuit.release ('p3')
   1. `Ostap::Math::GammaBW3`: use 1/s factor instead of 1/s^3/2. thanks to Misha Mikhasenko! 
   1. Add symmetic   Sinh-Asinh resolution  model `ResoSinhAsinh`
   1. Add symmetic Jonhson's SU resolution  model `ResoJohnsonSU`
-
+  1. fix for the new signature of `TDirectory::CurrentDirectory()` method 
+  
 ## Backward incompatible changes: 
 
 ## Bug fixes:

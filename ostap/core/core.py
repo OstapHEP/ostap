@@ -84,6 +84,7 @@ from   sys                  import version_info  as python_version
 from   ostap.math.ve        import VE
 from   ostap.stats.counters import SE , WSE 
 from   builtins             import range
+from   ostap.core.meta_info import root_info  
 # =============================================================================
 
 ## @var global ROOT/gROOT object 
@@ -120,28 +121,42 @@ class ROOTCWD(object) :
     """
     def __init__ ( self ) :
         self._dir = None
-        
+
+    def __del__ ( self ) :
+        del self._dir
+
     ## context manager ENTER 
     def __enter__ ( self ) :
         "Save current working directory"
-        self._dir = None 
+        self._dir = None
+
+        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
+            
         groot     = ROOT.ROOT.GetROOT ()
         if groot :
             cwd = groot.CurrentDirectory()
+            if root_info < ( 6, 23, 1 ) : pass
+            else                        : cwd = cwd.load() 
             if cwd : self._dir = cwd
-        return self 
+                           
+            ## self._dir = ROOT.TDirectory.TContext()
+            ## pass
         
+        return self
+
     ## context manager EXIT 
     def __exit__  ( self , *_ ) :
         "Make the previous directory current again"
 
+        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
         if self._dir :
-            
+
             odir = self._dir
+                
             self._dir = None
             
             fdir = odir.GetFile () if isinstance ( odir , ROOT.TDirectoryFile ) else None
-
+            
             if fdir and not fdir.IsOpen () :
                 
                 groot = ROOT.ROOT.GetROOT ()
@@ -149,7 +164,11 @@ class ROOTCWD(object) :
                 
             else :
                 odir.cd()
-        
+
+            del self._dir
+            
+        self._dir = None
+            
 # =============================================================================
 ## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

@@ -1405,6 +1405,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     if not silent : logger.info ( "Start to fill the dataset") 
     with rooSilent ( ROOT.RooFit.ERROR  , True ) :
         with rootError( ROOT.kWarning ) :
+
             ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
             varsete = ds.get()
 
