@@ -333,6 +333,18 @@ class Weight(object) :
             """
             return self.__skip 
 
+# =============================================================================
+## default function to make MC projection
+#  @param daatset dataset MC  dataset (typically TTree)
+#  @param histo   histogram template
+#  @param what    historgam varibales
+#  @param how     hisgoram template 
+def mc_data_projector  ( dataset , histo , what , how ) :
+    """Default function to make MC projection
+    """
+    
+    dataset.project ( histo , what , how )
+    return histo 
 
 # =============================================================================
 ## @class WeightingPlot
@@ -358,20 +370,21 @@ class WeightingPlot(object) :
     where to store the obtained weights
     
     - ``data'' : the ``data'' object, or  the ``target'' for the reweighting procedure
-    Typically it is a histotgram. But it could be any kind of callable 
+    Typically it is a histogram. But it could be any kind of callable 
     
     - ``mchisto'' : template/shape for the mc-historgam, to be used for reweighting.
     It is used as the  first argument of ``dataset.project'' method
     
     >>> dataset.project ( MCHISTO , what , how , ... )             
     """
-    def __init__ ( self            ,
-                   what            ,  
-                   how             ,
-                   address         ,
-                   data            ,
-                   mc_histo = None ,
-                   w        = 1.0  ) :
+    def __init__ ( self             ,
+                   what             ,  
+                   how              ,
+                   address          ,
+                   data             ,
+                   mc_histo  = None ,
+                   w         = 1.0  ,
+                   projector = None ) :
         """Helper class to manage/keep ``weighting-plot''
         
         - ``what'' : the variable/expression to be used for ``weighting-plot''
@@ -400,14 +413,20 @@ class WeightingPlot(object) :
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         
-        self.__what     = str(what)     if isinstance ( what , str ) else what 
-        self.__how      = str(how )     if isinstance ( how  , str ) else how 
-        self.__address  = str(address) 
-        self.__data     = data
-        self.__mc       = mc_histo      if mc_histo else data.clone()
+        self.__what      = str(what)     if isinstance ( what , str ) else what 
+        self.__how       = str(how )     if isinstance ( how  , str ) else how 
+        self.__address   = str(address) 
+        self.__data      = data
+        self.__mc        = mc_histo      if mc_histo else data.clone()
         assert isinstance ( self.__mc , ROOT.TH1 ), \
                "WPlot: invalid type of ``mchisto'' %s/%s"  % ( self.__mc , type ( self.__mc ) )
-        self.__w        = w
+        self.__w         = w
+
+        if not projector : projector = mc_data_projector
+            
+        self.__projector = projector
+
+        assert self.projector and callable ( self.projector ) ,"``Projector'' must be callable!"
         
     @property
     def  what ( self ) :
@@ -428,7 +447,7 @@ class WeightingPlot(object) :
         return self.__how 
     @property
     def  address ( self ) :
-        """``address'' : the addres in ``weighting-database''
+        """``address'' : the address in ``weighting-database''
         where to store the obtained weights
         """
         return self.__address
@@ -445,6 +464,13 @@ class WeightingPlot(object) :
         >>> dataset.project ( MCHISTO , what , how , ... )         
         """
         return self.__mc
+    @property
+    def projector ( self ) :
+        """``projector'' :  callable function to build MC distribution:
+        hmc = projector ( dataset , hmc ) 
+        """
+        return self.__projector
+    
     @property
     def w  ( self )   :
         """``w''  - relative weigtht (relative importance is this variable)"""
@@ -484,22 +510,23 @@ def makeWeights  ( dataset                  ,
     ## number of active plots for reweighting
     for wplot in plots  :
         
-        what    = wplot.what       ## variable/function to plot/compare 
-        how     = wplot.how        ## weight and/or additional cuts 
-        address = wplot.address    ## address in database 
-        hdata0  = wplot.data       ## original "DATA" object 
-        hmc0    = wplot.mc_histo   ## original "MC"   histogram 
-        ww      = wplot.w          ## relative weight 
+        what      = wplot.what       ## variable/function to plot/compare 
+        how       = wplot.how        ## weight and/or additional cuts 
+        address   = wplot.address    ## address in database 
+        hdata0    = wplot.data       ## original "DATA" object 
+        hmc0      = wplot.mc_histo   ## original "MC"   histogram 
+        ww        = wplot.w          ## relative weight
+        projector = wplot.projector  ## projector for MC data 
         #
-        # normailze the data
+        # normalize the data
         #
         hdata = hdata0
         if isinstance ( hdata , ROOT.TH1 ) :  hdata = hdata.density ()
-        
+
         # =====================================================================
         ## make a plot on (MC) data with the weight
         # =====================================================================
-        dataset.project ( hmc0 , what , how )
+        hmc0 = projector ( dataset , hmc0 , what , how )
         
         st   = hmc0.stat()
         mnmx = st.minmax()
