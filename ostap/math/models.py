@@ -1499,10 +1499,10 @@ def _random_generate_bernstein3D_ ( fun , num = 1 ) :
         x = _uniform_ ( xmn , xmx ) 
         y = _uniform_ ( ymn , ymx ) 
         z = _uniform_ ( zmn , zmx )
-        if v >= _uniform_ ( 0 , vmx ) :
+        if fun ( x , y, z ) >= _uniform_ ( 0 , vmx ) :
             i+= 1 
-            yield x,y,z
-
+            yield x , y , z
+            
 # =============================================================================
 ## Get random number from 2D bernstein-like distribuitions
 #  @code
@@ -1566,7 +1566,66 @@ for p in ( Ostap.Math.Positive3D    ,
     p.generate = _random_generate_bernstein3D_
     p.shoot    = _random_shoot_bernstein3D_
          
+# =============================================================================
+# 
+# =============================================================================
+## generate random numbers from single-mode distribution 
+#  @code
+#  >>> fun = ...
+#  >>> for x in fun.generate( 1000 ) : print x 
+#  @endcode
+def _random_generate_mode_ ( fun , num = 1 , vmax = None , mode = None ) :
+    """Generate random numbers from single-mode distribution 
+    >>> fun = ...
+    >>> for x in fun.generate( 1000 ) : print x 
+    """
+    xmn  = fun.xmin ()
+    xmx  = fun.xmax ()
 
+    if vmax is None or vmax <= 0 : 
+
+        if mode is None or not xmn <= mode <= xmx :
+            mode = fun.mode ()
+
+        vmax  = fun ( mode )
+
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        if fun ( x ) >= _uniform_ ( 0 , vmax ) :
+            i += 1 
+            yield x 
+
+# =============================================================================
+## Get random number from single-mode ditributions 
+#  @code
+#  >>> fun = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def _random_shoot_mode_ ( fun , vmax = None , mode  = None ) :
+    """Get random number from single-mode distribuitions
+    >>> fun = ...
+    >>> print fun.shoot()  
+    """
+    xmn  = fun.xmin ()
+    xmx  = fun.xmax ()
+
+    if vmax is None or vmax <= 0 :
+
+        if mode is None or not xmn <= mode <= xmx :
+            mode = fun.mode ()
+            
+        vmax = fun ( mode )
+        
+    while True : 
+        x = _uniform_ ( xmn , xmx ) 
+        if fun ( x ) >= _uniform_ (   0 , vmax ) : 
+            return x 
+
+
+for m in ( Ostap.Math.PhaseSpaceNL , ) :
+    m.generate = _random_generate_mode_
+    m.shoot    = _random_shoot_mode_
+    
 # =============================================================================
 ## add complex amplitudes 
 # =============================================================================

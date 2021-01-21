@@ -380,22 +380,22 @@ class CompressShelf(shelve.Shelf,object):
             if good ( k ) : yield k
 
     # =========================================================================
-    ## List the available keys (patterns included).
+    ##  Build the table of content(patterns included).
     #   Pattern matching is performed according to
     #  fnmatch/glob/shell rules [it is not regex!] 
     #  @code  
     #  db = ...
-    #  db.ls() ## all keys
-    #  db.ls ('*MC*')        
+    #  print ( db.table() ) 
+    #  print ( db.table ('*MC*') ) 
     #  @endcode 
-    def ls    ( self , pattern = '' , load = True ) :
-        """List the available keys (patterns included).
+    def table ( self , pattern = '' , load = True , prefix = '' ) :
+        """Build table of content (patterns included).
         Pattern matching is performed according to
         fnmatch/glob/shell rules [it is not regex!] 
 
         >>> db = ...
-        >>> db.ls() ## all keys
-        >>> db.ls ('*MC*')        
+        >>> print ( db.table () ) ## all keys
+        >>> print ( db.table ('*MC*') ) 
         
         """
         n  = os.path.basename ( self.dbname         )
@@ -431,7 +431,6 @@ class CompressShelf(shelve.Shelf,object):
         
         for k in keys :
 
-            
             ## kk = key.encode ( self.keyencoding ) ] )            
             ## ss = len ( self.dict [ k ] ) ##  compressed size 
             ss = len ( self.dict [ k.encode ( self.keyencoding ) ] )
@@ -473,12 +472,51 @@ class CompressShelf(shelve.Shelf,object):
         if maxlen + 3 <= len ( title ) :
             title = '<.>' + title [ -maxlen : ] 
 
-        table = T.table ( table , title = title , prefix = '# ' , alignment = 'llcc')
+        return T.table ( table , title = title , prefix = prefix , alignment = 'llcc')
+
+    # =========================================================================
+    ## List the available keys (patterns included).
+    #   Pattern matching is performed according to
+    #  fnmatch/glob/shell rules [it is not regex!] 
+    #  @code  
+    #  db = ...
+    #  db.ls() ## all keys
+    #  db.ls ('*MC*')        
+    #  @endcode 
+    def ls    ( self , pattern = '' , load = True , prefix = '# ' ) :
+        """List the available keys (patterns included).
+        Pattern matching is performed according to
+        fnmatch/glob/shell rules [it is not regex!] 
+
+        >>> db = ...
+        >>> db.ls() ## all keys
+        >>> db.ls ('*MC*')        
+        
+        """
+
+        n  = os.path.basename ( self.dbname         )
+        ap = os.path.abspath  ( self.dbname         ) 
+        ap = os.path.abspath  ( self.nominal_dbname ) 
+
+        self.sync() 
+        fs = self.disk_size()  
+            
+        if    fs <= 0            : size = "???"
+        elif  fs <  1024         : size = str ( fs ) 
+        elif  fs <  1024  * 1024 :
+            size = '%.2fkB' % ( float ( fs ) / 1024 )
+        elif  fs <  1024  * 1024 * 1024 :
+            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
+        else :
+            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+
+        t     = type( self ).__name__
+        tab   = self.table ( pattern = pattern , load = load , prefix = prefix )
+        
         ll    = getLogger ( n )
         line  = 'Database %s:%s|%s #keys: %d size: %s' % ( t , ap , self.dbtype , len ( self ) , size )
-        ll.info (  '%s\n%s' %  ( line , table ) )
-        
-        
+        ll.info (  '%s\n%s' %  ( line , tab ) )
+                
     # =========================================================================
     ## close and compress (if needed)
     def close ( self ) :

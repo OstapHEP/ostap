@@ -250,7 +250,7 @@ try :
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             result = integrate.quad ( func , xmin , xmax , **kwargs )
-            return VE( result[0] , result[1] * result[1] ) if err else result[0]
+            return VE ( result[0] , result[1] * result[1] ) if err else result[0]
         
 except ImportError :
     logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")

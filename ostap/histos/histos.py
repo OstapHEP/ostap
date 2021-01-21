@@ -182,7 +182,7 @@ def _h1_get_item_ ( h1 , ibin ) :
     nb = a.GetNbins ()
     #
     if     1 <=  ibin <= nb : pass
-    elif   1 <= -ibin <= nb : ibin += ( nb + 1 ) 
+    elif   1 <= -ibin <= nb : ibin += ( nb + 1 )
     else                    : raise IndexError 
     #
     val = h1.GetBinContent ( ibin ) 
@@ -5380,26 +5380,42 @@ _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
 
 # =============================================================================
 ## calculate bin-by-bin ``standardized moment''
+#  \f$ s_n = \frac{\mu_n}{\sigma^n} = \frac{\int (x-\mu)^n h(x) dx }{\sigma^n} \f$
 #  @see https://en.wikipedia.org/wiki/Standardized_moment
+#  for <code>exp_moment=True</code> it calculates
+#  \f$ \sign \mu_n \\frac{ \left| \mu_n \right|^{1/n} } {\sigma }\f$  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-09-04
-def _h1_std_moment_ ( h1 , order ) :
+def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
     """Get ``bin-by-bin'' ``standardized moment''
     >>> histo = ...
     >>> cmom  = histo.stdMoment ( 4 ) 
      - see https://en.wikipedia.org/wiki/Standardized_moment
+     For `exp_moment==True`, it calcualtes the value
+      sign(cmom)*(abs(cmom)**1.0/order)
+     
     """
     #
+
     if   1 == order : return VE ( 0 , 0 ) 
     elif 2 == order : return VE ( 1 , 1 )
     #
-    mom   = h1.centralMoment ( order )
-    
+    mom   = h1.centralMoment ( order )    
     sigma = math.sqrt ( h1.rms().value() )
     
-    return mom / ( sigma ** order ) 
+    if exp_moment :
+        
+        mm = abs ( mom ) ** ( 1. / order )
+        if mom.value() < 0 : mm *= -1 
+        moment = mm / sigma
 
+    else :
 
+        moment = mom / ( sigma ** order ) 
+        
+
+    return moment 
+    
 # =============================================================================
 ## get skewness
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5867,13 +5883,14 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 ## draw the line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _level_ ( self , level = 0 , linestyle = 2 ) :
+def _level_ ( self , level = 0 , linestyle = 2 , linecolor = 1 ) :
     """Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
     """
     mn,mx = self.xminmax() 
     line = ROOT.TLine ( mn , level , mx , level )
     line.SetLineStyle ( linestyle )
+    line.SetLineColor ( linecolor )
     self._line_ = line
     self._line_.Draw() 
     return self._line_
@@ -6959,6 +6976,7 @@ def _h_same_dims_ ( histo , another ) :
 
 ROOT.TH1. same_dims = _h_same_dims_
 
+
 # =============================================================================
 ## same binning?
 def _h_same_bins_ ( histo , another ) :
@@ -6997,7 +7015,50 @@ def _h_same_bins_ ( histo , another ) :
 
 ROOT.TH1. same_bins = _h_same_bins_
     
-#
+# =============================================================================
+## histogram dimension
+#  Get dimension of the histogram
+#  @code
+#  histo = ...
+#  d     =  histo.dim() 
+#  @endcode
+def _h_dim_ ( self  ) :
+    """Get dimension of the histogram
+    >>> histo = ...
+    >>> d     =  histo.dim() 
+    """
+    if   isinstance ( self , ROOT.TH3 ) : return 3
+    elif isinstance ( self , ROOT.TH2 ) : return 2
+    
+    return 1 
+
+ROOT.TH1 .dim = _h_dim_
+
+# =============================================================================
+## Get tuple of bins-dimensions 
+#  @code
+#  histo = ...
+#  nb    = histo.n_bins () 
+#  @endcode
+def _h_n_bins_ ( self ) :
+    """Get tuple of bins-dimensions 
+    >>> histo = ...
+    >>> nb    = histo.n_bins () 
+    """
+    if   isinstance ( self , ROOT.TH3 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        az = self.SetZaxis()
+        return ax.GetNbins() , ay.GetNbins(), az.xGetNbins() 
+    elif isinstance ( self , ROOT.TH2 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        return ax.GetNbins() , ay.GetNbins()
+    
+    ax = self.SetXaxis()
+    return ax.GetNbins() ,
+
+ROOT.TH1 .n_bins = _h_n_bins_
 
 # =============================================================================
 ## transfrom the x-axis for the 1D-historgam
@@ -7161,12 +7222,17 @@ ROOT.TH1.__hash__ = _h_hash_
 # =============================================================================
 
 # =============================================================================
-## represent historgam as ``density''
+## represent histogram as ``density''
 #  - the function with unit integral over the range
 def _h_density_ ( h1 ) :
-    """Represent historgam as  ``density''
+    """Represent histogram as  ``density''
     - the function with unit integral over the range
     """
+    ii = h1.integrate().value()
+    if isequal ( ii , 1.0 ) :
+        ## it is already density!, return the clone 
+        return h1.clone()
+    
     ## take into account bin width
     h  = h1.rescale_bins(1)
     ##  rescale to unit integral in range
@@ -7812,6 +7878,9 @@ _new_methods_   = (
     ROOT.TH1  . useLL        ,
     ROOT.TH1  . allInts      ,
     ROOT.TH1  . natural      ,
+    #
+    ROOT.TH1  . dim          ,
+    ROOT.TH1  . n_bins       ,
     #
     ROOT.TH1.uniform_bins    ,
     ROOT.TH1.uniform         ,

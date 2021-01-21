@@ -52,16 +52,22 @@ if not os.path.exists( testdata ) :
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D histograms
-    ix , iy  = 45 , 25
-    hdata  = h2_axes ( [ 20.0/ix*i for i in range ( ix + 1 ) ] ,
-                       [ 15.0/iy*i for i in range ( iy + 1 ) ] )
+    xmax     = 20
+    ymax     = 15 
+    ix , iy  = 30 , 30
+    hdata    = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
+                         [ ymax/iy*i for i in range ( iy + 1 ) ] )
     # 2) non-equal binning 1D histograms for x-component    
-    hxdata = h1_axis ( [    i      for i in range ( 5  ) ] +
-                       [  5+i*0.2  for i in range ( 50 ) ] +
-                       [ 15+i      for i in range ( 6  ) ] )
+    hxdata   = h1_axis ( [    i      for i in range ( 5  ) ] +
+                         [  5+i*0.2  for i in range ( 50 ) ] +
+                         [ 15+i      for i in range ( 6  ) ] )
     # 2) equal binning 1D histograms for y-component    
-    hydata = h1_axis ( [ i*0.5     for i in range ( 31 ) ] )
+    hydata   = h1_axis ( [ i*0.5     for i in range ( 31 ) ] )
 
+    assert hdata .xmax() == xmax , 'XMAX is invalid!'
+    assert hdata .ymax() == ymax , 'YMAX is invalid!'
+    assert hxdata.xmax() == xmax , 'XMAX is invalid!'
+    assert hydata.xmax() == ymax , 'XMAX is invalid!'
 
     with ROOT.TFile.Open ( testdata ,'recreate') as mc_file:
         mc_file.cd() 
@@ -76,20 +82,19 @@ if not os.path.exists( testdata ) :
         datatree.Branch ( 'y' , yvar , 'y/F' )
     
         N1 = 1000000
-        for i in range ( 0, N1 ) :
-            
-            v1 = random.gauss ( 0 , 3 )
-            v2 = random.gauss ( 0 , 2 )
-            
-            x  =  4 + v1 + v2   
-            y  = 12      - v2
-            
-            while 20 < x : x -= 20 
-            while 15 < y : y -= 15
 
-            while  0 > x : x += 20
-            while  0 > y : y += 15
-            
+        for i in  range ( N1 ) :
+
+            x , y = -1, -1
+
+            while not 0 <= x < xmax or not 0 <= y < ymax :
+                
+                v1 = random.gauss ( 0 , 3 )
+                v2 = random.gauss ( 0 , 2 )
+                
+                x  =  5 + v1 + v2   
+                y  = 12 + v1 - v2
+                
             hdata .Fill ( x , y )
             hxdata.Fill ( x )
             hydata.Fill ( y )
@@ -98,35 +103,56 @@ if not os.path.exists( testdata ) :
             yvar [ 0 ] = y
             
             datatree.Fill()
+
             
-           
-        for i in range ( 0 , N1 ) :
-            
-            v1 = random.gauss ( 0 , 3 )
-            v2 = random.gauss ( 0 , 2 )
-            
-            x  = 14 + v1 + v2   
-            y  =  3      + v2
-            
-            while 20 < x : x -= 20 
-            while 15 < y : y -= 15
-            
-            while  0 > x : x += 20
-            while  0 > y : y += 15
-            
+        for i in  range ( N1 ) :
+
+            x , y = -1 , -1
+
+            while not 0 <= x < xmax or not 0 <= y < ymax :
+                
+                v1 = random.gauss ( 0 , 3 )
+                v2 = random.gauss ( 0 , 2 )
+
+                x  = 15 + v1 
+                y  =  4 + v2    
+                
             hdata .Fill ( x , y )
             hxdata.Fill ( x )
             hydata.Fill ( y )
-            
+ 
             xvar [ 0 ] = x 
             yvar [ 0 ] = y
             
             datatree.Fill()
+
             
-        for i in range ( 0 , 2 * N1 ) :
+        for i in  range ( N1 ) :
+
+            x , y = -1 , -1
+
+            while not 0 <= x < xmax or not 0 <= y < ymax :
+                
+                v1 = random.gauss ( 0 , 3 )
+                v2 = random.gauss ( 0 , 2 )
+
+                x  = 15 + v1 - v2  
+                y  = 12 + v1 + v2     
+                
+            hdata .Fill ( x , y )
+            hxdata.Fill ( x )
+            hydata.Fill ( y )
+ 
+            xvar [ 0 ] = x 
+            yvar [ 0 ] = y
             
-            x = random.uniform ( 0 , 20 ) 
-            y = random.uniform ( 0 , 15 )
+            datatree.Fill()
+
+
+        for i in range ( 0 ,  4 * N1 ) :
+            
+            x = random.uniform ( 0 , xmax ) 
+            y = random.uniform ( 0 , ymax )
             
             hdata .Fill ( x , y )
             hxdata.Fill ( x )
@@ -153,11 +179,11 @@ if not os.path.exists( testdata ) :
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
 
-        N2 = 200000
-        for i in  range ( N2 ) :
+        N2 = 100000
+        for i in  range ( 2 * N2 ) :
 
-            xv = random.uniform ( 0 , 20 ) 
-            yv = random.uniform ( 0 , 15 ) 
+            xv = random.uniform ( 0 , xmax ) 
+            yv = random.uniform ( 0 , ymax ) 
 
             xvar [ 0 ] = xv 
             yvar [ 0 ] = yv
@@ -167,20 +193,22 @@ if not os.path.exists( testdata ) :
         fx = lambda x : ( x/10.0-1 ) ** 2
         fy = lambda y : ( y/ 7.5-1 ) ** 2
         
+
         for i in  range ( N2 ) :
             
             while True : 
-                xv = random.uniform ( 0 , 20 )
+                xv = random.uniform ( 0 , xmax )
                 if random.uniform   ( 0 ,  1 ) < fx ( xv ) : break
                 
             while True : 
-                yv = random.uniform ( 0 , 15 )
+                yv = random.uniform ( 0 , ymax )
                 if random.uniform   ( 0 ,  1 ) < fy ( yv ) : break 
                 
             xvar [ 0 ] = xv 
             yvar [ 0 ] = yv
             
             mctree.Fill()
+
             
         mctree.Write()
         mc_file.ls()
@@ -201,15 +229,21 @@ datastat = datatree.statCov('x','y')
 ## prebook MC histograms
 # =============================================================================
 ix , iy  = 45 , 25  # #DATA
-ix , iy  = 60 , 50 
-## ix , iy  = 35 , 22  
+ix , iy  = 30 , 30 
+## ix , iy  = 35 , 22
 ## ix , iy  = 60 , 40
 hmc  = h2_axes ( [ 20.0/ix*i for i in range ( ix + 1 ) ] ,
                  [ 15.0/iy*i for i in range ( iy + 1 ) ] )
+## hmc = hdata.clone()
 
-ix , iy  = 60 , 36 
+ix , iy  = 65 , 60 
 hmcx = h1_axis ( [ 20.0/ix*i for i in range ( ix + 1 ) ] )
 hmcy = h1_axis ( [ 15.0/iy*i for i in range ( iy + 1 ) ] )
+
+assert hmc .xmax() == xmax , 'XMAX is invalid!'
+assert hmc .ymax() == ymax , 'YMAX is invalid!'
+assert hmcx.xmax() == xmax , 'XMAX is invalid!'
+assert hmcy.xmax() == ymax , 'XMAX is invalid!'
 
 ## prepare re-weighting machinery 
 maxIter = 25
@@ -252,9 +286,11 @@ mcds_ = selector.data             ## dataset
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
 
-    logger.info ( allright ( 'Reweighting iteration %d ' % iter ) ) 
+    tag = 'Reweighting iteration #%d' % iter
+    logger.info ( allright ( tag ) ) 
+    
 
-    with timing ( 'Prepare MC-dataset:' , logger = logger ) : 
+    with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 0) The weighter object
         weighter = Weight ( dbname , weightings )
@@ -263,84 +299,92 @@ for iter in range ( 1 , maxIter + 1 ) :
         ## 1a) create new "weighted" mcdataset
         mcds=mcds_.Clone()
 
-    with timing ( 'Add weight to MC-dataset' , logger = logger ) :
+    with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 
         mcds.add_reweighting ( weighter ,  name = 'weight' ) 
-        
-        logger.info ('MCDATA:\n%s' %  mcds )
+        if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
     
     # =========================================================================
     ## 2) update weights
-    plots = [ WeightingPlot ( 'y:x' , 'weight' , '2D-reweight' , hdata  , hmc  ) ]
-    if 2 < iter: 
-        plots  = [
-            WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx        ) ,  
-            WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy        ) , 
-            WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  , 0.99 ) , 
-            ]
-
-    with timing ( 'Make one reweighting iteration:' , logger = logger ) : 
+    plots  = [
+        WeightingPlot ( 'x'     , 'weight' , 'x-reweight'  , hxdata , hmcx ) ,  
+        WeightingPlot ( 'y'     , 'weight' , 'y-reweight'  , hydata , hmcy ) , 
+        WeightingPlot ( 'y:x'   , 'weight' , '2D-reweight' , hdata  , hmc  ) , 
+        ]
+    
+    if    iter <=  3 : power = 0.75
+    elif  iter <= 10 : power = lambda nactive : 1.5 / nactive if 1 < nactive else 0.90
+    elif  iter <= 15 : power = lambda nactive : 1.3 / nactive if 1 < nactive else 0.90 
+    else             : power = lambda nactive : 1.1 / nactive if 1 < nactive else 0.90 
+    
+    with timing ( tag + ': make actual reweighting:' , logger = logger ) :
+        
         # =========================================================================
         ## 2a) the most important line: perform single iteration step  
-        more = makeWeights (
-            mcds                                   , ## what to be reweighted
-            plots                                  , ## reweighting plots/setup
-            dbname                                 , ## DBASE with reweigting constant 
-            delta  = 0.04                          , ## stopping criteria
-            minmax = 0.08                          , ## stopping criteria  
-            power = 2 if 1 != len ( plots ) else 1 , ## tune: effective power
-            tag = "Reweight/%d" % iter             ) ## tag for printout
+        active = makeWeights (
+            mcds               , ## what to be reweighted
+            plots              , ## reweighting plots/setup
+            dbname             , ## DBASE with reweigting constant 
+            delta      = 0.01  , ## stopping criteria
+            minmax     = 0.05  , ## stopping criteria  
+            power      = power , ## tune: effective power
+            make_plots = False , 
+            tag        = tag   ) ## tag for printout
         
-    with timing ( 'Project weighted MC-dataset:' , logger = logger ) : 
+    with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
         # =========================================================================
         ## 3) make MC-histograms  
         mcds .project  ( hmcx , 'x'   , 'weight'  )
         mcds .project  ( hmcy , 'y'   , 'weight'  )
         mcds .project  ( hmc  , 'y:x' , 'weight'  )
 
-    with timing ( 'Compare DATA and MC distributions:' , logger = logger ) :  
+
+    rows = [] 
+    with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :
+        
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
-        logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
+        logger.info    ( tag + ': compare DATA and MC for iteration #%d' % iter )
 
-        hh = 'Iteration#%d: ' % iter 
+        
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis&moments
-        logger.info ( hh + 'DATA(x)  %% MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ') ) 
-        logger.info ( hh + 'DATA(y)  %% MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ') ) 
-        logger.info ( hh + 'DATA(xy) %% MC(xy) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ') ) 
+        logger.info ( tag + ': DATA(x)  vs MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
+
+        logger.info ( tag + ': DATA(y)  vs MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )
         
-        ## 4b) calculate the ``distances''
-        logger.info ( hh + "DATA(x)  - MC(x)  ``distance''         %s" % hxdata.cmp_dist ( hmcx , density = True ) )
-        logger.info ( hh + "DATA(y)  - MC(y)  ``distance''         %s" % hydata.cmp_dist ( hmcy , density = True ) )
+        logger.info ( tag + ': DATA(xy) vs MC(xy) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ' , density = True ) )
         
-        ## 4c) calculate the ``orthogonality''
-        logger.info ( hh + "DATA(x)  - MC(x)  ``orthogonality''    %s" % hxdata.cmp_cos  ( hmcx , density = True ) )
-        logger.info ( hh + "DATA(y)  - MC(y)  ``orthogonality''    %s" % hydata.cmp_cos  ( hmcy , density = True ) )
+        
+        title = tag + ': DATA(x) vs MC(x) difference'
+        logger.info ( '%s:\n%s' % ( title , hxdata.cmp_diff_prnt ( hmcx , density = True , title = title , prefix = '# ' ) ) )
+        
+        title = tag + ': DATA(y) vs MC(y) difference'
+        logger.info ( '%s:\n%s' % ( title , hydata.cmp_diff_prnt ( hmcy , density = True , title = title , prefix = '# ' ) ) )
         
         ## 4d) get min/max difference between data and MC 
         mn , mx = hxdata.cmp_minmax ( hmcx   , diff = lambda a,b : a/b , density = True )
-        logger.info ( hh + "DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
+        logger.info ( tag + ": DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
             (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) )
         mn , mx = hydata.cmp_minmax ( hmcy   , diff = lambda a,b : a/b , density = True )
-        logger.info ( hh + "DATA(y)  / MC(y)  ``min/max-distance'' (%s)/(%s)[%%] at ymin/ymax=%.1f/%.1f" % (
+        logger.info ( tag + ": DATA(y)  / MC(y)  ``min/max-distance'' (%s)/(%s)[%%] at ymin/ymax=%.1f/%.1f" % (
             (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) ) 
         mn , mx = hdata .cmp_minmax ( hmc   , diff = lambda a,b : a/b  , density = True )
-        logger.info ( hh + "DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
+        logger.info ( tag + ": DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
             (100*mn[2]-100).toString ( '%+.1f+-%.1f' ) ,
             (100*mx[2]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mn[1] , mx[0]  , mx[1] ) )
 
         h1 = hdata.density()
         h2 = hmc  .density()
         
-        logger.info  ('MIN DATA/MC : %s,%s' %( h1 ( mn [0] , mn [1] ), h2 ( mn [0] , mn[1] )))
-        logger.info  ('MAX DATA/MC : %s,%s' % (h1 ( mx [0] , mx [1] ), h2 ( mx [0] , mx[1] )))
+        logger.info  ( tag + ': MIN DATA/MC : %s,%s' % ( h1 ( mn [0] , mn [1] ) , h2 ( mn [0] , mn[1] ) ) )
+        logger.info  ( tag + ': MAX DATA/MC : %s,%s' % ( h1 ( mx [0] , mx [1] ) , h2 ( mx [0] , mx[1] ) ) )
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')
-        logger.info  ( hh + 'x/y covariance DATA (unbinned):\n# %s' % ( str( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
-        logger.info  ( hh + 'x/y covariance MC   (unbinned):\n# %s' % ( str(   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str(   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
         
     # =========================================================================
     ## prepare the plot of weighted MC for the given iteration
@@ -367,16 +411,15 @@ for iter in range ( 1 , maxIter + 1 ) :
     mcx_density  .draw ('e1 same')
     datay_density.draw ('e1 same')
     mcy_density  .draw ('e1 same')
-    time.sleep ( 5 )
+    time.sleep ( 2 )
 
-    if not more and iter > 6 : 
+    if not active and iter > 6 : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         break
     
     mcds.clear()
     del mcds
     
-
 else :
 
     logger.error ( "No convergency!" )
@@ -386,11 +429,47 @@ del selector
 logger.info ('MCSTAT:\nx=%s\ny=%s\ncov2:\n%s'   %mcstat  [:3] ) 
 logger.info ('DATASTAT:\nx=%s\ny=%s\ncov2:\n%s' %datastat[:3] ) 
 
+with ROOT.TFile.open ( testdata , 'r' ) as dbroot : 
+    logger.info ( 'Test data is picked from DBASE "%s" for reweighting' % testdata )   
+    dbroot.ls()
+    mctree   = dbroot [ tag_mc      ]    
+    ## 0) The weighter object
+    weighter = Weight ( dbname , weightings )
+    mctree.add_reweighting ( weighter ,  name = 'weight' )
+
+    
+dbroot = ROOT.TFile.open ( testdata , 'r' )
+logger.info ( 'Reweighted data is fetched from DBASE "%s"' % testdata )   
+mctree = dbroot [ tag_mc      ]
+logger.info ('reweighted MCDATA \n%s:' % mctree.table() ) 
+
 datax_density.draw ('e1')
 mcx_density  .draw ('e1 same')
 datay_density.draw ('e1 same')
 mcy_density  .draw ('e1 same')
-time.sleep(10)
+
+time.sleep(2)
+
+ix, iy =       50, 50 
+hh1 = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
+                [ ymax/iy*i for i in range ( iy + 1 ) ] )
+
+mctree.project ( hh1 , 'y : x'           )
+hh1.SetMinimum(0)
+logger.info ( 'MC BEFORE reweighting' )
+hh1.draw ('colz')
+
+time.sleep(2)
+
+hh2 = hh1.clone()
+mctree.project ( hh2 , 'y : x' , 'weight')
+hh2.SetMinimum(0)
+logger.info ( 'MC AFTER  reweighting' )
+hh2.draw ('colz')
+
+time.sleep(2)
+
+
 
 # =============================================================================
 ##                                                                      The END 

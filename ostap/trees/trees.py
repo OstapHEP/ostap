@@ -1728,7 +1728,7 @@ def add_reweighting ( tree , weighter , name = 'weight' ) :
     ## create the weigthting function 
     wfun = W.W2Tree ( weighter )
     
-    return data.add_new_branch (  name , wfun ) 
+    return tree.add_new_branch (  name , wfun ) 
 
 ROOT.TTree.add_reweighting = add_reweighting
     

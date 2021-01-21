@@ -15,7 +15,7 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = () 
 # =============================================================================
-import ROOT             ## attention here!!
+import ROOT, math 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -25,7 +25,7 @@ else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
 # =============================================================================
-from   ostap.core.core       import hID,VE 
+from   ostap.core.core        import hID , VE 
 import ostap.histos.histos 
 import ostap.histos.param
 import ostap.fitting.param 
@@ -76,8 +76,8 @@ def _h1_cmp_fit_ ( h1              ,
     >>> if r : print r.Prob()    
     """    
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_fit_ ( h1_ , h2_ ,  density = False , opts = opts )
         del h1_
         del h2_
@@ -102,19 +102,18 @@ ROOT.TH1F.cmp_fit = _h1_cmp_fit_
 def _h1_cmp_pdf_ ( h1               ,
                    h2               ,
                    density  = False , 
-                   draw     = True  ,
+                   draw     = False ,
                    silent   = True  ) :
     """Compare histograms by refit of the first with functions,
     extracted from the second one
 
-    >>> h1 = ... ## the first histo
-    >>> h2 = ... ## the second histo
-    >>> r  = h1.cmp_fit ( h2 )
-    >>> if r : print r.Prob()    
+    >>> h1      = ... ## the first histo
+    >>> h2      = ... ## the second histo
+    >>> r, chi2 = h1.cmp_pdf ( h2 )
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_pdf_ ( h1_ , h2_ , density = False ,draw =  draw , silent = silent )
         del h1_
         del h2_
@@ -147,8 +146,8 @@ def _h1_cmp_chi2_ ( h1              ,
     >>> chi2ndf,prob  = h1.cmp_chi2 ( h2 )    
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_chi2_ ( h1_ , h2_ , density = False )
         del h1_
         del h2_
@@ -167,13 +166,13 @@ def _h1_cmp_chi2_ ( h1              ,
         ndf  += 1 
 
     c2ndf = c2/ndf 
-    return c2ndf, ROOT.TMath.Prob( c2 , ndf ) 
+    return c2ndf, ROOT.TMath.Prob ( c2 , ndf ) 
 
 ROOT.TH1D.cmp_chi2 = _h1_cmp_chi2_
 ROOT.TH1F.cmp_chi2 = _h1_cmp_chi2_ 
 
 # =============================================================================
-## Calculate chi2 for historgam and ``function''
+## Calculate chi2 for histogram and ``function''
 def _h1_chi2_cmp_ ( h1                                    ,
                     func                                  ,
                     integral = False                      ,
@@ -187,7 +186,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
     c2  = 0
     ndf = 0
 
-    _func_  = lambda x,xl,xr : func(x)
+    _func_  = lambda  x , xl , xr : func ( x )
     if   integral and hasattr ( func , 'integral' ) :
         _func_  = lambda x,xl,xr : func.integral(xl,xr)/(xr-xl) 
     elif integral and hasattr ( func , 'Integral' ) :  
@@ -195,13 +194,12 @@ def _h1_chi2_cmp_ ( h1                                    ,
     elif integral :
         ## use numerical integration 
         from ostap.math.intergal import integral as _integral_
-        _func_  = lambda x,xl,xr : _integral_ ( func , xl , xr )/(xr-xl)
+        _func_  = lambda x , xl , xr : _integral_ ( func , xl , xr ) / ( xr - xl )
         
     for entry in h1.items() :
         
         x    = entry[1]
         y1   = entry[2]
-
         
         xv   = x.value()
         xe   = x.error()
@@ -232,12 +230,12 @@ def _h1_cmp_costheta_ ( h1              ,
     
     >>> h1 = ... ## the first histo
     >>> h2 = ... ## the second histo
-    >>> cos_theta  = h1.cmp_costheta ( h2 )
+    >>> cos_theta  = h1.cmp_cos ( h2 )
     
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_costheta_ ( h1_ , h2_ , density  = False )
         del h1_
         del h2_
@@ -249,9 +247,9 @@ def _h1_cmp_costheta_ ( h1              ,
     lims = h1.xminmax()
     
     from ostap.math.integral import integral as _integral_
-    vr1   = _integral_ ( lambda x : f1( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
-    vr2   = _integral_ ( lambda x : f2( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
-    vr12  = _integral_ ( lambda x : f1( x )*f2(x) , lims[0] , lims[1] , limit = 200 , err = True )
+    vr1   = _integral_ ( lambda x : f1( x )**2    , lims[0] , lims[1] , limit = 200 , err = False )
+    vr2   = _integral_ ( lambda x : f2( x )**2    , lims[0] , lims[1] , limit = 200 , err = False )
+    vr12  = _integral_ ( lambda x : f1( x )*f2(x) , lims[0] , lims[1] , limit = 200 , err = False )
 
     return vr12 / ( vr1 * vr2 ) ** 0.5 
 
@@ -259,9 +257,51 @@ ROOT.TH1D.cmp_cos = _h1_cmp_costheta_
 ROOT.TH1F.cmp_cos = _h1_cmp_costheta_ 
 
 # =============================================================================
-## calculate the norm of difference of scaled histograms/functions 
-#  \f$ d = \left| f_1^{*} - f_2^{*}\right| \f$,
-#  where \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$ 
+## compare the 1D-historgams (as functions)
+#  calculate "discrete"
+# \f$cos \theta = \frac{ f_1 \cdot f_2 } { \left|f_1\right|\left|f_2\right| }\f$
+def _h1_cmp_dcostheta_ ( h1              ,
+                        h2              ,
+                        density = False ) :  
+    """Compare the 1D-historgams (as functions)
+    Calculate scalar product and get ``the angle'' from it
+    
+    >>> h1 = ... ## the first histo
+    >>> h2 = ... ## the second histo
+    >>> cos_theta  = h1.cmp_dcos ( h2 )
+    
+    """
+    if density : 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
+        cmp = _h1_cmp_dcostheta_ ( h1_ , h2_ , density  = False )
+        del h1_
+        del h2_
+        return cmp
+
+    r1 , r2 , r12 = 0.0 , 0.0 , VE() 
+    for i ,  x , y1  in h1.items () :
+        xv   = x.value ()
+        xe   = x.error () 
+        y2   = VE ( h2 ( xv ) )
+        r1  += 2 * xe * ( y1.value () ** 2 )
+        r2  += 2 * xe * ( y2.value () ** 2 ) 
+        r12 += 2 * xe * ( y1 * y2 ) 
+
+    return r12 / ( r1 * r2 ) ** 0.5 
+
+ROOT.TH1D.cmp_dcos = _h1_cmp_dcostheta_
+ROOT.TH1F.cmp_dcos = _h1_cmp_dcostheta_ 
+
+
+# =============================================================================
+## calculate the "distance" for two scaled histograms or function-like objects
+# Distance is defined as  
+#  \f$ d = \left| f_1^{*} - f_2^{*} \right|^{1/2} \f$,
+#  where:
+#  - \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$
+#  -  and the norm is   defined as
+#   \f$ |left| f(x) \right| \ equiv = \frac{1}{b-a}\int^{b}_{a}  f^2 ( s ) dx \f$ 
 def _h1_cmp_dist_ ( h1              ,
                     h2              ,
                     density = False ) : 
@@ -273,41 +313,110 @@ def _h1_cmp_dist_ ( h1              ,
     >>> diff = h1.cmp_dist ( h2 )
     
     """
-    assert isinstance ( h1 , ROOT.TH1 ) and not isinstance ( h1 , ROOT.TH2 ) , \
+    assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
            "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
-    assert isinstance ( h2 , ROOT.TH1 ) and not isinstance ( h2 , ROOT.TH2 ) , \
-           "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+    
+    if isinstance ( h2 , ROOT.TH1 ) :
+        assert 1 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
     
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_dist_ ( h1_ , h2_ , density = False )
         del h1_
         del h2_
         return cmp
     
-    f1 = h1.asFunc   ()
-    f2 = h2.asFunc   ()
+    f1   = h1.asFunc  ()
+    f2   = h2.asFunc  () if isinstance ( h2 , ROOT.TH1 ) else h2 
 
-    lims = h1.xminmax()
+    lims = h1.xminmax ()
     
+    volume = lims [ 1 ] - lims [ 0 ]
+
     from ostap.math.integral import integral as _integral_
-    r1   = _integral_ ( lambda x : f1 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
-    r2   = _integral_ ( lambda x : f2 ( x )**2    , lims[0] , lims[1] , limit = 200 , err = True )
+    
+    r1 = _integral_ ( lambda x : f1 ( x ) ** 2 , lims [ 0 ] , lims [ 1 ] , limit = 300 , err = False ) / volume 
+    r2 = _integral_ ( lambda x : f2 ( x ) ** 2 , lims [ 0 ] , lims [ 1 ] , limit = 300 , err = False ) / volume 
     
     import math 
     
-    sf1  = 1.0 / math.sqrt ( r1.value() ) 
-    sf2  = 1.0 / math.sqrt ( r2.value() ) 
-    
-    d12  = _integral_ ( lambda x : (sf1*f1(x)-sf2*f2(x))**2 , lims[0] , lims[1] , limit = 200 , err = True )
+    sf1  = 1.0 / r1 ** 0.5 
+    sf2  = 1.0 / r2 ** 0.5 
 
-    volume =  ( lims[1] - lims[0] )
+    dfn  = lambda x : ( sf1 * f1 ( x ) - sf2 * f2 ( x ) ) ** 2 
+    d12  = _integral_ ( dfn , lims [ 0 ] , lims [ 1 ] , limit = 300 , err = False ) / volume 
     
-    return d12 / volume
+    return d12 ** 0.5 
 
 ROOT.TH1D.cmp_dist = _h1_cmp_dist_
 ROOT.TH1F.cmp_dist = _h1_cmp_dist_ 
+
+# =============================================================================
+## calculate the "discrete distance" for two scaled histograms or function-like objects
+# Distance is defined as  
+#  \f$ d = \left| f_1^{*} - f_2^{*} \right|^{1/2} \f$,
+#  where:
+#  - \f$ f^* \f$-are scaled functions, such \f$ \left| f^*\right| = 1 \f$
+#  -  and the norm is   defined as
+#   \f$ |left| f(x) \right| \ equiv = \frac{1}{b-a}\int^{b}_{a}  f^2 ( s ) dx \f$ 
+def _h1_cmp_ddist_ ( h1              ,
+                     h2              ,
+                     density = False ) : 
+    """Calculate the norm of difference of scaled histograms/functions 
+    |f1-f2|, such |f1|=1 and |f2|=1
+    
+    >>> h1 = ... ## the first histo
+    >>> h2 = ... ## the second histo
+    >>> diff = h1.cmp_dist ( h2 )
+    
+    """
+    assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
+           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
+    
+    if isinstance ( h2 , ROOT.TH1 ) :
+        assert 1 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+    
+    if density : 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
+        cmp = _h1_cmp_ddist_ ( h1_ , h2_ , density = False )
+        del h1_
+        del h2_
+        return cmp
+
+    r1 , r2 = 0.0 , 0.0
+    for i , x , y1  in h1.items () :
+        xv  = x.value ()
+        xe  = x.error () 
+        y2  = VE ( h2 ( xv ) )
+        r1 += 2 * xe * ( y1.value () ** 2 )
+        r2 += 2 * xe * ( y2.value () ** 2 ) 
+
+    lims = h1.xminmax ()    
+    volume = lims [ 1 ] - lims [ 0 ] 
+
+    r1 /= volume
+    r2 /= volume
+
+    sf1  = 1.0 / r1 ** 0.5 
+    sf2  = 1.0 / r2 ** 0.5
+    
+    d12 = VE() 
+    for i , x , y1  in h1.items () :
+        xv  = x.value ()
+        xe  = x.error () 
+        y2  = VE ( h2 ( xv ) )
+
+        d12 += 2 * xe * ( ( sf1 * y1 - sf2 * y2 ) ** 2 )
+
+    d12 /= volume  
+
+    return d12 ** 0.5
+
+ROOT.TH1D.cmp_ddist = _h1_cmp_ddist_
+ROOT.TH1F.cmp_ddist = _h1_cmp_ddist_ 
+
 
 # =============================================================================
 ## calculate the norm of difference of scaled histograms/functions 
@@ -330,8 +439,8 @@ def _h2_cmp_dist_ ( h1              ,
            "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
     
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h2_cmp_dist_ ( h1_ , h2_ , density = False )
         del h1_
         del h2_
@@ -392,8 +501,8 @@ def _h3_cmp_dist_ ( h1              ,
            "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
     
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h3_cmp_dist_ ( h1_ , h2_ , density = False )
         del h1_
         del h2_
@@ -455,8 +564,8 @@ def _h1_cmp_dist2_ ( h1              ,
     
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_dist2_ ( h1_ , h2_ , density = False )
         del h1_
         del h2_
@@ -495,21 +604,23 @@ ROOT.TH1F.cmp_dist2 = _h1_cmp_dist2_
 #  h1 , h2 = ...
 #  h1.cmp_prnt ( h2 )
 #  @endcode 
-def _h1_cmp_prnt_ ( h1              ,
-                    h2              ,
-                    head1   = ''    ,
-                    head2   = ''    ,
-                    title   = ''    ,
-                    density = False ,
-                    prefix  = ''    ) : 
+def _h1_cmp_prnt_ ( h1                  ,
+                    h2                  ,
+                    head1       = ''    ,
+                    head2       = ''    ,
+                    title       = ''    ,
+                    density     = False ,
+                    max_moment  = 10    ,
+                    exp_moment  = True  , 
+                    prefix      = ''    ) : 
     """ Calculate and print some statistic information for two histos
     >>> h1 , h2 = ...
     >>> h1.cmp_prnt ( h2 ) 
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
-        cmp = _h1_cmp_prnt_ ( h1_ , h2_ , head1 = head1 , head2 = head2 , title = title , density = False )
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
+        cmp = _h1_cmp_prnt_ ( h1_ , h2_ , head1 = head1 , head2 = head2 , title = title , density = False , max_moment = max_moment , exp_moment = exp_moment )
         del h1_
         del h2_
         return cmp
@@ -519,28 +630,36 @@ def _h1_cmp_prnt_ ( h1              ,
 
     fmt    = '%+11.4g +- %-10.4g'
     wid0   = 25
-    values = ( 'Mean'      ,
-               'Rms'       ,
-               'Skewness'  ,
-               'Kurtosis'  ,
-               'StdMom/5'  ,
-               'StdMom/6'  ,
-               'StdMom/7'  ,
-               'StdMom/8'  ,
-               'StdMom/9'  ,
-               )
-    functions  =  ( lambda h : h.mean      (   ) ,
-                    lambda h : h.rms       (   ) ,
-                    lambda h : h.skewness  (   ) , 
-                    lambda h : h.kurtosis  (   ) , 
-                    lambda h : h.stdMoment ( 5 ) ,
-                    lambda h : h.stdMoment ( 6 ) , 
-                    lambda h : h.stdMoment ( 7 ) ,
-                    lambda h : h.stdMoment ( 8 ) , 
-                    lambda h : h.stdMoment ( 9 ) ,
-                    )
-    
-    wid1 = max ( len(v)  for v in values    )
+
+    values = [ 'Mean'     ,
+               'Rms'      ,
+               'Skewness' , 
+               'Kurtosis' ] 
+
+    numbers = []
+
+    mean =  h1.mean     ()  , h2.mean     ()
+    rms  =  h1.rms      ()  , h2.rms      ()   
+    skew =  h1.skewness ()  , h2.skewness ()   
+    kurt =  h1.kurtosis ()  , h2.kurtosis ()
+    numbers.append ( mean )
+    numbers.append ( rms  )
+    numbers.append ( skew )
+    numbers.append ( kurt )
+
+    if 4 < max_moment  : 
+        for i in range ( 5 , max_moment + 1 ) :
+            v1   = h1.stdMoment ( i , exp_moment )
+            v2   = h2.stdMoment ( i , exp_moment )
+            item = v1 , v2
+            numbers.append ( item )
+            if   exp_moment : values .append ( 'ExpMom/%d' % i )
+            else            : values .append ( 'StdMom/%d' % i )
+
+    numbers = tuple ( numbers )
+    values  = tuple ( values  ) 
+        
+    wid1 = max ( len ( v )  for v in values    )
     wid1 = max ( wid1  , len ( 'Quantity' ) )
     wid2 = max ( wid0  , len ( head1   ) )
     wid3 = max ( wid0  , len ( head2   ) )
@@ -553,9 +672,8 @@ def _h1_cmp_prnt_ ( h1              ,
     
     table_data = [ header ]
 
-    for v , f in zip ( values , functions ) :
-        v1  = f ( h1 )
-        v2  = f ( h2 )
+    for v , item in zip ( values , numbers ) :
+        v1 , v2 =  item 
         dv  = v1 - v2 
         row = allright ( v ) , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
         table_data.append ( row ) 
@@ -567,6 +685,156 @@ def _h1_cmp_prnt_ ( h1              ,
     
 ROOT.TH1D.cmp_prnt = _h1_cmp_prnt_
 ROOT.TH1F.cmp_prnt = _h1_cmp_prnt_ 
+
+
+# =============================================================================
+## calculate and print some statistic for comparison
+#  @code
+#  h1 , h2 = ...
+#  h1.cmp_diff_prnt ( h2 )
+#  @endcode 
+def _h1_cmp_diff_prnt_ ( h1                             ,
+                         h2                             ,
+                         title           = ''           ,
+                         density         = False        ,
+                         ##
+                         distance        = 'distance'   ,
+                         ddistance       = 'distance/D' ,
+                         angle           = 'angle'      ,
+                         dangle          = 'angle/D'    ,
+                         chi2ndf         = 'chi2/ndf'   ,
+                         probchi2        = 'prob(chi2)' ,
+                         probfit         = 'prob(fit)'  ,
+                         prefix          = ''           ) : 
+    """ Calculate and print some statistic information for two histos
+    >>> h1 , h2 = ...
+    >>> h1.cmp_prnt ( h2 ) 
+    """
+    if density : 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
+        cmp = _h1_cmp_diff_prnt_ ( h1_                   ,
+                                   h2_                   ,
+                                   title     = title     ,
+                                   density   = False     ,
+                                   distance  = distance  ,
+                                   ddistance = ddistance ,
+                                   angle     = angle     ,
+                                   dangle    = dangle    ,
+                                   chi2ndf   = chi2ndf   ,
+                                   probchi2  = probchi2  ,
+                                   probfit   = probfit   ,
+                                   prefix    = prefix    ) 
+        del h1_
+        del h2_
+        return cmp
+
+    rows = [ ('Quantity' , '' , 'value' ) ]
+
+    histo2 = isinstance ( h2 , ROOT.TH1 ) and 1 == h2.dim() 
+
+    from   ostap.logger.utils import pretty_float, pretty_ve
+    import ostap.math.math_ve as     ME
+    
+    if distance :
+        value = h1.cmp_dist ( h2 , density = density )
+        v , n = pretty_float ( value  )
+        row   = distance , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+        
+    if ddistance :
+        value = h1.cmp_ddist ( h2 , density = density )
+        v , n = pretty_ve ( value  , parentheses = False )
+        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if ddistance and histo2 :
+        value = h2.cmp_ddist ( h1 , density = density )
+        v , n = pretty_ve ( value  , parentheses = False )
+        row   = ddistance , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if angle :
+        value = h1.cmp_cos ( h2 , density = density )
+        value = math.acos    ( value ) 
+        v , n = pretty_float ( value )
+        row   = angle , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if dangle :
+        value = h1.cmp_dcos ( h2 , density = density )
+        import ostap.math.math_ve as ME 
+        value = ME.acos     ( value ) 
+        v , n = pretty_ve ( value  , parentheses = False )
+        row   = dangle , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if dangle and histo2 :
+        value = h2.cmp_dcos ( h1 , density = density )
+        value = ME.acos     ( value ) 
+        v , n = pretty_ve ( value  , parentheses = False )
+        row   = dangle , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if chi2ndf :
+        chi2, prob = h1.cmp_chi2 ( h2 , density = density )
+
+        value = chi2
+        v , n = pretty_float ( value )
+        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if chi2ndf and histo2 :
+        
+        chi2, prob = h2.cmp_chi2 ( h1 , density = density )
+        
+        value = chi2
+        v , n = pretty_float ( value )
+        row   = chi2ndf , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )        
+            
+    if probchi2 : 
+        chi2, prob = h1.cmp_chi2 ( h2 , density = density )
+
+        value = prob
+        v , n = pretty_float ( value )
+        row   = probchi2 , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if probchi2 and histo2 :
+        
+        chi2, prob = h2.cmp_chi2 ( h1 , density = density )
+
+        value = prob
+        v , n = pretty_float ( value )
+        row   = probchi2 , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+    if probfit and histo2 :
+
+        rf1   = h1.cmp_fit ( h2 , density = density , opts = '' ) 
+        prob  = rf1.Prob()
+        
+        value = prob 
+        v , n = pretty_float ( value )
+        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+
+        rf2   = h2.cmp_fit ( h1 , density = density , opts = '' ) 
+        prob  = rf2.Prob()
+        
+        value = prob 
+        v , n = pretty_float ( value )
+        row   = probfit , '[10^%d]' %n if  n  else  '' , v 
+        rows.append ( row  )
+        
+        
+    import ostap.logger.table as T
+    return T.table ( rows , title =  title , prefix = prefix , alignment = 'lcl' )
+
+ROOT.TH1D.cmp_diff_prnt = _h1_cmp_diff_prnt_
+ROOT.TH1F.cmp_diff_prnt = _h1_cmp_diff_prnt_ 
+    
 
 # =============================================================================
 ## compare two histograms and find the largest difference
@@ -586,8 +854,8 @@ def _h1_cmp_minmax_ ( h1                         ,
     """
     
     if density :
-        h1_ = h1.density () 
-        h2_ = h2.density ()
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h1_cmp_minmax_ ( h1_ , h2_ , density = False , diff = diff , **kwargs )
         del h1_
         del h2_
@@ -644,11 +912,11 @@ def _h2_cmp_minmax_ ( h1                         ,
     """
 
     if density : 
-        _h1 =  h1.density () 
-        _h2 =  h2.density ()
-        r   = _h2_cmp_minmax_  ( _h1  , _h2 , density = False , diff = diff , **kwargs )
-        del _h1
-        del _h2
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
+        r   = _h2_cmp_minmax_  ( h1_  , h2_ , density = False , diff = diff , **kwargs )
+        del h1_
+        del h2_
         return r 
 
     mn_x   = None
@@ -709,8 +977,8 @@ def _h2_cmp_prnt_ ( h1              ,
     >>> h1.cmp_prnt ( h2 ) 
     """
     if density : 
-        h1_ = h1.density() 
-        h2_ = h2.density() 
+        h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1.clone() 
+        h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2.clone() 
         cmp = _h2_cmp_prnt_ ( h1_ , h2_ , head1 = head1 , head2 = head2 , title = title , density = False )
         del h1_
         del h2_
@@ -860,5 +1128,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

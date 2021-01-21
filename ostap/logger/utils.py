@@ -329,7 +329,7 @@ def fmt_pretty_float ( value , width = 8 , precision = 6 ) :
 #  fmt, fmt_v , fmt_e  , n = fmt_pretty_ve ( number ) 
 #  @endcode
 #  @return formats nice string and the separate exponent 
-def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
+def fmt_pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
     """Formats for nice printout of the ValueWithError object  ( string + exponent)
     - return formats for nice stirng and the separate exponent 
     >>> fmt , fmt_v , fmt_e , n = pretty_ve ( number ) 
@@ -352,22 +352,26 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
     if   100 <= av < 1000 :
         fmtv = '%%+%d.%df' % ( width , precision - 2 )
         fmte = '%%-%d.%df' % ( width , precision - 2 )
-        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 2 , width , precision - 2 )
+        fmt  = '%%+%d.%df +/- %%-%d.%df' % ( width , precision - 2 , width , precision - 2 )
+        if parentheses : fmt = '( ' + fmt + ' )'
         return fmt , fmtv , fmte , 0 
     elif 10  <= av < 100  :
         fmtv = '%%+%d.%df' % ( width , precision - 1  )   
         fmte = '%%-%d.%df' % ( width , precision - 1 )   
-        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision - 1 , width , precision - 1 )   
+        fmt  = '%%+%d.%df +/- %%-%d.%df' % ( width , precision - 1 , width , precision - 1 )   
+        if parentheses : fmt = '( ' + fmt + ' )'
         return fmt , fmtv , fmte , 0 
     elif 1   <= av < 10   :
         fmtv = '%%+%d.%df' % ( width , precision     )
         fmte = '%%-%d.%df' % ( width , precision     )
-        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+        fmt  = '%%+%d.%df +/- %%-%d.%df' % ( width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0  
     elif 0.1 <= av < 1     :
         fmtv = '%%+%d.%df' % ( width , precision     )
         fmte = '%%-%d.%df' % ( width , precision     )
-        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+        fmt  = '%%+%d.%df +/- %%-%d.%df' % ( width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'
         return fmt , fmtv , fmte , 0  
 
 
@@ -375,7 +379,8 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
     if iszero ( av ) :
         fmtv = '%%+%d.%df' % ( width , precision     )
         fmte = '%%-%d.%df' % ( width , precision     )
-        fmt  = '( %%+%d.%df +/- %%-%d.%df )' % ( width , precision     , width , precision     )
+        fmt  = '%%+%d.%df +/- %%-%d.%df' % ( width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0  
 
     v_a , v_e = frexp10 ( av )
@@ -389,7 +394,7 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
     v *= 10**r
     e *= 10**r 
 
-    fmt , fmtv , fmte  , p = fmt_pretty_ve ( VE ( v , e * e ) , width, precision )    
+    fmt , fmtv , fmte  , p = fmt_pretty_ve ( VE ( v , e * e ) , width, precision , parentheses )    
     return fmt , fmtv , fmte , p + 3 * n 
 
 
@@ -399,11 +404,12 @@ def fmt_pretty_ve ( value , width = 8 , precision = 6 ) :
 #  fmt , fmtv , fmte , n = fmt_pretty_2ve ( number , ehigh , elow ) 
 #  @endcode
 #  @return formats for nice string and the separate exponent 
-def fmt_pretty_2ve ( value         ,
-                     eh            ,
-                     el            ,
-                     width     = 8 ,
-                     precision = 6 ) :
+def fmt_pretty_2ve ( value              ,
+                     eh                 ,
+                     el                 ,
+                     width       = 8    ,
+                     precision   = 6    ,
+                     parentheses = True ) :
     
     from ostap.math.ve          import VE
     from ostap.core.ostap_types import integer_types, num_types  
@@ -434,29 +440,35 @@ def fmt_pretty_2ve ( value         ,
     if   100 <= av < 1000 :
         fmtv  = '%%+%d.%df' %  ( width , precision - 2 )
         fmte  = '%%-%d.%df' %  ( width , precision - 2 )
-        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        fmt   = '%%+%d.%df +/%%-%d.%df -/%%-%d.%df' %  ( width , precision - 2 , width , precision - 2 , width , precision - 2 )
+        if parentheses : fmt = '( ' + fmt + ' )'        
+        
         return fmt , fmtv , fmte , 0  
     elif 10  <= av < 100  :        
         fmtv  = '%%+%d.%df' %  ( width , precision - 1 )
         fmte  = '%%-%d.%df' %  ( width , precision - 1 )
-        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        fmt   = '%%+%d.%df +/%%-%d.%df -/%%-%d.%df' %  ( width , precision - 1 , width , precision - 1 , width , precision - 1 )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv  , fmte , 0
     elif 1   <= av < 10   :
         fmtv  = '%%+%d.%df' %  ( width , precision     )
         fmte  = '%%-%d.%df' %  ( width , precision     )
-        fmt   = '( %%+%d.%df +/%%-0%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        fmt   = '%%+%d.%df +/%%-0%d.%df -/%%-%d.%df' %  ( width , precision     , width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0 
     elif 0.1 <= av < 1    :
         fmtv  = '%%+%d.%df' %  ( width , precision     )
         fmte  = '%%-%d.%df' %  ( width , precision     )
-        fmt   = '( %%+%d.%df +/%%-0%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        fmt   = '%%+%d.%df +/%%-0%d.%df -/%%-%d.%df' %  ( width , precision     , width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0 
 
     from  ostap.math.base        import frexp10, iszero
     if iszero ( av ) :
         fmtv  = '%%+%d.%df' %  ( width , precision     )
         fmte  = '%%-%d.%df' %  ( width , precision     )
-        fmt   = '( %%+%d.%df +/%%-%d.%df -/%%-%d.%df )' %  ( width , precision     , width , precision     , width , precision     )
+        fmt   = '%%+%d.%df +/%%-%d.%df -/%%-%d.%df' %  ( width , precision     , width , precision     , width , precision     )
+        if parentheses : fmt = '( ' + fmt + ' )'        
         return fmt , fmtv , fmte , 0 
                 
     v_a , v_e = frexp10 ( av )
@@ -472,7 +484,7 @@ def fmt_pretty_2ve ( value         ,
     eh *= 10**r 
     el *= 10**r 
 
-    fmt , fmtv  , fmte  , p = fmt_pretty_2ve ( v , eh , el , width , precision )
+    fmt , fmtv  , fmte  , p = fmt_pretty_2ve ( v , eh , el , width , precision , parentheses )
     
     return fmt , fmtv , fmte  , p + 3 * n 
 
@@ -497,13 +509,15 @@ def pretty_float ( value , width = 8 , precision = 6 ) :
 #  s , n = pretty_ve ( number ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_ve ( value , width = 8 , precision = 6 ) :
+def pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
     """Nice printout of the ValueWithError object  ( string + exponent)
     - return nice stirng and the separate exponent 
     >>> s , n = pretty_ve ( number ) 
     """
-
-    fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision )
+    from ostap.math.ve          import VE
+    value =  VE ( value )
+    
+    fmt , fmtv , fmte , n = fmt_pretty_ve ( value , width , precision , parentheses )
     
     v =           value.value ()   
     e = max ( 0 , value.error () ) 
@@ -516,11 +530,12 @@ def pretty_ve ( value , width = 8 , precision = 6 ) :
 #  s , n = pretty_2ve ( number , ehigh , elow ) 
 #  @endcode
 #  @return nice string and the separate exponent 
-def pretty_2ve ( value         ,
-                 eh            ,
-                 el            ,
-                 width     = 8 ,
-                 precision = 6 ) :
+def pretty_2ve ( value              ,
+                 eh                 ,
+                 el                 ,
+                 width       = 8    ,
+                 precision   = 6    ,
+                 parentheses = True ) :
 
     assert 0 <= eh or 0 <= el, 'Both errors cannot be negative!'
     
@@ -529,7 +544,7 @@ def pretty_2ve ( value         ,
     elif eh >= 0 and el < 0 :
         eh , el = eh , abs ( el )
 
-    fmt , fmtv , fmte , n = fmt_pretty_2ve ( value , eh , el , width , precision )
+    fmt , fmtv , fmte , n = fmt_pretty_2ve ( value , eh , el , width , precision , parentheses )
     
     return fmt  % ( value / 10**n , eh / 10**n , el / 10**n ) , n
 
