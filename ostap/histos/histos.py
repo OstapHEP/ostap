@@ -6726,7 +6726,7 @@ def axis_bins ( bins         ) :
     bins.sort()
     #
     if 2 > len ( bins ) :
-        raise AtributeError("axis_bins: insufficient length of bins: %s" % bins )
+        raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
     #
     from array import array 
     return ROOT.TAxis ( len ( bins ) - 1 , array ( 'd' , bins ) )
