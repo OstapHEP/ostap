@@ -567,6 +567,51 @@ from collections import namedtuple
 ComparisonPlot = namedtuple ( 'ComparisonPlot' , ( 'what' , 'data' , 'mc' , 'weight' ) )
 
 # =============================================================================
+## draw comparison plots
+def _cmp_draw_ ( self ) :
+    """Draw comparison plots
+    """
+    hd   = self.data
+    hmc  = self.mc
+    hw   = self.weight 
+
+    if isinstance ( hw , ROOT.TH1 ) :
+        if hasattr ( hw     , 'red'   ) : hw .red   ()         
+        hw.SetMinimum  ( 0 )
+        hw.SetMaximum  ( max ( 1.3 , 1.2 * hw.ymax () ) ) 
+        hw.draw ()
+        hw.level ( 1.0 , linestyle = 1 , linecolor = ROOT.kRed )
+
+    if isinstance ( hd , ROOT.TH1 ) and isinstance ( hmc , ROOT.TH1 ) :
+        if hasattr ( hd     , 'green'  ) : hd .green   () 
+        if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
+        rmax   = 1.2 * max ( hd .GetMaximum () , hmc.GetMaximum() )
+        hd .SetMinimum ( 0 )
+        hmc.SetMinimum ( 0 )        
+        scale  = ROOT.gPad.GetUymax() / rmax
+        hd  .Scale ( scale  )
+        hmc .Scale ( scale  )
+        hd  .draw  ( 'same' )
+        hmc .draw  ( 'same' )
+    elif isinstance ( hd  , ROOT.TH1 ) :
+        if hasattr ( hd     , 'green'  ) : hd .green   () 
+        rmax   = 1.2 *       hd .GetMaximum ()         
+        hd .SetMinimum ( 0 )
+        scale  = ROOT.gPad.GetUymax() / rmax
+        hd  .Scale ( scale  )
+        hd  .draw  ( 'same' )
+    elif isinstance ( hmc , ROOT.TH1 ) :
+        if hasattr ( hmc    , 'blue'   ) : hmc.blue   () 
+        rmax   = 1.2 *       hmc.GetMaximum ()         
+        hmc.SetMinimum ( 0 )        
+        scale  = ROOT.gPad.GetUymax() / rmax
+        hmc .Scale ( scale  )
+        hmc .draw  ( 'same' )
+        
+
+ComparisonPlot. draw = _cmp_draw_
+
+# =============================================================================
 ## The main  function: perform one re-weighting iteration 
 #  and reweight "MC"-data set to looks as "data"(reference) dataset
 #  @code
@@ -737,9 +782,6 @@ def makeWeights  ( dataset                    ,
 
         ## make plots at the start of  each iteration? 
         if make_plots : 
-            if hasattr ( hdata , 'green' ) : hdata.green ()
-            if hasattr ( hmc   , 'blue'  ) : hmc  .blue  ()
-            if hasattr ( w     , 'red'   ) : w    .red   () 
             item = ComparisonPlot ( what , hdata , hmc , w ) 
             cmp_plots.append ( item )
             

@@ -52,8 +52,8 @@ if not os.path.exists( testdata ) :
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D histograms
-    xmax     = 20.0
-    ymax     = 15.0 
+    xmax     = 20
+    ymax     = 15 
     ix , iy  = 30 , 30
     hdata    = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
                          [ ymax/iy*i for i in range ( iy + 1 ) ] )
@@ -246,7 +246,7 @@ assert hmcx.xmax() == xmax , 'XMAX is invalid!'
 assert hmcy.xmax() == ymax , 'XMAX is invalid!'
 
 ## prepare re-weighting machinery 
-maxIter = 25
+maxIter = 15
 
 ## check database 
 import os
@@ -348,43 +348,26 @@ for iter in range ( 1 , maxIter + 1 ) :
 
         
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis&moments
-        logger.info ( tag + ': DATA(x)  vs MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
+        logger.info ( tag + ': DATA(x)   vs MC(x)  comparison:\n%s' % hxdata.cmp_prnt ( hmcx , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ' , density = True ) )
 
-        logger.info ( tag + ': DATA(y)  vs MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )
+        logger.info ( tag + ': DATA(y)   vs MC(y)  comparison:\n%s' % hydata.cmp_prnt ( hmcy , 'DATA' , 'MC' , 'DATA(y)  vs MC(y)'  , prefix = '# ' , density = True ) )
         
-        logger.info ( tag + ': DATA(xy) vs MC(xy) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ' , density = True ) )
+        logger.info ( tag + ': DATA(x,y) vs MC(x,y) comparison:\n%s' % hdata .cmp_prnt ( hmc  , 'DATA' , 'MC' , 'DATA(xy) vs MC(xy)' , prefix = '# ' , density = True ) )
         
         
-        title = tag + ': DATA(x) vs MC(x) difference'
+        title = tag + ': DATA(x)   vs MC(x) difference'
         logger.info ( '%s:\n%s' % ( title , hxdata.cmp_diff_prnt ( hmcx , density = True , title = title , prefix = '# ' ) ) )
         
-        title = tag + ': DATA(y) vs MC(y) difference'
+        title = tag + ': DATA(y)   vs MC(y) difference'
         logger.info ( '%s:\n%s' % ( title , hydata.cmp_diff_prnt ( hmcy , density = True , title = title , prefix = '# ' ) ) )
         
-        ## 4d) get min/max difference between data and MC 
-        mn , mx = hxdata.cmp_minmax ( hmcx   , diff = lambda a,b : a/b , density = True )
-        logger.info ( tag + ": DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
-            (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
-            (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) )
-        mn , mx = hydata.cmp_minmax ( hmcy   , diff = lambda a,b : a/b , density = True )
-        logger.info ( tag + ": DATA(y)  / MC(y)  ``min/max-distance'' (%s)/(%s)[%%] at ymin/ymax=%.1f/%.1f" % (
-            (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
-            (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) ) 
-        mn , mx = hdata .cmp_minmax ( hmc   , diff = lambda a,b : a/b  , density = True )
-        logger.info ( tag + ": DATA(xy) / MC(xy) ``min/max-distance'' (%s)/(%s)[%%] at (x,y)min/max=(%.1f,%.1f)/(%.1f,%.1f)" % (
-            (100*mn[2]-100).toString ( '%+.1f+-%.1f' ) ,
-            (100*mx[2]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mn[1] , mx[0]  , mx[1] ) )
-
-        h1 = hdata.density()
-        h2 = hmc  .density()
-        
-        logger.info  ( tag + ': MIN DATA/MC : %s,%s' % ( h1 ( mn [0] , mn [1] ) , h2 ( mn [0] , mn[1] ) ) )
-        logger.info  ( tag + ': MAX DATA/MC : %s,%s' % ( h1 ( mx [0] , mx [1] ) , h2 ( mx [0] , mx[1] ) ) )
+        title = tag + ': DATA(x,y) vs MC(x,y) difference'
+        logger.info ( '%s:\n%s' % ( title , hdata .cmp_diff_prnt ( hmc  , density = True , title = title , prefix = '# ' ) ) )
         
         ## 4e) 2D-statistics 
         mcstat = mcds.statCov('x','y','weight')
-        logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
-        logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str(   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( tag + ': x/y covariance DATA (unbinned):\n# %s' % ( str ( datastat [2] ).replace ( '\n' , '\n# ' ) ) )
+        logger.info  ( tag + ': x/y covariance MC   (unbinned):\n# %s' % ( str (   mcstat [2] ).replace ( '\n' , '\n# ' ) ) )
         
     # =========================================================================
     ## prepare the plot of weighted MC for the given iteration
@@ -434,12 +417,15 @@ with ROOT.TFile.open ( testdata , 'r' ) as dbroot :
     dbroot.ls()
     mctree   = dbroot [ tag_mc      ]    
     ## 0) The weighter object
-    weighter = Weight ( dbname , weightings )
-    mctree.add_reweighting ( weighter ,  name = 'weight' )
+    with timing ( "Add weight column to MC-tree" , logger = logger ) : 
+        weighter = Weight ( dbname , weightings )
+        mctree.add_reweighting ( weighter ,  name = 'weight' )
 
-    
 dbroot = ROOT.TFile.open ( testdata , 'r' )
 logger.info ( 'Reweighted data is fetched from DBASE "%s"' % testdata )   
+hdata  = dbroot [ tag_data    ]
+hxdata = dbroot [ tag_datax   ]
+hydata = dbroot [ tag_datay   ]
 mctree = dbroot [ tag_mc      ]
 logger.info ('reweighted MCDATA \n%s:' % mctree.table() ) 
 
