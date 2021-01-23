@@ -16,16 +16,17 @@ __date__    = "2014-06-08"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 import ROOT,os,sys, random
-from   builtins                 import range
-from   ostap.core.pyrouts       import dsID,   Ostap 
-from   ostap.utils.timing       import timing
-from   ostap.trees.data         import Data
-from   ostap.utils.progress_bar import progress_bar
+from   builtins                     import range
+from   ostap.core.pyrouts           import dsID,   Ostap 
+from   ostap.utils.timing           import timing
+from   ostap.trees.data             import Data
+from   ostap.utils.progress_bar     import progress_bar
 import ostap.trees.trees       
 import ostap.fitting.roofit
 import ostap.fitting.dataset
-from   ostap.core.meta_info     import root_version_int
-from   ostap.utils.timing       import timing 
+from   ostap.core.meta_info         import root_version_int
+from   ostap.utils.timing           import timing
+import ostap.parallel.parallel_fill 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -91,7 +92,7 @@ def prepare_data ( nfiles   = 10  , nentries = 100 ) :
 
 
 with timing ("Prepare data ", logger ) :
-    data = prepare_data ( nfiles = 2 , nentries = 500 ) 
+    data = prepare_data ( nfiles = 10 , nentries = 20000 ) 
 
 ## variables 
 mass   = ROOT.RooRealVar ( "mass"  , '' , 3.0 , 3.2  )
@@ -118,7 +119,7 @@ def test_simple_loop ()  :
     
     logger = getLogger("test_simple_loop")
 
-    with timing ("Simple loop", logger ) :
+    with timing ( "Simple loop" , logger ) :
         
         varset  = ROOT.RooArgSet   ( mass , c2dtf , pt )
         dataset = ROOT.RooDataSet  ( dsID() , 'Test Data set-1' , varset )
@@ -133,18 +134,15 @@ def test_simple_loop ()  :
             if not 3.015 < v_mass  < 3.150 : continue
             if not 0.0   < v_c2dtf < 3.0   : continue
             if not 1.5   < v_pt    < 10    : continue
-
+            
             ## fill dataset 
             mass .value = v_mass
             c2dtf.value = v_c2dtf
             pt   .value = v_pt 
             dataset.add ( varset ) 
-            
+        
     logger.info ("Data set (simple-loop):\n%s"  % dataset.table ( prefix = "# " ) )
 
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
 
 # =============================================================================
 ## More advanced test
@@ -156,16 +154,13 @@ def test_loop_with_cuts ()  :
     - fill dataset    
     """
     
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
     logger = getLogger("test_loop_with_cuts")
 
-    with timing ("Loop-with-cuts", logger ) :
+    with timing ( "Loop with cuts" , logger ) :
         
         varset = ROOT.RooArgSet   ( mass , c2dtf , pt )
         dataset = ROOT.RooDataSet  ( dsID() , 'Test Data set-1' , varset )
-                
+        
         for i in data.chain.withCuts ( cuts  ) :
             
             v_mass  = i.mass
@@ -178,12 +173,9 @@ def test_loop_with_cuts ()  :
             pt   .value = v_pt
             
             dataset.add ( varset ) 
-
-            
+                        
     logger.info ("Data set (loop-with-cuts):\n%s"  % dataset.table ( prefix = "# " ) )
 
-    sys.stdout.flush()
-    sys.stderr.flush()
 
 # =============================================================================
 ## Use trivial selector to loop over the  chain 
@@ -197,9 +189,6 @@ def test_simple_selector ()  :
     - fill dataset 
     """
     
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
     logger = getLogger("test_simple_selector")
     
     from ostap.fitting.pyselectors import Selector
@@ -207,7 +196,7 @@ def test_simple_selector ()  :
     class MySel(Selector) :
         
         def __init__ ( self , tree , dataset ) :
-            super(MySel,self).__init__ (  tree )
+            super ( MySel , self ) .__init__ ( tree )
             self.__dataset = dataset
 
         @property
@@ -215,11 +204,11 @@ def test_simple_selector ()  :
         
         def process_entry ( self ) :
 
-            t = self.tree
+            tree = self.tree
             
-            v_mass  = t.mass
-            v_c2dtf = t.c2dtf
-            v_pt    = t.pt
+            v_mass  = tree.mass
+            v_c2dtf = tree.c2dtf
+            v_pt    = tree.pt
             
             ## apply cuts 
             if not 3.015 < v_mass  < 3.150 : return True
@@ -234,23 +223,17 @@ def test_simple_selector ()  :
             
             return True 
             
-    with timing ("Simple selector", logger ) :
-
+    with timing ( "Simple selector" , logger ) :
+        
         varset  = ROOT.RooArgSet   ( mass , c2dtf , pt )
         dataset = ROOT.RooDataSet  ( dsID() , 'Test Data set-1' , varset )
-
-
-        mySel = MySel ( data.chain , dataset )
-        mySel.set_tree ( data.chain )
         
-        ## data.chain.process ( mySel )
-        Ostap.Utils.process ( data.chain , mySel )
-
-            
+        mySel = MySel ( data.chain , dataset )
+        
+        data.chain.process ( mySel )
+        
     logger.info ("Data set (simple selector):\n%s"  % mySel.dataset.table ( prefix = "# " ) )
 
-    sys.stdout.flush()
-    sys.stderr.flush()
 
 # =============================================================================
 ## Use selector-with-cuts to loop over good entries in  the  chain 
@@ -262,10 +245,6 @@ def test_selector_with_cuts ()  :
     - fill dataset 
     """
     
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
-
     logger = getLogger("test_selector_with_cuts")
 
     from ostap.fitting.pyselectors import SelectorWithCuts 
@@ -294,71 +273,104 @@ def test_selector_with_cuts ()  :
             self.__dataset.add ( varset ) 
             
             return True 
-    
+            
+    with timing ( "Selector with cuts" , logger ) :
         
-    with timing ("Selector-with-cuts", logger ) :
-
         varset = ROOT.RooArgSet   ( mass , c2dtf , pt )
         dataset = ROOT.RooDataSet  ( dsID() , 'Test Data set-1' , varset )
-
-
+        
+        
         mySel = MySel2 ( data.chain , cuts , dataset )
-        mySel.set_tree ( data.chain )
-        mySel.set_cuts ( cuts       )
+        
+        data.chain.process ( mySel )
+        
+        logger.info ("Data set (selector-with-cuts):\n%s"  % dataset.table ( prefix = "# " ) )
+        
 
-        ## data.chain.process ( mySel )
+# =============================================================================
+## Use dedicated selector-with-vars to loop
+#  over good entries in  the  chain and fill   dataset 
+def test_selector_with_vars1 ()  :
+    """Use dedicated selector-with-vars to loop
+    over good entries in  the  chain and fill   dataset 
+    """
+    
+    logger = getLogger("test_selector_with_vars")
+
+    from ostap.fitting.pyselectors import SelectorWithVars
+
+    mySel = SelectorWithVars ( variables = [ mass , c2dtf , pt ] ,
+                               selection = cuts  ,
+                               logger    = logger )
+
+    
+    with timing ( "Selector with vars" , logger ) :
         Ostap.Utils.process ( data.chain , mySel )
-
-            
-    logger.info ("Data set (selector-with-cuts):\n%s"  % dataset.table ( prefix = "# " ) )
-
-    sys.stdout.flush()
-    sys.stderr.flush()
+        
+    dataset = mySel.data
+    
+    logger.info ("Data set (selector-with-vars):\n%s"  % dataset.table ( prefix = "# " ) )
 
 
 # =============================================================================
 ## Use dedicated selector-with-vars to loop
 #  over good entries in  the  chain and fill   dataset 
-def test_selector_with_vars ()  :
+def test_selector_with_vars2 ()  :
     """Use dedicated selector-with-vars to loop
     over good entries in  the  chain and fill   dataset 
     """
     
-    sys.stdout.flush()
-    sys.stderr.flush()
-    
-
-    logger = getLogger("test_selector_with_vars")
+    logger = getLogger("test_selector_with_vars2")
 
     from ostap.fitting.pyselectors import SelectorWithVars
-
-    with timing ("Selector-with-vars", logger ) :
-
-        mySel = SelectorWithVars ( variables = [ mass , c2dtf , pt ] ,
-                                   ##  [ 'mass' , 'c2dtf' , 'pt' ] ,
-                                   selection = cuts  ,
-                                   logger    = logger )
-
-        ## data.chain.process ( mySel , shortcut = False )
-        Ostap.Utils.process ( data.chain , mySel )
+    
+    
+    mySel = SelectorWithVars ( variables = [ mass , c2dtf , pt ] ,
+                               selection = cuts  ,
+                               logger    = logger )
+    
+    with timing ( "Selector with vars&logic" , logger ) :
+        data.chain.process ( mySel , shortcut = False )
         
-        dataset = mySel.data
+    dataset = mySel.data
         
-            
     logger.info ("Data set (selector-with-vars):\n%s"  % dataset.table ( prefix = "# " ) )
 
-    sys.stdout.flush()
-    sys.stderr.flush()
+# =============================================================================
+## Use dedicated selector-with-vars to loop
+#  over good entries in  the  chain and fill   dataset 
+def test_selector_with_vars3 ()  :
+    """Use dedicated selector-with-vars to loop
+    over good entries in  the  chain and fill   dataset 
+    """
     
+    logger = getLogger("test_selector_with_vars3")
+
+    from ostap.fitting.pyselectors import SelectorWithVars
+    
+    
+    mySel = SelectorWithVars ( variables = [ mass , c2dtf , pt ] ,
+                               selection = cuts  ,
+                               logger    = logger )
+    
+    with timing ( "Selector with vars&logic&kisa" , logger ) :
+        data.chain.pprocess ( mySel , shortcut = False )
+        
+    dataset = mySel.data
+        
+    logger.info ("Data set (selector-with-vars):\n%s"  % dataset.table ( prefix = "# " ) )
+
     
 # ==============================================================================================
 if '__main__' == __name__ :
 
     test_simple_loop         ()        
-    test_loop_with_cuts      ()        
-    test_simple_selector     ()        
-    test_selector_with_cuts  ()
-    test_selector_with_vars  ()
+    test_loop_with_cuts      ()    
+    test_simple_selector     ()    
+    test_selector_with_cuts  ()    
+    test_selector_with_vars1 ()    
+    test_selector_with_vars2 ()
+    test_selector_with_vars3 ()
     
 # ==============================================================================================
 ##                                                                                       The END

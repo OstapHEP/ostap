@@ -43,7 +43,7 @@
 # @endcode
 #
 # The module has been developed and used with great success in
-# ``Kali, framework for fine calibration of LHCb Electormagnetic Calorimeter''
+# ``Kali, framework for fine calibration of LHCb Electromagnetic Calorimeter''
 #
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
@@ -173,7 +173,7 @@ if old_PyROOT :
         - see ROOT.TPySelector.SlaveBegin
         - see Ostap.Selector.SlaveBegin
         """
-        assert valid_pointer ( tree ) , 'SlaveBegin: ivalid TTree*'
+        assert valid_pointer ( tree ) , 'SlaveBegin: invalid TTree*'
         pass
     # =========================================================================
     ## Initialize
@@ -302,19 +302,19 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         - it needs to be redefined!
         - returns True for successfull processing 
         """
-        raise NotImplementedError ("SelectorWirthCuts: process_entry is not implemented!")
+        raise NotImplementedError ("SelectorWithCuts: process_entry is not implemented!")
         return True
 
 # =============================================================================
 if old_PyROOT :
 
     # =========================================================================
-    ## The major method for: do NOT redefine it!
+    ## The major method for <cdoe>SelectorWithCuts</code>: do NOT redefine it!
     #  @see TPySelector::Process
     #  @see Ostap::Selector::Process
     #  @see Ostap::SelectorWithCuts::Process
     def SelectorWithCuts_Process        ( self , entry ) :
-        """The major method for: do NOT redefine it!
+        """The major method for `SelectorWithCuts`: do NOT redefine it!
          - see TPySelector::Process
          - see Ostap::Selector::Process
          - see Ostap::SelectorWithCuts::Process
@@ -900,9 +900,13 @@ class SelectorWithVars(SelectorWithCuts) :
                                             silent    = self.silence )
             
         if not self.silence :
-            if 0 == self.processed % 1000 or 0 == self.event() % 1000 or 0 == self.good () % 1000 : 
+            if   0 == self.processed % 1000 or 1 == self.good () % 1000 :
                 self.__progress.update_amount ( self.event () )
-                
+            else : 
+                evtn = self.event()                
+                if 0 == evtn % 10000 or evtn < 5 or 0 < self.total < evtn + 10 : 
+                    self.__progress.update_amount ( evtn )
+                                               
         self.stat.processed += 1
         
         #
@@ -1125,7 +1129,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## reset the formula 
         self.reset_formula ( tree )
         if valid_pointer ( tree ) :
-            assert self.ok(), 'Slave: formula is invalid!'
+            assert self.ok(), 'Init: formula is invalid!'
             
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
@@ -1145,7 +1149,7 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__progress.update_amount ( self.event () )
             
         if valid_pointer ( tree ) :
-            assert self.ok(), 'Slave: formula is invalid!'
+            assert self.ok(), 'Begin: formula is invalid!'
 
     # =========================================================================
     ## Start slave processing
