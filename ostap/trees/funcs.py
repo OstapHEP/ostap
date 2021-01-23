@@ -133,7 +133,7 @@ class PyDataFunction(FuncData) :
         if data is None : data = ROOT.nullptr 
         super(PyDataFunction,self).__init__ ( self , data  )
         assert callable   ( the_function ), \
-               'PyDataFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+               'PyDataFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
         self.__function = the_function
         
     @property
