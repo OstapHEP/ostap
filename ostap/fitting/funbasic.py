@@ -18,7 +18,8 @@ __all__     = (
     'Fun1D'             , ## wrapper for 1D-function
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
-    'make_fun'          , ## helper functno to reate FUNC-objects 
+    'make_fun'          , ## helper functno to reate FUNC-objects
+    'SETPARS'           , ## context manager to keep/preserve parameters 
     )
 # =============================================================================
 import ROOT, math, sys 
@@ -891,6 +892,63 @@ class FUNC(XVar) :
                 self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
             return frame
+
+# =============================================================================
+## Context manager to keep/preserve the parameters for function/pdf
+#  @code
+#  pdf = ...
+#  with SETPARS ( pdf ) :
+#  ...   <do something here with pdf>
+#
+#  @endcode 
+class SETPARS(object) :
+    """Context manager to keep/preserve the parameters for function/pdf
+    >>> pdf = ...
+    >>> with SETPARS ( pdf ) :
+    ...   <do something here with pdf>
+    """
+
+    ## constructor with the function and dataset 
+    def __init__ ( self , fun , dataset = None ) :
+
+        self.__params  = {}
+        self.__fun     = fun        
+        if dataset is None : dataset = ROOT.nullptr         
+        self.__dataset = dataset 
+
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+
+        params = self.__fun.parameters ( self.__dataset )
+        for par in params :
+            self.__params [ par ] = float ( params [ par ] )
+            
+        return self
+    
+    ## context manager: EXIT
+    def __exit__ ( self , *_ ) :
+        
+        if self.__params : 
+            self.__fun.load_params ( self.__dataset , self.__params , silent = True )
+
+        self.__fun     = Nne
+        self.__params  = {}
+        self.__dataset = ROOT.nullptr 
+        
+    @property
+    def fun ( self ) :
+        """``fun'': the actual function/pdf"""
+        return self.__fun
+    
+    @property
+    def dataset ( self ) :
+        """``dataset'': the dataset"""
+        return self.__dataset
+
+    @property
+    def params( self ) :
+        """``params'': dictionary of parameters"""
+        return self.__params
 
 # =============================================================================
 ## @class Fun1D

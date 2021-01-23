@@ -44,7 +44,7 @@ from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phases ,  
                                         fit_status , cov_qual , H1D_dset , get_i  )
-from   ostap.fitting.funbasic  import FUNC
+from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
 from   ostap.fitting.roocmdarg import check_arg, nontrivial_arg
 import ostap.histos.histos 
@@ -988,7 +988,7 @@ class PDF (FUNC) :
 
         from ostap.fitting.variables import KeepBinning
         
-        with KeepBinning ( var ) :
+        with SETPARS ( self , dataset ) , KeepBinning ( var ) :
 
             if bins :
                 var.bins = bins
@@ -1031,8 +1031,6 @@ class PDF (FUNC) :
                 frame.SetYTitle  ( '' )
                 frame.SetZTitle  ( '' )
                 
-        
-
         ## draw it!
         groot = ROOT.ROOT.GetROOT()        
         if not groot.IsBatch() :
@@ -1123,7 +1121,7 @@ class PDF (FUNC) :
         ## 2) collect NLL values 
         results   = []
         vmin      = None
-        with SETVAR  ( var ) :
+        with SETPARS ( self , dataset ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for v in progress_bar  ( values , silent = silent ) :
                 var.setVal ( v )
@@ -1193,7 +1191,7 @@ class PDF (FUNC) :
         ## 2) collect pLL values 
         results = [] 
         vmin    = None 
-        with SETVAR  ( var ) :
+        with SETPARS ( self , dataset ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for  v in progress_bar ( values , silent = silent )  :
                 var.setVal ( v )
@@ -1272,7 +1270,7 @@ class PDF (FUNC) :
             if 0 < maxv.cov2 () : error = maxv.error() 
             maxv = maxv.value ()
             
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
             
             nll , sf = self.nll ( dataset         ,
                                   silent = silent ,
@@ -1387,7 +1385,7 @@ class PDF (FUNC) :
             maxv = maxv.value ()
 
         vname = var.GetName() 
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
 
             ## fix "fixed" variables and redefine range for main variable
             mn = min ( minv , maxv - error )

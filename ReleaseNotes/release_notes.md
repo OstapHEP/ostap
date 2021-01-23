@@ -39,8 +39,12 @@ minuit.release ('p3')
   1. Add symmetic   Sinh-Asinh resolution  model `ResoSinhAsinh`
   1. Add symmetic Jonhson's SU resolution  model `ResoJohnsonSU`
   1. fix for the new signature of `TDirectory::CurrentDirectory()` method 
-  
+  1. fix/rewrite/improve `ostap.histos.compare` module 
+  1. improve reweighting machinery: make it more tunable (and less automatic) and more suitable for multidimensional reweighting. 
+  1. Add new context manager `SETPARS` and use it in `PDF.wilks` , `PDF.wilks2` , `PDF.draw_nll`, `PDF.graph_nll`, `PDF.graph_profile` 
+
 ## Backward incompatible changes: 
+  1. Reweighting machinery: different signature of `makeWeights` function -  new argument `make_plots`, different meaning of argument `power`,  different return value
 
 ## Bug fixes:
   1. fix bugs in `Ostap::Math::BWPS`
