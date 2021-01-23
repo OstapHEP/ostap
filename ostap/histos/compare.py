@@ -1252,7 +1252,7 @@ def _h1_cmp_prnt_ ( h1                  ,
         return cmp
 
     if not head1 : head1 = h1.GetName() 
-    if not head2 : head2 = h1.GetName()
+    if not head2 : head2 = h2.GetName()
 
     fmt    = '%+11.4g +- %-10.4g'
     wid0   = 25
@@ -1340,7 +1340,7 @@ def _h2_cmp_prnt_ ( h1              ,
         return cmp
 
     if not head1 : head1 = h1.GetName() 
-    if not head2 : head2 = h1.GetName()
+    if not head2 : head2 = h2.GetName()
 
     fmt1   = '%+11.4g +- %-10.4g'
     fmt    = '%+12.5g'

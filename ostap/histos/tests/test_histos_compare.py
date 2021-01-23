@@ -110,112 +110,74 @@ h5u = h4u.rescale_bins(1)
 h5e = h4e.rescale_bins(1)
 
 ## compare two histograms 
-def compare ( h1 , h2 , density = False ) :
+def compare ( h1 , h2 , title = '' , density = False ) :
     
-    r1  = h1.cmp_fit       ( h2 , opts = 'WL0Q' , density = density )
-    if r1 : logger.info    ( 'h1 vs h2 : fit probability is %.5f%% ' % ( r1.Prob()*100 ) )
-    else  : logger.warning ( 'h1 vs h2 : fit problems ')
+    ## r1  = h1.cmp_fit       ( h2 , opts = 'WL0Q' , density = density )
+    ## if r1 : logger.info    ( 'h1 vs h2 : fit probability is %.5f%% ' % ( r1.Prob()*100 ) )
+    ## else  : logger.warning ( 'h1 vs h2 : fit problems ')
     
-    r2  = h2.cmp_fit       ( h1 , opts = 'WL0Q' , density = density )
-    if r2 : logger.info    ( 'h2 vs h1 : fit probability is %.5f%% ' % ( r2.Prob()*100 ) )
-    else  : logger.warning ( 'h2 vs h1 : fit problems ')
+    ## r2  = h2.cmp_fit       ( h1 , opts = 'WL0Q' , density = density )
+    ## if r2 : logger.info    ( 'h2 vs h1 : fit probability is %.5f%% ' % ( r2.Prob()*100 ) )
+    ## else  : logger.warning ( 'h2 vs h1 : fit problems ')
 
-    ct  = h1.cmp_cos      ( h2 , density = density ) 
-    logger.info           ( 'h1 vs h2 : cos(theta)      is %s ' % ct  )
+    ## ct  = h1.cmp_cos      ( h2 , density = density ) 
+    ## logger.info           ( 'h1 vs h2 : cos(theta)      is %s ' % ct  )
     
-    dd1 = h1.cmp_dist     ( h2 , density = density ) 
-    logger.info           ( 'h1 vs h2 : distance        is %s ' % dd1 )
+    ## dd1 = h1.cmp_dist     ( h2 , density = density ) 
+    ## logger.info           ( 'h1 vs h2 : distance        is %s ' % dd1 )
     
-    dd2 = h1.cmp_dist2    ( h2 , density = density ) 
-    logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
+    ## ## dd2 = h1.cmp_dist2    ( h2 , density = density ) 
+    ## ## logger.info           ( 'h1 vs h2 : distance2       is %s ' % dd2 )
     
-    h1.cmp_prnt ( h2 , 'h1 vs h2 ' , density = density ) 
-
+    logger.info ( "%s\n%s" % (  title , h1.cmp_prnt       ( h2 , density = density , title = title , prefix = '# ' ) ) )
+    logger.info ( "%s\n%s" % (  title , h1.cmp_diff_prnt  ( h2 , density = density , title = title , prefix = '# ' ) ) )
+    
 # =============================================================================
 ## compare gaussians 
 def test_compare_gaussians() : 
-    logger.info( 'Compare gaussians    (1) and (2)' )
-    compare ( h1g , h2g )
-    logger.info( 'Compare gaussians    (1) and (3)' )
-    compare ( h1g , h3g )
-    logger.info( 'Compare gaussians    (1) and (4)' )
-    compare ( h1g , h4g )
-    logger.info( 'Compare gaussians    (1) and (4) with rescale' )
-    compare ( h1g , h4g , True )
-    logger.info( 'Compare gaussians    (1) and (5)' )
-    compare ( h1g , h5g )
-    logger.info( 'Compare gaussians    (2) and (3) : should be the same!' )
-    compare ( h2g , h3g )
-    logger.info( 'Compare gaussians    (2) and (4)' )
-    compare ( h2g , h4g )
-    logger.info( 'Compare gaussians    (2) and (4) with rescale' )
-    compare ( h2g , h4g , True )
-    logger.info( 'Compare gaussians    (2) and (5)' )
-    compare ( h2g , h5g )
-    logger.info( 'Compare gaussians    (3) and (4)' ) 
-    compare ( h3g , h4g )
-    logger.info( 'Compare gaussians    (3) and (4) with rescale' ) 
-    compare ( h3g , h4g , True )
-    logger.info( 'Compare gaussians    (3) and (5)' ) 
-    compare ( h3g , h5g )
-    logger.info( 'Compare gaussians    (4) and (5)' ) 
-    compare ( h4g , h5g )
+    compare ( h1g , h2g , 'Compare gaussians    (1) and (2)' )
+    compare ( h1g , h3g , 'Compare gaussians    (1) and (3)' )
+    compare ( h1g , h4g , 'Compare gaussians    (1) and (4)' )
+    compare ( h1g , h4g , 'Compare gaussians    (1) and (4) with rescale' , density = True ) 
+    compare ( h1g , h5g , 'Compare gaussians    (1) and (5)' )
+    compare ( h2g , h3g , 'Compare gaussians    (2) and (3) : should be the same!' )
+    compare ( h2g , h4g , 'Compare gaussians    (2) and (4)' )
+    compare ( h2g , h4g , 'Compare gaussians    (2) and (4) with rescale' , density = True )
+    compare ( h2g , h5g , 'Compare gaussians    (2) and (5)' )
+    compare ( h3g , h4g , 'Compare gaussians    (3) and (4)' ) 
+    compare ( h3g , h4g , 'Compare gaussians    (3) and (4) with rescale' , density = True )
+    compare ( h3g , h5g , 'Compare gaussians    (3) and (5)' ) 
+    compare ( h4g , h5g , 'Compare gaussians    (4) and (5)' ) 
 
 def test_compare_uniforms () :
-    logger.info( 'Compare uniforms     (1) and (2)' )
-    compare ( h1u , h2u )
-    logger.info( 'Compare uniforms     (1) and (3)' )
-    compare ( h1u , h3u )
-    logger.info( 'Compare uniforms     (1) and (4)' )
-    compare ( h1u , h4u )
-    logger.info( 'Compare uniforms     (1) and (4) with rescale' )
-    compare ( h1u , h4u , True )
-    logger.info( 'Compare uniforms     (1) and (5)' )
-    compare ( h1u , h5u )
-    logger.info( 'Compare uniforms     (2) and (3) : should be the same!' )
-    compare ( h2u , h3u )
-    logger.info( 'Compare uniforms     (2) and (4)' )
-    compare ( h2u , h4u )
-    logger.info( 'Compare uniforms     (2) and (4) with rescale' )
-    compare ( h2u , h4u , True )
-    logger.info( 'Compare uniforms     (2) and (5)' )
-    compare ( h2u , h4u )
-    logger.info( 'Compare uniforms     (3) and (4)' ) 
-    compare ( h3u , h4u )
-    logger.info( 'Compare uniforms     (3) and (4) with rescale;' ) 
-    compare ( h3u , h4u , True )
-    logger.info( 'Compare uniforms     (3) and (5)' ) 
-    compare ( h3u , h5u )
-    logger.info( 'Compare uniforms     (4) and (5)' ) 
-    compare ( h4u , h5u )
+    compare ( h1u , h2u , 'Compare uniforms     (1) and (2)' )
+    compare ( h1u , h3u , 'Compare uniforms     (1) and (3)' )
+    compare ( h1u , h4u , 'Compare uniforms     (1) and (4)' )
+    compare ( h1u , h4u , 'Compare uniforms     (1) and (4) with rescale' , density = True )
+    compare ( h1u , h5u , 'Compare uniforms     (1) and (5)' )
+    compare ( h2u , h3u , 'Compare uniforms     (2) and (3) : should be the same!' )
+    compare ( h2u , h4u , 'Compare uniforms     (2) and (4)' )
+    compare ( h2u , h4u , 'Compare uniforms     (2) and (4) with rescale' , density = True )
+    compare ( h2u , h4u , 'Compare uniforms     (2) and (5)' )
+    compare ( h3u , h4u , 'Compare uniforms     (3) and (4)' )
+    compare ( h3u , h4u , 'Compare uniforms     (3) and (4) with rescale;' , density = True )
+    compare ( h3u , h5u , 'Compare uniforms     (3) and (5)' ) 
+    compare ( h4u , h5u , 'Compare uniforms     (4) and (5)' )
 
 def test_compare_exponentials () :
-    logger.info( 'Compare exponentials (1) and (2)' )
-    compare ( h1e , h2e )
-    logger.info( 'Compare exponentials (1) and (3)' )
-    compare ( h1e , h3e )
-    logger.info( 'Compare exponentials (1) and (4)' )
-    compare ( h1e , h4e )
-    logger.info( 'Compare exponentials (1) and (4) with rescale' )
-    compare ( h1e , h4e , True )
-    logger.info( 'Compare exponentials (1) and (5)' )
-    compare ( h1e , h5e )
-    logger.info( 'Compare exponentials (2) and (3) : should be the same!' )
-    compare ( h2e , h3e )
-    logger.info( 'Compare exponentials (2) and (4)' )
-    compare ( h2e , h4e )
-    logger.info( 'Compare exponentials (2) and (4) with rescale' )
-    compare ( h2e , h4e , True )
-    logger.info( 'Compare exponentials (2) and (5)' )
-    compare ( h2e , h5e )
-    logger.info( 'Compare exponentials (3) and (4)' ) 
-    compare ( h3e , h4e )
-    logger.info( 'Compare exponentials (3) and (4) with rescale' ) 
-    compare ( h3e , h4e , True )
-    logger.info( 'Compare exponentials (3) and (5)' ) 
-    compare ( h3e , h5e )
-    logger.info( 'Compare exponentials (4) and (5)' ) 
-    compare ( h4e , h5e )
+    compare ( h1e , h2e , 'Compare exponentials (1) and (2)' )
+    compare ( h1e , h3e , 'Compare exponentials (1) and (3)' )
+    compare ( h1e , h4e , 'Compare exponentials (1) and (4)' )
+    compare ( h1e , h4e , 'Compare exponentials (1) and (4) with rescale' , density = True )
+    compare ( h1e , h5e , 'Compare exponentials (1) and (5)' )
+    compare ( h2e , h3e , 'Compare exponentials (2) and (3) : should be the same!' )
+    compare ( h2e , h4e , 'Compare exponentials (2) and (4)' )
+    compare ( h2e , h4e , 'Compare exponentials (2) and (4) with rescale' , density = True )
+    compare ( h2e , h5e , 'Compare exponentials (2) and (5)' )
+    compare ( h3e , h4e , 'Compare exponentials (3) and (4)' ) 
+    compare ( h3e , h4e , 'Compare exponentials (3) and (4) with rescale' , density = True )
+    compare ( h3e , h5e , 'Compare exponentials (3) and (5)' ) 
+    compare ( h4e , h5e , 'Compare exponentials (4) and (5)' )
 
 def test_compare_gauss_vs_uniform() :     
     _ig = 0 
@@ -224,8 +186,8 @@ def test_compare_gauss_vs_uniform() :
         _iu  = 0 
         for iu in ( h1u , h2u , h3u , h4u , h5u ) :
             _iu += 1 
-            logger.info( 'Compare gaussian  (%d) and uniform     (%d)' % ( _ig , _iu ) )
-            compare ( ig , iu )
+            compare ( ig , iu , 'Compare gaussian  (%d) and uniform     (%d)' % ( _ig , _iu ) )
+
             
 def test_compare_gauss_vs_exponent () :     
     _ig = 0 
@@ -234,8 +196,7 @@ def test_compare_gauss_vs_exponent () :
         _ie  = 0 
         for ie in ( h1e , h2e , h3e , h4e , h5e ) :
             _ie += 1 
-            logger.info( 'Compare gaussian  (%d) and exponent    (%d)' % ( _ig , _ie ) )
-            compare ( ig , ie )
+            compare ( ig , ie , 'Compare gaussian  (%d) and exponent    (%d)' % ( _ig , _ie ) ) 
 
 def test_compare_uniform_vs_exponent () :     
     _iu = 0 
@@ -244,8 +205,7 @@ def test_compare_uniform_vs_exponent () :
         _ie  = 0 
         for ie in ( h1e , h2e , h3e , h4e , h5e ) :
             _ie += 1 
-            logger.info( 'Compare uniform   (%d) and exponent    (%d)' % ( _iu , _ie ) )
-            compare ( iu , ie )
+            compare ( iu , ie , 'Compare uniform   (%d) and exponent    (%d)' % ( _iu , _ie ) )
             
 # =============================================================================
 if '__main__' == __name__ :
@@ -260,6 +220,6 @@ if '__main__' == __name__ :
     pass
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

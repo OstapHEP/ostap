@@ -52,8 +52,8 @@ if not os.path.exists( testdata ) :
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D histograms
-    xmax     = 20
-    ymax     = 15 
+    xmax     = 20.0
+    ymax     = 15.0 
     ix , iy  = 30 , 30
     hdata    = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
                          [ ymax/iy*i for i in range ( iy + 1 ) ] )
