@@ -931,7 +931,7 @@ class SETPARS(object) :
         if self.__params : 
             self.__fun.load_params ( self.__dataset , self.__params , silent = True )
 
-        self.__fun     = Nne
+        self.__fun     = None
         self.__params  = {}
         self.__dataset = ROOT.nullptr 
         
