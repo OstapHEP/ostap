@@ -710,64 +710,137 @@ def cmd_exists ( command ) :
     """
     return which ( command ) is not None
 
-## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
+# =============================================================================
+## @class VRange
+#  Helper looper over the values between vmin and vmax :
+#  @code
+#  for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class VRange(object) :
+    """Helper looper over the values between vmin and vmax :
+    >>> for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert isinstance ( n , integer_types ) and 0 < n,\
+               'VRange: invalid N=%s/%s' % ( n  , type ( n ) ) 
+        
+        self.__vmin = vmin
+        self.__vmax = vmax
+        self.__n    = n 
 
+    @property
+    def vmin  ( self ) :
+        """``vmin'' : minimal value"""
+        return self.__vmin
+    @property
+    def vmax  ( self ) :
+        """``vmax'' : maximal value"""
+        return self.__vmax    
+    @property
+    def n ( self )  :
+        """``n'' : number of steps"""
+        return self.__n
 
+    def __len__     ( self ) : return self.__n + 1
+    def __iter__    ( self ) :
+        
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield self.vmin * f1 + f2 * self.vmax
+                
 # =============================================================================
 ## loop over values between xmin and xmax 
 #  @code
 #  for x in vrange ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def vrange ( xmin , xmax , n = 100 ) :
+def vrange ( vmin , vmax , n = 100 ) :
     """ Loop  over range of values between xmin and xmax 
-    >>> for x in vrange ( xmin , xmax , 200 ) :
-    ...                print (x) 
+    >>> for v in vrange ( vmin , vmax , 200 ) :
+    ...                print (v) 
     """
-    assert isinstance ( n , integer_types ) and 0 < n,\
-           'vrange: invalid N=%s/%s' % ( n  , type ( n ) ) 
+    return VRange ( vmin , vmax , n )
 
-    fn = 1.0 / float ( n ) 
-    for i in range ( n + 1 ) :
-        #
-        if   0 == i : yield xmin
-        elif n == i : yield xmax
-        else        :
-            f2 = i * fn
-            f1 = 1 - f2
-            yield xmin * f1 + f2 * xmax 
 
+# =============================================================================
+## @class LRange
+#  Helper looper over the values between vmin and vmax using log-steps 
+#  @code
+#  for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class LRange(VRange) :
+    """Helper looper over the values between vmin and vmax using log-steps
+    >>> for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert 0 < vmin  and 0 < vmax,\
+           'LRange: invalid  non-positive vmin/ymax values: %s/%s' %  ( vmin , vmax )
+
+        super ( LRange , self ).__init__ ( vmin , vmax , n ) 
+
+        self.__lmin = math.log10 ( self.vmin )
+        self.__lmax = math.log10 ( self.vmax )
+                
+    @property
+    def lmin  ( self ) :
+        """``lmin'' : log10(minimal value)"""
+        return self.__lmin
+    @property
+    def lmax  ( self ) :
+        """``lmax'' : log10(maximal value)"""
+        return self.__lmax    
+
+    def __iter__    ( self ) :
+
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
+            
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
 #  @code
 #  for x in log_range ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def log_range ( xmin , xmax , n = 100 ) :
-    """:oop over values between xmin and xmax in log-scale 
+def log_range ( vmin , vmax , n = 100 ) :
+    """Loop over values between xmin and xmax in log-scale 
     >>> for x in log_range ( xmin , xmax , 200 ) :
     >>>      print (x) 
     """
-    assert 0 < xmin  and 0 < xmax,\
-           'log_range: invalid  xmin/xmax values: %s/%s' %  ( xmin , xmax )
-
-    ## loop
-    for x in vrange ( math.log10 ( xmin ) , math.log10 ( xmax ) , n ) :
-        yield 10.0**x 
+    return LRange ( vmin , vmax , n )
 
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
 #  @code
-#  for x in lrange ( xmin , xmax , 200 ) : ## ditto 
-#         print (x) 
+#  for v in lrange ( vmin , vmax , 200 ) : ## ditto 
+#         print (v) 
 #  @endcode
-def lrange ( xmin , xmax , n = 100 ) :
-    """:oop over values between xmin and xmax in log-scale 
-    >>> for x in lrange ( xmin , xmax , 200 ) :  ## ditto 
-    >>>      print (x) 
+def lrange ( vmin , vmax , n = 100 ) :
+    """:oop over values between vmin and vmax in log-scale 
+    >>> for v in lrange ( vmin , vmax , 200 ) :  ## ditto 
+    >>>      print (v) 
     """
-    for x in log_range ( xmin , xmax , n ) : yield x 
-        
+    return LRange ( vmin , vmax , n )
 
 
 # =============================================================================
