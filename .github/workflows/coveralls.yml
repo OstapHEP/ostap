@@ -32,20 +32,20 @@ jobs:
         hash -r
         conda config --set always_yes yes --set changeps1 no
         conda config --add channels conda-forge
-        conda create -q -n testenv python=3.7  cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl  future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3
+        conda create -q -n testenv python coverage coveralls cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3 psutil more-itertools
     - name: Build
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
+        mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
     - name: Test 
       run: |
         pip install coverage coveralls
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        source build/INSTALL/thisostap.sh && nosetests  --with-coverage  --cover-package=ostap
+        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
