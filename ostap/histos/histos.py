@@ -5883,17 +5883,33 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 ## draw the line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _level_ ( self , level = 0 , linestyle = 2 , linecolor = 1 ) :
+def _level_ ( self , level = 0 , linestyle = 2 , linecolor = 1 , **kwargs ) :
     """Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
+    >>> h.hline ( 5 ) ## ditto
     """
-    mn,mx = self.xminmax() 
+    mn,mx = self.xminmax()
     line = ROOT.TLine ( mn , level , mx , level )
-    line.SetLineStyle ( linestyle )
-    line.SetLineColor ( linecolor )
-    self._line_ = line
-    self._line_.Draw() 
-    return self._line_
+    line.draw( linestyle = linestyle , linecolor = linecolor , **kwargs )
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line
+
+# =============================================================================
+## draw the vertical line for the histogram 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21 
+def _vline_ ( self , x , linestyle = 2 , linecolor = 1 , **kwargs ) :
+    """Draw vertical line for the histogram
+    >>> h.vline ( 5 )    
+    """
+    mn,mx = self.yminmax()
+    line = ROOT.TLine ( x , mn , x , mx )
+    line.draw( linestyle = linestyle , linecolor = linecolor , **kwargs ) 
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line 
+
 # =============================================================================
 ## draw null-level for histogram  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5908,6 +5924,11 @@ ROOT.TH1D. level = _level_
 ROOT.TH1F. level = _level_
 ROOT.TH1D. null  = _null_
 ROOT.TH1F. null  = _null_
+
+ROOT.TH1F. hline = _level_
+ROOT.TH1F. vline = _vline_
+ROOT.TH1D. hline = _level_
+ROOT.TH1D. vline = _vline_
 
 
 # =============================================================================
@@ -7757,6 +7778,10 @@ _new_methods_   = (
     ROOT.TH1F.null   ,
     ROOT.TH1D.level  ,
     ROOT.TH1F.level  ,
+    ROOT.TH1D.vline  ,
+    ROOT.TH1F.vline  ,
+    ROOT.TH1D.hline  ,
+    ROOT.TH1F.hline  ,
     #
     ROOT.TAxis.edges ,
     #
