@@ -1216,7 +1216,8 @@ class PDF (FUNC) :
                     graph.SetPoint ( len ( graph ) , v , p ) ## add right point 
                     if i < 2 : graph.RemovePoint ( 0 )       ## remove fake points 
                         
-        ## 4) re-fill the graph 
+        ## 4) re-create the graph 
+        graph   = ROOT.TGraph ( len ( results ) )
         results.sort ()
         ymin    = None 
         for i , point  in enumerate ( results ) :
