@@ -1160,7 +1160,7 @@ class PDF (FUNC) :
                         dataset         ,
                         fix     = []    ,
                         silent  = True  ,
-                        draw    = True  , 
+                        draw    = False , 
                         args    = ()    , **kwargs ) :
         """Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
@@ -1198,13 +1198,13 @@ class PDF (FUNC) :
         ## 2) create graph 
         import ostap.histos.graphs
         graph = ROOT.TGraph ( 2 )
+        ## add two fake points (to be removed in process) 
         graph [ 0 ] = vmin , 99.9
-        graph [ 1 ] = vmin , 99.9
+        graph [ 1 ] = vmax , 99.9
         if draw : graph.draw ( 'ap' )
                 
         ## 3) collect pLL values 
         results = [] 
-        vmin    = None 
         with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for i , v in enumerate ( progress_bar ( vals , silent = silent )  ) :
@@ -1212,29 +1212,27 @@ class PDF (FUNC) :
                 p   = pLL.getVal() 
                 res = v , p 
                 results.append ( res )
-                vmin = p if vmin is None else min ( vmin , p ) 
                 if draw :
-                    graph.SetPoint ( len ( graph ) , v , p ) 
-                    if i < 2 : graph.RemovePoint ( 0 )
+                    graph.SetPoint ( len ( graph ) , v , p ) ## add right point 
+                    if i < 2 : graph.RemovePoint ( 0 )       ## remove fake points 
                         
-        ## 3) create graph 
-        import ostap.histos.graphs
-        graph = ROOT.TGraph ( len ( results ) )        
+        ## 4) re-fill the graph 
         results.sort ()
+        ymin    = None 
         for i , point  in enumerate ( results ) :
             x , y = point
             graph [ i ]  = x , y 
-
+            ymin = y if ymin is None else min ( ymin , y )
+            
         ## subtract the minimum 
-        if vmin is Nnoe : pass
-        else            : graph -= vmin 
+        graph -= vmin 
             
         ## scale it if needed
         if 1 != sf :
             logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
             graph *= sf 
 
-        if draw : graph.draw ('alc')
+        if draw : graph.draw ('apl')
         
         return graph 
         
