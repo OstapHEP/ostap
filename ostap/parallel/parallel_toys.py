@@ -29,6 +29,39 @@ import ROOT
 from   ostap.parallel.parallel import Task, WorkManager
 from   ostap.core.ostap_types  import string_types, integer_types  
 # =============================================================================
+## merge results of toys 
+#  Helper function to merge results of toys
+#  @param previous  previous results
+#  @param result    new  result
+#  @param jobid     (optional) not used 
+#  @return  updated results 
+def merge_toys ( previous , result , jobid = -1 ) :
+    """Helper function to merge results of toys
+    """
+    
+    if not result :
+        logger.error ( "No valid results for merging" )
+        return previous 
+    
+    if not previous   : return result
+    
+    results  , stat  = result    
+    results_ , stat_ = previous 
+    
+    rset = set ()
+    for p in results  : rset.add ( p )
+    for p in results_ : rset.add ( p )                
+    for p in rset     : results_ [ p ] += results [ p ]
+    
+    sset = set ()
+    for p in stat     : sset.add ( p )
+    for p in stat_    : sset.add ( p )
+    for p in sset     : stat_    [ p ] += stat    [ p ] 
+    
+    return results_ , stat_ 
+
+
+# =====================================================================================
 ## The simple task object for parallel fitting toys 
 #  - single PDF to generate and fit
 #  @see ostap.fitting.toys 
@@ -131,32 +164,12 @@ class  ToysTask(Task) :
         
         return self.results() 
 
-    ## merge results/datasets 
+    
+    ## merge results of toys 
     def merge_results ( self , result , jobid = -1 ) :
-        
-        if result :
-            results , stat = result
-            if not self.the_output :
-                self.__the_output = results , stat 
-            else :
-                results  , stat    = result
-                results_ , stat_   = self.__the_output 
-
-                rset = set()
-                for p in results  : rset.add ( p )
-                for p in results_ : rset.add ( p )                
-                for p in rset : results_[ p ] += results [ p ]
-
-                sset = set()
-                for p in stat  : sset.add ( p )
-                for p in stat_ : sset.add ( p )
-                for p in sset  : stat_ [ p  ] += stat [ p ] 
-                
-                self.__the_output = results_ , stat_ 
-        else :
-            logger.error ( "No valid results for merging" )
-            
-
+        """Merge results of toys
+        """
+        self.__the_output = merge_toys ( self.__the_output , result , jobid )
     
 # =============================================================================
 ## The simple task object for parallel fitting toys

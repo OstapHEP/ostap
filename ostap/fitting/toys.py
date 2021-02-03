@@ -301,7 +301,7 @@ def make_toys ( pdf                ,
     pdf.load_params ( None , fix_pars , silent = silent )
     pdf.load_params ( None , fix_init , silent = silent )
 
-    ## save all initial parameters (needed fot the final statistics)
+    ## save all initial parameters (needed for the final statistics)
     params  = pdf.params      ()
     fix_all = vars_transform  ( params ) 
     
@@ -315,7 +315,7 @@ def make_toys ( pdf                ,
     from   ostap.core.core        import SE, VE
 
     fits = defaultdict ( SE )  ## fit statuses 
-    covs = defaultdict ( SE )  ## covarinace matrix quality
+    covs = defaultdict ( SE )  ## covariance matrix quality
     
     ## run pseudoexperiments
     from ostap.utils.progress_bar import progress_bar 
