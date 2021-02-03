@@ -10,6 +10,8 @@
 #  - Bukin                               (exponential or gaussian tails)
 #  - symmetric double-sided Crystal Ball (power-law  tails)
 #  - symmetric Student-T                 (power-law  tails)
+#  - symmetric Sinh-Asinh model          (tails can be heavy or light)
+#  - symmetric JohnsonSU  model          (tails can be heavy or light)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================

@@ -721,7 +721,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,  ## the name 
-                   xvar             ,  ## the varibale 
+                   xvar             ,  ## the variable
                    phasespace       ,  ## Ostap::Math::PhaseSpace(Left/2)
                    power    = 2     ,  ## degree of the polynomial
                    tau      = None  ,  ## the exponent 
@@ -828,7 +828,7 @@ class TwoExpoPoly_pdf(PolyBase) :
     where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
     
     >>>  mass = ROOT.RooRealVar( ... ) 
-    >>>  bkg  = TwoExpoPolu_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
+    >>>  bkg  = TwoExpoPoly_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
     
     """
     ## constructor
@@ -839,8 +839,8 @@ class TwoExpoPoly_pdf(PolyBase) :
                    delta    = None  ,   ## (alpha+delta) is the slope of the first exponent
                    x0       = 0     ,   ## f(x)=0 for x<x0 
                    power    = 0     ,   ## degree of polynomial
-                   xmin     = None  ,  ## optional x-min
-                   xmax     = None  ,  ## optional x-max                    
+                   xmin     = None  ,   ## optional x-min
+                   xmax     = None  ,   ## optional x-max                    
                    the_phis = None  ) : 
         #
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
@@ -870,7 +870,7 @@ class TwoExpoPoly_pdf(PolyBase) :
         
         self.__x0     = self.make_var ( x0                  ,
                                   "x0_%s"     % name  ,
-                                  "x_{0}(%s)" % name  , x0    ,  *limits_x0 )
+                                  "x_{0}(%s)" % name  , x0  ,  *limits_x0 )
 
         #
         xmin , xmax = self.xminmax() 

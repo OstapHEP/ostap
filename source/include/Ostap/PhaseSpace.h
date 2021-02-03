@@ -434,7 +434,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PhaseSpaceLeft
-     *  Function to represent N-body phase space near left-threshold
+     *  Function to represent N-body phase space near the left-threshold
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
