@@ -46,7 +46,9 @@ jobs:
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
         source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core
+        coveralls --output=lcov.info
     - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./lcov.info
