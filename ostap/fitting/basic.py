@@ -1215,8 +1215,9 @@ class PDF (FUNC) :
                 if draw :
                     graph.SetPoint ( len ( graph ) , v , p ) ## add right point 
                     if i < 2 : graph.RemovePoint ( 0 )       ## remove fake points 
-                        
-        ## 4) re-create the graph 
+                    if ROOT.gPad : ROOT.gPad.Update()
+                    
+        ## 4) re-create the graph
         graph   = ROOT.TGraph ( len ( results ) )
         results.sort ()
         ymin    = None 
@@ -1224,10 +1225,10 @@ class PDF (FUNC) :
             x , y = point
             graph [ i ]  = x , y 
             ymin = y if ymin is None else min ( ymin , y )
-            
+                    
         ## subtract the minimum 
-        graph -= vmin 
-            
+        graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
             logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
