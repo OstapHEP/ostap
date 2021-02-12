@@ -42,6 +42,7 @@ minuit.release ('p3')
   1. fix/rewrite/improve `ostap.histos.compare` module 
   1. improve reweighting machinery: make it more tunable (and less automatic) and more suitable for multidimensional reweighting. 
   1. Add new context manager `SETPARS` and use it in `PDF.wilks` , `PDF.wilks2` , `PDF.draw_nll`, `PDF.graph_nll`, `PDF.graph_profile` 
+  1. Add logistic/"sech-squared" resolution model `ResoLogistic`
 
 ## Backward incompatible changes: 
   1. Reweighting machinery: different signature of `makeWeights` function -  new argument `make_plots`, different meaning of argument `power`,  different return value

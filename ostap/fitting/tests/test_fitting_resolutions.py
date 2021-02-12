@@ -188,6 +188,32 @@ def test_sech () :
     models.add ( reso_sech )
 
 # =============================================================================
+## Logistic 
+# =============================================================================
+def test_logistic () :
+    
+    logger.info ('Test ResoLogistic: logistic (sech-squared) resolution model' )
+    from   ostap.fitting.resolution import ResoLogistic
+    reso_log = ResoLogistic ( 'Logistic' , mass ,  0.1 )
+    reso_log.sigma .release()
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso_log. fitTo ( dataset0 )
+        result, frame = reso_log. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoLog :   RMS        %s ' % reso_log.rms          () )  
+        logger.info ( 'ResoLog :   FWHM       %s ' % reso_log.fwhm         () )
+        logger.info ( "ResoLog :   fit results\n%s" % result.table ( title = 'Logistic/sech-squared resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso_log )
+
+
+# =============================================================================
 ## symmetric Bukin
 # =============================================================================
 def test_bukin () :
@@ -298,6 +324,9 @@ if '__main__' == __name__ :
         
     with timing ("Sech"      , logger ) :  
         test_sech       () ## hyperbolic secant resolution model
+
+    with timing ("Logistic"  , logger ) :  
+        test_logistic   () ## logistic resolution model
         
     with timing ("Bukin"     , logger ) :  
         test_bukin      () ## Bukin resolution model

@@ -16,10 +16,11 @@
 #  @date 2017-07-13
 # =============================================================================
 """Set of useful resolution models:
-- single Gaussian                     (gaussian   tails)
-- double Gaussian                     (gaussian   tails)
-- symmetric Apollonios                (exponenial tails)
-- Sech/hyperbolic  secant             (exponenial tails)-
+- single Gaussian                     (gaussian    tails)
+- double Gaussian                     (gaussian    tails)
+- symmetric Apollonios                (exponential tails)
+- Sech/hyperbolic  secant             (exponential tails)
+- Logistic/Sech-squared               (exponential tails) 
 - symmetric Bukin                     (exponential or gaussian tails)
 - Symmetric double-sided Crystal Ball (power-law  tails)
 - Student-T                           (power-law  tails)
@@ -38,6 +39,7 @@ __all__     = (
     'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
     'ResoStudentT'  , ## Student-T resolution model,
     'ResoSech'      , ## Sech/hyperbolic secant  resolution model
+    'ResoLogistic'  , ## Logistic ("sech-squared") resoltuion model
     'ResoBukin'     , ## symmetric Bukin resolution model
     'ResoJohnsonSU' , ## symmetric Jonnson's SU resolution model 
     'ResoSinhAsinh' , ## symmetric Sinh-Asinh resolution model 
@@ -749,9 +751,60 @@ class ResoSinhAsinh(RESOLUTION) :
         self.__delta.setVal ( value ) 
 
 
+# =============================================================================
+## @class ResoLogistic
+#  Logistic, aka "sech-square" PDF
+#  \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
+#   where
+#   \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
+#  @see https://en.wikipedia.org/wiki/Logistic_distribution
+#  @see Ostap::Math::Logistic
+#  @see Ostap::Models::Logistic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2016-06-14
+class ResoLogistic(RESOLUTION) :
+    """ Logistic, aka ``sech-square'' PDF
+     \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
+     where
+     \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
+     - see https://en.wikipedia.org/wiki/Logistic_distribution
+     - see Ostap::Math::Logistic
+     - see Ostap::Models::Logistic
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   fudge     = 1    , 
+                   mean      = None ) : ## related to mean 
+        
+        
+        ## initialize the base 
+        super(ResoLogistic,self).__init__ ( name  = name  ,
+                                            xvar  = xvar  ,
+                                            sigma = sigma ,
+                                            mean  = mean  ,
+                                            fudge = fudge )
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Logistic (
+            "logistic_"     + name ,
+            "Logistic(%s)"  % name ,
+            self.xvar       ,
+            self.mean       ,
+            self.sigma_corr ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'fudge'     : self.fudge ,
+            }
 
         
-
 # =============================================================================
 if '__main__' == __name__ :
     

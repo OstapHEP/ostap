@@ -61,16 +61,16 @@ def print_stats (  stats , ntoys = '???' ) :
     """print statistics of pseudoexperiments
     """
     
-    table = [ ( 'Parameter' , '#', 'mean' , 'rms' , '%11s / %-11s' % ( 'min' , 'max' ) ) ] 
+    table = [ ( 'Parameter' , '#', 'mean' , 'rms' , '%13s / %-13s' % ( 'min' , 'max' ) ) ] 
     keys = stats.keys()
     keys = sorted ( keys )
 
     def make_row ( c ) :
         n      = "{:^11}".format ( c.nEntries() )
         mean   = c.mean ()
-        mean   = "%+11.4g +- %-11.4g" % ( mean.value() , mean.error() )
-        rms    = "%11.4g"             % c.rms ()
-        minmax = "%+11.4g / %-+11.4g" % ( c.min() , c.max () ) 
+        mean   = "%+13.6g +- %-13.6g" % ( mean.value() , mean.error() )
+        rms    = "%13.6g"             % c.rms ()
+        minmax = "%+13.6g / %-+13.6g" % ( c.min() , c.max () ) 
         return p , n , mean , rms  , minmax 
         
     
@@ -85,8 +85,10 @@ def print_stats (  stats , ntoys = '???' ) :
         table.append (  make_row ( c )  )
         
     import ostap.logger.table as Table
-    table = Table.table ( table , title = "Results of %s toys" % ntoys ,
-                          alignment = 'lcccc' , prefix = "# " )
+    table = Table.table ( table                                    ,
+                          title     = "Results of %s toys" % ntoys ,
+                          alignment = 'lcccc'                      ,
+                          prefix    = "# "                         )
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
 
 # ==============================================================================
