@@ -1011,7 +1011,7 @@ class PDF (FUNC) :
                                         
             ## scale it if needed
             if 1 != sf :
-                logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
+                logger.info ('draw_nll: apply scale factor of %.4g due to dataset weights' % sf )
                 graph  = frame.getObject ( 0 )
                 graph *= sf 
                 
@@ -1100,6 +1100,7 @@ class PDF (FUNC) :
                     values          ,
                     dataset         ,
                     silent  = True  ,
+                    draw    = False , 
                     args    = ()    , **kwargs ) :
         """Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
@@ -1118,7 +1119,11 @@ class PDF (FUNC) :
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
 
-        ## 2) collect NLL values 
+        import ostap.histos.graphs
+        ## 2) create graph if drawing reqested 
+        graph = ROOT.TGraph () if graph else None 
+            
+        ## 3) collect NLL values 
         results   = []
         vmin      = None
         with SETPARS ( self , dataset ) , SETVAR  ( var ) :
@@ -1128,10 +1133,12 @@ class PDF (FUNC) :
                 n   = nLL.getVal() 
                 res = v , n
                 results.append ( res )
-                vmin = n if vmin is None else min ( vmin , n ) 
-        
+                vmin = n if vmin is None else min ( vmin , n )
+                if draw :
+                    graph.SetPoint ( len ( graph ) , v , n ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ( "ap" )  
+
         ## 3) create graph
-        import ostap.histos.graphs
         graph = ROOT.TGraph ( len ( results ) )
         results.sort () 
         for i , point in enumerate ( results ) :
@@ -1144,6 +1151,8 @@ class PDF (FUNC) :
             logger.info ('graph_nll: apply scale factor of %s due to dataset weights' % sf )
             graph *= sf 
             
+        if draw : graph.draw ('ap')
+
         return graph 
 
     # =========================================================================
@@ -1190,18 +1199,15 @@ class PDF (FUNC) :
                                   nLL , vars )
 
         vals = [ v for v in values ]
+        assert 2 <= len ( vals ) , 'Invalid number of points %s. It must be at least 2' % len  (vals ) 
         vmin = min ( vals )
         vmax = max ( vals )
         minv = min ( var.getMin () , vmin )
         maxv = max ( var.getMax () , vmax )
         
-        ## 2) create graph 
+        ## 2) create graph if requested 
         import ostap.histos.graphs
-        graph = ROOT.TGraph ( 2 )
-        ## add two fake points (to be removed in process) 
-        graph [ 0 ] = vmin , 99.9
-        graph [ 1 ] = vmax , 99.9
-        if draw : graph.draw ( 'ap' )
+        graph = ROOT.TGraph () if draw else None 
                 
         ## 3) collect pLL values 
         results = [] 
@@ -1213,9 +1219,8 @@ class PDF (FUNC) :
                 res = v , p 
                 results.append ( res )
                 if draw :
-                    graph.SetPoint ( len ( graph ) , v , p ) ## add right point 
-                    if i < 2 : graph.RemovePoint ( 0 )       ## remove fake points 
-                    if ROOT.gPad : ROOT.gPad.Update()
+                    graph.SetPoint ( len ( graph ) , v , p ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ("ap")  
                     
         ## 4) re-create the graph
         graph   = ROOT.TGraph ( len ( results ) )
@@ -1231,10 +1236,10 @@ class PDF (FUNC) :
 
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_profile: apply scale factor of %.4g due to dataset weights' % sf )
             graph *= sf 
 
-        if draw : graph.draw ('apl')
+        if draw : graph.draw ('ap')
         
         return graph 
         
@@ -1327,7 +1332,7 @@ class PDF (FUNC) :
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
@@ -1449,7 +1454,7 @@ class PDF (FUNC) :
             dnll = nll_min - nll_max
 
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
         
             ## convert the difference in likelihoods into sigmas/significance
