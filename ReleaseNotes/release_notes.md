@@ -43,6 +43,7 @@ minuit.release ('p3')
   1. improve reweighting machinery: make it more tunable (and less automatic) and more suitable for multidimensional reweighting. 
   1. Add new context manager `SETPARS` and use it in `PDF.wilks` , `PDF.wilks2` , `PDF.draw_nll`, `PDF.graph_nll`, `PDF.graph_profile` 
   1. Add logistic/"sech-squared" resolution model `ResoLogistic`
+  1. Improve `PDG.graph_profile/PDF.graph_nll` : add `draw` argument to draw the graph in progress  
 
 ## Backward incompatible changes: 
   1. Reweighting machinery: different signature of `makeWeights` function -  new argument `make_plots`, different meaning of argument `power`,  different return value
