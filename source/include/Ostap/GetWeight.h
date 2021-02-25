@@ -20,9 +20,9 @@ namespace Ostap
   namespace Utils 
   {
     // ========================================================================
-    /** get the weight variable from data set (if and when possible)
+    /** get the name of the weight variable from data set (if and when possible)
      *  @param data (INPUT) dataset
-     *  @return weigth variable, if and when possible 
+     *  @return the name of weigth variable, if and when possible 
      */
     std::string getWeight ( const RooAbsData* data ) ;
     // ========================================================================

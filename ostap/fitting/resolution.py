@@ -574,7 +574,7 @@ class ResoJohnsonSU(RESOLUTION) :
                    xvar             ,
                    lambd     = None ,   ## related to sigma 
                    delta     = 1    ,
-                   fudge     = 0    ,
+                   fudge     = 1    ,
                    mean      = None ) :
         
         #
@@ -591,7 +591,7 @@ class ResoJohnsonSU(RESOLUTION) :
         self.__lambd = self.sigma
         self.__gamma = ROOT.RooRealConstant.value ( 0 )
         
-        self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
+        self.lambd.setMax ( self.lambd.getMax() * 100 ) ## adjust it! 
     
         self.__delta = self.make_var ( delta                 ,
                                        'delta_%s'     % name ,
@@ -604,11 +604,12 @@ class ResoJohnsonSU(RESOLUTION) :
         self.pdf = Ostap.Models.JohnsonSU (
             "ResoJSU_"          + name ,
             "ResoJohnsonSU(%s)" % name ,
-            self.xvar      ,
-            self.xi        ,
-            self.lambd     ,
-            self.delta     ,
-            self.gamma     )
+            self.xvar       ,
+            self.xi         ,
+            ## self.lambd      ,
+            self.sigma_corr , ## ATTENTION! as lambda ....
+            self.delta      ,
+            self.gamma      )
 
         ## save the configuration
         self.config = {
@@ -617,6 +618,7 @@ class ResoJohnsonSU(RESOLUTION) :
             'mean'      : self.mean    ,
             'lambd'     : self.lambd   ,
             'delta'     : self.delta   ,
+            'fudge'     : self.fudge   , 
             }
 
     @property

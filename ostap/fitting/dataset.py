@@ -27,6 +27,7 @@ import ROOT, random, math, sys
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
+from   ostap.math.base        import islong 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -613,7 +614,7 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
     
     if 1 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax  ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         histo = ROOT.TH1F ( hID() , w1 , 200 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
@@ -621,9 +622,9 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
 
     if 2 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax  ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         w2        = what[1] 
-        mn2 , mx2 = ds_var_minmax  ( dataset , w2 , cuts )
+        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         histo = ROOT.TH2F ( hID() , "%s:%s" % ( w1 , w2 ) ,
                             50 , mn1 , mx1 ,
                             50 , mn2 , mx2 )  ; histo.Sumw2()
@@ -633,11 +634,11 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
 
     if 3 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         w2        = what[1] 
-        mn2 , mx2 = ds_var_minmax ( dataset , w2 , cuts )
+        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         w3        = what[2] 
-        mn3 , mx3 = ds_var_minmax ( dataset , w3 , cuts )
+        mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
         histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w1 , w2 , w3 ) ,
                             20 , mn1 , mx1 ,
                             20 , mn2 , mx2 ,
@@ -684,8 +685,8 @@ def ds_var_minmax ( dataset , var , cuts = '' , delta = 0.0 )  :
     if isinstance ( var , ROOT.RooAbsReal ) : var = var.GetName() 
     if cuts : s = dataset.statVar ( var , cuts )
     else    : s = dataset.statVar ( var )
-    mn,mx = s.minmax()
-    if mn < mn and 0.0 < delta :
+    mn , mx = s.minmax()
+    if mn < mx and 0.0 < delta :
         dx   = delta * 1.0 * ( mx - mn )  
         mx  += dx   
         mn  -= dx   
@@ -698,7 +699,20 @@ _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
     ]
 
+# =============================================================================
+## find sutable range for drawing a variable 
+def ds_var_range ( dataset , var , cuts = '' ) :
+    """Find suitable range for drawing a variable
+    """
 
+    ## min/max values
+    
+    mn , mx = ds_var_minmax ( dataset , var , cuts )
+
+    from ostap.math.base import axis_range
+    
+    return axis_range ( mn , mx , delta = 0.05 )
+    
 # =============================================================================
 ## clear dataset storage
 if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
@@ -1007,7 +1021,7 @@ def _rds_unWeighted_ ( dataset , weight = '' ) :
         logger.error ("unweight: dataset is not weighted!") 
         return None, ''
     
-    ds , w = Ostap.Utils.unweight (  dataset , weight )  
+    ds , w = Ostap.Utils.unweight ( dataset , weight )  
     return ds , w 
 
 # =============================================================================

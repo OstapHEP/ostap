@@ -89,12 +89,12 @@ ROOT.RooCategory.labels = _rc_labels_
 #                 wvars  , { 'cc' : dsn_cc ,  'zz' : dsn_00 } ,
 #                 args = ( ROOT.RooFit.WeightVar( 'SS_sw' ) , ) )
 #  @endcode
-def combined_data ( sample        ,
-                    varset        , 
-                    datasets      ,
-                    name     = '' ,
-                    title    = '' ,
-                    args     = () ) :
+def combined_data ( sample          ,
+                    varset          , 
+                    datasets        ,
+                    name     = ''   ,
+                    title    = ''   ,
+                    args     = ()   ) :
     """
      Create combined  dataset for simultaneous fit
 
@@ -112,10 +112,14 @@ def combined_data ( sample        ,
      
      """
     
-    labels = sample.labels()
+    labels  = sample.labels()
     
     largs   = [ ROOT.RooFit.Index ( sample ) ] 
 
+
+    weights = set() 
+    ds_keep = []
+    
     for label in labels :
 
         dset = None 
@@ -131,21 +135,47 @@ def combined_data ( sample        ,
 
         assert not dset.isNonPoissonWeighted () ,\
                'Weighted data cannot be combined!'
-                    
-        largs.append (  ROOT.RooFit.Import ( label , dset ) )
 
+        if not dset.isWeighted () :
+            largs.append (  ROOT.RooFit.Import ( label , dset ) )
+        else :
+            uwdset , wnam = dset.unWeighted ()
+            assert uwdset and wnam, "Cannot ``unweight'' dataset!"
+            largs.append (  ROOT.RooFit.Import ( label , uwdset ) )
+            ds_keep.append ( uwdset ) 
+            weights.add    ( wnam   )
+
+    assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
+
+    weight = weights.pop() if weights else None 
+    
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
     args = args + tuple ( largs )
-
+        
     vars = ROOT.RooArgSet()
     if   isinstance ( varset , ROOT.RooArgSet  ) : vars = varset
     elif isinstance ( varset , ROOT.RooAbsReal ) : vars.add ( varset )
     else :
         for v in varset : vars.add ( v )
         
-    return ROOT.RooDataSet ( name , title , vars , *args )
+    if weight :
+        args = args + ( ROOT.RooFit.WeightVar ( weight ) , )
+        if not weight in vars : 
+            wvar = ROOT.RooRealVar ( weight , 'weigth variable' , 1 , -1.e+100 , 1.e+100 ) 
+            vars.add ( wvar ) 
+
+    ds = ROOT.RooDataSet ( name , title , vars , *args )
+
+    while ds_keep :
+        d = ds_keep.pop()
+        d.reset()
+        del d
+        
+    
+    return ds
+
 
 # =============================================================================
 ## create combined binned dataset for simultaneous fit
@@ -236,9 +266,9 @@ def combined_hdata ( sample        ,
     d2 = 0 < nd2
     d3 = 0 < nd3
     
-    assert ( not d1 and not d2 ) or \
-           ( not d2 and not d3 ) or \
-           ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
+    ## assert ( not d1 and not d2 ) or \
+    ##       ( not d2 and not d3 ) or \
+    ##       ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
             
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
@@ -248,10 +278,10 @@ def combined_hdata ( sample        ,
     else :  
         for v in varset : varlst.add ( v )
 
-    assert ( d3 and 3 == len ( varlst ) ) or \
-           ( d2 and 2 == len ( varlst ) ) or \
-           ( d1 and 1 == len ( varlst ) )  , \
-           'Invalid dimension of dataset!'
+    ## assert ( d3 and 3 == len ( varlst ) ) or \
+    ##       ( d2 and 2 == len ( varlst ) ) or \
+    ##       ( d1 and 1 == len ( varlst ) )  , \
+    ##       'Invalid dimension of dataset!'
     
     return ROOT.RooDataHist ( name , title , varlst , sample  , mm ) 
     
@@ -568,7 +598,7 @@ class SimFit ( MakeVar ) :
     - see RooSimultaneous
 
     Note that this class is *not* PDF, but it behaves rather similar to PDF,
-    and, in partcualr has such methods as 
+    and, in partcular has such methods as 
     - fitTo
     - draw
     - nll

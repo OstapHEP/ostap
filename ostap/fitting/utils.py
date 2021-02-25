@@ -45,17 +45,18 @@ __all__     = (
 import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   builtins               import range 
-from   ostap.core.core        import Ostap, rootID, VE, items_loop
-from   ostap.core.ostap_types import ( num_types     , list_types   ,
-                                       integer_types , string_types ,
-                                       is_good_number               )
-from   ostap.logger.utils     import roo_silent
-from   sys                    import version_info as python_version 
-from   ostap.math.random_ext  import ve_gauss, poisson
-from   ostap.core.meta_info   import root_version_int 
+from   builtins                import range 
+from   ostap.core.core         import Ostap, rootID, VE, items_loop
+from   ostap.core.ostap_types  import ( num_types     , list_types   ,
+                                        integer_types , string_types ,
+                                        is_good_number               )
+from   ostap.logger.utils      import roo_silent
+from   sys                     import version_info as python_version 
+from   ostap.math.random_ext   import ve_gauss, poisson
+from   ostap.core.meta_info    import root_version_int
+from   ostap.fitting.variables import SETVAR 
 # =============================================================================
-from   ostap.logger.logger import getLogger
+from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
@@ -1441,42 +1442,85 @@ class MakeVar ( object ) :
 #  @code
 #  h   = ...
 #  dset = H1D_dset ( h )
-#  @endcode 
+#  @endcode
+#  One can create binned (default) or weighted datasets depending
+#  on the value of <code>weighted</code> parameter
+#  @code
+#  h   = ...
+#  wset = H1D_dset ( h , weighted = True  )
+#  bset = H1D_dset ( h , weighted = False ) ## default 
+#  @endcode
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_dset(MakeVar) :
     """Simple convertor of 1D-histogram into data set
     >>> h   = ...
     >>> dset = H1D_dset ( h )
+    One can create `binned` (default) or `weighted` data set
+    >>> wset = H1D_dset ( h , weighted = True  )
+    >>> bset = H1D_dset ( h , weighted = False ) ## default 
     """
-    def __init__ ( self            , 
-                   histo           ,
-                   xaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             , 
+                   histo            ,
+                   xaxis    = None  , ## predefined axis/variable ? 
+                   density  = False ,
+                   weighted = False , ## weighted or binned? 
+                   silent   = False ) :
+        
+        import ostap.histos.histos
+        
         #
         ## use mass-variable
         #
-        assert isinstance ( histo , ROOT.TH1 ) , "``histo'' is not ROOT.TH1"
+        assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim () , "``histo'' is not ROOT.TH1"
         self.__histo      = histo 
         self.__histo_hash = hash ( histo )
         
+
         name           = histo.GetName()
         self.__xaxis   = self.make_var ( xaxis , 'x_%s' % name , 'x-axis(%s)' % name , None , *(histo.xminmax()) )
         
         self.__density = True if density else False 
         self.__silent  = silent 
-        
+
+        self.__wvar    = None
+
         with roo_silent ( self.silent ) :  
-            
-            self.__vlst = ROOT.RooArgList    ( self.xaxis )
-            self.__vimp = ROOT.RooFit.Import ( self.histo , self.density )
-            self.__dset = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
-            
+
+            ## create weighted dataset ?
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h1weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max ) 
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__wvar )
+                self.__wset = ROOT.RooArgSet   ( self.__wvar      )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
+                self.__dset = ROOT.RooDataSet  (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset , *self.__warg )
+
+                xvar = self.__xaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+                        
+            ## create binned dataset 
+            else :
+                
+                self.__vlst = ROOT.RooArgList    ( self.xaxis )
+                self.__vimp = ROOT.RooFit.Import ( self.histo , self.density )
+                self.__dset = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned data set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
+                
     @property     
     def xaxis ( self ) :
         """The histogram x-axis variable"""
@@ -1501,7 +1545,10 @@ class H1D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
 
 # =============================================================================
 ## simple convertor of 2D-histo to data set
@@ -1510,14 +1557,21 @@ class H1D_dset(MakeVar) :
 class H2D_dset(MakeVar) :
     """Simple convertor of 2D-histogram into data set
     """
-    def __init__ ( self            ,
-                   histo           ,
-                   xaxis   = None  ,
-                   yaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             ,
+                   histo            ,
+                   xaxis    = None  ,
+                   yaxis    = None  ,
+                   density  = False ,
+                   weighted = False ,
+                   silent   = False ) :
         #
-        assert isinstance ( histo , ROOT.TH2 ) , "``histo'' is not ROOT.TH2"
+        import ostap.histos.histos
+        
+        assert isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() , "``histo'' is not ROOT.TH2"
         self.__histo      =        histo
         self.__histo_hash = hash ( histo )
 
@@ -1535,15 +1589,40 @@ class H2D_dset(MakeVar) :
         self.__density = True if density else False 
         self.__silent  = silent
         
+        self.__wvar    = None
+
         with roo_silent ( silent ) : 
 
-            self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis )
-            self.__vimp  = ROOT.RooFit.Import ( histo , density )
-            self.__dset  = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
+            ## create weighted dataset 
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h2weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__yaxis , self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__dset = ROOT.RooDataSet (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset ,
+                    self.__warg )
+
+                xvar = self.__xaxis
+                yvar = self.__yaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , y , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        yvar.setVal     ( y.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+
+            ## create binned dataset 
+            else : 
+                self.__vlst  = ROOT.RooArgList    ( self.__xaxis , self.__yaxis )
+                self.__vimp  = ROOT.RooFit.Import ( histo , density )
+                self.__dset  = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned sata set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
             
     @property     
     def xaxis  ( self ) :
@@ -1573,6 +1652,10 @@ class H2D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
     
 # =============================================================================
 ## simple convertor of 3D-histo to data set
@@ -1581,15 +1664,22 @@ class H2D_dset(MakeVar) :
 class H3D_dset(MakeVar) :
     """Simple convertor of 3D-histogram into data set
     """
-    def __init__ ( self            ,
-                   histo           ,
-                   xaxis   = None  ,
-                   yaxis   = None  ,
-                   zaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             ,
+                   histo            ,
+                   xaxis    = None  ,
+                   yaxis    = None  ,
+                   zaxis    = None  ,
+                   density  = False ,
+                   weighted = False ,
+                   silent   = False ) :
         
-        assert isinstance ( histo , ROOT.TH3 ) , "``histo'' is not ROOT.TH3"
+        import ostap.histos.histos
+
+        assert isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim () , "``histo'' is not ROOT.TH3"
         self.__histo      =        histo
         self.__histo_hash = hash ( histo )
         #
@@ -1610,16 +1700,44 @@ class H3D_dset(MakeVar) :
         
         self.__density = True if density else False 
         self.__silent  = silent
-                
+        
+        self.__wvar    = None
+        
         with roo_silent ( silent ) : 
 
-            self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis , self.zaxis )
-            self.__vimp  = ROOT.RooFit.Import ( histo , density )
-            self.__dset  = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
+            ## create weighted dataset 
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h2weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__yaxis , self.__zaxis, self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__dset = ROOT.RooDataSet  (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset ,
+                    self.__warg )
+
+                xvar = self.__xaxis
+                yvar = self.__yaxis
+                zvar = self.__zaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , y , z , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        yvar.setVal     ( y.value () )
+                        zvar.setVal     ( z.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+
+            ## create binned dataset 
+            else : 
+                                
+                self.__vlst  = ROOT.RooArgList    ( self.__xaxis , self.__yaxis , self.__zaxis )
+                self.__vimp  = ROOT.RooFit.Import ( histo , density )
+                self.__dset  = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned data set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
             
     @property     
     def xaxis  ( self ) :
@@ -1653,7 +1771,11 @@ class H3D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
+    
 # =============================================================================
 ## @class XVar
 #  Helper class to keep all properties of the x-variable

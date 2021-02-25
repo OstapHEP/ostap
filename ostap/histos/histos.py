@@ -26,7 +26,7 @@ __all__     = (
     've_adjust'       , ## adjust the efficiency to be in physical range
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
-    'Histo3DFun'      , ## 3D-histogram as function object 
+    'Histo3DFun'      , ## 3D-histogram as function object
     )
 # =============================================================================
 import ROOT, sys, math, ctypes
@@ -50,6 +50,7 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               isint    , islong    ,
                               natural_entry        ,
                               natural_number       )
+from   ostap.math.base        import frexp10 
 from   ostap.core.ostap_types import integer_types, num_types , long_type
 import ostap.plotting.draw_attributes 
 # =============================================================================
@@ -7357,6 +7358,7 @@ def _h1_split2_ ( h1 , n ) :
 for h in ( ROOT.TH1F , ROOT.TH1D ) :
     h.split      = _h1_split1_
     h.split_bins = _h1_split2_
+
 
 # =============================================================================
 _decorated_classes_ = (

@@ -92,11 +92,12 @@ __all__     = (
     'vInts'          , ## std::vector<int>
     'vLongs'         , ## std::vector<long>
     ##
-    'frexp10'        , ## similar to math.frexp but woith radix=10,
+    'frexp10'        , ## similar to math.frexp but with radix=10,
     ## 
     'cpp'            , ## C++ global  namespace 
     'Ostap'          , ## C++ namespace Ostap 
     'std'            , ## C++ namespace Ostap
+    'axis_range'     , ## suitable axis range 
     ) 
 # =============================================================================
 import ROOT, cppyy, sys
@@ -679,6 +680,58 @@ def frexp10 ( value ) :
     return p.first, p.second
 
 # =============================================================================
+## Find suitable range for histogram axis 
+def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
+    """Find suitable range for histogram axis
+    """
+    xmn = min ( xmin , xmax )
+    xmx = max ( xmin , xmax )
+    
+    import math
+    
+    ## 1) special case
+    if isequal ( xmn , xmx ) :
+        return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
+
+    ## 2) special case
+    if islong ( xmn - 0.5 ) and islong ( xmn + 0.5 ) :
+        return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
+
+    d = xmx - xmn
+    
+    if 0 <= xmn < xmx :
+        
+        xmin = max ( 0 , xmn - delta * d )
+        xmax =           xmx + delta * d 
+        
+    elif xmn < xmx <= 0 :
+        
+        xmin =           xmn - delta * d 
+        xmax = max ( 0 , xmx + delta * d )
+        
+    elif xmn < 0 < xmx  :
+        
+        xmin = ( 1 + delta ) * xmn  
+        xmax = ( 1 + delta ) * xmx
+        
+    else : 
+    
+        xmin = xmn - delta * d 
+        xmax = xmx + delta * d 
+
+    a1 , b1 = frexp10 ( xmin )
+    a2 , b2 = frexp10 ( xmax )
+
+    b1  -= 2
+    b2  -= 2
+    
+    xmin = math.floor ( a1 * 100 ) * ( 10 ** b1 )
+    xmax = math.ceil  ( a2 * 100 ) * ( 10 ** b2 )
+    
+    return xmin , xmax
+    
+    
+# =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
@@ -692,6 +745,9 @@ if '__main__' == __name__ :
     print(' dir(Ostap.Math) : ')
     _v.sort()
     for v in _v : print(v)
+
+
+
 
 
 # =============================================================================
