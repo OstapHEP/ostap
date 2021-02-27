@@ -227,14 +227,15 @@ class PDF (FUNC) :
         - Signal(x)*Signal(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms1
+    
     @property
-    def crossterms2 ( self ) :
+    def crossterms2 ( self ) : 
         """``cross-terms'': cross-components for multidimensional PDFs e.g.
         - Signal(y)*Background(x)               for 2D-fits,
         - Signal(x)*Background(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms2
-    
+        
     @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
@@ -244,7 +245,7 @@ class PDF (FUNC) :
     def  histo_data ( self  , value ) :
         if   value is None :
             self.__histo_data = value 
-        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooDataHist ) :
+        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooAbsData ) :
             self.__histo_data = value 
         else :
             raise AttributeError("``histo_data'' has invalid type %s/%s" % (   value , type(value) ) )
@@ -809,7 +810,7 @@ class PDF (FUNC) :
             else :                
                 ## convert it! 
                 self.debug ('Create new H1D_dset'        ) 
-                self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = histo , xaxis = self.xvar , density = density , silent = silent )
                 data            = self.histo_data.dset
 
             if  self.xminmax() :
@@ -860,7 +861,7 @@ class PDF (FUNC) :
             # if histogram, convert it to RooDataHist object:
             xminmax = dataset.xminmax() 
             with RangeVar( self.xvar , *xminmax ) :                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset 
                 histo           = dataset 
                 
@@ -928,7 +929,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data   = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data   = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset          = self.histo_data.dset
                 kwargs [ 'ncpu' ] = 2   
                 return self.draw_nll ( var     = var      ,
@@ -1270,7 +1271,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
@@ -1371,7 +1372,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silnet = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks2 ( var            = var             ,
@@ -2979,7 +2980,7 @@ class H1D_pdf(H1D_dset,PDF) :
                    order   = 0     , ## interpolation order 
                    silent  = False ) :
         
-        H1D_dset.__init__ ( self , histo , xvar , density , silent )
+        H1D_dset.__init__ ( self , histo = histo , xaxis = xvar , density = density , silent = silent )
         PDF     .__init__ ( self , name  , self.xaxis ) 
 
         assert isinstance ( order, integer_types ) and 0 <= order ,\
