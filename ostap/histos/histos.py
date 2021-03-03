@@ -5933,14 +5933,14 @@ ROOT.TH1D. vline = _vline_
 
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin ( left = True )  
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
@@ -5949,7 +5949,7 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin ( left = True )  
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     _a = h1.GetXaxis()
     _e = list ( _a.edges() ) 
@@ -5978,14 +5978,14 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
     return hn 
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_left() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
@@ -5995,19 +5995,19 @@ def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_left()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , True , value , width )
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(1)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_right() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
@@ -6017,7 +6017,7 @@ def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_right()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , False , value , width ) 
 
@@ -6030,7 +6030,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -6042,7 +6042,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  - 2: min y
 #  - 3: max y 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -6056,7 +6056,7 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 2: min y
     - 3: max y 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h2.GetXaxis()
@@ -6115,7 +6115,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
     _h.add_fake_side       = _h2_add_fake_side_
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -6129,7 +6129,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  - 4: min z
 #  - 5: max z 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -6144,7 +6144,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 4: min z
     - 5: max z 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h3.GetXaxis()
@@ -7083,9 +7083,9 @@ def _h_n_bins_ ( self ) :
 ROOT.TH1 .n_bins = _h_n_bins_
 
 # =============================================================================
-## transfrom the x-axis for the 1D-historgam
+## transfrom the x-axis for the 1D-histogram
 def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
-    """Transfrom the x-axis for the 1D-historgam
+    """Transfrom the x-axis for the 1D-histogram
     """
     ax =  h1.GetXaxis()
     e  =  ax.edges()
@@ -7138,7 +7138,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
 #  @endcode
 #  Histogram is transformed as raw histigram (no Jacobian correction is applied)
 def _h1_transform_x_numbers_ ( h1 , fun ) :
-    """Make a historgam transfromation:
+    """Make a histogram transfromation:
     H(x)  ->  H'(y(x))
     where transformation is defined  y=fun(x)
     >>> h  = ...
@@ -7270,14 +7270,14 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
 ## Fill the histogram from iterable/generator/...
 #  @code
 #
-#  h1 = ... ## 1D historgam 
+#  h1 = ... ## 1D histogram 
 #  h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
 #  
-#  h2  = ... ## 2D historgam#
+#  h2  = ... ## 2D histogram#
 #  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
 #  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
 #
-#  h3  = ... ## 2D historgam#
+#  h3  = ... ## 2D histogram#
 #  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
 #  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
 #
@@ -7285,28 +7285,30 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
 def _h_fill_loop_ ( histo , filler ) :
     """Fill the histogram from iterable/generator/...
     >>> 
-    >>> h1 = ... ## 1Dhistorgam 
+    >>> h1 = ... ## 1Dhistogram 
     >>> h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
     
-    >>> h2  = ... ## 2D-historgam
+    >>> h2  = ... ## 2D-histogram
     >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
     >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
     
-    >>> h3  = ... ## 3D-historgam
+    >>> h3  = ... ## 3D-histogram
     >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
     >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
     """
-    
+
+    num = 0 
     for item in filler :
+        num += 1
         histo.Fill ( *item ) 
 
-    return histo 
+    return num  
 
 ROOT.TH1.fill_loop = _h_fill_loop_
 
 
 # ==============================================================================
-## split the historgam into <code>n</code> sub-histograms 
+## split the histogram into <code>n</code> sub-histograms 
 #  @code
 #  h1 = ...
 #  histos = h1.split(10) 
@@ -7331,13 +7333,13 @@ def _h1_split1_ ( h1 , n ) :
     return tuple ( histos ) 
 
 # ==============================================================================
-## split the historgam into sub-histograms with at most <code>n</code> bins 
+## split the histogram into sub-histograms with at most <code>n</code> bins 
 #  @code
 #  h1 = ...
 #  histos = h1.split_bins(10) 
 #  @endcode 
 def _h1_split2_ ( h1 , n ) :
-    """Split the historgam into sub-histograms with at most <code>n</code> bins 
+    """Split the histogram into sub-histograms with at most <code>n</code> bins 
     >>> h1 = ...
     >>> histos = h1.split_bins ( 10 ) 
     """

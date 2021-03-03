@@ -94,7 +94,8 @@ zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
 # =============================================================================
-
+## helper function for case-insensitive dictionary with ignorance of underscores and blanks 
+cidict_fun = lambda k : k.lower().replace('_','').replace(' ','')
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)
@@ -301,7 +302,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         """
         
         from ostap.utils.cidict import cidict
-        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        kw = cidict ( transform = cidict_fun , **kwargs )
         
         ## Line
         

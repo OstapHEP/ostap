@@ -2174,6 +2174,32 @@ class PDF (FUNC) :
         dataset.project ( hdata , self.xvar.name )
         return self.pull_histo ( hdata ) 
         
+    # ==========================================================================
+    ## make 2D-cpontours
+    # ==========================================================================
+    def contours ( self              ,
+                   var1              ,
+                   var2              ,
+                   dataset           ,
+                   levels  = ( 1 , ) ,
+                   npoints = 100     ,
+                   **kwargs          ) :
+        
+        ## create the minuit 
+        mn = self.minuit ( dataset , **kwargs )
+        
+        ## get the parametrs
+        pars = self.params ( dataset ) 
+        assert var1 in pars , "Variable %s is not a parameter"   % var1
+        if not isinstance ( var1 , ROOT.RooAbsReal ) : var1 = pars [ var1 ]
+        assert var2 in pars , "Variable %s is not a parameter"   % var2
+        if not isinstance ( var2 , ROOT.RooAbsReal ) : var2 = pars [ var2 ]
+        del pars 
+
+        import ostap.fitting.roofitresult
+        status = mn.migrad( tag = 'contours' )
+
+        return mn.contour ( var1 , var2 , npoints , *levels ) 
 
         
     # ==========================================================================
@@ -3465,7 +3491,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__signal_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3485,7 +3511,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__background_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for f "  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
                 
     @property
@@ -3505,7 +3531,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__components_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3544,7 +3570,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
     
     @property
@@ -3582,7 +3608,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv  , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property
@@ -3620,7 +3646,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property 
@@ -3656,7 +3682,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property

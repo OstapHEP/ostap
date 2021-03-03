@@ -394,7 +394,7 @@ class ScaleAndShift ( FUNC ) :
     def a ( self , value ) :
         vv = float ( value )
         if self.__a.minmax () and not vv in self.__a  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__a.minmax() , self.__a.name ) )
         self.__a.setVal ( vv )
 
     @property
@@ -405,7 +405,7 @@ class ScaleAndShift ( FUNC ) :
     def b ( self , value ) :
         vv = float ( value )
         if self.__b.minmax () and not vv in self.__b  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__b.minmax() , self.__b.name ) )
         self.__b.setVal ( vv )
     
     @property

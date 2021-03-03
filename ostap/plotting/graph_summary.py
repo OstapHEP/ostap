@@ -17,7 +17,7 @@
 # average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
 # result = draw_summary ( data  , average  = average , vmax = 5 )
 # @endcode
-# "Average" can be alsoadded into list of data points:
+# "Average" can be also added into list of data points:
 # @code
 # data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
 #          Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -59,15 +59,148 @@ __all__     = (
     'Average'       , ## graphical representation of average  (box)
     'Summary'       , ## the  final summary graph 
     'make_summary'  , ## prepare summary graph 
-    'draw_summary'  , ## draw summary graph 
+    'draw_summary'  , ## draw summary graph
+    'error_band'    , ## prepare drawing for the error band(s)
     )
 # =============================================================================
 import ROOT
 from   ostap.core.ostap_types import num_types, string_types  
-from   ostap.core.core        import VE, hID
+from   ostap.core.core        import VE, hID, cidict_fun 
 from   ostap.utils.cidict     import cidict 
 from   ostap.utils.utils      import vrange  
 from   ostap.histos.graphs    import pos_infinity, neg_infinity
+# =============================================================================
+## Helper function to decode/pack/unpack/transform  errors and value
+#  From sequence of values, get value, and sequece of positive
+#  and sequence of negative errors
+#  @code
+#  v , ep , en = value_errors ( 0.1            , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 ) 
+#  v , ep , en = value_errors ( VE(0.1,0.2**2) , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 )
+#  @endcode 
+def value_errors ( value , *errors ) :
+    """Helper function to decode/pack/unpack/transform  errors and value
+    
+    >>> v , ep , en = value_errors ( 0.1            , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 ) 
+    >>> v , ep , en = value_errors ( VE(0.1,0.2**2) , 0.2 , (-0.1,0.4) , (-0.2,0.1) , 0.3 )
+    """
+    
+    _covp  = 0.0
+    _covn  = 0.0    
+    _errsp = []
+    _errsn = []
+    
+    if   isinstance ( value , num_types  ) :
+        
+        value = 1.0 * value
+        
+    elif isinstance ( value , VE ) and 0 <= value.cov2() :
+        
+        value = value.value()
+        covp += value.cov2()
+        covn += value.cov2()
+        _errsp.append ( _covp **0.5 ) 
+        _errsn.append ( _covn **0.5 )
+        
+    else :
+        raise TypeError( 'Invalid value %s/%s ' % ( value , type ( value ) ) ) 
+    
+    for i, e in enumerate ( errors ) :
+        
+        if   isinstance ( e , num_types ) and 0 <= e    : ep , en =  e   , -e  
+        elif 2 == len ( e ) and e[0] <= 0 and e[1] >= 0 : ep , en = e[1] , e[0] 
+        elif 2 == len ( e ) and e[1] <= 0 and e[0] >= 0 : ep , en = e[0] , e[1] 
+        else :
+            raise TypeError( 'Invalid errors[%d]=%s ' % ( i , str ( e ) ) ) 
+        
+        covp += ep * ep
+        covn += en * en
+        
+    _errsp.append ( covp ** 0.5 ) 
+    _errsn.append ( covn ** 0.5 ) 
+
+    return value , tuple ( _errsp ) , tuple (_errsn )
+
+# =============================================================================
+## Helper function to prepare drawing the error band
+#  @code
+#  objects = error_band2 ( value , positive_erorors , negative_errors , min_value = 0 , max_value = 10 , transpose = False )
+#  for o in objects : o.draw()
+#  @endcode
+def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
+    """Helper function to prepare drawing the error band(s)
+    >>> objects = error_band ( 1 , 0.2 , (-0.1,0.4) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
+    >>> for o in objects  : o.draw()
+    """
+    config = cidict ( transform = cidict_fun )
+    config.update ( kwargs )
+
+    transpose   = config.get ( 'transpose'   , False )
+    transparent = config.get ( 'transparent' , -1    )
+
+    if max_value < min_value :
+        min_value , max_value = max_value , min_value
+        
+    boxes = []
+        
+    ## fill color 
+    fcolor = config.get ( 'fill_color' , ROOT.kOrange )
+    
+    from  itertools import count
+    for fc , ep , en in zip ( count ( fcolor ) , reversed ( epos ) ,  reversed ( eneg ) ) :
+        
+        if not transpose :
+            box1 = ROOT.TBox ( value - en , min_value  , value + ep , max_value  )
+            box2 = ROOT.TBox ( value - en , min_value  , value + ep , max_value  )
+        else         :
+            box1 = ROOT.TBox ( min_value  , value - en , max_value  , value + ep )
+            box2 = ROOT.TBox ( min_value  , value - en , max_value  , value + ep )
+            
+        box1.set_fill_attributes ( **config ) 
+        box2.set_fill_attributes ( **config ) 
+        
+        ## adjust fill color for transparency
+        
+        if 0 <= transparent <= 1 : box1.SetFillColorAlpha ( fc , transparent ) 
+        else                     : box1.SetFillColor      ( fc ) 
+        
+        box2.SetLineColor ( fc - 1 )
+        box2.SetFillStyle ( 0      )
+        
+        boxes.append ( box1 )
+        boxes.append ( box2 )
+                
+    ##  mean value
+    if not transpose : line  = ROOT.TLine ( value     , min_value , value     , max_value )
+    else             : line  = ROOT.TLine ( min_value , value     , max_value , value     )
+    
+    line.set_line_attributes ( **config )
+    line.SetLineWidth ( config.get ( 'average_width' , 3 ) )
+
+    boxes.append ( line ) 
+    
+    return tuple ( boxes ) 
+
+
+# =============================================================================
+## Helper function to prepare drawing the error band
+#  @code
+#  objects = error_band ( 1 , 0.2 , (-0.1,0.4) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
+#  for o in objects : o.draw()
+#  objects = error_band ( VE(1,0.5**2) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
+#  @endcode
+def error_band ( value , *errors , **kwargs ) :
+    """Helper function to prepare drawing the error band(s)
+    >>> objects = error_band ( 1 , 0.2 , (-0.1,0.4) , (0.1,-0.3) , min_value = 0 , max_value = 10 , transpose = False )
+    >>> for o in objects  : o.draw()
+    """
+
+    ## decode/pack/unpack/transform errors 
+    v , epos , eneg = value_errors ( value , *errors )
+
+    ## make colored bands 
+    return error_band2 ( v , epos , eneg , **kwargs )
+
+    
 # =============================================================================
 ##  @class DrawConfig
 #   Helper base class to keep the configuration of drawing attributes 
@@ -75,7 +208,7 @@ class DrawConfig(object) :
     """Helper base class to keep the configuration of drawingattributes 
     """    
     def __init__ ( self , **config ) :
-        self.__config = cidict ( transform = lambda k : k.lower().replace('_','' ) )
+        self.__config = cidict ( transform = cidict_fun )
         self.__config.update   ( config )
          
     @property
@@ -258,8 +391,8 @@ class Record(Label) :
     def negative_errors ( self ) :
         """``positive errors'' : positive uncertainties (cumulative sum in quadrature)"""
         return self.__errsn
-
-    ## construct a graph objejct for this data point/measurement  at givel level 
+            
+    ## construct a graph object for this data point/measurement  at givel level 
     def point ( self , level ):
         """Contruct a graph objejct for this data point/measurement  at givel level"""
 
@@ -317,33 +450,18 @@ class Average(Record) :
         if not 'fill_color'    in self.config : self.config [ 'fill_color'    ] = ROOT.kOrange   
         if not 'line_color'    in self.config : self.config [ 'line_color'    ] = ROOT.kOrange + len ( self.positive_errors )    
         if not 'average_width' in self.config : self.config [ 'average_width' ] = 3 
-        
-    ## construct a colored bands for the average 
+        if not 'transparent'   in self.config : self.config [ 'transparent'   ] = 0.35 
+    
+    ## construct colored bands for the ``average with errors"
     def bands ( self , level ) :
-        """Construct a graph objejct for this ``average'' at givel level
+        """Construct a graph object for this ``average-with-errors'' at givel level
         """
-        
-        epos , eneg  = reversed ( self.positive_errors ) , \
-                       reversed ( self.negative_errors )
-
-        boxes  = []
-        for i , e in enumerate ( zip ( epos, eneg ) ) :
-            ep , en = e 
-            b = ROOT.TBox  ( self.value - en , 0., self.value + ep , level )
-            
-            b.set_fill_attributes ( **self.config )
-            ##  adjust  the color
-            b.SetFillColor ( self.config ['fill_color'] + i )
-            boxes.append ( b )
-
-        ##  mean value 
-        line  = ROOT.TLine( self.value , 0 , self.value , level )
-        line.set_line_attributes ( **self.config )
-        line.SetLineWidth ( self.config[ 'average_width' ] )
-        
-        boxes.append (  line  )   
-        
-        return tuple ( boxes ) 
+        return error_band2 ( self.value           ,
+                             self.positive_errors ,
+                             self.negative_errors ,
+                             min_value    = 0     ,
+                             max_value    = level ,
+                             **self.config        )  
 
 # ==============================================================================================
 ## @class Summary
@@ -541,7 +659,7 @@ def make_summary ( data               ,
     >>> average = Average ( 2.2 , 0.3 , Label = 'PDG' ) 
     >>> result = make_summary ( data  , average  = average )
     
-    ``Averag'' data  can be also added into list of data points:
+    ``Average'' data  can be also added into list of data points:
     
     >>> data = [ Record ( 1.0 , 0.1 ,(-0.2, 0.5 ), label = 'LHCb'  , color = 4 ) ,
     ... Record ( 2.0 , 0.5 ,0.5         , label = 'Belle' , color = 3 , marker_style = 23 ) ,
@@ -551,7 +669,7 @@ def make_summary ( data               ,
     """
     
     np      = len ( data )
-    grpahs  = []
+    graphs  = []
     limits  = []
     labels  = []
     points  = [] 

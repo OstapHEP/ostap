@@ -81,10 +81,12 @@ class Convolution(object):
         if   isinstance ( resolution , PDF            ) :
             self.__resolution = resolution
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
-            self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
+            rname = 'Reso_' + name  if name else 'Reso_' + resolution.GetName() 
+            self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar , name = rname ) 
         else :
             ## use   Gaussial resolution
             import ostap.fitting.resolution as OFR 
+            rname = 'Reso_' + name  if name else 'Reso_Gauss'
             self.__resolution = OFR.ResoGauss ( 'Reso' + name      ,
                                                 self.__xvar        ,
                                                 sigma = resolution ,
@@ -93,6 +95,8 @@ class Convolution(object):
         self.__buffer   = buffer
         self.__bufstrat = bufstrat 
         self.__nsigmas  = nsigmas
+
+        name = name if name else 'CONV_%s_%s' % ( pdf.name , self.resolution.name ) 
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
@@ -187,7 +191,11 @@ class Convolution(object):
     def nsigmas ( self ) :
         """``nsigmas'' : convolution window for RooNumConvPdf"""
         return self.__nsigmas
-        
+    @property
+    def name    ( self ) :
+        """``name'' : name of this convoltuoon object/name of pdf"""
+        return self.__pdf.name
+    
 # =============================================================================
 ## @class Convolution_pdf
 #  Helper class to simplify the convolutions
@@ -223,11 +231,6 @@ class Convolution_pdf(PDF) :
         else :
             raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
-        name = name if name else 'Cnv_%s' % pdf.name
-        
-        ## initialize the base 
-        PDF.__init__ ( self , name , xvar )
-        
         em = pdf.pdf.extendMode()
         if   1 == em : self.warning ( "PDF  ``canBeExtended''" )
         elif 2 == em : self.error   ( "PDF ``mustBeExtended''" )
@@ -237,7 +240,7 @@ class Convolution_pdf(PDF) :
             assert resolution.xvar is xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
             self.__cnv = resolution
         else :
-            self.__cnv = Convolution ( name       = name             ,
+            self.__cnv = Convolution ( name       = name if name else 'Cnv_%s' % pdf.name ,
                                        pdf        = self.old_pdf.pdf ,
                                        xvar       = xvar             ,
                                        resolution = resolution       ,
@@ -246,6 +249,12 @@ class Convolution_pdf(PDF) :
                                        buffer     = buffer           ,
                                        bufstrat   = bufstrat         ,
                                        nsigmas    = nsigmas          )
+
+        name = name if name else 'Cnv_%s_%s' %  ( pdf.name , self.convolution.name ) 
+                            
+        ## initialize the base 
+        PDF.__init__ ( self , name , xvar )
+
 
         ## the  actual convoluted PDF 
         self.pdf = self.__cnv.pdf 
@@ -274,8 +283,13 @@ class Convolution_pdf(PDF) :
     @property
     def old_pdf ( self ):
         """``old_pdf''  : original (non-convolved) PDF"""
-        return self.__old_pdf         
-
+        return self.__old_pdf
+    
+    @property
+    def resolution ( self ) :
+        """``resolution'' :  the actual resolution function/PDF"""
+        return self.cnv.resolution
+    
 
     ## ## redirect any other attributes to original PDF
     ## def __getattr__ ( self , attr ) :

@@ -779,10 +779,11 @@ def _rm_contour_ ( self                   ,
            'Invalid number of points %s' % npoints
     
     res  = self.save () 
-    
-    ## var1 = res.param ( var1 ) [ 1 ] 
-    ## var2 = res.param ( var2 ) [ 1 ] 
-
+    if not isinstance ( var1 , ROOT.RooAbsReal ) : 
+        var1 = res.param ( var1 ) [ 1 ]
+    if not isinstance ( var2 , ROOT.RooAbsReal ) :         
+        var2 = res.param ( var2 ) [ 1 ] 
+            
     n = 6 * [ 0.0 ]
     for i , l in enumerate ( levels ) :
         if len ( n ) <= i : break
@@ -799,7 +800,8 @@ def _rm_contour_ ( self                   ,
 if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
     ROOT.RooMinimizer._old_contour_ = ROOT.RooMinimizer.contour 
     _rm_contour_.__doc__ += '\n' + ROOT.RooMinimizer.contour.__doc__
-    ROOT.RooMinimizer. contour  = _rm_contour_ 
+    ROOT.RooMinimizer. new_contour  = _rm_contour_ 
+    ROOT.RooMinimizer. contour      = _rm_contour_ 
 
 # =============================================================================
 ## some decoration over RooFitResult

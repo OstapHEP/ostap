@@ -2030,7 +2030,7 @@ class Phases(MakeVar) :
         for s , v in  zip ( self.__phis , values ) :
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) )                 
             s.setVal   ( vv )
         nphi = len ( self.__phis )
 
@@ -2143,7 +2143,7 @@ class ParamsPoly(MakeVar) :
         for s , v in  zip ( self.__pars , values ) :
             vv = float ( v  )
             if s.minmax () and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )
+                self.error ("Value %s is outside the allowed region %s for %s "  % ( vv , s.minmax() , s.name ) )
             s.setVal   ( vv )
             
     def reset_pars ( self , value = 0 ) :
@@ -2204,7 +2204,7 @@ class ShiftScalePoly ( Phases ) :
     def a ( self , value ) :
         vv = float ( value )
         if self.__a.minmax () and not vv in self.__a  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__a.minmax() , self.__a.name ) )
         self.__a.setVal ( vv )
 
     @property
@@ -2215,7 +2215,7 @@ class ShiftScalePoly ( Phases ) :
     def b ( self , value ) :
         vv = float ( value )
         if self.__b.minmax () and not vv in self.__b  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__b.minmax() . self.__b.name ) )
         self.__b.setVal ( vv )
     
     @property
