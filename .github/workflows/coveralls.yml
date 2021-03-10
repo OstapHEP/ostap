@@ -47,6 +47,7 @@ jobs:
         source activate testenv
         source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core
     - name: Coveralls
-      run: |
-        CI_BRANCH=${GITHUB_REF#"ref/heads"} coveralls
-      shell: bash
+      uses: AndreMiras/coveralls-python-action@develop
+      with:
+        parallel: true
+        flag-name: Test
