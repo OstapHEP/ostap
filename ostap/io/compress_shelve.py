@@ -483,7 +483,7 @@ class CompressShelf(shelve.Shelf,object):
     #  db.ls() ## all keys
     #  db.ls ('*MC*')        
     #  @endcode 
-    def ls    ( self , pattern = '' , load = True , prefix = '# ' ) :
+    def ls    ( self , pattern = '' , load = True , prefix = '# ' , logger = None ) :
         """List the available keys (patterns included).
         Pattern matching is performed according to
         fnmatch/glob/shell rules [it is not regex!] 
@@ -513,7 +513,7 @@ class CompressShelf(shelve.Shelf,object):
         t     = type( self ).__name__
         tab   = self.table ( pattern = pattern , load = load , prefix = prefix )
         
-        ll    = getLogger ( n )
+        ll    = logger if logger else getLogger ( n )
         line  = 'Database %s:%s|%s #keys: %d size: %s' % ( t , ap , self.dbtype , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , tab ) )
                 
