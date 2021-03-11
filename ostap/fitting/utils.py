@@ -288,10 +288,10 @@ class MakeVar ( object ) :
     # =============================================================================
     ## generate some unique name
     @classmethod 
-    def generate_name ( cls , prefix = '' ) :    
-        name = prefix  
+    def generate_name ( cls , prefix = '' , suffix = '' ) :
+        name = prefix + suffix 
         while name in cls.__pdf_names or name in cls.__var_names or not name :
-            name = prefix + '_' + ''.join ( ( random.choice (  ascii_letters ) for i in range ( 6 ) )  )
+            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
         return name
     
     # =============================================================================

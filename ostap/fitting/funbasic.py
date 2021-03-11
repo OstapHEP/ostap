@@ -374,7 +374,7 @@ class FUNC(XVar) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {} , silent = False  ) :
+    def load_params ( self , params = {} , dataset = None , silent = False  ) :
         """Load parameters from
         - external dictionary `{ name : value }`
         - sequence of `RooAbsReal` objects
@@ -387,9 +387,15 @@ class FUNC(XVar) :
         >>> params = ( A , B , C , ... )
         >>> pdf.load_params ( dataset , params )  
         """
-        ## nothing to load 
-        if not params : return 
 
+        if dataset :
+            assert     isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of ``dataset':%s'" % type ( dataset ) 
+        else :
+            dataset = ROOT.nullptr
+            
+        if params :
+            assert not isinstance ( params  , ROOT.RooAbsData ) , "load_params: invalid type of ``params'':%s" % type ( params ) 
+            
         if isinstance ( params , ROOT.RooFitResult ) :
             params = params.dct_params () 
         

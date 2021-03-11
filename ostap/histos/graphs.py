@@ -649,7 +649,7 @@ def _gr_call_ ( graph , x , spline = None , opts = '' ) :
     >>> graph = ...
     >>> y     = graph ( 0.2 ) 
     """
-    ## if not spline : spline = ROOT.MakeNullPointer(ROOT.TSpline)
+    if spline is None : spline = ROOT.nullptr 
     return graph.Eval ( float( x ) , spline , opts )
 
 # =============================================================================

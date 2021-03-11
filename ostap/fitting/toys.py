@@ -300,8 +300,8 @@ def make_toys ( pdf                ,
     fix_pars = vars_transform ( params    ) 
     fix_init = vars_transform ( init_pars ) 
 
-    pdf.load_params ( None , fix_pars , silent = silent )
-    pdf.load_params ( None , fix_init , silent = silent )
+    pdf.load_params ( params = fix_pars , silent = silent )
+    pdf.load_params ( params = fix_init , silent = silent )
 
     ## save all initial parameters (needed for the final statistics)
     params  = pdf.params      ()
@@ -324,8 +324,8 @@ def make_toys ( pdf                ,
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
                 
         ## 1. reset PDF parameters 
-        pdf.load_params ( None , fix_pars  , silent = silent )
-        pdf.load_params ( None , init_pars , silent = silent )
+        pdf.load_params ( params = fix_pars  , silent = silent )
+        pdf.load_params ( params = init_pars , silent = silent )
 
         ## 2. generate dataset!  
         ## dataset = pdf.generate ( varset = varset , **gen_config )  
@@ -576,16 +576,16 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     for i in progress_bar ( range ( nToys ) , silent = not progress ) :
 
         ## 1. reset PDF parameters 
-        gen_pdf.load_params ( None , fix_gen_init , silent = silent )
-        gen_pdf.load_params ( None , fix_gen_pars , silent = silent )
+        gen_pdf.load_params ( params = fix_gen_init , silent = silent )
+        gen_pdf.load_params ( params = fix_gen_pars , silent = silent )
 
         ## 2. generate dataset!
         dataset =  gen_fun ( gen_pdf , varset = varset , **gen_config ) 
         if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
 
         ## 3. reset parameters of fit_pdf
-        fit_pdf.load_params ( None , fix_fit_init , silent = silent )
-        fit_pdf.load_params ( None , fix_fit_pars , silent = silent )
+        fit_pdf.load_params ( params = fix_fit_init , silent = silent )
+        fit_pdf.load_params ( params = fix_fit_pars , silent = silent )
         
         ## 4. fit it!  
         r = fit_fun ( fit_pdf , dataset , **fitcnf ) 

@@ -87,8 +87,7 @@ class Product1D_pdf(PDF) :
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
-        
-        if not name  : name  = "product_%s_%s"  % ( self.pdf1.name , self.pdf2.name )
+        name = name if name else self.generate_name ( prefix = "product_%s_%s_"  % ( self.pdf1.name , self.pdf2.name ) )
         if not title : title = "Product(%s,%s)" % ( self.pdf1.name , self.pdf2.name )
 
         ## initialize the base class
@@ -185,7 +184,7 @@ class Modify1D_pdf(Product1D_pdf) :
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
-        if not name  : name  = "modify_%s_%s"  % ( pdf.name , power )
+        name = name if name else self.generate_name ( prefix = "modify_%s_%s"  % ( pdf.name , power ) )
         if not title : title = "Modify(%s,%s)" % ( pdf.name , power )
 
         from ostap.fitting.background import PolyPos_pdf
@@ -245,5 +244,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
