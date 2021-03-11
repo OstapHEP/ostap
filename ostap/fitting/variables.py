@@ -546,11 +546,11 @@ def _rav_getvale_ ( self ) :
     """
     v = self.getVal()
     e = self.getError() 
-    return VE ( v , e*e ) if e>0 else v
+    return VE ( v , e * e ) if e > 0 else v
 
 # =============================================================================
 def _rav_setval_  ( self , value ) :
-    """Assign the valeu for the variable 
+    """Assign the value for the variable 
     >>> var = ...
     >>> var.value = 10 
     """
@@ -565,7 +565,7 @@ def _rav_setvalc_  ( self , value ) :
     >>> var.value = 10 
     """
     value = float ( value )
-    mn,mx  = self.getMin(), self.getMax() 
+    mn , mx  = self.getMin(), self.getMax() 
     if not mn <= value <= mx :
         logger.warning('Value %s is out the range [%s,%s]' %  ( value  , mn , mx ) ) 
     self.setVal ( value ) 

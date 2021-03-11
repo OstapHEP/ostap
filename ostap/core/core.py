@@ -44,8 +44,8 @@ __all__     = (
     'islong'           ,  ## Is float value actually long ?
     'inrange'          ,  ## Is float walue in range ?  
     ##
-    'natural_entry'    ,  ## natual entry?   @see Gaudi::Math::natural_entry 
-    'natural_number'   ,  ## natual numnber? @see Gaudi::Math::natural_number
+    'natural_entry'    ,  ## natural entry?  @see Ostap::Math::natural_entry 
+    'natural_number'   ,  ## natural nunber? @see Ostap::Math::natural_number
     ##
     'valid_pointer'    ,  ## Is it a valid C++ pointer?
     ##

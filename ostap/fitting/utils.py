@@ -46,7 +46,7 @@ import ROOT, math, random
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 from   builtins                import range 
-from   ostap.core.core         import Ostap, rootID, VE, items_loop
+from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
 from   ostap.core.ostap_types  import ( num_types     , list_types   ,
                                         integer_types , string_types ,
                                         is_good_number               )
@@ -707,12 +707,52 @@ class MakeVar ( object ) :
             _args = _a 
                                     
         return tuple ( _args )
-    
+
+    # =========================================================================
+    ## set value to a given value with the optional check
+    #  @code
+    #  pdf = ...
+    #  pdf.set_value ( my_var1 , 10 )
+    #  pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+    #  @endcode 
+    @staticmethod 
+    def set_value ( var , value , ok = lambda a , b : True ) :
+        """set value to a given value with the optional check
+        pdf = ...
+        pdf.set_value ( my_var1 , 10 )
+        pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+        """
+
+        ## must be roofit variable! 
+        assert isinstance ( var , ROOT.RooAbsVar ) , 'Invalid type of ``var'' %s' % type ( var )
+        
+        if not hasattr ( var ,  'setVal' ) :
+            raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
+
+        ## convert to float 
+        value = float ( value )
+
+        ## check for the range, if defined 
+        minmax = var.minmax ()
+        if minmax :
+            mn , mx = minmax
+            if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
+                raise ValueError ( "Value %s is outside of [%s,%s] region" % ( value , mn , mx ) ) 
+            
+        ## check for external conditions, if specified  
+        if not ok ( var , value ) :
+            raise ValueError ( "Value %s is not OK" % value ) 
+
+        ## finally set the value 
+        var.setVal ( value )
+
+        return isequal ( value , var.getVal () ) 
+
     # =========================================================================
     ## Create some expressions with variables
     # =========================================================================
     
-    # =============================================================================
+    # =========================================================================
     ## construct (on-flight) variable for the product of
     #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
     #  @code
