@@ -2724,7 +2724,7 @@ class Flat1D(PDF) :
     """
     def __init__ ( self , xvar , name = '' , title = '' ) :
         
-        name = name if name else self.generate_name ( prefix = 'Flat1D_')
+        name = name if name else self.generate_name ( prefix = 'flat1D_')
         PDF.__init__ ( self  , name , xvar ) 
         
         if not title : title = 'flat1(%s)' % name 
@@ -2771,7 +2771,7 @@ class Generic1D_pdf(PDF) :
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert pdf  and isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
 
-        name = name if name else self.generate_name ( prefix = prefix + pdf.GetName() + '_' , suffix = suffix )
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix )
         
         ## initialize the base 
         PDF . __init__ ( self , name , xvar , special = special )
@@ -2858,7 +2858,7 @@ class Sum1D(PDF) :
         else :
             raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf2, type(pdf2) , xvar , type(xvar) ) )
 
-        name = name if name else self.generate_name ( prefix = 'Sum1D_%_%_' % ( pdf1.name , pdf2.name ) ) 
+        name = name if name else self.generate_name ( prefix = 'sum1D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
 
         ## initialize the base class
         PDF.__init__ ( self , name , xvar )

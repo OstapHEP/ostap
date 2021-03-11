@@ -970,7 +970,7 @@ class Generic2D_pdf(PDF2) :
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"        
         assert isinstance ( pdf  , ROOT.RooAbsReal  ) , "``pdf'' must be ROOT.RooAbsReal"
         
-        name = name if name else self.generate_name ( prefix = prefix + pdf.GetName() + '_' , suffix = suffix ) 
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix ) 
         PDF2  . __init__ ( self , name , xvar , yvar , special = special )
 
         if not self.special : 
@@ -1060,7 +1060,7 @@ class Sum2D (PDF2) :
             raise TypeError ( "Invalid type: pdf1/xvar/yvar: %s/%s/%s" % ( pdf1 , xvar , yvar ) )
         
 
-        name = name if name else self.generate_name ( prefix = 'Sum2D_%_%_' % ( pdf1.name , pdf2.name ) )         
+        name = name if name else self.generate_name ( prefix = 'sum2D_%s_%s_' % ( pdf1.name , pdf2.name ) )         
         PDF2.__init__ ( self, name , xvar , yvar )
 
         self.__pdf1     = pdf1
@@ -1134,7 +1134,7 @@ class Flat2D(PDF2) :
     """
     def __init__ ( self , xvar , yvar , name = '' ,  title = '' ) :
 
-        name = name if name else self.generate_name ( prefix = 'Flat2D_')                            
+        name = name if name else self.generate_name ( prefix = 'flat2D_')                            
         PDF2.__init__ ( self  , name , xvar , yvar ) 
                         
         if not title : title = 'flat2(%s)' % name 

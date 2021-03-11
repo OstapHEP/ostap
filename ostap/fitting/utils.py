@@ -263,7 +263,7 @@ class MakeVar ( object ) :
         return self.__aux_keep
     @property
     def logger   ( self ) :
-        """``logger'': get the local Logger object"""
+        """``logger'': get the local logger object"""
         name    = self.name
         logname = str ( self.__class__.__name__ ) 
         if name : logname += '(' + name + ')'

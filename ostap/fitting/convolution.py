@@ -81,13 +81,13 @@ class Convolution(object):
         if   isinstance ( resolution , PDF            ) :
             self.__resolution = resolution
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
-            rname = 'Reso_' + name  if name else 'Reso_' + resolution.GetName() 
             self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar , name = rname ) 
         else :
             ## use   Gaussial resolution
-            import ostap.fitting.resolution as OFR 
-            rname = 'Reso_' + name  if name else 'Reso_Gauss'
-            self.__resolution = OFR.ResoGauss ( 'Reso' + name      ,
+            import ostap.fitting.resolution as OFR
+            rname  = ( 'Reso%s_' % name ) if name else 'ResoGauss_'
+            rname  = PDF.generate_name ( prefix = rname ) 
+            self.__resolution = OFR.ResoGauss ( rname              ,
                                                 self.__xvar        ,
                                                 sigma = resolution ,
                                                 mean  = None       )
@@ -96,7 +96,7 @@ class Convolution(object):
         self.__bufstrat = bufstrat 
         self.__nsigmas  = nsigmas
 
-        name = name if name else 'CONV_%s_%s' % ( pdf.name , self.resolution.name ) 
+        name = name if name else PDF.generate_name ( prefix = 'CONV_%s_%s' % ( pdf.name , self.resolution.name ) )
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
@@ -250,7 +250,7 @@ class Convolution_pdf(PDF) :
                                        bufstrat   = bufstrat         ,
                                        nsigmas    = nsigmas          )
 
-        name = name if name else 'Cnv_%s_%s' %  ( pdf.name , self.convolution.name ) 
+        name = name if name else self.generate_name ( prefix = 'Cnv_%s_%s_' %  ( pdf.name , self.convolution.name ) ) 
                             
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )

@@ -316,7 +316,7 @@ class Sim1D(PDF) :
         assert isinstance ( sample , ROOT.RooCategory ),\
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
-        if not name  : name  = 'SimFit_'                 +          sample.GetName()
+        name = name if name else self.generate_name ( prefix = 'sim1D_%s_' % sample.GetName() )
         if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
         
         self.__sample     = sample 
@@ -627,7 +627,8 @@ class SimFit ( MakeVar ) :
         assert isinstance ( sample , ROOT.RooCategory ),\
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
-        if not name  : name  = 'SimFit_'                 +          sample.GetName()
+        name = name if name else self.generate_name ( prefix = 'simfit_%s_' % sample.GetName() )
+        
         if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
 
         ## propagate the name 
@@ -1195,7 +1196,7 @@ class SimFit ( MakeVar ) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {}  , silent = False ) :
+    def load_params ( self , params = {}  , dataset = None , silent = False ) :
         """Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
@@ -1206,7 +1207,7 @@ class SimFit ( MakeVar ) :
         >>> pdf.load_params ( dataset , params )  
         """
         ## nothing to load 
-        return self.pdf.load_params ( dataset , params , silent )
+        return self.pdf.load_params ( params = params , dataset = dataset , silent = silent )
 
     # =========================================================================
     ##  Does this function depend on this variable,

@@ -1033,7 +1033,7 @@ class Generic3D_pdf(PDF3) :
         assert isinstance ( zvar , ROOT.RooAbsReal ) , "``zvar'' must be ROOT.RooAbsReal"
         assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf''  must be ROOT.RooAbsReal"
 
-        name = name if name else self.generate_name ( prefix = prefix + pdf.GetName() + '_' , suffix = suffix ) 
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix ) 
         PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special )
 
         if not self.special : 
@@ -1130,7 +1130,7 @@ class Sum3D(PDF3) :
             raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
         
 
-        name = name if name else self.generate_name ( prefix = 'Sum3D_%_%_' % ( pdf1.name , pdf2.name ) ) 
+        name = name if name else self.generate_name ( prefix = 'sum3D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
         PDF3.__init__ ( self , name , xvar , yvar , zvar )
 
         self.__pdf1     = pdf1
@@ -1204,7 +1204,7 @@ class Flat3D(PDF3) :
     """
     def __init__ ( self , xvar , yvar , zvar , name = ''  , title = '' ) :
 
-        name = name if name else self.generate_name ( prefix = 'Flat3D_')                            
+        name = name if name else self.generate_name ( prefix = 'flat3D_')                            
         PDF3.__init__ ( self  , name , xvar , yvar , zvar ) 
         
         if not title : title = 'flat3(%s)' % name 

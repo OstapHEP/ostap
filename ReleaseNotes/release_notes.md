@@ -1,9 +1,11 @@
+# v1.6.0.0
+
 ## New features 
 
   1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
   1. Make few important steps towards ROOT 6.23/01 ("New PYROOT"). Full  adaptation is not yet achieved, there   are some pending problems with effective inheritance from C++ classes (namely `TSelector`, `PyPDF`, `PyVAR`, ...). There are also some puzzling  crashes... 
   1. rename  tests, make test selection more transparent and easy to navigate back 
-  1. rename `ostap/fitting/selectors.py` to `ostap/fitting/pyselectors.py` to avoid the name clash for python3 
+  1. rename `ostap/fitting/selectors.py` to `ostap/fitting/pyselectors.py` to avoid the name clash for `python3` 
   1. add helper script `pplaunch` to launch remote pp-servers via ssh tunnels
   1. update `PyVar`, `PyVar2`, `PyPdf`,`PyPdf2`
   1. (almost) complete update for new PyROOT 
@@ -44,6 +46,7 @@ minuit.release ('p3')
   1. Add new context manager `SETPARS` and use it in `PDF.wilks` , `PDF.wilks2` , `PDF.draw_nll`, `PDF.graph_nll`, `PDF.graph_profile` 
   1. Add logistic/"sech-squared" resolution model `ResoLogistic`
   1. Improve `PDG.graph_profile/PDF.graph_nll` : add `draw` argument to draw the graph in progress  
+  1. Better (but not perfect yet) treatment/assignement of the unique names for many intermediate objects 
 
 ## Backward incompatible changes: 
   1. Reweighting machinery: different signature of `makeWeights` function -  new argument `make_plots`, different meaning of argument `power`,  different return value
