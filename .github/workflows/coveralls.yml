@@ -45,8 +45,8 @@ jobs:
         export PATH="$HOME/miniconda/bin:$PATH"
         export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
         source activate testenv
-        source build/INSTALL/thisostap.sh &&  coverage run -m nosetests -x --exe -v  --cover-package=ostap --no-byte-compile -w ./ostap/core
-        
+        echo "[run] relative_files = True" > .coveragerc
+        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core        
     - name: Coveralls
       uses: AndreMiras/coveralls-python-action@develop
       with:
