@@ -122,7 +122,7 @@ else                      : logger = getLogger ( __name__             )
 def dump_root ( objects , rfile  = '' ) :
 
     if not rfile :
-        rfile = 'ROOT_Objects_%s.root ' % root_version_int
+        rfile = 'ROOT_Objects_%s.root' % root_version_int
 
     if isinstance ( objects , ROOT.TObject ) : objects = [ objects ]
     
