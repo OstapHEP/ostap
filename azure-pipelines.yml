@@ -48,10 +48,10 @@ jobs:
 #
  - template: template-pipelines.yml  # Template reference
    parameters:
-    name: cs7_dev3_gcc10
+    name: cs7_dev3_gcc9
     vmImage:  'ubuntu-16.04'
     dockername: 'gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: '/dev3/latest'
-    CMTCONFIG: 'x86_64-centos7-gcc10-opt'
-    artifact: 'test_cs7_dev3_gcc10'
+    CMTCONFIG: 'x86_64-centos7-gcc9-opt'
+    artifact: 'test_cs7_dev3_gcc9'
 
