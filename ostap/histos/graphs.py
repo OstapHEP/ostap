@@ -2387,6 +2387,80 @@ ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 
 
 # =============================================================================
+## append the graph with new point
+#  @code
+#  point = x , y
+#  graph.append ( *point ) 
+#  @endcode
+def _gr_append_ ( graph , *point ) :
+    """ append the graph with new point
+    >>> point = x , y
+    >>> graph.append ( *point ) 
+    """
+    last = len ( graph )
+    graph.SetPoint ( last , 0 , 0 )
+    graph [ last ] = point
+    ##
+    return len ( graph )
+
+# =============================================================================
+## pop the point fro mthe graph
+#  @code
+#  graph = ...
+#  graph.pop ( 3 ) ## pop the point #3
+#  graph.pop (   ) ## pop th elast point 
+#  @endcode
+def _gr_pop_  ( graph , i = None ) :
+    """Pop the point fro mthe graph
+    >>> graph = ...
+    >>> graph.pop ( 3 ) ## pop the point #3
+    >>> graph.pop (   ) ## pop th elast point 
+    """
+
+    if i is None :
+        
+        last  = len ( graph )
+        if 1 <= last : 
+            point = graph [ -1 ] 
+            graph.RemovePoint ( last - 1 )
+            return point
+        
+        return None
+    
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+
+    point = graph [ i ]
+    graph.RemovePoint ( i )
+    return point
+
+# =============================================================================
+## swap two points in the graph
+#  @code
+#  graph = ...
+#  graph.swap ( 1 , 6 ) 
+#  @endcode 
+def _gr_swap_ ( grap , i , j ) :
+
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+    
+    if j < 0 : j += len ( graph )
+    if not j in graph : raise IndexError ( "Point #%s is not in graph!" % j )
+
+    pi = graph [ i ]
+    pj = graph [ j ]
+    
+    graph [ i ] = pj 
+    graph [ j ] = pi
+    
+    return graph
+
+ROOT.TGraph.append    =  _gr_append_
+ROOT.TGraph.swap      =  _gr_swap_ 
+ROOT.TGraph.pop       =  _gr_pop_ 
+
+# =============================================================================
 ## Transpose the graphs
 # =============================================================================
 
@@ -3051,6 +3125,9 @@ _new_methods_      = (
     ROOT.TGraph . __sech__   ,
     ROOT.TGraph . __probit__ ,
     ROOT.TGraph . __pow__    ,
+    #
+    ROOT.TGraph . append     ,
+    ROOT.TGraph . swap       ,    
     #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
