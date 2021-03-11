@@ -182,20 +182,21 @@ class  CleanUp(object) :
     @staticmethod
     def get_temp_file ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
         """Generate the name for the temporary file.
-        - the method shodul be  abvoided in favour of` CleanUp.tempfile`
+        - the method should be  avoided in favour of `CleanUp.tempfile`
         >>> fname = CleanUp.get_temp_file () 
         """
         with UseTmpDir ( _TmpDir ) :
             if date :
                 now = datetime.datetime.now()
                 prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )            
-            _file = tempfile.NamedTemporaryFile ( suffix = suffix ,
-                                                  prefix = prefix ,
-                                                  dir    = dir    , 
-                                                  delete = False  )
-            fname = _file.name
-            _file.close()
-            os.unlink(fname)
+
+            with tempfile.NamedTemporaryFile ( suffix = suffix ,
+                                               prefix = prefix ,
+                                               dir    = dir    , 
+                                               delete = False  ) as tfile :
+                fname = tfile.name
+                
+            os.unlink ( fname )            
             assert not os.path.exists ( fname )
             logger.verbose  ( 'temporary file      requested %s' % fname )
             return fname
