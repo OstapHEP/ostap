@@ -102,7 +102,7 @@ class PyTreeFunction(FuncTree) :
         if tree is None : tree = ROOT.nullptr 
         super(PyTreeFunction,self).__init__ ( tree  )
         assert callable   ( the_function ), \
-               'PyTreeFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+               'PyTreeFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
         self.__function = the_function
         
     @property
