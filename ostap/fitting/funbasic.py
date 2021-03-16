@@ -935,8 +935,8 @@ class SETPARS(object) :
     def __exit__ ( self , *_ ) :
         
         if self.__params : 
-            self.__fun.load_params ( self.__dataset , self.__params , silent = True )
-
+            self.__fun.load_params ( params = self.__params , dataset = self.__dataset , silent = True )
+            
         self.__fun     = None
         self.__params  = {}
         self.__dataset = ROOT.nullptr 
