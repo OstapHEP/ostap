@@ -96,8 +96,8 @@ def value_errors ( value , *errors ) :
     elif isinstance ( value , VE ) and 0 <= value.cov2() :
         
         value = value.value()
-        covp += value.cov2()
-        covn += value.cov2()
+        _covp += value.cov2()
+        _covn += value.cov2()
         _errsp.append ( _covp **0.5 ) 
         _errsn.append ( _covn **0.5 )
         
@@ -112,8 +112,8 @@ def value_errors ( value , *errors ) :
         else :
             raise TypeError( 'Invalid errors[%d]=%s ' % ( i , str ( e ) ) ) 
         
-        covp += ep * ep
-        covn += en * en
+        _covp += ep * ep
+        _covn += en * en
         
     _errsp.append ( covp ** 0.5 ) 
     _errsn.append ( covn ** 0.5 ) 
