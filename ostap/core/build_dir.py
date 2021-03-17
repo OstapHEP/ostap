@@ -11,7 +11,7 @@
 # =============================================================================
 """Set  build dir for ROOT
 - check environment varibale   OSTAP_BUILD_DIR
-- check the configurtaion file, section [General], field BUILD_DIR
+- check the configuration file, section [General], field BUILD_DIR
 - use the temporary directory
 """
 # =============================================================================
