@@ -19,7 +19,10 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'build_dir' , ## Build directory for ROOT 
+    'build_dir'      , ## Build directory for ROOT
+    'make_build_dir' , ## make (temporary) build directory for ROOT
+    'UseBuildDir'    , ## use  (temporary) build directory for ROOT
+    'use_build_dir'  , ## use  (temporary) build directory for ROOT    
     )
 # =============================================================================
 import ROOT, os 
@@ -53,17 +56,86 @@ if not build_dir :
         if good_dir ( bdir ) : build_dir = bdir
 
 # ==============================================================================
-# 3) use the temporary directory 
-if not build_dir :
+## Context manager to use certain build build directory 
+#  (useful for multiprocessing environment)
+#  @code
+#  with UseBuildDir() :
+#  ... 
+#  @endcode
+class UseBuildDir ( object ) :
+    """Context manager to use certain build build directory 
+    (useful for multiprocessing environment)
+    >>> with UseBuildDir() :
+    >>> ... 
+    """
+    def __init__ ( self , build = None ) :
+        
+        ##
+        if build and good_dir ( build ) :
+            self.__build   = build
+            self.__created = False 
+        else : 
+            self.__created = True             
+            self.__build   = make_build_dir ()
+            
+        self.__prev   = ROOT.gSystem.SetBuildDir ( self.__build )
+        
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
 
-    from ostap.utils.cleanup import CleanUp as _CU
-    bdir = _CU.tempdir ( prefix = 'build-' )
-    if good_dir ( bdir ) : build_dir = bdir
-    del _CU
+        self.__prev   = ROOT.gSystem.GetBuildDir ()
+        ROOT.gSystem.SetBuildDir ( self.__build )        
+        return ROOT.gSystem.GetBuildDir ()
+    
+    ## context manager: EXIT  
+    def __exit__ ( self , *_ ) :
+        
+        ROOT.gSystem.SetBuildDir ( self.__prev )
+        if self.__created :  
+            from ostap.utils.cleanup import CleanUp as CU
+            CU.remove_dir ( self.__build ) 
+
+# ==============================================================================
+## Context manager to use certain build build directory 
+#  (useful for multiprocessing environment)
+#  @code
+#  with use_build_dir() :
+#  ... 
+#  @endcode
+def use_build_dir ( build = None ) :
+    """Context manager to use certain build build directory 
+    (useful for multiprocessing environment)
+    >>> with Use_build_dir() :
+    >>> ... 
+    """
+    return UseBuildDir ( build )
+
+
+# ==============================================================================
+## create proper temporary directry for ROOT builds 
+def make_build_dir ( build = None ) :
+    """Create proper temporary directory for ROOT builds
+    """
+
+    if not build or not good_dir  ( build ) : 
+        from ostap.utils.cleanup import CleanUp as CU
+        build = CU.tempdir ( prefix = 'build-' )
+
+    if not os.path.exists ( build ) :
+        make_dir ( build )
+        
+    return build
+
+
+# ==============================================================================
+# 3) use the temporary directory 
+if not build_dir :    
+    build_dir = make_build_dir()
 
 # =============================================================================
 if build_dir and good_dir ( build_dir ) : 
-    ROOT.gSystem.SetBuildDir ( build_dir ) 
+    ROOT.gSystem.SetBuildDir ( build_dir )
+    
 
 build_dir = ROOT.gSystem.GetBuildDir ()
     

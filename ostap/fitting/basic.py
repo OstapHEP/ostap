@@ -426,6 +426,10 @@ class PDF (FUNC) :
                                  args   = args   , **kwargs ) 
 
         frame = None
+
+        ## if not silent :
+        ##     self.info ( "Fir resukt "result.table ( , prefix = '# ' ) 
+            
         
         ## draw it if requested
         if draw :  
@@ -1096,13 +1100,14 @@ class PDF (FUNC) :
     #                          vrange ( 0 , 100 , 100 ) ,
     #                          dataset                  )
     #  @endcode
-    def graph_nll ( self            ,
-                    variable        , 
-                    values          ,
-                    dataset         ,
-                    silent  = True  ,
-                    draw    = False , 
-                    args    = ()    , **kwargs ) :
+    def graph_nll ( self             ,
+                    variable         , 
+                    values           ,
+                    dataset          ,
+                    silent   = True  ,
+                    draw     = False ,
+                    subtract = True  , 
+                    args     = ()    , **kwargs ) :
         """Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_nll ( 'S'                     ,
@@ -1141,15 +1146,21 @@ class PDF (FUNC) :
 
         ## 3) create graph
         graph = ROOT.TGraph ( len ( results ) )
-        results.sort () 
+        results.sort ()
+        ymin   = None 
         for i , point in enumerate ( results ) :
             x , y = point 
-            if vmin is None : graph [ i ] = x , y
-            else            : graph [ i ] = x , y - vmin 
+            graph [ i ]  = x , y 
+            ymin = y if ymin is None else min ( ymin , y )
             
+       ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_nll: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_nll: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
             
         if draw : graph.draw ('ap')
@@ -1164,14 +1175,15 @@ class PDF (FUNC) :
     #                              vrange ( 0 , 12.5 , 10  ) ,
     #                              dataset                   )
     #  @endcode
-    def graph_profile ( self            ,
-                        variable        , 
-                        values          ,
-                        dataset         ,
-                        fix     = []    ,
-                        silent  = True  ,
-                        draw    = False , 
-                        args    = ()    , **kwargs ) :
+    def graph_profile ( self             ,
+                        variable         , 
+                        values           ,
+                        dataset          ,
+                        fix      = []    ,
+                        silent   = True  ,
+                        draw     = False ,
+                        subtract = True  , 
+                        args     = ()    , **kwargs ) :
         """Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_profile ( 'S'                     ,
@@ -1232,12 +1244,14 @@ class PDF (FUNC) :
             graph [ i ]  = x , y 
             ymin = y if ymin is None else min ( ymin , y )
                     
-        ## subtract the minimum 
-        graph -= ymin 
+        ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_profile: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
 
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_profile: apply scale factor of %.4g due to dataset weights' % sf )
+            logger.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
 
         if draw : graph.draw ('ap')

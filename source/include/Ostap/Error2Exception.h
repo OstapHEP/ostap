@@ -4,6 +4,11 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <vector>
+#include <string>
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -44,15 +49,16 @@ namespace Ostap
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: print error to stderr 
-      GslError  () ; 
+      GslError  ( const bool force = false ) ; 
       /// destructor: stop using the error  handler 
       ~GslError () ;
       // ======================================================================
     protected: 
       // ======================================================================
       typedef  void handler ( const char* , const char* , int , int ) ;
-      GslError ( handler* h ) ;
+      GslError ( handler* h , const bool force = false ) ;
       handler*  m_previous ;
+      bool      m_force    ;
       // ======================================================================
     };
     // ========================================================================
@@ -66,8 +72,34 @@ namespace Ostap
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: ignore error 
-      GslIgnore  () ; // constructor: make use of Gsl Error Handler: ignore error 
+      GslIgnore  ( const bool force = false ) ;
       // ======================================================================
+    };
+    // ========================================================================
+    /** @class GslCount
+     *  helper class to manipulate with GSL error handlers 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     */
+    class GslCount : public GslError 
+    {
+      //=======================================================================
+    public:
+      //=======================================================================
+      /// constructor: make use of Gsl Error Handler: counts errors 
+      GslCount ( const bool force = false ) ;
+      // ======================================================================
+      /// get total number of errors 
+      static std::size_t size  () ; // get total number of errors 
+      // ======================================================================
+      /// clear summary of errors 
+      static std::size_t clear () ;
+      // ======================================================================
+      typedef std::vector<std::string> Row   ;
+      typedef std::vector<Row>         Table ;
+      // ======================================================================
+      /// get all errors in a form of the  table 
+      static Table table () ;
+      // ======================================================================      
     };
     // ========================================================================
     /** @class GslException
@@ -81,7 +113,7 @@ namespace Ostap
     public:
       //=======================================================================
       /// constructor: make use of Gsl Error Handler: throw Exception 
-      GslException  () ; // constructor: make use of Gsl Error Handler: throw Exception 
+      GslException  ( const bool force = false ) ; 
       // ======================================================================
     };
     // ========================================================================

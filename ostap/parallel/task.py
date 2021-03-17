@@ -97,6 +97,8 @@ class Task(object) :
         obj.__dot_in_path = None
         obj.__batch       = None  
         obj.__batch_set   = False
+        obj.__build       = None
+        obj.__build_set   = False 
         
         return obj
 
@@ -171,12 +173,12 @@ class Task(object) :
     
     @property
     def append_to ( self ) :
-        """``append_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        """``append_to'' : a dictionary of environment variables to be appended"""
         return self.__append_to
 
     @property
     def prepend_to ( self ) :
-        """``prepend_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        """``prepend_to'' : a dictionary of environment variables to be appended"""
         return self.__prepend_to
     
     @property
@@ -190,7 +192,7 @@ class Task(object) :
 
     @property
     def batch_set ( self ) :
-        """``batch_set'' : is ``batch'' property actiovated?"""
+        """``batch_set'' : is ``batch'' property activated?"""
         return self.__batch_set
     
     @property
@@ -202,6 +204,22 @@ class Task(object) :
     def batch ( self , value ) :
         self.__batch     = True if value else False
         self.__batch_set = True
+
+    @property
+    def build ( self ) :
+        """``build'': use this as a build directory"""
+        return self.__build
+    @build.setter
+    def build ( self , value ) :
+        self.__build     = value
+        self.__build_set = True
+        
+    @property
+    def build_set ( self ) :
+        """``build_set'': is build directory defined?"""
+        return self.__build_set
+
+    
         
 # =============================================================================
 ## @class GenericTask
@@ -718,12 +736,18 @@ def task_executor ( item ) :
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
         
     if task.batch_set :
-        from ostap.utils.utils import Batch     as batch_context 
+        from ostap.utils.utils    import Batch       as batch_context 
     else :
-        from ostap.utils.utils import NoContext as batch_context 
+        from ostap.utils.utils    import NoContext   as batch_context 
 
-    ## use batch context 
-    with batch_context ( task.batch ) :
+    if task.build_set :
+        from ostap.core.build_dir import UseBuildDir as build_context
+    else :
+        from ostap.utils.utils    import NoContext   as build_context 
+        
+
+    ## use build & batch context 
+    with build_context ( task.build ), batch_context ( task.batch ) : 
         
         ## perform remote  inialization (if needed) 
         task.initialize_remote ( jobid ) 
@@ -734,7 +758,7 @@ def task_executor ( item ) :
 
         
 # =============================================================================
-## helper function to execute the function and collect stattistic
+## helper function to execute the function and collect statisticc
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 def func_executor ( item ) :

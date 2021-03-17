@@ -771,7 +771,7 @@ double Ostap::Math::psi ( const double x )
 {
   //
   // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_psi_e ( x , &result ) ;
