@@ -26,6 +26,9 @@ __all__     = (
     'useHandler'         , ## ditto 
     )
 # =============================================================================
+from ostap.core.core import Ostap 
+# =============================================================================
+
 ## helper base class/context manager  
 class ErrHandler(object) :
     def __init__  ( self , force = True ) :
@@ -55,7 +58,6 @@ class GslIgnore(ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self , force = True ) :
-        from ostap.core.core import Ostap 
         self.handler = Ostap.Utils.GslIgnore
         super(GslIgnore,self).__init__( force )
 
@@ -72,7 +74,6 @@ class GslError(ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self , force = True ) :
-        from ostap.core.core import Ostap 
         self.handler = Ostap.Utils.GslError   
         super(GslError,self).__init__(  force )
 
@@ -89,7 +90,6 @@ class GslCount(ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self , force = True ) :
-        from ostap.core.core import Ostap 
         self.handler = Ostap.Utils.GslCount   
         super(GslCount,self).__init__(  force )
         
@@ -106,7 +106,6 @@ class GslException (ErrHandler) :
     >>>    ... do something...
     """
     def __init__ ( self , force = True ) : 
-        from ostap.core.core import Ostap 
         self.handler = Ostap.Utils.GslException 
         super(GslException,self).__init__( force )
 
@@ -239,7 +238,6 @@ def print_gsl_errors () :
     """Catch GSL errors from C++ and print the summary table at exit
     """
     
-    from ostap.core.core import Ostap 
     gsl_cnt =  Ostap.Utils.GslCount
     if 0    == gsl_cnt.size() : return  ## No GSL errors 
     
@@ -268,12 +266,13 @@ def print_gsl_errors () :
         
         title = 'Summary of GSL errors'
         
-        import ostap.logger.table as T 
-        logger.error ( '%s:\n%s' % ( title , T.table ( rows , title = title , prefix = '# ' , alignment = 'ccccl') ) ) 
+        import ostap.logger.table     as     T
+        from   ostap.logger.colorized import attention 
+        logger.error ( '%s\n%s' % ( attention ( title ) , T.table ( rows , title = title, prefix = '# ' , alignment = 'ccccl') ) ) 
         
     ## clear the errors 
     gsl_cnt.clear() 
-        
+    del gsl_cnt 
     
 
 # =============================================================================
@@ -281,6 +280,7 @@ if '__main__' == __name__ :
     
     
     from ostap.utils.docme import docme
+    from  ostap.logger.logger import getLogger
     logger = getLogger ( 'ostap.utils.gsl' )
     docme ( __name__ , logger = logger )
 
@@ -296,6 +296,10 @@ if '__main__' == __name__ :
             setHandler ( 'Error'     )
             setHandler ( 'Error'     )
             setHandler ( 'Error'     )
+            
+    with gslCount ( force = True ) :
+        for i in range ( 20 ) :
+            Ostap.Math.psi ( -1 ) 
         
     logger.info ( 'Active handlers %s' % _global_gsl_handler ) 
     del   _global_gsl_handler[:]
