@@ -581,7 +581,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = p , n , '  ' + s , ''  
+        row = p , n , '  ' + s + ' (fix)' , ''  
         crows.append ( row ) 
 
     ## floating parameters 

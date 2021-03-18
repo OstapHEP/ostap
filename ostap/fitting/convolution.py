@@ -81,7 +81,7 @@ class Convolution(object):
         if   isinstance ( resolution , PDF            ) :
             self.__resolution = resolution
         elif isinstance ( resolution , ROOT.RooAbsPdf ) :
-            self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar , name = rname ) 
+            self.__resolution = Generic1D_pdf ( resolution , xvar = self.__xvar ) 
         else :
             ## use   Gaussial resolution
             import ostap.fitting.resolution as OFR
@@ -96,7 +96,7 @@ class Convolution(object):
         self.__bufstrat = bufstrat 
         self.__nsigmas  = nsigmas
 
-        name = name if name else PDF.generate_name ( prefix = 'CONV_%s_%s' % ( pdf.name , self.resolution.name ) )
+        name = name if name else PDF.generate_name ( prefix = 'cnv_%s@%s' % ( pdf.name , self.resolution.name ) )
         
         if self.useFFT : ## Use Fast Fourier transform  (fast)
             
@@ -118,10 +118,12 @@ class Convolution(object):
                     logger.info('Convolution: choose #bins %d' % self.__nbins )
 
             self.__xvar.setBins ( self.nbinsFFT , 'cache' )
-            
+
+            pdf_name  = PDF.generate_name ( prefix = 'FFT_' + name ) 
+            pdf_title = 'FFT convolution: %s (*) %s' %  ( pdf.name , self.resolution.name )
             self.__pdf = ROOT.RooFFTConvPdf (
-                'FFT'     + name       , 
-                'FFT(%s)' % name       ,
+                pdf_name               ,
+                pdf_title              ,
                 self.__xvar            ,
                 self.__old_pdf    .pdf ,
                 self.__resolution .pdf )            
@@ -135,9 +137,11 @@ class Convolution(object):
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
                    "Invalid ``nsigmas''  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
             
+            pdf_name  = PDF.generate_name ( prefix = 'NUMCNV_' + name ) 
+            pdf_title = 'NUM convolution: %s (*) %s' %  ( pdf.name , self.resolution.name )
             self.__pdf = ROOT.RooNumConvPdf (
-                'CNV'     + name       ,
-                'CNV(%s)' % name       ,
+                pdf_name               ,
+                pdf_title              ,
                 self.__xvar            ,
                 self.__old_pdf    .pdf ,
                 self.__resolution .pdf )
@@ -227,7 +231,7 @@ class Convolution_pdf(PDF) :
             self.__old_pdf = pdf 
             xvar = pdf.xvar
         elif isinstance ( pdf , ROOT.RooAbsPdf ) and xvar :
-            self.__old_pdf = Generic1D_pdf  ( pdf , xvar , name = '%s%s' % ( name , pdf.name )  )
+            self.__old_pdf = Generic1D_pdf  ( pdf , xvar )
         else :
             raise AttributeError ("Convolution_pdf: invalid pdf/xvar %s/%s"  % ( pdf , xvar ) ) 
 
@@ -240,7 +244,7 @@ class Convolution_pdf(PDF) :
             assert resolution.xvar is xvar, "Mismatch in ``xvar'': %s vs %s" % ( xvar , resolution.xvar )
             self.__cnv = resolution
         else :
-            self.__cnv = Convolution ( name       = name if name else 'Cnv_%s' % pdf.name ,
+            self.__cnv = Convolution ( name       = ''               ,
                                        pdf        = self.old_pdf.pdf ,
                                        xvar       = xvar             ,
                                        resolution = resolution       ,
@@ -250,7 +254,7 @@ class Convolution_pdf(PDF) :
                                        bufstrat   = bufstrat         ,
                                        nsigmas    = nsigmas          )
 
-        name = name if name else self.generate_name ( prefix = 'Cnv_%s_%s_' %  ( pdf.name , self.convolution.name ) ) 
+        name = name if name else self.generate_name ( prefix = 'Cnv_%s@%s_' %  ( pdf.name , self.resolution.name ) ) 
                             
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
@@ -283,6 +287,10 @@ class Convolution_pdf(PDF) :
     @property
     def old_pdf ( self ):
         """``old_pdf''  : original (non-convolved) PDF"""
+        return self.__old_pdf
+    @property
+    def original_pdf ( self ):
+        """``original_pdf''  : original (non-convolved) PDF"""
         return self.__old_pdf
     
     @property

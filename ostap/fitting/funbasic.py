@@ -415,7 +415,7 @@ class FUNC(XVar) :
                     pv = p.getVal ()   
                     if vv != pv : 
                         p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
                         table.append ( item ) 
                     keys.add ( key )
 
@@ -435,7 +435,7 @@ class FUNC(XVar) :
                     pv = p.getVal () 
                     if vv != pv :
                         p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
                         table.append ( item ) 
                     keys.add  ( i )
 
