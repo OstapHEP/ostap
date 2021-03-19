@@ -1203,7 +1203,7 @@ namespace Ostap
       /// the channel(s) 
       mutable std::vector<std::unique_ptr<ChannelBW> > m_channels ; // the channel(s)
       // ======================================================================
-    private : // integrtaion workspace 
+    private : // integration workspace 
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace

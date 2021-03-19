@@ -1186,10 +1186,16 @@ class PDF (FUNC) :
                         args     = ()    , **kwargs ) :
         """Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
-        >>> graph = pdf.graph_profile ( 'S'                     ,
-        ...                             range ( 0 , 12.5 , 20 ) ,
-        ...                             dataset                 )
+        >>> graph = pdf.graph_profile ( 'S'                      ,
+        ...                             vrange ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                  )
         """
+        
+        vals = [ v for v in values ]
+        assert vals, 'graph_profile: no points are specified!'
+                
+        vmin = min ( vals )
+        vmax = max ( vals )
 
         ## 1) create NLL 
         nLL , sf = self.nll ( dataset , silent = silent ,  args = args , **kwargs )
@@ -1199,6 +1205,10 @@ class PDF (FUNC) :
         pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+
+        if var.minmax () :            
+            minv = min ( var.getMin () , vmin )
+            maxv = max ( var.getMax () , vmax )
 
         vars = ROOT.RooArgSet ( var )
         for f in fix :
@@ -1211,17 +1221,11 @@ class PDF (FUNC) :
                                   'LL-profile(%s,%s)' % ( var.name , self.name ) ,
                                   nLL , vars )
 
-        vals = [ v for v in values ]
-        assert 2 <= len ( vals ) , 'Invalid number of points %s. It must be at least 2' % len  (vals ) 
-        vmin = min ( vals )
-        vmax = max ( vals )
-        minv = min ( var.getMin () , vmin )
-        maxv = max ( var.getMax () , vmax )
-        
         ## 2) create graph if requested 
         import ostap.histos.graphs
         graph = ROOT.TGraph () if draw else None 
-                
+                        
+
         ## 3) collect pLL values 
         results = [] 
         with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :

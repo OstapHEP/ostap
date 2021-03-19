@@ -1175,9 +1175,15 @@ double  Ostap::Math::BW::integral
   if ( t >= high ) { return                    0   ; }
   if ( t >  low  ) { return integral  ( t , high ) ; }
   //
-  // split into reasonable sub intervals
+  // split into reasonable sub intervals according to gamma-parameters 
+  double g0 = gamma () ;
+  if ( 0 < m_m0 ) 
+  {
+    // check the imaginary part at the pole and use it as "width"
+    const double gX = std::abs ( std::imag ( 1.0 / amplitude ( m_m0 ) ) / m_m0 ) ;
+    if ( 0 < gX ) { g0 = gX ; }
+  }
   //
-  const double g0 = gamma () ;
   if ( 0 < g0 ) 
   {
     //
