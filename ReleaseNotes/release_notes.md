@@ -4,6 +4,8 @@
  1. Add `Ostap::Math::Hyperbolic` hyperbolic distribition 
  1. Add `Ostap::Models::Hyperbolic` hyperbolic distribition 
  1. Add `Hyperbilic_pdf` hyperbolic distribition 
+ 1. Add `ROOT.TGraph.merge`
+ 1. Improve treatment of GSL errors 
 
 
 ## Backward incompatible changes: 

@@ -2601,7 +2601,7 @@ def _gr_merge_ ( graph , graph2 , sort = False ) :
     result = graph.Clone()
 
     lst = ROOT.TList()
-    lst.Add ( grapjh2 )
+    lst.Add ( graph2  )
     result.Merge( lst )
     
     del lst
