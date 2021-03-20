@@ -1066,6 +1066,45 @@ def test_rasingcosine () :
     models.add ( model )
 
 
+# ==========================================================================
+## Hyperbolic
+# ==========================================================================
+def test_hyperbolic() :
+    
+    logger.info ('Test Hyperbolic_pdf: hyperbolic distribution (exponential tails)' ) 
+    model_hyperbolic = Models.Fit1D (
+        signal = Models.Hyperbolic_pdf ( name = 'HB' , 
+                                         xvar      = mass               ,
+                                         mu        = signal_gauss.mean  ,
+                                         sigma     = signal_gauss.sigma ,
+                                         zeta      = ( 1   , -1 , 1e+6  ) ,
+                                         kappa     = ( 0   , -1 ,   1 ) ) ,
+        background = Models.Bkg_pdf ('BkgHB', xvar = mass , power = 0 ) , 
+        S = S , B = B 
+        )
+
+    model_hyperbolic.S.value  = 5000
+    model_hyperbolic.B.value  =  500
+    
+    with rooSilent() :
+        model_hyperbolic.signal.kappa.fix ( 0 )    
+        result, frame = model_hyperbolic. fitTo ( dataset0 )
+        model_hyperbolic.signal.kappa.release ()
+        result, frame = model_hyperbolic. fitTo ( dataset0 )
+        model_hyperbolic.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Hyperbolic  function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_hyperbolic )
+
+
+
+
+
+
 ## # =============================================================================
 ## ## Breit-Wigner with interference
 ## # =============================================================================
@@ -1243,10 +1282,17 @@ if '__main__' == __name__ :
     ## Laplace-function                            + background 
     with timing ('test_laplace'        , logger ) :
         test_laplace        () 
-    
+
+    ## Hyperbolic                                 + background 
+    with timing ('test_hyperbolic'     , logger ) :
+        test_hyperbolic        () 
+        
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
         test_db ()
+
+    pass
+
 
          
 # =============================================================================

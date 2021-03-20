@@ -19,6 +19,7 @@
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
 // ============================================================================
 // LHCbMath
@@ -1289,6 +1290,126 @@ Ostap::Math::barrier_g
   return std::complex<double> ( re_g , im_g ) ;
 }
 // ============================================================================
+
+
+// ============================================================================
+/*  modified Bessel function of the second kind 
+ *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_e 
+ *  @see gsl_sf_bessel_K1_e 
+ *  @see gsl_sf_bessel_Kn_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_e ( x , &result ) :
+    gsl_sf_bessel_Kn_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_K0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_K1_e" : 
+                "Error from gsl_sf_bessel_Kn_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_scaled_e 
+ *  @see gsl_sf_bessel_K1_scaled_e 
+ *  @see gsl_sf_bessel_Kn_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn_scaled 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_scaled_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_scaled_e ( x , &result ) :
+    gsl_sf_bessel_Kn_scaled_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( ( 0 == n ) ? "Error from gsl_sf_bessel_K0_scaled_e" : 
+                ( 1 == n ) ? "Error from gsl_sf_bessel_K1_scaled_e" : 
+                "Error from gsl_sf_bessel_Kn_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** modified Bessel function of the second kind  
+ *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu_scaled 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn_scaled ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_scaled_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+
 
 
 

@@ -488,6 +488,7 @@ class StatMerger(object) :
         """``merged'' : get the full merged statistic"""
         return self.__merged 
 
+    # =========================================================================
     ## Print the job execution statistics
     #  @code 
     #  merged = ...

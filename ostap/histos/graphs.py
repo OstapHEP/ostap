@@ -1275,73 +1275,21 @@ def _gr2_getslice_ ( graph , i , j ) :
 #  s     = graph.sorted() 
 #  @endcode
 #  @date   2016-03-28 
-def _gr0_sorted_ ( graph , reverse = False ) :
+def _gr_sorted_ ( graph , reverse = False ) :
     """Make sorted graph
     >>> graph = ...
     >>> s     = graph.sorted() 
     """
     
+    ## make new graph 
+    new_graph = graph.Clone() 
+
     oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraph ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
+    sitems = sorted ( oitems , key = lambda s : s [ 1 ] , reverse = reverse )
 
     ip = 0 
     for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr1_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1].value() , reverse = reverse )
-    
-    new_graph = ROOT.TGraphErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr2_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraphAsymmErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
+        new_graph [ ip ] = item [ 1 : ]
         ip += 1
 
     return new_graph 
@@ -1515,14 +1463,10 @@ ROOT.TGraph            .__getslice__  = _gr0_getslice_
 ROOT.TGraphErrors      .__getslice__  = _gr1_getslice_
 ROOT.TGraphAsymmErrors .__getslice__  = _gr2_getslice_
 
-ROOT.TGraph            .sorted        = _gr0_sorted_
-ROOT.TGraphErrors      .sorted        = _gr1_sorted_
-ROOT.TGraphAsymmErrors .sorted        = _gr2_sorted_ 
-
+ROOT.TGraph            .sorted        = _gr_sorted_
 
 ROOT.TGraph            .filter        = _gr_filter_
 ROOT.TGraph            .remove        = _gr_remove_
-
 
 # ==========================================================================
 import ostap.math.math_ve as mve
@@ -2635,6 +2579,43 @@ ROOT.TMultiGraph.ymin    = _gr_ymin_
 ROOT.TMultiGraph.xmax    = _gr_xmax_ 
 ROOT.TMultiGraph.ymax    = _gr_ymax_ 
 
+# ==============================================================================
+## merge two graphs into a common graph
+#  @code
+#  gr1 = ...
+#  gr2 = ...
+#  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+#  @endcode
+#  The method relies on <code>TGraph::Merge</code>, and the type of result is inherited fron the first argument 
+#  @see TGraph::Merge 
+def _gr_merge_ ( graph , graph2 , sort = False ) :
+    """Merge two graphs into a common graph
+    >>> gr1 = ...
+    >>> gr2 = ...
+    >>>  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+    The method relies on `ROOT.TGraph.Merge`, and the type of result is inherited from the first argument 
+    - see ROOT.TGraph.Merge 
+    """
+
+    ## clone the first argument 
+    result = graph.Clone()
+
+    lst = ROOT.TList()
+    lst.Add ( grapjh2 )
+    result.Merge( lst )
+    
+    del lst
+    
+    ## SORT if required 
+    if sort : result = result.sort()
+    
+    return result 
+    
+# ==============================================================================
+
+ROOT.TGraph            .merge         = _gr_merge_
+
+
 
 # =============================================================================
 ## Convert the histogram to into "Laffery-Wyatt" graph
@@ -2907,6 +2888,7 @@ def fill_area ( fun1                     ,
         
     graph.SetFillStyle(3013) 
     return graph 
+
 
 
 # ==============================================================================
@@ -3210,11 +3192,10 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors .__getslice__  ,
     #
     ROOT.TGraph            .sorted        ,
-    ROOT.TGraphErrors      .sorted        ,
-    ROOT.TGraphAsymmErrors .sorted        ,
     #
     ROOT.TGraph            .filter        ,
     ROOT.TGraph            .remove        ,
+    ROOT.TGraph            .merge         ,
     ##
     ROOT.TGraph.transpose                 ,
     ROOT.TGraph.T                         ,     

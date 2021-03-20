@@ -1,6 +1,11 @@
 
 ## New features 
 
+ 1. Add `Ostap::Math::Hyperbolic` hyperbolic distribition 
+ 1. Add `Ostap::Models::Hyperbolic` hyperbolic distribition 
+ 1. Add `Hyperbilic_pdf` hyperbolic distribition 
+
+
 ## Backward incompatible changes: 
 
 ## Bug fixes:

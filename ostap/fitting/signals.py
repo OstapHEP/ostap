@@ -46,6 +46,7 @@ Empricial PDFs to describe narrow peaks
   - Logistic_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
+  - Hyperbolic_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -93,6 +94,7 @@ __all__ = (
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
+    'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
@@ -2516,6 +2518,219 @@ class QGaussian_pdf(MASS) :
         self.__q.setVal ( value ) 
     
 models.append ( QGaussian_pdf )      
+
+
+
+
+# =============================================================================
+## @class Hyperbolic_pdf 
+#  Hyperbolic disribtion
+#  @see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+#  @see  Barndorff-Nielsen, Ole, 
+#    "Exponentially decreasing distributions for the logarithm of particle size". 
+#     Proceedings of the Royal Society of London. Series A,
+#     Mathematical and Physical Sciences. 
+#     The Royal Society. 353 (1674): 401–409
+#     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+#
+#  \f[  f(x;\mu, \beta, \delta, \gamma) = 
+#  \frac{\gamma}{2\alpha\delta K_1(\delta \gamma)}
+#  \mathrm{e}^{ -\sqrt{ \alpha^2\delta^2 + \alpha^2 (x-\mu)^2 } + \beta ( x - \mu)}
+#  \f]
+#  where 
+#  - \f$ \alpha^2 = \beta^2\f + \gamma^2$
+#  - \f$ K_1\f$ is a modified Bessel function of the second kind 
+#  
+# In the code we adopt parameterisation in terms of
+#  - location parameter \f$\mu\f$
+#  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+#  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+#  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the kurtosis 
+#
+# The parameters are defined as:
+# \f[\begin{array}{lcl}
+#     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_2(\zeta)}{\zetaK_1(zeta)} \\
+#     \kappa   & \equiv & \frac{\beta}{\sigma} \                   \
+#     \zeta\equiv\delta \gamma \end{array} \f]
+# - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+# - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+# - For small \f$ \zeta \f$ distribution shows kurtosis of 3 
+#
+# The inverse transformation is:
+# \f[ \begin{array}{lcl}
+#     \beta    & = & \frac{\kappa}{\sigma}            \\
+#     \delta   & = & \frac{\zeta}{\gamma}             \\
+#     \gamma   & = & \frac{\sqrt{A^*(\zeta)}}{\sigma} \\
+#     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+# where \f$ A^{*}(\zeta) = \frac{\zeta K^*_2(\zeta)}{K^*_1(zeta)} \f$. 
+# It is largely inspired by NIM A764 (2014) 150, arXiv:1312.5000, 
+# but has much better properties when \f$ \zeta \rigtarrow 0 \f$ 
+#  @see D. Martinez Santos and F. Dupertuis,
+#          "Mass distributions marginalized over per-event errors",
+#          NIM A764 (2014) 150, arXiv:1312.5000
+#          DOI: 10.1016/j.nima.2014.06.081",
+#
+#  The final form of the distribution is 
+#  \f[  f(x;\mu,\sigma,\zeta,\kappa) = 
+#      \frac{ A^*(\zeta) } { 2 \sigma \sqrt{\kappa^2+A^*(\zeta)} \zeta K^*_1(\zeta) } 
+#      \mathrm{e}^{\zeta - \sqrt{ (\kappa^2+A(\zeta))  \left( \frac{\zeta^2}{A(\zeta)}  +  
+#      \left( \frac{x-\mu}{\sigma}\right)^2  \right) } } 
+#    \f]
+#  where \f$ K^*_n(x)\f$ is a scaled modified Bessel functon to th eseodn kind 
+#   \f$ K^*_n(x) = \mathrm{e}^{x}K_1(x) \f$ 
+#
+#  In all expressions \f$ \left| \sigma \right|\f$ and 
+#  \f$ \left| \zeta \right|\f$ are used instead of \f$\sigma\f$ and \f$\zeta\f$ 
+# 
+#  @see Ostap::Models::Hyperbolic
+#  @see Ostap::Math::Hyperbolic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class Hyperbolic_pdf(MASS) :
+    """Hyperbolic distribution
+    - see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+    - see  Barndorff-Nielsen, Ole, 
+    #    `Exponentially decreasing distributions for the logarithm of particle size'. 
+    #     Proceedings of the Royal Society of London. Series A,
+    #     Mathematical and Physical Sciences. 
+    #     The Royal Society. 353 (1674): 401–409
+    #     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+    - see Ostap::Math::Hyperbolic
+    - see Ostap::Models::Hyperbolic
+    
+    Parameters are different from ``canonical''
+    - mu     : related to location   (equal to mean/mode for kappa=0) 
+    - sigma  : relates to width      (equal to RMS           for kappa=0)
+    - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
+    - kappa  : related  to asymmetry 
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   sigma     = 1    ,   ## relatd  to width  
+                   zeta      = 0    ,   ## related to kurtosis 
+                   kappa     = 0    ) : ## related to asymmetry
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+                 
+        
+        self.__mu    = self.mean 
+        
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
+        ## kappa  
+        self.__kappa = self.make_var ( kappa               ,
+                                       'kappa_%s'   % name ,
+                                       '#kappa(%s)' % name , None , kappa ,   -5 ,   5 ) 
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Hyperbolic (
+            "hyperbolic_"    + name ,
+            "hyperbolic(%s)" % name ,
+            self.xvar      ,
+            self.mu        ,
+            self.sigma     ,
+            self.zeta      ,
+            self.kappa     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mu'        : self.mu    ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'kappa'     : self.kappa }
+        
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to kurtosis"""
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mode ( self ) :
+        """``nominal_mode'' : actual mode of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().mode ()
+    
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+
+        
+models.append ( Hyperbolic_pdf )      
+
 
 # =============================================================================
 ## @class Voigt_pdf

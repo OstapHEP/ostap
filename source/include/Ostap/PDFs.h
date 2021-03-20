@@ -5111,6 +5111,143 @@ namespace Ostap
     // ========================================================================
 
     // ========================================================================
+    /** @class Hyperbolic 
+     *  Hyperbolic disribtion
+     *  @see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+     *  @see  Barndorff-Nielsen, Ole, 
+     *    "Exponentially decreasing distributions for the logarithm of particle size". 
+     *    Proceedings of the Royal Society of London. Series A, 
+     *    Mathematical and Physical Sciences. 
+     *    The Royal Society. 353 (1674): 401–409
+     *     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+     * 
+     *  \f[  f(x;\mu, \beta, \delta, \gamma) = 
+     *  \frac{\gamma}{2\alpha\delta K_1(\delta \gamma)}
+     *  \mathrm{e}^{ -\sqrt{ \alpha^2\delta^2 + \alpha^2 (x-\mu)^2 } + \beta ( x - \mu)}
+     *  \f]
+     *  where 
+     *  - \f$ \alpha^2 = \beta^2\f + \gamma^2$
+     *  - \f$ K_1\f$ is a modified Bessel function of the second kind 
+     *  
+     * In the code we adopt parameterisation in terms of
+     *  - location parameter \f$\mu\f$
+     *  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+     *  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+     *  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the kurtosis 
+     *
+     * The parameters are defined as:
+     * \f[\begin{array}{lcl}
+     *     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_2(\zeta)}{\zetaK_1(zeta)} \\
+     *     \kappa   & \equiv & \frac{\beta}{\sigma} \                   \
+     *     \zeta\equiv\delta \gamma \end{array} \f]
+     * - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+     * - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+     * - For small \f$ \zeta \f$ distribution shows kurtosis of 3 
+     *
+     * The inverse transformation is:
+     * \f[ \begin{array}{lcl}
+     *     \beta    & = & \frac{\kappa}{\sigma}            \\
+     *     \delta   & = & \frac{\zeta}{\gamma}             \\
+     *     \gamma   & = & \frac{\sqrt{A^*(\zeta)}}{\sigma} \\
+     *     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+     * 
+     * where \f$ A^{*}(\zeta) = \frac{\zeta K^*_2(\zeta)}{K^*_1(zeta)} \f$. 
+     * It is largely inspired by NIM A764 (2014) 150, arXiv:1312.5000, 
+     * but has much better properties when \f$ \zeta \rigtarrow 0 \f$ 
+     * @see D. Martinez Santos and F. Dupertuis,
+     *         "Mass distributions marginalized over per-event errors",
+     *          NIM A764 (2014) 150, arXiv:1312.5000
+     *          DOI: 10.1016/j.nima.2014.06.081",
+     *
+     *  The final form of the distribution is 
+     *  \f[  f(x;\mu,\sigma,\zeta,\kappa) = 
+     *     \frac{ A^*(\zeta) } { 2 \sigma \sqrt{\kappa^2+A^*(\zeta)} \zeta K^*_1(\zeta) } 
+     *     \mathrm{e}^{\zeta - \sqrt{ (\kappa^2+A(\zeta))  \left( \frac{\zeta^2}{A(\zeta)}  +  
+     *      \left( \frac{x-\mu}{\sigma}\right)^2  \right) } } 
+     *  \f]
+     *  where \f$ K^*_n(x)\f$ is a scaled modified Bessel functon to th eseodn kind 
+     *   \f$ K^*_n(x) = \mathrm{e}^{x}K_1(x) \f$ 
+     *
+     *  In all expressions \f$ \left| \sigma \right|\f$ and 
+     *  \f$ \left| \zeta \right|\f$ are used instead of \f$\sigma\f$ and \f$\zeta\f$ 
+     * 
+     *  @see Ostap::Math::Hyperbolic
+     */
+    class Hyperbolic: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Hyperbolic, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param name  name of PDF
+       *  @param title name of PDF
+       *  @param x     observable 
+       *  @param mu    related to location 
+       *  @param beta  related to asymmetry
+       *  @param gamma related to width 
+       *  @param delta related to width 
+       */
+      Hyperbolic( const char*          name  , 
+                  const char*          title ,
+                  RooAbsReal&          x     ,   // observable 
+                  RooAbsReal&          mu    ,   // location
+                  RooAbsReal&          sigma ,   // wodth 
+                  RooAbsReal&          zeta  ,   // zeta 
+                  RooAbsReal&          kappa ) ; // kappa 
+      /// "copy" constructor 
+      Hyperbolic ( const Hyperbolic& , const char* name = 0 ) ;
+      /// clone 
+      Hyperbolic* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      Hyperbolic () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+      ( RooArgSet&  allVars       , 
+        RooArgSet&  analVars      , 
+        const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+      ( Int_t       code          , 
+        const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Hyperbolic& function () const { return m_hyperbolic ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_mu    ;
+      RooRealProxy m_sigma ;
+      RooRealProxy m_zeta  ;
+      RooRealProxy m_kappa ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::Hyperbolic m_hyperbolic ;
+      // =====================================================================
+    } ;
+    // ========================================================================
+    
+    // ========================================================================
     // 1D-splines
     // ========================================================================
 

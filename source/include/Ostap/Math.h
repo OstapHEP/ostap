@@ -773,13 +773,20 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
-    bool isuint  ( const double x ) ;
+    bool isuint     ( const double x ) ;
+    // =========================================================================
+    /** is it a short value ?
+     */
+    bool isshort    ( const double x ) ;
+    /** is it am nusigned  short value ?
+     */
+    bool isushort   ( const double x ) ;
     // =========================================================================
     /** is the value actually unsigned long ?
      *  @author Vanya BELYAEV Ivan.Belyaev       
      *  @date 2011-07-18
      */
-    bool isulong  ( const double x ) ;
+    bool isulong    ( const double x ) ;
     // =========================================================================
     /** is the value actually long long?
      */

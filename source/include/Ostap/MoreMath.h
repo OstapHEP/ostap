@@ -452,7 +452,41 @@ namespace Ostap
     double H2 ( const double a  , 
                 const double u1 , 
                 const double u2 ) ;
-
+    
+    
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_e 
+     *  @see gsl_sf_bessel_K1_e 
+     *  @see gsl_sf_bessel_Kn_e 
+     */
+    double bessel_Kn         ( const int   n  , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_scaled_e 
+     *  @see gsl_sf_bessel_K1_scaled_e 
+     *  @see gsl_sf_bessel_Kn_scaled_e 
+     */
+    double bessel_Kn_scaled  ( const int   n  , const double ) ;
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_e 
+     */
+    double bessel_Knu        ( const double nu , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_scaled_e 
+     */
+    double bessel_Knu_scaled ( const double  nu , const double x ) ;
+    
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

@@ -6533,6 +6533,103 @@ Double_t Ostap::Models::QGaussian::analyticalIntegral
 }
 // ============================================================================
 
+
+
+// ============================================================================
+/*  constructor from all parameters
+ *  @param name  name of PDF
+ *  @param title name of PDF
+ *  @param x     observable 
+ *  @param mu    related to location 
+ *  @param beta  related to asymmetry
+ *  @param gamma related to width 
+ *  @param delta related to width 
+ */
+// ============================================================================
+Ostap::Models::Hyperbolic::Hyperbolic 
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,   // observable 
+  RooAbsReal&          mu        ,   // location
+  RooAbsReal&          sigma     ,   // respondible for asymmetry
+  RooAbsReal&          zeta      ,   // 
+  RooAbsReal&          kappa     )   // related to width 
+  : RooAbsPdf    ( name , title ) 
+  , m_x          ( "x"      , "Observable"            , this , x     ) 
+  , m_mu         ( "mu"     , "Location parameter"    , this , mu    ) 
+  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma ) 
+  , m_zeta       ( "zeta"   , "Zeta     parameter"    , this , zeta  ) 
+  , m_kappa      ( "kappa"  , "Kappa    parameter"    , this , kappa ) 
+  , m_hyperbolic ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Hyperbolic::Hyperbolic 
+( const Ostap::Models::Hyperbolic& right ,
+  const char*                      name  ) 
+  : RooAbsPdf    ( right , name ) 
+    //
+  , m_x          ( "x"     , this , right.m_x     ) 
+  , m_mu         ( "mu"    , this , right.m_mu    )  
+  , m_sigma      ( "sigma" , this , right.m_sigma ) 
+  , m_zeta       ( "zeta"  , this , right.m_zeta  ) 
+  , m_kappa      ( "kappa" , this , right.m_kappa ) 
+  , m_hyperbolic ( right.m_hyperbolic ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Hyperbolic*
+Ostap::Models::Hyperbolic::clone ( const char* name ) const 
+{ return new Ostap::Models::Hyperbolic ( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Hyperbolic::setPars () const 
+{
+  m_hyperbolic.setMu    ( m_mu    ) ;
+  m_hyperbolic.setSigma ( m_sigma ) ;
+  m_hyperbolic.setZeta  ( m_zeta  ) ;
+  m_hyperbolic.setKappa ( m_kappa ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Hyperbolic::evaluate() const 
+{
+  setPars() ;
+  return m_hyperbolic ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Hyperbolic::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Hyperbolic::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_hyperbolic.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
 // ============================================================================
 // Flat in 1D
 // ============================================================================
@@ -6745,6 +6842,7 @@ ClassImp(Ostap::Models::Gumbel             )
 ClassImp(Ostap::Models::Weibull            )
 ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::QGaussian          )
+ClassImp(Ostap::Models::Hyperbolic         )
 ClassImp(Ostap::Models::PositiveSpline     ) 
 ClassImp(Ostap::Models::MonotonicSpline    ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )
