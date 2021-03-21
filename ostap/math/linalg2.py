@@ -20,9 +20,9 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-from   builtins  import range 
 import ROOT, re
 from   sys       import version_info as python_version
+from   builtins  import range 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -30,8 +30,8 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.linalg2' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
-from ostap.math.base        import isequal , iszero , std, Ostap
-from ostap.core.ostap_types import num_types, integer_types
+from ostap.math.base        import isequal   , iszero, std , Ostap
+from ostap.core.ostap_types import num_types , integer_types
 from ostap.utils.clsgetter  import classgetter 
 # =============================================================================
 try :
@@ -162,8 +162,8 @@ class Method2(object) :
     """Access and keep two methods
     """
 
-    def __init__ ( self , factory1, factory2  ) :
-        
+    def __init__ ( self , factory1 , factory2  ) :
+
         self.__method1 = Method ( factory1 ) 
         self.__method2 = Method ( factory2 ) 
         
@@ -185,11 +185,15 @@ class Method2(object) :
     def methods ( self , a , b = None ) :
 
         oper  = self.__method1 ( a , b )
-        if not oper : return None, None    
+        
+        if not oper : return None, None
+        
         check = self.__method2 ( a , b  )
+        
         return oper, check 
 
     def __call__ ( self , a  , b = None ) :
+
         return self.methods ( a , b )
     
     def __nonzero__  ( self ) : return bool ( self.__method1 ) or bool ( self.__method2 ) 
@@ -298,7 +302,7 @@ class LinAlg(object) :
                                      'column'        , 'columns'        , 
                                      'cross'         , 'dot'            , 
                                      'sym'           , 'asym'           , 'skew'  ) ) :
-        """restore useful attributesc
+        """restore useful attributes
         """
         
         oa = '__old_attributes__' 
@@ -320,15 +324,13 @@ class LinAlg(object) :
     def CLEANUP () :
         """Cleanup LinAlg
         """
-
-        ##  print ('CLEANUP-START') 
-        ## return
-    
+        
         while LinAlg.decorated_matrices :
             LinAlg.restore ( LinAlg.decorated_matrices.pop() ) 
         while LinAlg.decorated_vectors  :
             LinAlg.restore ( LinAlg.decorated_vectors .pop() ) 
         
+
         while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices . popitem ()
         while LinAlg.known_smatrices    : LinAlg.known_smatrices    . popitem ()
         while LinAlg.known_svectors     : LinAlg.known_svectors     . popitem ()
@@ -419,6 +421,9 @@ class LinAlg(object) :
             LinAlg.method_EQ     . clear ()
             LinAlg.method_EQ     = None 
 
+        return
+
+
     mgetter = staticmethod ( mgetter  )
         
     # =========================================================================
@@ -499,8 +504,10 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+
             s1 = a.shape
             s2 = b.shape
+
             if s1 != s2 : return NotImplemented
             return a.to_numpy() + b
         
@@ -531,7 +538,7 @@ class LinAlg(object) :
         if oper and check and check.ok ( a, b ) :
             oper.iadd ( a, b )
             return a 
-        
+
         return NotImplemented 
                 
     # =========================================================================
@@ -644,8 +651,10 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+
             sa = a.shape            
             sb = b.shape
+
             if sa[-1] != sb[0] :
                 ##  return NotImplemented
                 raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )

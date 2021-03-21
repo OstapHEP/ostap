@@ -56,11 +56,11 @@ def test_linalg2() :
     logger.info ( 'l1 *= 2 : %s    '  % l1 )
 
 
-    ## if ( 3 , 5 ) <= python_version :
+    if ( 3 , 5 ) <= python_version :
         
-    ##     logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
-    ##     logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
-    ##     logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
+        logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
+        logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
+        logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
         
     logger.info('TEST matrices: ')
     
@@ -121,14 +121,17 @@ def test_linalg2() :
     logger.info ( ' l1 == (0,1,2) : %s ' % (  l1 == ( 0 , 1 , 2 ) ) )
     logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
 
+
+    print ( "HERE-1" )
     
-    ## if ( 3 , 5 ) <= python_version :
+    if ( 3 , 5 ) <= python_version :
         
-    ##     logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
-    ##     logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
-    ##     logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
-    ##     logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
+        logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
+        logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
+        logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
+        logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
          
+    print ( "HERE-2" ) 
 
     m22[0,0] = 1
     m22[0,1] = 2
@@ -143,25 +146,57 @@ def test_linalg2() :
     logger.info ( ' m22 == s22*1.0 : %s ' % ( m22 == s22 * 1.0 ) )
     logger.info ( ' m22 != s22*1.1 : %s ' % ( m22 != s22 * 1.1 ) )
 
+    print ( "HERE-3" ) 
 
+    ## ok 
+    m22 + m22
+
+    ## crash 
     m22 += m22
+
+    ## crash
+    m22 += Ostap.Math.Matrix(2,2) ()
+
+    print ( "HERE-4" ) 
+
     logger.info ( ' m22 += m22  :\n%s ' % m22 )
 
+    print ( "HERE-5" ) 
+
     m22 -= m22*2
+
+    print ( "HERE-6" ) 
+    
     logger.info ( ' m22 += m22*2 :\n%s ' % m22 )
 
+
+    print ( "HERE-7" ) 
+
     m22 += s22*0
+    m22 += s22
+    m22 = m22 + s22
+
+
+    print ( "HERE-8" ) 
+
     logger.info ( ' m22 += s22*0 :\n%s ' % m22 )
+
+    print ( "HERE-9" ) 
 
     m22 -= s22*2
     logger.info ( ' m22 -= s22*2 :\n%s ' % m22 )
 
+    print ( "HERE-10" ) 
+
     s22 += s22*2
     logger.info ( ' s22 += s22*2 :\n%s ' % s22 )
+
+    print ( "HERE-11" ) 
 
     s22 -= s22*2
     logger.info ( ' s22 -= s22*2 :\n%s ' % s22 )
     
+    print ( "HERE-12" ) 
     
     if np :
         logger.info ( 'Operations with numpy objects')
@@ -174,14 +209,24 @@ def test_linalg2() :
         logger.info ( 's22 * v2  : %s' % ( s22 * v2  ) )
         logger.info ( 'm22 * v2  : %s' % ( m22 * v2  ) )
         logger.info ( 'm23 * v3  : %s' % ( m23 * v3  ) )
+
+        logger.info ( 'm22 as np : %s' % ( m22.to_numpy() ) )
+        logger.info ( 's22 as np : %s' % ( s22.to_numpy() ) )
+        logger.info ( 'm23 as np : %s' % ( m23.to_numpy() ) )
         
         if 62006 <= root_version_int :
             logger.warning ("Tests with numpy are broken for ROOT %s" %  root_version_int ) 
-        else :             
-            logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy() ) )
-            logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy() ) )
-            logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy() ) )        
-            logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy() ) )
+        else :
+            
+            logger.info ( 'm22  + m22(np) :\n%s' % ( m22 + m22.to_numpy () ) )
+            logger.info ( 'm22  + s22(np) :\n%s' % ( m22 + s22.to_numpy () ) )
+            logger.info ( 's22  + s22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
+            logger.info ( 's22  + m22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
+            
+            logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy () ) )
+            logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy () ) )
+            logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy () ) )        
+            logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy () ) )
 
         
     logger.info ( 'SVector with errors')

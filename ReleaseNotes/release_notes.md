@@ -12,6 +12,8 @@
 
 ## Bug fixes:
 
+ 1. Fix some tiny incorrectnes in `Ostap/MatrixUtils2.h`
+
 
 # v1.6.0.0
 
