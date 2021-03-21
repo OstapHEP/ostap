@@ -377,19 +377,38 @@ class KeepCWD(object) :
     ...
     """
     def __init__ ( self , new_dir = '' ) :
-        self.cwd     = os.getcwd() 
-        self.new_dir = new_dir
+        
+        self.__cwd     = os.getcwd ()
+        self.__new_dir = new_dir
         
     def __enter__ (  self ) :
-        self.cwd = os.getcwd() 
-        if self.new_cdir and os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
+        
+        self.__cwd = os.getcwd()
+        
+        if   self.new_dir and     os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
             os.chdir ( self.new_dir )
-            return self
+        elif self.new_dir and not os.path.exist ( self.new_dir  ) :
+            logger.error ( "KeepCWD: directory ``%s'' does not exist!" % self.new_dir ) 
+        elif self.new_dir and not os.path.isdir ( self.new_dir  ) :
+            logger.error ( "KeepCWD: ``%s'' is not a directory!"       % self.new_dir ) 
+            
+        return self
         
     def __exit__ ( self , *_ ) :
         if os.path.exists ( self.cwd ) and os.path.isdir ( self.cwd ) :
             os.chdir ( os.cwd ) 
-            
+
+    @property
+    def cwd    ( self ) :
+        """``cwd'' : current working directory"""
+        return self.__cwd
+
+    @property
+    def new_dit ( self ) :
+        """``new_dir'' : new current working directory"""
+        return self.__new_dir 
+
+    
 # =============================================================================
 ## context manager to keep the current working directory
 #  @code
@@ -397,7 +416,7 @@ class KeepCWD(object) :
 #    ....
 #  @endcode 
 def keepCWD ( new_dir = '' ) :
-    """context manager to keep the current working directory
+    """Context manager to keep the current working directory
     >>> with keepCWD( new_dir ) :
     ...
     """

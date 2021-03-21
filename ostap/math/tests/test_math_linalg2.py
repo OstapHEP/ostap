@@ -121,9 +121,6 @@ def test_linalg2() :
     logger.info ( ' l1 == (0,1,2) : %s ' % (  l1 == ( 0 , 1 , 2 ) ) )
     logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
 
-
-    print ( "HERE-1" )
-    
     if ( 3 , 5 ) <= python_version :
         
         logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
@@ -131,8 +128,6 @@ def test_linalg2() :
         logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
         logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
          
-    print ( "HERE-2" ) 
-
     m22[0,0] = 1
     m22[0,1] = 2
     m22[1,0] = 2
@@ -146,8 +141,6 @@ def test_linalg2() :
     logger.info ( ' m22 == s22*1.0 : %s ' % ( m22 == s22 * 1.0 ) )
     logger.info ( ' m22 != s22*1.1 : %s ' % ( m22 != s22 * 1.1 ) )
 
-    print ( "HERE-3" ) 
-
     ## ok 
     m22 + m22
 
@@ -157,46 +150,28 @@ def test_linalg2() :
     ## crash
     m22 += Ostap.Math.Matrix(2,2) ()
 
-    print ( "HERE-4" ) 
-
     logger.info ( ' m22 += m22  :\n%s ' % m22 )
-
-    print ( "HERE-5" ) 
 
     m22 -= m22*2
 
-    print ( "HERE-6" ) 
-    
     logger.info ( ' m22 += m22*2 :\n%s ' % m22 )
 
-
-    print ( "HERE-7" ) 
 
     m22 += s22*0
     m22 += s22
     m22 = m22 + s22
 
 
-    print ( "HERE-8" ) 
-
     logger.info ( ' m22 += s22*0 :\n%s ' % m22 )
-
-    print ( "HERE-9" ) 
 
     m22 -= s22*2
     logger.info ( ' m22 -= s22*2 :\n%s ' % m22 )
 
-    print ( "HERE-10" ) 
-
     s22 += s22*2
     logger.info ( ' s22 += s22*2 :\n%s ' % s22 )
 
-    print ( "HERE-11" ) 
-
     s22 -= s22*2
     logger.info ( ' s22 -= s22*2 :\n%s ' % s22 )
-    
-    print ( "HERE-12" ) 
     
     if np :
         logger.info ( 'Operations with numpy objects')
@@ -250,7 +225,6 @@ def test_linalg2() :
     r2 = v2.transform ( rho  )
     logger.info ( " -> rho      %s " % r2 )
     
-
     
 # =============================================================================
 if '__main__' == __name__ :

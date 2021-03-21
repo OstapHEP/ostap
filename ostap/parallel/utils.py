@@ -228,17 +228,23 @@ def random_random ( *jobid ) :
     ##
     random.seed ()
     ##
-    jhid = jobid
+    jhid = jobid 
     jhid = jhid , os.getpid () , os.getppid() , os.uname()
     jhid = jhid , socket.getfqdn ()
     jhid = jhid , time.time ()
-    jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )   
+    jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )
+    jhid = jhid , os.urandom ( 32 )
     jhid = hash ( jhid ) 
     ##
-    if sys.version_info.major < 3 : random.jumpahead ( jhid )
-    else :
-        njumps = jhid % 9967
-        for j in range ( njumps ) : random.uniform ( 0 , 1 )
+    random.seed ( jhid )
+    ## 
+    if sys.version_info.major < 3 :
+        random.jumpahead ( jhid )
+    ##
+    njumps = jhid % 9967
+    for j in range ( njumps ) :
+        random.uniform ( 0 , 1 )
+    ## 
 
     ## sleep a bit (up to one second) 
     time.sleep ( random.uniform ( 0.01 , 1.0 ) )
