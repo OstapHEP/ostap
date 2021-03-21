@@ -370,41 +370,42 @@ def batch( batch = True ) :
 #  @code
 #  with KeepCWD ( new_dir ) :
 #    ....
-#  @endcode 
+#  @endcode
+#  - No action if no directory is specified 
 class KeepCWD(object) :
     """context manager to keep the current working directory
     >>> with KeepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
     def __init__ ( self , new_dir = '' ) :
         
-        self.__cwd     = os.getcwd ()
+        self.__old_dir = os.getcwd ()
         self.__new_dir = new_dir
-        
+
+    ## ENTER : context mamager 
     def __enter__ (  self ) :
         
-        self.__cwd = os.getcwd()
+        self.__old_dir = os.getcwd()
         
-        if   self.new_dir and     os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
+        if   self.new_dir :
             os.chdir ( self.new_dir )
-        elif self.new_dir and not os.path.exist ( self.new_dir  ) :
-            logger.error ( "KeepCWD: directory ``%s'' does not exist!" % self.new_dir ) 
-        elif self.new_dir and not os.path.isdir ( self.new_dir  ) :
-            logger.error ( "KeepCWD: ``%s'' is not a directory!"       % self.new_dir ) 
             
         return self
         
+    ## EXIT : context mamager 
     def __exit__ ( self , *_ ) :
-        if os.path.exists ( self.cwd ) and os.path.isdir ( self.cwd ) :
-            os.chdir ( os.cwd ) 
+        
+        if os.path.exists ( self.old_dir ) and os.path.isdir ( self.old_dir ) :
+            os.chdir ( self.old_dir )
+            
+    @property
+    def old_dir ( self ) :
+        """``old_dir'' : old working directory"""
+        return self.__old_dir
 
     @property
-    def cwd    ( self ) :
-        """``cwd'' : current working directory"""
-        return self.__cwd
-
-    @property
-    def new_dit ( self ) :
+    def new_dir ( self ) :
         """``new_dir'' : new current working directory"""
         return self.__new_dir 
 
@@ -415,12 +416,14 @@ class KeepCWD(object) :
 #  with keepCWD ( new_dir ) :
 #    ....
 #  @endcode 
+#  - No action if no directory is specified 
 def keepCWD ( new_dir = '' ) :
     """Context manager to keep the current working directory
     >>> with keepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
-    return KeepCWD (  new_dir ) 
+    return KeepCWD ( new_dir ) 
         
 # =============================================================================
 ## @class KeepCanvas
