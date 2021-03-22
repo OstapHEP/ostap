@@ -76,14 +76,14 @@ class LinAlgT(LA.LinAlg) :
         return mtrx.GetNcols()
 
     # ========================================================================
-    ## get number ofelemets in TVectorT 
+    ## get number of elements in TVectorT 
     #  @code
     #  tvec = ...
     #  size = mtrx.kSize  
     #  @endcode  
     @staticmethod
     def T_KSIZE ( tvec ) :
-        """Get number of elememnt in TVectorT 
+        """Get number of elements in TVectorT 
         >>> tvec = ...
         >>> tvec = tvec.kSize 
         """
