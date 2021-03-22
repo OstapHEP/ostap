@@ -1,0 +1,19 @@
+# v1.6.1.0
+
+## New features 
+
+ 1. Add `Ostap::Math::Hyperbolic` hyperbolic distribition 
+ 1. Add `Ostap::Models::Hyperbolic` hyperbolic distribition 
+ 1. Add `Hyperbilic_pdf` hyperbolic distribition 
+ 1. Add `ROOT.TGraph.merge`
+ 1. Improve treatment of GSL errors 
+
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+ 1. Fix some tiny incorrectnesses in `Ostap/MatrixUtils2.h`
+ 1. Fix small problem in `ostap.utils.utils.KeepCWD` context manager 
+
+
