@@ -95,11 +95,13 @@ def value_errors ( value , *errors ) :
         
     elif isinstance ( value , VE ) and 0 <= value.cov2() :
         
-        value = value.value()
         _covp += value.cov2()
         _covn += value.cov2()
+        
         _errsp.append ( _covp **0.5 ) 
         _errsn.append ( _covn **0.5 )
+        
+        value = value.value()
         
     else :
         raise TypeError( 'Invalid value %s/%s ' % ( value , type ( value ) ) ) 
@@ -115,8 +117,8 @@ def value_errors ( value , *errors ) :
         _covp += ep * ep
         _covn += en * en
         
-    _errsp.append ( covp ** 0.5 ) 
-    _errsn.append ( covn ** 0.5 ) 
+        _errsp.append ( _covp ** 0.5 ) 
+        _errsn.append ( _covn ** 0.5 ) 
 
     return value , tuple ( _errsp ) , tuple (_errsn )
 
@@ -146,7 +148,7 @@ def error_band2 ( value , epos , eneg , min_value , max_value , **kwargs ) :
     fcolor = config.get ( 'fill_color' , ROOT.kOrange )
     
     from  itertools import count
-    for fc , ep , en in zip ( count ( fcolor ) , reversed ( epos ) ,  reversed ( eneg ) ) :
+    for fc , ep , en in zip ( count ( fcolor , -1 ) , reversed ( epos ) ,  reversed ( eneg ) ) :
         
         if not transpose :
             box1 = ROOT.TBox ( value - en , min_value  , value + ep , max_value  )
