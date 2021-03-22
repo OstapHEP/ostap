@@ -147,7 +147,7 @@ class Method(object) :
                 self.__methods[ targs ] = mm 
             
         return mm
-    
+   
     def __call__ ( self , a  , b = None ) :
         return self.method ( a , b )
 
@@ -425,7 +425,13 @@ class LinAlg(object) :
 
 
     mgetter = staticmethod ( mgetter  )
-        
+
+    # =========================================================================
+    ## create matrix/vector from numpy array/matrix  
+    @staticmethod
+    def NUMPY ( arr ) :
+        pass
+    
     # =========================================================================
     ## convert vector to numpy array:
     #  @code
@@ -498,7 +504,7 @@ class LinAlg(object) :
     #  @endcode 
     @staticmethod
     def ADD ( a  , b ) :
-        """ Addition of vector/,atrix objects:
+        """ Addition of vector/matrix objects:
         >>>  C = A + B
         """
         
@@ -509,9 +515,9 @@ class LinAlg(object) :
             s2 = b.shape
 
             if s1 != s2 : return NotImplemented
-            return a.to_numpy() + b
-        
-        
+
+            return a + LinAlg.toSObject ( b ) 
+                
         oper , check  = LinAlg.methods_ADD ( a , b )
         
         if oper and check and check.ok ( a, b ) :
@@ -553,10 +559,13 @@ class LinAlg(object) :
         """
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            
             s1 = a.shape
             s2 = b.shape
+            
             if s1 != s2 : return NotImplemented
-            return b + a.to_numpy()
+
+            return LinAlg.toSObject ( b ) + a 
         
         oper , check  = LinAlg.methods_RADD ( a , b )
         
@@ -579,10 +588,13 @@ class LinAlg(object) :
         
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+            
             s1 = a.shape
             s2 = b.shape
+            
             if s1 != s2 : return NotImplemented
-            return a.to_numpy() - b 
+
+            return a - LinAlg.toSObject ( b ) 
         
         oper , check  = LinAlg.methods_SUB ( a , b )
         
@@ -625,10 +637,13 @@ class LinAlg(object) :
         """                
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
+
             s1 = a.shape
             s2 = b.shape
+            
             if s1 != s2 : return NotImplemented
-            return b - a.to_numpy()
+            
+            return LinAlg.toSObject ( b ) - a
         
         oper , check  = LinAlg.methods_RSUB ( a , b )
         
@@ -655,13 +670,14 @@ class LinAlg(object) :
             sa = a.shape            
             sb = b.shape
 
-            if sa[-1] != sb[0] :
-                ##  return NotImplemented
+            if sa [ -1 ] != sb [ 0 ] :                
                 raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
-            return np.matmul ( a.to_numpy() , b )  
+            
+            return a * LinAlg.toSObject ( b )
+        
         
         oper , check  = LinAlg.methods_MUL ( a , b )
-        
+
         if oper and check and check.ok ( a, b ) :
             result = oper.mul ( a, b )
             return result
@@ -702,15 +718,13 @@ class LinAlg(object) :
 
         if isinstance ( b , num_types ) : b = float( b )
         elif LinAlg.with_numpy and isinstance ( b , np.ndarray ) :
-
-            return NotImplemented
-        
+            
             sa = a.shape            
             sb = b.shape
-            if sb[-1] != sa[0] :
-                ## return NotImplemented
+            if sb [ -1 ] != sa[0] :
                 raise NotImplementedError ( "Cannot multiply %s/%s with %s" % ( type(a), sa , sb ) )
-            return np.matmul ( b , a.to_numpy() )  
+
+            return LinAlg.toSObject ( b ) * a 
 
         oper , check  = LinAlg.methods_RMUL ( a , b )
         
@@ -777,7 +791,7 @@ class LinAlg(object) :
             s1 = a.shape            
             s2 = b.shape
             if s1 != s2 : return False 
-            return np.array_equal( a.to_numpy() , b )
+            return np.array_equal ( a.to_numpy() , b )
 
         oper = LinAlg.method_EQ ( a , b )
         if not oper : return NotImplemented
@@ -938,7 +952,7 @@ class LinAlg(object) :
         return NotImplemented 
 
     # =========================================================================
-    ## symmetric part  frot square marix
+    ## symmetric part of square marix
     #  @code
     #  C = A.sym() 
     #  @endcode 
@@ -957,14 +971,14 @@ class LinAlg(object) :
         raise NotImplementedError ( "Cannot symmetrise %s/%s" % ( a , type(a) ) )
     
     # =========================================================================
-    ## Asymmetric part  frot square marix
+    ## Antisymmetric/skew part of square marix
     #  @code
     #  C = A.asym() 
     #  C = A.skew() 
     #  @endcode 
     @staticmethod
     def M_ASYM ( a  ) :
-        """ Asymmetric part of square matrices  
+        """ Antisymmetric/skew part of square matrices  
         >>>  C = A.asym() 
         >>>  C = A.skew() 
         """
@@ -1564,6 +1578,7 @@ class LinAlg(object) :
 
         m.tmatrix       = LinAlg.M_TM 
 
+        ## should be class property!! 
         m.shape         = property ( LinAlg.M_SHAPE , None , None )
 
         m.__pow__       = LinAlg.M_POW 
@@ -1766,7 +1781,9 @@ class LinAlg(object) :
         return t in LinAlg.decorated_vectors or t in LinAlg.decorated_matrices
     
 
-# =======================================================================
+
+
+# =============================================================================
 
 Ostap.Vector         =  staticmethod ( LinAlg.Vector    )
 Ostap.VectorE        =  staticmethod ( LinAlg.VectorE   )
@@ -1776,6 +1793,89 @@ Ostap.Math.Vector    =  staticmethod ( LinAlg.Vector    )
 Ostap.Math.VectorE   =  staticmethod ( LinAlg.VectorE   ) 
 Ostap.Math.Matrix    =  staticmethod ( LinAlg.Matrix    )
 Ostap.Math.SymMatrix =  staticmethod ( LinAlg.SymMatrix ) 
+
+# =============================================================================
+
+
+if np :
+
+    # =========================================================================
+    ## create <code>SMatrix</code> from <code>numpy</code> array
+    #  @code
+    #  a = ...
+    #  m = toSMatrix ( a ) 
+    #  @endcode 
+    def toSMatrix ( a , shape = None ) :
+        """ Create `SMatrix` from 2D `numpy` array
+        >>> a = ...
+        >>> m = toSMatrix ( a ) 
+        """
+        assert isinstance ( a , np.ndarray ) and 2 == len ( a.shape ) ,\
+               'toSMatrix: Invalid type/shape of input array'
+        
+        if shape :
+            assert shape == a.shape, 'toSMatrix: Invalid shape of input array'
+
+        mtrx  = LinAlg.Matrix ( *a.shape ) () 
+        N , K = a.shape 
+        for i in range ( N ) :
+            for j in range ( K ) :
+                index = i , j 
+                mtrx [ index ] = a [ index ]
+                
+        return mtrx 
+
+    # =========================================================================
+    ## create <code>SVector</code> from <code>numpy</code> array
+    #  @code
+    #  a = ...
+    #  v = toSVector ( a ) 
+    #  @endcode 
+    def toSVector ( a , length = None ) :
+        """ Create `SVector` from 1D `numpy` array
+        >>> a = ...
+        >>> v = toSVector( a ) 
+        """
+        assert isinstance ( a , np.ndarray ) and 1 == len ( a.shape ) ,\
+               'toSVector: Invalid type/shape of input array'
+        
+        if not length is None :
+            assert shape == a.shape, 'toMatrix: Invalid shape/size of input array'
+
+        vct  = LinAlg.Vector ( *a.shape ) () 
+        N = a.shape[0]
+        for i in range ( N ) :
+            vct [ i ] = a [ i ]
+                
+        return vct
+
+    # =========================================================================
+    ## convert numpy array to SMatrix/SVecrtor
+    #  @code
+    #  a = ...
+    #  s = toSObject ( a ) 
+    #  @endcode
+    def toSObject ( a ) :
+        """Convert 1D or 2D numpy array to SMatrix/SVecrtor
+        >>> a = ...
+        >>> s = toSObject ( a ) 
+        """
+        assert isinstance ( a , np.ndarray ) and 1 <= len ( a.shape ) <= 2 ,\
+               'toSObject: Invalid type/shape of input array'
+        return toSVector ( a ) if 1 == len( a.shape ) else toSMatrix ( a )
+
+
+    LinAlg.toSMatrix      = staticmethod ( toSMatrix ) 
+    LinAlg.toSVector      = staticmethod ( toSVector ) 
+    LinAlg.toSObject      = staticmethod ( toSObject ) 
+
+    Ostap.toSMatrix       = staticmethod ( LinAlg.toSMatrix ) 
+    Ostap.toSVector       = staticmethod ( LinAlg.toSVector )
+    Ostap.toSObject       = staticmethod ( LinAlg.toSObject )
+    Ostap.Math.toSMatrix  = staticmethod ( LinAlg.toSMatrix ) 
+    Ostap.Math.toSVector  = staticmethod ( LinAlg.toSVector )
+    Ostap.Math.toSObject  = staticmethod ( LinAlg.toSObject )
+    
 
 # =============================================================================
 _decorated_classes_ = (
@@ -1795,6 +1895,15 @@ _new_methods_ = (
     Ostap.Math.SymMatrix , 
     )
 
+if np :
+    _new_methods_ = _new_methods_ + (
+        Ostap.toSMatrix      ,
+        Ostap.toSVector      ,
+        Ostap.toSObject      ,
+        Ostap.Math.toSMatrix ,
+        Ostap.Math.toSVector ,
+        Ostap.Math.toSObject ,
+        )
 
 import atexit
 atexit.register ( LinAlg.CLEANUP ) 

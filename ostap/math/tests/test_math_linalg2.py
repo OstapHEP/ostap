@@ -188,21 +188,17 @@ def test_linalg2() :
         logger.info ( 's22 as np : %s' % ( s22.to_numpy() ) )
         logger.info ( 'm23 as np : %s' % ( m23.to_numpy() ) )
         
-        if 62006 <= root_version_int :
-            logger.warning ("Tests with numpy are broken for ROOT %s" %  root_version_int ) 
-        else :
-            
-            logger.info ( 'm22  + m22(np) :\n%s' % ( m22 + m22.to_numpy () ) )
-            logger.info ( 'm22  + s22(np) :\n%s' % ( m22 + s22.to_numpy () ) )
-            logger.info ( 's22  + s22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
-            logger.info ( 's22  + m22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
-            
-            logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy () ) )
-            logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy () ) )
-            logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy () ) )        
-            logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy () ) )
-
         
+        logger.info ( 'm22  + m22(np) :\n%s' % ( m22 + m22.to_numpy () ) )
+        logger.info ( 'm22  + s22(np) :\n%s' % ( m22 + s22.to_numpy () ) )
+        logger.info ( 's22  + s22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
+        logger.info ( 's22  + m22(np) :\n%s' % ( s22 + s22.to_numpy () ) )
+        
+        logger.info ( 'm22  * m22(np) :\n%s' % ( m22 * m22.to_numpy () ) )
+        logger.info ( 's22  * s22(np) :\n%s' % ( s22 * s22.to_numpy () ) )
+        logger.info ( 's22  * m23(np) :\n%s' % ( s22 * m23.to_numpy () ) )        
+        logger.info ( 'l2   * m22(np) :\n%s' % ( l2  * m22.to_numpy () ) )
+
     logger.info ( 'SVector with errors')
 
     v2  = Ostap.Math.VectorE (2)()

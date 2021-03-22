@@ -154,13 +154,17 @@ def test_linalgt() :
     s22 += s22*2
     s22 -= s22*1
     
-    
-    if np :
+
+    ## DISABLE!!!
+    if np and False :
+        
         logger.info ( 'Operations with numpy objects')
         
         v2 = np.array ( [1.0,2.0]      )
         v3 = np.array ( [1.0,2.0,3.0 ] )
 
+        print ('v1,l2:', v2 , l2 )
+        
         logger.info ( 'v2  * l2  : %s' % ( v2  * l2  ) )
         logger.info ( 'l3  * v3  : %s' % ( l3  * v3  ) )
         logger.info ( 's22 * v2  : %s' % ( s22 * v2  ) )
