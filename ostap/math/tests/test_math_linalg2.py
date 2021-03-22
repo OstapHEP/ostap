@@ -56,11 +56,11 @@ def test_linalg2() :
     logger.info ( 'l1 *= 2 : %s    '  % l1 )
 
 
-    if ( 3 , 5 ) <= python_version :
+    ## if ( 3 , 5 ) <= python_version :
         
-        logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
-        logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
-        logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
+    ##     logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
+    ##     logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
+    ##     logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
         
     logger.info('TEST matrices: ')
     
@@ -121,12 +121,12 @@ def test_linalg2() :
     logger.info ( ' l1 == (0,1,2) : %s ' % (  l1 == ( 0 , 1 , 2 ) ) )
     logger.info ( ' l1 == [0,1,2] : %s ' % (  l1 == [ 0 , 1 , 2 ] ) )
 
-    if ( 3 , 5 ) <= python_version :
+    ## if ( 3 , 5 ) <= python_version :
         
-        logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
-        logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
-        logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
-        logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
+    ##     logger.info ( 'm23 @ 3   :\n%s' % ( m23 @ 3   ) ) 
+    ##     logger.info ( 'm22 @ m23 :\n%s' % ( m22 @ m23 ) ) 
+    ##     logger.info ( 'm22 @  l2 : %s ' % ( m22 @ l2  ) ) 
+    ##     logger.info ( 'm23 @  l3 : %s ' % ( m23 @ l3  ) ) 
          
     m22[0,0] = 1
     m22[0,1] = 2
