@@ -55,9 +55,8 @@ def test_linalg2() :
     l1 *= 2 
     logger.info ( 'l1 *= 2 : %s    '  % l1 )
 
-
     ## if ( 3 , 5 ) <= python_version :
-        
+    
     ##     logger.info ( 'l1 @ l2 : %s    '  % ( l1 @ l2  ) )
     ##     logger.info ( 'l1 @  2 : %s    '  % ( l1 @  2  ) )
     ##     logger.info ( ' 2 @ l2 : %s    '  % ( 2  @ l2  ) )
