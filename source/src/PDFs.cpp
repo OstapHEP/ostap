@@ -314,7 +314,6 @@ Ostap::Models::BreitWignerMC::breit_wigner_MC () const
 // ============================================================================
 
 
-
 // ============================================================================
 /// Breit-wigner with interference 
 // ============================================================================
@@ -331,6 +330,20 @@ Ostap::Models::BWI::BWI
   , m_ab    ( "ab"    , "background factor" , this , ab   ) 
   , m_phib  ( "phib"  , "background phase"  , this , phib )
 {}
+// ============================================================================
+// constructor from Breit-Wigner and backround 
+// ============================================================================
+Ostap::Models::BWI::BWI 
+( const char*                       name  , 
+  const char*                       title , 
+  const Ostap::Models::BreitWigner& bw    ,
+  RooAbsReal&                       b     , 
+  RooAbsReal&                       ab    , 
+  RooAbsReal&                       phib  ) 
+  : BWI ( name , bw , b , ab , phib ) 
+{
+  SetTitle ( title ) ;  
+}
 // ============================================================================
 // "copy" constructor 
 // ============================================================================

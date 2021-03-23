@@ -119,14 +119,12 @@ class Convolution(object):
 
             self.__xvar.setBins ( self.nbinsFFT , 'cache' )
 
-            pdf_name  = PDF.generate_name ( prefix = 'FFT_' + name ) 
-            pdf_title = 'FFT convolution: %s (*) %s' %  ( pdf.name , self.resolution.name )
             self.__pdf = ROOT.RooFFTConvPdf (
-                pdf_name               ,
-                pdf_title              ,
-                self.__xvar            ,
-                self.__old_pdf    .pdf ,
-                self.__resolution .pdf )            
+                PDF.roo_name ( 'fft_' ) ,
+                'FFT convolution: %s (*) %s' %  ( pdf.name , self.resolution.name ) ,
+                self.__xvar              ,
+                self.__old_pdf    .pdf   ,
+                self.__resolution .pdf   )            
             self.__pdf.setBufferFraction ( self.buffer )
             
             if isinstance ( self.bufstrat , int ) and 0 <= self.bufstrat <= 2 : 
@@ -137,11 +135,9 @@ class Convolution(object):
             assert isinstance ( nsigmas  , num_types ) and 2.5 <= nsigmas , \
                    "Invalid ``nsigmas''  parameter  %s/%s for ``setConvolutionWindow''"  % ( nsigmas , type ( nsigmas ) )
             
-            pdf_name  = PDF.generate_name ( prefix = 'NUMCNV_' + name ) 
-            pdf_title = 'NUM convolution: %s (*) %s' %  ( pdf.name , self.resolution.name )
             self.__pdf = ROOT.RooNumConvPdf (
-                pdf_name               ,
-                pdf_title              ,
+                PDF.roo_name ( 'numcnv_' ) ,
+                'NUM convolution: %s (*) %s' %  ( pdf.name , self.resolution.name ) ,
                 self.__xvar            ,
                 self.__old_pdf    .pdf ,
                 self.__resolution .pdf )

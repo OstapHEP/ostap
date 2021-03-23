@@ -221,6 +221,7 @@ class MakeVar ( object ) :
     """
     __pdf_names = set()
     __var_names = set()
+    __numnames  = 0
     
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
@@ -285,15 +286,46 @@ class MakeVar ( object ) :
         self.__pdf_names.add ( value )     
         self.__name = value
 
+    ## # =============================================================================
+    ## ## generate some unique name
+    ## @classmethod 
+    ## def generate_name ( cls , prefix = '' , suffix = '' ) :
+    ##     name = prefix + suffix 
+    ##     while name in cls.__pdf_names or name in cls.__var_names or not name :
+    ##         name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
+    ##     return name
+
     # =============================================================================
     ## generate some unique name
-    @classmethod 
-    def generate_name ( cls , prefix = '' , suffix = '' ) :
+    @staticmethod 
+    def generate_name ( prefix = '' , suffix = '' ) :
         name = prefix + suffix 
-        while name in cls.__pdf_names or name in cls.__var_names or not name :
-            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
+        MakeVar.__numnames += 1            
+        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or not name :
+            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            MakeVar.__numnames += 1            
         return name
     
+    # =============================================================================
+    ## generate some unique name for <code>RooFit</code>
+    #  @see TNamed 
+    #  @see RooNameReg 
+    #  @see RooAbsArg 
+    @staticmethod
+    def roo_name ( prefix = 'roo_' , suffix = '' ) :
+        """Generate some unique name for <code>RooFit</code>
+        - see `ROOT.RooNameReg` 
+        - see `ROOT.TNamed`
+        - see `ROOT.RooAbsArg`
+        """
+        regname = ROOT.RooNameReg.instance()
+        name    = prefix + suffix
+        MakeVar.__numnames += 1            
+        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or regname.known ( name ) or not name :
+            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
+            MakeVar.__numnames += 1            
+        return name
+            
     # =============================================================================
     ## create/modify  the variable
     #  Helper function for creation/modification/adjustment of variable

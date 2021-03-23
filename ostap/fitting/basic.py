@@ -2322,7 +2322,7 @@ class PDF (FUNC) :
                                    fracs     = fractions )
         fracs  = ROOT.RooArgList()
         for f in fs : fracs.add ( f ) 
-        pdf    = ROOT.RooAddPdf ( name , title , pdfs , fracs , recursive )
+        pdf    = ROOT.RooAddPdf ( self.roo_name ( name ) , title , pdfs , fracs , recursive )
         ##
         self.aux_keep.append ( pdf   )
         self.aux_keep.append ( pdfs  )
@@ -2745,8 +2745,9 @@ class Flat1D(PDF) :
         name = name if name else self.generate_name ( prefix = 'flat1D_')
         PDF.__init__ ( self  , name , xvar ) 
         
-        if not title : title = 'flat1(%s)' % name 
-        self.pdf = Ostap.Models.Uniform ( name , title , self.xvar )
+        if not title : title = 'flat1(%s)' % name
+        
+        self.pdf = Ostap.Models.Uniform ( self.roo_name ( 'flat_' ) , title , self.xvar )
         assert 1 == self.pdf.dim() , 'Flat1D: wrong dimensionality!'
         
         ## save configuration
@@ -2893,7 +2894,8 @@ class Sum1D(PDF) :
                                             self.pdf2.pdf )
         self.alist2     = ROOT.RooArgList ( self.fraction )
         
-        self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'sum1_' ) ,
+                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
                                     self.pdf1.pdf ,
                                     self.pdf2.pdf ,
                                     self.fraction )
@@ -2994,8 +2996,8 @@ class Shape1D_pdf(PDF) :
         
         ## create the actual pdf
         self.pdf = Ostap.Models.Shape1D.create  (
-            "s1D_%s"      % self.name , 
-            "shape1D(%s)" % self.name ,
+            self.roo_name ( 'shape1_' ) , 
+            "Shape-1D %s" % self.name ,
             self.xvar                 ,
             self.shape                ) 
 
@@ -3037,8 +3039,8 @@ class H1D_pdf(H1D_dset,PDF) :
             ## finally create PDF :
             self.__vset = ROOT.RooArgSet  ( self.xvar )        
             self.pdf    = ROOT.RooHistPdf (
-                'hpdf_%s'             % name ,
-                'Histo1PDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
+                self.roo_name ( 'histo1_' ) ,
+                'Histo-1D PDF: %s/%s' % ( histo.GetName() , histo.GetTitle() ) , 
                 self.__vset , 
                 self.dset   ,
                 order       )
@@ -3395,8 +3397,8 @@ class Fit1D (PDF) :
         ## The final PDF
         #       
 
-        pdfname  = "Fit1D_"    + self.name
-        pdftitle = "Fit1D(%s)" % self.name
+        pdfname  = self.roo_name ( 'fit1d_' ) 
+        pdftitle = "Fit1D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         
         if not self.extended :

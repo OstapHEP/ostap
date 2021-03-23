@@ -81,8 +81,8 @@ class ResoGauss(RESOLUTION) :
         #
         # self.gauss = ROOT.RooGaussModel(
         self.gauss = ROOT.RooGaussian (
-            'ResoGauss_%s'  + name ,
-            'ResoGauss(%s)' % name ,
+            self.roo_name ( 'rgauss_' )       ,
+            "Resolution Gauss %s" % self.name ,
             self.xvar              ,
             self.mean              , 
             self.sigma_corr        ) ## ATTENTION!
@@ -144,8 +144,8 @@ class ResoGauss2(RESOLUTION) :
         ## build resolution model
         # 
         self.pdf = Ostap.Models.DoubleGauss (
-            "Reso2Gauss_"       + name ,
-            "Reso2Gauss(%s)"    % name ,
+            self.roo_name ( 'rgauss2_' )       ,
+            "Resolution double Gauss %s" % self.name ,
             self.xvar       ,
             self.sigma_corr , ## ATTENTION! 
             self.fraction   ,
@@ -226,8 +226,8 @@ class ResoApo2(RESOLUTION) :
         ## build resolution model
         #
         self.apo2  = Ostap.Models.Apollonios2 (
-            "ResoApollonios_"    + name ,
-            "ResoApollonios(%s)" % name ,
+            self.roo_name ( 'rapo2_' )       ,
+            "Resolution Apollonios2 %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr ,
@@ -300,8 +300,8 @@ class ResoCB2(RESOLUTION) :
         
         ## gaussian 
         self.cb2 = Ostap.Models.CrystalBallDS (
-            'ResoCB2_'   + name ,
-            'ResoCB2(%s' % name ,
+            self.roo_name ( 'rcb2_' )       ,
+            "Resolution double-sided Crystal Ball %s" % self.name ,
             self.xvar           ,
             self.mean           , 
             self.sigma_corr     , ## ATTENTION!
@@ -385,8 +385,8 @@ class ResoStudentT(RESOLUTION) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.StudentT (
-            "ResoStT_"    + name ,
-            "ResoStT(%s)" % name ,
+            self.roo_name ( 'rstt_' )       ,
+            "Resolution Student's t %s" % self.name ,
             self.xvar       , 
             self.mean       ,
             self.sigma_corr , ## ATTENTION!
@@ -451,8 +451,8 @@ class ResoSech(RESOLUTION) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Sech (
-            "ResoSech_"    + name ,
-            "ResoSech(%s)" % name ,
+            self.roo_name ( 'rsech_' )       ,
+            "Resolution Sech %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr )  ## ATTENTION!
@@ -509,8 +509,8 @@ class ResoBukin (RESOLUTION) :
         ## create PDF
         # 
         self.pdf = Ostap.Models.Bukin (
-            "ResoBukin_"    + name ,
-            "ResoBukin(%s)" % name ,
+            self.roo_name ( 'rbukin_' )       ,
+            "Resolution Bukin %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr , ## ATTENTION!
@@ -602,8 +602,8 @@ class ResoJohnsonSU(RESOLUTION) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.JohnsonSU (
-            "ResoJSU_"          + name ,
-            "ResoJohnsonSU(%s)" % name ,
+            self.roo_name ( 'rjsu_' )       ,
+            "Resolution Johnson's SU %s" % self.name ,
             self.xvar       ,
             self.xi         ,
             ## self.lambd      ,
@@ -720,8 +720,8 @@ class ResoSinhAsinh(RESOLUTION) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SinhAsinh (
-            "ResoSinhAsinhT_"   + name ,
-            "ResoSinhAsinh(%s)" % name ,
+            self.roo_name ( 'rsash_' )       ,
+            "Resolution SinhAsinh %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr , ## ATTENTION! 
@@ -791,8 +791,8 @@ class ResoLogistic(RESOLUTION) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Logistic (
-            "logistic_"     + name ,
-            "Logistic(%s)"  % name ,
+            self.roo_name ( 'rlog_' )       ,
+            "Resolution Logistic %s" % self.name ,
             self.xvar       ,
             self.mean       ,
             self.sigma_corr ) 

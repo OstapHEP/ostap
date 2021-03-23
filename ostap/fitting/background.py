@@ -117,8 +117,8 @@ class Bkg_pdf(PolyBase) :
                                       "tau(%s)" % name , tau , 0 , *limits_tau  )
         
         self.pdf  = Ostap.Models.ExpoPositive (
-            'expopos_%s'  % name ,
-            'expopos(%s)' % name ,
+            self.roo_name ( "exppol_"  ) ,
+            "Exponential modulated by positive polynom %s" % self.name , 
             self.xvar            ,
             self.tau             ,
             self.phi_list        ,
@@ -192,8 +192,8 @@ class PolyPos_pdf(PolyBase) :
         #
         ## build the model
         self.pdf   = Ostap.Models.PolyPositive (
-            'pp_%s'            % name ,
-            'PolyPositive(%s)' % name ,
+            self.roo_name ( "pol_"  ) ,
+            "Positive polynom %s" % self.name , 
             self.xvar            ,
             self.phi_list        ,
             xmin , xmax )
@@ -339,8 +339,8 @@ class PolyEven_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyPositiveEven (
-            'ppe_%s'               % name ,
-            'PolyPositiveEven(%s)' % name ,
+            self.roo_name ( "epol_"  ) ,
+            "Positive even polynom %s" % self.name , 
             self.xvar                     ,
             self.phi_list                 ,
             xmin ,
@@ -405,8 +405,8 @@ class Monotonic_pdf(PolyBase) :
         #
         ## build PDF
         self.pdf  = Ostap.Models.PolyMonotonic (
-            'pp_%s'              % name ,
-            'PolyMonotonic(%s)' % name ,
+            self.roo_name ( "mpol_"  ) ,
+            "%s polynomial %s" % ( "increasing" if self.increasing else "decreasing" , self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -491,8 +491,10 @@ class Convex_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyConvex (
-            'pp_%s'          % name ,
-            'PolyConvex(%s)' % name ,
+            self.roo_name ( "cpol_"  ) ,
+            "%s %s polynomial %s" % ( "convex"     if self.convex     else "concave"    ,
+                                      "increasing" if self.increasing else "decreasing" ,
+                                      self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin ,
@@ -578,8 +580,9 @@ class ConvexOnly_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyConvexOnly (
-            'pp_%s'          % name ,
-            'PolyConvex(%s)' % name ,
+            self.roo_name ( "copol_"  ) ,
+            "%s polynomial %s" % ( "convex"     if self.convex     else "concave"    ,
+                                   self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -661,8 +664,8 @@ class PSPol_pdf(PolyBase) :
         self.__power = power
         # 
         self.pdf  = Ostap.Models.PhaseSpacePol (
-            'pspol_%s'          % name ,
-            'PhaseSpacePol(%s)' % name ,
+            self.roo_name ( "pspol_"  ) ,
+            "Phase space modulated by polynomial %s" % self.name  , 
             self.xvar            ,
             self.phasespace      ,  ## Ostap::Math::PhaseSpaceNL 
             self.phi_list        )
@@ -763,8 +766,8 @@ class PSLeftExpoPol_pdf(PolyBase) :
                                       "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+3 )
         
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
-            'pslepol_%s'                % name ,
-            'PhaseSpaceLeftExpoPol(%s)' % name ,
+            self.roo_name ( "psepol_"  ) ,
+            "Phase space and exponent  modulated by polynomial %s" % self.name  , 
             self.xvar            ,
             self.phasespace      ,  ## Ostap::Math::PhaseSpaceLeft
             self.tau             , 
@@ -875,8 +878,8 @@ class TwoExpoPoly_pdf(PolyBase) :
         #
         xmin , xmax = self.xminmax() 
         self.pdf  = Ostap.Models.TwoExpoPositive (
-            '2expopos_%s'  % name ,
-            '2expopos(%s)' % name ,
+            self.roo_name ( "pol2e_"  ) ,
+            "Two exponents  modulated by polynomial %s" % self.name  , 
             self.xvar             ,
             self.alpha            ,
             self.delta            ,
@@ -985,8 +988,8 @@ class Sigmoid_pdf(PolyBase) :
 
         xmin,xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolySigmoid (
-            'ps_%s'           % name ,
-            'PolySigmoid(%s)' % name ,
+            self.roo_name ( "sigmoid_"  ) ,
+            "Sigmoid modulated by polynomial %s" % self.name  , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -1085,8 +1088,8 @@ class PSpline_pdf(PolyBase) :
         #
         
         self.pdf  = Ostap.Models.PositiveSpline (
-            'ps_%s'              % name ,
-            'PositiveSpline(%s)' % name ,
+            self.roo_name ( "pspline_"  ) ,
+            "Positive spline %s" % self.name  , 
             self.xvar            ,
             self.spline          , 
             self.phi_list        )
@@ -1148,11 +1151,11 @@ class MSpline_pdf(PolyBase) :
         self.__spline = spline
         # 
         self.pdf  = Ostap.Models.MonotonicSpline (
-            'is_%s'                % name ,
-            'MonotonicSpline(%s)' % name ,
-            self.xvar                     ,
-            self.spline                   , 
-            self.phi_list                 )
+            self.roo_name ( "mspline_"  )      ,
+            "Monotonic spline %s" % self.name  , 
+            self.xvar                          ,
+            self.spline                        , 
+            self.phi_list                      )
 
         ## save configuration 
         self.config = {
@@ -1210,8 +1213,8 @@ class CSpline_pdf(PolyBase) :
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexSpline (
-            'is_%s'            % name ,
-            'ConvexSpline(%s)' % name ,
+            self.roo_name ( "cspline_"  )   ,
+            "Convex spline %s" % self.name  , 
             self.xvar                ,
             self.spline              , 
             self.phi_list            )
@@ -1270,8 +1273,8 @@ class CPSpline_pdf(PolyBase) :
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexOnlySpline (
-            'is_%s'                % name ,
-            'ConvexOnlySpline(%s)' % name ,
+            self.roo_name ( "cospline_"  )   ,
+            "Convex spline %s" % self.name  , 
             self.xvar                ,
             self.spline              , 
             self.phi_list            )
@@ -1332,8 +1335,8 @@ class PS2_pdf(PDF) :
             assert am1  + am2 < mx , 'PS2: senseless setting of edges/threshold %s,%s vs %s' % ( mn , mx , am1+am2 )   
             
         self.pdf  = Ostap.Models.PhaseSpace2 (
-            'ps2_%s'          % name ,
-            'PhaseSpace2(%s)' % name ,
+            self.roo_name ( "ps2_"  )   ,
+            "Two body phase space  %s" % self.name  , 
             self.xvar                , self.m1  , self.m2 )
         
         ## save configuration 
@@ -1399,8 +1402,8 @@ class PSLeft_pdf(PDF) :
             assert lmn <= mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
 
         self.pdf  = Ostap.Models.PhaseSpaceLeft (
-            'psl_%s'             % name ,
-            'PhaseSpaceLeft(%s)' % name ,
+            self.roo_name ( "psl_"  )   ,
+            "Left edge of phase space %s" % self.name  , 
             self.xvar ,
             self.left ,
             self.N    ) 
@@ -1476,8 +1479,8 @@ class PSRight_pdf(PDF) :
             assert rmx > mn, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
             
         self.pdf  = Ostap.Models.PhaseSpaceRight (
-            'psr_%s'              % name ,
-            'PhaseSpaceRight(%s)' % name ,
+            self.roo_name ( "psr_"  )   ,
+            "Right edge of phase space %s" % self.name  , 
             self.xvar  ,
             self.right ,
             self.L     , 
@@ -1575,8 +1578,8 @@ class PSNL_pdf(PDF) :
 
         ## pdf 
         self.pdf  = Ostap.Models.PhaseSpaceNL (
-            'psnl_%s'          % name ,
-            'PhaseSpaceNL(%s)' % name ,
+            self.roo_name ( "ps_"  )   ,
+            "Phase space %s" % self.name  , 
             self.xvar  ,
             self.left  ,
             self.right ,
@@ -1688,8 +1691,8 @@ class PS23L_pdf(PDF) :
         self.__l  = l
         
         self.pdf  = Ostap.Models.PhaseSpace23L (
-            'ps23l_%s'          % name ,
-            'PhaseSpace23L(%s)' % name ,
+            self.roo_name ( "ps23_"  )   ,
+            "Phase space 2 from 3 %s" % self.name  , 
             self.xvar  ,
             self.m1    ,
             self.m2    ,
@@ -1883,11 +1886,11 @@ class PSSmear_pdf ( PDF ) :
             psp = PS (  delta )
             psm = PS ( -delta )
 
-            pdfp = self.pdf0.clone ( name = name + '%dp' % i , phasespace = psp )
-            pdfm = self.pdf0.clone ( name = name + '%dm' % i , phasespace = psm )
+            pdfp = self.pdf0.clone ( name = self.generate_name ( name + '%dp' % i ) , phasespace = psp )
+            pdfm = self.pdf0.clone ( name = self.generate_name ( name + '%dm' % i ) , phasespace = psm )
             
             fraction = ROOT.RooConstVar ( 'fF%s%dfix' % ( name , i ) , '' , 0.5 )
-            pdfi     = Sum1D ( pdfp , pdfm , name = name + '%d' % i  , fraction = fraction )
+            pdfi     = Sum1D ( pdfp , pdfm , self.generate_name ( name + '%d' % i  ) , fraction = fraction )
             
             ## wp = gpdf ( step * i ) 
             wp = gcdf ( step * ( i + 0.5 ) ) - gcdf ( step * ( i - 0.5 ) ) 
@@ -1922,12 +1925,12 @@ class PSSmear_pdf ( PDF ) :
         ## create the final PDF 
         self.pdf , self.__fractions , _ = self.add_pdf (
             [ i.pdf for i in self.__pdfs ] ,
-            self.name                 , 
-            'Smeared(%s)' % self.name , 
-            'some_pattern%d'      , 
-            'some_pattern%d'      ,
-            recursive = False     ,
-            fractions = self.__ff )
+            self.name                 ,          
+            'Smeared phasel space %s' % self.name , 
+            'some_pattern%d'          , 
+            'some_pattern%d'          ,
+            recursive = False         ,
+            fractions = self.__ff     )
         
         self.config = {
             'name'   : self.name   ,            
@@ -2012,8 +2015,8 @@ class RooPoly_pdf(RooPoly) :
 
         ## create PDF
         self.pdf = ROOT.RooPolynomial (
-            'roopoly_%s%d'         % ( name , self.power ) ,
-            'RooPolynomial(%s,%d)' % ( name , self.power ) ,
+            self.roo_name ( 'rpoly_' ) ,
+            'RooPolynomial %s|%d' % ( self.name , self.power ) ,
             self.xvar , self.__clist )
 
         ## save configuration 
@@ -2054,8 +2057,8 @@ class RooCheb_pdf(RooPoly) :
 
         ## create PDF 
         self.pdf = ROOT.RooChebyshev (
-            'roocheb_%s%d'        % ( name , self.power ) ,
-            'RooChebyshev(%s,%d)' % ( name , self.power ) ,
+            self.roo_name ( 'rcheb_' ) ,
+            'RooChebyshev %s|%d' % ( self.name , self.power ) ,
             self.xvar , self.__clist )
 
         ## save configuration 
@@ -2109,8 +2112,8 @@ class RooKeys1D_pdf(PDF) :
         
         ## create PDF
         self.pdf = ROOT.RooNDKeysPdf (
-            "rookeys1_%s"        % name ,
-            "RooNDKeysPdf(%s,1)" % name ,
+            self.roo_name ( 'keys1_' ) , 
+            "Keys 1D %s"  % self.name ,
             self.__keys_vlst  ,
             self.data    ,
             self.options , 
@@ -2364,5 +2367,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

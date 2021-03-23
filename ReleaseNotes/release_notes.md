@@ -1,3 +1,11 @@
+## New features 
+
+  1. make names of created `PDF` and `RooAbsPdf` objects unique..  It is not yet 100%, but a good step in this direction. 
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
 
 # v1.6.1.0
 

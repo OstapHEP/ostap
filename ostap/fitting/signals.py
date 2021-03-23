@@ -153,8 +153,8 @@ class Gauss_pdf(MASS) :
         ## build pdf
         # 
         self.pdf = ROOT.RooGaussian (
-            'gauss_%s'  % name ,
-            "Gauss(%s)" % name ,
+            self.roo_name ( 'gauss_' ) ,
+            "Gauss %s" % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma )
@@ -236,8 +236,8 @@ class CrystalBall_pdf(MASS) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.CrystalBall (
-            'cb_%s'           % name ,
-            'CrystalBall(%s)' % name ,
+            self.roo_name ( 'cb_'  )       , 
+            'Crystal Ball %s' % self.name  ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -299,8 +299,8 @@ class CrystalBallRS_pdf(CrystalBall_pdf) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.CrystalBallRS (
-            'cbrs_%s'           % name ,
-            'CrystalBallRS(%s)' % name ,
+            self.roo_name ( 'cbrs_' )  , 
+            'Right-sided Crystal Ball %s' % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -370,8 +370,8 @@ class CB2_pdf(MASS) :
                                  "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 50 )
         
         self.pdf = Ostap.Models.CrystalBallDS(
-            "cb2_"       + name ,
-            "CB_{2}(%s)" % name ,
+            self.roo_name ( 'cb2_' ) , 
+            "double-sided Crystal Ball %s" % self.name ,
             self.xvar    ,
             self.mean    ,
             self.sigma   ,
@@ -495,8 +495,8 @@ class Needham_pdf(MASS) :
                               -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
         #
         self.pdf = Ostap.Models.Needham (
-            'needham_%s'  % name ,
-            'needham(%s)' % name ,
+            self.roo_name ( 'needham_' ) , 
+            'Needham function %s' % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -604,8 +604,8 @@ class Apollonios_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf  = Ostap.Models.Apollonios (
-            "apollo_"        + name ,
-            "Apollonios(%s)" % name ,
+            self.roo_name ( 'apo_' ) , 
+            "Apollonios %s" % self.name   ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -736,8 +736,8 @@ class Apollonios2_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf  = Ostap.Models.Apollonios2 (
-            "apollo2_"        + name ,
-            "Apollonios2(%s)" % name ,
+            self.roo_name ( 'apo2_' ) , 
+            "Apollonios2 %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -843,8 +843,8 @@ class BifurcatedGauss_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.BifurcatedGauss (
-            "fbgau_"         + name ,
-            "BifurGauss(%s)" % name ,
+            self.roo_name ( "bfgauss_" )  , 
+            "Bifurcated Gauss %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -919,9 +919,9 @@ class DoubleGauss_pdf(MASS) :
             'CoreFraction'      + name ,
             'CoreFraction(%s)'  % name , fraction , 0 , 1 ) 
         
-        self.pdf = Ostap.Models.DoubleGauss (           
-            "f2gau_"          + name ,
-            "DoubleGauss(%s)" % name ,
+        self.pdf = Ostap.Models.DoubleGauss (
+            self.roo_name ( 'gauss2_' ) , 
+            "double Gauss %s" % self.name ,
             self.mass     ,
             self.sigma    ,
             self.fraction ,
@@ -1049,8 +1049,8 @@ class GenGaussV1_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf = Ostap.Models.GenGaussV1 (
-            "gengV1_"        + name ,
-            "GenGaussV1(%s)" % name ,
+            self.roo_name ( 'gaussgv1_' ) , 
+            "generalized Gauss-V1 %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.alpha  ,
@@ -1139,8 +1139,8 @@ class GenGaussV2_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf = Ostap.Models.GenGaussV2 (
-            "gengV2_"        + name ,
-            "GenGaussV2(%s)" % name ,
+            self.roo_name ( 'gaussgv2_' ) , 
+            "generalized Gauss-V2 %s" % self.name ,
             self.xvar   ,
             self.xi     ,
             self.alpha  ,
@@ -1230,8 +1230,8 @@ class SkewGauss_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SkewGauss (
-            "skewg_"         + name ,
-            "SkewGauss(%s)" % name ,
+            self.roo_name ( 'gausssk_' ) , 
+            "skew Gauss %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.omega  ,
@@ -1360,8 +1360,8 @@ class Bukin_pdf(MASS) :
         ## create PDF
         # 
         self.pdf = Ostap.Models.Bukin (
-            "bkn_"      + name ,
-            "Bukin(%s)" % name ,
+            self.roo_name ( 'bukin_' ) , 
+            "Bukin %s" % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -1462,8 +1462,8 @@ class StudentT_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.StudentT (
-            "stT_"         + name ,
-            "StudentT(%s)" % name ,
+            self.roo_name ( 'studentt_' ) , 
+            "Student's t %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -1563,8 +1563,8 @@ class BifurcatedStudentT_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.BifurcatedStudentT (
-            "bstT_"         + name ,
-            "BStudentT(%s)" % name ,
+            self.roo_name ( 'sttbf_' ) , 
+            "Bifurcated Student's t %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -1689,8 +1689,8 @@ class SinhAsinh_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SinhAsinh (
-            "sinhaT_"        + name ,
-            "SinhAsinh(%s)" % name ,
+            self.roo_name ( 'sinasinh_' ) , 
+            "Sinh-Asinh %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ,
@@ -1832,8 +1832,8 @@ class JohnsonSU_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.JohnsonSU (
-            "jSU_"          + name ,
-            "JohnsonSU(%s)" % name ,
+            self.roo_name ( 'jsu_' ) , 
+            "Johnson's SU %s" % self.name ,
             self.xvar      ,
             self.xi        ,
             self.lambd     ,
@@ -1926,8 +1926,8 @@ class Atlas_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Atlas (
-            "atlas_"    + name ,
-            "ATLAS(%s)" % name ,
+            self.roo_name ( 'atlas_' ) , 
+            "ATLAS/ZEUS %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     )
@@ -1975,8 +1975,8 @@ class Slash_pdf(MASS) :
 
         ## finally build pdf
         self.pdf = Ostap.Models.Slash (
-            "slash_"    + name ,
-            "Slash(%s)" % name ,
+            self.roo_name ( 'slash_' ) , 
+            "Slash %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.scale     )
@@ -2067,8 +2067,8 @@ class AsymmetricLaplace_pdf(MASS) :
         
         ## finally build pdf
         self.pdf = Ostap.Models.AsymmetricLaplace (
-            "alaplace_"    + name ,
-            "ALaplace(%s)" % name ,
+            self.roo_name ( 'alaplace_' ) , 
+            "Asymmetrical Laplace  %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.lambdaL   ,
@@ -2180,8 +2180,8 @@ class Sech_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Sech (
-            "sech_"    + name ,
-            "SECH(%s)" % name ,
+            self.roo_name ( 'sech_' ) , 
+            "Sech %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ) 
@@ -2255,8 +2255,8 @@ class Losev_pdf(MASSMEAN) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Losev (
-            "losev_"    + name ,
-            "Losev(%s)" % name ,
+            self.roo_name ( 'losev_' ) , 
+            "Losev %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.alpha     ,
@@ -2342,8 +2342,8 @@ class Logistic_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Logistic (
-            "logistic_"    + name ,
-            "Logistic(%s)" % name ,
+            self.roo_name ( 'logistic_' ) , 
+            "Logistic %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ) 
@@ -2400,8 +2400,8 @@ class RaisingCosine_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.RaisingCosine (
-            "rcos_"    + name ,
-            "RCos(%s)" % name ,
+            self.roo_name ( 'rcos_' ) , 
+            "Raising Cosine %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.scale     ) 
@@ -2481,8 +2481,8 @@ class QGaussian_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.QGaussian (
-            "qgauss_"    + name ,
-            "QGauss(%s)" % name ,
+            self.roo_name ( 'qgauss_' ) , 
+            "q-Gaussian %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.q         ,
@@ -2639,8 +2639,8 @@ class Hyperbolic_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Hyperbolic (
-            "hyperbolic_"    + name ,
-            "hyperbolic(%s)" % name ,
+            self.roo_name ( 'hyperbolic_' ) , 
+            "Hyperbolic %s" % self.name ,
             self.xvar      ,
             self.mu        ,
             self.sigma     ,
@@ -2784,8 +2784,8 @@ class Voigt_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Voigt (
-            "vgt_"       + name ,
-            "Voigt(%s)" % name ,
+            self.roo_name ( 'voigt_' ) , 
+            "Voigt %s" % self.name ,
             self.xvar   ,
             self.m0     ,
             self.gamma  ,
@@ -2864,8 +2864,8 @@ class PseudoVoigt_pdf(Voigt_pdf) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.PseudoVoigt (
-            "pvgt_"           + name ,
-            "PseudoVoigt(%s)" % name ,
+            self.roo_name ( 'pvoigt_' ) , 
+            "Pseudo Voigt %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.gamma  ,
@@ -2938,8 +2938,8 @@ class BreitWigner_pdf(MASS) :
 
         ## create PDF 
         self.pdf = Ostap.Models.BreitWigner ( 
-            "rbw_"    + name ,
-            "RBW(%s)" % name ,
+            self.roo_name ( 'rbw_' ) , 
+            "Relativistic Breit-Wigner %s" % self.name ,
             self.xvar        ,
             self.m0          ,
             self.gamma       ,
@@ -3177,8 +3177,8 @@ class BWMC_pdf(MASS) :
         
         ## create PDF 
         self.pdf = Ostap.Models.BreitWignerMC ( 
-            "rbwmc_"    + name ,
-            "RBWMC(%s)" % name ,
+            self.roo_name ( 'rbwmc_' ) , 
+            "Multi-channel relativistic Breit-Wigner %s" % self.name ,
             self.xvar        ,
             self.mean        ,
             self.widths      , 
@@ -3335,12 +3335,14 @@ class BWI_pdf (BreitWigner_pdf) :
 
         
         ## finally create PDF
-        self.pdf = Ostap.Models.BWI ( 'rbwi'     + name , 
-                                      self.bw           ,
-                                      self.b            ,
-                                      self.a            ,
-                                      self.phi          ) 
-            
+        self.pdf = Ostap.Models.BWI (
+            self.roo_name ( 'bwi_' ) ,
+            "Breit-Wigner with interference %s" % self.name  ,
+            self.bw                  ,
+            self.b                   ,
+            self.a                   ,
+            self.phi                 ) 
+
         ## save configuration
         self.config = {
             'name'        : self.name        ,
@@ -3426,13 +3428,14 @@ class BWPS_pdf(BreitWigner_pdf,Phases) :
         self.__bwps = breitwigner
         
         ## finally create PDF        
-        self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
-                                       'BWPS(%s)' % name ,
-                                       self.xvar         ,
-                                       self.m0           ,
-                                       self.gamma        ,
-                                       self.phi_list     ,
-                                       self.bwps         ) 
+        self.pdf = Ostap.Models.BWPS (
+            self.roo_name ( 'bwps_' ) ,
+            "Breit-Wigner with phase space %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.gamma        ,
+            self.phi_list     ,
+            self.bwps         ) 
             
         ## save configuration
         self.config = {
@@ -3523,12 +3526,13 @@ class BW3L_pdf(BreitWigner_pdf) :
         self.__bw3l = breitwigner
         
         ## finally create PDF        
-        self.pdf = Ostap.Models.BW3L ( 'bw3l_%s'  + name ,
-                                       'BW3:(%s)' % name ,
-                                       self.xvar         ,
-                                       self.m0           ,
-                                       self.gamma        ,
-                                       self.bw3l         ) 
+        self.pdf = Ostap.Models.BW3L (
+            self.roo_name ( 'bw3l_' ) ,
+            "Breit-Wigner form 3-body decay  %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.gamma        ,
+            self.bw3l         ) 
             
         ## save configuration
         self.config = {
@@ -3644,9 +3648,9 @@ class Flatte_pdf(MASSMEAN) :
             self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
                 
         ## create PDF 
-        self.pdf = Ostap.Models.Flatte ( 
-            "flatte_"    + name ,
-            "Flatte(%s)" % name ,
+        self.pdf = Ostap.Models.Flatte (
+            self.roo_name ( 'flatte_' ) ,
+            "Flatte %s" % self.name  ,
             self.xvar    ,
             self.m0      ,
             self.g1      ,
@@ -3831,13 +3835,14 @@ class FlattePS_pdf(Flatte_pdf,Phases) :
         self.__g_list = ROOT.RooArgList ( self.g1 , self.g2 , self.gamma0 )
         
         ## finally create PDF
-        self.pdf = Ostap.Models.BWPS ( 'bwps_%s'  + name ,
-                                       'BWPS(%s)' % name ,
-                                       self.xvar         ,
-                                       self.m0           ,
-                                       self.g_list       ,
-                                       self.phi_list     ,
-                                       self.bwps         ) 
+        self.pdf = Ostap.Models.BWPS (
+            self.roo_name ( 'flatteps_' ) ,
+            "Flatte with phase space %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.g_list       ,
+            self.phi_list     ,
+            self.bwps         ) 
         
         ## save the configuration
         cnf = {
@@ -3940,9 +3945,9 @@ class LASS_pdf(MASS) :
         self.__mPion = mPion
         
         ## create PDF 
-        self.pdf = Ostap.Models.LASS ( 
-            "lass_"    + name ,
-            "LASS(%s)" % name ,
+        self.pdf = Ostap.Models.LASS (
+            self.roo_name ( 'lass_' ) ,
+            "LASS/kappa %s" % self.name  ,
             self.xvar    ,
             self.m0      ,
             self.g0      ,
@@ -4083,8 +4088,8 @@ class Bugg_pdf(MASS) :
         self.__mPion = mPion 
         ## create PDF 
         self.pdf = Ostap.Models.Bugg ( 
-            "bugg_"    + name ,
-            "Bugg(%s)" % name ,
+            self.roo_name ( 'bugg_' ) ,
+            "Bugg/sigma %s" % self.name  ,
             self.xvar      ,
             self.__bugg_m  ,
             self.__bugg_g2 ,

@@ -1077,8 +1077,9 @@ class Sum2D (PDF2) :
             self.__fraction  )
 
         
-        self.pdf = ROOT.RooAddPdf ( name , 
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
+        self.pdf = ROOT.RooAddPdf (
+            self.roo_name ( 'sum2_' ) ,             
+            '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
         
         if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
         if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
@@ -1183,8 +1184,9 @@ class Model2D(PDF2) :
             self.__ymodel = Generic1D_pdf  ( ymodel , yvar )
         else : raise AttributeError ( "Invalid ``y-model'' argument: %s" % ymodel )
 
-        name  = name  if name  else 'Model2D_%s_%s'  % ( self.xmodel.name , self.ymodel.name )
-        title = title if title else 'Model2D(%s,%s)' % ( self.xmodel.name , self.ymodel.name )
+        name  = name  if name  else self.generate_name ( 'Model2D_%s_%s'  % ( self.xmodel.name , self.ymodel.name ) )
+        
+        title = title if title else 'Model2D %s|%s' % ( self.xmodel.name , self.ymodel.name )
         
         ## initialize the base 
         PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
@@ -1208,7 +1210,7 @@ class Model2D(PDF2) :
             
             ## build the final PDF 
             self.pdf = ROOT.RooProdPdf (
-                name  ,
+                self.roo_name ( 'prod2_' ) , 
                 title ,
                 self.__xmodel.pdf ,
                 self.__ymodel.pdf )
@@ -1256,8 +1258,8 @@ class Shape2D_pdf(PDF) :
             
         ## create the actual pdf
         self.pdf = Ostap.Models.Shape2D.create  (
-            "s2D_%s"      % self.name , 
-            "shape2D(%s)" % self.name ,
+            self.roo_name  ( 'shape2_' ) , 
+            "Shape-2D %s" % self.name ,
             self.xvar                 ,
             self.yvar                 ,
             self.shape                ) 
@@ -1305,8 +1307,8 @@ class H2D_pdf(H2D_dset,PDF2) :
         #
         with roo_silent ( silent ) : 
             self.pdf    = ROOT.RooHistPdf (
-                'hpdf_%s'            % name ,
-                'Histo2PDF(%s/%s/%s)' % ( name , self.histo.GetName() , self.histo.GetTitle() ) , 
+                self.roo_name  ( 'histo2_' ) , 
+                'Histo-2D PDF: %s/%s' % ( self.histo.GetName() , self.histo.GetTitle() ) , 
                 self.__vset , 
                 self.dset   ,
                 order       )
@@ -1488,7 +1490,7 @@ class Fit2D (PDF2) :
         ## initialize base class
         #
         if not name :
-            name = "%s&%s" % ( self.__signal_x.name , self.__signal_y.name )
+            name = self.generate_name ( "fit2:%s&%s" % ( self.__signal_x.name , self.__signal_y.name ) )
             if suffix : name += '_' + suffix 
             
         PDF2.__init__ ( self , name          ,
@@ -1507,9 +1509,9 @@ class Fit2D (PDF2) :
         if   sig_2D and isinstance ( sig_2D , PDF2 ) :
             self.__ss_cmp = sig_2D
         elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
-            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_' + self.name  )
+            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , self.generate_name ( 'SS_' + self.name ) )
         elif not sig_2D : 
-            self.__ss_cmp = Model2D ( "SS_" + self.name ,
+            self.__ss_cmp = Model2D ( self.generate_name ( "SS_" + self.name ) ,
                                       self.__signal_x   ,
                                       self.__signal_y   , 
                                       title = "Signal(x) x Signal(y)" )
@@ -1520,8 +1522,8 @@ class Fit2D (PDF2) :
         ## Second component: Background(1) and Signal(2)
         # =====================================================================
 
-        self.__bkg_1x = self.make_bkg ( bkg_1x  , 'Bkg1X_BS' + self.name , self.xvar )
-        self.__bs_cmp = Model2D ( "BS_" + self.name         ,
+        self.__bkg_1x = self.make_bkg ( bkg_1x  , self.generate_name ( 'Bkg1X_BS' + self.name ) , self.xvar )
+        self.__bs_cmp = Model2D ( self.generate_name ( "BS_" + self.name ) ,
                                   self.__bkg_1x             ,
                                   self.__signal_y           ,
                                   title = "Backround1(x) x Signal(y)" )
@@ -1530,8 +1532,8 @@ class Fit2D (PDF2) :
         ## Third component:  Signal(1) and Background(2)
         # =====================================================================
         
-        self.__bkg_1y = self.make_bkg ( bkg_1y   , 'Bkg1Y_SB' + self.name , self.yvar )
-        self.__sb_cmp = Model2D ( "SB_" + self.name         ,
+        self.__bkg_1y = self.make_bkg ( bkg_1y   , self.generate_name ( 'Bkg1Y_SB' + self.name ) , self.yvar )
+        self.__sb_cmp = Model2D ( self.generate_name ( "SB_" + self.name ) ,
                                   self.__signal_x           ,
                                   self.__bkg_1y             ,
                                   title = "Signal(x) x Background1(y)" )
@@ -1563,14 +1565,14 @@ class Fit2D (PDF2) :
 
         if   isinstance ( bkg_2D , PDF2             ) : self.__bb_cmp = bkg_2D        
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf   ) : ## generic PDF 
-            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar , 'BB_' + self.name )            
+            self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar , self.generate_name ( 'BB_' + self.name ) )
         elif isinstance ( bkg_2D , ( tuple , list ) ) : ## polynomials 
             from ostap.fitting.models_2d import make_B2D
-            self.__bb_cmp = make_B2D ( "BB_" + self.name  , self.xvar , self.yvar , *bkg_2D )
+            self.__bb_cmp = make_B2D ( self.generate_name ( "BB_" + self.name  ) , self.xvar , self.yvar , *bkg_2D )
         else     :                       
-            self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_BB' + self.name , self.xvar )
-            self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_BB' + self.name , self.yvar )            
-            self.__bb_cmp = Model2D ( "BB_" + self.name         ,
+            self.__bkg_2x = self.make_bkg ( bkg_2x , self.generate_name ( 'Bkg2X_BB' + self.name ) , self.xvar )
+            self.__bkg_2y = self.make_bkg ( bkg_2y , self.generate_name ( 'Bkg2Y_BB' + self.name ) , self.yvar )            
+            self.__bb_cmp = Model2D ( self.generate_name ( "BB_" + self.name ) ,
                                       self.__bkg_2x             ,
                                       self.__bkg_2y             ,
                                       title = "Background2(x) x Background2(y)" )
@@ -1629,8 +1631,8 @@ class Fit2D (PDF2) :
         #
         ## build the final PDF 
         # 
-        pdfname  = "Fit2D_"    + self.name
-        pdftitle = "Fit2D(%s)" % self.name
+        pdfname  = self.roo_name ( 'fit2d_' ) 
+        pdftitle = "Fit2D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
@@ -1981,35 +1983,35 @@ class Fit2DSym (PDF2) :
         if   sig_2D and isinstance ( sig_2D , PDF2 ) :
             self.__ss_cmp = sig_2D
         elif sig_2D and isinstance ( sig_2D , ROOT.RooAbsPdf ) :
-            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , 'SS_' + self.name  )
+            self.__ss_cmp = Generic2D_pdf ( sig_2D , self.xvar , self.yvar , self.generate_name ( 'SS_' + self.name  ) ) 
         elif not sig_2D : 
-            self.__ss_cmp = Model2D ( 'SS_' + self.name  ,
+            self.__ss_cmp = Model2D ( self.generate_name ( 'SS_' + self.name ) ,
                                       self.__signal_x    ,
                                       self.__signal_y    , 
                                       title = "Signal(x) x Signal(y)" )
         else :
             raise TypeError("Fit2D: can't create Signal(x,y)-component!")
         
-        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BS' + self.name , self.xvar )
-        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SB' + self.name , self.yvar )
+        self.__bkg_1x = self.make_bkg (        bkg_1x , self.generate_name ( 'Bkg1X_BS' + self.name ) , self.xvar )
+        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , self.generate_name ( 'Bkg1Y_SB' + self.name ) , self.yvar )
 
         # =====================================================================
         ## Second sub-component: Background (1) and Signal     (2)
         ## Third  sub-component: Signal     (1) and Background (2)
         # =====================================================================
 
-        self.__sb_cmp_raw = Model2D ( "S1B2_" + self.name       ,
+        self.__sb_cmp_raw = Model2D ( self.generate_name ( "S1B2_" + self.name ) ,
                                       self.__signal_x           ,
                                       self.__bkg_1y             ,
                                       title = "Signal(x) x Background(y)" )
         
-        self.__bs_cmp_raw = Model2D ( "B1S2_" + self.name       ,
+        self.__bs_cmp_raw = Model2D ( self.generate_name ( "B1S2_" + self.name ) , 
                                       self.__bkg_1x             ,
                                       self.__signal_y           ,    
                                       title = "Background(x) x Signal(y)" )
         
         self.__sb_cmp     = Generic2D_pdf (
-            self.make_sum ( "SB_" + self.name    ,
+            self.make_sum ( self.generate_name ( "SB_" + self.name ) ,
                             "Signal(x) x Background(y) + Background(x) x Signal(y)"   ,
                             self.__sb_cmp_raw.pdf ,
                             self.__bs_cmp_raw.pdf ) , self.xvar , self.yvar , 'SB_' + self.name )
@@ -2035,7 +2037,7 @@ class Fit2DSym (PDF2) :
         self.__bkg_2x = None
         self.__bkg_2y = None
 
-        bb_name = 'BB_' + self.name 
+        bb_name = self.generate_name ( 'BB_' + self.name )
         if   isinstance ( bkg_2D , PDF2           ) : self.__bb_cmp = bkg_2D  
         elif isinstance ( bkg_2D , ROOT.RooAbsPdf ) :
             self.__bb_cmp  = Generic2D_pdf  ( bkg_2D , self.xvar , self.yvar , bb_name )
@@ -2045,8 +2047,8 @@ class Fit2DSym (PDF2) :
             self.__bb_cmp = make_B2Dsym ( bb_name , self.xvar , self.yvar , bkg_2D )
 
         else     :                        
-            self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_BB' + self.name , self.xvar )
-            self.__bkg_2y = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_BB' + self.name , self.yvar )
+            self.__bkg_2x = self.make_bkg (        bkg_2x , self.generate_name ( 'Bkg2X_BB' + self.name ) , self.xvar )
+            self.__bkg_2y = self.make_bkg ( self.__bkg_2x , self.generate_name ( 'Bkg2Y_BB' + self.name ) , self.yvar )
             self.__bb_cmp = Model2D ( bb_name       ,
                                       self.__bkg_2x ,
                                       self.__bkg_2y ,
@@ -2108,8 +2110,8 @@ class Fit2DSym (PDF2) :
         #
         ## build the final PDF 
         #
-        pdfname  = "Fit2DSym_"    + self.name
-        pdftitle = "Fit2DSym(%s)" % self.name
+        pdfname  = self.roo_name ( 'fit2ds_' ) 
+        pdftitle = "Fit2Dsym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
@@ -2315,5 +2317,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

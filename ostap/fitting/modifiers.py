@@ -88,7 +88,6 @@ class Product1D_pdf(PDF) :
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
         name = name if name else self.generate_name ( prefix = "product_%s_%s_"  % ( self.pdf1.name , self.pdf2.name ) )
-        if not title : title = "Product(%s,%s)" % ( self.pdf1.name , self.pdf2.name )
 
         ## initialize the base class
         PDF.__init__ ( self , name , xvar =  xvar )
@@ -103,7 +102,11 @@ class Product1D_pdf(PDF) :
         elif 1 == em2 : self.warning ( "pdf2  ``can-be-extended''" )
 
         ## finally build PDF 
-        self.pdf = ROOT.RooProdPdf ( name , title , self.pdf1.pdf , self.pdf2.pdf )
+        self.pdf = ROOT.RooProdPdf (
+            self.roo_name ( 'prod1_' ) ,
+            title if title else 'Product of two pdfs %s' % self.name , 
+            self.pdf1.pdf  ,
+            self.pdf2.pdf )
 
         ## save configuration for cloning
         self.config = {
@@ -185,10 +188,9 @@ class Modify1D_pdf(Product1D_pdf) :
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
         name = name if name else self.generate_name ( prefix = "modify_%s_%s"  % ( pdf.name , power ) )
-        if not title : title = "Modify(%s,%s)" % ( pdf.name , power )
 
         from ostap.fitting.background import PolyPos_pdf
-        pdf2 = PolyPos_pdf( 'M_%s_%s' % ( pdf.name , power ) ,
+        pdf2 = PolyPos_pdf( self.generate_name ( 'M_%s_%s' % ( pdf.name , power ) ) ,
                             xvar  = xvar  ,
                             power = power ,
                             xmin  = xmin  ,

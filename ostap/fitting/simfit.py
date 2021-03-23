@@ -317,7 +317,6 @@ class Sim1D(PDF) :
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
         name = name if name else self.generate_name ( prefix = 'sim1D_%s_' % sample.GetName() )
-        if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
         
         self.__sample     = sample 
         self.__categories = {}
@@ -360,9 +359,10 @@ class Sim1D(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name , xvar = _xvar ) 
         
-        self.pdf = ROOT.RooSimultaneous ( 'sim_' + self.name , 
-                                          title              , 
-                                          self.sample        )
+        self.pdf = ROOT.RooSimultaneous (
+            self.roo_name ( 'sim1d_' ) ,
+            title if title else "Simultaneous %s" % self.name , 
+            self.sample )
 
         keys = self.categories.keys()
         for key in sorted ( keys ) :
@@ -629,7 +629,6 @@ class SimFit ( MakeVar ) :
         
         name = name if name else self.generate_name ( prefix = 'simfit_%s_' % sample.GetName() )
         
-        if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
 
         ## propagate the name 
         self.name = name
@@ -665,7 +664,10 @@ class SimFit ( MakeVar ) :
 
             
         sim_pdf     = PDF ( self.name + '_Sim' , xvar = _xv )            
-        sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
+        sim_pdf.pdf = ROOT.RooSimultaneous (
+            self.roo_name ( 'simfit_' ) ,
+            title if title else "Simultaneous %s" % self.name , 
+            self.sample )
         
         keys = self.categories.keys()
         for key in sorted ( keys ) :
@@ -1341,5 +1343,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

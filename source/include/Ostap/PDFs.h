@@ -272,6 +272,13 @@ namespace Ostap
             RooAbsReal&                         b     , 
             RooAbsReal&                         ab    , 
             RooAbsReal&                         phib  ) ;
+      ///constructor from Breit-Wigner and backround 
+      BWI ( const char*                         name  , 
+            const char*                         title , 
+            const Ostap::Models::BreitWigner&   bw    ,
+            RooAbsReal&                         b     , 
+            RooAbsReal&                         ab    , 
+            RooAbsReal&                         phib  ) ;
       /// "copy" constructor
       BWI ( const BWI& , const char* name = 0 ) ;
       /// virtual destructor
