@@ -100,7 +100,7 @@ endif()
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/build.config.in"
-  "${CMAKE_CURRENT_SOURCE_DIR}/build.config"
+  "${CMAKE_CURRENT_BINARY_DIR}/build.config"
 )
                                                            
 configure_file (
@@ -220,6 +220,7 @@ install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/Ostap
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/Ostap/Config.h    DESTINATION include/Ostap )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostap_rdict.pcm   DESTINATION lib           )
 install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/ostapDict.rootmap DESTINATION lib           )
+install ( FILES     ${CMAKE_CURRENT_BINARY_DIR}/build.config      DESTINATION lib           )
 
 install(EXPORT ostap-export
   FILE         OstapTargets.cmake
