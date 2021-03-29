@@ -55,6 +55,7 @@ from   sys                     import version_info as python_version
 from   ostap.math.random_ext   import ve_gauss, poisson
 from   ostap.core.meta_info    import root_version_int
 from   ostap.fitting.variables import SETVAR 
+from   ostap.fitting.roocmdarg import flat_args, check_arg 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
@@ -493,7 +494,7 @@ class MakeVar ( object ) :
         _args = []
         for a in args :
             if not isinstance ( a , ROOT.RooCmdArg ) :
-                self.warning ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
+                self.error ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
             else : _args.append ( a ) 
 
         from ostap.plotting.fit_draw import keys  as drawing_options
@@ -684,26 +685,40 @@ class MakeVar ( object ) :
             else :
                
                 self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
-
-        keys       = [ a.GetName() for a in _args ]        
-        if not 'NumCPU' in keys :
+            
+        
+        if not check_arg ( 'numcpu' , *_args ) :
             if  dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
                 _args.append ( ncpu ( len ( dataset ) ) )
             else :
                 nc = numcpu()
-                if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
+                if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) )
 
-        # =============================================================
-        ## check sumw2 for the weighted datasets 
-        if dataset and dataset.isWeighted() :
-            for a in _args :
-                if   'SumW2Error'      == a.name :
-                    val = bool ( a.getInt ( 0 ) ) 
-                    if not val : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
-                elif 'AsymptoticError' == a.name :
-                    val = bool ( a.getInt ( 0 ) )
-                    if not val : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
                 
+        # =============================================================
+        ## check options for the weighted datasets 
+        if dataset :
+            
+            weighted = dataset.isWeighted ()            
+            sw2      = check_arg ( 'SumW2Error'      , *_args )
+            aer      = check_arg ( 'AsymptoticError' , *_args )
+
+            if sw2 and aer :
+                logger.warning ( "parse_args: Both ``SumW2Error'' and ``AsymptoticError'' are specified" )                
+            if weighted   and sw2 :
+                value = bool ( sw2.getInt( 0 ) )
+                if not value : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
+            elif weighted and aer : 
+                value = bool ( aer.getInt( 0 ) )
+                if not value : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
+            ## elif weighted :                
+            ##     logger.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
+            ##     _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
+            elif not weighted and sw2 :
+                logger.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
+            elif not weighted and aer :
+                logger.warning ( "parse_args:``AsymptoticError'' is specified for non-weighted dataset" )
+
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
         
@@ -720,26 +735,49 @@ class MakeVar ( object ) :
             self.warning ("duplicated options!")            
         #
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
-        ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
-        
-        def chunks(lst, n):
-            """Yield successive n-sized chunks from lst."""
-            for i in range(0, len(lst), n):
-                yield lst[i:i + n]
 
-        ## _args.append ( ROOT.RooFit.BatchMode ( True ) )
-        
-        nn = 4 
-        while nn < len ( _args ) :
-            _a = [] 
-            for c in chunks ( _args , nn ) :
-                if   2 <= len ( c ) : _a.append ( ROOT.RooFit.MultiArg ( *c ) )
-                elif 1 == len ( c ) : _a.append ( c[1] )
-            _args = _a 
-                                    
-        return tuple ( _args )
 
+        ## store them 
+        self.aux_keep.append ( _args ) 
+        
+        return self.merge_args ( 5 , *_args )
+
+    # =========================================================================
+    ## Merge <code>RooCmdArgs</code> into chunks
+    #  It is needed to account a limited number of <code>RooCmdArg</code> arguments
+    #  @see RooCmdArg 
+    #  @see RooFit::MultiArg
+    def merge_args ( self , num , *args ) :
+        """Merge `RooCmdArgs` into chunks 
+        - It is needed to account a limited number of `RooCmdArg` arguments
+        - see `ROOT.RooCmdArg`
+        - see `ROOT.RooFit.MultiArg`
+        """
+        assert isinstance ( num , integer_types ) and 1 <= num ,\
+               "merge_args: invalid chunk size ``%s''" % num
+
+        ## no action 
+        if len ( args ) < num : return args
+
+        from   ostap.utils.utils  import chunked
+
+        lst   = flat_args ( *args )
+        
+        self.aux_keep.append ( lst )
+                
+        while num < len ( lst ) : 
+            
+            nlst = chunked ( lst , 4 )
+            ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ]
+            
+            self.aux_keep.append ( ll ) 
+            lst = tuple ( ll )
+            
+        return lst 
+
+        
+        
     # =========================================================================
     ## set value to a given value with the optional check
     #  @code

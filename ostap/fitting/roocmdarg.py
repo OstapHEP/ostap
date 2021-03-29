@@ -19,7 +19,9 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.ostap_types import string_types 
+from   ostap.core.ostap_types       import string_types, integer_types 
+from   ostap.utils.utils            import chunked
+import ostap.fitting.roocollections 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -204,7 +206,7 @@ def _rca_print_ ( self ) :
     elif 'ZVar'                 == name : return "ZVar({.})"
     elif 'AxisLabel'            == name : return "AxisLabel('%s')"     % self.getString ( 0 )
     elif 'Scaling'              == name : return "Scaling(%s)"         % self.getBool   (   )
-    
+   
     ## RooAbsReal::createHistogram arguments
     if   'IntrinsicBinning'     == name : return "IntrinsicBinning(%s)" % self.getBool  (   )
     
@@ -292,7 +294,7 @@ def _rca_print_ ( self ) :
 
     ## ? 
     if   'MultiArg'               == name :
-        return "MultiArg(%s)" % [ i for i in self.subArgs() ]
+        return "MultiArg(%s)" % [ i for i in self.subArgs() if i.name ]
     
     return name
 
@@ -307,9 +309,9 @@ def flat_args ( *args ) :
     flat = []
     for arg in args :
 
-        if arg.GetName() != "MultiArg" : flat.append ( arg )
+        if arg.name != "MultiArg" : flat.append ( arg )
         else :
-            lst = [ i for i in arg.subArgs() ]
+            lst = [ i for i in arg.subArgs() if i.name ]
             flat = flat + list ( flat_args ( *lst ) ) 
 
     return tuple ( flat ) 
@@ -379,20 +381,20 @@ def check_arg  ( pattern , *args ) :
 
 # =============================================================================
 ## check at least one command  different form the trivial commands  
-def nontrivial_arg ( trivials , *args ) :
+def nontrivial_arg ( trivia , *args ) :
     """Check at least one command  different form the trivial commands
     """
 
     if not args : return False
     
-    if isinstance ( trivials , string_types ) :
-        trivials = trivials ,
+    if isinstance ( trivia , string_types ) :
+        trivia = trivia ,
 
     flat = flat_args ( *args )
     
     for arg in flat :
 
-        for pattern in trivials :
+        for pattern in trivia :
             
             if match_arg ( pattern , arg ) : break 
             
@@ -401,8 +403,36 @@ def nontrivial_arg ( trivials , *args ) :
             return True
 
     return False 
-        
+
+# ==============================================================================
+## merge arguments into smaller chunks
+#  @code
+#  args = ...
+#  margs = merge_args ( 3 , *args ) 
+#  @endcode 
+def merge_args ( num , *args ) : 
+    """merge arguments into smaller chunks
+    args = ...
+    margs = merge_args ( 3 , *args ) 
+    """
+    assert isinstance ( num , integer_types ) and 1 <= num ,\
+           "merge_args: invalid chunk size ``%s''" % num
     
+    if len ( args ) < num : return tuple ( args ) 
+
+    lst   = flat_args ( *args ) 
+    keep  = [ l for l in lst ]
+    
+    while num < len ( lst ) : 
+        
+        nlst = chunked ( lst , 4 )
+        ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ] 
+        for l in ll : keep.append ( l )  
+        
+        lst = tuple ( ll )
+
+    return lst 
+
 # =============================================================================
 def _rca_bool_ ( self ) :
     """Get boolean value"""

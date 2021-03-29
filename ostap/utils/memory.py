@@ -120,7 +120,7 @@ class Memory(object):
     >>> delta = M.delta    
     """
     from ostap.logger.logger import getLogger 
-    _logger = getLogger( 'ostap.utils.utils' )
+    _logger = getLogger( 'ostap.utils.memory' )
     del getLogger
     
     _printed = False
@@ -151,7 +151,7 @@ class Memory(object):
  
 # ============================================================================
 ## create the context manager to monitor the virtual memory increase  
-def virtualMemory ( name = '' ) :
+def virtualMemory ( name = '' , logger = None ) :
     """Create the context manager to monitor the virtual memory increase:
     
     >>> with memory('here...') :
@@ -164,7 +164,7 @@ def virtualMemory ( name = '' ) :
     
     >>> delta = m.delta    
     """
-    return Memory( name )
+    return Memory( name , logger = logger )
 
 ## ditto 
 memory = virtualMemory  ## ditto
@@ -181,5 +181,5 @@ if '__main__' == __name__ :
         logger.info ( 80*'*' ) 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -1895,7 +1895,7 @@ class Fit2DSym (PDF2) :
     
     Example:
     
-    >>>  model   = Models.Fit2D (
+    >>>  model   = Models.Fit2DSym (
     ...      signal_x = Models.Gauss_pdf ( 'Gx' , xvar = m_x ) ,
     ...      signal_y = Models.Gauss_pdf ( 'Gy' , xvar = m_y ) ,
     ...      bkg1x    = 1 , 

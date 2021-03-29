@@ -729,19 +729,23 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
         s = self.store()
         if s : s.reset()
         self._old_reset_()
-        return len(self)
-    ROOT.RooDataSet.reset = _ds_new_reset_
+        return len ( self )
+    
+    ## ROOT.RooDataSet.reset = _ds_new_reset_
+    ROOT.RooDataSet.clear = _ds_new_reset_
+    ROOT.RooDataSet.erase = _ds_new_reset_
+    ## ROOT.RooDataSet.Reset = _ds_new_reset_
 
-ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
-ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
-ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+
 ROOT.RooDataSet.get_var       = get_var
 
 _new_methods_ += [
     ROOT.RooDataSet .clear ,
     ROOT.RooDataSet .erase ,
-    ROOT.RooDataSet .Reset ,
-
+    
     ROOT.RooDataSet .get_var ,
     ]
 
@@ -980,13 +984,15 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
 
     ##
     formula =  0 <= wvarname.find ( '(' ) and wvarname.find( '(' ) < wvarname.find ( ')' )
-    formula = formula or 0 <  wvarname.find ( '*' ) 
-    formula = formula or 0 <  wvarname.find ( '/' )     
+    formula = formula or 0 <= wvarname.find ( '*' ) 
+    formula = formula or 0 <= wvarname.find ( '/' )     
     formula = formula or 0 <= wvarname.find ( '+' ) 
     formula = formula or 0 <= wvarname.find ( '-' )     
-    formula = formula or 0 <  wvarname.find ( '&' )     
-    formula = formula or 0 <  wvarname.find ( '|' )     
-
+    formula = formula or 0 <= wvarname.find ( '&' )     
+    formula = formula or 0 <= wvarname.find ( '|' )     
+    formula = formula or 0 <= wvarname.find ( '^' )     
+    formula = formula or 0 <= wvarname.find ( '%' )
+    
     if formula :
         wname    = 'W' or vname 
         while wname in dataset : wname += 'W'

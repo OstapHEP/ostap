@@ -46,7 +46,7 @@ from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phase
                                         fit_status , cov_qual , H1D_dset , get_i  )
 from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
-from   ostap.fitting.roocmdarg import check_arg, nontrivial_arg
+from   ostap.fitting.roocmdarg import check_arg, nontrivial_arg, merge_args 
 import ostap.histos.histos 
 from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
@@ -317,8 +317,15 @@ class PDF (FUNC) :
         #
         ## treat the arguments properly
         #
-        opts = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
-        opts = self.parse_args ( dataset , *opts , **kwargs )
+        opts     = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
+        opts     = self.parse_args ( dataset , *opts , **kwargs )
+        weighted = dataset.isWeighted() if dataset else False
+        if weighted :
+            sw2 = check_arg ( 'SumW2Error'      , *opts )
+            aer = check_arg ( 'AsymptoticError' , *opts )
+            if not sw2 and not aer :
+                self.warning ( "fitTo: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset!" )
+
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
             self.info ('fitTo options: %s ' % list ( opts ) )
 
@@ -330,10 +337,12 @@ class PDF (FUNC) :
                 nb2 = xv.getBins('cache')
                 if  nb1 != nb2 :
                     xv.setBins ( max (  nb1 , nb2 ) , 'cache' )
-                    self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
+                    if not silent :
+                        self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
             elif xv :
                 xv.setBins (        nb1         , 'cache' )
-                self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
+                if not silent : 
+                    self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
         if dataset.isWeighted () and dataset.isNonPoissonWeighted()  : 
             sw = check_arg ( 'sumw2'      , *opts )
@@ -345,7 +354,7 @@ class PDF (FUNC) :
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None
-            result          = self.pdf.fitTo ( dataset , *opts ) 
+            result          = self.pdf.fitTo ( dataset , *self.merge_args ( 8 , *opts ) ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -428,7 +437,7 @@ class PDF (FUNC) :
         frame = None
 
         ## if not silent :
-        ##     self.info ( "Fir resukt "result.table ( , prefix = '# ' ) 
+        ##     self.info ( "Fit result " result.table ( , prefix = '# ' ) 
             
         
         ## draw it if requested
@@ -471,7 +480,7 @@ class PDF (FUNC) :
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
 
         if args :
-            self.error ( "___DRAW: " + str ( args ) )
+            self.error ( "_draw: " + str ( args ) )
         
         for i , cmp in enumerate ( what ) :
 
@@ -1003,7 +1012,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            result.plotOn ( frame , *largs  )
+            result.plotOn ( frame , *self.merge_args ( 8 , *largs ) )
             
             import ostap.histos.graphs
             
@@ -1090,7 +1099,7 @@ class PDF (FUNC) :
         sf   = dataset.sFactor() 
 
         self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
-        return self.pdf.createNLL ( dataset , *opts ) , sf 
+        return self.pdf.createNLL ( dataset , *self.merge_args ( 7 , *opts ) ) , sf 
 
     # =========================================================================
     ## get NLL/profile-graph for the variable, using the specified abscissas
@@ -3195,16 +3204,15 @@ class Fit1D (PDF) :
             backgrounds      = [] 
             
         ## wrap signal if needed 
-        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
+        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone()
         ## if bare RooFit pdf,  fit variable must be specified
         elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
             self.__signal = Generic1D_pdf ( signal , xvar , prefix = 'S_' , suffix = suffix )
         else :
             raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
-        
+
         if not name :
-            name = 'Fit%s' % self.__signal.name 
-            if suffix : name += '_' + suffix 
+            name = self.generate_name ( prefix = 'Fit%s' % self.__signal.name , suffix = suffix ) 
 
         ## Init base class
         PDF.__init__ ( self , name , self.__signal.xvar )             
@@ -3293,7 +3301,7 @@ class Fit1D (PDF) :
                                                 recursive = True          ,
                                                 fractions = fB            )
             ## new background
-            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BACKGROUND_' , suffix =  suffix )
+            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BKG_' , suffix =  suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
             self.__bkgs            = bkgs 
             self.__background_fractions = fracs 
@@ -3312,7 +3320,7 @@ class Fit1D (PDF) :
                                                 recursive = True     ,
                                                 fractions = fC       ) 
             ## save old background
-            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'COMPONENT_' , suffix = suffix )
+            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'CMP_' , suffix = suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
             self.__components_fractions = fracs 
             self.verbose('%2d components  are combined into single COMPONENT'    % len ( cmps ) )
@@ -3495,6 +3503,21 @@ class Fit1D (PDF) :
     def more_components ( self ) :
         """additional ``other'' components"""
         return tuple( self.__more_components  )
+
+    @property
+    def signals_all ( self ) :
+        """``signals_all'' : list of all signal components (possible merged)"""
+        return ( self.signal, ) + self.more_signals
+    
+    @property
+    def backgrounds_all ( self ) :
+        """``backgrounds_all'' : list of all background components (possible merged)"""
+        return ( self.background, ) + self.more_backgrounds
+
+    @property
+    def components_all ( self ) :
+        """``components_all'' : list of all other components (possible merged)"""
+        return self.more_components 
     
     @property
     def fS ( self  ) :
