@@ -915,8 +915,8 @@ namespace Ostap
      *  where \f$ f_{N^2}]\f$,  \f$ f_{D}]\f$, \f$ f_L \f$  and 
      *  \f$ f_{\varrho}]\f$ are provdied externally
      *  - Integresting special case is when   
-     *    \f$ f_L (s.m_0^2) \f$ and \f$ f_D \f$ as real and imaginary parts 
-     *   of the amplitude are related via the dispersion relation  
+     *    \f$ f_L (s,m_0^2) \f$ and \f$ f_D \f$ as real and imaginary parts 
+     *   of the amplitude related via the dispersion relation  
      *  with the single subtraction 
      *  \f[ f_L(s) = - \frac{s}{\pi} 
      *  \int \frac{f_D(s^\prime d s^{\prime}}{s^\prime(s^\prime -s ) } \f]
@@ -2301,7 +2301,7 @@ namespace Ostap
     /** @class GammaBW3 
      *  Running width/phase-space function 
      *  for 3-body decays 
-     *  \f[ \Gamma(s) \propto \frac{1}{s}
+     *  \f[ \Gamma(s) =  \frac{pi^2}{4s}
      *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
      *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
      *  @attention note the power of \f$s\f$ in denumerator! 

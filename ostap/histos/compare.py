@@ -276,7 +276,6 @@ def _h3_cmp_chi2_ ( h1              ,
 ROOT.TH3F.cmp_chi2 = _h3_cmp_chi2_
 ROOT.TH3D.cmp_chi2 = _h3_cmp_chi2_
 
-
 # =============================================================================
 ## Calculate chi2 for histogram and ``function''
 def _h1_chi2_cmp_ ( h1                                    ,
@@ -284,6 +283,7 @@ def _h1_chi2_cmp_ ( h1                                    ,
                     integral = False                      ,
                     select   = lambda x,y,v : True        ,
                     chi2     = lambda v1,v2 : v1.chi2(v2) ) :
+    
     """Calculate chi2 for histogram and ``function''
     >>> h1   = ... ## the first histo
     >>> func = ... ## the the function 
@@ -301,25 +301,47 @@ def _h1_chi2_cmp_ ( h1                                    ,
         ## use numerical integration 
         from ostap.math.intergal import integral as _integral_
         _func_  = lambda x , xl , xr : _integral_ ( func , xl , xr ) / ( xr - xl )
-        
-    for entry in h1.items() :
-        
-        x    = entry[1]
-        y1   = entry[2]
-        
-        xv   = x.value()
-        xe   = x.error()
-        xl   = xv - xe
-        xr   = xv + xe
-        
-        y2   = _func_ ( x , xl , xr )        
-        if not select ( x, y1 , y2 ) : continue
 
-        c2  += chi2 ( y1 , y2 )
-        ndf += 1
+
+    ## helper function
+    def _chi2_ ( c , histo , func , accept , funchi2 )  :
+
+        c2   = 0.0
+        ndf  = 1
+
+        for entry in histo.items() :
         
+            x    = entry [ 1 ]
+            y1   = entry [ 2 ]
+            
+            xv   = x.value()
+            xe   = x.error()
+            xl   = xv - xe
+            xr   = xv + xe
+            
+            y2   = func ( x , xl , xr )    
+            if not accept ( x, y1 , y2 ) : continue
+
+            c2  += funchi2 ( y1 , c * y2 )
+            ndf += 1
+
+        return c2 , ndf 
+
+    if not scale : 
+        c2 , ndf = _chi2_ ( 1.0 , h1 , _func_ , select , chi2 )
+        c2ndf = c2/ndf 
+        return c2ndf, ROOT.TMath.Prob( c2 , ndf )
+    
+    fun = lambda c : _chi2_ ( 1.0 , h1 , _func_ , select , chi2 )[0]
+
+    from ostap.math.minimize import minimize_scalar 
+    r = minimize_scalar ( fun )
+
+    c2 , ndf =  _chi2_ ( r.x , h1 , _func_ , select , chi2 )
+    
     c2ndf = c2/ndf 
-    return c2ndf, ROOT.TMath.Prob( c2 , ndf ) 
+    return c2ndf, ROOT.TMath.Prob( c2 , ndf ) , r.x 
+    
 
 ROOT.TH1D.chi2_cmp = _h1_chi2_cmp_
 ROOT.TH1F.chi2_cmp = _h1_chi2_cmp_ 

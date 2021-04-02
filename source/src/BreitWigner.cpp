@@ -2244,7 +2244,7 @@ std::string Ostap::Math::ChannelNR::describe() const
 // ============================================================================
 /* constructor from the Dalitz configuration and 
  *  the squared matrix element
- *  @param dalitz Dalizt configriation
+ *  @param dalitz Dalitz configriation
  *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
  */
 // ============================================================================
