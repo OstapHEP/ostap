@@ -40,6 +40,11 @@ for i in range ( N ) :
 # ============================================================================
 def test_morphing1 () :
 
+    logger = getLogger ('test_morphing1')    
+    if ROOT.gROOT.GetVersionInt() < 62301 :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return 
+
     pdf1 = Models.Gauss_pdf ( 'G1' , xvar = mass , mean = 10 , sigma = 1 )
     pdf2 = Models.Gauss_pdf ( 'G2' , xvar = mass , mean = 10 , sigma = 2 )
     pdf3 = Models.Gauss_pdf ( 'G3' , xvar = mass , mean = 10 , sigma = 3 )
@@ -60,8 +65,12 @@ def test_morphing1 () :
 
 # ============================================================================
 def test_morphing2 () :
-## if 1 < 2 :
     
+    logger = getLogger ('test_morphing2')    
+    if ROOT.gROOT.GetVersionInt() < 62301 :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return 
+
     pdf11 = Models.Gauss_pdf ( 'G11' , xvar = mass , mean =  8 , sigma = 1 )
     pdf12 = Models.Gauss_pdf ( 'G12' , xvar = mass , mean = 10 , sigma = 1 )
     pdf13 = Models.Gauss_pdf ( 'G13' , xvar = mass , mean = 12 , sigma = 1 )
