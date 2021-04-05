@@ -288,14 +288,14 @@ def test_selector_with_cuts ()  :
         
 
 # =============================================================================
-## Use dedicated selector-with-vars to loop
+## Use dedicated selector-with-vars (1) to loop
 #  over good entries in  the  chain and fill   dataset 
 def test_selector_with_vars1 ()  :
-    """Use dedicated selector-with-vars to loop
+    """Use dedicated selector-with-vars (1) to loop
     over good entries in  the  chain and fill   dataset 
     """
     
-    logger = getLogger("test_selector_with_vars")
+    logger = getLogger("test_selector_with_vars1")
 
     from ostap.fitting.pyselectors import SelectorWithVars
 
@@ -313,10 +313,10 @@ def test_selector_with_vars1 ()  :
 
 
 # =============================================================================
-## Use dedicated selector-with-vars to loop
+## Use dedicated selector-with-vars (2) to loop
 #  over good entries in  the  chain and fill   dataset 
 def test_selector_with_vars2 ()  :
-    """Use dedicated selector-with-vars to loop
+    """Use dedicated selector-with-vars (2) to loop
     over good entries in  the  chain and fill   dataset 
     """
     
@@ -337,10 +337,10 @@ def test_selector_with_vars2 ()  :
     logger.info ("Data set (selector-with-vars):\n%s"  % dataset.table ( prefix = "# " ) )
 
 # =============================================================================
-## Use dedicated selector-with-vars to loop
+## Use dedicated selector-with-vars (3) to loop
 #  over good entries in  the  chain and fill   dataset 
 def test_selector_with_vars3 ()  :
-    """Use dedicated selector-with-vars to loop
+    """Use dedicated selector-with-vars (3) to loop
     over good entries in  the  chain and fill   dataset 
     """
     
