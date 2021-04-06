@@ -12,8 +12,11 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2018-11-29"
 __all__     = (
-    'Product1D_pdf' , ## make a product of 1D PDFs
-    'Modify1D_pdf'  , ## modify 1D pdf with a positive polynomials 
+    'Product1D_pdf'     , ## make a product of 1D PDFs
+    'Modify1D_pdf'      , ## modify 1D pdf with a positive polynomials
+    'CutOff_pdf'        , ## Cut-off PDF
+    'CutOffGauss_pdf'   , ## Gaussian cut-off
+    'CutOffStudent_pdf' , ## Student's t-like/power law cut-off    
     )
 # =============================================================================
 import ROOT, math
@@ -239,6 +242,225 @@ class Modify1D_pdf(Product1D_pdf) :
 
 models.append ( Modify1D_pdf )
 
+
+# =============================================================================
+# @class CutOffGauss_pdf
+#  Useful function for smooth Gaussian cut-off:
+#  \f[ f(x;x_0;\sigma) = \left\{ 
+#    \begin{array}{ll}
+#    1  & \mathrm{for~} x \le x_0  \\
+#    \mathrm{e}^{-\frac{1}{2}\left( \frac{ (x-x_0)^2}{\sigma^2} \right)}
+#       & \mathrm{for~} x >   x_0 
+#    \end{array}\right. \f] 
+# @see Ostap::Math::CutOffGauss
+# @see Ostap::Models::CutOffGauss
+class CutOffGauss_pdf(PDF) :
+    """ Useful function for smooth Gaussian-like  cut-off
+    - see Ostap.Math.CutOffGauss
+    - see Ostap.Models.CutOffGauss
+    """
+    def __init__ ( self  ,
+                   name  ,
+                   xvar  ,
+                   right ,
+                   x0    ,
+                   sigma ) :
+        
+        PDF.__init__ ( self , name , xvar = xvar ) 
+        
+        self.__x0   = self.make_var ( x0       ,
+                                      'x0_%s'      % name ,
+                                      '#x_{0}(%s)' % name , x0 , x0 )
+        
+        self.__sigma = self.make_var ( sigma   ,
+                                       'sigma_%s'        % name ,
+                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+
+
+        self.__right = True if right else False
+        
+        self.pdf = Ostap.Models.CutOffGauss (
+            self.roo_name ( 'cofg_'  )          , 
+            'Gaussian cut-off %s' % self.name  ,
+            self.xvar                          ,
+            self.right                         , 
+            self.x0                            ,
+            self.sigma                         ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'x0'    : self.x0    ,
+            'right' : self.right , 
+            'sigma' : self.sigma ,
+            }
+        
+    @property
+    def x0 ( self ) :
+        """``x0'' : threshold/location parameter for Gaussial cut-off"""
+        return self.__x0
+    @x0.setter 
+    def x0 ( self , value ) :
+        self.set_value ( self.__x0 , value ) 
+
+    @property
+    def sigma ( self ) :
+        """``sigma'' : width parameter for Gaussial cut-off"""
+        return self.__sigma
+    @sigma.setter 
+    def sigma ( self , value ) :
+        self.set_value ( self.__sigma , value ) 
+    
+    @property
+    def right ( self ) :
+        """``right'' : parameter of the Gaussian cut-off"""
+        return self.__right 
+
+    @property
+    def left ( self ) :
+        """``left'' : parameter of the Gaussian cut-off"""
+        return not self.right 
+
+
+models.append ( CutOffGauss_pdf )
+
+
+
+# =============================================================================
+# @class CutOffStudent_pdf
+#  Useful function for smooth Student's t=-like (power-law) cut-off:
+#  \f[ f(x;x_0;\sigma) = \left\{ 
+#    \begin{array}{ll}
+#    1  & \mathrm{for~} x \le x_0  \\
+#    \left( \frac{1}{\nu} \left( \frac{(x-x_0)}{\sigma^2} \right)^{ - \frac{\nu+1}{2}} \right) 
+#       & \mathrm{for~} x >   x_0 
+#    \end{array}\right. \f] 
+# @see Ostap::Math::CutOffGauss
+# @see Ostap::Models::CutOffGauss
+class CutOffStudent_pdf(PDF) :
+    """ Useful function for smooth Student's t=-like (power-law) cut-off:
+    - see Ostap.Math.CutOffStudent
+    - see Ostap.Models.CutOffStudent
+    """
+    def __init__ ( self  ,
+                   name  ,
+                   xvar  ,
+                   right ,
+                   x0    ,
+                   nu    ,
+                   sigma ) :
+        
+        PDF.__init__ ( self , name , xvar = xvar ) 
+        
+        self.__x0   = self.make_var ( x0       ,
+                                      'x0_%s'      % name ,
+                                      '#x_{0}(%s)' % name , x0 , x0 )
+        
+        self.__nu   = self.make_var ( nu    ,
+                                      'nu_%s'        % name ,
+                                      '#nu_{CB}(%s)' % name , nu , nu , 0 , 1000 )
+        
+        self.__sigma = self.make_var ( sigma   ,
+                                       'sigma_%s'        % name ,
+                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+
+
+        self.__right = True if right else False
+        
+        self.pdf = Ostap.Models.CutOffStudent (
+            self.roo_name ( 'cofs_'  )          , 
+            "Student's t-like cut-off %s" % self.name  ,
+            self.xvar                          ,
+            self.right                         , 
+            self.x0                            ,
+            self.nu                            ,
+            self.sigma                         ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'right' : self.right , 
+            'x0'    : self.x0    ,
+            'nu'    : self.nu    ,
+            'sigma' : self.sigma ,
+            }
+        
+    @property
+    def x0 ( self ) :
+        """``x0'' : threshold/location parameter for Student's t-like cut-off"""
+        return self.__x0
+    @x0.setter 
+    def x0 ( self , value ) :
+        self.set_value ( self.__x0 , value ) 
+
+    @property
+    def sigma ( self ) :
+        """``sigma'' : width parameter for Student's t-like cut-off"""
+        return self.__sigma
+    @sigma.setter 
+    def sigma ( self , value ) :
+        self.set_value ( self.__sigma , value ) 
+
+    @property
+    def nu ( self ) :
+        """``nu'' : power parameter for Student's t-like cut-off"""
+        return self.__nu
+    @nu.setter 
+    def nu ( self , value ) :
+        self.set_value ( self.__nu , value ) 
+    
+    @property
+    def right ( self ) :
+        """``right'' : parameter of the Student's t-like cut-off"""
+        return self.__right 
+
+    @property
+    def left ( self ) :
+        """``left'' : parameter of the Student's t-like cut-off"""
+        return not self.right 
+
+
+models.append ( CutOffStudent_pdf )
+
+
+# ==============================================================================
+# @class CutOff_pdf
+# Trivial wrapper for <code>Product1D_pdf</code>
+class CutOff_pdf(Product1D_pdf) :
+    """Trivial wrapper for `Product1D_pdf`
+    """
+    def __init__ ( self          ,
+                   pdf           ,
+                   cutoff        ,
+                   xvar   = None , 
+                   name   = ''   ) :
+
+        Product1D_pdf.__init__ ( self          ,
+                                 pdf1 = pdf    ,
+                                 pdf2 = cutoff ,
+                                 xvar = xvar   ,
+                                 name = name   )
+
+        ## save the configuration
+        self.config = {
+            'name'   : self.name     ,
+            'pdf'    : self.orig_pdf ,
+            'cutoff' : self.cutoff   ,
+            'xvar'   : self.xvar     ,
+            }
+        
+    @property
+    def orig_pdf  ( self ) :
+        """``orig_pdf'' : original PDF"""
+        return self.pdf1
+
+    @property
+    def cutoff   ( self ) :
+        """``cutoff'' : PDF ised for cut-off"""
+        return self.pdf2
+    
 # =============================================================================
 if '__main__' == __name__ : 
 

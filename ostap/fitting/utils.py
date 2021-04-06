@@ -807,7 +807,7 @@ class MakeVar ( object ) :
         if minmax :
             mn , mx = minmax
             if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
-                raise ValueError ( "Value %s is outside of [%s,%s] region" % ( value , mn , mx ) ) 
+                raise ValueError ( "Value %s is outside of the [%s,%s] region" % ( value , mn , mx ) ) 
             
         ## check for external conditions, if specified  
         if not ok ( var , value ) :

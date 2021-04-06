@@ -180,9 +180,12 @@ __all__ = (
     'Linear_pdf'           , ## positive linear polynom 
     'Parabolic_pdf'        , ## positive parabolic polynom  
     ## the native RooFit background shapes
-    'RooPoly_pdf'       , ## wrapper for RooPolynomial 
-    'RooCheb_pdf'       , ## wrapper for RooChebyshev 
+    'RooPoly_pdf'          , ## wrapper for RooPolynomial 
+    'RooCheb_pdf'          , ## wrapper for RooChebyshev 
     ##
+    'CutOff_pdf'           , ## Cut-off 
+    'CutOffGauss_pdf'      , ## Gaussian cut-off 
+    'CutOffStudent_pdf'    , ## Student's t-like /power law cut-off 
     #
     ## 2D non-factorazable models
     #

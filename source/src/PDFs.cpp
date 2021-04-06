@@ -6642,6 +6642,212 @@ Double_t Ostap::Models::Hyperbolic::analyticalIntegral
 // ============================================================================
 
 
+// ============================================================================
+Ostap::Models::CutOffGauss::CutOffGauss 
+( const char* name  , 
+  const char* title ,
+  RooAbsReal& x     , // observable 
+  const bool  right , 
+  RooAbsReal& x0    , 
+  RooAbsReal& sigma ) 
+  : RooAbsPdf ( name , title )
+  , m_x          ( "x"      , "Observable"            , this , x     ) 
+  , m_x0         ( "x0"     , "Threshold parameter"   , this , x0    ) 
+  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma ) 
+  , m_cutoff     ( right    ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+Ostap::Models::CutOffGauss::CutOffGauss 
+( const char* name  , 
+  const char* title ,
+  RooAbsReal& x     , // observable 
+  RooAbsReal& x0    , 
+  RooAbsReal& sigma , 
+  const Ostap::Math::CutOffGauss& cutoff ) 
+  : RooAbsPdf ( name , title )
+  , m_x          ( "x"      , "Observable"            , this , x     ) 
+  , m_x0         ( "x0"     , "Threshold parameter"   , this , x0    ) 
+  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma ) 
+  , m_cutoff     ( cutoff ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::CutOffGauss::CutOffGauss 
+( const Ostap::Models::CutOffGauss& right ,
+  const char*                       name  ) 
+  : RooAbsPdf    ( right , name ) 
+    //
+  , m_x          ( "x"     , this , right.m_x     ) 
+  , m_x0         ( "x0"    , this , right.m_x0    )  
+  , m_sigma      ( "sigma" , this , right.m_sigma ) 
+  , m_cutoff     ( right.m_cutoff ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// destructor
+// ============================================================================
+Ostap::Models::CutOffGauss::~CutOffGauss(){} 
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::CutOffGauss*
+Ostap::Models::CutOffGauss::clone( const char* name ) const 
+{ return new Ostap::Models::CutOffGauss(*this,name) ; }
+// ============================================================================
+void Ostap::Models::CutOffGauss::setPars () const 
+{
+  m_cutoff.setX0    ( m_x0    ) ;
+  m_cutoff.setSigma ( m_sigma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::CutOffGauss::evaluate() const 
+{
+  setPars() ;
+  return m_cutoff ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::CutOffGauss::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::CutOffGauss::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_cutoff.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
+Ostap::Models::CutOffStudent::CutOffStudent
+( const char* name  , 
+  const char* title ,
+  RooAbsReal& x     , // observable 
+  const bool  right , 
+  RooAbsReal& x0    , 
+  RooAbsReal& nu    , 
+  RooAbsReal& sigma ) 
+  : RooAbsPdf ( name , title )
+  , m_x          ( "x"      , "Observable"            , this , x     ) 
+  , m_x0         ( "x0"     , "Threshold parameter"   , this , x0    ) 
+  , m_nu         ( "nu"     , "Power     parameter"   , this , nu    ) 
+  , m_sigma      ( "sigma"  , "Sigma     parameter"   , this , sigma ) 
+  , m_cutoff     ( right    ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+Ostap::Models::CutOffStudent::CutOffStudent
+( const char* name  , 
+  const char* title ,
+  RooAbsReal& x     , // observable 
+  RooAbsReal& x0    , 
+  RooAbsReal& nu    , 
+  RooAbsReal& sigma , 
+  const Ostap::Math::CutOffStudent& cutoff ) 
+  : RooAbsPdf ( name , title )
+  , m_x          ( "x"      , "Observable"            , this , x     ) 
+  , m_x0         ( "x0"     , "Threshold parameter"   , this , x0    ) 
+  , m_nu         ( "nu"     , "Power     parameter"   , this , nu    ) 
+  , m_sigma      ( "sigma"  , "Sigma     parameter"   , this , sigma ) 
+  , m_cutoff     ( cutoff ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::CutOffStudent::CutOffStudent
+( const Ostap::Models::CutOffStudent& right ,
+  const char*                         name  ) 
+  : RooAbsPdf    ( right , name ) 
+    //
+  , m_x          ( "x"     , this , right.m_x     ) 
+  , m_x0         ( "x0"    , this , right.m_x0    )  
+  , m_nu         ( "nu"    , this , right.m_nu    )  
+  , m_sigma      ( "sigma" , this , right.m_sigma ) 
+  , m_cutoff     ( right.m_cutoff ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// desctructor 
+// ============================================================================
+Ostap::Models::CutOffStudent::~CutOffStudent(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::CutOffStudent*
+Ostap::Models::CutOffStudent::clone( const char* name ) const 
+{ return new Ostap::Models::CutOffStudent(*this,name) ; }
+// ============================================================================
+void Ostap::Models::CutOffStudent::setPars () const 
+{
+  m_cutoff.setX0    ( m_x0    ) ;
+  m_cutoff.setNu    ( m_nu    ) ;
+  m_cutoff.setSigma ( m_sigma ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::CutOffStudent::evaluate() const 
+{
+  setPars() ;
+  return m_cutoff ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::CutOffStudent::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::CutOffStudent::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_cutoff.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+
 
 // ============================================================================
 // Flat in 1D
@@ -6786,6 +6992,10 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 // ============================================================================
 
 
+
+
+
+
 // ============================================================================
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
@@ -6860,6 +7070,8 @@ ClassImp(Ostap::Models::PositiveSpline     )
 ClassImp(Ostap::Models::MonotonicSpline    ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )
 ClassImp(Ostap::Models::ConvexSpline       )
+ClassImp(Ostap::Models::CutOffGauss        )
+ClassImp(Ostap::Models::CutOffStudent      )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

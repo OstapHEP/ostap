@@ -170,12 +170,16 @@ def test_breitwigner_phi_ps () :
     f2 = Ostap.Math.BWPS ( bw2 , ps , True , True )
     f3 = Ostap.Math.BWPS ( bw3 , ps , True , True )
     
+
     f1.draw (          linecolor = 2 )
     f2.draw ( 'same' , linecolor = 4 )
     f3.draw ( 'same' , linecolor = 5 )
 
+
     logger.info (" f1 fraction %.4f" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
     logger.info (" f2 fraction %.4f" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    
     logger.info (" f3 fraction %.4f" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
 
     mass    = ROOT.RooRealVar  ('mass' , 'm(KK)' , 0.96 * GeV , 1.5 * GeV ) 
@@ -294,7 +298,7 @@ def test_db() :
     from ostap.utils.timing     import timing 
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         for i, m in enumerate ( models ) :
-            db ['model/%2d: %s' % ( i , type ( m ) ) ] = m
+            db ['model/%2d: %s' % ( i , type ( m ).__name__  ) ] = m
         db['models'   ] = models
         db.ls() 
 

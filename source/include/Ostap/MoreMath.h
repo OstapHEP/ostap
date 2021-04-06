@@ -315,6 +315,22 @@ namespace Ostap
                        const double mu    = 0 ,
                        const double sigma = 1 ) ;
     // ========================================================================
+    /** Student's t-CDF 
+     *  \f[ f(t;\nu) = \left\{
+     *  \begin{array}{ll}
+     *  1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\ge0 \                                     \
+     *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\<0
+     *  \end{array} \right. f]
+     *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+     *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+     *  @param  t t-value 
+     *  @param  nu parameter nu , $\nu>0$
+     */
+    double student_cdf ( const double t  , 
+                         const double nu ) ;
+    // ========================================================================
     /** compute Owen's T-function
      *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 
      *  @see https://en.wikipedia.org/wiki/Owen%27s_T_function

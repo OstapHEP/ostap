@@ -1858,6 +1858,138 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class CutOffGauss 
+     *  Useful function for smooth Gaussian cut-off:
+     *  \f[ f(x;x_0;\sigma) = \left\{ 
+     *    \begin{array}{ll}
+     *    1  & \mathrm{for~} x \le x_0  \\
+     *    \mathrm{e}^{-\frac{1}{2}\left( \frac{ (x-x_0)^2}{\sigma^2} \right)}
+     *       & \mathrm{for~} x >   x_0 
+     *    \end{array}\right. \f] 
+     */
+    class CutOffGauss 
+    {
+    public:
+      // ======================================================================
+      /** Constructor from all parameters
+       *  @param right dump direction
+       *  @param x0    threshold value 
+       *  @param sigma sigma  
+       */
+      CutOffGauss ( const bool   right = true , 
+                    const double x0    = 0    , 
+                    const double sigma = 1    ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// the main method 
+      double operator() ( const double x ) const ;
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// right ?
+      bool right   () const { return m_right ; }
+      /// x_0 
+      double x0    () const { return m_x0    ; }
+      /// sigma
+      double sigma () const { return m_sigma ; }      
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// update x_0
+      bool setX0    ( const double value ) ;
+      /// update sigma 
+      bool setSigma ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high
+      double integral    ( const double low  ,
+                           const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      bool   m_right ;
+      double m_x0    ;
+      double m_sigma ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class CutOffStudent
+     *  Useful function for smooth Student's t=-like (power-law) cut-off:
+     *  \f[ f(x;x_0;\sigma) = \left\{ 
+     *    \begin{array}{ll}
+     *    1  & \mathrm{for~} x \le x_0  \\
+     *    \left( \frac{1}{\nu} \left( \frac{(x-x_0)}{\sigma^2} \right)^{ - \frac{\nu+1}{2}} \right) 
+     *       & \mathrm{for~} x >   x_0 
+     *    \end{array}\right. \f] 
+     */
+    class CutOffStudent
+    {
+    public:
+      // ======================================================================
+      /** Constructor from all parameters
+       *  @param right dump direction
+       *  @param x0    threshold value 
+       *  @param nu    parameter nu 
+       *  @param sigma parameter sigma  
+       */
+      CutOffStudent ( const bool   right = true , 
+                      const double x0    = 0    , 
+                      const double n     = 1    ,
+                      const double sigma = 1    ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// the main method 
+      double operator() ( const double x ) const ;
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// right ?
+      bool right   () const { return m_right ; }
+      /// x_0 
+      double x0    () const { return m_x0    ; }
+      /// n 
+      double nu    () const { return m_nu    ; }      
+      /// sigma
+      double sigma () const { return m_sigma ; }      
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// update x_0
+      bool setX0    ( const double value ) ;
+      /// update nu 
+      bool setNu    ( const double value ) ;
+      /// update sigma 
+      bool setSigma ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral between low and high
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag () const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      bool   m_right ;
+      double m_x0    ;
+      double m_nu    ;
+      double m_sigma ;
+      double m_C     ;
+      // ======================================================================
+    } ;
+    // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

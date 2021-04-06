@@ -144,15 +144,15 @@ namespace
       (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
   }
-  // ==========================================================================
-  // Studen-t'
-  // ==========================================================================
-  inline double student_cdf (  const double t , const double nu ) 
-  {
-    const double xt    = nu / ( t * t + nu ) ;
-    const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
-    return t >= 0 ? 1 - value : value ;
-  }
+  // // ==========================================================================
+  // // Studen-t'
+  // // ==========================================================================
+  // inline double student_cdf (  const double t , const double nu ) 
+  // {
+  //   const double xt    = nu / ( t * t + nu ) ;
+  //   const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
+  //   return t >= 0 ? 1 - value : value ;
+  // }
   // ==========================================================================
 }
 // ============================================================================
@@ -252,7 +252,10 @@ double Ostap::Math::BifurcatedGauss::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigmaL , m_sigmaR ) ; }
+{
+  static const std::string s_name = "BiFurcatedGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigmaL , m_sigmaR ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -415,7 +418,10 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::DoubleGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_fraction , m_scale ) ; }
+{
+  static const std::string s_name = "DoubleGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_fraction , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -497,7 +503,10 @@ bool Ostap::Math::Gauss::setPeak ( const double value )
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Gauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Gauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -629,7 +638,10 @@ double  Ostap::Math::GenGaussV1::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV1::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "GenGaussV1" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -781,7 +793,10 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV2::tag () const 
-{ return std::hash_combine ( m_xi , m_alpha , m_kappa ) ; }
+{ 
+  static const std::string s_name = "GenGaussV2" ;
+  return std::hash_combine ( s_name , m_xi , m_alpha , m_kappa ) ; 
+}
 // ============================================================================
 
 
@@ -889,7 +904,10 @@ double Ostap::Math::SkewGauss::sigma  () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGauss::tag () const 
-{ return std::hash_combine ( m_xi , m_omega , m_alpha ) ; }
+{ 
+  static const std::string s_name = "SkewGauss" ;
+  return std::hash_combine ( m_xi , m_omega , m_alpha ) ; 
+}
 // ============================================================================
 
 
@@ -1164,7 +1182,10 @@ double Ostap::Math::Bukin::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Bukin::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; }
+{ 
+  static const std::string s_name = "Bukin" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; 
+}
 // ============================================================================
 
 
@@ -1392,7 +1413,10 @@ void Ostap::Math::Novosibirsk::integrate()
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Novosibirsk::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_tau ) ; }
+{ 
+  static const std::string s_name = "Novosibirsk" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_tau ) ; 
+}
 // ============================================================================
 
 
@@ -1564,7 +1588,10 @@ double Ostap::Math::CrystalBall::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBall::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_alpha , m_n ) ; }
+{
+  static const std::string s_name = "CrystalBall" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n ) ; 
+}
 // ============================================================================
 
 
@@ -1628,7 +1655,10 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Needham::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; }
+{
+  static const std::string s_name = "Needham" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; 
+}
 // ============================================================================
 
 
@@ -1675,7 +1705,10 @@ double Ostap::Math::CrystalBallRightSide::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallRightSide::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  -1 ) ; }
+{  
+  static const std::string s_name = "CrystalBallRightSide" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  -1 ) ;
+}
 // ============================================================================
 
 
@@ -1933,9 +1966,13 @@ double Ostap::Math::CrystalBallDoubleSided::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
+{ 
+  static const std::string s_name = "CrystalBallDoubleSide" ;
+  return std::hash_combine ( s_name    , 
+                             m_m0      , m_sigma , 
                              m_alpha_L , m_n_L   , 
-                             m_alpha_R , m_n_R   ) ; }
+                             m_alpha_R , m_n_R   ) ; 
+}
 // ============================================================================
 
 
@@ -2126,8 +2163,10 @@ double Ostap::Math::Apollonios::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
-                             m_alpha   , m_n     , m_b ) ; }
+{ 
+  static const std::string s_name = "Apollonios" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n , m_b ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2269,7 +2308,10 @@ double Ostap::Math::Apollonios2::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios2::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
+{ 
+  static const std::string s_name = "Apollonios2" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -2376,7 +2418,10 @@ double Ostap::Math::Atlas::integral () const { return 1 ; }
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Atlas::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Atlas" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -2458,7 +2503,10 @@ double Ostap::Math::Sech::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Sech::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Sech" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2512,7 +2560,10 @@ double Ostap::Math::Losev::mode () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Losev::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "Losev" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // =============================================================================
 // evaluate the function 
 // =============================================================================
@@ -2656,7 +2707,10 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Logistic::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Logistic" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ;
+}
 // ============================================================================
 
 
@@ -2755,7 +2809,7 @@ double Ostap::Math::StudentT::cdf ( const double y ) const
 {
   //
   const double  t    = ( y - M () ) / sigma () ;
-  return student_cdf ( t , nu() ) ;
+  return Ostap::Math::student_cdf ( t , nu() ) ;
 }
 // ============================================================================
 // get the integral 
@@ -2777,7 +2831,10 @@ double Ostap::Math::StudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::StudentT::tag () const 
-{ return std::hash_combine ( m_M , m_s , m_n ) ; }
+{ 
+  static const std::string s_name = "StudentT" ;
+  return std::hash_combine ( s_name , m_M , m_s , m_n ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2923,11 +2980,11 @@ double Ostap::Math::BifurcatedStudentT::cdf ( const double y ) const
   if ( y <= M() ) 
   {
     const double  t    = ( y - M () ) / sigmaL () ;
-    return     2 * n_2 / ( n_1 + n_2 ) * student_cdf (  t , nuL () ) ;  
+    return     2 * n_2 / ( n_1 + n_2 ) * Ostap::Math::student_cdf (  t , nuL () ) ;  
   }
   //
   const   double  t    = ( y - M () ) / sigmaR () ;
-  return   1 - 2 * n_1 / ( n_1 + n_2 ) * student_cdf ( -t , nuR () ) ;  
+  return   1 - 2 * n_1 / ( n_1 + n_2 ) * Ostap::Math::student_cdf ( -t , nuR () ) ;  
 }
 // ============================================================================
 // get the integral 
@@ -2949,7 +3006,10 @@ double Ostap::Math::BifurcatedStudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedStudentT::tag () const 
-{ return std::hash_combine ( m_M , m_sL , m_sR  , m_nL , m_nR ) ; }
+{  
+  static const std::string s_name = "BiFurcatedStudentT" ;
+  return std::hash_combine ( s_name , m_M , m_sL , m_sR  , m_nL , m_nR ) ; 
+}
 // ============================================================================
 
 
@@ -3043,7 +3103,10 @@ double Ostap::Math::SinhAsinh::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SinhAsinh::tag () const 
-{ return std::hash_combine ( m_mu , m_sigma , m_epsilon , m_delta ) ; }
+{  
+  static const std::string s_name = "SinhAsinh" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_epsilon , m_delta ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -3157,7 +3220,10 @@ double Ostap::Math::JohnsonSU::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::JohnsonSU::tag () const 
-{ return std::hash_combine ( m_xi , m_lambda , m_delta , m_gamma ) ; }
+{ 
+  static const std::string s_name = "JohnsonSU" ;
+  return std::hash_combine ( s_name , m_xi , m_lambda , m_delta , m_gamma ) ; 
+}
 // ============================================================================
 
 
@@ -3247,7 +3313,10 @@ double Ostap::Math::Slash::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Slash::tag () const 
-{ return std::hash_combine ( m_mu , m_scale ) ; }
+{ 
+  static const std::string s_name = "Slash" ;
+  return std::hash_combine ( s_name , m_mu , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -3344,7 +3413,10 @@ double Ostap::Math::RaisingCosine::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::RaisingCosine::tag () const 
-{ return std::hash_combine ( m_mu , m_s ) ; }
+{ 
+  static const std::string s_name = "RasisingCosine" ;
+  return std::hash_combine ( s_name , m_mu , m_s ) ; 
+}
 // ============================================================================
 
 
@@ -3423,7 +3495,10 @@ double Ostap::Math::AsymmetricLaplace::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::AsymmetricLaplace::tag () const 
-{ return std::hash_combine ( m_mu , m_lambdaL , m_lambdaR ) ; }
+{ 
+  static const std::string s_name = "AsymmetricLaplace" ;
+  return std::hash_combine ( s_name , m_mu , m_lambdaL , m_lambdaR ) ; 
+}
 // ============================================================================
 
 
@@ -3602,7 +3677,10 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::QGaussian::tag () const 
-{ return std::hash_combine ( m_mean , m_q , m_scale ) ; }
+{ 
+  static const std::string s_name = "QGaussian" ;
+  return std::hash_combine ( s_name , m_mean , m_q , m_scale ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -3773,7 +3851,10 @@ double Ostap::Math::Hyperbolic::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Hyperbolic::tag () const 
-{ return std::hash_combine ( m_mu , m_sigma , m_zeta , m_kappa  ) ; }
+{ 
+  static const std::string s_name = "Hyperbolic" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_zeta , m_kappa  ) ; 
+}
 // ============================================================================
 
 

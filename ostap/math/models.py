@@ -1036,6 +1036,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Apply                  ,
                Ostap.Math.KramersKronig          ,
                ##
+               Ostap.Math.CutOffGauss            ,
+               Ostap.Math.CutOffStudent          ,
+               ##
                ) :
     model.tf1          =  tf1 
     model.sp_integrate = sp_integrate_1D

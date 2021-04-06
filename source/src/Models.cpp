@@ -161,7 +161,10 @@ double Ostap::Math::Gumbel::integral ( const double low  ,
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Gumbel::tag () const 
-{ return std::hash_combine ( m_mu , m_beta ) ; }
+{ 
+  static const std::string s_name = "Gumbel" ;
+  return std::hash_combine ( s_name , m_mu , m_beta ) ; 
+}
 // ============================================================================
  
 
@@ -326,7 +329,10 @@ bool Ostap::Math::GramCharlierA::setKappa4 ( const double value )
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::GramCharlierA::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma , m_kappa3 , m_kappa4 ) ; }
+{ 
+  static const std::string s_name = "GramCharlier" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma , m_kappa3 , m_kappa4 ) ;
+}
 // ============================================================================
 
 
@@ -463,7 +469,10 @@ double  Ostap::Math::PhaseSpacePol::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpacePol::tag () const 
-{ return std::hash_combine ( m_phasespace.tag () , m_positive.tag () ) ; }
+{
+  static const std::string s_name = "PhaseSpacePol" ;
+  return std::hash_combine ( s_name , m_phasespace.tag () , m_positive.tag () ) ; 
+}
 // ============================================================================
 
 
@@ -636,7 +645,10 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceLeftExpoPol::tag () const 
-{ return std::hash_combine ( m_phasespace.tag () , m_positive.tag () , m_tau ) ; }
+{
+  static const std::string s_name = "PhaseSpaceLeftExpoPol" ;
+  return std::hash_combine ( s_name , m_phasespace.tag () , m_positive.tag () , m_tau ) ;
+}
 // ============================================================================
 
 
@@ -695,7 +707,10 @@ double Ostap::Math::ExpoPositive::integral ( const double low  ,
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::ExpoPositive::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_tau ) ; }
+{
+  static const std::string s_name = "ExpoPositive" ;
+  return std::hash_combine ( s_name , m_positive.tag () , m_tau ) ; 
+}
 // ============================================================================
 
 
@@ -808,7 +823,10 @@ double Ostap::Math::GammaDist::quantile ( const double p ) const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::GammaDist::tag () const 
-{ return std::hash_combine ( m_k , m_theta ) ; }
+{ 
+  static const std::string s_name = "GammaDist" ;
+  return std::hash_combine ( s_name  , m_k , m_theta ) ;
+}
 // ============================================================================
 
 
@@ -906,7 +924,10 @@ double Ostap::Math::GenGammaDist::integral ( const double low  ,
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::GenGammaDist::tag () const 
-{ return std::hash_combine ( m_k , m_theta , m_p , m_low ) ; }
+{ 
+  static const std::string s_name = "GenGammaDist" ;
+  return std::hash_combine ( s_name , m_k , m_theta , m_p , m_low ) ;
+}
 // ============================================================================
 
 
@@ -1080,7 +1101,10 @@ double Ostap::Math::Amoroso::sigma () const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Amoroso::tag () const 
-{ return std::hash_combine ( m_a , m_theta , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "Amoroso" ;
+  return std::hash_combine ( s_name , m_a , m_theta , m_alpha , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -1144,7 +1168,10 @@ double Ostap::Math::LogGammaDist::quantile ( const double p ) const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::LogGammaDist::tag () const 
-{ return std::hash_combine ( 1 , m_gamma.tag () ) ; }
+{ 
+  static const std::string s_name = "LogGammaDist" ;
+  return std::hash_combine ( s_name , m_gamma.tag () ) ;
+}
 // ============================================================================
 
 
@@ -1191,7 +1218,10 @@ double Ostap::Math::Log10GammaDist::quantile ( const double p ) const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Log10GammaDist::tag () const 
-{ return std::hash_combine ( 10 , m_gamma.tag () ) ; }
+{ 
+  static const std::string s_name = "Log10GammaDist" ;
+  return std::hash_combine ( s_name , m_gamma.tag () ) ; 
+}
 // ============================================================================
 
 
@@ -1311,7 +1341,10 @@ double Ostap::Math::LogGamma::kurtosis () const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::LogGamma::tag () const 
-{ return std::hash_combine ( m_nu , m_lambda , m_alpha ) ; }
+{ 
+  static const std::string s_name = "LogGamma" ;
+  return std::hash_combine ( s_name , m_nu , m_lambda , m_alpha ) ; 
+}
 // ============================================================================
 
 
@@ -1460,7 +1493,10 @@ double Ostap::Math::BetaPrime::skewness  () const
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::BetaPrime::tag () const 
-{ return std::hash_combine ( m_alpha , m_beta , m_scale , m_shift ) ; }
+{ 
+  static const std::string s_name = "BetaPrime" ;
+  return std::hash_combine ( s_name , m_alpha , m_beta , m_scale , m_shift ) ; 
+}
 // ============================================================================
 
 
@@ -1677,7 +1713,10 @@ double Ostap::Math::Landau::integral ( const double low  ,
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Landau::tag () const 
-{ return std::hash_combine ( m_scale , m_shift ) ; }
+{ 
+  static const std::string s_name = "Landau" ;
+  return std::hash_combine ( s_name , m_scale , m_shift ) ;
+}
 // ============================================================================
 
 
@@ -1786,7 +1825,10 @@ double Ostap::Math::Weibull::rms () const { return  std::sqrt ( variance () ) ; 
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Weibull::tag () const 
-{ return std::hash_combine ( m_scale , m_shape , m_shift ) ; }
+{ 
+  static const std::string s_name = "Weibull" ;
+  return std::hash_combine ( s_name , m_scale , m_shape , m_shift ) ;
+}
 // ============================================================================
 
 
@@ -1908,7 +1950,10 @@ double Ostap::Math::Argus::integral ( const double low  ,
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Argus::tag () const 
-{ return std::hash_combine ( m_shape , m_high , m_low ) ; }
+{ 
+  static const std::string s_name = "Argus" ;
+  return std::hash_combine ( s_name , m_shape , m_high , m_low ) ; 
+}
 // ============================================================================
 
 
@@ -2040,7 +2085,10 @@ double Ostap::Math::Sigmoid::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Sigmoid::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_alpha , m_x0 ) ; }
+{
+  static const std::string s_name = "Sigmoid" ;
+  return std::hash_combine ( s_name , m_positive.tag () , m_alpha , m_x0 ) ; 
+}
 // ============================================================================
 
 
@@ -2221,7 +2269,10 @@ double Ostap::Math::TwoExpos::derivative
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::TwoExpos::tag () const 
-{ return std::hash_combine ( m_alpha , m_delta , m_x0 ) ; }
+{
+  static const std::string s_name = "TwoExpos" ;
+  return std::hash_combine ( s_name , m_alpha , m_delta , m_x0 ) ; 
+}
 // ============================================================================
 
 
@@ -2310,7 +2361,10 @@ double Ostap::Math::TwoExpoPositive::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::TwoExpoPositive::tag () const 
-{ return std::hash_combine ( m_positive.tag () , m_2exp.tag () ) ; }
+{ 
+  static const std::string s_name = "TwoExposPositive" ;
+  return std::hash_combine ( s_name , m_positive.tag () , m_2exp.tag () ) ; 
+}
 // ============================================================================
 
 
@@ -2427,7 +2481,10 @@ double Ostap::Math::Tsallis::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::Tsallis::tag () const 
-{ return std::hash_combine ( m_mass , m_n , m_T ) ; }
+{ 
+  static const std::string s_name = "Tsallis" ;
+  return std::hash_combine ( s_name , m_mass , m_n , m_T ) ; 
+}
 // ============================================================================
 
 
@@ -2532,15 +2589,194 @@ double Ostap::Math::QGSM::integral
 // get the tag
 // ============================================================================
 std::size_t Ostap::Math::QGSM::tag () const 
-{ return std::hash_combine ( m_mass , m_b ) ; }
+{ 
+  static const std::string s_name = "QGSM" ;
+  return std::hash_combine ( s_name , m_mass , m_b ) ; 
+}
 // ============================================================================
 
 
 
- 
+
+// ============================================================================
+/*  Constructor from all parameters
+ *  @param right dump direction
+ *  @param x0    threshold value 
+ *  @param sigma sigma  
+ */
+// ============================================================================
+Ostap::Math::CutOffGauss::CutOffGauss
+( const bool   right , 
+  const double x0    , 
+  const double sigma ) 
+  : m_right ( right ) 
+  , m_x0    ( x0                 )
+  , m_sigma ( std::abs ( sigma ) ) 
+{}
+// =========================================================================
+// update sigma
+// ============================================================================
+bool Ostap::Math::CutOffGauss::setSigma ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_sigma , avalue ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// update x0
+// ============================================================================
+bool Ostap::Math::CutOffGauss::setX0 ( const double value )
+{
+  if ( s_equal ( m_x0 , value ) ) { return false ; }
+  m_x0 = value ;
+  return true ;
+}
+// ============================================================================
+// the main method 
+// ============================================================================
+double Ostap::Math::CutOffGauss::operator() ( const double x ) const 
+{
+  // 
+  if      (  m_right && x <= m_x0 ) { return 1 ; }
+  else if ( !m_right && x >= m_x0 ) { return 1 ; }
+  //
+  const double dx = ( x - m_x0 ) / m_sigma ;
+  return std::exp ( -0.5 * dx * dx ) ;
+}
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::CutOffGauss::integral
+( const double low  ,
+  const double high ) const 
+{
+  if      ( s_equal ( low , high ) ) { return 0                        ; }
+  else if ( low > high             ) { return -integral ( high , low ) ; }
+  //
+  if ( low < m_x0 && m_x0 < high ) 
+  { return integral ( low , m_x0 ) + integral ( m_x0 , high ) ; }
+  //
+  if      (  m_right && high <= m_x0 ) { return high - low ; }
+  else if ( !m_right && low  >= m_x0 ) { return high - low ; }
+  //
+  static const double s_norm = std::sqrt ( 2.0 * M_PI ) ;
+  return s_norm * m_sigma * 
+    ( Ostap::Math::gauss_cdf ( high , m_x0 , m_sigma ) -
+      Ostap::Math::gauss_cdf ( low  , m_x0 , m_sigma ) ) ;  
+}
+
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::CutOffGauss::tag () const 
+{  
+  static const std::string s_name = "CutOffGauss" ;
+  return std::hash_combine ( s_name , m_right , m_x0 , m_sigma ) ; 
+}
+// ============================================================================
 
 
 
+
+// ============================================================================
+/*  Constructor from all parameters
+ *  @param right dump direction
+ *  @param x0    threshold value 
+ *  @param nu    parameter nu 
+ *  @param sigma parameter sigma  
+ */
+// ============================================================================
+Ostap::Math::CutOffStudent::CutOffStudent 
+( const bool   right , 
+  const double x0    , 
+  const double nu    ,
+  const double sigma ) 
+  : m_right  ( right ) 
+  , m_x0     ( x0    ) 
+  , m_nu     ( -1    ) 
+  , m_sigma  ( std::abs ( sigma ) ) 
+  , m_C      ( -1    )
+{
+  setNu ( nu ) ;
+}
+// =========================================================================
+// update sigma
+// ============================================================================
+bool Ostap::Math::CutOffStudent::setSigma ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_sigma , avalue ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// =========================================================================
+// update nu
+// ============================================================================
+bool Ostap::Math::CutOffStudent::setNu ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_nu , avalue ) ) { return false ; }
+  m_nu = avalue ;
+  //
+  m_C  = std::exp ( - std::lgamma (  0.5 * ( m_nu + 1 ) )  
+                    + std::lgamma (  0.5 * ( m_nu     ) ) 
+                    + 0.5 * std::log ( m_nu * M_PI ) ) ;
+  return true ;
+}
+// ============================================================================
+// update x0
+// ============================================================================
+bool Ostap::Math::CutOffStudent::setX0 ( const double value )
+{
+  if ( s_equal ( m_x0 , value ) ) { return false ; }
+  m_x0 = value ;
+  return true ;
+}
+// ============================================================================
+// the main method 
+// ============================================================================
+double Ostap::Math::CutOffStudent::operator() ( const double x ) const 
+{
+  // 
+  if      (  m_right && x <= m_x0 ) { return 1 ; }
+  else if ( !m_right && x >= m_x0 ) { return 1 ; }
+  //
+  const double dx = ( x - m_x0 ) / m_sigma ;
+  return std::pow ( 1 + dx * dx / m_nu , -0.5 * ( m_nu + 1 ) ) ;
+}
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::CutOffStudent::integral
+( const double low  ,
+  const double high ) const 
+{
+  if      ( s_equal ( low , high ) ) { return 0                        ; }
+  else if ( low > high             ) { return -integral ( high , low ) ; }
+  //
+  if ( low < m_x0 && m_x0 < high ) 
+  { return integral ( low , m_x0 ) + integral ( m_x0 , high ) ; }
+  //
+  if      (  m_right && high <= m_x0 ) { return high - low ; }
+  else if ( !m_right && low  >= m_x0 ) { return high - low ; }
+  //
+  const double xl = ( low  - m_x0 ) / m_sigma ;
+  const double xh = ( high - m_x0 ) / m_sigma ;
+  //
+  return m_C * m_sigma * ( Ostap::Math::student_cdf ( xh , m_nu ) - 
+                           Ostap::Math::student_cdf ( xl , m_nu ) )  ;
+}
+
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::CutOffStudent::tag () const 
+{ 
+  static const std::string s_name = "CutOffStudent" ;
+  return std::hash_combine ( s_name , m_right , m_x0 , m_nu , m_sigma ) ;
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END

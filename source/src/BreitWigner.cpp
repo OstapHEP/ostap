@@ -364,7 +364,10 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 // unique tag/label
 // ============================================================================
 std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
-{ return std::hash_combine ( m_what , m_L , m_b ) ; }
+{
+  static const std::string s_name = "BlattWeisskopf";
+  return std::hash_combine ( s_name , m_what , m_L , m_b ) ; 
+}
 // ============================================================================
 // clone operation 
 // ============================================================================
@@ -393,12 +396,15 @@ Ostap::Math::FormFactors::NoFormFactor::clone() const
 // unique tag/label
 // ============================================================================
 std::size_t Ostap::Math::FormFactors::NoFormFactor::tag      () const
-{ return std::hash<std::string>{} ( describe () ) ; }
+{ 
+  static const std::string s_name = "NoFormFactor";
+  return std::hash_combine ( s_name ,  describe () ) ; 
+}
 // ============================================================================
 // describe the formfactor
 // ============================================================================
 std::string Ostap::Math::FormFactors::NoFormFactor::describe () const
-{ return "NoFomrFactor"; }
+{ return "NoFormFactor"; }
 // ============================================================================
 
    
@@ -574,11 +580,14 @@ Ostap::Math::ChannelWidth::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelWidth::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelWidth" ) ,
+{ 
+  static const std::string s_name = "ChannelWidth" ;
+  return std::hash_combine  ( s_name         ,
                               gamma0      () , 
                               m_sthreshold   , 
                               m_description  , 
-                              m_tag          ) ; }
+                              m_tag          ) ; 
+}
 // ============================================================================
 
 
@@ -609,11 +618,14 @@ Ostap::Math::ChannelGamma::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGamma::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelGamma" ) ,
+{ 
+  static const std::string s_name = "ChannelGamma" ;
+  return std::hash_combine  ( s_name         , 
                               gamma0      () , 
                               m_sthreshold   , 
                               m_description  , 
-                              m_tag          ) ; }
+                              m_tag          ) ; 
+}
 // ============================================================================
 
 
@@ -657,8 +669,10 @@ double Ostap::Math::ChannelCW::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelCW::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelCW" ) ,
-                              ps2 () . tag () , gamma0 () ) ; }
+{
+  static const std::string s_name = "ChannelCW" ;
+  return std::hash_combine  ( s_name , ps2 () . tag () , gamma0 () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -839,7 +853,8 @@ Ostap::Math::Channel::D
 // ============================================================================
 std::size_t Ostap::Math::Channel::tag() const
 { 
-  return std::hash_combine ( std::string ( "Channel")      , 
+  static const std::string s_name = "Channel" ;
+  return std::hash_combine ( s_name , 
                              Ostap::Math::ChannelCW::tag() , 
                              m_L       , 
                              m_formfactor  ? m_formfactor->tag() : 0 ) ;
@@ -1013,8 +1028,10 @@ double Ostap::Math::Channel0::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::Channel0::tag() const
-{ return std::hash_combine ( std::string ("Channel0") , 
-                             Ostap::Math::Channel::tag() , qs () ) ; }
+{ 
+  static const std::string s_name = "Channel0" ;
+  return std::hash_combine ( s_name , Ostap::Math::Channel::tag() , qs () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -1527,8 +1544,9 @@ Ostap::Math::ChannelFlatte::D
 // get unique tag/label 
 // ============================================================================
 std::size_t Ostap::Math::ChannelFlatte::tag() const
-{ return std::hash_combine ( std::string ( "ChannelFlatte" ) , 
-                             Ostap::Math::ChannelCW::tag () ) ; }
+{ 
+  static const std::string s_name = "ChannelFlatte" ;
+  return std::hash_combine ( s_name , Ostap::Math::ChannelCW::tag () ) ; }
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -1593,8 +1611,10 @@ Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; 
 // unique tag
 // ============================================================================
 std::size_t Ostap::Math::Flatte::tag () const
-{ return std::hash_combine ( std::string ( "Flatte")  ,
-                             Ostap::Math::BW::tag () ) ; }
+{ 
+  static const std::string s_name = "Flatte" ;
+  return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
+}
 
 
 
@@ -2140,9 +2160,10 @@ Ostap::Math::Channel23L::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::Channel23L::tag () const
-{ return std::hash_combine ( std::string ( "Channel23L" ) , 
-                             m_channel->tag () , 
-                             m_ps.tag       () ) ; }
+{ 
+  static const std::string s_name = "Channel23L" ;
+  return std::hash_combine ( s_name , m_channel->tag () , m_ps.tag () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2223,9 +2244,10 @@ Ostap::Math::ChannelNR::D
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelNR::tag () const
-{ return std::hash_combine ( std::string ( "ChannelNR" ) , 
-                             gamma0 () ,
-                             m_m1 , m_m2 , m_m3 ) ; }
+{ 
+  static const std::string s_name = "ChannelNR" ;
+  return std::hash_combine ( s_name , gamma0 () , m_m1 , m_m2 , m_m3 ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2459,9 +2481,10 @@ double Ostap::Math::ChannelGS::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGS::tag () const
-{ return std::hash_combine ( std::string ( "ChannelGS" ) , 
-                             gamma0 () ,
-                             m_mpi     ) ; }
+{ 
+  static const std::string s_name = "ChannelGS" ;
+  return std::hash_combine ( s_name , gamma0 () , m_mpi ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2495,9 +2518,10 @@ Ostap::Math::ChannelQ::clone() const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelQ::tag () const
-{ return std::hash_combine ( std::string ( "ChannelQ" ) , 
-                             gamma0    () ,
-                             m_ps2.tag () ) ; }
+{ 
+  static const std::string s_name = "ChannelGS" ;
+  return std::hash_combine ( s_name , gamma0 () , m_ps2.tag () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2523,10 +2547,13 @@ Ostap::Math::ChannelGLR::clone() const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGLR::tag () const
-{ return std::hash_combine ( std::string ( "ChannelGLR" ) ,
-                             m_tag             ,
-                             m_description     ,
-                             gamma0    () ) ;  }
+{
+  static const std::string s_name = "ChannelGLR " ;
+  return std::hash_combine ( s_name ,
+                             m_tag  ,
+                             m_description  ,
+                             gamma0    () ) ; 
+}
 // ============================================================================
 
 
@@ -2667,10 +2694,10 @@ bool Ostap::Math::LASS::setE ( const double x )
 // unique label/tag 
 // ============================================================================
 std::size_t Ostap::Math::LASS::tag () const 
-{ return std::hash_combine  ( std::string ("LASS") , 
-                              BW::tag     (      ) , 
-                              m_a , m_b , m_e      ) ; }
-
+{
+  static const std::string s_name = "LASS" ;
+  return std::hash_combine  ( s_name , BW::tag () , m_a , m_b , m_e ) ; 
+}
 // ============================================================================
 /*  constructor from Breit-Wigner, Phase-space and flags 
  *  @param bw Breit-Wigner shape 
@@ -2811,12 +2838,10 @@ double Ostap::Math::BWPS::integral
 // unique label/tag 
 // ============================================================================
 std::size_t Ostap::Math::BWPS::tag () const 
-{ return std::hash_combine  ( std::string ( "BWPS" ) , 
-                              m_ps .tag () , 
-                              m_bw->tag () , 
-                              m_rho , m_N2 ) ; }
-
-
+{
+  static const std::string s_name = "BWPS" ;
+  return std::hash_combine  ( s_name , m_ps .tag () , m_bw->tag () , m_rho , m_N2 ) ; 
+}
 
 // ============================================================================
 /*  constructor from Breit-Wigner, Phase-space and flags 
@@ -2946,10 +2971,11 @@ double Ostap::Math::BW3L::integral
 // unique label/tag 
 // ============================================================================
 std::size_t Ostap::Math::BW3L::tag () const 
-{ return std::hash_combine ( std::string ( "BW3L" ) , 
-                             m_bw->tag () , m_M , m_m1 , m_m2  , m_m3 , m_L ) ; }
-
-
+{ 
+  static const std::string s_name = "BW3L" ;
+  return std::hash_combine ( s_name , 
+                             m_bw->tag () , m_M , m_m1 , m_m2  , m_m3 , m_L ) ; 
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

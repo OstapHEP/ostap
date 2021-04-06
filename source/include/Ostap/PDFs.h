@@ -5582,6 +5582,175 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class CutOffGauss 
+     *  Useful function for smooth Gaussian cut-off:
+     *  \f[ f(x;x_0;\sigma) = \left\{ 
+     *    \begin{array}{ll}
+     *    1  & \mathrm{for~} x \le x_0  \                               \
+     *    \mathrm{e}^{-\frac{1}{2}\left( \frac{ (x-x_0)^2}{\sigma^2} \right)}
+     *       & \mathrm{for~} x >   x_0 
+     *    \end{array}\right. \f] 
+     *  @see Ostap::Math::CutOffGauss
+     */
+    class CutOffGauss : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::CutOffGauss, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      CutOffGauss ( const char* name  , 
+                    const char* title ,
+                    RooAbsReal& x     , // observable 
+                    const bool  right , 
+                    RooAbsReal& x0    , 
+                    RooAbsReal& sigma ) ;
+      // ======================================================================
+      CutOffGauss ( const char* name  , 
+                    const char* title ,
+                    RooAbsReal& x     , // observable 
+                    RooAbsReal& x0    , 
+                    RooAbsReal& sigma , 
+                    const Ostap::Math::CutOffGauss& cutoff ) ;
+      // Copy
+      CutOffGauss ( const CutOffGauss& right    , 
+                    const char*        name = 0 ) ;
+      // destructor 
+      virtual ~CutOffGauss() ;      
+      /// clone
+      CutOffGauss* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      CutOffGauss () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::CutOffGauss& function() const { return m_cutoff ; }
+      const Ostap::Math::CutOffGauss& cutoff  () const { return m_cutoff ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_x0    ;
+      RooRealProxy m_sigma ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::CutOffGauss m_cutoff ;          // the function
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class CutOffStudent
+     *  Useful function for smooth Student's t=-like (power-law) cut-off:
+     *  \f[ f(x;x_0;\sigma) = \left\{ 
+     *    \begin{array}{ll}
+     *    1  & \mathrm{for~} x \le x_0  \                               \
+     *    \left( \frac{1}{\nu} \left( \frac{(x-x_0)}{\sigma^2} \right)^{ - \frac{\nu+1}{2}} \right) 
+     *       & \mathrm{for~} x >   x_0 
+     *    \end{array}\right. \f] 
+     *  @see Ostap::Math::CutOffStudent
+     */
+    class CutOffStudent : public RooAbsPdf 
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::CutOffStudent, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      CutOffStudent ( const char* name  , 
+                      const char* title ,
+                      RooAbsReal& x     , // observable 
+                      const bool  right , 
+                      RooAbsReal& x0    , 
+                      RooAbsReal& nu    , 
+                      RooAbsReal& sigma ) ;
+      // ======================================================================
+      CutOffStudent ( const char* name  , 
+                      const char* title ,
+                      RooAbsReal& x     , // observable 
+                      RooAbsReal& x0    , 
+                      RooAbsReal& nu    , 
+                      RooAbsReal& sigma , 
+                      const Ostap::Math::CutOffStudent& cutoff ) ;
+      // Copy
+      CutOffStudent ( const CutOffStudent& right    , 
+                      const char*        name = 0 ) ;
+      // destructor 
+      virtual ~CutOffStudent() ;      
+      /// clone
+      CutOffStudent* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      CutOffStudent () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::CutOffStudent& function() const { return m_cutoff ; }
+      const Ostap::Math::CutOffStudent& cutoff  () const { return m_cutoff ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x     ;
+      RooRealProxy m_x0    ;
+      RooRealProxy m_nu    ;
+      RooRealProxy m_sigma ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::CutOffStudent m_cutoff ;          // the function
+      // ======================================================================
+    };
+    // ========================================================================
     /** @class Uniform
      *  The trivial model: flat/uniform dsitribution in 1,2,3-dimensions 
      */

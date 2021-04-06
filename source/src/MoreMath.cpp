@@ -885,6 +885,31 @@ double Ostap::Math::gauss_cdf ( const double x     ,
   return 0.5 * ( 1 + std::erf ( y ) ) ;
 }
 // ============================================================================
+/*  Student's t-CDF 
+ *  \f[ f(t;\nu) = \left\{
+ *  \begin{array}{ll}
+ *   1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\ge0 \\
+ *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\<0
+ *  \end{array} \right. f]
+ *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+ *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+ *  @param  t t-value 
+ *  @param  nu parameter nu , $\nu>0$
+ */
+// ============================================================================
+double Ostap::Math::student_cdf 
+( const double t  , 
+  const double nu ) 
+{
+  const double anu = std::abs ( nu ) ; // NB!!
+  //
+  const double xt    = anu / ( t * t + anu ) ;
+  const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * anu , 0.5 , xt ) ;
+  return t >= 0 ? 1 - value : value ;
+}
+// ============================================================================
 namespace 
 {
   // ==========================================================================
