@@ -15,6 +15,7 @@
 #include "RooProduct.h"
 #include "RooRealConstant.h"
 #include "RooRealProxy.h"
+#include "RooAbsPdf.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 namespace Ostap 
@@ -1710,7 +1711,7 @@ namespace Ostap
     }; //
     // ========================================================================
     /** @class Id
-     *  Trivial variable: identical trnaformation 
+     *  Trivial variable: identical transformation 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2020-03-17
      */ 
@@ -1757,21 +1758,56 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-//       // ======================================================================
-//       RooSpan<double> evaluateBatch 
-//         ( std::size_t begin     , 
-//           std::size_t batchSize ) const override
-//       { return m_x.arg().evaluateBatch ( begin , batchSize  ) ; }
-//       // ======================================================================
-// #endif
-      // ======================================================================
-    protected:
-      // ======================================================================
       // the actual evaluation of the result 
       Double_t evaluate () const override ;    
       // ======================================================================
-    }; //    
+    }; //
+    // ========================================================================    
+    /** @class ProductPdf
+     *  Oversimplified product of two PDF
+     *  - It is useful to bypass some "features" of RooFit
+     *  - it can be rather inefficient 
+     *  @attention all native roofit optimisations are not applied 
+     *  for this case!      
+     */
+    class ProductPdf : public RooAbsPdf
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ProductPdf , 1 ) ;  // sum of RooAbsReal objects
+      // ========================================================================
+    public:
+      // ======================================================================== 
+      /** constructor from name, title and two pdfs
+       *  @param name  name 
+       *  @param title name 
+       *  @param pdf1 the first pdf 
+       *  @param pdf2 the second pdf 
+       */
+      ProductPdf ( const char* name  , 
+                   const char* title , 
+                   RooAbsPdf&  pdf1  , 
+                   RooAbsPdf&  pdf2  ) ;
+      /// copy constructor 
+      ProductPdf ( const ProductPdf& right    , 
+                   const char*       name = 0 ) ;
+      /// destructor 
+      virtual ~ProductPdf() ;
+      /// clone 
+      ProductPdf* clone ( const char* newname ) const override ;
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// the main method 
+      Double_t evaluate () const override ;
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// pdf1
+      RooRealProxy m_pdf1 ; // the first pdf 
+      /// pdf2
+      RooRealProxy m_pdf2 ; // the second pdf 
+      // ======================================================================
+    } ;
     // ========================================================================    
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================

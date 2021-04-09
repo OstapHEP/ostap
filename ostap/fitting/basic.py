@@ -46,7 +46,7 @@ from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phase
                                         fit_status , cov_qual , H1D_dset , get_i  )
 from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
-from   ostap.fitting.roocmdarg import check_arg, nontrivial_arg, merge_args 
+from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args 
 import ostap.histos.histos 
 from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
@@ -319,15 +319,25 @@ class PDF (FUNC) :
         #
         opts     = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
         opts     = self.parse_args ( dataset , *opts , **kwargs )
+        
+        if silent :
+            pl = check_arg ('PrintLevel'      , *opts ) 
+            if not pl : opts = opts + ( ROOT.RooFit.PrintLevel      ( -1    ) , )
+            vl = check_arg ('Verbose'         , *opts )
+            if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
+            pe = check_arg ('PrintEvalErrors' , *opts )
+            if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
+
+                
         weighted = dataset.isWeighted() if dataset else False
         if weighted :
             sw2 = check_arg ( 'SumW2Error'      , *opts )
             aer = check_arg ( 'AsymptoticError' , *opts )
             if not sw2 and not aer :
                 self.warning ( "fitTo: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset!" )
-
+           
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
-            self.info ('fitTo options: %s ' % list ( opts ) )
+            self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
 
         ## play a bit with the binning cache for convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
@@ -344,13 +354,6 @@ class PDF (FUNC) :
                 if not silent : 
                     self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
-        if dataset.isWeighted () and dataset.isNonPoissonWeighted()  : 
-            sw = check_arg ( 'sumw2'      , *opts )
-            ae = check_arg ( 'asymptotic' , *opts )
-            if not sw and not ae : 
-                self.warning ("fitTo: neither SumW2 nor Asymptotic are specified for weighted dataset!")
-                
-        #
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None

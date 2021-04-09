@@ -20,6 +20,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
+from   ostap.core.core     import Ostap 
 from   ostap.fitting.basic import PDF , Generic1D_pdf
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -38,6 +39,12 @@ models = []
 #  @endcode
 #  @see RooProdPdf
 #  @attention it could be rather CPU-inefficient!
+#
+#  Parameter <code>use_roo</code> correspodmn to usage of <code>RooProdPdf</code>,
+#  and therefore certain CPU optimisations are applied, however this approah
+#  has some problems with convolution PDF, where <code>use_roo=False</code>
+#  is recommended, but it causes large CPU consumption.
+# 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2018-11-29  
 class Product1D_pdf(PDF) :
@@ -49,13 +56,19 @@ class Product1D_pdf(PDF) :
     >>> pdf  = Product1D_pdf( pdf1 , pdf2 )
     
     - attention: it could be rather CPU-inefficient!
+    - parameter `use_roo`  correspodmn to usage of `RooProdPdf`, 
+    and therefore certain CPU optimisations are applied,
+    however this approah has some problems with convolution PDF,
+    where `use_roo=False` is recommended, but it causes large CPU consumption.
+    
     """
-    def __init__ ( self         ,
-                   pdf1         ,
-                   pdf2         ,
-                   xvar  = None ,
-                   name  = ''   ,
-                   title = ''   ) :
+    def __init__ ( self           ,
+                   pdf1           ,
+                   pdf2           ,
+                   xvar    = None ,
+                   name    = ''   ,
+                   title   = ''   ,
+                   use_roo = True ) :  ## UseRooFit or Ostap for product?
         
         self.__pdf__1 = pdf1
         self.__pdf__2 = pdf2
@@ -104,20 +117,26 @@ class Product1D_pdf(PDF) :
         if   2 == em2 : self.warning ( "pdf2 ``must-be-extended''" )
         elif 1 == em2 : self.warning ( "pdf2  ``can-be-extended''" )
 
-        ## finally build PDF 
-        self.pdf = ROOT.RooProdPdf (
+        self.__use_roo = True if use_roo else False
+        
+        ## finally build PDF
+
+        PDFTYPE = ROOT.RooProdPdf if self.use_roo else Ostap.MoreRooFit.ProductPdf 
+
+        self.pdf = PDFTYPE  (
             self.roo_name ( 'prod1_' ) ,
-            title if title else 'Product of two pdfs %s' % self.name , 
-            self.pdf1.pdf  ,
+            title if title else 'Product of two pdfs %s' % self.name  ,
+            self.pdf1.pdf ,
             self.pdf2.pdf )
 
         ## save configuration for cloning
         self.config = {
-            'pdf1'  : self.pdf1  ,
-            'pdf2'  : self.pdf2  ,
-            'xvar'  : self.xvar  ,
-            'name'  : self.name  ,
-            'title' : self.title ,            
+            'pdf1'    : self.pdf1    ,
+            'pdf2'    : self.pdf2    ,
+            'xvar'    : self.xvar    ,
+            'name'    : self.name    ,
+            'title'   : self.title   ,            
+            'use_roo' : self.use_roo ,            
             }
         
     @property
@@ -129,7 +148,12 @@ class Product1D_pdf(PDF) :
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
         return self.__pdf2
-
+    
+    @property
+    def use_roo ( self ) :
+        """``use_roo'' : use RooProdPdf or Ostap.MoreRooFit.ProductPdf ?"""
+        return self.__use_roo 
+    
     ## redefine the clone 
     def clone ( self , **kwargs ) :
         """ Redefine the clone
@@ -164,14 +188,15 @@ class Modify1D_pdf(Product1D_pdf) :
     
     - attention: it could be rather CPU-inefficient!
     """
-    def __init__ ( self         ,
-                   pdf          ,
-                   power = 1    ,
-                   xvar  = None ,
-                   name  = ''   ,
-                   xmin  = None ,
-                   xmax  = None ,
-                   title = ''   ) :
+    def __init__ ( self           ,
+                   pdf            ,
+                   power   = 1    ,
+                   xvar    = None ,
+                   name    = ''   ,
+                   xmin    = None ,
+                   xmax    = None ,
+                   title   = ''   ,
+                   use_roo = True ) :
         
         assert isinstance ( power , int ) and 0 <= power,\
                "Invalid ``power''   %s" % power
@@ -202,12 +227,13 @@ class Modify1D_pdf(Product1D_pdf) :
         self.__pdf_2 = pdf2
         
         ## initialize the base
-        Product1D_pdf.__init__ ( self          ,
-                                 pdf1  = pdf   ,
-                                 pdf2  = pdf2  , 
-                                 xvar  = xvar  ,
-                                 name  = name  ,
-                                 title = title )         
+        Product1D_pdf.__init__ ( self              ,
+                                 pdf1    = pdf     ,
+                                 pdf2    = pdf2    , 
+                                 xvar    = xvar    ,
+                                 name    = name    ,
+                                 title   = title   ,
+                                 use_roo = use_roo )         
 
         ## for drawing...
         
@@ -218,18 +244,19 @@ class Modify1D_pdf(Product1D_pdf) :
         for c in self.pdf1.crossterms2 : self.crossterms2.add ( c )
         
         self.config = {
-            'name'  : self.name  ,
-            'pdf'   : self.pdf1  ,
-            'xvar'  : self.xvar  ,
-            'power' : power      ,
-            'xmin'  : xmin       ,
-            'xmax'  : xmin       ,
-            'title' : self.title ,            
+            'name'    : self.name    ,
+            'pdf'     : self.pdf1    ,
+            'xvar'    : self.xvar    ,
+            'power'   : power        ,
+            'xmin'    : xmin         ,
+            'xmax'    : xmin         ,
+            'title'   : self.title   ,
+            'use_roo' : self.use_roo 
             }
-
+        
     @property
     def old_pdf ( self ):
-        """``old_pdf''  : original (non-modifier) PDF"""
+        """``old_pdf''  : original (not modified) PDF"""
         return self.pdf1
     
     ## redirect any other attributes to original PDF
@@ -268,19 +295,18 @@ class CutOffGauss_pdf(PDF) :
         
         PDF.__init__ ( self , name , xvar = xvar ) 
         
-        self.__x0   = self.make_var ( x0       ,
-                                      'x0_%s'      % name ,
-                                      '#x_{0}(%s)' % name , x0 , x0 )
+        self.__x0   = self.make_var  ( x0       ,
+                                       'x0_%s'           % name ,
+                                       '#x_{0}(%s)'      % name , x0 , x0 )
         
         self.__sigma = self.make_var ( sigma   ,
-                                       'sigma_%s'        % name ,
+                                       'csigma_%s'       % name ,
                                        '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
-
-
+        
         self.__right = True if right else False
         
         self.pdf = Ostap.Models.CutOffGauss (
-            self.roo_name ( 'cofg_'  )          , 
+            self.roo_name ( 'cofg_'  )         , 
             'Gaussian cut-off %s' % self.name  ,
             self.xvar                          ,
             self.right                         , 
@@ -353,13 +379,13 @@ class CutOffStudent_pdf(PDF) :
         
         PDF.__init__ ( self , name , xvar = xvar ) 
         
-        self.__x0   = self.make_var ( x0       ,
-                                      'x0_%s'      % name ,
-                                      '#x_{0}(%s)' % name , x0 , x0 )
+        self.__x0   = self.make_var   ( x0       ,
+                                        'x0_%s'      % name ,
+                                        '#x_{0}(%s)' % name , x0 , x0 )
         
-        self.__nu   = self.make_var ( nu    ,
-                                      'nu_%s'        % name ,
-                                      '#nu_{CB}(%s)' % name , nu , nu , 0 , 1000 )
+        self.__nu   = self.make_var  ( nu    ,
+                                       'nu_%s'        % name ,
+                                       '#nu_{CB}(%s)' % name , nu , nu , 0 , 1000 )
         
         self.__sigma = self.make_var ( sigma   ,
                                        'sigma_%s'        % name ,
@@ -431,24 +457,31 @@ models.append ( CutOffStudent_pdf )
 class CutOff_pdf(Product1D_pdf) :
     """Trivial wrapper for `Product1D_pdf`
     """
-    def __init__ ( self          ,
-                   pdf           ,
-                   cutoff        ,
-                   xvar   = None , 
-                   name   = ''   ) :
+    def __init__ ( self           ,
+                   pdf            ,
+                   cutoff         ,
+                   xvar    = None , 
+                   name    = ''   ,
+                   title   = ''   ,
+                   use_roo = True ) :
 
         Product1D_pdf.__init__ ( self          ,
-                                 pdf1 = pdf    ,
-                                 pdf2 = cutoff ,
-                                 xvar = xvar   ,
-                                 name = name   )
+                                 pdf1    = pdf    ,
+                                 pdf2    = cutoff ,
+                                 xvar    = xvar   ,
+                                 name    = name   ,
+                                 title   = title ,
+                                 use_roo = use_roo )
+                                 
 
         ## save the configuration
         self.config = {
-            'name'   : self.name     ,
-            'pdf'    : self.orig_pdf ,
-            'cutoff' : self.cutoff   ,
-            'xvar'   : self.xvar     ,
+            'name'    : self.name     ,
+            'pdf'     : self.orig_pdf ,
+            'cutoff'  : self.cutoff   ,
+            'xvar'    : self.xvar     ,
+            'title'   : self.title    ,
+            'use_roo' : self.use_roo  ,
             }
         
     @property

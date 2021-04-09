@@ -6,6 +6,7 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooAddition.h"
+#include "RooAbsPdf.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 // Ostap
@@ -53,6 +54,7 @@ ClassImp(Ostap::MoreRooFit::OneVar        )
 ClassImp(Ostap::MoreRooFit::TwoVars       )
 ClassImp(Ostap::MoreRooFit::FunOneVar     )
 ClassImp(Ostap::MoreRooFit::FunTwoVars    )
+ClassImp(Ostap::MoreRooFit::ProductPdf    )
 // ============================================================================
 namespace 
 {
@@ -775,6 +777,58 @@ Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegralWN
   const RooArgSet* normset  ,
   const char*      range    ) const
 { return m_x.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
+// ============================================================================
+
+
+
+// ============================================================================
+/* constructor from name, title and two pdfs
+ *  @param name  name 
+ *  @param title name 
+ *  @param pdf1 the first pdf 
+ *  @param pdf2 the second pdf 
+ */
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::ProductPdf 
+( const char* name  , 
+  const char* title , 
+  RooAbsPdf&  pdf1  , 
+  RooAbsPdf&  pdf2  )
+  : RooAbsPdf  ( name , title ) 
+    //
+  , m_pdf1 ( "pdf1" , "The first PDF"  , this , pdf1 ) 
+  , m_pdf2 ( "pdf2" , "The second PDF" , this , pdf2 ) 
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::ProductPdf 
+( const Ostap::MoreRooFit::ProductPdf& right , 
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_pdf1 ( "pdf1" , this , right.m_pdf1 ) 
+  , m_pdf2 ( "pdf2" , this , right.m_pdf2 )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::~ProductPdf(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf*
+Ostap::MoreRooFit::ProductPdf::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::ProductPdf( *this , newname ) ; }
+// ============================================================================
+// the main method 
+// ============================================================================
+Double_t Ostap::MoreRooFit::ProductPdf::evaluate () const
+{
+  const double v1 = m_pdf1 ;
+  const double v2 = m_pdf2 ;
+  return v1 * v2 ;
+}
 // ============================================================================
 
 // ============================================================================

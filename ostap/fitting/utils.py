@@ -775,8 +775,6 @@ class MakeVar ( object ) :
             lst = tuple ( ll )
             
         return lst 
-
-        
         
     # =========================================================================
     ## set value to a given value with the optional check
@@ -794,7 +792,7 @@ class MakeVar ( object ) :
         """
 
         ## must be roofit variable! 
-        assert isinstance ( var , ROOT.RooAbsVar ) , 'Invalid type of ``var'' %s' % type ( var )
+        assert isinstance ( var , ROOT.RooAbsReal ) , 'Invalid type of ``var'' %s' % type ( var )
         
         if not hasattr ( var ,  'setVal' ) :
             raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
