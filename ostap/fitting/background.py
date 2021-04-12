@@ -2100,7 +2100,6 @@ class RooKeys1D_pdf(PDF) :
         PDF.__init__ (  self , name , xvar )
 
         self.__data    = data
-        self.__options = mirror
         self.__rho     = rho 
         self.__options = options 
         self.__nsigma  = nsigma 
@@ -2108,7 +2107,7 @@ class RooKeys1D_pdf(PDF) :
         self.__sort    = True if sort   else False 
 
         self.__keys_vlst = ROOT.RooArgList()
-        self.__keys_vlst.Add ( self.xvar )
+        self.__keys_vlst.add ( self.xvar )
         
         ## create PDF
         self.pdf = ROOT.RooNDKeysPdf (
@@ -2140,8 +2139,8 @@ class RooKeys1D_pdf(PDF) :
         return self.__data
     @property
     def options ( self ) :
-        """``options'' : ``ootions'' string for RooNDKeysPdf"""
-        return self.__mirror        
+        """``options'' : ``options'' string for RooNDKeysPdf"""
+        return self.__options        
     @property
     def rho    ( self )  :
         """``rho'' : ``rho'' parameter for RooNDKeysPdf"""

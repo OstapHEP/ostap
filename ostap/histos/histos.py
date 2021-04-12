@@ -5884,14 +5884,14 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 ## draw the line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _level_ ( self , level = 0 , linestyle = 2 , linecolor = 1 , **kwargs ) :
+def _level_ ( self , level = 0 , **kwargs ) :
     """Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
     >>> h.hline ( 5 ) ## ditto
     """
     mn,mx = self.xminmax()
     line = ROOT.TLine ( mn , level , mx , level )
-    line.draw( linestyle = linestyle , linecolor = linecolor , **kwargs )
+    line.draw ( **kwargs )
     if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
     self._lines_.append ( line ) 
     return line
@@ -5900,13 +5900,14 @@ def _level_ ( self , level = 0 , linestyle = 2 , linecolor = 1 , **kwargs ) :
 ## draw the vertical line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _vline_ ( self , x , linestyle = 2 , linecolor = 1 , **kwargs ) :
+def _vline_ ( self , x , ymin = 0 , ymax = None , **kwargs ) :
     """Draw vertical line for the histogram
     >>> h.vline ( 5 )    
     """
-    mn,mx = self.yminmax()
+    if ymax is None : ymax = self.GetMaximum() 
+    mn , mx = ymin , ymax 
     line = ROOT.TLine ( x , mn , x , mx )
-    line.draw( linestyle = linestyle , linecolor = linecolor , **kwargs ) 
+    line.draw( **kwargs ) 
     if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
     self._lines_.append ( line ) 
     return line 
