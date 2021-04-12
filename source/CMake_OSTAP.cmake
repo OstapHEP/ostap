@@ -32,6 +32,7 @@ add_library(ostap SHARED src/format.cpp
                          src/GSL_utils.cpp 
                          src/Hesse.cpp
                          src/HistoDump.cpp
+                         src/HistoHash.cpp
                          src/HistoInterpolation.cpp
                          src/HistoInterpolators.cpp
                          src/HistoMake.cpp

@@ -3,6 +3,7 @@
   1. make names of created `PDF` and `RooAbsPdf` objects unique..  It is not yet 100%, but a good step in this direction. 
   1. add "cut-off" functions and PDFs
   1. improve treatment of "tags" for C++ models. 
+  1. improve spline <--> graph relations 
 
 
 ## Backward incompatible changes: 

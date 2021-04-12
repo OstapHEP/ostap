@@ -41,6 +41,7 @@
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/HistoDump.h"
+#include "Ostap/HistoHash.h"
 #include "Ostap/HistoInterpolation.h"
 #include "Ostap/HistoInterpolators.h"
 #include "Ostap/HistoMake.h"
