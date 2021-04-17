@@ -719,14 +719,16 @@ def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
         xmin = xmn - delta * d 
         xmax = xmx + delta * d 
 
+    N = 3
+    
     a1 , b1 = frexp10 ( xmin )
     a2 , b2 = frexp10 ( xmax )
 
-    b1  -= 2
-    b2  -= 2
+    b1  -= N 
+    b2  -= N 
     
-    xmin = math.floor ( a1 * 100 ) * ( 10 ** b1 )
-    xmax = math.ceil  ( a2 * 100 ) * ( 10 ** b2 )
+    xmin = math.floor ( a1 * ( 10**N ) ) * ( 10 ** b1 )
+    xmax = math.ceil  ( a2 * ( 10**N ) ) * ( 10 ** b2 )
     
     return xmin , xmax
     

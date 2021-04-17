@@ -20,7 +20,8 @@ __all__     = (
     'setStorage' , ## define the default storage for  RooDataStore 
     'useStorage' , ## define (as context) the default storage for  RooDataStore
     'ds_draw'    , ## draw varibales from RooDataSet 
-    'ds_project' , ## project variables from RooDataSet to histogram 
+    'ds_project' , ## project variables from RooDataSet to histogram
+    'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
 import ROOT, random, math, sys 
@@ -527,8 +528,10 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
+    print ( 'HERE!')
     
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
+        print ( 'HERE!-3D' , what[2] , what[1] , what[0] , cuts , args )
         sc = Ostap.HistoProject.project3 ( dataset ,
                                            histo   , 
                                            what[2] ,
@@ -538,7 +541,8 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
             return None
         return histo
-    elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
+    elif isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() and 2 == len ( what )  :
+        print ( 'HERE!-3D' , what[1] , what[0] , cuts , args )
         sc = Ostap.HistoProject.project2 ( dataset ,
                                            histo   , 
                                            what[1] ,
@@ -547,7 +551,8 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
             return None
         return histo
-    elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
+    elif isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() and 1 == len ( what )  :
+        print ( 'HERE!-1D'  , what[0] , cuts , args )
         sc = Ostap.HistoProject.project  ( dataset ,
                                            histo   , 
                                            what[0] , cuts , *args )
@@ -626,8 +631,8 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
         w2        = what[1] 
         mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         histo = ROOT.TH2F ( hID() , "%s:%s" % ( w1 , w2 ) ,
-                            50 , mn1 , mx1 ,
-                            50 , mn2 , mx2 )  ; histo.Sumw2()
+                            50 , mn2 , mx2 ,
+                            50 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
         return histo
@@ -640,9 +645,9 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
         w3        = what[2] 
         mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
         histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w1 , w2 , w3 ) ,
-                            20 , mn1 , mx1 ,
+                            20 , mn3 , mx3 ,
                             20 , mn2 , mx2 ,
-                            20 , mn2 , mx2 )  ; histo.Sumw2()
+                            20 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
         return histo
@@ -847,7 +852,11 @@ _new_methods_ += [
 
 
 # =============================================================================
-## add variable to dataset 
+## add variable to dataset
+#  @code
+#  dataset = ...
+#  dataset.addVar ( 'NewVar' , 'A+B/3' )
+#  @endcode 
 def _rds_addVar_ ( dataset , vname , formula ) : 
     """Add/calculate variable to RooDataSet
 
@@ -1025,7 +1034,7 @@ def _rds_unWeighted_ ( dataset , weight = '' ) :
     """
     if not dataset.isWeighted() :
         logger.error ("unweight: dataset is not weighted!") 
-        return None, ''
+        return dataset , ''
     
     ds , w = Ostap.Utils.unweight ( dataset , weight )  
     return ds , w 
@@ -1606,6 +1615,203 @@ _new_methods_ += [
 
 
 # =============================================================================
+## get the name of weigth variable in dataset
+#  @code
+#  dataset = ...
+#  wname   = dataset.wname() 
+#  @endcode 
+#  @see Ostap::Utils::getWeight
+def _ds_wname_ ( dataset ) :
+    """Get the name of weigth variable in dataset
+    >>> dataset = ...
+    >>> wname   = dataset.wname() 
+    """
+    
+    if not dataset.isWeighted() : return '' ## UNWEIGHTED!
+
+    attr = '_weight_var_name'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.getWeight (  dataset )
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+# =============================================================================
+
+
+# =============================================================================
+## Are weight errors stored in dataset?
+#  @code
+#  dataset     = ...
+#  store_error = dataset.store_error () 
+#  @endcode
+#  The function checks the <code>StoreError</code> and 
+#   <code>StoreAsymError</code> attributes for the weight variable 
+#  @see Ostap::Utils::storeError
+def _ds_store_error_ ( dataset ) :
+    """Are weight errors stored in dataset?
+    >>> dataset     = ...
+    >>> store_error = dataset.store_error () 
+    The function checks the `StoreError` and 
+    `StoreAsymError` attributes for the weight variable 
+    - see Ostap::Utils::storeError
+    """
+    
+    if not dataset.isWeighted() : return False ## UNWEIGHTED!
+    
+    attr = '_store_weeight_error'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.storeError  (  dataset )
+        wn = True if wn else False
+        
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+# =============================================================================
+
+# =============================================================================
+## Are asymmetric weight errors stored in dataset?
+#  @code
+#  dataset     = ...
+#  store_error = dataset.store_asym_error () 
+#  @endcode
+#  The function checks the <code>StoreAsymError</code> attribute for the weight variable 
+#  @see Ostap::Utils::storeError
+def _ds_store_asym_error_ ( dataset ) :
+    """Are weight errors stored in dataset?
+    >>> dataset     = ...
+    >>> store_error = dataset.store_asym_error () 
+    The function checks the `StoreAsymError` attributes for the weight variable 
+    - see Ostap::Utils::storeAsymError
+    """
+    
+    if not dataset.isWeighted() : return False ## UNWEIGHTED!
+    
+    attr = '_store_asym_weight_error'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.storeAsymError  (  dataset )
+        wn = True if wn else False
+        
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+
+# =============================================================================
+
+ROOT.RooDataSet.wname            = _ds_wname_
+ROOT.RooDataSet.store_error      = _ds_store_error_
+ROOT.RooDataSet.store_asym_error = _ds_store_asym_error_
+
+_new_methods_ += [
+    ROOT.RooDataSet.wname            , 
+    ROOT.RooDataSet.store_error      , 
+    ROOT.RooDataSet.store_asym_error ,
+    ]
+
+# =============================================================================
+
+
+# =============================================================================
+## Combine two datasets with some weights
+#  @code
+#  dataset1 = ... 
+#  dataset2 = ...
+#  dataset  = ds_combine ( dataset1 , dataset2 , 1.0 , -0.1 )
+#  @endcode
+#  - Input datasets may be weighted
+#  - Output dataset  is weighted 
+def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
+    """ Combine two datasets with some weights
+    >>> dataset1 = ... 
+    >>> dataset2 = ...
+    >>> dataset  = ds_combine ( dataset1 , dataset2 , 1.0 , -0.1 ) 
+    - Input datasets may be weighted
+    - Output dataset  is always weighted 
+    """
+
+    r1 = float ( r1 )
+    r2 = float ( r2 )
+
+    w1, w2  = '', ''
+    ## 
+    if ds1.isWeighted() : ds1 , w1 = ds1.unWeighted ()
+    if ds2.isWeighted() : ds2 , w2 = ds2.unWeighted ()
+    ##
+    if w2 and not w2 in ds1 : ds1.addVar ( w2 , '1' )
+    if w1 and not w1 in ds2 : ds2.addVar ( w1 , '1' )
+    ## 
+    v1 = set ( ds1.branches () )
+    v2 = set ( ds2.branches () )
+    ##
+    if v1 != v2 :
+
+        v12 = v1 - v2
+        if v12 : logger.warning ("ds_combine: first  dataset contains %d extra columns: %s" % ( len ( v12 ) , list ( v1 - v2 ) ) )
+        
+        v21 = v2 - v1
+        if v21 : logger.warning ("ds_combine: second dataset contains %d extra columns: %s" % ( len ( v21 ) , list ( v2 - v1 ) ) ) 
+
+        cv = v1.intersection ( v2 )
+        
+        ds1s = ds1.subset ( cv )
+        ds2s = ds2.subset ( cv )
+        
+        if w1 : ds1.clear() 
+        if w2 : ds2.clear()
+        
+        ds1 = ds1s        
+        ds2 = ds2s
+
+
+    ## construct the name for new common weight variable
+    new_weight = weight if weight else 'weight'
+    i = 0 
+    while ( new_weight in ds1 ) or ( new_weight in ds2 )  :
+        new_weight = "%s_%d" % ( new_weight , i )
+        i += 1
+
+    ## define new weigths for datasets
+    if 1 == r1 : weight1 =       '%s' %        w1   if w1 else '1'
+    else       : weight1 = '%.16g*%s' % ( r1 , w1 ) if w1 else '%.16g' % r1
+    if 1 == r2 : weight2 =       '%s' %        w2   if w2 else '1'
+    else       : weight2 = '%.16g*%s' % ( r2 , w2 ) if w2 else '%.16g' % r2
+    
+    logger.info  ("ds_combine: new weights are ``%s''  and ``%s''"% ( weight1 , weight2 ) )
+    
+    ds1.addVar ( new_weight , weight1 )
+    ds2.addVar ( new_weight , weight2 )
+
+    ww1_ = ds1.statVar ( w1 ) if w1 else ds1.statVar ( '1' )
+    ww2_ = ds2.statVar ( w2 ) if w2 else ds2.statVar ( '1' ) 
+    
+    ww1  = ds1.statVar ( new_weight )
+    ww2  = ds2.statVar ( new_weight )
+    
+    logger.info ( 'ds_combine: old weights dataset1: %s' % ww1_ )
+    logger.info ( 'ds_combine: old weights dataset2: %s' % ww2_ )
+    
+    logger.info ( 'ds_combine: new weights dataset1: %s' % ww1  )
+    logger.info ( 'ds_combine: new weights dataset2: %s' % ww2  )
+    
+    ## add two datasets together 
+    ds = ds1 + ds2
+
+    ## apply common weight 
+    dsw = ds.makeWeighted ( new_weight )
+
+    ## cleanup
+    
+    if w1 or v1 != v2 : ds1.clear()
+    if w2 or v1 != v2 : ds2.clear()
+    
+    ds.clear()
+    
+    return dsw
+
+
+# ============================================================================
 
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.RooAbsData )

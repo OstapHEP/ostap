@@ -4,12 +4,15 @@
   1. add "cut-off" functions and PDFs
   1. improve treatment of "tags" for C++ models. 
   1. improve spline <--> graph relations 
-
+  1. add `da_combine` functions to combine two datasets with weights 
+  1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
+  1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
 
 ## Backward incompatible changes: 
 
 ## Bug fixes:
 
+  1. fix asserion statement in `dalitz.py` 
 
 # v1.6.1.0
 
