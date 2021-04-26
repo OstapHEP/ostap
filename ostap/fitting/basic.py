@@ -339,7 +339,7 @@ class PDF (FUNC) :
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
             self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
 
-        ## play a bit with the binning cache for convolutions 
+        ## play a bit with the binning cache for 1D-convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
             xv  = getattr ( dataset , self.xvar.name , None )
@@ -437,11 +437,12 @@ class PDF (FUNC) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
-        frame = None
+        if   result and 0 == result.status() and not silent :
+            logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and not silent :
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 
-        ## if not silent :
-        ##     self.info ( "Fit result " result.table ( , prefix = '# ' ) 
-            
+        frame = None
         
         ## draw it if requested
         if draw :  
@@ -461,10 +462,6 @@ class PDF (FUNC) :
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
         ## ##
-        ## if   not silent and result and 0 == result.status() :
-        ##     logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
-        ## elif not silent and result :
-        ##     logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
                          
         return result, frame 
 
