@@ -63,7 +63,7 @@ class PolyBase3(PDF3,Phases) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos3D_pdf(PolyBase3) :
-    """Positive (non-factorizable!) polynomial in 3D:
+    r"""Positive (non-factorizable!) polynomial in 3D:
     
     The 3D-polynomial of order Nx*Ny*Nz, that is constrained 
     to be non-negative over the defined range
@@ -151,7 +151,7 @@ models.append ( PolyPos3D_pdf )
 #  @see Ostap::Models::Poly3DSymPositive
 #  @see Ostap::Math::Positive3DSym
 class PolyPos3Dsym_pdf(PolyBase3) :
-    """Positive (non-factorizable!) symmetric polynomial in 3D:
+    r"""Positive (non-factorizable!) symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
     to be non-negative ans symmetric over the  defined range
@@ -245,7 +245,7 @@ models.append ( PolyPos3Dsym_pdf )
 #  @see Ostap::Models::Poly3DMixPositive
 #  @see Ostap::Math::Positive3DMix
 class PolyPos3DmixXY_pdf(PolyBase3) :
-    """Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
+    r"""Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
     to be non-negative ans symmetric over the  defined range

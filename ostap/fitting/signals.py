@@ -1905,7 +1905,7 @@ models.append ( JohnsonSU_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-024
 class Atlas_pdf(MASS) :
-    """Modified gaussian with exponential tails
+    r"""Modified gaussian with exponential tails
     \f$  f(x) \propto \exp( -frac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
     Function is taken from http://arxiv.org/abs/arXiv:1507.07099    
@@ -2149,7 +2149,7 @@ models.append ( AsymmetricLaplace_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-04-025
 class Sech_pdf(MASS) :
-    """Hyperbolic secant distribution or ``inverse-cosh'' distribution
+    r"""Hyperbolic secant distribution or ``inverse-cosh'' distribution
     
     The hyperbolic secant distribution shares many properties with the 
     standard normal distribution: 
@@ -2318,7 +2318,7 @@ models.append ( Losev_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class Logistic_pdf(MASS) :
-    """ Logistic, aka ``sech-square'' PDF
+    r""" Logistic, aka ``sech-square'' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$

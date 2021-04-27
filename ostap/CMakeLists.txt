@@ -125,7 +125,7 @@ option(RUN_TESTS "Run tests?" ON)
 enable_testing() 
 
 execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}" -W error -c "import math"
+  COMMAND "${PYTHON_EXECUTABLE}" -Werror -c "import math"
   OUTPUT_VARIABLE OSTAP_PYTHON_CHECK_WARNINGS
   RESULT_VARIABLE OSTAP_PYTHON_CHECK_WARNINGS_RESULT
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -134,7 +134,7 @@ execute_process(
 if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
  set( OSTAP_TEST_PYTHON_WARNINGS "" ) 
 else  () 
- set( OSTAP_TEST_PYTHON_WARNINGS " -W error " ) 
+ set( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
 endif () 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 

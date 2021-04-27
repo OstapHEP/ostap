@@ -78,7 +78,7 @@ __all__     = (
     'interpolate_bspline'   , ## Basic spline interpolation
     )
 # =============================================================================
-import  ROOT, math
+import  ROOT, math, sys 
 from    builtins          import range
 from    ostap.core.core   import cpp, Ostap
 from    ostap.core.ostap_types  import is_integer
@@ -88,6 +88,8 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
+if (3,3) <= sys.version_info : from collections.abc  import Iterable, Mapping
+else                         : from collections      import Iterable, Mapping
 
 # =============================================================================
 ## Interpolation abscissas
@@ -628,8 +630,8 @@ def lagrange ( func , abscissas  = None ) :
     """
        
     from types       import GeneratorType as GT
-    from collections import Iterable      as IT
-    from collections import Mapping       as MT
+    IT = Iterable
+    MT = Mapping
 
     ## switch on abscissas:
     _W = isinstance ( abscissas , Ostap.Math.Interpolation.Weights   )
@@ -696,8 +698,8 @@ def points ( func , abscissas  = None ) :
     """
        
     from types       import GeneratorType as GT
-    from collections import Iterable      as IT
-    from collections import Mapping       as MT
+    IT = Iterable
+    MT = Mapping
 
     ## switch on abscissas:
     _A = isinstance ( abscissas , Ostap.Math.Interpolation.Abscissas )

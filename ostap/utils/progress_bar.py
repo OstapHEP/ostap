@@ -106,6 +106,9 @@ __all__      = (
 import sys , os, time 
 from   builtins import range
 # =============================================================================
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
+else                              : from collections     import Sized
+# =============================================================================
 ## get number of columns for xterm
 #  @code
 #  ncols = columns()
@@ -494,9 +497,8 @@ def progress_bar ( iterable , max_value = None , **kwargs ) :
     >>> for i in progress_bar  ( range ( 10000 ) ) :
     ...      do something here
     """
-    import collections 
     if   max_value is None  \
-           and isinstance ( iterable , collections.Sized      ) :
+           and isinstance ( iterable , Sized      ) :
         max_value = len ( iterable ) 
     elif max_value is None and hasattr ( iterable , '__len__' ) :
         max_value = len ( iterable )

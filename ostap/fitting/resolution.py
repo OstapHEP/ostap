@@ -765,7 +765,7 @@ class ResoSinhAsinh(RESOLUTION) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class ResoLogistic(RESOLUTION) :
-    """ Logistic, aka ``sech-square'' PDF
+    r""" Logistic, aka ``sech-square'' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$

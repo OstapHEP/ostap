@@ -22,7 +22,7 @@ __all__     = (
     'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
-import ROOT, random
+import ROOT, sys, random
 from   ostap.core.core         import Ostap
 from   ostap.core.ostap_types  import string_types 
 import ostap.fitting.variables
@@ -32,6 +32,9 @@ import ostap.fitting.variables
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocollections' )
 else                       : logger = getLogger( __name__ )
+# =============================================================================
+if (3,3) < sys.version_info : from collections.abc import Container
+else                        : from collections     import Container
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -258,8 +261,7 @@ def _ral_iadd_ ( self , other ) :
     >>> lst = ....
     >>> lst += another_lst
     """
-    from collections import Container as _CNT
-    _RAC = ROOT.RooAbsCollection
+    _CNT = Container
     _RAC = ROOT.RooAbsCollection
     _RAA = ROOT.RooAbsArg      
     if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
@@ -279,7 +281,7 @@ def _ral_add_ ( self , other ) :
     >>> set2 = ...
     >>> lst2 = lst1 + set2 
     """
-    from collections import Container as _CNT
+    _CNT = Container
     _RAC = ROOT.RooAbsCollection
     _RAA = ROOT.RooAbsArg  
     if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented

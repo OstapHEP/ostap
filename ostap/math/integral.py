@@ -1027,7 +1027,7 @@ class Integral3(Integral2) :
 # print fy ( 1 ) 
 # @endcode 
 class Integrate2D_X(IntegralBase) :
-    """Helper class to perform (partial) integration of 2D function
+    r"""Helper class to perform (partial) integration of 2D function
     
     f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
     
@@ -1038,7 +1038,7 @@ class Integrate2D_X(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun2d , xmin , xmax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(y) = \int_{x_{min}}^{x_{max}} f_{2D}(x,y) dx
         
@@ -1084,7 +1084,7 @@ class Integrate2D_X(IntegralBase) :
 # print fx ( 1 ) 
 # @endcode 
 class Integrate2D_Y(IntegralBase) :
-    """Helper class to perform (partial) integration of 2D function
+    r"""Helper class to perform (partial) integration of 2D function
     
     f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
     
@@ -1095,7 +1095,7 @@ class Integrate2D_Y(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun2d , ymin , ymax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(x) = \int_{y_{min}}^{y_{max}} f_{2D}(x,y) dy
         
@@ -1145,7 +1145,7 @@ class Integrate2D_Y(IntegralBase) :
 # print fyz ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_X(Integrate2D_X) :
-    """Helper class to perform (partial) integration of 3D function
+    r"""Helper class to perform (partial) integration of 3D function
     
     f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
     
@@ -1156,7 +1156,7 @@ class Integrate3D_X(Integrate2D_X) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
         
@@ -1168,7 +1168,7 @@ class Integrate3D_X(Integrate2D_X) :
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , y  , z , *args ) :
-        """Evaluate the function (perform y-integration)
+        r"""Evaluate the function (perform y-integration)
         
         f(y,z) = \int_{x_{min}}^{x_{max}} f_{3D}(x,y,z) dx
         
@@ -1192,7 +1192,7 @@ class Integrate3D_X(Integrate2D_X) :
 # print fxy ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_Y(Integrate2D_Y) :
-    """Helper class to perform (partial) integration of 3D function
+    r"""Helper class to perform (partial) integration of 3D function
     
     f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
     
@@ -1203,7 +1203,7 @@ class Integrate3D_Y(Integrate2D_Y) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , ymin , ymax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
         
@@ -1215,7 +1215,7 @@ class Integrate3D_Y(Integrate2D_Y) :
         
     ##  evaluate the function (perform y-integration) 
     def __call__ ( self , x  , z , *args ) :
-        """Evaluate the function (perform y-integration)
+        r"""Evaluate the function (perform y-integration)
         
         f(x,z) = \int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dy
         
@@ -1240,7 +1240,7 @@ class Integrate3D_Y(Integrate2D_Y) :
 # print fxy ( 1 , 2 ) 
 # @endcode 
 class Integrate3D_Z(IntegralBase) :
-    """Helper class to perform (partial) integration of 3D function
+    r"""Helper class to perform (partial) integration of 3D function
     
     f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
     
@@ -1251,7 +1251,7 @@ class Integrate3D_Z(IntegralBase) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , zmin , zmax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
         
@@ -1265,7 +1265,7 @@ class Integrate3D_Z(IntegralBase) :
         
     ##  evaluate the function (perform z-integration) 
     def __call__ ( self , x  , y , *args ) :
-        """Evaluate the function (perform z-integration)
+        r"""Evaluate the function (perform z-integration)
         
         f(x,y) = \int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dz
         
@@ -1304,7 +1304,7 @@ class Integrate3D_Z(IntegralBase) :
 # print fz ( 1 ) 
 # @endcode 
 class Integrate3D_XY(Integrate3D_X) :
-    """Make (partial 2D) integration of 3D function
+    r"""Make (partial 2D) integration of 3D function
     
     f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
     
@@ -1315,7 +1315,7 @@ class Integrate3D_XY(Integrate3D_X) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , ymin , ymax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
         
@@ -1330,7 +1330,7 @@ class Integrate3D_XY(Integrate3D_X) :
         
     ##  evaluate the function (perform xy-integration) 
     def __call__ ( self , z , *args ) :
-        """Evaluate the function (perform (xy)-integration)
+        r"""Evaluate the function (perform (xy)-integration)
         
         f(z) = \int_{x_{min}}^{x_{max}}\int_{y_{min}}^{y_{max}} f_{3D}(x,y,z) dx dy
         
@@ -1365,7 +1365,7 @@ class Integrate3D_XY(Integrate3D_X) :
 #  print fy ( 1 ) 
 #  @endcode 
 class Integrate3D_XZ(Integrate3D_X) :
-    """Make (partial 2D) integration of 3D function
+    r"""Make (partial 2D) integration of 3D function
     
     f(y) = \int_{x_{min}}^{x_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dx dz
     
@@ -1376,7 +1376,7 @@ class Integrate3D_XZ(Integrate3D_X) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , zmin , zmax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         
         f(y) = \int_{x_{min}}^{x_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dx dz
         
@@ -1391,7 +1391,7 @@ class Integrate3D_XZ(Integrate3D_X) :
         
     ## evaluate the function (perform xz-integration) 
     def __call__ ( self , y , *args ) :
-        """Evaluate the function (perform (xz)-integration)
+        r"""Evaluate the function (perform (xz)-integration)
         
         f(y) = \int_{x_{min}}^{x_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dx dz
         
@@ -1427,7 +1427,7 @@ class Integrate3D_XZ(Integrate3D_X) :
 #  print fx ( 1 ) 
 #  @endcode 
 class Integrate3D_YZ(Integrate3D_Y) :
-    """Make (partial 2D) integration of 3D function
+    r"""Make (partial 2D) integration of 3D function
     
     f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
     
@@ -1438,7 +1438,7 @@ class Integrate3D_YZ(Integrate3D_Y) :
 
     ## construct the integration object 
     def __init__  ( self , fun3d , xmin , xmax , zmin , zmax , args = () , err = False , **kwargs ) :
-        """Construct the integration object
+        r"""Construct the integration object
         f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
         
         >>> fun3d  = ... ## 3D-function
@@ -1452,7 +1452,7 @@ class Integrate3D_YZ(Integrate3D_Y) :
         
     ##  evaluate the function (perform yz-integration) 
     def __call__ ( self , x , *args ) :
-        """Evaluate the function (perform (yz)-integration)
+        r"""Evaluate the function (perform (yz)-integration)
         
         f(x) = \int_{y_{min}}^{y_{max}}\int_{z_{min}}^{z_{max}} f_{3D}(x,y,z) dy dz
         

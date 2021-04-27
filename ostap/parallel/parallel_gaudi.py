@@ -24,7 +24,6 @@ __all__ = (
     )
 # =============================================================================
 import sys, os, time
-from   collections               import Sized
 from   itertools                 import repeat , count
 from   ostap.utils.progress_bar  import progress_bar
 from   ostap.logger.logger       import getLogger
@@ -32,7 +31,8 @@ from   ostap.parallel.task       import Task, TaskManager
 # =============================================================================
 logger  = getLogger('ostap.parallel.parallel_gaudi')
 # =============================================================================
-
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
+else                              : from collections     import Sized 
 # =============================================================================
 import multiprocessing     as MP
 

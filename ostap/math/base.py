@@ -109,12 +109,17 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.base' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
+else                              : from collections     import Iterable
+# =============================================================================
+
 ## get global C++ namespace
 cpp = cppyy.gbl
 ## C++ namespace Gaudi
 std = cpp.std
 ## C++ namespace Ostap
-Ostap = cpp.Ostap
+Ostap = cpp.Ostap 
+
 
 from ostap.logger.utils import ROOTIgnore
 from ostap.logger.mute  import mute
@@ -229,7 +234,8 @@ def _add_to ( vct , cnv , arg1 , *args ) :
     """Add something to std::vector 
     """
     from types       import GeneratorType as GT
-    from collections import Iterable      as IT
+    
+    IT = Iterable
 
     VT = type(vct)
 

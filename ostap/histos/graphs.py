@@ -677,7 +677,7 @@ def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
-    """Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
+    r"""Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
     It is not very efficient, but OK 
     >>> graph = ...
     >>> i     = graph.integral ( 0 , 1 )

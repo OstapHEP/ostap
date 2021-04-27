@@ -44,7 +44,6 @@ else                      : logger = getLogger ( __name__                       
 import sys, os 
 from   builtins                 import range
 from   itertools                import repeat , count
-from   collections              import Sized
 # =============================================================================
 from   ostap.utils.progress_bar import progress_bar
 from   ostap.parallel.task      import ( TaskManager   ,
@@ -53,6 +52,9 @@ from   ostap.parallel.task      import ( TaskManager   ,
                                          task_executor , func_executor )
 # =============================================================================
 from   ostap.parallel.utils     import get_local_port  , pool_context  
+# =============================================================================
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Sized
+else                              : from collections     import Sized 
 # =============================================================================
 ## CORE pathos 
 # =============================================================================
