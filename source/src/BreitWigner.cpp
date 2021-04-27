@@ -2973,9 +2973,11 @@ double Ostap::Math::BW3L::integral
 std::size_t Ostap::Math::BW3L::tag () const 
 { 
   static const std::string s_name = "BW3L" ;
-  return std::hash_combine ( s_name , 
-                             m_bw->tag () , m_M , m_m1 , m_m2  , m_m3 , m_L ) ; 
+  return std::hash_combine ( s_name , m_bw -> tag () , m_M , m_m1 , m_m2 , m_m3 , m_L ) ; 
 }
+// ============================================================================
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
