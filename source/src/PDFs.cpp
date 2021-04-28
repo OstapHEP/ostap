@@ -14,6 +14,7 @@
 // ============================================================================
 #include "RooArgSet.h"
 #include "RooRealVar.h"
+#include "RooConstVar.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 // Local
@@ -2430,28 +2431,134 @@ Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
   const char*          title     ,
   RooAbsReal&          x         ,
   RooAbsReal&          threshold ,
-  const unsigned short N         ) 
+  RooAbsReal&          scale     ,
+  const Ostap::Math::PhaseSpaceLeft& left ) 
   : RooAbsPdf ( name , title ) 
-//
-  , m_x         ( "x"  , "Observable" , this , x         ) 
-  , m_threshold ( "th" , "Threshold"  , this , threshold  ) 
-//  
-  , m_left ( 10 , N ) 
+    //
+  , m_x         ( "x"     , "Observable" , this , x          ) 
+  , m_threshold ( "th"    , "Threshold"  , this , threshold  ) 
+  , m_scale     ( "scale" , "Scale"      , this , scale      ) 
+    //  
+  , m_left ( left ) 
 {
   setPars () ;  
 }
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold , 
+  const Ostap::Math::PhaseSpaceLeft& left ) 
+ : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 ) , left )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  RooAbsReal&          scale     ,
+  const Ostap::Math::PhaseSpace2& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( left ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  const Ostap::Math::PhaseSpace2& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 )  , Ostap::Math::PhaseSpaceLeft ( left  ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  RooAbsReal&          scale     ,
+  const Ostap::Math::PhaseSpace3& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( left ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  const Ostap::Math::PhaseSpace3& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 )  , Ostap::Math::PhaseSpaceLeft ( left  ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  RooAbsReal&          scale     ,
+  const Ostap::Math::PhaseSpace3s& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( left ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  const Ostap::Math::PhaseSpace3s& left ) 
+  : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 )  , Ostap::Math::PhaseSpaceLeft ( left  ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  RooAbsReal&          scale     ,
+  const unsigned short N         )
+  : PhaseSpaceLeft ( name , title , x , threshold , scale , Ostap::Math::PhaseSpaceLeft ( 10 , N ) )
+{}
+// ============================================================================
+// Left-edge of N-body phase space 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
+( const char*          name      , 
+  const char*          title     ,
+  RooAbsReal&          x         ,
+  RooAbsReal&          threshold ,
+  const unsigned short N         )
+  : PhaseSpaceLeft ( name , title , x , threshold , RooFit::RooConst ( 1.0 )  , Ostap::Math::PhaseSpaceLeft ( 10 , N ) )
+{}
 // ============================================================================
 // "copy constructor"
 // ============================================================================
 Ostap::Models::PhaseSpaceLeft::PhaseSpaceLeft
 ( const Ostap::Models::PhaseSpaceLeft& right , const char* name )  
   : RooAbsPdf ( right , name )
-//
-  , m_x         ( "x"  , this , right.m_x         ) 
-  , m_threshold ( "tr" , this , right.m_threshold ) 
-//
-  , m_left     ( right.m_left ) 
-//
+    //
+  , m_x         ( "x"     , this , right.m_x         ) 
+  , m_threshold ( "tr"    , this , right.m_threshold ) 
+  , m_scale     ( "scale" , this , right.m_scale     ) 
+    //
+  , m_left      ( right.m_left ) 
+    //
 {
   setPars () ;  
 }
@@ -2470,6 +2577,7 @@ void Ostap::Models::PhaseSpaceLeft::setPars () const
 {
   //
   m_left.setThreshold ( m_threshold ) ;  
+  m_left.setScale     ( m_scale     ) ;  
   //
 }
 // ============================================================================
@@ -3094,6 +3202,81 @@ Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol
   //
   setPars() ;
 }
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const Ostap::Math::PhaseSpace2&    ps        , 
+  RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
+  RooArgList&                        phis      )
+  : PhaseSpaceLeftExpoPol  ( name , title , x , 
+                             Ostap::Math::PhaseSpaceLeft ( ps ) , 
+                             tau  , scale , phis )
+{}
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const Ostap::Math::PhaseSpace3&    ps        , 
+  RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
+  RooArgList&                        phis      )
+  : PhaseSpaceLeftExpoPol  ( name , title , x , 
+                             Ostap::Math::PhaseSpaceLeft ( ps ) , 
+                             tau  , scale , phis )
+{}
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const Ostap::Math::PhaseSpace3s&   ps        , 
+  RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
+  RooArgList&                        phis      )
+  : PhaseSpaceLeftExpoPol  ( name , title , x , 
+                             Ostap::Math::PhaseSpaceLeft ( ps ) , 
+                             tau  , scale , phis )
+{}
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const Ostap::Math::PhaseSpaceNL&   ps        , 
+  RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
+  RooArgList&                        phis      )
+  : PhaseSpaceLeftExpoPol  ( name , title , x , 
+                             Ostap::Math::PhaseSpaceLeft ( ps ) , 
+                             tau  , scale , phis )
+{}
+// ============================================================================
+//  PhaseSpaceLeft x expo x pol 
+// ============================================================================
+Ostap::Models::PhaseSpaceLeftExpoPol::PhaseSpaceLeftExpoPol 
+( const char*                        name      , 
+  const char*                        title     ,
+  RooRealVar&                        x         ,
+  const unsigned short               ps        , 
+  RooAbsReal&                        tau       ,
+  RooAbsReal&                        scale     ,
+  RooArgList&                        phis      )
+  : PhaseSpaceLeftExpoPol  ( name , title , x , 
+                             Ostap::Math::PhaseSpaceLeft ( 10.0 , ps ) , 
+                             tau  , scale , phis )
+{}
 // ============================================================================
 // destructor 
 // ============================================================================

@@ -274,9 +274,9 @@ Ostap::Math::PhaseSpace3::PhaseSpace3
   const double         m3 ,
   const unsigned short l1 ,
   const unsigned short l2 )
-  : m_m1  ( std::abs ( m1 ) )
-  , m_m2  ( std::abs ( m2 ) )
-  , m_m3  ( std::abs ( m3 ) )
+  : m_m1  ( s_zero ( m1 ) ? 0.0 : std::abs ( m1 ) )
+  , m_m2  ( s_zero ( m2 ) ? 0.0 : std::abs ( m2 ) )
+  , m_m3  ( s_zero ( m3 ) ? 0.0 : std::abs ( m3 ) )
   , m_l1  ( l1 )
   , m_l2  ( l2 )
   , m_tmp ( 0  )   
@@ -291,13 +291,46 @@ Ostap::Math::PhaseSpace3::PhaseSpace3
 ( const PhaseSpace3s&  ps3 , 
   const unsigned short l1  ,
   const unsigned short l2  ) 
-  : m_m1 ( ps3.m1 () ) 
-  , m_m2 ( ps3.m2 () ) 
-  , m_m3 ( ps3.m3 () ) 
-  , m_l1  ( l1 )
-  , m_l2  ( l2 )
-  , m_tmp ( 0  )   
+  : m_m1  ( ps3.m1 () ) 
+  , m_m2  ( ps3.m2 () ) 
+  , m_m3  ( ps3.m3 () ) 
+  , m_l1  ( l1        )
+  , m_l2  ( l2        )
+  , m_tmp ( 0         )   
 {}
+// ============================================================================a
+//  set the first mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3::setM1 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m1 ) ) { return false ; }
+  m_m1 = a ;
+  if ( s_zero ( m_m1 ) ) { m_m1 = 0 ; }
+  return true ;
+}
+// ============================================================================a
+//  set the second mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3::setM2 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m2 ) ) { return false ; }
+  m_m2 = a ;
+  if ( s_zero ( m_m2 ) ) { m_m2 = 0 ; }
+  return true ;
+}
+// ============================================================================a
+//  set the third mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3::setM3 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m3 ) ) { return false ; }
+  m_m3 = a ;
+  if ( s_zero ( m_m3 ) ) { m_m3 = 0 ; }
+  return true ;
+}
 // ============================================================================
 // evaluate 3-body phase space
 // ============================================================================
@@ -332,7 +365,8 @@ double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
   const double norm = s_norm / ( x * x ) ;
   //
   // all masses are zero 
-  if ( s_zero ( m_m1 ) && s_zero ( m_m2 ) && s_zero ( m_m3 ) ) { return norm ; }
+  if ( 0 == m_l1 && 0 == m_l2 && 
+       s_zero ( m_m1 ) && s_zero ( m_m2 ) && s_zero ( m_m3 ) && m_l1 == 0 && m_l2 == 0 ) { return 0.5 * s_norm * x * x  ; }
   //
   /// set the temporary mass
   m_tmp = x ;
@@ -474,10 +508,43 @@ Ostap::Math::PhaseSpace3s::PhaseSpace3s
 ( const double m1 ,
   const double m2 ,
   const double m3 ) 
-  : m_m1  ( std::abs ( m1 ) ) 
-  , m_m2  ( std::abs ( m2 ) ) 
-  , m_m3  ( std::abs ( m3 ) ) 
+  : m_m1  ( s_zero ( m1 ) ? 0.0 : std::abs ( m1 ) )
+  , m_m2  ( s_zero ( m2 ) ? 0.0 : std::abs ( m2 ) )
+  , m_m3  ( s_zero ( m3 ) ? 0.0 : std::abs ( m3 ) )
 {}
+// ============================================================================a
+//  set the first mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3s::setM1 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m1 ) ) { return false ; }
+  m_m1 = a ;
+  if ( s_zero ( m_m1 ) ) { m_m1 = 0 ; }
+  return true ;
+}
+// ============================================================================a
+//  set the second mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3s::setM2 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m2 ) ) { return false ; }
+  m_m2 = a ;
+  if ( s_zero ( m_m2 ) ) { m_m2 = 0 ; }
+  return true ;
+}
+// ============================================================================a
+//  set the third mass
+// ============================================================================a
+bool Ostap::Math::PhaseSpace3s::setM3 ( const double value )
+{
+  const double a = std::abs ( value ) ;
+  if ( s_equal ( a , m_m3 ) ) { return false ; }
+  m_m3 = a ;
+  if ( s_zero ( m_m3 ) ) { m_m3 = 0 ; }
+  return true ;
+}
 // ==============================================================================
 // evaluate 3-body phase space
 // ==============================================================================
@@ -542,14 +609,14 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const double         threshold ,
   const unsigned short num       , 
   const double         scale     ) 
-  : m_threshold ( std::abs ( threshold ) )
-  , m_num       ( num   )
-  , m_scale     ( scale ) 
-  , m_ps2       () 
+  : m_threshold ( std::max ( 0.0 , threshold ) )
+  , m_num       ( num     )
+  , m_scale     ( scale   ) 
+  , m_ps2       ( nullptr ) 
+  , m_ps3       ( nullptr ) 
+  , m_ps3s      ( nullptr ) 
 {
-  Ostap::Assert ( 2 <= m_num , 
-                  "Invalid number of particles" , 
-                  "Ostap::Math::PhaseSpaceLeft" ) ;
+  Ostap::Assert ( 2 <= m_num , "Invalid number of particles" , "Ostap::Math::PhaseSpaceLeft" ) ;
 }
 // ============================================================================
 // constructor from the list of masses
@@ -559,22 +626,25 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
   const double               scale  )
   : m_threshold (  0            )
   , m_num       ( masses.size() )
-  , m_scale     ( scale ) 
-  , m_ps2       () 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( nullptr ) 
+  , m_ps3       ( nullptr ) 
+  , m_ps3s      ( nullptr ) 
 {
-  Ostap::Assert ( 2 <= m_num                    , 
-                  "Invalid number of particles" , 
-                  "Ostap::Math::PhaseSpaceLeft" ) ;
-  if ( 2 == m_num ) 
+  Ostap::Assert ( 2 <= m_num , "Invalid number of particles" , "Ostap::Math::PhaseSpaceLeft" ) ;
+  if      ( 2 == m_num ) 
   {
-    m_ps2.setM1 ( std::abs ( masses[0] ) ) ;
-    m_ps2.setM2 ( std::abs ( masses[1] ) ) ;
-    m_threshold = m_ps2.lowEdge() ;
+    m_ps2.reset  ( new PhaseSpace2  ( masses [ 0 ] , masses [ 1 ] ) ) ;
+    m_threshold = m_ps2->lowEdge() ;
+  }
+  else if ( 3 == m_num ) 
+  {
+    m_ps3s.reset ( new PhaseSpace3s ( masses [ 0 ] , masses [ 1 ] , masses [ 2 ] ) ) ;
+    m_threshold = m_ps3s->lowEdge() ;
   }
   else 
   {
-    for ( std::vector<double>::const_iterator im = masses.begin() ;
-          masses.end() != im ; ++im )
+    for ( std::vector<double>::const_iterator im = masses.begin() ; masses.end() != im ; ++im )
     { m_threshold += std::abs ( *im ) ; }
   }
 }
@@ -584,10 +654,63 @@ Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
 ( const Ostap::Math::PhaseSpace2& ps2   , 
   const double                    scale ) 
-  : m_threshold ( ps2.m1()  + ps2.m2()  ) 
-  , m_num       ( 0       ) // ATTENTION HERE!! 
+  : m_threshold ( ps2.lowEdge() ) 
+  , m_num       ( 2       ) 
   , m_scale     ( scale   ) 
-  , m_ps2       ( ps2     ) 
+  , m_ps2       ( new PhaseSpace2 ( ps2 ) ) 
+  , m_ps3       ( nullptr ) 
+  , m_ps3s      ( nullptr ) 
+{}
+// ============================================================================
+// special case: true 3-body phasespace 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const Ostap::Math::PhaseSpace3& ps3   , 
+  const double                    scale ) 
+  : m_threshold ( ps3.lowEdge() ) 
+  , m_num       ( 3       ) 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( nullptr ) 
+  , m_ps3       ( new PhaseSpace3 ( ps3 ) ) 
+  , m_ps3s      ( nullptr ) 
+{}
+// ============================================================================
+// special case: true 3-body phasespace 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const Ostap::Math::PhaseSpace3s& ps3   , 
+  const double                     scale ) 
+  : m_threshold ( ps3.lowEdge() ) 
+  , m_num       ( 3       ) 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( nullptr ) 
+  , m_ps3       ( nullptr ) 
+  , m_ps3s      ( new PhaseSpace3s ( ps3 ) ) 
+{}
+// ============================================================================
+// special case: N from L 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const Ostap::Math::PhaseSpaceNL& ps    , 
+  const double                     scale ) 
+  : m_threshold ( ps.lowEdge() ) 
+  , m_num       ( ps.L ()      ) 
+  , m_scale     ( scale   ) 
+  , m_ps2       ( nullptr ) 
+  , m_ps3       ( nullptr ) 
+  , m_ps3s      ( nullptr ) 
+{}
+// ============================================================================
+// Copy constructor 
+// ============================================================================
+Ostap::Math::PhaseSpaceLeft::PhaseSpaceLeft
+( const Ostap::Math::PhaseSpaceLeft& right )  
+  : m_threshold ( right.m_threshold ) 
+  , m_num       ( right.m_num       ) 
+  , m_scale     ( right.m_scale     ) 
+  , m_ps2       ( right.m_ps2  ? new PhaseSpace2  ( *right.m_ps2  ) : nullptr ) 
+  , m_ps3       ( right.m_ps3  ? new PhaseSpace3  ( *right.m_ps3  ) : nullptr ) 
+  , m_ps3s      ( right.m_ps3s ? new PhaseSpace3s ( *right.m_ps3s ) : nullptr ) 
 {}
 // ============================================================================
 // destructor
@@ -602,11 +725,14 @@ double Ostap::Math::PhaseSpaceLeft::operator () ( const double x ) const
   const double  t = threshold ()  ;
   if ( t >= x ) { return 0 ; }
   //
-  const double y = t + m_scale * ( x - t ) ;
+  const double y = t + m_scale * ( x - t ) ; // SCALE IT! 
   //
-  if ( 0 == m_num ) { return m_ps2 ( y ) ; }
+  return 
+    m_ps2  ? ( *m_ps2  ) ( y ) :                                 // Two-body 
+    m_ps3  ? ( *m_ps3  ) ( y ) :                                 // Three-body 
+    m_ps3s ? ( *m_ps3s ) ( y ) :                                 // Three-body 
+    std::pow ( ( y - t ) / y , 3 * 0.5 * m_num - 5 * 0.5  ) ;    // Generic 
   //
-  return std::pow ( ( y - t ) / y , 3 * 0.5 * m_num - 5 * 0.5  ) ;
 }
 // ============================================================================
 double Ostap::Math::PhaseSpaceLeft::integral 
@@ -622,7 +748,9 @@ double Ostap::Math::PhaseSpaceLeft::integral
   const double xlow  = std::max ( xmin , t ) ;
   const double xhigh = std::max ( xmax , t ) ;
   //
-  if ( 0 == m_num ) { return m_ps2.integral ( xlow , xhigh ) ; }
+  if      ( m_ps2  ) { return m_ps2  -> integral ( xlow , xhigh ) ; }
+  else if ( m_ps3  ) { return m_ps3  -> integral ( xlow , xhigh ) ; }
+  else if ( m_ps3s ) { return m_ps3s -> integral ( xlow , xhigh ) ; }
   //
   // use GSL to evaluate the integral
   //
@@ -673,20 +801,41 @@ bool Ostap::Math::PhaseSpaceLeft::setThreshold ( const double value )
   const double t = threshold (       ) ;
   if ( s_equal ( a , t ) ) { return false ; } // RETURN
   ///
-  if ( 0 == m_num ) 
+  if ( m_ps2 ) 
   {
-    m_ps2.setM1 ( m_ps2.m1 () * ( a / t ) ) ;
-    m_ps2.setM2 ( m_ps2.m2 () * ( a / t ) ) ;
-    return true  ;
+    m_ps2  -> setM1 ( m_ps2  -> m1 () * ( a / t ) ) ;
+    m_ps2  -> setM2 ( m_ps2  -> m2 () * ( a / t ) ) ;
   }
+  else if ( m_ps3 ) 
+  {
+    m_ps3  -> setM1 ( m_ps3  -> m1 () * ( a / t ) ) ;
+    m_ps3  -> setM2 ( m_ps3  -> m2 () * ( a / t ) ) ;
+    m_ps3  -> setM3 ( m_ps3  -> m3 () * ( a / t ) ) ;
+  }
+  else if ( m_ps3s ) 
+  {
+    m_ps3s -> setM1 ( m_ps3s -> m1 () * ( a / t ) ) ;
+    m_ps3s -> setM2 ( m_ps3s -> m2 () * ( a / t ) ) ;
+    m_ps3s -> setM3 ( m_ps3s -> m3 () * ( a / t ) ) ;
+  }
+  // generic case 
   m_threshold = a ;
+  //
   return true ;
 }
 // ============================================================================
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpaceLeft::tag () const  // get the tag
-{ return std::hash_combine ( m_threshold , m_num , m_scale , m_ps2.tag () ) ; }
+{ 
+  return std::hash_combine ( m_threshold ,
+                             m_num       , 
+                             ps_case ()  , 
+                             m_scale     ,
+                             m_ps2  ? m_ps2  -> tag () : 0 , 
+                             m_ps3  ? m_ps3  -> tag () : 0 , 
+                             m_ps3s ? m_ps3s -> tag () : 0 ) ;
+}
 // ============================================================================
 
 // ============================================================================

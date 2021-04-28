@@ -1984,7 +1984,7 @@ namespace Ostap
     } ;
     // ========================================================================
     /** @class PhaseSpaceLeft
-     *  simple model for left-edge of N-body phase-space
+     *  Simple model for left-edge of N-body phase-space
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
@@ -2001,7 +2001,68 @@ namespace Ostap
                        const char*          title     ,
                        RooAbsReal&          x         ,
                        RooAbsReal&          threshold ,
+                       RooAbsReal&          scale     ,
+                       const Ostap::Math::PhaseSpaceLeft& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       const Ostap::Math::PhaseSpaceLeft& left ) ;      
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       RooAbsReal&          scale     ,
+                       const Ostap::Math::PhaseSpace2& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       const Ostap::Math::PhaseSpace2& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       RooAbsReal&          scale     ,
+                       const Ostap::Math::PhaseSpace3& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       const Ostap::Math::PhaseSpace3& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       RooAbsReal&          scale     ,
+                       const Ostap::Math::PhaseSpace3s& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       const Ostap::Math::PhaseSpace3s& left ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       RooAbsReal&          scale     ,
                        const unsigned short N         ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeft ( const char*          name      ,
+                       const char*          title     ,
+                       RooAbsReal&          x         ,
+                       RooAbsReal&          threshold ,
+                       const unsigned short N         ) ;
+      
+
       /// "copy constructor"
       PhaseSpaceLeft ( const PhaseSpaceLeft& right     ,
                        const char*           name  = 0 )  ;
@@ -2044,6 +2105,7 @@ namespace Ostap
       // ======================================================================
       RooRealProxy m_x         ;
       RooRealProxy m_threshold ;
+      RooRealProxy m_scale     ;
       // ======================================================================
     private:
       // ======================================================================
@@ -2054,7 +2116,7 @@ namespace Ostap
     // ========================================================================
     /** @class PhaseSpaceRight
      *  simple model for right-edge of L-body phase-space in N-body decays
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-11-30
      */
     class PhaseSpaceRight : public RooAbsPdf
@@ -2358,6 +2420,51 @@ namespace Ostap
         const char*                        title  ,
         RooRealVar&                        x      ,
         const Ostap::Math::PhaseSpaceLeft& ps     ,
+        RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
+        RooArgList&                        phis   ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const Ostap::Math::PhaseSpace2&    ps     ,
+        RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
+        RooArgList&                        phis   ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const Ostap::Math::PhaseSpace3&    ps     ,
+        RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
+        RooArgList&                        phis   ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const Ostap::Math::PhaseSpace3s&   ps     ,
+        RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
+        RooArgList&                        phis   ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const Ostap::Math::PhaseSpaceNL&   ps     ,
+        RooAbsReal&                        tau    ,
+        RooAbsReal&                        scale  ,
+        RooArgList&                        phis   ) ;
+      /// constructor from all parameters
+      PhaseSpaceLeftExpoPol
+      ( const char*                        name   ,
+        const char*                        title  ,
+        RooRealVar&                        x      ,
+        const unsigned short               ps     ,
         RooAbsReal&                        tau    ,
         RooAbsReal&                        scale  ,
         RooArgList&                        phis   ) ;

@@ -8,13 +8,17 @@
   1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
   1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
   1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
-
+  1. more coherency for different `Ostap::Math::PhaseSpace*` classes 
+  1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
 
 ## Backward incompatible changes: 
 
 ## Bug fixes:
 
   1. fix asserion statement in `dalitz.py` 
+  1. fix a bug in analytic  three-body phase space for cases with zero masses 
+  1. fix a bug in numerical three-body phase space for case with all zero masses 
+
 
 # v1.6.1.0
 

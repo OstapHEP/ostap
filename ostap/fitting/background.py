@@ -60,6 +60,11 @@ from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
+## list of "left" phase space functions 
+PSL = ( Ostap.Math.PhaseSpaceLeft , Ostap.Math.PhaseSpaceNL ,
+        Ostap.Math.PhaseSpace2    , Ostap.Math.PhaseSpace3  , Ostap.Math.PhaseSpace3s )
+
+    
 models  = []
 # =============================================================================
 ##  @class PolyBase
@@ -726,25 +731,22 @@ class PSLeftExpoPol_pdf(PolyBase) :
     def __init__ ( self             ,
                    name             ,  ## the name 
                    xvar             ,  ## the variable
-                   phasespace       ,  ## Ostap::Math::PhaseSpace(Left/2)
+                   phasespace       ,  ## phase space object 
                    power    = 2     ,  ## degree of the polynomial
                    tau      = None  ,  ## the exponent 
                    scale    = 1     ,  ## the exponent 
                    the_phis = None  ) :         
         #
-        #
+        ## check the type of phasespace 
+        assert isinstance ( phasespace , PSL ) or ( isinstance ( phasespce , integer_types ) and 2 <= ps ) , \
+               "Invalid type of ``phasespace'' %s/%s" % ( phasespace , type ( phasespace ) )
+
+        ## initialize the base 
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #
-        if isinstance ( phasespace , Ostap.Math.PhaseSpace2 ) :
-            ps         = phasespace 
-            ## phasespace = Ostap.Math.PhaseSpaceLeft ( 'a' , ps.m1() , ps.m2 () , 1 )
-            phasespace = Ostap.Math.PhaseSpaceLeft ( ps , 1 )
-            
-        assert isinstance ( phasespace , Ostap.Math.PhaseSpaceLeft ), \
-               'Illegal type of "phasespace" parameter'
 
-        self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
-        self.__power = power
+        self.__phasespace = phasespace 
+        self.__power      = power
         
         limits_tau = () 
         if self.xminmax() : 
@@ -764,13 +766,13 @@ class PSLeftExpoPol_pdf(PolyBase) :
         #
         self.__scale = self.make_var ( scale             ,
                                       "scale_%s"  % name ,
-                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+3 )
+                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+6 )
         
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
             self.roo_name ( "psepol_"  ) ,
-            "Phase space and exponent  modulated by polynomial %s" % self.name  , 
+            "Phase space and exponent modulated by polynomial %s" % self.name  , 
             self.xvar            ,
-            self.phasespace      ,  ## Ostap::Math::PhaseSpaceLeft
+            self.phasespace      ,  
             self.tau             , 
             self.scale           , 
             self.phi_list        )
@@ -790,22 +792,24 @@ class PSLeftExpoPol_pdf(PolyBase) :
     def mass ( self ) :
         """``mass''-variable for the fit (alias for ``x'' or ``xvar'')"""
         return self.xvar
+    
     @property
     def power ( self ) :
         """``power''-parameter (polynomial order) for PSLeftExpoPol-function"""
         return self.__power
+    
     @property
     def phasespace ( self ) :
         """``phasespace''-function for PS*exp*pol function"""
-        return self.__ps    
+        return self.__phasespace
+    
     @property
     def tau ( self ) :
         """``tau''-parameter - exponential slope"""
         return self.__tau
     @tau.setter
     def tau ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , float ( value ) ) 
         
     @property
     def scale( self ) :
@@ -813,8 +817,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
-        value = float ( value )
-        self.__scale.setVal ( value )
+        self.set_value ( self.__scale , float ( value ) ) 
     
 models.append ( PSLeftExpoPol_pdf ) 
 
@@ -1365,76 +1368,117 @@ class PS2_pdf(PDF) :
 models.append ( PS2_pdf ) 
 # =============================================================================
 ## @class  PSLeft_pdf
-#  Left edge of N-body phase space
+#  Left edge of N-body phase space (with possible scaling)
 #  @code 
 #  mass  = ... ## mass variable
 #  low   = 139 + 139 + 139  ## 3 pion mass
-#  model = PSLeft_pdf ( 'PDF' , mass , low , 3  )
+#  model = PSLeft_pdf ( 'PDF' , mass , 3 , low )
 #  @endcode 
 #  @see Ostap::Models::PhaseSpaceLeft
 #  @see Ostap::Math::PhaseSpaceLeft
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSLeft_pdf(PDF) :
-    """Left edge of N-body phase space function
+    """Left edge of N-body phase space function (with possible scaling)
     >>> mass  = ... ## mass variable
     >>> low   = 139 + 139 + 139  ## 3 pion mass
-    >>> model = PSLeft_pdf ( 'PDF' , mass , low , 3  )   
+    >>> model = PSLeft_pdf ( 'PDF' , mass , 3 , low )   
     """
     ## constructor
-    def __init__ ( self             ,
-                   name             ,   ## the name 
-                   xvar             ,   ## the variable
-                   N                ,   ## N 
-                   left   = None    ) : 
-        #
+    def __init__ ( self           ,
+                   name           , ## the name 
+                   xvar           , ## the variable
+                   phasespace     , ## phase space object 
+                   left   = None  ,
+                   scale  = None  ) : 
+        
+        ## check the type of phasespace 
+        assert isinstance ( phasespace , PSL ) or ( isinstance ( phasespce , integer_types ) and 2 <= ps ) , \
+               "Invalid type of ``phasespace'' %s/%s" % ( phasespace , type ( phasespace ) )
+
+        # 
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
         #
-        self.__N    = N
-        self.__left = self.make_var ( left                ,
-                                'left_%s'    % name ,
-                                'm_left(%s)' % name ,
-                                None , *self.xminmax() ) 
+        
+        self.__phasespace = phasespace
 
+        if self.xminmax() :
+            mn , mx = self.xminmax()
+            mn = max ( 0 , mn - 0.25 * ( mx - mn ) )
+            lminmax = mn , mx 
+        else :
+            lminmax = ()
+            
+        ## left threshold variable 
+        self.__left = self.make_var ( left                     ,
+                                      'left_%s'    % self.name ,
+                                      'm_left(%s)' % self.name , None , left , *lminmax ) 
+
+        ## scale variable 
+        if scale is None :
+            self.__scale = ROOT.RooFit.RooConst ( 1.0 )
+        else             :
+            self.__scale = self.make_var ( scale                   ,
+                                           'scale_%s'  % sefl.name ,
+                                           'scale(%s)' % self.name , None , scale , 0.1 , 1.e+6 )
+            
         if  self.xminmax() and self.left.minmax() : 
             mn  , mx  = self.xminmax()
             lmn , lmx = self.left.minmax()            
-            assert lmn <= mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
+            assert lmn < mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
+
 
         self.pdf  = Ostap.Models.PhaseSpaceLeft (
             self.roo_name ( "psl_"  )   ,
-            "Left edge of phase space %s" % self.name  , 
-            self.xvar ,
-            self.left ,
-            self.N    ) 
+            "Left edge of the phase space %s" % self.name  , 
+            self.xvar       ,
+            self.left       ,
+            self.scale      ,
+            self.phasespace )
         
         ## save configuration 
         self.config = {
-            'name'       : self.name ,
-            'xvar'       : self.xvar ,
-            'N'          : self.N    ,            
-            'left'       : self.left ,            
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'phasespace' : self.phasespace ,            
+            'left'       : self.left       ,            
+            'scale'      : self.scale      ,            
             }
-
+        
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
     
     @property
-    def N( self ) :
-        """define N-body phase space"""
-        return self.__N
+    def scale ( self ) : 
+        """``scale'' : scale-factor for left-threshold"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , float ( value ) , ok = lambda a , b : 0 < b ) 
+        
     @property
     def left( self ) :
         """(left) threshold for N-body phase space"""
         return self.__left
     @left.setter
     def left ( self , value ) :
-        value = float ( value )
-        self.__left.setVal ( value  )
-        return self.__left.getVal()
+        self.set_value ( self.__left , float ( value ) )
+    
+    @property
+    def threshold ( self ) :
+        """``threshold'' : threshold position, same as ``left''"""
+        return self.left
+    @threshold.setter
+    def threshold ( self , value ) :
+        self.left = value
+        
+    @property
+    def phasespace ( self ) :
+        """``phasespace'' : phase space object (or number of particles)"""
+        return self.__phasespace
 
 models.append ( PSLeft_pdf ) 
 # =============================================================================

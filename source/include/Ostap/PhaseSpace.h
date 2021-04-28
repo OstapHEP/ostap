@@ -314,6 +314,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second mass 
+      ///  set the third mass 
+      bool setM3  ( const double value ) ; // set the  third mass 
+     // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag 
       std::size_t tag ()  const ;
       // ======================================================================
@@ -403,6 +412,15 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second mass 
+      ///  set the third mass 
+      bool setM3  ( const double value ) ; // set the  third mass 
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag 
       std::size_t tag ()  const ;
       // ======================================================================
@@ -432,123 +450,7 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace2 ;    // integration workspace
       // ======================================================================
     } ;
-    // ========================================================================
-    /** @class PhaseSpaceLeft
-     *  Function to represent N-body phase space near the left-threshold
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  PhaseSpaceLeft
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from threshold and number of particles and  scale
-      PhaseSpaceLeft ( const double                    threshold = 0 ,
-                       const unsigned short            num       = 2 , 
-                       const double                    scale     = 1 ) ;      
-      /// constructor from the list of masses
-      PhaseSpaceLeft ( const std::vector<double>&      masses        , 
-                       const double                    scale     = 1 ) ;      
-      /// special case: true 2-body phasespace 
-      PhaseSpaceLeft ( const PhaseSpace2& ps2        , 
-                       const double       scale =  1 ) ;
-      /// destructor
-      ~PhaseSpaceLeft () ;                                       // destructor
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate N-body phase space near the left threshold
-      double operator   () ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the threshold 
-      double         threshold  () const { return m_threshold ; }
-      /// get the number of particles : 0 means true 2-body! 
-      unsigned short N          () const { return m_num       ; }
-      /// get the scale 
-      double         scale      () const { return m_scale     ; }
-      // ======================================================================
-      const PhaseSpace2& ps2    () const { return m_ps2       ; }
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      double integral   ( const double xmin , const double xmax ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      bool setThreshold ( const double x ) ;
-      bool setScale     ( const double x ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the tag  
-      std::size_t tag   () const ; // get the hash 
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the threshold
-      double         m_threshold         ; // the threshold
-      /// number of particles
-      unsigned short m_num       { 0   } ; // number of particles
-      /// the scale  factor 
-      double         m_scale     { 1.0 } ; // the scale factor
-      /// true 2-body phase-space 
-      PhaseSpace2    m_ps2       {}      ;
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace {} ;    // integration workspace
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class PhaseSpaceRight
-     *  simple function to represent L/N-body phase space near right-threshold
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class  PhaseSpaceRight
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// constructor from threshold and number of particles
-      PhaseSpaceRight ( const double         threshold = 10 ,
-                        const unsigned short l         = 2  ,
-                        const unsigned short n         = 3  ) ;
-      /// deststructor
-      ~PhaseSpaceRight () ;                                     // deststructor
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate N/L-body phase space near right  threhsold
-      double operator () ( const double x ) const ;
-      // ======================================================================
-    public: // integrals
-      // ======================================================================
-      double integral ( const double xmin , const double xmax ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      bool setThreshold ( const double x ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the tag  
-      std::size_t tag () const ; // get the hash 
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the threshold
-      double         m_threshold ; // the threshold
-      /// number of particles
-      unsigned short m_N         ; // number of particles
-      /// number of particles
-      unsigned short m_L         ; // number of particles
-      // ======================================================================
-    } ;  
+
     // ========================================================================
     /** @class PhaseSpaceNL
      *  Function epresenting the approximation for
@@ -594,7 +496,7 @@ namespace Ostap
                      const unsigned short l    =  2 ,
                      const unsigned short n    =  3 ) ;
       /// destructor
-      ~PhaseSpaceNL () ;                                     // deststructor
+      ~PhaseSpaceNL () ;                                     // destructor
       // ======================================================================
     public:
       // ======================================================================
@@ -649,6 +551,171 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class PhaseSpaceLeft
+     *  Function to represent N-body phase space near the left-threshold
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  PhaseSpaceLeft
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** @enum Case
+       *  The actual case of the phase space 
+       */
+      enum Case { Generic    , 
+                  TwoBody    , 
+                  ThreeBody  , 
+                  ThreeBodyS } ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from threshold and number of particles and  scale
+      PhaseSpaceLeft ( const double                    threshold = 0 ,
+                       const unsigned short            num       = 2 , 
+                       const double                    scale     = 1 ) ;      
+      /// constructor from the list of masses
+      PhaseSpaceLeft ( const std::vector<double>&      masses        , 
+                       const double                    scale     = 1 ) ;      
+      /// special case: true 2-body phasespace 
+      PhaseSpaceLeft ( const PhaseSpace2&  ps2        , 
+                       const double        scale =  1 ) ;
+      /// special case: true 3-body phases pace 
+      PhaseSpaceLeft ( const PhaseSpace3&  ps2        , 
+                       const double        scale =  1 ) ;
+      /// special case: true 3-body phasespace 
+      PhaseSpaceLeft ( const PhaseSpace3s& ps3        , 
+                       const double        scale =  1 ) ;
+      /// special case: L from N phasespace 
+      PhaseSpaceLeft ( const PhaseSpaceNL& ps         , 
+                       const double        scale =  1 ) ;
+      /// copy contructor 
+      PhaseSpaceLeft ( const PhaseSpaceLeft&  right ) ;
+      /// move contructor 
+      PhaseSpaceLeft (       PhaseSpaceLeft&& right ) = default ;
+      /// destructor
+      ~PhaseSpaceLeft () ;                                       // destructor
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate N-body phase space near the left threshold
+      double operator   () ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the threshold 
+      double         threshold  () const { return m_threshold ; }
+      /// get the number of particles 
+      unsigned short N          () const { return m_num       ; }
+      /// get the scale 
+      double         scale      () const { return m_scale     ; }
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double integral   ( const double xmin , const double xmax ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setThreshold ( const double x ) ;
+      bool setScale     ( const double x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// specific case? 
+      Case ps_case () const 
+      {
+        return 
+          m_ps3  ? ThreeBody  :
+          m_ps3s ? ThreeBodyS :
+          m_ps2  ? TwoBody    : Generic ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag   () const ; // get the hash 
+      // ======================================================================
+    public: // get specific phase space object (if defined) 
+      // ======================================================================
+      /// get true two-body   phase space (if defined) 
+      const PhaseSpace2*  ps2 () const { return m_ps2.get () ; }      
+      /// get true three-body phase space (if defined) 
+      const PhaseSpace3*  ps3 () const { return m_ps3.get () ; }
+      /// get true three-body phase space (if defined) 
+      const PhaseSpace3s* ps3s() const { return m_ps3s.get() ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the threshold
+      double         m_threshold         ; // the threshold
+      /// number of particles
+      unsigned short m_num       { 0   } ; // number of particles
+      /// the scale  factor 
+      double         m_scale     { 1.0 } ; // the scale factor
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// true 2-body phase-space 
+      std::unique_ptr<PhaseSpace2>   m_ps2  { nullptr } ;
+      /// true 3-body phase-space 
+      std::unique_ptr<PhaseSpace3>   m_ps3  { nullptr } ;
+      /// true 3-body phase-space 
+      std::unique_ptr<PhaseSpace3s>  m_ps3s { nullptr } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace {} ;    // integration workspace
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class PhaseSpaceRight
+     *  simple function to represent L/N-body phase space near right-threshold
+     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class  PhaseSpaceRight
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from threshold and number of particles
+      PhaseSpaceRight ( const double         threshold = 10 ,
+                        const unsigned short l         = 2  ,
+                        const unsigned short n         = 3  ) ;
+      /// deststructor
+      ~PhaseSpaceRight () ;                                     // deststructor
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate N/L-body phase space near right  threhsold
+      double operator () ( const double x ) const ;
+      // ======================================================================
+    public: // integrals
+      // ======================================================================
+      double integral ( const double xmin , const double xmax ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setThreshold ( const double x ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag () const ; // get the hash 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the threshold
+      double         m_threshold ; // the threshold
+      /// number of particles
+      unsigned short m_N         ; // number of particles
+      /// number of particles
+      unsigned short m_L         ; // number of particles
+      // ======================================================================
+    } ;  
     // ========================================================================
     /** @class PSDalitz 
      *  @see Ostap::Kinematics::Dalitz
