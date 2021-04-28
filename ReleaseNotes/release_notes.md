@@ -7,6 +7,8 @@
   1. add `da_combine` functions to combine two datasets with weights 
   1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
   1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
+  1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
+
 
 ## Backward incompatible changes: 
 

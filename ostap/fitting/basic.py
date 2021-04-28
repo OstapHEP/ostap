@@ -437,8 +437,12 @@ class PDF (FUNC) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
+        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
+        
         if   result and 0 == result.status() and not silent :
             logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and ( not cov2_good ) and not silent : 
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
         elif result and not silent :
             logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 

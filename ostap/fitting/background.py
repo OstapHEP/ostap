@@ -37,7 +37,8 @@ __all__     = (
     'PSNL_pdf'          , ## L-body phase space from N-body decays  
     'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
-    'PSSmear_pdf'       , ## smeared PhaseSpace-based PDF 
+    'PSSmear_pdf'       , ## smeared (left/right, Gaussian) PhaseSpace-based PDF 
+    'PSSmear2_pdf'      , ## smeared (left, generic)        PhaseSpace-based PDF 
     ## 
     ## get the native RooFit background shapes
     ##
@@ -1769,7 +1770,7 @@ models.append ( PS23L_pdf )
 #  such as product of step* and step exceed 3, one can get very good approximation
 #  to real convolution.
 # 
-#  The gaussian function for smear/convolution is evaluated at folloiwing points
+#  The gaussian function for smear/convolution is evaluated at following points
 #  \f$ x_0, x_0\pm s\sigma,x_0\pm 2s\sigma,...x_0\pm ns\sigma,...\f$, where
 #   - \f$\sigma\f$ corresponds to <code>sigma</code> 
 #   - \f$s\f$ corresponds to <code>step</code> 
@@ -1844,12 +1845,12 @@ class PSSmear_pdf ( PDF ) :
         
         if   isinstance  ( ps0 , Ostap.Math.PhaseSpaceNL    ) :
             
-            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge ()
+            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge () , ps0.L() , ps0.N() 
             
-            ## 1.75 is a safety factor here 
-            assert xmx - xmn > 1.75 * 0.5 * asigma * nhalfsigma, \
-                   'Interval is too small (%s,%s) for such large smearing %s*%s' % (
-                xmn , xmx , sigma , 0.5 * nhalfsigma )
+            ## ## 1.75 is a safety factor here 
+            ## assert xmx - xmn > 1.75 * 0.5 * asigma * nhalfsigma, \
+            ##        'Interval is too small (%s,%s) for such large smearing %s*%s' % (
+            ##    xmn , xmx , sigma , 0.5 * nhalfsigma )
             
             if   0 < sigma : PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn + x , xmx , L , N )
             elif 0 > sigma : PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn , xmx + x , L , N )
@@ -1972,6 +1973,222 @@ class PSSmear_pdf ( PDF ) :
     def fractions ( self ) :
         """``fractions'' : calcualted fractions"""
         return tuple ( self.__fractions ) 
+
+
+# ==============================================================================
+## @class PSSmear2_pdf
+#  Usefull class to represent "smear" phase space function
+#  @code
+#  pspdf = PSPol_pdf ( ... )
+#  gamma = 10 * MeV 
+#  shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+#  values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
+#  smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values ) 
+#  @endcode
+#  It is very useful to smear left thresholds for phase-space-based PDFs.
+#
+#  This PDF is a weighted sum of <code>len(values)</code> components
+#  with fixed coefficients. Each component corresponds to small shift in
+#  left edge of the phase space, and the components 
+#  are weighted accoring to profile function
+#
+#  It is *not* a real convolution with profile function, but some approximation
+# 
+#  The phase-space-based PDF is required to have a method <code>phasespace</code>
+#  that returns object of the type :
+#  - Ostap::Math::PhaseSpaceNL    
+#  - Ostap::Math::PhaseSpace2    
+#  - Ostap::Math::PhaseSpace3    
+#  - Ostap::Math::PhaseSpace3s    
+#  - Ostap::Math::PhaseSpaceLeft
+#
+#  The phase-space-based PDF is required to have constructor with keyword
+#  <code>phasespace</code>
+#  @see Ostap::Math::PhaseSpaceNL    
+#  @see Ostap::Math::PhaseSpace2    
+#  @see Ostap::Math::PhaseSpace3    
+#  @see Ostap::Math::PhaseSpace3s    
+#  @see Ostap::Math::PhaseSpaceLeft
+class PSSmear2_pdf ( PDF ) :
+    """ Usefull class to represent ``smear'' phase space function
+    >>> pspdf = PSPol_pdf ( ... )
+    >>> gamma = 10 * MeV 
+    >>> shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+    >>> values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
+    >>> smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values )
+    
+    - It is very useful to smear left thresholds for phase-space-based PDFs.
+    
+    - This PDF is a weighted sum of `len(values)` components
+    with fixed coefficients. Each component corresponds to small shift in
+    left edge of the phase space, and the components 
+    are weighted accoring to profile function
+    
+    - It is *not* a real convolution with profile function, but some approximation
+    
+    - The phase-space-based PDF is required to have a method `phasespace`
+    that returns object of the type :
+    - `Ostap.Math.PhaseSpaceNL`    
+    - `Ostap.Math.PhaseSpace2`    
+    - `Ostap.Math.PhaseSpace3`    
+    - `Ostap.Math.PhaseSpace3s`    
+    - `Ostap.Math.PhaseSpaceLeft`
+    """
+    def __init__ ( self          ,
+                   pdf0          ,
+                   profile       ,
+                   values        , 
+                   name   = ''   ) :
+
+        assert callable ( profile ) , "PSSmear2_pdf: ``profile'' must be callable!"
+
+        self.__profile  = profile
+        
+        ## initialize the base
+        name =  name if name else pdf0.name + '_smear2'
+        PDF.__init__ ( self , name , pdf0.xvar )
+
+        ## keep the template 
+        self.__pdf0 = pdf0
+        
+        vals = list ( set ( [ v for v in values ] ) ) 
+        vals.sort()
+        self.__values = tuple ( vals )
+        
+        nn = len ( self.values )        
+        assert 3 < nn , 'PSSmear2_pdf: At least three different points must be specified!'
+        
+        ##
+        ps0    = self.pdf0.phasespace
+
+        if   isinstance  ( ps0 , Ostap.Math.PhaseSpaceNL    ) :
+            
+            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge () , ps0.L() , ps0.N() 
+            
+            PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn + x , xmx , L , N )
+
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace2     ) :
+
+            m1 , m2 = ps0.m1() , ps0.m2() 
+            PS = lambda x : Ostap.Math.PhaseSpace2 ( m1 + x , m2 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3     ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3 ( m1 + x , m2 , m3 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3s    ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3s ( m1 + x , m2 , m3 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpaceLeft  ) :
+            
+            N = ps0.N ()
+            if 2 <= N :
+                t , s = ps0.threshold() , ps0.scale() 
+                PS = lambda x : Ostap.Math.PhaseSpaceLeft ( t + x , N , s )
+            else      :
+                ps2 = ps0.ps2() 
+                m1 , m2 , s = ps2.m1() , ps2.m2() , ps0.scale() 
+                PS2 = lambda x : Ostap.Math.PhaseSpace2    ( m1 + x    , m2 )
+                PS  = lambda x : Ostap.Math.PhaseSpaceLeft ( PS2 ( x ) , s  )
+
+        else :
+            
+            raise AttributeError ('Illegal type of "phasespace"!')
+
+        ## get numerical integration 
+        from ostap.math.integral import integral as _integral 
+
+        self.__pdfs = []
+        self.__ws   = []
+
+        nn = len ( self.values )        
+        for i , v in enumerate ( self.values ) : 
+
+            first = ( i     == 0  ) 
+            last  = ( i + 1 == nn )             
+            
+            if first  : xmin =         self.values [ i ]
+            else      : xmin = 0.5 * ( self.values [ i ] + self.values [ i - 1 ] )
+            
+            if last   : xmax =         self.values [ i ] 
+            else      : xmax = 0.5 * ( self.values [ i ] + self.values [ i + 1 ] )
+
+            ## calculate the contribution of this component
+            iint = _integral ( profile , xmin = xmin , xmax = xmax )
+            ## if first or last : iint *= 2 ## Needed? 
+
+            wv   = iint
+            
+            psv  = PS ( v )
+            pdfv = self.pdf0.clone ( name = self.generate_name ( self.name + '%dv' % i ) , phasespace = psv )
+
+            self.__pdfs.append ( pdfv )
+            self.__ws  .append ( wv   )
+            
+        self.__pdfs = tuple ( self.__pdfs )
+
+        ## normalize fractions
+        wsum = sum ( self.__ws )
+        assert 0 < wsum , 'PSSmear2_pdf: illegal sum of weights: %s/%d' % ( wsum , len ( self.__ws ) )
+        
+        self.__ws   = [ v/wsum for v in self.__ws ]
+        self.__ws   = tuple ( self.__ws [ :-1 ] )   ## and skip the last!
+
+        ## create fixed fractions 
+        self.__ff = []
+        for i , w in enumerate ( self.__ws  ) :
+            f = ROOT.RooConstVar ( self.generate_name ( 'f' + self.name + '_Ffix%d' % i ) , 'fixed fraction' , w )
+            self.__ff.append ( f )
+        self.__ff = tuple ( self.__ff )
+
+        ## create the final PDF 
+        self.pdf , self.__fractions , _ = self.add_pdf (
+            [ i.pdf for i in self.__pdfs ] ,
+            self.name                 ,          
+            'Smeared phase-space %s' % self.name , 
+            'some_pattern%d'          , 
+            'some_pattern%d'          ,
+            recursive = False         ,
+            fractions = self.__ff     )
+        
+        self.config = {
+            'name'    : self.name    ,            
+            'pdf0'    : self.pdf0    ,
+            'values'  : self.values  , 
+            'profile' : self.profile ,  
+            }
+        
+    @property
+    def profile ( self ) :
+        """``profile'' : profiel for smearing"""
+        return self.__profile 
+    @property
+    def pdf0   ( self ) :
+        """``pdf0'' : non-smeared original PDF"""
+        return self.__pdf0
+    @property
+    def pdfs   ( self ) :
+        """``pdfs'' : the tuple of all PDFs"""
+        return self.__pdfs
+    @property
+    def ws     ( self ) :
+        """``ws'' : calculated fractions"""
+        return self.__ws
+    @property
+    def ffs    ( self ) :
+        """``ffs'' : calculated fractions"""
+        return self.__ff 
+    @property
+    def fractions ( self ) :
+        """``fractions'' : calcualted fractions"""
+        return tuple ( self.__fractions ) 
+    @property
+    def values ( self ) :
+        """``values'' : list of abscissas where profile is evaluated"""
+        return self.__values 
 
 # ==============================================================================
 ##  @class RooPoly
