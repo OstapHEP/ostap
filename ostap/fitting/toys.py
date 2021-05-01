@@ -2,29 +2,30 @@
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/fitting/toys.py
-#  Simple utilities to run fitting toys   
+#  Simple utilities to run fitting toys, Jackknife, bootstrap, etc...    
 #  @date   2020-01-18
 #  @author Vanya  BELYAEV Ivan.Belyaev@itep.ru
-#  - thanks to Albert PUIG
-#
 # =============================================================================
-""" Simple utilities to run fitting toys
-Python interface to two major TMVA classes
+""" Simple utilities to run fitting toys, Jackknife, bootstrap, ..
 """
 # =============================================================================
 __author__  = 'Vanya BELYAEV  Ivan.Belyaev@itep.ru'
 __date__    = "2020-01-18"
 __version__ = '$Revision$'
 __all__     = (
-    "make_toys"      , ## run fitting toys (the same PDF to generate and fit)
-    "make_toys2"     , ## run fitting toys (separate models to generate and fit)
-    "vars_transform" , ## helper fnuction to transform the variables
-    "print_stats"    , ## print statistics of toys 
+    "make_toys"        , ## run fitting toys (the same PDF to generate and fit)
+    "make_toys2"       , ## run fitting toys (separate models to generate and fit)
+    'make_jackknife'   , ## run Jackknife analysis 
+    'make_bootstrap'   , ## run Bootstrapanalysis 
+    "vars_transform"   , ## helper fnuction to transform the variables
+    "print_stats"      , ## print toys      statistics 
+    "print_jackknife"  , ## print jackknife statistics 
+    "print_bootstrap"  , ## print bootstrap statistics 
     )
 # =============================================================================
 import ROOT
 from   builtins          import range
-#
+from   ostap.core.core   import VE
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,7 +33,7 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.toys' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
-logger.debug ( 'Utilities to run fitting toys')
+logger.debug ( 'Utilities to run fitting toys, Jackknife, bootstrap, ... ')
 # ==============================================================================
 ## Technical transformation  to the dictionary :  { 'name' : float_value }
 def vars_transform ( vars ) :
@@ -55,15 +56,14 @@ def vars_transform ( vars ) :
                 result [ p.GetName()  ] = float ( p )
             
     return result
+
 # =============================================================================
 ## print statistics of pseudoexperiments
-def print_stats (  stats , ntoys = '???' ) :
+def print_stats (  stats , ntoys = '' , logger = logger ) :
     """print statistics of pseudoexperiments
     """
     
     table = [ ( 'Parameter' , '#', 'mean' , 'rms' , '%13s / %-13s' % ( 'min' , 'max' ) ) ] 
-    keys = stats.keys()
-    keys = sorted ( keys )
 
     def make_row ( c ) :
         n      = "{:^11}".format ( c.nEntries() )
@@ -73,7 +73,6 @@ def print_stats (  stats , ntoys = '???' ) :
         minmax = "%+13.6g / %-+13.6g" % ( c.min() , c.max () ) 
         return p , n , mean , rms  , minmax 
         
-    
     for p in sorted ( stats )  :
         if    p.startswith('pull:') : continue  
         c      = stats [ p ]
@@ -83,13 +82,138 @@ def print_stats (  stats , ntoys = '???' ) :
         if not p.startswith('pull:') : continue  
         c      = stats [ p ]
         table.append (  make_row ( c )  )
-        
+
+    if not ntoys :
+        ntoys = 0
+        for s in stats :
+            ntoys = max ( ntoys , stats[s].nEntries() )
+            
     import ostap.logger.table as Table
     table = Table.table ( table                                    ,
                           title     = "Results of %s toys" % ntoys ,
                           alignment = 'lcccc'                      ,
                           prefix    = "# "                         )
     logger.info ( 'Results of %s toys:\n%s' % ( ntoys , table ) ) 
+
+
+# =============================================================================
+## Jackknife estimator from jackknife statistic
+#  @code
+#  statistics = ....
+#  jackknife              = jackknife_estimator ( statistics         )
+#  jackknife , theta_jack = jackknife_esiimator ( statistics , value )
+#  @endcode 
+def jackknife_statistics ( statistics , theta = None ) :
+    """Jackknife estimator from jackknife statistic
+    >>> statistics = ....
+    >>> jacknife                      = jackknife_estimator ( statistics         )
+    >>> jacknife , theta_corr , bias  = jackknife_esiimator ( statistics , value )
+    """
+    assert isinstance ( theta , ( VE, None) ) ,\
+           "jackknife_statistics: invalid type of ``value'' %s" % type ( value ) 
+    
+    N         = statistics . nEntries ()             ## number of jackknife samples 
+    theta_dot = statistics . mean     ()             ## mean over jackknife samples 
+    jvar      = statistics . variance () * ( N - 1 ) ## variance 
+
+    jackknife = VE ( theta_dot.value () , jvar )     ## jackknife estimate 
+    
+    ## get Jackknife estimator from statistics 
+    if theta is None : return jackknife
+    
+    bias       =  ( N - 1 ) * ( theta_dot.value() - theta.value() )
+    
+    ## theta  corrected for the bias and with Jackknife variance  
+    theta_jack = VE ( theta.value() - bias , jvar     ) ## corrected value 
+
+    return jackknife , theta_jack
+
+# =============================================================================
+## print Jackknife statistics
+def print_jackknife  ( fitresult , stats , logger = logger ) :
+    """print Jackknife statistics
+    """
+    
+    header = ( 'Parameter' , 'theta' , 'theta_(.)' ,  'theta_jack' , 'bias/sigma [%]' , 'error [%]' ) 
+    table  = []
+    
+    for p in fitresult :
+        name  = p.name
+        if not name in stats : continue
+
+        statistics  = stats [ name ]
+        
+        theta = p * 1.0 ## fitted value
+
+        ## jackknife estimates 
+        jackknife , theta_jack = jackknife_statistics ( statistics , theta )
+
+        bias  = theta_jack.value () - theta     .value ()        
+        scale = theta     .error () / theta_jack.error () 
+
+        row = ( name , 
+                "%+13.6g +- %-13.6g" % ( theta      . value () , theta      .error () ) , 
+                "%+13.6g +- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
+                "%+13.6g +- %-13.6g" % ( theta_jack . value () , theta_jack .error () ) ,  
+                '%+6.2f'             % ( bias / theta.error() * 100 ) , 
+                '%+6.2f'             % ( scale * 100 - 100 )          )
+        
+        table.append ( row )
+        
+    table.sort()
+    table = [ header ] + table 
+ 
+    import ostap.logger.table as Table
+    table = Table.table ( table                           ,
+                          title     = "Jackknife results" ,
+                          alignment = 'lcccccc'             ,
+                          prefix    = "# "                )
+    logger.info ( 'Jackknife results:\n%s' % table )
+    
+
+# =============================================================================
+## print Bootstrap statistics
+def print_bootstrap  ( fitresult , stats , logger = logger ) :
+    """print Bootstrap statistics
+    """
+    
+    header = ( 'Parameter' , 'theta' ,  'theta_boot' , 'bias/sigma [%]' , 'error [%]' ) 
+    table  = []
+
+    n = 0 
+    for p in fitresult :
+        name  = p.name
+        if not name in stats : continue
+
+        statistics  = stats [ name ]
+
+        n = max ( n , statistics.nEntries() ) 
+        theta      = p * 1.0 ## fitted value
+
+        theta_boot = VE ( statistics.mean().value() , statistics.mu2() ) 
+        
+
+        bias  = theta_boot.value () - theta     .value ()        
+        scale = theta     .error () / theta_boot.error () 
+
+        row = ( name , 
+                "%+13.6g +- %-13.6g" % ( theta      . value () , theta      .error () ) , 
+                "%+13.6g +- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) ,  
+                '%+6.2f'             % ( bias / theta.error() * 100 ) , 
+                '%+6.2f'             % ( scale * 100 - 100 )          )
+        
+        table.append ( row )
+        
+    table.sort()
+    table = [ header ] + table 
+ 
+    import ostap.logger.table as Table
+    table = Table.table ( table                                   ,
+                          title     = "Bootstrapping with #%d samples" % n ,
+                          alignment = 'lcccc'             ,
+                          prefix    = "# "                )
+    logger.info ( 'Bootstrapping with #%d samples:\n%s' % ( n , table ) )
+    
 
 # ==============================================================================
 ## Default function to generate the data
@@ -173,9 +297,9 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
 # @param fit_config configuration of <code>pdf.fitTo</code>
 # @param init_pars  redefine these parameters for each pseudoexperiment
 # @param more_vars  calculate more variables form fit-result
-# @param gen_fun    generator function
-# @param fit_fun    fitting   function
-# @param accept_fun accept    function
+# @param get_fun    specific generate action (if needed) 
+# @param fit_fun    specific fitting action (if needed) 
+# @param accept_fun specific accept action (if needed) 
 # @param silent     silent toys?
 # @param progress   show the progress?
 # @return dictionary with fit results for the toys and the dictionary of statistics
@@ -183,18 +307,19 @@ def accept_fit  ( result , pdf = None , dataset = None ) :
 #  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
-def make_toys ( pdf                ,
-                nToys              , 
-                data               , ## template for dataset/variables 
-                gen_config         , ## parameters for <code>pdf.generate</code>   
-                fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
-                init_pars  = {}    ,
-                more_vars  = {}    ,
-                gen_fun    = None  , ## generator function ( pdf , varset  , **config )
-                fit_fun    = None  , ## fit       function ( pdf , dataset , **config )
-                accept_fun = None  , ## accept    function ( fit-result, pdf, dataset )
-                silent     = True  ,                
-                progress   = True  ) :
+def make_toys ( pdf                 ,
+                nToys               , 
+                data                , ## template for dataset/variables 
+                gen_config          , ## parameters for <code>pdf.generate</code>   
+                fit_config = {}     , ## parameters for <code>pdf.fitTo</code>
+                init_pars  = {}     ,
+                more_vars  = {}     ,
+                gen_fun    = None   , ## generator function ( pdf , varset  , **config )
+                fit_fun    = None   , ## fit       function ( pdf , dataset , **config )
+                accept_fun = None   , ## accept    function ( fit-result, pdf, dataset )
+                silent     = True   ,                
+                progress   = True   ,
+                logger     = logger ) :
     """Make `nToys` pseudoexperiments
 
     -   Schematically:
@@ -258,22 +383,19 @@ def make_toys ( pdf                ,
 
     ## 1. generator function? 
     if gen_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``generate_data'' function!")
+        if not silent : logger.info ( "make_toys: use default ``generate_data'' function!")
         gen_fun = generate_data 
     assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
     
     ## 2. fitting function? 
     if fit_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``make_fit'' function!")
+        if not silent : logger.info ( "make_toys: use default ``make_fit'' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 3. accept function? 
     if accept_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_toys: use default ``accept_fit'' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
         
@@ -330,13 +452,10 @@ def make_toys ( pdf                ,
         ## 2. generate dataset!  
         ## dataset = pdf.generate ( varset = varset , **gen_config )  
         dataset = gen_fun ( pdf , varset = varset , **gen_config )  
-        if not silent :
-            logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
+        if not silent : logger.info ( 'Generated dataset #%d\n%s' % ( i , dataset ) )
         
         ## 3. fit it!
         r = fit_fun ( pdf , dataset , **fitcnf ) 
-        if not silent :
-            logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
         ## fit status 
         fits [ r.status  () ] += 1
@@ -381,7 +500,7 @@ def make_toys ( pdf                ,
         stats ['- CovQual %s' % k ] = covs [ k ]
             
         
-    if progress or not silent : print_stats ( stats , nToys )
+    if progress or not silent : print_stats ( stats , nToys , logger = logger )
     
     return results, stats 
 
@@ -436,29 +555,32 @@ def make_toys ( pdf                ,
 # @param gen_pars   redefine these parameters for each pseudoexperiment
 # @param fit_pars   redefine these parameters for each pseudoexperiment
 # @param more_vars  calculate more variables form fit-result
-# @param gen_fun    generator function
-# @param fit_fun    fitting   function
-# @param accept_fun accept    function
+# @param gen_fun    specific generate  action (if needed) 
+# @param fit_fun    specific fitting action (if needed) 
+# @param accept_fun specific accept action (if needed) 
 # @param silent     silent toys?
+# @param progress   show progress bar?
+# @param logger     logger 
 # @return dictionary with fit results for the toys and the dictionary of statistics
 #
 #  - If <code>gen_fun</code>    is not specified <code>generate_data</code> is used 
 #  - If <code>fit_fun</code>    is not specified <code>make_fit</code>      is used 
 #  - If <code>accept_fun</code> is not specified <code>accept_fit</code>    is used   
-def make_toys2 ( gen_pdf            , ## pdf to generate toys 
-                 fit_pdf            , ## pdf to fit  
-                 nToys              , ## number of pseudoexperiments 
-                 data               , ## template for dataset/variables 
-                 gen_config         , ## parameters for <code>pdf.generate</code>   
-                 fit_config = {}    , ## parameters for <code>pdf.fitTo</code>
-                 gen_pars   = {}    , ## gen-parameters to reset/use 
-                 fit_pars   = {}    , ## fit-parameters to reset/use
-                 more_vars  = {}    , ## additional  results to be calculated
-                 gen_fun    = None  , ## generator function ( pdf , varset  , **gen_config ) 
-                 fit_fun    = None  , ## fit       function ( pdf , dataset , **fit_config ) 
-                 accept_fun = None  , ## accept    function ( fit-result, pdf, dataset     )
-                 silent     = True  ,
-                 progress   = True  ) :
+def make_toys2 ( gen_pdf             , ## pdf to generate toys 
+                 fit_pdf             , ## pdf to fit  
+                 nToys               , ## number of pseudoexperiments 
+                 data                , ## template for dataset/variables 
+                 gen_config          , ## parameters for <code>pdf.generate</code>   
+                 fit_config = {}     , ## parameters for <code>pdf.fitTo</code>
+                 gen_pars   = {}     , ## gen-parameters to reset/use 
+                 fit_pars   = {}     , ## fit-parameters to reset/use
+                 more_vars  = {}     , ## additional  results to be calculated
+                 gen_fun    = None   , ## generator function ( pdf , varset  , **gen_config ) 
+                 fit_fun    = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                 accept_fun = None   , ## accept    function ( fit-result, pdf, dataset     )
+                 silent     = True   ,
+                 progress   = True   ,
+                 logger     = logger ) :
     """Make `ntoys` pseudoexperiments
     
     -   Schematically:
@@ -509,22 +631,19 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     
     ## 1. generator function? 
     if gen_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``generate_data'' function!")
+        if not silent :  logger.info ( "make_toys2: use default ``generate_data'' function!")
         gen_fun = generate_data 
     assert gen_fun and callable ( gen_fun ) , 'Invalid generator function!'
     
     ## 2. fitting function? 
     if fit_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``make_fit'' function!")
+        if not silent :  logger.info ( "make_toys2: use default ``make_fit'' function!")
         fit_fun = make_fit 
     assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
 
     ## 3. accept function? 
     if accept_fun is None :
-        if not silent : 
-            logger.info ( "make_toys: use default ``accept_fit'' function!")
+        if not silent : logger.info ( "make_toys2: use default ``accept_fit'' function!")
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
@@ -589,8 +708,6 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
         
         ## 4. fit it!  
         r = fit_fun ( fit_pdf , dataset , **fitcnf ) 
-        if not silent :
-            logger.info ( 'Fit result #%d\n%s' % ( i , r.table ( title = 'Fit result #%d' % i , prefix = '# ' ) ) )
 
         ## fit status 
         fits [ r.status  () ] += 1
@@ -629,9 +746,347 @@ def make_toys2 ( gen_pdf            , ## pdf to generate toys
     for k in covs :
         stats ['- CovQual %s' % k ] = covs [ k ]
                     
-    if progress or not silent : print_stats ( stats , nToys )
+    if progress or not silent :
+        print_stats ( stats , nToys , logger = logger  )
 
     return results, stats 
+
+# =============================================================================
+## run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
+# 
+#  For each <code>i</code> remove event with index <code>i</code> from the dataset,
+#  and refit it.
+#  @code
+#  dataset = ...
+#  model   = ...
+#  r , f = model.fitTo ( dataset , .... )           ## fit the whole dataset   
+#  results, stats = make_jackknife ( model , data ) ## run Jackknife 
+#  print_jackknife ( r , stats )                    ## print summary table 
+#  @endcode
+#  @see printJackknife
+#  @see https://en.wikipedia.org/wiki/Jackknife_resampling
+#  @param pdf         fit model
+#  @param data        original dataset
+#  @param fit_config  configuration of <code>pdf.FitTo( data , ... )</code>
+#  @param fit_pars    redefine these parameters before each fit 
+#  @param more_vars   calculate more variables from the fit-results 
+#  @param fit_fun     fitting   function
+#  @param accept_fun  accept    function
+#  @param event_range event range to use for jackknife   
+#  @param silent      silent processing 
+#  @param progress    show progress bar?
+#  @param logger      use this logger
+#  @return statistics of jackknife experiments 
+def make_jackknife ( pdf                  ,
+                     data                 ,
+                     fit_config  = {}     , ## parameters for <code>pdf.fitTo</code>
+                     fit_pars    = {}     , ## fit-parameters to reset/use
+                     more_vars   = {}     , ## additional  results to be calculated
+                     fit_fun     = None   , ## fit       function ( pdf , dataset , **fit_config ) 
+                     accept_fun  = None   , ## accept    function ( fit-result, pdf, dataset     )
+                     event_range = ()     , ## event range for jackknife                      
+                     silent      = True   ,
+                     progress    = True   ,
+                     logger      = logger ) :
+    """Run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
+    For each <code>i</code> remove event with index <code>i</code> from the dataset, and refit it.
+    >>> dataset = ...
+    >>> model   = ...
+    >>> r , f = model.fitTo ( dataset , .... )           ## fit the whole dataset   
+    >>> results, stats = make_jackknife ( model , data ) ## run Jackknife 
+    >>> print_jackknife ( r , stats )                    ## print summary table 
+    - see https://en.wikipedia.org/wiki/Jackknife_resampling
+    - see print_jackknife 
+    - see jackknife_statistics
+
+
+    - `pdf`         : fit model
+    - `data`        : original dataset
+    - `fit_config`  : configuration of `pdf.FitTo( data , ... )`
+    - `fit_pars`    : redefine these parameters before each fit
+    - `more_vars`   : calculate more variables from the fit-results
+    - `fit_fun`     : specific fitting acion (if needed) 
+    - `accept_fun`  : specific accept action (if needed)
+    - `event_range` : event range to use for jackknife   
+    - `silent`      : silent processing?
+    - `progress`    : show progress bar?
+    - `logger`      : use this logger 
+
+    """
+    
+    N = len ( data )
+    assert 1 < N            , 'make_jackknife: invalid dataset size %s' % N
+
+    if not event_range : event_range = 0 , N 
+    assert 2 == len ( event_range ) , 'make_jackknife: invalid event range %s ' % str ( event_range )
+    
+    begin , end = event_range
+    assert 0 <= begin and begin < end and end <= N, 'make_jackknife: invalid event range (%s,%s)/%d' % ( begin , end , N )
+    
+    ## 1. fitting function? 
+    if fit_fun is None :
+        if not silent :  logger.info ( "make_jackknife: use default ``make_fit'' function!")
+        fit_fun = make_fit 
+    assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
+
+    ## 2. accept function? 
+    if accept_fun is None :
+        if not silent : logger.info ( "make_jackknife: use default ``accept_fit'' function!")
+        accept_fun = accept_fit
+    assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
+
+    import ostap.fitting.roofit
+    import ostap.fitting.dataset
+    import ostap.fitting.variables
+    import ostap.fitting.roofitresult
+    import ostap.fitting.basic 
+       
+    ## parameters for fitting 
+
+    fparams      = pdf.params ()
+    fix_fit_init = vars_transform ( fparams  )     
+    fix_fit_pars = vars_transform ( fit_pars )
+    
+    fitcnf = {}
+    fitcnf.update ( fit_config )
+    if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
+    
+    from collections import defaultdict 
+    results = defaultdict(list) 
+
+    from   ostap.core.core        import SE    
+    fits = defaultdict ( SE )  ## fit statuses 
+    covs = defaultdict ( SE )  ## covarinace matrix quality
+
+    ## Fit the whole sample 
+    pdf.load_params ( params = fix_fit_init , silent = silent )
+    pdf.load_params ( params = fix_fit_pars , silent = silent )
+    r_tot = fit_fun ( pdf , data , **fitcnf )
+    
+    from ostap.utils.progress_bar import progress_bar
+    ## run jackknife  bootstrapping
+    for ds in progress_bar ( data.jackknife ( begin , end ) , max_value = end - begin , silent = not progress ) :
+
+        ## 2. reset parameters of fit_pdf
+        pdf.load_params ( params = fix_fit_init , silent = silent )
+        pdf.load_params ( params = fix_fit_pars , silent = silent )
+ 
+        ## 3. fit it!  
+        r = fit_fun ( pdf , ds , **fitcnf ) 
+
+        ## 4. fit status 
+        fits [ r.status  () ] += 1
+
+        ## 5. covariance matrix quality
+        covs [ r.covQual () ] += 1
+
+        ## ok ?
+        if accept_fun ( r , pdf , ds ) : 
+
+            ## 6. save results 
+            rpf = r.params ( float_only = True ) 
+            for i in rpf : 
+                results [ i ].append ( rpf[i][0] ) 
+
+            ## 7. more variables to be calculated? 
+            for v in more_vars :
+                func  = more_vars[v] 
+                results [ v ] .append ( func ( r , pdf ) )
+                
+            results [ '#' ] .append ( len ( ds ) )
+
+        ds.clear()
+        
+    ## 8. make a final statistics 
+    stats = defaultdict ( SE )
+    
+    for par in results :
+        pars = results [ par ]
+        for v in pars : 
+            v0 = float ( v )         
+            stats [ par ] += v0 
+            
+    for k in fits :
+        stats ['- Status  %s' % k ] = fits [ k ]
+    for k in covs :
+        stats ['- CovQual %s' % k ] = covs [ k ]
+        
+    if progress or not silent :
+
+        ## 9. fit total dataset (twice) 
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        
+        ## 10. the final table  
+        print_jackknife ( r_tot , stats , logger = logger )
+            
+    return results , stats 
+
+
+# =============================================================================
+## Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates
+# 
+#  In total <code>size</code> datasets are sampled (with replacement) from the orifinal dataste
+#  <code>data</code> and each sampled dataset is fit
+#  @code
+#  dataset = ...
+#  model   = ...
+#  r , f = model.fitTo ( dataset , .... )                         ## fit the whole dataset   
+#  results, stats = make_bootstrap ( model , data , size = 1000 ) ## run Bootstrap 
+#  print_bootstrap ( r , stats )                    ## print summary table 
+#  @endcode
+#  @see print_bootstrap
+#  @param pdf   fit model
+#  @param data  original dataset
+#  @param size  number of datasets to sample
+#  @param fit_config configuration of <code>pdf.FitTo( data , ... )</code>
+#  @param fit_pars   redefine these parameters before each fit 
+#  @param more_vars  calculate more variables from the fit-results 
+#  @param fit_fun    specific fitting action (if needed) 
+#  @param accept_fun specific accept action (if needed) 
+#  @param silent     silent processing 
+#  @param progress   show progress bar?
+#  @param logger     use this logger
+#  @return statistics of boostrap experiments 
+def make_bootstrap ( pdf                  ,
+                     data                 ,
+                     size        = 100    ,   ## numbere of samples 
+                     fit_config  = {}     ,   ## parameters for <code>pdf.fitTo</code>
+                     fit_pars    = {}     ,   ## fit-parameters to reset/use
+                     more_vars   = {}     ,   ## additional  results to be calculated
+                     fit_fun     = None   ,   ## fit       function ( pdf , dataset , **fit_config ) 
+                     accept_fun  = None   ,   ## accept    function ( fit-result, pdf, dataset     )
+                     silent      = True   ,   ## silent processing?
+                     progress    = True   ,   ## shpow progress bar? 
+                     logger      = logger ) : ## use this logger 
+
+    """Run Bootstrap analysis, useful for evaluaton of fit biased and uncertainty estimates 
+    In total `size` datasets are sampled (with replacement) from the orifinal dataste
+    `data` and each sampled dataset is fit
+    >>> dataset = ...
+    >>> model   = ...
+    >>> r , f = model.fitTo ( dataset , .... )                         ## fit the whole dataset   
+    >>> results, stats = make_bootstrap ( model , data , size = 1000 ) ## run Bootstrap 
+    >>> print_bootstrap ( r , stats )                    ## print summary table 
+
+    - `pdf`        : fit model
+    - `data`       : original dataset
+    - `size`       : number of datasets to sample
+    - `fit_config` : configuration of `pdf.FitTo( data , ... )`
+    - `fit_pars`   : redefine these parameters before each fit
+    - `more_vars`  : calculate more variables from the fit-results
+    - `fit_fun`    : specific fitting acion (if needed) 
+    - `accept_fun` : specific accept action (if needed) 
+    - `silent`     : silent processing?
+    - `progress`   : show progress bar?
+    - `logger`     : use this logger 
+    """
+    
+    N = len ( data )
+    assert 1 < N            , 'make_bootstrap: invalid dataset size %s' % N
+
+    from ostap.core.ostap_types import integer_types  
+    assert isinstance ( size , integer_types ) and 0 < size, \
+           "make_bootstrap: invalid ``size'' parameter %s" % size 
+    
+    ## 1. fitting function? 
+    if fit_fun is None :
+        if not silent :  logger.info ( "make_bootstrap: use default ``make_fit'' function!")
+        fit_fun = make_fit 
+    assert fit_fun and callable ( fit_fun ) , 'Invalid fit function!'
+
+    ## 2. accept function? 
+    if accept_fun is None :
+        if not silent : logger.info ( "make_bootstrap: use default ``accept_fit'' function!")
+        accept_fun = accept_fit
+    assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
+
+    import ostap.fitting.roofit
+    import ostap.fitting.dataset
+    import ostap.fitting.variables
+    import ostap.fitting.roofitresult
+    import ostap.fitting.basic 
+       
+    ## parameters for fitting 
+
+    fparams      = pdf.params ()
+    fix_fit_init = vars_transform ( fparams  )     
+    fix_fit_pars = vars_transform ( fit_pars )
+    
+    fitcnf = {}
+    fitcnf.update ( fit_config )
+    if not 'silent' in fitcnf : fitcnf [ 'silent' ] = silent
+    
+    from collections import defaultdict 
+    results = defaultdict(list) 
+
+    from   ostap.core.core        import SE    
+    fits = defaultdict ( SE )  ## fit statuses 
+    covs = defaultdict ( SE )  ## covarinace matrix quality
+
+    ## fit original dataset 
+    pdf.load_params ( params = fix_fit_init , silent = silent )
+    pdf.load_params ( params = fix_fit_pars , silent = silent )
+    r_tot = fit_fun ( pdf , data , **fitcnf )
+
+    from ostap.utils.progress_bar import progress_bar
+    ## run jackknife  bootstrapping
+    for ds in progress_bar ( data.bootstrap ( size ) , max_value = size , silent = not progress ) :
+
+        ## 2. reset parameters of fit_pdf
+        pdf.load_params ( params = fix_fit_init , silent = silent )
+        pdf.load_params ( params = fix_fit_pars , silent = silent )
+ 
+        ## 3. fit it!  
+        r = fit_fun ( pdf , ds , **fitcnf ) 
+
+        ## 4. fit status 
+        fits [ r.status  () ] += 1
+
+        ## 5. covariance matrix quality
+        covs [ r.covQual () ] += 1
+
+        ## ok ?
+        if accept_fun ( r , pdf , ds ) : 
+
+            ## 6. save results 
+            rpf = r.params ( float_only = True ) 
+            for i in rpf : 
+                results [ i ].append ( rpf[i][0] ) 
+
+            ## 7. more variables to be calculated? 
+            for v in more_vars :
+                func  = more_vars[v] 
+                results [ v ] .append ( func ( r , pdf ) )
+                
+            results [ '#' ] .append ( len ( ds ) )
+
+        ds.clear()
+        
+    ## 8. make a final statistics 
+    stats = defaultdict ( SE )
+    
+    for par in results :
+        pars = results [ par ]
+        for v in pars : 
+            v0 = float ( v )         
+            stats [ par ] += v0 
+            
+    for k in fits :
+        stats ['- Status  %s' % k ] = fits [ k ]
+    for k in covs :
+        stats ['- CovQual %s' % k ] = covs [ k ]
+        
+    if progress or not silent :
+
+        ## 9. fit total dataset (twice) 
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        r_tot = fit_fun ( pdf , data , **fitcnf )
+        
+        ## 10. the final table  
+        print_bootstrap ( r_tot , stats , logger = logger )
+            
+    return results , stats 
 
 
 # =============================================================================

@@ -10,6 +10,7 @@
   1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
   1. more coherency for different `Ostap::Math::PhaseSpace*` classes 
   1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
+  1. add functionality for jackknife and bootstrap analyses for fit biases and error estimates 
 
 ## Backward incompatible changes: 
 

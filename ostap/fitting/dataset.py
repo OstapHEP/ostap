@@ -28,10 +28,14 @@ import ROOT, random, math, sys
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
-from   ostap.math.base        import islong 
+from   ostap.math.base        import islong
+from   ostap.stats.bootstrap  import bootstrap as bootstrap_indices 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
+# =============================================================================
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Generator, Collection
+else                              : from collections     import Generator, Collection
 # =============================================================================
 # logging 
 # =============================================================================
@@ -61,37 +65,55 @@ def _rad_iter_ ( self ) :
     for i in range ( 0 , _l ) :
         yield self.get ( i )
 
+
 # =============================================================================
 ## access to the entries in  RooAbsData
 #  @code
 #  dataset = ...
-#  event   = dataset[4]
-#  events  = dataset[0:1000]
-#  events  = dataset[0:-1:10]
+#  event   = dataset[4]            ## index 
+#  events  = dataset[0:1000]       ## slice 
+#  events  = dataset[0:-1:10]      ## slice 
+#  events  = dataset[ (1,2,3,10) ] ## seqeucne of indices  
 #  @eendcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
-def _rad_getitem_ ( self , i ) :
+def _rad_getitem_ ( data , index ) :
     """Get the entry from RooDataSet
     >>> dataset = ...
-    >>> event  = dataset[4]
-    >>> events = dataset[0:1000]
-    >>> events = dataset[0:-1:10]
+    >>> event  = dataset[4]                 ## index 
+    >>> events = dataset[0:1000]            ## slice
+    >>> events = dataset[0:-1:10]           ## slice 
+    >>> events = dataset[ (1,2,3,4,10) ]    ## sequnce of indices 
     """
-    if   isinstance ( i , slice ) :
+
+    N = len ( data ) 
+    if isinstance ( index , integer_types ) and index < 0 :
+        index += N
+
+    if isinstance ( index , integer_types ) and 0 <= index  < len ( data ) :
         
-        start , stop , step = i.indices ( len ( self ) )
+        return data.get ( index )
+       
+    elif isinstance ( index , slice ) :
+        
+        start , stop , step = index.indices ( len ( data ) )
                               
-        if 1 == step : return self.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
         
-        result = self.emptyClone( dsID() )
-        for j in range ( start , stop , step ) : result.add ( self [j] ) 
+        result = data.emptyClone( dsID() )
+        for j in range ( start , stop , step ) : result.add ( data [ j ] )
+        
         return result
-    
-    elif isinstance ( i , integer_types ) and 0<= i < len ( self ) :
-        return self.get ( i )
-    
-    raise IndexError ( 'Invalid index %s'% i )
+
+    elif isinstance ( index , ( Generator , Collection ) ) :
+
+        result = data.emptyClone ( dsID () )
+        for j in index : result.add ( data [ int ( j ) ] )
+        
+        return result
+        
+    raise IndexError ( 'Invalid index %s'% index )
+
 
 # =============================================================================
 ## Get variables in form of RooArgList 
@@ -263,6 +285,84 @@ def  _rad_mod_ ( self , fraction ) :
 
     return NotImplemented
 
+# =============================================================================
+## Make dataset with removed i-th element  (for Jackknife/bootstrapping)
+#  @code
+#  dataset = ...
+#  N = len ( dataset)
+#  for index in range ( N ) :
+#    ds_i = dataset - index
+#  @endcode 
+def _rds_sub_ ( dataset , index ) :
+    """Make dataset with removed i-th element  (for Jackknife/bootstrapping)
+    >>> dataset = ...
+    >>> N = len ( dataset)
+    >>> for index in range ( N ) :
+    >>> ... ds_i = dataset - index
+    """
+    N = len ( dataset )
+    
+    if 1 < N and isinstance ( index , integer_types ) and  0 <= index < N :
+
+        if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
+        elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
+
+        ds1 = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
+        ds2 = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
+
+        result = ds1 + ds2
+
+        ds1.clear()
+        ds2.clear()
+
+        assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
+        
+        return result
+    
+    return NotImplemented
+        
+# ============================================================================
+## Jackknife generator: generates data sets with removed i-th element
+#  @code
+#  dataset = ...
+#  for ds in ds.jackknife() :
+#  ...
+#  @endcode 
+def _rds_jackknife_ ( dataset , low = 0 , high = None ) :
+    """Jacknife generator
+    >>> dataset = ...
+    >>> for ds in ds.jackknife() :
+    >>> ...
+    """
+    N = len ( dataset )
+    
+    if high == None : high = N
+    
+    if 1 < N : 
+        for i in range ( low , high ) :
+            ds_i = dataset - i        ## this is the line 
+            yield ds_i               
+            ds_i.clear()             
+            del ds_i
+
+# =============================================================================
+## Boostrap generator
+#  @code
+#  dataset = ...
+#  for ds in dataset.bootstrap ( 100 ) :
+#  ...
+#  @endcode
+def _rds_bootstrap_ ( dataset , size = 100 ) :
+    """ Boostrap generator
+    >>> dataset = ...
+    >>> for ds in dataset.bootstrap ( 100 ) :
+    >>> ...
+    """
+    for indices in bootstrap_indices ( range ( len ( dataset ) ) , size = size ) :
+        ds = dataset [ indices ] 
+        yield ds
+        ds.clear()
+        del ds
 
 # =============================================================================
 ## get (random) sub-sample from the dataset
@@ -379,6 +479,7 @@ ROOT.RooAbsData . __mod__       = _rad_mod_
 ROOT.RooAbsData . __div__       = _rad_div_
 ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 
+
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
@@ -388,6 +489,10 @@ ROOT.RooAbsData . sumVar_       = _sum_var_old_
 ROOT.RooAbsData . statVar       = _stat_var_ 
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
+
+ROOT.RooDataSet . __sub__       = _rds_sub_
+ROOT.RooDataSet . jackknife     = _rds_jackknife_
+ROOT.RooDataSet . bootstrap     = _rds_bootstrap_
 
 
 _new_methods_ += [
@@ -509,7 +614,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
 
-        gdir = ROOT.TDirectory.CurrentDirectory()
+        gdir = ROOT.directory.CurrentDirectory()
         if gdir : 
             obj  = gdir.FindObject    ( histo )
             if instance ( obj  , ROOT.TH1 ) :
@@ -850,7 +955,42 @@ _new_methods_ += [
     ROOT.RooAbsData .sFactor      
     ]
 
+# =============================================================================
+## clone dataset
+#  @code
+#  dataset = ...
+#  cloned  = datatset.clone ( 'new_name') 
+#  @endcode
+def _rds_clone_ ( dataset , name = '' ) :
+    """Clone dataset
+    >>> dataset = ...
+    >>> cloned  = datatset.clone ( 'new_name') 
+    """
+    name = name if name else dsID () 
+    
+    return ROOT.RooDataSet ( dataset , name ) 
 
+# =============================================================================
+## clone dataset
+#  @code
+#  dataset = ...
+#  cloned  = datatset.clone ( 'new_name') 
+#  @endcode
+def _rdh_clone_ ( dataset , name = '' ) :
+    """Clone dataset
+    >>> dataset = ...
+    >>> cloned  = datatset.clone ( 'new_name') 
+    """
+    name = name if name else dsID () 
+    
+    return ROOT.RooDataHist ( dataset , name ) 
+
+if not hasattr ( ROOT.RooDataSet  , 'clone' ) :
+    ROOT.RooDataSet .clone = _rds_clone_
+
+if not hasattr ( ROOT.RooDataHist , 'clone' ) :
+    ROOT.RooDataHist.clone = _rdh_clone_
+    
 # =============================================================================
 ## add variable to dataset
 #  @code
