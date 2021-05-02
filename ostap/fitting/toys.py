@@ -889,7 +889,11 @@ def make_jackknife ( pdf                  ,
     assert 2 == len ( event_range ) , 'make_jackknife: invalid event range %s ' % str ( event_range )
     
     begin , end = event_range
-    assert 0 <= begin and begin < end and end <= N, 'make_jackknife: invalid event range (%s,%s)/%d' % ( begin , end , N )
+
+    ## check begin/end range
+    assert 0 <= begin and begin < end and begin < N , 'make_jackknife: invalid event range (%s,%s)/%d' % ( begin , end , N )
+    ## adjust the end 
+    end   = min ( end   , N )
     
     ## 1. fitting function? 
     if fit_fun is None :
