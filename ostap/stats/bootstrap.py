@@ -16,6 +16,8 @@ __all__     = (
     'bootstrap'  , ## primitive bootstrap generator 
     )
 # =============================================================================
+from   builtins          import range
+# =============================================================================
 try :
     
     import numpy as np
