@@ -42,11 +42,12 @@ model.B     = 100
 ## model = gauss
 
 # ==============================================================================
-## Perform boostrap study for possible fit bias and correct uncertainty evaluation 
-def test_bootstrap  ( ) :
+## Perform boostrap study for possible fit bias and correct uncertainty evaluation
+if 1 < 2 :
+## def test_bootstrap  ( ) :
     """Perform toys-study for possible fit bias and correct uncertainty evaluation
     - generate `nToys` pseudoexperiments with some PDF `pdf`
-    - fit teach experiment with the same PDF
+    - fit each experiment with the same PDF
     - store  fit results
     - calculate statistics of pulls
     - fill distributions of fit results
@@ -61,6 +62,11 @@ def test_bootstrap  ( ) :
     ## prefit the whole dataset
     res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
+    more_vars   = { 'vm' : lambda  r, _ : ( r.mean_G - 0.4 ) / 0.1 ,
+                    'vs' : lambda  r, _ :   r.sigma_G        / 0.1 ,
+                    'vr' : lambda  r, _ :   r.sigma_G * 1    / r.mean_G } 
+                    
+
     ## start Jackknife process 
     results , stats = Toys.make_bootstrap (
         pdf         = model    ,
@@ -68,13 +74,18 @@ def test_bootstrap  ( ) :
         data        = dataset  , 
         fit_config  = { 'silent' : True , 'refit'   : 5   } ,
         fit_pars    = { 'mean_G' : 0.4  , 'sigma_G' : 0.1 } ,
-        silent      = True , 
-        progress    = True )
+        more_vars   = more_vars , 
+        silent      = True ,
+        progress    = True ,
+        frequency   = 100  )
 
     ## fit the whole sample 
     res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 ) 
     ## print the final table
-    Toys.print_bootstrap ( res , stats , logger )
+    Toys.print_bootstrap ( res   ,
+                           stats ,
+                           morevars = dict ( (k,more_vars[k](res,model)) for k in more_vars ),
+                           logger = logger )
 
     time.sleep ( 2 ) 
 
@@ -82,7 +93,10 @@ def test_bootstrap  ( ) :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_bootstrap ( ) 
+    ## test_bootstrap ( )
+    pass
+
+
     
 # =============================================================================
 ##                                                                      The END 

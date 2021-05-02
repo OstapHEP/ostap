@@ -93,7 +93,32 @@ def _rfr_param_  ( self , pname , float_only = False ) :
         elif hasattr ( pname , 'getName' ) : pname = pname.getName ()
         elif hasattr ( pname , 'name'    ) : pname = pname.   name () 
     p = self.parameters ( float_only )[ pname ] 
-    return p 
+    return p
+
+# =============================================================================
+## check if certain parameter (or index) is in <code>RooFitResult</code> object
+#  @code
+#  fit_result = ...
+#  print ( 1      in fit_results ) 
+#  print ( 'mean' in fit_results ) 
+#  print ( 'A'    in fit_results ) 
+#  @endcode 
+def _rfr_contains_ ( self , label ) :
+    """Check if certain parameter (or index) is in <code>RooFitResult</code> object
+    >>> fit_result = ...
+    >>> print ( 1      in fit_results ) 
+    >>> print ( 'mean' in fit_results ) 
+    >>> print ( 'A'    in fit_results ) 
+    """
+    
+    if   isinstance ( label , integer_types ) :
+        return 0 <= label < len ( self.floatParsFinal() ) + len ( self.constPars () )
+    elif isinstance ( label , string_types  ) :
+        return label in  self.floatParsFinal() or label in self.constPars ()
+    elif isinstance ( label , ROOT.RooAbsArg ) :
+        return label.GetName() in self
+    
+    return False 
 
 # =============================================================================
 ## iterator over fit results 
@@ -810,6 +835,7 @@ ROOT.RooFitResult . __str__         = _rfr_print_
 ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
 ROOT.RooFitResult . __iter__        = _rfr_iter_
+ROOT.RooFitResult . __contains__    = _rfr_contains_
 ROOT.RooFitResult . iteritems       = _rfr_iteritems_
 ROOT.RooFitResult . dct_params      = _rfr_dct_params_
 ROOT.RooFitResult . parameters      = _rfr_params_
@@ -845,6 +871,7 @@ _new_methods_ += [
     ROOT.RooFitResult . __call__         ,
     ROOT.RooFitResult . __getattr__      ,
     ROOT.RooFitResult . __iter__         ,
+    ROOT.RooFitResult . __contains__     ,
     ROOT.RooFitResult . iteritems        ,
     ROOT.RooFitResult . parameters       ,
     ROOT.RooFitResult . params           ,
