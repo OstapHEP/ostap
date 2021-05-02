@@ -34,8 +34,13 @@ import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 # =============================================================================
-if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Generator, Collection
-else                              : from collections     import Generator, Collection
+if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection
+elif ( 3 , 3 ) <= sys.version_info  :
+    from collections.abc import Collection
+    from types           import GeneratorType as Generator 
+else :
+    from collections     import Sequence      as Collection
+    from types           import GeneratorType as Generator 
 # =============================================================================
 # logging 
 # =============================================================================
