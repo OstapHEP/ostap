@@ -61,9 +61,9 @@ def test_bootstrap  ( ) :
     ## prefit the whole dataset
     res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
-    more_vars   = { 'vm' : lambda  r, _ : ( r.mean_G - 0.4 ) / 0.1      ,
-                    'vs' : lambda  r, _ :   r.sigma_G        / 0.1 - 1  ,
-                    'vr' : lambda  r, _ :   r.sigma_G * 1    / r.mean_G } 
+    more_vars   = { 'vm' : lambda  r, *_ : ( r.mean_G - 0.4 ) / 0.1      ,
+                    'vs' : lambda  r, *_ :   r.sigma_G        / 0.1 - 1  ,
+                    'vr' : lambda  r, *_ :   r.sigma_G * 1    / r.mean_G } 
                     
 
     ## start Jackknife process 
@@ -79,7 +79,11 @@ def test_bootstrap  ( ) :
         frequency   = 100  )
 
     ## fit the whole sample 
-    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 ) 
+    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+    ## print fit results 
+    logger.info  ('Fit results:\n%s' % res.table ( title     = 'Fit results' ,
+                                                   prefix    = '# '          ,
+                                                   more_vars = more_vars     ) ) 
     ## print the final table
     Toys.print_bootstrap ( res   ,
                            stats ,

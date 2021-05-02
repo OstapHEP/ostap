@@ -532,7 +532,7 @@ def _rfr_evaluate_ ( self , func , args , partial = () ) :
 #  result = ...
 #  result.table() 
 #  @endcode 
-def _rfr_table_ ( r , title = '' , prefix = '' ) :
+def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     """ print RooFitResult  as a table
     >>> result = ...
     >>> result.table() 
@@ -633,10 +633,27 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         row = p , n , s , cc
         frows.append ( row ) 
 
+    ## more parameters
+    mrows = []
+    for p in sorted ( more_vars ) :
+        
+        func  = more_vars [ p ]
+        
+        v     = func ( r )
+        
+        s , n = pretty_ve  ( v ) 
+        
+        if n : n = '[10^%+d]' % n
+        else : n = '' 
+
+        cc = 'derived'
+        row = p , n , s , cc
+        mrows.append ( row ) 
+
     crows.sort()
     frows.sort()
 
-    all = rows + crows + frows
+    all = rows + crows + frows + mrows 
 
     import ostap.logger.table as T
 

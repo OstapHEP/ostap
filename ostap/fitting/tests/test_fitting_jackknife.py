@@ -58,9 +58,9 @@ def test_jackknife ( ) :
     N = 400 
     dataset = model.generate ( N , sample = False )
     
-    more_vars   = { 'vm' : lambda  r, _ : ( r.mean_G - 0.4 ) / 0.1       ,
-                    'vs' : lambda  r, _ :   r.sigma_G        / 0.1 - 1   ,
-                    'vr' : lambda  r, _ :   r.sigma_G * 1    / r.mean_G  } 
+    more_vars   = { 'vm' : lambda  r, *_ : ( r.mean_G - 0.4 ) / 0.1       ,
+                    'vs' : lambda  r, *_ :   r.sigma_G        / 0.1 - 1   ,
+                    'vr' : lambda  r, *_ :   r.sigma_G * 1    / r.mean_G  } 
     
      ## prefit the whole dataset
     res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
@@ -76,7 +76,11 @@ def test_jackknife ( ) :
         progress    = True )
 
     ## fit the whole sample 
-    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 ) 
+    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+    
+    logger.info  ('Fit results:\n%s' % res.table ( title     = 'Fit results' ,
+                                                   prefix    = '# '          ,
+                                                   more_vars = more_vars     )  ) 
     ## print the final table
     Toys.print_jackknife ( res   ,
                            stats ,

@@ -14,7 +14,7 @@
   1. better output report from Jackknife and Boostrap studies
   1. add parameter `frequency` to roys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
   1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
- 
+  1. allow derived quantitites to be added into the output table of `RooFitResult`
 
 ## Backward incompatible changes: 
 
