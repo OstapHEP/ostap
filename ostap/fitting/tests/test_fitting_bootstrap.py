@@ -43,8 +43,7 @@ model.B     = 100
 
 # ==============================================================================
 ## Perform boostrap study for possible fit bias and correct uncertainty evaluation
-if 1 < 2 :
-## def test_bootstrap  ( ) :
+def test_bootstrap  ( ) :
     """Perform toys-study for possible fit bias and correct uncertainty evaluation
     - generate `nToys` pseudoexperiments with some PDF `pdf`
     - fit each experiment with the same PDF
@@ -62,8 +61,8 @@ if 1 < 2 :
     ## prefit the whole dataset
     res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
-    more_vars   = { 'vm' : lambda  r, _ : ( r.mean_G - 0.4 ) / 0.1 ,
-                    'vs' : lambda  r, _ :   r.sigma_G        / 0.1 ,
+    more_vars   = { 'vm' : lambda  r, _ : ( r.mean_G - 0.4 ) / 0.1      ,
+                    'vs' : lambda  r, _ :   r.sigma_G        / 0.1 - 1  ,
                     'vr' : lambda  r, _ :   r.sigma_G * 1    / r.mean_G } 
                     
 
@@ -85,7 +84,7 @@ if 1 < 2 :
     Toys.print_bootstrap ( res   ,
                            stats ,
                            morevars = dict ( (k,more_vars[k](res,model)) for k in more_vars ),
-                           logger = logger )
+                           logger   = logger )
 
     time.sleep ( 2 ) 
 
@@ -93,9 +92,7 @@ if 1 < 2 :
 # =============================================================================
 if '__main__' == __name__ :
 
-    ## test_bootstrap ( )
-    pass
-
+    test_bootstrap ( )
 
     
 # =============================================================================

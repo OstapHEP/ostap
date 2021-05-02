@@ -158,21 +158,34 @@ def jackknife_statistics ( statistics , theta = None ) :
 
 # =============================================================================
 ## print Jackknife statistics
-def print_jackknife  ( fitresult , stats , logger = logger ) :
+def print_jackknife  ( fitresult          ,
+                       stats              ,
+                       morevars  = {}     ,                       
+                       logger    = logger ) :
     """print Jackknife statistics
     """
     
     header = ( 'Parameter' , 'theta' , 'theta_(.)' ,  'theta_jack' , 'bias/sigma [%]' , 'error [%]' ) 
     table  = []
-    
-    for p in fitresult :
-        name  = p.name
-        if not name in stats : continue
+
+    for name in sorted ( stats ) :
+        
+        if   name in fitresult :
+            p = getattr ( fitresult , name , None )
+            if not p :
+                logger.warning ('print_boostrap: parameter "%p" is invalid in RooFitResult, skip') 
+                continue
+            theta = p * 1.0
+        elif name in morevars :
+            theta = morevars [ name ]
+            if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
+                logger.warning ('print_boostrap: parameter "%p" is invalid in ``morevars'', skip %s' % theta ) 
+                continue
+        else :
+            continue 
 
         statistics  = stats [ name ]
         
-        theta = p * 1.0 ## fitted value
-
         ## jackknife estimates 
         jackknife , theta_jack = jackknife_statistics ( statistics , theta )
 
@@ -535,7 +548,7 @@ def make_toys ( pdf                 ,
         del r
 
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
                 stats = make_stats ( results , fits , covs )
                 print_stats ( stats , i + 1 , logger = logger )
                 
@@ -783,7 +796,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
         del dataset
 
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
                 stats = make_stats ( results , fits , covs )
                 print_stats ( stats , i + 1 , logger = logger )
                 
@@ -829,6 +842,7 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
 #  @param silent      silent processing 
 #  @param progress    show progress bar?
 #  @param logger      use this logger
+#  @param frequency  how often to dump the intermediate results ? 
 #  @return statistics of jackknife experiments 
 def make_jackknife ( pdf                  ,
                      data                 ,
@@ -840,7 +854,8 @@ def make_jackknife ( pdf                  ,
                      event_range = ()     , ## event range for jackknife                      
                      silent      = True   ,
                      progress    = True   ,
-                     logger      = logger ) :
+                     logger      = logger ,
+                     frequency   = 100    ) :
     """Run Jackknife analysis, useful for evaluaton of fit biased and uncertainty estimates
     For each <code>i</code> remove event with index <code>i</code> from the dataset, and refit it.
     >>> dataset = ...
@@ -864,7 +879,7 @@ def make_jackknife ( pdf                  ,
     - `silent`      : silent processing?
     - `progress`    : show progress bar?
     - `logger`      : use this logger 
-
+    - `frequency`   : how often to dump the intermediate results ? 
     """
     
     N = len ( data )
@@ -888,6 +903,10 @@ def make_jackknife ( pdf                  ,
         accept_fun = accept_fit
     assert accept_fun and callable ( accept_fun ) , 'Invalid accept function!'
 
+    if progress and not silent :
+        assert isinstance ( frequency , integer_types ) and 0 < frequency,\
+               "make_makejackknife: invalid ``frequency'' parameter %s" % frequency
+    
     import ostap.fitting.roofit
     import ostap.fitting.dataset
     import ostap.fitting.variables
@@ -918,7 +937,7 @@ def make_jackknife ( pdf                  ,
     
     from ostap.utils.progress_bar import progress_bar
     ## run jackknife  bootstrapping
-    for ds in progress_bar ( data.jackknife ( begin , end ) , max_value = end - begin , silent = not progress ) :
+    for i , ds in progress_bar ( enumerate ( data.jackknife ( begin , end ) ) , max_value = end - begin , silent = not progress ) :
 
         ## 2. reset parameters of fit_pdf
         pdf.load_params ( params = fix_fit_init , silent = silent )
@@ -938,8 +957,8 @@ def make_jackknife ( pdf                  ,
 
             ## 6. save results 
             rpf = r.params ( float_only = True ) 
-            for i in rpf : 
-                results [ i ].append ( rpf[i][0] ) 
+            for j in rpf : 
+                results [ j ].append ( rpf [ j ] [ 0 ] ) 
 
             ## 7. more variables to be calculated? 
             for v in more_vars :
@@ -949,7 +968,12 @@ def make_jackknife ( pdf                  ,
             results [ '#' ] .append ( len ( ds ) )
 
         ds.clear()
-        
+
+        if progress or not silent :
+            if 0 < frequency and 1 <= i and 0 == ( i + 1 ) % frequency : 
+                stats = make_stats ( results , fits , covs )
+                print_stats ( stats , i + 1 , logger = logger )
+                        
     ## 8. make a final statistics 
     stats = make_stats ( results , fits , covs )
         
@@ -960,7 +984,10 @@ def make_jackknife ( pdf                  ,
         r_tot = fit_fun ( pdf , data , **fitcnf )
         
         ## 10. the final table  
-        print_jackknife ( r_tot , stats , logger = logger )
+        print_jackknife ( r_tot   ,
+                          stats   ,
+                          morevars = dict ( ( k , more_vars [ k ]( r_tot , pdf ) ) for k in more_vars ) ,
+                          logger   = logger )
             
     return results , stats 
 
@@ -1121,7 +1148,7 @@ def make_bootstrap ( pdf                  ,
         ds.clear()
         
         if progress or not silent :
-            if 0 < frequency and 1 <= i and 0 == i % frequency : 
+            if 0 < frequency and 1 <= i and 0 == ( i + 1 )  % frequency : 
                 stats = make_stats ( results , fits , covs )                
                 ## print_stats ( stats , i + 1 , logger = logger )
                 print_bootstrap ( r_tot ,

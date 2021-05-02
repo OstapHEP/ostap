@@ -11,6 +11,10 @@
   1. more coherency for different `Ostap::Math::PhaseSpace*` classes 
   1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
   1. add functionality for jackknife and bootstrap analyses for fit biases and error estimates 
+  1. better output report from Jackknife and Boostrap studies
+  1. add parameter `frequency` to roys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
+  1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
+ 
 
 ## Backward incompatible changes: 
 
