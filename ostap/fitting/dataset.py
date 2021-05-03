@@ -1982,6 +1982,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         row  =  'Sum weights (original) ' ,  \
                ( "%+13.6g +- %-13.6g" % ( sw1.value()  , sw1.error() ) ) , \
                ( "%+13.6g +- %-13.6g" % ( sw2.value()  , sw2.error() ) ) , '' 
+        rows.append ( row )
 
         st1n , st2n = ds1.statVar ( new_weight ) , ds2.statVar( new_weight )
         
@@ -1993,13 +1994,13 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         
         rows.append ( row )
         
-        mw1 , mw2 , mw = sw1 / n1 , sw2 / n2 ,  sw / n
+        mw1 , mw2 , mw = st1.mean() , st2.mean() ,  sw / n
         row  =  'Mean weight (original)' , \
                ( "%+13.6g +- %-13.6g" % ( mw1.value() , mw1.error() ) ) , \
                ( "%+13.6g +- %-13.6g" % ( mw2.value() , mw2.error() ) ) , ''               
         rows.append ( row )
 
-        mw1n , mw2n = sw1n / n1 , sw2n / n2 
+        mw1n , mw2n = st1n.mean () , st2n.mean ()  
         row  =  'Mean weight (updated)' , \
                ( "%+13.6g +- %-13.6g" % ( mw1n.value() , mw1n.error() ) ) , \
                ( "%+13.6g +- %-13.6g" % ( mw2n.value() , mw2n.error() ) ) , \
