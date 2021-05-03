@@ -36,7 +36,7 @@
 # @code
 #
 # >>> import sqliteshelve as DBASE     ## import the SQLiteShelve module 
-# >>> db = DBASE.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
+# >>> db = DBASE.open ('a_db' , 'r' )  ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -49,7 +49,7 @@
 # @code
 #
 # >>> import sqliteshelve as DBASE     ## import the SQLiteShelve module 
-# >>> db = DBASE.open ('a_db' )      ## access existing dbase in update mode
+# >>> db = DBASE.open ('a_db' )        ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...

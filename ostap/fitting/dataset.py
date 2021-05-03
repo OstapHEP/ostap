@@ -39,7 +39,7 @@ elif ( 3 , 3 ) <= sys.version_info  :
     from collections.abc import Collection
     from types           import GeneratorType as Generator 
 else :
-    from collections     import Sequence      as Collection
+    from collections     import Container     as Collection
     from types           import GeneratorType as Generator 
 # =============================================================================
 # logging 
