@@ -1958,10 +1958,10 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         rows.append ( row )
 
         if w1 or w2 :
-            row = 'Weight (original)' , w1 , w2 , ''
+            row  = 'Weight      (original)' , w1 , w2 , ''
             rows.append ( row )
             
-        row = 'Weight (updated)' , new_weight , new_weight , new_weight
+        row = 'Weight      (updated)' , new_weight , new_weight , new_weight
         rows.append ( row )
                 
         row  =  'Sum weights (original) ' ,  \
@@ -1992,13 +1992,13 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
                ( "%+13.6g +- %-13.6g" % ( mw  .value() , mw  .error() ) ) 
         rows.append ( row )
 
-        row  =  's-factor (original)' , "%+13.6g" % sf1 , "%+13.6g" % sf2 , ''
+        row  =  's-factor    (original)' , "%+13.6g" % sf1 , "%+13.6g" % sf2 , ''
         rows.append ( row )
         
         ## s-factor
         sf1n , sf2n = st1n.sum() / st1n.sumw2() , st2n.sum() / st2n.sumw2()
         
-        row  =  's-factor (updated)' , "%+13.6g" % sf1n , "%+13.6g" % sf2n , "%+13.6g" % sf
+        row  =  's-factor    (updated)' , "%+13.6g" % sf1n , "%+13.6g" % sf2n , "%+13.6g" % sf
         rows.append ( row )
 
         row  =  'R'                  , "%+13.6g" % r1  , "%+13.6g" % r2  , '' 
