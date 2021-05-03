@@ -1938,23 +1938,8 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
     if 1 == r2 : weight2 =       '%s' %        w2   if w2 else '1'
     else       : weight2 = '%.16g*%s' % ( r2 , w2 ) if w2 else '%.16g' % r2
     
-    logger.info  ("ds_combine: new weights are ``%s''  and ``%s''"% ( weight1 , weight2 ) )
-    
     ds1.addVar ( new_weight , weight1 )
     ds2.addVar ( new_weight , weight2 )
-
-
-    ww1_ = ds1.statVar ( w1 ) if w1 else ds1.statVar ( '1' )
-    ww2_ = ds2.statVar ( w2 ) if w2 else ds2.statVar ( '1' ) 
-    
-    ww1  = ds1.statVar ( new_weight )
-    ww2  = ds2.statVar ( new_weight )
-    
-    logger.info ( 'ds_combine: old weights dataset1: %s' % ww1_ )
-    logger.info ( 'ds_combine: old weights dataset2: %s' % ww2_ )
-    
-    logger.info ( 'ds_combine: new weights dataset1: %s' % ww1  )
-    logger.info ( 'ds_combine: new weights dataset2: %s' % ww2  )
     
     ## add two datasets together 
     ds = ds1 + ds2
