@@ -1952,7 +1952,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
 
     if not silent :
 
-        rows = [  ( ''        , 'A' , 'B' , '%+g*A%+g*B' ) ]
+        rows = [  ( ''        , 'A' , 'B' , '%+.6g*A%+.6g*B' % ( r1 , r2 ) ) ] 
 
         row  =  'Size'        , '%d' % n1 , '%s' % n2  , '%d' % n
         rows.append ( row )
@@ -2005,7 +2005,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         rows.append ( row )
         
         import ostap.logger.table as Table
-        title = title if title else 'Combine two datasets: %+g*A%+g*B' % ( r1 , r2 )
+        title = title if title else 'Combine two datasets: %+.6g*A%+.6g*B' % ( r1 , r2 )
         table = Table.table ( rows               ,
                               title     = title  ,
                               alignment = 'lccc' ,
