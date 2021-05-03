@@ -16,6 +16,7 @@
   1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
   1. allow derived quantitites to be added into the output table of `RooFitResult`
   1. add `getitem` stuff for `RooFitResult` to allow interchange with dictionaries 
+  1. add `split_range` generator to splti large range into smaller chunks 
 
 ## Backward incompatible changes: 
 

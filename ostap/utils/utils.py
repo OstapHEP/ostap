@@ -72,6 +72,8 @@ __all__     = (
     ## 
     'lrange'             , ## helper loop over values between xmin and xmax in log
     ##
+    'split_range'        , ## helper generator to splti large range into smaller chunks
+    ##
     'chunked'            , ## break *iterable* into chunks of length *n*:
     'divide'             , ## divide the elements from *iterable* into *n* parts
     'grouper'            , ## collect data into fixed-length chunks or blocks"
@@ -864,6 +866,32 @@ def lrange ( vmin , vmax , n = 100 ) :
     """
     return LRange ( vmin , vmax , n )
 
+# =============================================================================
+## split range into smaller chunks:
+#  @code
+#  for i in split_range ( 0 , 10000 , 200 ) :
+#     for j in range (*i) :
+#          ... 
+#  @endcode 
+def split_range ( low , high , num ) :
+    """Split range into smaller chunks:
+    >>> for i in split_range ( 0 , 10000 , 200 ) :
+    >>>     for j in range (*i) :
+    >>>         ... 
+    """
+    if high <= low or num < 1 :
+        
+        yield low , low 
+        
+    else : 
+        
+        next = low + num 
+        while next < high :
+            yield low , next
+            low   = next
+            next += num 
+            
+        yield low , high
 
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word
