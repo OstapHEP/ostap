@@ -171,15 +171,15 @@ def print_jackknife  ( fitresult          ,
     for name in sorted ( stats ) :
         
         if   name in fitresult :
-            p = getattr ( fitresult , name , None )
-            if not p :
-                logger.warning ('print_boostrap: parameter "%p" is invalid in RooFitResult, skip') 
-                continue
+            p     = fitresult [ name ]
             theta = p * 1.0
+            if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
+                logger.warning ('print_jackknife: parameter "%s" is invalid in ``fitresult'', skip %s' % ( name , theta ) )
+                continue
         elif name in morevars :
             theta = morevars [ name ]
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_boostrap: parameter "%p" is invalid in ``morevars'', skip %s' % theta ) 
+                logger.warning ('print_jackknife: parameter "%s" is invalid in ``morevars'',  skip %s' % ( name , theta ) ) 
                 continue
         else :
             continue 
@@ -230,19 +230,19 @@ def print_bootstrap  ( fitresult          ,
     for name in sorted ( stats ) :
         
         if   name in fitresult :
-            p = getattr ( fitresult , name , None )
-            if not p :
-                logger.warning ('print_boostrap: parameter "%p" is invalid in RooFitResult, skip') 
-                continue
+            p     = fitresult [ name ]
             theta = p * 1.0
+            if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
+                logger.warning ('print_bootstrap: parameter "%s" is invalid in ``fitresult'', skip %s' % ( name , theta ) )
+                continue
         elif name in morevars :
             theta = morevars [ name ]
             if not isinstance ( theta , VE ) or theta.cov2() <= 0 :
-                logger.warning ('print_boostrap: parameter "%p" is invalid in ``morevars'', skip %s' % theta ) 
+                logger.warning ('print_bootstrap: parameter "%s" is invalid in ``morevars'',  skip %s' % ( name , theta ) ) 
                 continue
         else :
             continue 
-        
+
         statistics  = stats [ name ]
 
         n = max ( n , statistics.nEntries() ) 

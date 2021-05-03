@@ -294,12 +294,16 @@ def _rfr_max_cor_ ( self , v ) :
     
 # ===============================================================================
 ## get fit-parameter as attribute
+#  @code
+#  fit_result = ...
+#  sigma = fit_resul.sigma 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-03
 def _rfr_getattr_ ( self , att ) :
     """Get fit-parameter as attribute
     >>> r = ....
-    >>> print r.sigma 
+    >>> print( 'sigma is', r.sigma)
     """
     ##
     pars = self.floatParsFinal()
@@ -312,6 +316,31 @@ def _rfr_getattr_ ( self , att ) :
         
     raise AttributeError ( 'RooFitResult: invalid attribute %s ' % att )
 
+# =============================================================================
+## get fit-parameter through the key/name 
+#  @code
+#  fit_result = ...
+#  sigma = fit_result['sigma']
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-08-03
+def _rfr_getitem_ ( self , key  ) :
+    """Get fit-parameter through the key/name 
+    >>> fit_result = ...
+    >>> sigma = fit_result['sigma']
+    """
+    
+    ##
+    pars = self.floatParsFinal()
+    for p in pars :
+        if key == p.GetName() : return p      
+    #
+    pars = self.constPars()
+    for p in pars :
+        if key == p.GetName() : return p
+        
+    raise KeyError ( 'RooFitResult: invalid key %s ' % key  )
+    
 # ===========================================================================
 ## get correct estimate of sum of two (or more) variables,
 #  taking into account correlations
@@ -547,7 +576,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) , '' 
         rows.append ( row )
     else :
-        row = 'Status'  , '' , allright  ( fit_status ( status ) ) , '' 
+        row = 'Status'                , '' , allright  ( fit_status ( status ) ) , '' 
         rows.append ( row )
 
     ## 2. minumum NLL
@@ -653,8 +682,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     crows.sort()
     frows.sort()
 
-    all = rows + crows + frows + mrows 
-
+    all = rows + crows + frows + mrows  
+    
     import ostap.logger.table as T
 
     all = T.align_column ( all , 0 , 'left' )
@@ -665,8 +694,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     for l in range ( len ( rows ) , len ( all ) ) :
         line = all [ l ]
         line = list ( line ) 
-        line [ 0 ] = allright ( line[0] )
-        all  [ l ] = tuple ( line  ) 
+        line [ 0 ] = allright ( line [ 0 ] )
+        all  [ l ] = tuple    ( line       ) 
 
     if title : 
         return T.table ( all , title = title         , prefix = prefix )
@@ -851,6 +880,7 @@ ROOT.RooFitResult . __repr__        = _rfr_print_
 ROOT.RooFitResult . __str__         = _rfr_print_
 ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
+ROOT.RooFitResult . __getitem__     = _rfr_getitem_ 
 ROOT.RooFitResult . __iter__        = _rfr_iter_
 ROOT.RooFitResult . __contains__    = _rfr_contains_
 ROOT.RooFitResult . iteritems       = _rfr_iteritems_
