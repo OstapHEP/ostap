@@ -896,7 +896,7 @@ _new_methods_ += [
 #  @date 2019-05-30
 # =============================================================================
 def _rad_sFactor_ ( data ) :
-    """Get the s-factor for   (weighted) dataset, where
+    """Get the s-factor for (weighted) dataset, where
     s-factor is defined as
      s_{w} equiv frac{ sum w_i}{ sum w_i^2}
      
@@ -910,6 +910,9 @@ def _rad_sFactor_ ( data ) :
     if 0 == data.numEntries() :
         logger.warning ("RooAbsData.sFactor: dataset is empty, return 1.0")
         return 1.0
+
+    if not data.isWeighted() :
+        return 1.0 
     
     sf = Ostap.SFactor.sFactor ( data )
     if    0 >  sf.cov2() :
@@ -1867,7 +1870,7 @@ _new_methods_ += [
 #  @endcode
 #  - Input datasets may be weighted
 #  - Output dataset  is weighted 
-def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
+def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = '' , logger = logger ) :
     """ Combine two datasets with some weights
     >>> dataset1 = ... 
     >>> dataset2 = ...
@@ -1879,7 +1882,17 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
     r1 = float ( r1 )
     r2 = float ( r2 )
 
-    w1, w2  = '', ''
+    w1 , w2  = '', ''
+
+    ## number of entries 
+    n1  , n2  = len      ( ds1 ) , len ( ds2 )
+    ## statistics of weights
+    st1 , st2 = ds1.statVar('1') , ds2.statVar('1')
+    ## sum of weights
+    sw1 , sw2 = VE ( st1.sum()   , st1.sumw2() ) , VE ( st2.sum() , st2.sumw2() )
+    ## s-factor
+    sf1 , sf2 = st1.sum() / st1.sumw2() , st2.sum() / st2.sumw2()
+    
     ## 
     if ds1.isWeighted() : ds1 , w1 = ds1.unWeighted ()
     if ds2.isWeighted() : ds2 , w2 = ds2.unWeighted ()
@@ -1899,12 +1912,14 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
         if v21 : logger.warning ("ds_combine: second dataset contains %d extra columns: %s" % ( len ( v21 ) , list ( v2 - v1 ) ) ) 
 
         cv = v1.intersection ( v2 )
+
+        assert cv, 'ds_combine: datasets have no common columns!'
         
         ds1s = ds1.subset ( cv )
         ds2s = ds2.subset ( cv )
         
-        if w1 : ds1.clear() 
-        if w2 : ds2.clear()
+        if w1 : ds1.clear () 
+        if w2 : ds2.clear ()
         
         ds1 = ds1s        
         ds2 = ds2s
@@ -1928,6 +1943,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
     ds1.addVar ( new_weight , weight1 )
     ds2.addVar ( new_weight , weight2 )
 
+
     ww1_ = ds1.statVar ( w1 ) if w1 else ds1.statVar ( '1' )
     ww2_ = ds2.statVar ( w2 ) if w2 else ds2.statVar ( '1' ) 
     
@@ -1946,12 +1962,77 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' ) :
     ## apply common weight 
     dsw = ds.makeWeighted ( new_weight )
 
+    ## statistics 
+    n , sw , sf = len ( dsw ) , dsw.sumVar('1') , dsw.sFactor() 
+
+    if not silent :
+
+        rows = [  ( ''        , 'A' , 'B' , 'combined' ) ]
+
+        row  =  'Size'        , '%d' % n1 , '%s' % n2  , '%d' % n
+        rows.append ( row )
+
+        if w1 or w2 :
+            row = 'Weight (original)' , w1 , w2 , ''
+            rows.append ( row )
+            
+        row = 'Weight (updated)' , new_weight , new_weight , new_weight
+        rows.append ( row )
+                
+        row  =  'Sum weights (original) ' ,  \
+               ( "%+13.6g +- %-13.6g" % ( sw1.value()  , sw1.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw2.value()  , sw2.error() ) ) , '' 
+
+        st1n , st2n = ds1.statVar ( new_weight ) , ds2.statVar( new_weight )
+        
+        sw1n , sw2n = VE ( st1n.sum()   , st1n.sumw2() ) , VE ( st2n.sum() , st2n.sumw2() )
+        row  =  'Sum weights (updated) ' , \
+               ( "%+13.6g +- %-13.6g" % ( sw1n.value() , sw1n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw2n.value() , sw2n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw  .value() , sw  .error() ) ) ,
+        
+        rows.append ( row )
+        
+        mw1 , mw2 , mw = sw1 / n1 , sw2 / n2 ,  sw / n
+        row  =  'Mean weight (original)' , \
+               ( "%+13.6g +- %-13.6g" % ( mw1.value() , mw1.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw2.value() , mw2.error() ) ) , ''               
+        rows.append ( row )
+
+        mw1n , mw2n = sw1n / n1 , sw2n / n2 
+        row  =  'Mean weight (updated)' , \
+               ( "%+13.6g +- %-13.6g" % ( mw1n.value() , mw1n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw2n.value() , mw2n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw  .value() , mw  .error() ) ) 
+        rows.append ( row )
+
+        row  =  's-factor (original)' , "%+13.6g" % sf1 , "%+13.6g" % sf2 , ''
+        rows.append ( row )
+        
+        ## s-factor
+        sf1n , sf2n = st1n.sum() / st1n.sumw2() , st2n.sum() / st2n.sumw2()
+        
+        row  =  's-factor (updated)' , "%+13.6g" % sf1n , "%+13.6g" % sf2n , "%+13.6g" % sf
+        rows.append ( row )
+
+        row  =  'R'                  , "%+13.6g" % r1  , "%+13.6g" % r2  , '' 
+        rows.append ( row )
+        
+        import ostap.logger.table as Table
+        title = title if title else 'Combine two datasets: %s*A %s*B' % ( r1 , r2 )
+        table = Table.table ( rows                                ,
+                              title     = "Combine two datasets"  ,
+                              alignment = 'lccc'                  ,
+                              prefix    = "# "                    )
+        logger.info ( '%s:\n%s' % ( title  , table ) )
+    
     ## cleanup
     
     if w1 or v1 != v2 : ds1.clear()
     if w2 or v1 != v2 : ds2.clear()
     
     ds.clear()
+
     
     return dsw
 

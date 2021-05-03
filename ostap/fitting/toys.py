@@ -161,13 +161,15 @@ def jackknife_statistics ( statistics , theta = None ) :
 def print_jackknife  ( fitresult          ,
                        stats              ,
                        morevars  = {}     ,                       
-                       logger    = logger ) :
+                       logger    = logger ,
+                       title     = ''     ) :
     """print Jackknife statistics
     """
     
     header = ( 'Parameter' , 'theta' , 'theta_(.)' ,  'theta_jack' , 'bias/sigma [%]' , 'error [%]' ) 
     table  = []
 
+    N = 0 
     for name in sorted ( stats ) :
         
         if   name in fitresult :
@@ -185,6 +187,8 @@ def print_jackknife  ( fitresult          ,
             continue 
 
         statistics  = stats [ name ]
+
+        N = max ( N , statistics.nEntries() )
         
         ## jackknife estimates 
         jackknife , theta_jack = jackknife_statistics ( statistics , theta )
@@ -205,12 +209,14 @@ def print_jackknife  ( fitresult          ,
     table.sort()
     table = [ header ] + table 
  
+    title = title if title else "Jackknife results (N=%d)" % N  
+
     import ostap.logger.table as Table
     table = Table.table ( table                           ,
-                          title     = "Jackknife results" ,
-                          alignment = 'lcccccc'             ,
+                          title     = title               ,
+                          alignment = 'lcccccc'           ,
                           prefix    = "# "                )
-    logger.info ( 'Jackknife results:\n%s' % table )
+    logger.info ( '%s:\n%s' % ( title , table ) ) 
     
 
 # =============================================================================
@@ -218,7 +224,8 @@ def print_jackknife  ( fitresult          ,
 def print_bootstrap  ( fitresult          ,
                        stats              ,
                        morevars  = {}     ,
-                       logger    = logger ) :
+                       logger    = logger ,
+                       title     = ''     ) :
     """print Bootstrap statistics
     """
     
@@ -264,12 +271,14 @@ def print_bootstrap  ( fitresult          ,
 
     table = [ header ] + table 
  
+    title = title if title else "Bootstrapping with #%d samples" % n 
+
     import ostap.logger.table as Table
-    table = Table.table ( table                                   ,
-                          title     = "Bootstrapping with #%d samples" % n ,
-                          alignment = 'lcccc'             ,
-                          prefix    = "# "                )
-    logger.info ( 'Bootstrapping with #%d samples:\n%s' % ( n , table ) )
+    table = Table.table ( table                ,
+                          title     = title    ,
+                          alignment = 'lcccc'  ,
+                          prefix    = "# "     )
+    logger.info ( '%s:\n%s' % ( title , table ) )
     
 
 # ==============================================================================
