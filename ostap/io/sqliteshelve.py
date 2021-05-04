@@ -240,7 +240,8 @@ class SQLiteShelf(SqliteDict):
                    writeback      = True      , ## original name: "autocommit"
                    compress_level = zlib.Z_BEST_COMPRESSION , 
                    journal_mode   = "DELETE"  ,
-                   protocol       = PROTOCOL  ) :
+                   protocol       = PROTOCOL  ,
+                   timeout        = 30        ) :
         """Initialize a thread-safe sqlite-backed dictionary.
         The dictionary will be a table ``tablename`` in database file
         ``filename``. A single file (=database) may contain multiple tables.
@@ -287,7 +288,8 @@ class SQLiteShelf(SqliteDict):
                               tablename    = tablename    ,
                               flag         = mode         ,
                               autocommit   = writeback    ,
-                              journal_mode = journal_mode )
+                              journal_mode = journal_mode ,
+                              timeout      = timeout      )
         
         self.__compresslevel = compress_level 
         self.__protocol      = protocol
