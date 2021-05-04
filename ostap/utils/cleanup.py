@@ -80,40 +80,31 @@ def make_base_tmp_dir () :
     if user and not user in td : prefix = '%s%s-' % ( prefix , user )
     
     now     = datetime.datetime.now()
-    prefix  = "%s%s-"   %  ( prefix , now.strftime ( date_format ) )
-    
+    prefix  = "%s%s-%d-"   %  ( prefix , now.strftime ( date_format ) , os.getpid () )
+
     return tempfile.mkdtemp ( prefix = prefix ) 
 
-## 3) make a try to construct something temporary and unique
-if not base_tmp_dir :
-    
-    base_tmp_dir = make_base_tmp_dir()
-    if base_tmp_dir :
-        logger.debug ('Temporary directory ``%s'' is created' % base_tmp_dir )
-        for_cleanup = True 
-        
+
 # ===============================================================================
 ## local storage of temporary pid-dependent temporary directories 
-_tmp_dirs = {}
+base_tmp_pid_dirs = {}
 # ===============================================================================
 ## get the process-dependent name of the temporary directory 
 def tmp_dir ( pid = None ) :
     """get the process-dependent name of the temporary directory
     """
-    
-    global base_tmp_dir
-    if not base_tmp_dir or not writeable ( base_tmp_dir ) :
-        base_tmp_dir = make_base_tmp_dir() 
+    if base_tmp_dir :
+        return base_tmp_dir 
         
     if not pid : pid = os.getpid()
     
-    if not pid in _tmp_dirs :
-        dpid   = os.path.sep.join ( [ base_tmp_dir , '%s' % pid ] )
-        piddir = make_dir ( dpid )
-        if piddir :_tmp_dirs [ pid ] = piddir
+    if not pid in base_tmp_pid_dirs :
+        piddir = make_base_tmp_dir ()
+        base_tmp_pid_dirs [ pid ] = piddir
+        return piddir 
             
-    return _tmp_dirs.get ( pid , base_tmp_dir )
-    
+    return base_tmp_pid_dirs [ pid ]
+
 # ===============================================================================
 ## Context manager to define/redefine temporary directory for <code>tempfile</code> module
 class UseTmpDir ( object ) :
@@ -332,7 +323,7 @@ class  CleanUp(object) :
             return CleanUp.remove_file ( fname )
         
 # =============================================================================
-if tmp_dir and for_cleanup :
+if base_tmp_dir and for_cleanup :
     CleanUp().tmpdirs = base_tmp_dir 
     
 # =============================================================================
@@ -340,6 +331,7 @@ import atexit
 @atexit.register
 def _cleanup_ () :
 
+    
     ## 1. clean up the files 
     tmp_files  = CleanUp._tmpfiles
     logger.debug ( 'remove temporary files: %s' % list ( tmp_files ) )
@@ -354,6 +346,17 @@ def _cleanup_ () :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
 
+    ## 3.remove base directories
+    global base_tmp_pid_dirs 
+    for k in base_tmp_pid_dirs :
+        d = base_tmp_pid_dirs [ k ]
+        CleanUp.remove_dir ( d )
+    base_tmp_pid_dirs = {}
+
+    ## 4. remove base tmp directory 
+    if for_cleanup and base_tmp_dir :
+        CleanUp.remove_dir ( base_tmp_dir  )
+        
     for fname in CleanUp._protected :
         if os.path.exists ( fname ) and os.path.isfile ( fname ) :
             logger.info ( "Temporary file is kept : %s" % fname )
