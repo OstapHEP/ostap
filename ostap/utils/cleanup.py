@@ -41,35 +41,38 @@ if not user :
     user = getpass.getuser()
 # =============================================================================            
 ## temporary directory for <code>tempfile</code> module
-tmp_dir     = None
-for_cleanup = False 
+base_tmp_dir = None
+for_cleanup  = False 
 # =============================================================================
 
 ## 1) check the environment variable OSTAP_TMPDIR 
-if not tmp_dir :
-    tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
+if not base_tmp_dir :
+    base_tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
     ##
-    if tmp_dir and not os.path.exists (  tmp_dir ) :
-        tmp_dir = make_dir ( tmp_dir ) 
-    if tmp_dir and not writeable ( tmp_dir ) :
-        logger.warning ('Directory ``%s'' is not writeable!' % tmp_dir )
-        tmp_dir = None
+    if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
+        base_tmp_dir = make_dir  ( base_tmp_dir ) 
+    if base_tmp_dir and not writeable ( base_tmp_dir ) :
+        logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
+        base_tmp_dir = None
         
 ## 2) get from configuration file 
-if not tmp_dir :
+if not base_tmp_dir :
     ## 2) check the configuration file 
     import ostap.core.config as OCC 
-    tmp_dir = OCC.general.get ( 'TMP_DIR' , None )
+    base_tmp_dir = OCC.general.get ( 'TMP_DIR' , None )
     del OCC
 
-    if tmp_dir and not os.path.exists (  tmp_dir ) :
-        tmp_dir = make_dir ( tmp_dir ) 
-    if tmp_dir and not writeable ( tmp_dir ) :
-        logger.warning ('Directory ``%s'' is not writeable!' % tmp_dir )
-        tmp_dir = None
+    if base_tmp_dir and not os.path.exists ( base_tmp_dir ) :
+        base_tmp_dir = make_dir ( base_tmp_dir ) 
+    if base_tmp_dir and not writeable ( base_tmp_dir ) :
+        logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
+        base_tmp_dir = None
 
-## 3) make a try to construct something temporary and unique
-if not tmp_dir :
+# ===========================================================================
+## create the base temporary directory
+def make_base_tmp_dir () :
+    """Create the base temporary directory
+    """
     
     prefix = 'ostap-session-'
     
@@ -78,12 +81,39 @@ if not tmp_dir :
     
     now     = datetime.datetime.now()
     prefix  = "%s%s-"   %  ( prefix , now.strftime ( date_format ) )
+    
+    return tempfile.mkdtemp ( prefix = prefix ) 
 
-    tmp_dir = tempfile.mkdtemp ( prefix = prefix ) 
-    if tmp_dir :
-        logger.debug ('Temporary directory ``%s'' is created' % tmp_dir )
+## 3) make a try to construct something temporary and unique
+if not base_tmp_dir :
+    
+    base_tmp_dir = make_base_tmp_dir()
+    if base_tmp_dir :
+        logger.debug ('Temporary directory ``%s'' is created' % base_tmp_dir )
         for_cleanup = True 
-
+        
+# ===============================================================================
+## local storage of temporary pid-dependent temporary directories 
+_tmp_dirs = {}
+# ===============================================================================
+## get the process-dependent name of the temporary directory 
+def tmp_dir ( pid = None ) :
+    """get the process-dependent name of the temporary directory
+    """
+    
+    global base_tmp_dir
+    if not base_tmp_dir or not writeable ( base_tmp_dir ) :
+        base_tmp_dir = make_base_tmp_dir() 
+        
+    if not pid : pid = os.getpid()
+    
+    if not pid in _tmp_dirs :
+        dpid   = os.path.sep.join ( [ base_tmp_dir , '%s' % pid ] )
+        piddir = make_dir ( dpid )
+        if piddir :_tmp_dirs [ pid ] = piddir
+            
+    return _tmp_dirs.get ( pid , base_tmp_dir )
+    
 # ===============================================================================
 ## Context manager to define/redefine temporary directory for <code>tempfile</code> module
 class UseTmpDir ( object ) :
@@ -91,7 +121,7 @@ class UseTmpDir ( object ) :
     """
     def __init__   ( self , temp_dir = None ) :
         
-        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir 
+        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir ()  
         self.previous  = None
         
     def __enter__  ( self ) :
@@ -184,7 +214,7 @@ class  CleanUp(object) :
         The directory will be cleaned-up and deleted at-exit.
         >>> dirname = CleanUp.tempdir() 
         """
-        with UseTmpDir ( tmp_dir ) :
+        with UseTmpDir ( tmp_dir () ) :
             if date :
                 now    = datetime.datetime.now()
                 if prefix and prefix.endswith('-') :
@@ -208,7 +238,7 @@ class  CleanUp(object) :
         - the method should be  avoided in favour of `CleanUp.tempfile`
         >>> fname = CleanUp.get_temp_file () 
         """
-        with UseTmpDir ( tmp_dir ) :
+        with UseTmpDir ( tmp_dir () ) :
             if date :
                 now = datetime.datetime.now()
                 if prefix and prefix.endswith('-') :
@@ -303,7 +333,7 @@ class  CleanUp(object) :
         
 # =============================================================================
 if tmp_dir and for_cleanup :
-    CleanUp().tmpdirs = tmp_dir 
+    CleanUp().tmpdirs = base_tmp_dir 
     
 # =============================================================================
 import atexit

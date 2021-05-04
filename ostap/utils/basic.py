@@ -91,8 +91,9 @@ def make_dir ( bdir ) :
 
         if bdir : 
             os.mkdir ( bdir )
-            if os.path.exists ( bdir ) and os.path.isdir ( bdir ) : return bdir
-        
+            if os.path.exists ( bdir ) and os.path.isdir ( bdir ) :
+                return os.path.abspath ( bdir)
+            
     except OSError :
         
         pass
