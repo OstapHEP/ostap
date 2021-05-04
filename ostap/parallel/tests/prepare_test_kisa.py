@@ -82,11 +82,11 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
 
     from ostap.utils.cleanup import CleanUp
-    tmpfile = CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir )
+    tmpfile = CleanUp.tempfile ( prefix = 'ostap-test-kisa-' , suffix = '.root' , dir = tmpdir )
     
     fname = '%s/test_kisa_%d.root'
     
-    files = [ CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
+    files = [ CleanUp.tempfile ( prefix = 'ostap-test-kisa-' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
     
     wmgr.process (  task , [  ( f , nentries ) for f in files  ] )
     

@@ -32,12 +32,12 @@ else :
 logger.info ( 'Test for 2D-Reweighting machinery')
 # ============================================================================
 from ostap.utils.cleanup import CleanUp
-testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='test_tools_reweight2_' )
+testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight2-' )
 tag_data   = 'DATA2_histogram'
 tag_datax  = 'DATAX_histogram'
 tag_datay  = 'DATAY_histogram'
 tag_mc     = 'MC2_tree'
-dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='test_tools_reweight2_'   )
+dbname     = CleanUp.tempfile ( suffix = '.db' , prefix ='ostap-test-tools-reweight2-'   )
  
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   )

@@ -702,7 +702,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the temporary directory
     #  The directory will be cleaned-up and deleted at-exit.
     @classmethod
-    def tempdir ( cls , suffix = '=db-dir' , prefix = 'compress-shelve-dir-' , date = True  ) :
+    def tempdir ( cls , suffix = '=db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
         """Create the temporary directory
         The directory will be cleaned-up and deleted at-exit.
         """
@@ -713,7 +713,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the name for the temproary file 
     #  The file will be deleted at-axit 
     @classmethod
-    def tempfile ( cls , suffix = '-db' , prefix = 'compress-shelve-' , dir = None , date = True  ) :
+    def tempfile ( cls , suffix = '-db' , prefix = 'ostap-compress-shelve-' , dir = None , date = True  ) :
         """Ccreate the name for the temproary file 
         The file will be deleted at-axit
         """

@@ -246,7 +246,7 @@ class AutoPlots ( object ) :
                 directory = None
                 
         if not directory :
-            directory = tempfile.mkdtemp ( prefix = 'plots_' )
+            directory = tempfile.mkdtemp ( prefix = 'ostap-plots-' )
             logger.info ( 'AutoPlots: use directory "%s"' % directory ) 
 
         ## check the validity of pattern

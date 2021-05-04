@@ -480,9 +480,8 @@ class Files(object):
         """
         if not output :
             import ostap.utils.cleanup as CU
-            output = CU.CleanUp.tempfile ( suffix = '.root' )
+            output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
             
-
         import subprocess
         
         args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]

@@ -129,8 +129,8 @@ class ppServer(object) :
         self.__tmpdir = None 
         if environment or script or profile or ( not self.silent ) or True :
             self.logger.verbose( 'Creating remote temporary directory' ) 
-            ## self.session  ( command =  'TMPDIR=${TMPDIR} mktemp -d -t $(whoami)-pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
-            self.session  ( command =  'mktemp -d -t $(whoami)-pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
+            ## self.session  ( command =  'TMPDIR=${TMPDIR} mktemp -d -t $(whoami)-ostap-pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
+            self.session  ( command =  'mktemp -d -t $(whoami)-ostap-pathos-$(date +%Y-%b-%d)-XXXXXXXXX' )
             self.session.launch()
             r = self.session.response()
             if r and 1 < len ( r ) : 
@@ -145,7 +145,7 @@ class ppServer(object) :
             self.logger.verbose ( "Processing the environment:\n%s" % environment  ) 
             ##
             import ostap.utils.cleanup as CU
-            tmpfile = CU.CleanUp.tempfile ( prefix = 'env-' , suffix = '.sh' )
+            tmpfile = CU.CleanUp.tempfile ( prefix = 'ostap-env-' , suffix = '.sh' )
             with open ( tmpfile , 'w' ) as tf :
                 tf.write( environment )
                 tf.write('\n')

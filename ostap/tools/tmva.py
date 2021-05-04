@@ -80,7 +80,7 @@ class WeightsFiles(CleanUp) :
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
-                    tmpdir = self.tempdir ( prefix = 'tmp-tmva-weights-' )
+                    tmpdir = self.tempdir ( prefix = 'ostap-tmva-weights-' )
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]

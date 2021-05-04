@@ -84,7 +84,7 @@ def prepare_data ( nfiles   = 10  , nentries = 100 ) :
     for i in progress_bar  ( range ( nfiles ) ) :
         
         from ostap.utils.cleanup import CleanUp
-        tmpfile = CleanUp.tempfile ( prefix = 'test_selectors_' , suffix = '.root' )        
+        tmpfile = CleanUp.tempfile ( prefix = 'ostap-test-selectors-' , suffix = '.root' )        
         files.append ( create_tree ( tmpfile , nentries ) ) 
 
     files.sort() 

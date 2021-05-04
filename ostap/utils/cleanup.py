@@ -24,77 +24,92 @@ __all__     = (
 import os, tempfile, datetime  
 from   sys import version_info as python_version 
 # =============================================================================
+from   ostap.core.ostap_types import string_types
+from   ostap.utils.basic      import make_dir, writeable  
+# =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
 else                       : logger = getLogger( __name__              )
 del getLogger
-from ostap.core.ostap_types import string_types
 # =============================================================================
+date_format =  "%Y-%b-%d"
+re_format   = r"-(\d{4}-(\D&\S){3}-\d{2})-" 
+# =============================================================================
+user = os.getlogin()
+if not user :
+    import getpass
+    user = getpass.getuser()
+# =============================================================================            
 ## temporary directory for <code>tempfile</code> module
-_TmpDir = None
-if not _TmpDir :
-    ## 1) check the environment variable OSTAP_TMPDIR 
-    _TmpDir = os.environ.get  ( 'OSTAP_TMPDIR' , None )
-if not _TmpDir :
+tmp_dir     = None
+for_cleanup = False 
+# =============================================================================
+
+## 1) check the environment variable OSTAP_TMPDIR 
+if not tmp_dir :
+    tmp_dir = os.environ.get  ( 'OSTAP_TMP_DIR' , None )
+    ##
+    if tmp_dir and not os.path.exists (  tmp_dir ) :
+        tmp_dir = make_dir ( tmp_dir ) 
+    if tmp_dir and not writeable ( tmp_dir ) :
+        logger.warning ('Directory ``%s'' is not writeable!' % tmp_dir )
+        tmp_dir = None
+        
+## 2) get from configuration file 
+if not tmp_dir :
     ## 2) check the configuration file 
     import ostap.core.config as OCC 
-    _TmpDir = OCC.general.get ( 'TmpDir' , None )
-    del OCC 
-if not _TmpDir : _TmpDir = None
+    tmp_dir = OCC.general.get ( 'TMP_DIR' , None )
+    del OCC
+
+    if tmp_dir and not os.path.exists (  tmp_dir ) :
+        tmp_dir = make_dir ( tmp_dir ) 
+    if tmp_dir and not writeable ( tmp_dir ) :
+        logger.warning ('Directory ``%s'' is not writeable!' % tmp_dir )
+        tmp_dir = None
+
+## 3) make a try to construct something temporary and unique
+if not tmp_dir :
+    
+    prefix = 'ostap-session-'
+    
+    td = tempfile.gettempdir()
+    if user and not user in td : prefix = '%s%s-' % ( prefix , user )
+    
+    now     = datetime.datetime.now()
+    prefix  = "%s%s-"   %  ( prefix , now.strftime ( date_format ) )
+
+    tmp_dir = tempfile.mkdtemp ( prefix = prefix ) 
+    if tmp_dir :
+        logger.debug ('Temporary directory ``%s'' is created' % tmp_dir )
+        for_cleanup = True 
+
 # ===============================================================================
-## Context manager to define/redefine TmpDir for <code>tempfile</code> module
+## Context manager to define/redefine temporary directory for <code>tempfile</code> module
 class UseTmpDir ( object ) :
     """Context manager to define/redefine TmpDir for the tempfile module
     """
-    def __init__   ( self , tmp_dir = None ) :
-        self.tmp_dir  = tmp_dir
-        self.previous = None 
+    def __init__   ( self , temp_dir = None ) :
+        
+        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir 
+        self.previous  = None
         
     def __enter__  ( self ) :
-        self.previous    = tempfile.tempdir
-        tempfile.tempdir = self.tmp_dir
         
+        self.previous    = tempfile.tempdir        
+        if  self.tmp_dir is None or writeable ( self.tmp_dir ) : 
+            tempfile.tempdir = self.tmp_dir
+            
+        return self.__tmp_dir
+    
     def __exit__   ( self , *_ ) :
         if self.previous :
-            tempfile.tempdir = self.previous 
+            tempfile.tempdir = self.previous
+            
+    @property
+    def tmp_dir ( self ) :
+        return self.__tmp_dir 
 
-
-## # =============================================================================
-## ## clean an ancient stuff from TMP directory
-## def clean_ancient_stuff ( what = _TmpDir , startwith = '/tmp' ) :
-    
-##     with UseTmpDir ( what ) :
-##         tdir = tempfile.gettempdir()
-##         if os.path.exist ( tdir ) and os.path.isdir ( tdir ) :
-##             import getpass
-##             username = getpass.getuser()
-##             if tdir.startswith ( startdir ) :
-##                 commandp = 'find %s -type f -atime +1 -print' % tdir 
-##                 commandd = 'find %s -type f -atime +1 -print' % tdir 
-##                 import subprocess
-##                 pp = bprocess.Pipe ( commandp.split() ,
-##                                      stdout = subprocess.PIPE ,
-##                                      stderr = subprocess.PIPE )
-                
-##                 op , ep = pp.communucate ()
-##                 op = op.split ( '\n' )
-##                 ep = ep.split ( '\n' )
-##                 if '' in op : op.remove  ('')
-##                 if '' in ep : ep.remove  ('')
-##                 ppc = pp.returncode
-##                 if ppc or ep : pass
-                
-##                 pd = bprocess.Pipe ( commandd.split() ,
-##                                      stdout = subprocess.PIPE ,
-##                                      stderr = subprocess.PIPE )
-                                
-##                 od , ed = pd.communucate ()
-##                 od = od.split ( '\n' )
-##                 ed = ed.split ( '\n' )
-##                 if '' in od : od.remove  ('')
-##                 if '' in ed : ed.remove  ('')
-##                 pdc = pd.returncode
-##                 if pdc or ed : pass
 
 # =============================================================================
 ## @class CleanUp
@@ -133,7 +148,7 @@ class  CleanUp(object) :
     
     @tmpdirs.setter
     def tmpdirs ( self, values ) :
-        if instance ( values , str ) : values = [ values ]
+        if isinstance ( values , str ) : values = [ values ]
         for o in values :
             if o and isinstance ( o ,  str ) :
                 self._tmpdirs.add ( o )
@@ -164,31 +179,45 @@ class  CleanUp(object) :
         while self.__trash : self.remove ( self.__trash.pop () )
             
     @staticmethod
-    def tempdir ( suffix = '' , prefix = 'tmp-' , date = True ) :
-        """Get the name of the temporary directory.
+    def tempdir ( suffix = '' , prefix = 'ostap-tmp-dir-' , date = True ) :
+        """Get the name of the newly created temporary directory.
         The directory will be cleaned-up and deleted at-exit.
         >>> dirname = CleanUp.tempdir() 
         """
-        with UseTmpDir ( _TmpDir ) :
+        with UseTmpDir ( tmp_dir ) :
             if date :
-                now = datetime.datetime.now()
-                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )
-            tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix ) 
+                now    = datetime.datetime.now()
+                if prefix and prefix.endswith('-') :
+                    prefix = "%s%s-"  % ( prefix , now.strftime ( date_format ) )
+                else :
+                    prefix = "%s-%s-" % ( prefix , now.strftime ( date_format ) )
+                    
+            td = tempfile.gettempdir()
+            if user and not user in td : prefix = '%s%s-' % ( prefix , user )
+            
+            tmp = tempfile.mkdtemp ( suffix = suffix , prefix = prefix )
+            
             CleanUp._tmpdirs.add ( tmp )
             logger.verbose ( 'temporary directory requested %s' % tmp   )
             return tmp        
 
     
     @staticmethod
-    def get_temp_file ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
+    def get_temp_file ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True ) :
         """Generate the name for the temporary file.
         - the method should be  avoided in favour of `CleanUp.tempfile`
         >>> fname = CleanUp.get_temp_file () 
         """
-        with UseTmpDir ( _TmpDir ) :
+        with UseTmpDir ( tmp_dir ) :
             if date :
                 now = datetime.datetime.now()
-                prefix = "%s%s-"   %  ( prefix , now.strftime ( "%Y-%b-%d" ) )            
+                if prefix and prefix.endswith('-') :
+                    prefix = "%s%s-"  % ( prefix , now.strftime ( date_format ) )
+                else :
+                    prefix = "%s-%s-" % ( prefix , now.strftime ( date_format ) )
+
+            td = tempfile.gettempdir()
+            if user and not user in td : prefix = '%s%s-' % ( prefix , user )
 
             with tempfile.NamedTemporaryFile ( suffix = suffix ,
                                                prefix = prefix ,
@@ -202,7 +231,7 @@ class  CleanUp(object) :
             return fname
 
     @staticmethod
-    def tempfile ( suffix = '' , prefix = 'tmp-' , dir = None , date = True ) :
+    def tempfile ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True ) :
         """Get the name of the temporary file.
         - The file will be deleted at-exit
         >>> fname = CleanUp.tempfile() 
@@ -273,6 +302,10 @@ class  CleanUp(object) :
             return CleanUp.remove_file ( fname )
         
 # =============================================================================
+if tmp_dir and for_cleanup :
+    CleanUp().tmpdirs = tmp_dir 
+    
+# =============================================================================
 import atexit
 @atexit.register
 def _cleanup_ () :
@@ -333,12 +366,21 @@ class TempFile(object) :
         if self.__filename and os.path.exists ( self.__filename ) :
             CleanUp.remove_file ( self.__filename )
 
+
+    
+    
+
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
-    
+
+    logger.info ( 80*'*' ) 
+    # =========================================================================
+
+  
+    # =========================================================================    
     logger.info ( 80*'*' ) 
             
 # =============================================================================

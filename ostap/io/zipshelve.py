@@ -284,7 +284,7 @@ class ZipShelf(CompressShelf):
 
         ## 3) try old good gzipped (single) file
         import gzip , io, tempfile
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-db' )
         with gzip.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )            
@@ -388,7 +388,7 @@ class TmpZipShelf(ZipShelf):
 
         ## create temporary file name 
         import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.zdb' )
+        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.zdb' )
          
         ZipShelf.__init__ ( self        ,  
                             filename    ,

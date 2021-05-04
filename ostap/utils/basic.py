@@ -22,7 +22,8 @@ __date__    = "2013-02-10"
 __all__     = (
     'with_ipython'  , ## do we run IPython ? 
     'isatty'        , ## is the stream ``isatty'' ?
-    'terminal_size' , ## get the size of terminal cosole 
+    'terminal_size' , ## get the size of terminal cosole
+    'writeable'     , ## good writeable direcrtory?
     )
 # =============================================================================
 import sys,os 
@@ -75,22 +76,6 @@ def terminal_size():
         return 50 , 128
 
     
-# =============================================================================
-## good wrietable drectory?
-#  @code
-#  path = ...
-#  good_dir( path )
-#  @endcode
-def good_dir ( bdir ) :
-    """Good writeable directory?
-    >>> path = ...
-    >>> good_dir ( path )
-    """
-    return bdir                    and \
-           os.path.exists ( bdir ) and \
-           os.path.isdir  ( bdir ) and \
-           os.access      ( bdir , os.W_OK ) 
-
 # ===============================================================================
 ## make directory
 #  @code
@@ -98,17 +83,44 @@ def good_dir ( bdir ) :
 #  make_dir( path )
 #  @endcode 
 def make_dir ( bdir ) :
-    """Good writeable directory?
+    """Make new directory 
     >>> path = ...
     >>> make_dir ( path )
     """
     try :
-        os.mkdir( bdir )
+
+        if bdir : 
+            os.mkdir ( bdir )
+            if os.path.exists ( bdir ) and os.path.isdir ( bdir ) : return bdir
+        
     except OSError :
+        
         pass
     
-    return bdir if good_dir ( bdir ) else ''
-    
+    return ''
+
+# =============================================================================
+## is this directory writeable?
+#  @code
+#  my_dir = ...
+#  if wrietable ( my_dir ) : ...
+#  @endcode
+def writeable ( adir ) :
+    """Is this directory is writeable?
+    >>> my_dir = ...
+    >>> if writeable ( my_dir ) : ...
+    """
+    if adir and os.path.exists ( adir ) and os.path.isdir ( adir ) :
+        
+        import tempfile 
+        try :
+            with tempfile.TemporaryFile ( dir = adir ) : pass
+            return True 
+        except :
+            return False
+
+    return False    
+   
 # =============================================================================
 if __name__ == '__main__' :
 

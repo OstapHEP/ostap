@@ -1660,7 +1660,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 logger.debug  ( 'PROCESS: add cut %s ' % acut )
 
             from ostap.utils.cleanup import TempFile
-            with TempFile ( suffix = '.root' , prefix = 'frame-' ) as tf :
+            with TempFile ( suffix = '.root' , prefix = 'ostap-frame-' ) as tf :
                 if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
                 report   = frame . Report ()
 

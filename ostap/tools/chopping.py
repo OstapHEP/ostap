@@ -849,7 +849,7 @@ class WeightsFiles(CleanUp) :
             with tarfile.open ( wf , 'r' ) as tar :
                 logger.debug ( "Open tarfile %s" % wf )
                 ## tar.list()
-                tmpdir = self.tempdir ( prefix = 'tmp-chopping-weights-' )  
+                tmpdir = self.tempdir ( prefix = 'ostap-chopping-weights-' )  
                 self.trash.add ( tmpdir ) 
                 tar.extractall ( path = tmpdir )                
                 logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 

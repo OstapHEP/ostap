@@ -321,18 +321,19 @@ import ostap.fixes.fixes
 import ostap.core.build_dir
 if arguments.build_dir :
     
-    from ostap.utils.basic import good_dir , make_dir 
+    from ostap.utils.basic   import make_dir
+    from ostap.utils.cleanup import writeable 
     bdir = arguments.build_dir
     
-    if   good_dir ( bdir )                    : pass 
+    if   writeable ( bdir )                   : pass 
     elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 
 
-    if good_dir ( bdir ) :
+    if writeable ( bdir ) :
         ROOT.gSystem.SetBuildDir ( bdir )
         logger.info ( 'Build directory for ROOT: %s' % ostap.core.build_dir.build_dir )
         ostap.core.build_dir.build_dir = bdir 
         
-    del bdir, good_dir, make_dir
+    del bdir, writeable , make_dir
     
 # =============================================================================
 ## ostap startup: history, readlines, etc... 

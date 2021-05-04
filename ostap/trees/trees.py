@@ -2086,7 +2086,7 @@ class Chain(CleanUp) :
                 
                 if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
                 else :
-                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree-' )
+                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tree-' )
                     from ostap.core.core import ROOTCWD
                     with ROOTCWD() : 
                         import ostap.io.root_file

@@ -273,7 +273,7 @@ class LzShelf(CompressShelf):
                 return tuple ( items )
                     
         import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-db' )
         with lzma.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )                
@@ -379,9 +379,9 @@ class TmpLzShelf(LzShelf):
 
         ## create temporary file name 
         ## import tempfile
-        ## filename = tempfile.mktemp  ( prefix = 'tmpdb-' , suffix = '.lzdb' )
+        ## filename = tempfile.mktemp  ( prefix = 'ostap-tmpdb-' , suffix = '.lzdb' )
         import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.lzdb' )
+        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.lzdb' )
         
         LzShelf.__init__ ( self        ,  
                            filename    ,

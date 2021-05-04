@@ -238,9 +238,9 @@ class SqliteDict(DictClass):
         self.in_temp = filename is None
         if self.in_temp:
             ## import tempfile
-            ## filename = tempfile.mktemp  ( prefix = 'tmpdb-'  , suffix = '.sqldb' )
+            ## filename = tempfile.mktemp  ( prefix = 'ostap-tmpdb-'  , suffix = '.sqldb' )
             import ostap.utils.cleanup as CU 
-            filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.sqldb' )
+            filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.sqldb' )
             # randpart = hex(random.randint(0, 0xffffff))[2:]
             # filename = os.path.join(tempfile.gettempdir(), 'sqldict' + randpart)
 

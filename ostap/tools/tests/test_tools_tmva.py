@@ -35,7 +35,7 @@ else :
 # def test_tmva () :
 if 1 < 2 :   
     from ostap.utils.cleanup import CleanUp
-    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva_' )
+    data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva-' )
     if not os.path.exists( data_file ) :
         import random 
         nB =  10000
