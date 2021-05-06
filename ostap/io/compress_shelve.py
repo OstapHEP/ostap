@@ -219,7 +219,7 @@ class CompressShelf(shelve.Shelf,object):
             f     = self.dbname
             db    = self.dbtype            
             if os.path.exists ( f ) and os.path.isfile ( f ) and \
-                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' ) :  
+                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' , 'berkeleydb') :  
                 files.append  ( f )
             elif   f + '.db'  in nfiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
                 files.append  ( f + '.db'  )

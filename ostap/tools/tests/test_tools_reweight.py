@@ -168,7 +168,7 @@ for iter in range ( 1 , maxIter + 1  ) :
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
         
-        ## 4b) compare th        
+        ## 4b) compare them        
         title = tag + ': DATA vs MC difference'
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )

@@ -17,7 +17,9 @@
   1. allow derived quantitites to be added into the output table of `RooFitResult`
   1. add `getitem` stuff for `RooFitResult` to allow interchange with dictionaries 
   1. add `split_range` generator to splti large range into smaller chunks 
-  1. make creation an dmanagemenbt of temporary files and directories more robust, probably more efficient, use better namings, ...
+  1. make creation and managemenbt of temporary files and directories more robust, probably more efficient, use better namings, ...
+  1. add `timeout` parameter for `sqlitedict` and `sqliteshelve`
+  1. make use of `berkeleydb` for 3.6<=python
 
  
 ## Backward incompatible changes: 

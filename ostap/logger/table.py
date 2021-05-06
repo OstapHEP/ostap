@@ -63,7 +63,10 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () ) :
     >>> t = the_table ( table_data , 'Title' )
     >>> print (t)
     """
-    ## calculate the number of columns 
+    ## calculate the number of columns
+
+    rows = list ( rows )
+    
     nc  = 0
     for row in rows : nc = max ( nc , len ( row ) )
         
@@ -172,7 +175,10 @@ def table ( rows , title = '' , prefix = '' , alignment = () ) :
         rows [0]   = header_row 
         rows = tuple ( rows )
         
+    rows = [ list(row) for row in rows ]
+
     if terminaltables and isatty () :
+
         
         table_instance = terminaltables.SingleTable ( rows , title)
 
@@ -185,7 +191,7 @@ def table ( rows , title = '' , prefix = '' , alignment = () ) :
                 elif al in right  : table_instance.justify_columns [ i ] = 'right'
                 elif al in center : table_instance.justify_columns [ i ] = 'center'
 
-        return add_prefix (  table_instance.table , prefix ) 
+        return add_prefix ( table_instance.table , prefix ) 
     
     elif terminaltables :
         
@@ -227,7 +233,7 @@ def add_prefix ( table , prefix = '' ) :
     """Add certain prefix to  each line of the table
     >>> table = ...
     >>> table =  add_prefix ( table , '# ') 
-    """    
+    """
     return prefix + table.replace ( '\n' , '\n' + prefix ) if prefix else table 
 
 # ==============================================================================

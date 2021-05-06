@@ -203,7 +203,7 @@ class SqliteDict(DictClass):
                  ## tablename='unnamed',
                  tablename='ostap',
                  flag='c',
-                 autocommit=False, journal_mode="DELETE", encode=encode, decode=decode, timeout = 5):
+                 autocommit=False, journal_mode="DELETE", encode=encode, decode=decode, timeout = 30 ):
         """
         Initialize a thread-safe sqlite-backed dictionary. The dictionary will
         be a table `tablename` in database file `filename`. A single file (=database)

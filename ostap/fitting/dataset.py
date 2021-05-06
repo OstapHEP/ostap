@@ -29,7 +29,6 @@ from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
 from   ostap.math.base        import islong
-from   ostap.stats.bootstrap  import bootstrap as bootstrap_indices 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -357,13 +356,19 @@ def _rds_jackknife_ ( dataset , low = 0 , high = None ) :
 #  for ds in dataset.bootstrap ( 100 ) :
 #  ...
 #  @endcode
-def _rds_bootstrap_ ( dataset , size = 100 ) :
+def _rds_bootstrap_ ( dataset , size = 100 , extended = False ) :
     """ Boostrap generator
     >>> dataset = ...
     >>> for ds in dataset.bootstrap ( 100 ) :
     >>> ...
     """
-    for indices in bootstrap_indices ( range ( len ( dataset ) ) , size = size ) :
+
+    from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
+
+    N    = len ( dataset )
+    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size ) 
+    
+    for indices in bgen : 
         ds = dataset [ indices ] 
         yield ds
         ds.clear()
@@ -638,10 +643,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
-    print ( 'HERE!')
-    
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
-        print ( 'HERE!-3D' , what[2] , what[1] , what[0] , cuts , args )
         sc = Ostap.HistoProject.project3 ( dataset ,
                                            histo   , 
                                            what[2] ,
@@ -652,7 +654,6 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             return None
         return histo
     elif isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() and 2 == len ( what )  :
-        print ( 'HERE!-3D' , what[1] , what[0] , cuts , args )
         sc = Ostap.HistoProject.project2 ( dataset ,
                                            histo   , 
                                            what[1] ,
@@ -662,7 +663,6 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             return None
         return histo
     elif isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() and 1 == len ( what )  :
-        print ( 'HERE!-1D'  , what[0] , cuts , args )
         sc = Ostap.HistoProject.project  ( dataset ,
                                            histo   , 
                                            what[0] , cuts , *args )
