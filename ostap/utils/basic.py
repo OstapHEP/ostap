@@ -24,6 +24,7 @@ __all__     = (
     'isatty'        , ## is the stream ``isatty'' ?
     'terminal_size' , ## get the size of terminal cosole
     'writeable'     , ## good writeable direcrtory?
+    'whoami'        , ## who am I? 
     )
 # =============================================================================
 import sys,os 
@@ -51,6 +52,23 @@ def isatty ( stream = None ) :
     #
     return False
 
+# =============================================================================
+## Who am i ?
+#  @cdoe
+#  print ( 'I am :' % whoami() ) 
+#  @endcode 
+def whoami () :
+    """ Who am i ?
+    >>> print ( "I am ", whoami() ) 
+    """
+    try :
+        return os.getlogin()
+    except :
+        pass
+    
+    import getpass
+    return getpass.getuser() 
+    
 # =============================================================================
 ## helper function that allows to detect running ipython
 def with_ipython()  :

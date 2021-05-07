@@ -25,7 +25,7 @@ import os, tempfile, datetime
 from   sys import version_info as python_version 
 # =============================================================================
 from   ostap.core.ostap_types import string_types
-from   ostap.utils.basic      import make_dir, writeable  
+from   ostap.utils.basic      import make_dir, writeable, whoami   
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.cleanup' )
@@ -35,10 +35,7 @@ del getLogger
 date_format =  "%Y-%b-%d"
 re_format   = r"-(\d{4}-(\D&\S){3}-\d{2})-" 
 # =============================================================================
-user = os.getlogin()
-if not user :
-    import getpass
-    user = getpass.getuser()
+user = whoami ()
 # =============================================================================            
 ## temporary directory for <code>tempfile</code> module
 base_tmp_dir = None
