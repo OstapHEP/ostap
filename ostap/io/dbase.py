@@ -26,6 +26,8 @@ from   ostap.logger.logger  import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
 else                      : logger = getLogger ( __name__         )
 # =============================================================================
+from ostap.io.sqlitedict import SqliteDict, issqlite3
+# =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
@@ -125,7 +127,6 @@ def whichdb ( filename  ) :
     if tst or tst is None     : return tst
     
     ## sqlite3 ?
-    from ostap.io.sqlitedict  import issqlite3
     if issqlite3 ( filename ) : return 'sqlite3'
 
 
@@ -174,6 +175,7 @@ def whichdb ( filename  ) :
     ## unknown 
     return ""
 
+
 # =====================================================================
 ## Open or create database at path given by *file*.
 # 
@@ -213,6 +215,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
         
         if concurrent and use_bsddb3     :
+            if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
             return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
         if concurrent :
@@ -224,6 +227,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
         return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
     if use_bdsdb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
+        if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
     if check == 'sqlite3' :
