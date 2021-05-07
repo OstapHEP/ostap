@@ -24,7 +24,12 @@ from   builtins          import range
 try :
     
     import numpy as np
-    
+
+    if hasattr ( np.random , 'default_rng' ) : 
+        np_rng = np.random.default_rng () 
+    else :
+        np_rng = np.random
+        
     # ============================================================================
     ## generate bootstrap samples 
     #  @code
@@ -51,9 +56,8 @@ try :
         >>> ... sample = data [ indices ]
         """
         N   = len ( data )
-        rng = np.random.default_rng()        
         for i in range ( size ) :
-            yield rng.choice ( data , size = N )
+            yield np_rng.choice ( data , size = N )
 
     # =========================================================================
     ## Generate "extended" bootstrap
@@ -78,10 +82,9 @@ try :
         >>> for indices  in extended_bootstrap ( range ( N ) , size = 100  ) :
         >>> ... sample = data [ indices ]
         """
-        rng  = np.random.default_rng()
         N    = len ( data )
         for i in range ( size ) :
-            yield rng.choice ( data , size = rng.poisson ( N )  )
+            yield np_rng.choice ( data , size = np_rng.poisson ( N )  )
 
 except ImportError :
 
