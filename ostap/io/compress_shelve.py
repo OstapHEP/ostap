@@ -531,13 +531,12 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and 'e' == self.mode : write = True
         else                                                : write = False 
         if write : 
-            meta = meta_info () 
-            dct = self.get ( '__metainfo__' , {} )
+            dct  = self.get ( '__metainfo__' , {} )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
-            dct  [ 'Updated by'                  ] = meta.User 
-            dct  [ 'Updated with Ostap version'  ] = meta.Ostap 
-            dct  [ 'Updated with Python version' ] = meta.Python 
-            dct  [ 'Updated with ROOT version'   ] = meta.ROOT   
+            dct  [ 'Updated by'                  ] = meta_info.User 
+            dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
+            dct  [ 'Updated with Python version' ] = meta_info.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT   
             self [ '__metainfo__' ] = dct
 
         if not self.silent : self.ls ()

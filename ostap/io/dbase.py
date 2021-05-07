@@ -33,7 +33,7 @@ Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
 if sys.version_info < ( 3, 0 ) :
     import anydbm                   as std_db
-    from   whichdb import whichdb   as std_whichb 
+    from   whichdb import whichdb   as std_whichdb 
 else :
     import dbm                      as std_db
     std_whichdb = std_db.whichdb
@@ -41,7 +41,7 @@ else :
 ## Check for Berkeley DB
 # =============================================================================
 use_bsddb3     = False
-use_berkleydb  = False
+use_berkeleydb = False
 
 ## make a try to use berkeleydb
 if  ( 3 , 6 ) <= sys.version_info :
@@ -227,7 +227,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
     if use_berkeleydb and check in ( 'berkeleydb' , 'bsddb3' , 'dbhash' ) :
         return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
-    if use_bdsdb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
+    if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
         if 'encode'  in kwargs : kwargs.pop ( 'encode' ) 
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
