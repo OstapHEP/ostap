@@ -216,6 +216,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
         
         if concurrent and use_bsddb3     :
             if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
+            if 'encode'  in kwargs : kwargs.pop ( 'encode' ) 
             return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
         if concurrent :
@@ -228,6 +229,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
 
     if use_bdsdb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
         if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
+        if 'encode'  in kwargs : kwargs.pop ( 'encode' ) 
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
     if check == 'sqlite3' :

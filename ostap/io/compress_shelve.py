@@ -187,24 +187,27 @@ class CompressShelf(shelve.Shelf,object):
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
 
-
+        
         if  3 <= python_version.major  :
             
             shelve.Shelf.__init__ (
-                self                           ,
-                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
+                self                          ,
+                dbopen ( self.dbname , mode ) ,  ## decode = lambda s : s , encode = lambda s : c )  ,
+                
                 protocol                      ,
-                writeback                         ,
-                keyencoding                       )
+                writeback                     ,
+                keyencoding                   )
+            
         else :
             
             shelve.Shelf.__init__ (
-                self                              ,
-                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
-                protocol                          ,
-                writeback                         ) 
+                self                          ,
+                dbopen ( self.dbname , mode ) , ## decode = lambda s : s , encode = lambda s : c )  ,
+                protocol                      ,
+                writeback                     ) 
             self.keyencoding = keyencoding
-                    
+
+
         self.__opened        = True
         self.__mode          = mode        
 
