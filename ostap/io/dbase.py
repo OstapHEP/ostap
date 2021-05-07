@@ -128,46 +128,49 @@ def whichdb ( filename  ) :
     from ostap.io.sqlitedict  import issqlite3
     if issqlite3 ( filename ) : return 'sqlite3'
 
-    if use_berkeleydb or use_bsddb3 :
 
-        import io , struct
+    import io , struct
+    
+    try :
         
-        try :
+        with io.open ( filename  ,'rb' ) as f :
+            # Read the start of the file -- the magic number
+            s16 = f.read(16)
             
-            with io.open ( filename  ,'rb' ) as f :
-                # Read the start of the file -- the magic number
-                s16 = f.read(16)
-                
-        except OSError :
-            return None
-
-        s = s16[0:4]
-
-        # Return "" if not at least 4 bytes
-        if len(s) != 4:
-            return ""
-
-        # Convert to 4-byte int in native byte order -- return "" if impossible
-        try:
-            ( magic, ) = struct.unpack("=l", s)
-        except struct.error:
-            return ""
-        
-        # Check for old Berkeley db hash file format v2
-        if magic in ( 0x00061561 , 0x61150600 ):
-            return "bsddb185"
-        
-        # Later versions of Berkeley db hash file have a 12-byte pad in
-        # front of the file type
-        try:
-            (magic,) = struct.unpack("=l", s16[-4:])
-        except struct.error:
-            return ""
-
-        # Check for BSD hash
-        if magic in ( 0x00061561 , 0x61150600 ):
-            return "berkeleydb" if use_berkeleydb else "bsddb3"
-
+    except OSError :
+        return None
+    
+    s = s16[0:4]
+    
+    # Return "" if not at least 4 bytes
+    if len(s) != 4:
+        return ""
+    
+    # Convert to 4-byte int in native byte order -- return "" if impossible
+    try:
+        ( magic, ) = struct.unpack("=l", s)
+    except struct.error:
+        return ""
+    
+    # Check for GNU dbm
+    if magic in (0x13579ace, 0x13579acd, 0x13579acf):
+        return "dbm.gnu"
+    
+    # Check for old Berkeley db hash file format v2
+    if magic in ( 0x00061561 , 0x61150600 ):
+        return "bsddb185"
+    
+    # Later versions of Berkeley db hash file have a 12-byte pad in
+    # front of the file type
+    try:
+        (magic,) = struct.unpack("=l", s16[-4:])
+    except struct.error:
+        return ""
+    
+    # Check for BSD hash
+    if magic in ( 0x00061561 , 0x61150600 ):
+        return "berkeleydb" if use_berkeleydb else "bsddb3"
+    
     ## unknown 
     return ""
 
@@ -209,7 +212,7 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
         
-        if concurrent and use_bdsdb3     :
+        if concurrent and use_bsddb3     :
             return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
         if concurrent :
