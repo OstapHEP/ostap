@@ -84,7 +84,7 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
     
     try :        
         import bsddb3
-        use_bdddb3  = True        
+        use_bsddb3  = True        
     except ImportError  :        
         bsddb3      = None 
         use_bsddb3  = False 
