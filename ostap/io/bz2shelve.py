@@ -192,7 +192,7 @@ class Bz2Shelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.tbz' , '.tbz2' , '.bz2' , '.bz2db' 
+    extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
     def __init__(
         self                                   ,

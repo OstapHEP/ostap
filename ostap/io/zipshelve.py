@@ -186,7 +186,7 @@ class ZipShelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.zip' , '.tgz' , '.zdb' , '.zipdb' , '.gz'  
+    extensions = '.zip' , '.tgz' , '.gz'  
     ## 
     def __init__(
         self                                   ,

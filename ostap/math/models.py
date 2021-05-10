@@ -346,7 +346,8 @@ def _amp_ ( self , x , *a ) :
     >>> a = fun.amp ( x )    
     """
     v = self.amplitude ( x , *a )
-    return complex( v.real () , v.imag () ) 
+    print ( '_amp_', v, type ( v ) , v ) 
+    return complex( v.real , v.imag  ) 
 
 
 # ==============================================================================

@@ -112,14 +112,14 @@ def issqlite3 ( filename ) :
     >>> ok = issqlite3 ( 'mydbase' ) 
     - see https://stackoverflow.com/questions/12932607/how-to-check-if-a-sqlite3-database-exists-in-python
     """
-    
+
     if not   os.path.exists  ( filename ) : return False
     if not   os.path.isfile  ( filename ) : return False
     if 100 > os.path.getsize ( filename ) : return False
     
     with io.open ( filename  , 'rb' ) as f :
         hdr = f.read(100)
-        return hdr[:16] == 'SQLite format 3\x00'
+        return hdr[:16] == b'SQLite format 3\x00'
     
     return False 
 

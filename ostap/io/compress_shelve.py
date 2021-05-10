@@ -186,13 +186,12 @@ class CompressShelf(shelve.Shelf,object):
 
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
-
         
         if  3 <= python_version.major  :
             
             shelve.Shelf.__init__ (
                 self                          ,
-                dbopen ( self.dbname , mode ) ,  ## decode = lambda s : s , encode = lambda s : c )  ,
+                dbopen ( self.dbname , flag = mode ) ,  ## decode = lambda s : s , encode = lambda s : c )  ,
                 
                 protocol                      ,
                 writeback                     ,
@@ -202,7 +201,7 @@ class CompressShelf(shelve.Shelf,object):
             
             shelve.Shelf.__init__ (
                 self                          ,
-                dbopen ( self.dbname , mode ) , ## decode = lambda s : s , encode = lambda s : c )  ,
+                dbopen ( self.dbname , flag = mode ) , ## decode = lambda s : s , encode = lambda s : c )  ,
                 protocol                      ,
                 writeback                     ) 
             self.keyencoding = keyencoding
@@ -244,8 +243,8 @@ class CompressShelf(shelve.Shelf,object):
                 files.append  ( f + '.dir' )                
             elif   f + '.pag' in ofiles                           and db in ( 'dbm.dumb' , 'dumbdbm' ) :
                 files.append  ( f + '.pag' )
-            else  :
-                logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
+            ## else  :
+            ##    logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
 
             files.sort ()
             self.__files = tuple  ( files  )

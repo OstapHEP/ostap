@@ -90,7 +90,8 @@ if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) :
     except ImportError  :        
         bsddb3      = None 
         use_bsddb3  = False 
-        
+
+
 # =============================================================================
 ##  Guess which db package to use to open a db file.
 #  
@@ -119,7 +120,7 @@ def whichdb ( filename  ) :
     - Actually it is a bit extended  form of `dbm.whichdb`
     that accounts for `bsddb3` and `sqlite3`
     """
-
+    
     ## use the standard function 
     tst = std_whichdb ( filename  )
 
@@ -128,7 +129,6 @@ def whichdb ( filename  ) :
     
     ## sqlite3 ?
     if issqlite3 ( filename ) : return 'sqlite3'
-
 
     import io , struct
     
@@ -144,34 +144,37 @@ def whichdb ( filename  ) :
     s = s16[0:4]
     
     # Return "" if not at least 4 bytes
-    if len(s) != 4:
+    if len ( s ) != 4:
         return ""
-    
+
+    if s == b'root'  :
+        return 'root'
+
     # Convert to 4-byte int in native byte order -- return "" if impossible
     try:
         ( magic, ) = struct.unpack("=l", s)
     except struct.error:
         return ""
-    
+
     # Check for GNU dbm
     if magic in (0x13579ace, 0x13579acd, 0x13579acf):
         return "dbm.gnu"
-    
+
     # Check for old Berkeley db hash file format v2
     if magic in ( 0x00061561 , 0x61150600 ):
         return "bsddb185"
-    
+
     # Later versions of Berkeley db hash file have a 12-byte pad in
     # front of the file type
     try:
         (magic,) = struct.unpack("=l", s16[-4:])
     except struct.error:
         return ""
-    
+
     # Check for BSD hash
     if magic in ( 0x00061561 , 0x61150600 ):
         return "berkeleydb" if use_berkeleydb else "bsddb3"
-    
+
     ## unknown 
     return ""
 
@@ -205,36 +208,36 @@ def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
 
     if 'n' in flag and os.path.isfile ( file ) :
         os.unlink ( file ) 
-
+ 
     check = whichdb ( file ) if 'n' not in flag  else None
 
+    if 'c' in flag and '' == check :
+        check = None 
+        os.unlink ( file ) 
+        
     # 'n' flag is specified  or dbase does not exist and c flag is specified 
     if 'n' in flag or ( check is None and 'c' in flag ) : 
-        
+                
         if concurrent and use_berkeleydb :
             return berkeleydb_open ( file , flag , mode , **kwargs ) 
-        
+
         if concurrent and use_bsddb3     :
-            if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
-            if 'encode'  in kwargs : kwargs.pop ( 'encode' ) 
             return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
         if concurrent :
             return SqliteDict ( filename = file , flag = flag , **kwargs )
-            
+
         return std_db.open ( file , flag , mode ) 
 
     if use_berkeleydb and check in ( 'berkeleydb' , 'bsddb3' , 'dbhash' ) :
         return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
     if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
-        if 'decode'  in kwargs : kwargs.pop ( 'decode' ) 
-        if 'encode'  in kwargs : kwargs.pop ( 'encode' ) 
         return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
     if check == 'sqlite3' :
         return SqliteDict ( filename = file , flag = flag , **kwargs )
-        
+
     return std_db.open ( file , flag , mode )  
     
 # =============================================================================

@@ -81,14 +81,19 @@ def test_shelves():
     db_root_name = CU.CleanUp.tempfile ( suffix = '.root'   )
     db_lz_name   = CU.CleanUp.tempfile ( suffix = '.lzmadb' )
 
+    dbases = ( db_sql_name , db_zip_name , db_bz2_name , db_root_name )
+    
+    from   ostap.io.dbase        import whichdb
+
+
     db_sql  = sqliteshelve.open ( db_sql_name  , 'c' )
     db_zip  = zipshelve.open    ( db_zip_name  , 'c' )
     db_bz2  = bz2shelve.open    ( db_bz2_name  , 'c' )
     db_root = rootshelve.open   ( db_root_name , 'c' )
     
     if lzshelve : db_lz = lzshelve.open ( db_lz_name , 'c' )
-    else        : db_ls = None 
-        
+    else        : db_lz = None 
+ 
         
     for k in data :
         db_sql  [ k ] = data[k]
@@ -98,6 +103,7 @@ def test_shelves():
             db_lz  [ k ] = data[k]
         db_root [ k ] = data[k]
         
+        
     logger.info('SQLiteShelve #keys: %s' % len ( list ( db_sql .keys() ) ) ) 
     logger.info('ZipShelve    #keys: %s' % len ( db_zip .keys() ) )
     logger.info('Bz2Shelve    #keys: %s' % len ( db_bz2 .keys() ) )
@@ -105,11 +111,13 @@ def test_shelves():
     if lzshelve :
         logger.info('LzShelve     #keys: %s' % len ( db_lz .keys() ) )
 
+
     db_sql  .close() 
     db_zip  .close()
     db_bz2  .close()
     db_root .close()
     if lzshelve : db_lz .close()
+
 
     logger.info('SQLiteShelve size: %d|%d ' % dbsize ( db_sql_name  ) ) 
     logger.info('ZipShelve    size: %d|%d ' % dbsize ( db_zip_name  ) )   
@@ -117,7 +125,7 @@ def test_shelves():
     logger.info('RootShelve   size: %d|%d'  % dbsize ( db_root_name ) )  
     if lzshelve :
         logger.info('LzShelve     size: %d|%d ' % dbsize ( db_lz_name    ) ) 
-    
+
     db_sql  = sqliteshelve.open    ( db_sql_name  , 'r' )
     db_zip  = zipshelve.open       ( db_zip_name  , 'r' )
     db_bz2  = bz2shelve.open       ( db_bz2_name  , 'r' )
@@ -132,7 +140,6 @@ def test_shelves():
         logger.info('LzShelve     #keys: %s' % len ( db_lz  .keys() ) )
     logger.info('RootShelve   #keys: %s' % len ( db_root.keys() ) )
 
-    
     with timing ( 'h2-read/SQL'  ) : h2_sql  = db_sql  [ 'histo-2D']
     with timing ( 'h2_read/ZIP'  ) : h2_zip  = db_zip  [ 'histo-2D']
     with timing ( 'h2_read/BZ2'  ) : h2_bz2  = db_bz2  [ 'histo-2D']
@@ -175,7 +182,6 @@ def test_shelves():
             if not iszero ( v.value() ) :
                 logger.error('Large difference for 1D histogram(5)!')
                 
-    
     for i in h2_sql : 
         v = h2_sql  [i] - h2_zip[i] 
         if not iszero ( v.value() ) :
