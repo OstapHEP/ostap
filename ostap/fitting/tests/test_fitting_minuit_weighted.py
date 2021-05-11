@@ -101,7 +101,7 @@ def test_minuit_weighted () :
     
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = False )
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = True  , nbins = 50 )
-    
+
     logger.info ('Weighted fit result (SumW2=True)\n%s' % r2.table ( 'SumW2=True')  )
     
     if 61900 <= root_version_int : 
@@ -125,7 +125,8 @@ def test_minuit_weighted () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ("minuit weighted" , logger ) :  
+
+    with timing ("minuit weighted" , logger ) :
         test_minuit_weighted ()
     
 # =============================================================================

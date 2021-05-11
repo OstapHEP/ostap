@@ -19,6 +19,7 @@ __all__     = (
 # =============================================================================
 from   builtins import range 
 import ROOT
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 import ostap.math.linalg      
@@ -639,7 +640,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         crows.append ( row ) 
 
     ## floating parameters 
-    frows = [] 
+    frows    = []
     for p in pars_float :
         v , a = pars_float [ p ]
 
@@ -651,11 +652,11 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        cc = 'Not available'
-        if 0 <= cq :             
+        cc = 'Not available' if root_info < ( 6 , 24 ) else ''
+        if 0 <= cq and root_info < ( 6 , 24 ) : 
             mxr , mxv = r.max_cor    ( p )
-            gc        = r.globalCorr ( p )
-            
+            gc    = r.globalCorr ( p )
+
             cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
             if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
             
