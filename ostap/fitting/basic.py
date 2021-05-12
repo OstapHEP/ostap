@@ -1140,7 +1140,7 @@ class PDF (FUNC) :
 
         import ostap.histos.graphs
         ## 2) create graph if drawing reqested 
-        graph = ROOT.TGraph () if graph else None 
+        graph = ROOT.TGraph () if draw else None 
             
         ## 3) collect NLL values 
         results   = []
