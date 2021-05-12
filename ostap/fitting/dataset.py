@@ -24,7 +24,7 @@ __all__     = (
     'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-import ROOT, random, math, sys 
+import ROOT, random, math, sys, ctypes  
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
@@ -33,11 +33,12 @@ import ostap.fitting.variables
 import ostap.fitting.roocollections
 import ostap.fitting.printable
 # =============================================================================
-if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection
+if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection, Sequence, Iterable  
 elif ( 3 , 3 ) <= sys.version_info  :
-    from collections.abc import Collection
+    from collections.abc import Collection, Sequence, Iterable  
     from types           import GeneratorType as Generator 
 else :
+    from collections     import Sequence , Iterable            
     from collections     import Container     as Collection
     from types           import GeneratorType as Generator 
 # =============================================================================
@@ -90,35 +91,88 @@ def _rad_getitem_ ( data , index ) :
     >>> events = dataset[ (1,2,3,4,10) ]    ## sequnce of indices 
     """
 
-    N = len ( data ) 
+    N = len ( data )
+    
     if isinstance ( index , integer_types ) and index < 0 :
         index += N
 
-    if isinstance ( index , integer_types ) and 0 <= index  < len ( data ) :
+    if isinstance ( index , integer_types ) and 0 <= index  < N :
         
-        return data.get ( index )
-       
+        return data.get ( index )  ## should we add weight here? 
+   
+    elif isinstance ( index , range ) :
+
+        ## simpel case 
+        start , stop , step = index.start , index.stop , index.step
+        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+                
     elif isinstance ( index , slice ) :
         
-        start , stop , step = index.indices ( len ( data ) )
+        start , stop , step = index.indices ( N )
                               
         if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
-        
-        result = data.emptyClone( dsID() )
-        for j in range ( start , stop , step ) : result.add ( data [ j ] )
-        
-        return result
 
-    elif isinstance ( index , ( Generator , Collection ) ) :
+        index = range ( start , stop , step ) 
+
+
+    ## the actual loop over entries 
+    if isinstance ( index , ( Generator , Collection , Sequence ) ) :
+
+        weighted = data.isWeighted                    ()
+        se       = weighted and data.store_error      ()
+        sae      = weighted and data.store_asym_error ()
 
         result = data.emptyClone ( dsID () )
-        for j in index : result.add ( data [ int ( j ) ] )
-        
+        for i in index :
+
+            j = int ( i )                 ## the content must be convertible tointegers 
+
+            if j < 0 : j += N             ## allow negative indicees 
+            
+            if not 0 <= j < N :           ## is adjusted integer in the proper range ? 
+                logger.error ( 'Invalid index %d, skip it' % j ) 
+                continue  
+            
+            vars = data.get ( j )
+            
+            if   weighted and sae :
+                wel , weh = data.weight_errors()
+                result.add ( vars , data.weight () , wel , weh ) 
+            elif weighted and se  :
+                we        = data.weightError()
+                result.add ( vars , data.weight () , we  ) 
+            elif weighted         :
+                result.add ( vars , data.weight () ) 
+            else : 
+                result.add ( vars ) 
+            
         return result
-        
+
     raise IndexError ( 'Invalid index %s'% index )
 
+# ==============================================================================
+## Get (asymmetric) weigth errors for the current entry in dataset
+#  @code
+#  dataset = ...
+#  weight_error_low, weight_error_high = dataset.weightErrors() 
+#  @endcode
+#  @see RooAbsData::weightError
+def _rad_weight_errors( data , *etype ) :
+    """ Get (asymmetric) weigth errors for the current entry in dataset
+    >>> dataset = ...
+    >>> weight_error_low, weigth_error_high = dataset.weight_errors () 
+    - see ROOT.RooAbsData.weightError
+    """
+    ##
+    if not w.isWeighted () : return 0.0, 0.0
+    ##
+    wel = ctypes.c_double ( 0.0 )
+    weh = ctypes.c_double ( 0.0 )
+    data.weightError ( wel , weh )
+    #
+    return float ( wel.value ) , float ( weh.value )
 
+        
 # =============================================================================
 ## Get variables in form of RooArgList 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru

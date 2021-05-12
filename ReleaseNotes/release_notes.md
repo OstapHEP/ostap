@@ -29,6 +29,7 @@
   1. fix asserion statement in `dalitz.py` 
   1. fix a bug in analytic  three-body phase space for cases with zero masses 
   1. fix a bug in numerical three-body phase space for case with all zero masses 
+  1. fix a bug in `__getitem__` for range/slice/index sequecne for the weighted datasets - the event weigth was propagates incorrectly. Thanks to Dmitry Pereima.
 
 
 # v1.6.1.0
