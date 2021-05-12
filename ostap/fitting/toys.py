@@ -96,7 +96,7 @@ def print_stats (  stats , ntoys = '' , logger = logger ) :
     def make_row ( c ) :
         n      = "{:^11}".format ( c.nEntries() )
         mean   = c.mean ()
-        mean   = "%+13.6g +- %-13.6g" % ( mean.value() , mean.error() )
+        mean   = "%+13.6g +/- %-13.6g" % ( mean.value() , mean.error() )
         rms    = "%13.6g"             % c.rms ()
         minmax = "%+13.6g / %-+13.6g" % ( c.min() , c.max () ) 
         return p , n , mean , rms  , minmax 
@@ -137,7 +137,7 @@ def jackknife_statistics ( statistics , theta = None ) :
     >>> jacknife                      = jackknife_estimator ( statistics         )
     >>> jacknife , theta_corr , bias  = jackknife_esiimator ( statistics , value )
     """
-    assert isinstance ( theta , ( VE, None) ) ,\
+    assert isinstance ( theta , VE ) or theta is None  ,\
            "jackknife_statistics: invalid type of ``value'' %s" % type ( value ) 
     
     N         = statistics . nEntries ()             ## number of jackknife samples 
@@ -197,16 +197,27 @@ def print_jackknife  ( fitresult          ,
         scale = theta     .error () / theta_jack.error () 
 
         row = ( name , 
-                "%+13.6g +- %-13.6g" % ( theta      . value () , theta      .error () ) , 
-                "%+13.6g +- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
-                "%+13.6g +- %-13.6g" % ( theta_jack . value () , theta_jack .error () ) ,  
+                "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
+                "%+13.6g +/- %-13.6g" % ( jackknife  . value () , jackknife  .error () ) , 
+                "%+13.6g +/- %-13.6g" % ( theta_jack . value () , theta_jack .error () ) ,  
                 '%+6.2f'             % ( bias / theta.error() * 100 ) , 
                 '%+6.2f'             % ( scale * 100 - 100 )          )
         
         table.append ( row )
 
         
-    table.sort()
+    for name in sorted ( stats ) :
+
+        if name in fitresult : continue
+        if name in morevars  : continue
+
+        statistics = stats [ name ]
+        jackknife  = jackknife_statistics ( statistics ) 
+        
+        row = name , '' , "%+13.6g +/- %-13.6g" % ( jackknife . value () , jackknife .error () ) , '' , '' , '' 
+        table.append ( row )
+        
+    
     table = [ header ] + table 
  
     title = title if title else "Jackknife results (N=%d)" % N  
@@ -261,13 +272,25 @@ def print_bootstrap  ( fitresult          ,
         scale = theta     .error () / theta_boot.error () 
 
         row = ( name , 
-                "%+13.6g +- %-13.6g" % ( theta      . value () , theta      .error () ) , 
-                "%+13.6g +- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) ,  
-                '%+6.2f'             % ( bias / theta.error() * 100 ) , 
-                '%+6.2f'             % ( scale * 100 - 100 )          )
+                "%+13.6g +/- %-13.6g" % ( theta      . value () , theta      .error () ) , 
+                "%+13.6g +/- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) ,  
+                '%+6.2f'              % ( bias / theta.error() * 100 ) , 
+                '%+6.2f'              % ( scale * 100 - 100 )          )
         
         table.append ( row )
 
+    for name in sorted ( stats ) :
+        
+        if name in fitresult : continue
+        if name in morevars  : continue
+        
+        statistics = stats [ name ]
+        theta_boot = VE ( statistics.mean().value() , statistics.mu2() ) 
+
+        row = name , '',  "%+13.6g +/- %-13.6g" % ( theta_boot . value () , theta_boot .error () ) , '' , '' 
+        table.append ( row )
+
+        
 
     table = [ header ] + table 
  
@@ -550,7 +573,8 @@ def make_toys ( pdf                 ,
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
 
-            results [ '#' ] .append ( len ( dataset ) )
+            results [ '#'     ] .append ( len ( dataset ) )
+            results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
             
         dataset.clear()
         del dataset
@@ -799,7 +823,8 @@ def make_toys2 ( gen_pdf             , ## pdf to generate toys
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , fit_pdf ) )
                 
-            results [ '#' ] .append ( len ( dataset ) )
+            results [ '#'     ] .append ( len ( dataset ) )
+            results [ '#sumw' ] .append ( dataset.sumVar ( '1' ) ) 
 
         dataset.clear()
         del dataset
@@ -978,7 +1003,8 @@ def make_jackknife ( pdf                  ,
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
                 
-            results [ '#' ] .append ( len ( ds ) )
+            results [ '#'     ] .append ( len ( ds ) )
+            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
 
         ds.clear()
 
@@ -1156,7 +1182,8 @@ def make_bootstrap ( pdf                  ,
                 func  = more_vars[v] 
                 results [ v ] .append ( func ( r , pdf ) )
                 
-            results [ '#' ] .append ( len ( ds ) )
+            results [ '#'     ] .append ( len ( ds ) )
+            results [ '#sumw' ] .append ( ds.sumVar ( '1' ) ) 
 
         ds.clear()
         

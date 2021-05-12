@@ -360,8 +360,12 @@ def _rds_sub_ ( dataset , index ) :
     """
     N = len ( dataset )
     
-    if 1 < N and isinstance ( index , integer_types ) and  0 <= index < N :
+    if 1 < N and isinstance ( index , integer_types ) :
 
+        if index < 0 : index += N  ## allow negative indices 
+
+        if not 0 <= index < N : return NotImplemented
+        
         if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
         elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
 
