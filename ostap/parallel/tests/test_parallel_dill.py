@@ -51,28 +51,27 @@ def test_dill () :
         
     try : 
         p = pickle.dumps  ( h )
-        logger.info  ("Histogram is successfully serialized using pickle!/1")
+        logger.info  ("Histogram is successfully serialized using pickle!")
     except :
-        logger.error ("Histogram cannot be serialized using pickle!/1")
+        logger.error ("Histogram cannot be serialized using pickle!")
         
     try : 
         d = dill  .dumps  ( h ) 
-        logger.info  ("Histogram is successfully serialized using dill!/1")
+        logger.info  ("Histogram is successfully serialized using dill!")
     except :
-        logger.error ("Histogram cannot be serialized using dill!/1")
+        logger.error ("Histogram cannot be serialized using dill!")
 
     try : 
         p = pickle.loads ( pickle.dumps  ( h ) ) 
-        logger.info  ("Histogram is successfully serialized using pickle!/2")
+        logger.info  ("Histogram is successfully serialized/deserialized using pickle!")
     except :
-        logger.error ("Histogram cannot be serialized using pickle!/2")
+        logger.error ("Histogram cannot be serialized/deserialized using pickle!")
         
     try : 
         d = dill.loads ( dill  .dumps  ( h )  ) 
-        logger.info  ("Histogram is successfully serialized using dill/2!")
+        logger.info  ("Histogram is successfully serialized/deserialized using dill!")
     except :
-        logger.error ("Histogram cannot be serialized using dill!/2")
-
+        logger.error ("Histogram cannot be serialized/deserialized using dill!")
 
 
 # =============================================================================
