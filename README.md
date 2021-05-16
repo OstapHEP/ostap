@@ -24,7 +24,7 @@ Key features include:
 
 Dependencies
 ------------
-- _mandatory_: [ROOT], [RooFit]
+- _mandatory_: [ROOT] version `<6.22` or `>=6.24`, [RooFit]
 - _highly desirable_: [numpy]
    - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
    - optional for some other issues, in particular for the prime number treatment;  
@@ -41,7 +41,9 @@ Dependencies
 - _desirable_: [more_itertoos]
    - `chunked` stuff is used in parallelization for spliting jobs into chunks 
    - `ostap` offers a home-made replacement  
-- _optional_ (only for python3) : [bsddb3]
+- _optional_ (only for python3,  `3.6<=version` ) : [berkeleydb]
+   - python interface to Berkeley DB (`libdb` needs to be installed!)
+- _optional_ (only for python3,  `3.3<=version<3.10` ) : [bsddb3]
    - python interface to Berkeley DB (`libdb` needs to be installed!)
    
 Setup
@@ -62,4 +64,5 @@ The possible  setup options are described  [here](INSTALL.md)
 [multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
 [terminaltables]: https://pypi.org/project/terminaltables
 [more_itertools]: https://pypi.org/project/more-itertools/
+[berkeleydb]: https://pypi.org/project/berkeleydb/
 [bsddb3]: https://pypi.org/project/bsddb3/
