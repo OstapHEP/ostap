@@ -370,11 +370,11 @@ class FUNC(XVar) :
     #  pdf     = ...
     #  dataset = ...
     #  params  = { 'A' : 10 , 'B' : ... }
-    #  pdf.load_params ( dataset , params ) 
+    #  pdf.load_params ( params, dataset ) 
     #  params  = ( A , B , C , ... )
-    #  pdf.load_params ( dataset , params )  
+    #  pdf.load_params ( params , dataset )  
     #  @endcode 
-    def load_params ( self , params = {} , dataset = None , silent = False  ) :
+    def load_params ( self , params = {} , dataset = None , silent = False , **kwargs ) :
         """Load parameters from
         - external dictionary `{ name : value }`
         - sequence of `RooAbsReal` objects
@@ -383,9 +383,9 @@ class FUNC(XVar) :
         >>> pdf      = ...
         >>> dataset = ... 
         >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
+        >>> pdf.load_params ( params , dataset  ) 
         >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
+        >>> pdf.load_params ( params , dataset )  
         """
 
         if dataset :
@@ -443,6 +443,24 @@ class FUNC(XVar) :
             for i , pp in enumerate ( params ) :  
                 if i in keys : continue
                 not_used.append ( pp )
+
+        ## explicit parameters 
+        keys = set()        
+        for key in kwargs :
+            for p in pars :
+                if not hasattr ( p  , 'setVal' ) : continue
+                if p.name != key                 : continue
+                
+                v  = kwargs [key]
+                vv = float ( v  )
+                pv = p.getVal ()   
+                if vv != pv : 
+                    p.setVal   ( vv )
+                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    table.append ( item ) 
+                keys.add ( key )
+                
+            not_used |= set ( kwargs.keys() ) - keys 
 
         if not silent :
             
@@ -817,6 +835,45 @@ class FUNC(XVar) :
         from ostap.math.minimize import sp_maximum_1D
         return sp_maximum_1D (  self , xmin , xmax , x0 )
 
+    # ================================================================================
+    ## Check the ranges for variables  in dataset 
+    def check_ranges ( self , dataset , range = '' ) :
+        """Check the ranges for varibales in dataset 
+        """
+
+        import ostap.trees.cuts
+        
+        cuts = '' 
+        for v in self.vars :
+            
+            ## has range? 
+            if ( hasattr ( v , 'hasMin' ) and not v.hasMin() ) and \
+               ( hasattr ( v , 'hasMax' ) and not v.hasMax() ) : continue
+            
+            if not v in dataset                                : continue
+            
+            vv_minmax = v.minmax ()
+            if not vv_minmax : continue
+
+            ##variable in dataset 
+            vd = getattr ( dataset , v.name , None )
+            if vd is None    : continue
+
+            vd_minmax = vd.minmax()
+            if not vd_minmax : continue
+
+            vcut1 = ROOT.TCut ( '%s<%.17g'  % ( vd.name      , vd_minmax[0] ) )
+            vcut2 = ROOT.TCut ( '%.17g<=%s' % ( vd_minmax[1] , vd.name      ) )
+            if   cuts : cuts  = cuts | ( vcut1 | vcut2 )
+            else      : cuts  =          vcut1 | vcut2 
+
+
+        if dataset and not cuts : return  True
+
+        has_entry  = dataset.hasEntry ( cuts , range ) if range else dataset.hasEntry ( cuts )
+        
+        return not has_entry 
+    
     # ================================================================================
     ## visualise the function 
     #  @code

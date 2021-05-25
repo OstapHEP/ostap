@@ -29,6 +29,7 @@ from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
 from   ostap.math.base        import islong
+import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
@@ -870,6 +871,36 @@ ROOT.RooDataSet .vminmax  = ds_var_minmax
 
 _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
+    ]
+
+# =============================================================================
+## Is there at least one entry that satisfy selection criteria?
+#  @code
+#  dataset = ...
+#  dataset.hasEntry ( 'pt>100' )
+#  dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
+#  dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
+#  dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
+#  @endcode
+#  @see Ostap::StatVar::hasEntru
+def _ds_has_entry_ ( dataset , selection , *args ) : 
+    """Is there at leats one entry that satoisfies selection criteria?
+    >>> dataset = ...
+    >>> dataset.hasEntry ( 'pt>100' )
+    >>> dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
+    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
+    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
+    - see Ostap.StatVar.hasEntru
+    """
+    result = Ostap.StatVar.hasEntry ( dataset , selection , *args ) 
+    return True if result else False 
+
+ROOT.RooAbsData.hasEntry  = _ds_has_entry_
+ROOT.RooAbsData.has_entry = _ds_has_entry_
+
+_new_methods_ += [
+    ROOT.RooAbsData.hasEntry  , 
+    ROOT.RooAbsData.has_entry , 
     ]
 
 # =============================================================================

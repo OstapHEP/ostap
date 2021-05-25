@@ -904,6 +904,161 @@ namespace
   // ==========================================================================
 } //                                                 end of anonymous namespace
 // ============================================================================
+/*  check if there is at least one entry that satisfies criteria 
+ *  @param tree       (INPUT) the tree 
+ *  @param cuts       (INPUT) criteria 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( TTree*              tree  , 
+  const std::string&  cuts  ,   
+  const unsigned long first ,
+  const unsigned long last  )
+{
+  // check arguments 
+  if ( nullptr == tree || last <= first || tree->GetEntries() < first ) { return false ; }
+  //
+  Ostap::Formula formula ( cuts , tree ) ;
+  if ( !formula.GetNdim() )         { return false  ; }  // RETURN
+  //
+  Ostap::Utils::Notifier notify ( tree , &formula ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return false  ; }                // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return false  ; }                // RETURN
+    //
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) 
+    { if ( r ) { return true ; } }
+    //
+  }
+  return false ;
+}
+// ============================================================================
+/*  check if there is at least one entry that satisfies criteria 
+ *  @param tree       (INPUT) the tree 
+ *  @param cuts       (INPUT) criteria 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( TTree*              tree  , 
+  const TCut&         cuts  ,   
+  const unsigned long first ,
+  const unsigned long last  )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( tree , _cuts , first , last ) ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const std::string&  cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  if ( nullptr == data || last <= first || data->numEntries() < first ) { return false ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    //
+    // apply cuts:
+    const long double wc = selection -> getVal() ;
+    if ( wc ) { return true ; }
+  }
+  //
+  return false ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const std::string&  cuts      , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{ return hasEntry ( data , cuts , "" , first , last ) ; }
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const TCut&         cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( data , _cuts , cut_range , first , last ) ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const TCut&         cuts      , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( data , _cuts , "" , first , last ) ;
+}
+// ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree
  *  @param expression (INPUT) the expression

@@ -327,7 +327,6 @@ class PDF (FUNC) :
             if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
             pe = check_arg ('PrintEvalErrors' , *opts )
             if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
-
                 
         weighted = dataset.isWeighted() if dataset else False
         if weighted :
@@ -335,7 +334,16 @@ class PDF (FUNC) :
             aer = check_arg ( 'AsymptoticError' , *opts )
             if not sw2 and not aer :
                 self.warning ( "fitTo: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset!" )
-           
+
+        if 1 < len ( self.vars ) :
+            rng = check_arg ( 'Range' , *opts ) 
+            if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
+
+        ## check fit ranges 
+        rng = check_arg ( 'RangeByName' , *opts )
+        ok  = self.check_ranges ( dataset , rng.getString(0) if rng else '' )
+        if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
+
         if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
             self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
 

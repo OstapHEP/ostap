@@ -1198,18 +1198,17 @@ class SimFit ( MakeVar ) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , params = {}  , dataset = None , silent = False ) :
+    def load_params ( self , params = {}  , dataset = None , silent = False , **kwargs ) :
         """Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
         >>> dataset = ... 
         >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
+        >>> pdf.load_params ( params , dataset ) 
         >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
+        >>> pdf.load_params ( params , dataset )  
         """
-        ## nothing to load 
-        return self.pdf.load_params ( params = params , dataset = dataset , silent = silent )
+        return self.pdf.load_params ( params = params , dataset = dataset , silent = silent , **kwargs )
 
     # =========================================================================
     ##  Does this function depend on this variable,
