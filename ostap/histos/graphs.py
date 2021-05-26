@@ -2680,7 +2680,6 @@ def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
     curr_hash = hash ( status  )
         
     if curr_hash != prev_hash or not spline3 :
-        print ('REDO SPLINE!')
         spline3 = ROOT.TSpline3 ( 'spline' , graph , opts , *args )
         
     setattr ( graph , attr , ( curr_hash , spline3 ) ) 
