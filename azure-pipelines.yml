@@ -4,7 +4,7 @@ jobs:
  - template: template-pipelines.yml  # Template reference
    parameters:
     name: cs7_lcg_100_gcc9_python3
-    vmImage:  'ubuntu-latest'
+    vmImage:  'centos-7'
     dockername: 'docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: 'LCG_100'
     CMTCONFIG: 'x86_64-centos7-gcc9-opt'
@@ -13,7 +13,7 @@ jobs:
  - template: template-pipelines.yml  # Template reference
    parameters:
     name: cs7_dev3_gcc9_python3
-    vmImage:  'ubuntu-latest'
+    vmImage:  'centos-7'
     dockername: 'docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: '/dev3/latest'
     CMTCONFIG: 'x86_64-centos7-gcc9-opt'
@@ -22,7 +22,7 @@ jobs:
  - template: template-pipelines.yml  # Template reference
    parameters:
     name: cs7_dev3_gcc9_python2
-    vmImage:  'ubuntu-latest'
+    vmImage:  'centos-7'
     dockername: 'docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: '/dev3python2/latest'
     CMTCONFIG: 'x86_64-centos7-gcc9-opt'
@@ -31,7 +31,7 @@ jobs:
  - template: template-pipelines.yml  # Template reference
    parameters:
     name: cs7_dev3_gcc9_python39
-    vmImage:  'ubuntu-latest'
+    vmImage:  'centos-7'
     dockername: 'docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest'
     LCG: '/dev3python39/latest'
     CMTCONFIG: 'x86_64-centos7-gcc9-opt'
