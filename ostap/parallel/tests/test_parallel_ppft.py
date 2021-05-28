@@ -19,11 +19,24 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 try : 
+    import dill 
+except ImportError :
+    logger.error('Can not import dill')
+    dill = None
+
+try : 
     import ppft
 except ImportError :
     logger.error('Can not import ppft')
     ppft = None
-    
+
+
+DILL_PY3_issue = False 
+if ( 3 , 6 ) <= sys.version_info and dill :
+    dill_version =  getattr ( dill , '__version__' , '' )
+    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
+    DILL_PY3_issue = dill_version < '0.3' 
+
 # =============================================================================
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
@@ -81,10 +94,9 @@ def test_ppft_function () :
         logger.error ( "ppdf is not available" )
         return 
     
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
+    if DILL_PY3_issue : 
+         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
+         return
     
     job_server = ppft.Server()
     
@@ -120,11 +132,10 @@ def test_ppft_method() :
         logger.error ( "ppft is not available" )
         return 
         
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
-    
+    if DILL_PY3_issue : 
+         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
+         return
+        
     job_server = ppft.Server()
     
     jobs = [ ( i , job_server.submit ( mh.process , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]
@@ -160,9 +171,10 @@ def test_ppft_callable () :
         logger.error ( "ppft is not available" )
         return 
         
-    logger.warning ("test is disabled for UNKNOWN REASON")
-    return
-
+    if DILL_PY3_issue : 
+         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
+         return
+        
     job_server = ppft.Server()
     
     jobs = [ ( i , job_server.submit ( mh.__call__  , ( i , n ) ) ) for ( i , n ) in enumerate  ( inputs ) ]

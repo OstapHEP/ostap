@@ -31,7 +31,14 @@ try :
 except ImportError :
     logger.error('Can not import multiprocess')
     multiprocess = None
-    
+
+DILL_PY3_issue = False 
+if ( 3 , 6 ) <= sys.version_info and dill :
+    dill_version =  getattr ( dill , '__version__' , '' )
+    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
+    DILL_PY3_issue = dill_version < '0.3' 
+    if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
+        
 # =============================================================================
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
@@ -64,7 +71,6 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-
 ## start 5 jobs, and for each job create the histogram with 100 entries 
 inputs = 5 * [ 100 ]
 
@@ -83,11 +89,10 @@ def test_multiprocess_function () :
     if not multiprocess :
         logger.error ( "multiprocess is not available" )
         return 
-        
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
+
+    if DILL_PY3_issue : 
+         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
+         return
     
     ncpus = multiprocess.cpu_count() 
     
@@ -130,10 +135,9 @@ def test_multiprocess_callable  () :
         logger.error ( "multiprocess is not available" )
         return 
         
-    from ostap.core.known_issues import DILL_ROOT_issue
-    if DILL_ROOT_issue : 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" )
-        return
+    if DILL_PY3_issue : 
+         logger.warning ("test is disabled for Python %s (DILL/ROOT/PY3 issue)" )
+         return
     
     ncpus = multiprocess.cpu_count() 
     

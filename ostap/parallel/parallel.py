@@ -22,13 +22,12 @@ __all__     = (
     'GenericTask' , ## very generic "template"  tasl 
     )
 # =============================================================================
+import sys, os
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
 from ostap.parallel.task import  Task, GenericTask
-
-import os
 
 workers = 'PATHOS' , 'GAUDIMP'
 
@@ -47,9 +46,16 @@ if not worker :
         if not  worker in workers : worker = ''
 
 # ===============================================================================
-from ostap.core.known_issues import DILL_ROOT_issue
-if DILL_ROOT_issue  :
-    worker = 'GAUDIMP'
+try : 
+    import dill 
+except ImportError :
+    dill = None    
+
+if ( 3 , 6 ) <= sys.version_info and dill :
+    dill_version =  getattr ( dill , '__version__' , '' )
+    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
+    DILL_PY3_issue = dill_version < '0.3'
+    if DILL_PY3_issue : worker = 'GAUDIMP'
 
 # ===============================================================================
 

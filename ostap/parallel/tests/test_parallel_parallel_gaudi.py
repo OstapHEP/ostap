@@ -92,11 +92,11 @@ def test_parallel_gaudi_mp_bare ( ) :
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
+    ## vi = sys.version_info
+    ## if 3<= vi.major and 6 <= vi.minor :
+    ##     vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+    ##     logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    ##     return
     
     ## create the manager 
     manager = WorkManager ( silent = False  )
@@ -131,11 +131,11 @@ def test_parallel_gaudi_mp_task ( ) :
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
+    ## vi = sys.version_info
+    ## if 3<= vi.major and 6 <= vi.minor :
+    ##     vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+    ##     logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    ##     return
     
     ## create the manager 
     manager = WorkManager ( silent = False  )
@@ -168,11 +168,11 @@ def test_parallel_gaudi_mp_func ( ) :
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
+    ## vi = sys.version_info
+    ## if 3<= vi.major and 6 <= vi.minor :
+    ##     vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+    ##     logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    ##     return
     
     ## create the manager 
     manager = WorkManager ( silent = False  )
@@ -201,11 +201,11 @@ def test_parallel_gaudi_mp_generic ( ) :
     
     logger.info ('Test job submission with %s' % WorkManager  ) 
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
-        return
+    ## vi = sys.version_info
+    ## if 3<= vi.major and 6 <= vi.minor :
+    ##     vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
+    ##     logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    ##     return
     
     ## create the manager 
     manager = WorkManager ( silent = False  )

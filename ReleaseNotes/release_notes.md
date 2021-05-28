@@ -1,3 +1,13 @@
+
+## New features 
+
+  1. reenable `pathos` for (3.6<=python & 0.3<=dill )
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+
 # v1.6.2.0
 
 ## New features 
@@ -6,7 +16,7 @@
   1. add "cut-off" functions and PDFs
   1. improve treatment of "tags" for C++ models. 
   1. improve spline <--> graph relations 
-  1. add `da_combine` functions to combine two datasets with weights 
+  1. add `ds_combine` functions to combine two datasets with weights 
   1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
   1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
   1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
@@ -14,7 +24,7 @@
   1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
   1. add functionality for jackknife and bootstrap analyses for fit biases and error estimates 
   1. better output report from Jackknife and Boostrap studies
-  1. add parameter `frequency` to roys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
+  1. add parameter `frequency` to toys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
   1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
   1. allow derived quantitites to be added into the output table of `RooFitResult`
   1. add `getitem` stuff for `RooFitResult` to allow interchange with dictionaries 
@@ -28,7 +38,7 @@
 
 ## Bug fixes:
 
-  1. fix asserion statement in `dalitz.py` 
+  1. fix assertion statement in `dalitz.py` 
   1. fix a bug in analytic  three-body phase space for cases with zero masses 
   1. fix a bug in numerical three-body phase space for case with all zero masses 
   1. fix a bug in `__getitem__` for range/slice/index sequecne for the weighted datasets - the event weigth was propagates incorrectly. Thanks to Dmitry Pereima.

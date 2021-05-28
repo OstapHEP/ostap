@@ -95,7 +95,7 @@ class WorkManager (TaskManager) :
                   ppservers = ()           ,
                   silent    = False        , **kwargs ) :
 
-        if   not isinstance ( ncpus , int ) and 0 <= ncpus :
+        if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
             from pathos.helpers import cpu_count
             ncpus = cpu_count ()
             

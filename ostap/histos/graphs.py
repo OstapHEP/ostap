@@ -556,7 +556,12 @@ def _hToGraph_ ( h1 , funcx , funcy ) :
     return graph
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph2 ( 0.1 ) ## shift for 10% of bin width
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph2 ( h1 , bias ) :
@@ -574,14 +579,19 @@ def hToGraph2 ( h1 , bias ) :
     return _hToGraph_ ( h1 , funcx , funcy ) 
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute) 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph3 ( h1 , bias ) :
     """ Convert  1D-histogram into graph with small shift in x
     Useful for overlay of very similar plots
     >>> h1 = ....
-    >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 0.1 (absolute)    
+    >>> g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute)    
     """
     for p in h1.items() :
         x = p[1]

@@ -49,6 +49,7 @@ find_python_module ( ppft          QUIET )
 find_python_module ( multiprocess  QUIET )
 find_python_module ( dill          QUIET )
 
+
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
 
 message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
@@ -74,6 +75,8 @@ endif()
 endif()
 
 endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+
+find_python_module ( pp  QUIET )
 
 find_python_module ( terminaltables QUIET )
 if ( NOT ${PY_terminaltables_FOUND} )

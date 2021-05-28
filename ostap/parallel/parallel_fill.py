@@ -24,6 +24,7 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 import ROOT
 from   ostap.parallel.parallel import Task, WorkManager
+
 # =============================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel

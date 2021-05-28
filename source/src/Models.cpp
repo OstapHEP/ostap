@@ -65,7 +65,6 @@ namespace
 } //                                                 end of anonymous namespace
 // ============================================================================
 
-
 // ============================================================================
 /*  constructor  from all parameters 
  *  @param mu location, bias parameter 

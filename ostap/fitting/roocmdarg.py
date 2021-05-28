@@ -172,10 +172,11 @@ def _rca_print_ ( self ) :
     elif 'Integrate'            == name : return 'Integrate(%s)'       %   self.getBool () 
     elif 'Minimizer'            == name : return "Minimizer('%s','%s')"% ( self.getString ( 0 ) ,
                                                                            self.getString ( 1 ) )                                                                           
-    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'          %   self.getBool () 
-    elif 'BatchMode'            == name : return 'BatchMode(%s)'       %   self.getBool () 
-    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)' %   self.getBool () 
-    
+    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'           %   self.getBool () 
+    elif 'BatchMode'            == name : return 'BatchMode(%s)'        %   self.getBool () 
+    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)'  %   self.getBool () 
+
+    elif 'IntegrateBins'        == name : return 'IntegrateBins(%.16g)' %   self.getDouble ( 0 ) 
     
     ## RooAbsPdf::paramOn arguments
     if   'Label'                == name : return "Label('%s')"         %    self.getString ( 0 )

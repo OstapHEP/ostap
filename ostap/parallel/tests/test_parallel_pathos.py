@@ -25,10 +25,24 @@ from   ostap.parallel.utils     import pool_context
 
 # =============================================================================
 try : 
+    import dill 
+except ImportError :
+    logger.error('Can not import dill')
+    dill = None    
+# =============================================================================
+try : 
     import pathos
 except ImportError :
     logger.error ('Can not import pathos')
     pathos = None
+    
+
+DILL_PY3_issue = False 
+if ( 3 , 6 ) <= sys.version_info and dill :
+    dill_version =  getattr ( dill , '__version__' , '' )
+    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
+    DILL_PY3_issue = dill_version < '0.3'
+    if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
     
 # =============================================================================
 ## simple function that creates and  fills a histogram
@@ -65,11 +79,9 @@ def test_pathos_mp_function () :
         return 
     
     logger.info ('Test job submission with %s' %  pathos ) 
-            
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
     
     from pathos.helpers import cpu_count
@@ -109,10 +121,8 @@ def test_pathos_mp_callable  () :
         
     logger.info ('Test job submission with %s' %  pathos ) 
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
     
     from pathos.helpers import cpu_count
@@ -157,10 +167,8 @@ def test_pathos_pp_function () :
         
     logger.info ('Test job submission with %s' %  pathos ) 
 
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
 
     from pathos.helpers import cpu_count
@@ -209,10 +217,8 @@ def test_pathos_pp_callable () :
         logger.error ( "pathos is not available" )
         return 
         
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
 
     from pathos.helpers import cpu_count
@@ -258,10 +264,8 @@ def test_pathos_pp_method () :
     
     logger.info ('Test job submission with %s' %  pathos ) 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
 
     from pathos.helpers import cpu_count
@@ -306,14 +310,12 @@ def test_pathos_pp_callable () :
     
     logger.info ('Test job submission with %s' %  pathos ) 
     
-    vi = sys.version_info
-    if 3<= vi.major and 6 <= vi.minor :
-        vip = '%s.%s.%s' % ( vi.major , vi.minor , vi.micro ) 
-        logger.warning ("test is disabled for Python %s (dill/ROOT issue)" % vip )
+    if DILL_PY3_issue : 
+        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
         return
 
-    logger.warning ("test is disabled for UNKNOWN REASON")
-    return
+    ## logger.warning ("test is disabled for UNKNOWN REASON")
+    ## return
 
     from pathos.helpers import cpu_count
     ncpus = cpu_count  ()
@@ -327,7 +329,7 @@ def test_pathos_pp_callable () :
 
 
     mh   = MakeHisto() 
-    jobs = pool.uimap ( mh ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
+    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
     
     result = None 
     for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
@@ -350,11 +352,11 @@ def test_pathos_pp_callable () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    # test_pathos_mp_function ()
-    # test_pathos_mp_callable ()
+    test_pathos_mp_function ()
+    test_pathos_mp_callable ()
     test_pathos_pp_function ()
-    # test_pathos_pp_method   ()
-    # test_pathos_pp_callable ()
+    test_pathos_pp_method   ()
+    test_pathos_pp_callable ()
 
 
 # =============================================================================
