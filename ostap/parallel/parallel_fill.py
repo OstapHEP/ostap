@@ -184,7 +184,7 @@ def pprocess ( chain               ,
         stat.processed   ,
         stat.total       ,
         skipped          ,
-        selector.cuts()  , dataset ) )            
+        selector.cuts()  , dataset.table ( prefix = '# ' ) ) )             
     
     return 1 
 
