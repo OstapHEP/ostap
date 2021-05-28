@@ -16,6 +16,10 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   steps:
   - script: |
+     sudo wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
+     sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && \
+     sudo apt-get update
+     sudo apt-get install -y singularity-container
      sudo apt-get install lsb-release
      wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
      sudo dpkg -i cvmfs-release-latest_all.deb
@@ -27,18 +31,11 @@ jobs:
      echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
      sudo service autofs restart
      sudo cvmfs_config probe
-     sudo wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
-     sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && \
-     sudo apt-get update
-     sudo apt-get install -y singularity-container
     displayName: 'install cvmfs'
   - script: |
      singularity exec -B /cvmfs -B $PWD/  ${{ parameters.dockername }} /bin/bash  ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}
     displayName: 'build stage'
   - script: |
-     sudo cvmfs_config chksetup
-     echo $?
-     sudo service autofs restart
      singularity exec -B /cvmfs -B $PWD/ ${{ parameters.dockername }} /bin/bash  ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}
     displayName: 'test stage'
   - task: PublishPipelineArtifact@0
