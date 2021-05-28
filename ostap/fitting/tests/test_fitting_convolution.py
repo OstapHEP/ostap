@@ -16,7 +16,8 @@ import ROOT, random
 import ostap.fitting.roofit 
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent 
+from   ostap.logger.utils   import rooSilent
+from   ostap.utils.timing   import timing
 # =============================================================================
 # logging 
 # =============================================================================
@@ -67,20 +68,27 @@ def test_laplace():
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for  i , m in enumerate ( models ) :
+            db['model/%-2d: %s' % ( i , m.name ) ] = m 
         db['models'   ] = models
         db.ls() 
         
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_laplace        () ## Laplace-function                            + background 
+    ## Laplace-function + background
+    with timing('Laplace'    , logger ) :
+        test_laplace () 
+
     
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing('Save to DB' , logger ) :
+        test_db ()          
 
 # =============================================================================
 ##                                                                      The END 

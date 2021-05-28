@@ -19,6 +19,7 @@ import random
 import ostap.math.models 
 import ostap.math.bspline
 from   ostap.core.core  import Ostap
+from   ostap.core.meta_info import root_version_int 
 
 # ============================================================================
 ##  test solution of equation  B(x) = c
@@ -60,9 +61,15 @@ def test_solve ():
 def test_interpolation ():
     """Test spline interpolation
     """
+
+    if 62006 <= root_version_int :
+        logger.warning ("Test_interpolation segfaults for ROOT %s" %  root_version_int ) 
+        return 
+    
     from math import sin,pi, sqrt
 
-    fun = lambda x  : sin(2*pi*x) 
+    fun = lambda x  : sin(2*pi*x)
+    
     bs  =  ostap.math.bspline.interpolate ( fun , None, [0] + [  random.uniform(0.01,0.99) for i in range(50) ] + [1] , 2 )
 
     from ostap.stats.counters import SE

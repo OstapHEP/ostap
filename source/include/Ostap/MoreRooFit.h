@@ -15,6 +15,8 @@
 #include "RooProduct.h"
 #include "RooRealConstant.h"
 #include "RooRealProxy.h"
+#include "RooAbsPdf.h"
+#include "RooGlobalFunc.h"
 // ============================================================================
 namespace Ostap 
 {
@@ -35,7 +37,7 @@ namespace Ostap
     class Addition : public RooAddition
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Addition , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Addition , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -51,6 +53,20 @@ namespace Ostap
                  const std::string& name  = ""  , 
                  const std::string& title = ""  ) 
         : Addition ( name , title , a , b )
+      {}
+      /// constructor with two variables 
+      Addition ( RooAbsReal&        a           , 
+                 const double       b           ,
+                 const std::string& name  = ""  , 
+                 const std::string& title = ""  ) 
+        : Addition ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Addition ( const double       a           ,
+                 RooAbsReal&        b           , 
+                 const std::string& name  = ""  , 
+                 const std::string& title = ""  ) 
+        : Addition ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// copy 
       Addition ( const Addition&    right       , 
@@ -70,7 +86,7 @@ namespace Ostap
     class Product : public RooProduct
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Product , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -86,6 +102,20 @@ namespace Ostap
                 const std::string& name  = ""  , 
                 const std::string& title = ""  ) 
         : Product ( name , title , a , b )
+      {}
+      /// constructor with two variables 
+      Product ( RooAbsReal&        a           , 
+                const double       b           ,
+                const std::string& name  = ""  , 
+                const std::string& title = ""  ) 
+        : Product ( name , title , a , RooFit::RooConst ( b )  )
+      {}
+      /// constructor with two variables 
+      Product ( const double       a           ,
+                RooAbsReal&        b           , 
+                const std::string& name  = ""  , 
+                const std::string& title = ""  ) 
+        : Product ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// copy 
       Product ( const Product&    right       , 
@@ -105,7 +135,7 @@ namespace Ostap
     class Subtraction : public Addition
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Subtraction , 1 ) ;  // Difference of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Subtraction , 1 ) ;  // Difference of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -121,6 +151,20 @@ namespace Ostap
                     const std::string& name  = ""  , 
                     const std::string& title = ""  ) 
         : Subtraction ( name , title , a , b )
+      {}
+      /// constructor with two variables 
+      Subtraction ( RooAbsReal&        a           , 
+                    const double       b           ,
+                    const std::string& name  = ""  , 
+                    const std::string& title = ""  ) 
+        : Subtraction ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Subtraction ( const double       a           ,
+                    RooAbsReal&        b           , 
+                    const std::string& name  = ""  , 
+                    const std::string& title = ""  ) 
+        : Subtraction ( name , title , RooFit::RooConst ( a ) , b )
       {}
       /// copy 
       Subtraction ( const Subtraction& right       , 
@@ -143,7 +187,7 @@ namespace Ostap
     class OneVar : public RooAbsReal 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::OneVar , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::OneVar , 1 ) ;  
       // ========================================================================
     public:
       // ========================================================================
@@ -175,7 +219,7 @@ namespace Ostap
     class FunOneVar : public OneVar  
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::FunOneVar , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::FunOneVar , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -236,6 +280,11 @@ namespace Ostap
                const std::string& title = "" )
       { return FunOneVar ( fun , x , name , title ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      // fictive default constructor 
+      FunOneVar () {}      
+      // ======================================================================
     public :  
       // ======================================================================     
       // the actual evaluation of the result 
@@ -255,7 +304,7 @@ namespace Ostap
     class TwoVars : public OneVar
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::TwoVars , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::TwoVars , 1 ) ;  
       // ========================================================================
     public:
       // ========================================================================
@@ -288,7 +337,7 @@ namespace Ostap
     class FunTwoVars : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::FunTwoVars , 1 ) ;  
+      ClassDefOverride(Ostap::MoreRooFit::FunTwoVars , 1 ) ;  
       // ========================================================================
     public: 
       // ======================================================================
@@ -327,6 +376,40 @@ namespace Ostap
         : FunTwoVars ( name , title , fun , x , y )
       {}
       // ======================================================================
+      /** create the tranformation variable as function from two variables 
+       *  \f$ z= f(x,y) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param y the second variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
+      template <class FUNCTION>
+      FunTwoVars ( FUNCTION fun                    , 
+                   const double        x           , 
+                   RooAbsReal&         y           ,
+                   const std::string&  name  = ""  , 
+                   const std::string&  title = ""  ) 
+        : FunTwoVars ( name , title , fun , RooFit::RooConst ( x ) , y )
+      {}
+      // ======================================================================
+      /** create the tranformation variable as function from two variables 
+       *  \f$ z= f(x,y) \f$ 
+       *  @param fun the transformation function 
+       *  @param x the first variable 
+       *  @param y the second variable 
+       *  @param name the name of variable 
+       *  @param title the title  of variable 
+       */
+      template <class FUNCTION>
+      FunTwoVars ( FUNCTION fun                    , 
+                   RooAbsReal&         a           ,
+                   const double        y           , 
+                   const std::string&  name  = ""  , 
+                   const std::string&  title = ""  ) 
+        : FunTwoVars ( name , title , fun , x , RooFit::RooConst ( y ) )
+      {}
+      // ======================================================================
       /// copy 
       FunTwoVars ( const FunTwoVars& right       , 
                    const char*       newname = 0 ) ;
@@ -354,6 +437,11 @@ namespace Ostap
                const std::string&  title = ""  ) 
       { return FunTwoVars ( fun , x , y , name , title ) ; }
       // ======================================================================
+    public:
+      // ======================================================================
+      // fictive default constructor 
+      FunTwoVars() {}      
+      // ======================================================================
     protected:
       // ======================================================================
       // the actual evaluation of the result 
@@ -371,10 +459,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Division final : public FunTwoVars 
+    class Division final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Division , 1 ) ;  // ratio of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Division , 2 ) ;  // ratio of RooAbsReal objects
       // ========================================================================
     public:
       // ======================================================================
@@ -389,16 +477,36 @@ namespace Ostap
                  const std::string&  title = ""  ) 
         : Division ( name , title , x , y )
       {}
+      /// constructor with two variables 
+      Division ( const double        x           , 
+                 RooAbsReal&         y           ,
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Division ( name , title , RooFit::RooConst ( x ) , y )
+      {}
+      /// constructor with two variables 
+      Division ( RooAbsReal&         x           ,
+                 const double        y           , 
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Division ( name , title , x , RooFit::RooConst ( y ) )
+      {}
       // ======================================================================
-      /// default constructor 
-      Division  () =  default ;
+      /// (fictive) default constructor 
+      Division  (){} ; //  =  default ;
       // ======================================================================
       // copy 
-      Division 
-        ( const Division& right       ,
-          const char*     newname = 0 ) 
-        : FunTwoVars ( right , newname ) 
+      Division ( const Division& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
       {}
+      // ======================================================================
+      Division* clone ( const char* newname ) const override 
+      { return new Division ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -407,10 +515,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Fraction final : public FunTwoVars
+    class Fraction final : public TwoVars
     {
       // ======================================================================
-      ClassDef(Ostap::MoreRooFit::Fraction , 1 ) ;  // Fraction 
+      ClassDefOverride(Ostap::MoreRooFit::Fraction , 2 ) ;  // Fraction 
       // ======================================================================
     public:
       // ======================================================================
@@ -426,15 +534,36 @@ namespace Ostap
                  const std::string&  title = ""  ) 
         : Fraction ( name , title , x , y )
       {}
+      /// constructor with two variables 
+      Fraction ( const double        x           , 
+                 RooAbsReal&         y           ,
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Fraction ( name , title , RooFit::RooConst ( x ) , y )
+      {}
+      /// constructor with two variables 
+      Fraction ( RooAbsReal&         x           ,
+                 const double        y           , 
+                 const std::string&  name  = ""  , 
+                 const std::string&  title = ""  ) 
+        : Fraction ( name , title , x , RooFit::RooConst ( y ) )
+      {}
       // ======================================================================
       /// default constructor 
       Fraction  () =  default ;
       // ======================================================================
       // copy 
-      Fraction ( const Fraction& right       , 
-                 const char*     newname = 0 ) 
-        : FunTwoVars ( right , newname ) 
+      Fraction ( const Fraction& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
       {}
+      // ======================================================================
+      Fraction* clone ( const char* newname ) const override 
+      { return new Fraction ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -443,10 +572,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Asymmetry: public FunTwoVars 
+    class Asymmetry final : public TwoVars 
     {
       // ======================================================================
-      ClassDef(Ostap::MoreRooFit::Asymmetry , 1 ) ;  // Relative difference 
+      ClassDefOverride(Ostap::MoreRooFit::Asymmetry , 2 ) ;  // Relative difference 
       // ======================================================================
     public:
       // ======================================================================
@@ -462,18 +591,39 @@ namespace Ostap
                   const std::string&  title = ""  ) 
         : Asymmetry ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Asymmetry ( RooAbsReal&         a           , 
+                  const double        b           ,
+                  const std::string&  name  = ""  , 
+                  const std::string&  title = ""  ) 
+        : Asymmetry ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Asymmetry ( const double        a           ,
+                  RooAbsReal&         b           ,
+                  const std::string&  name  = ""  , 
+                  const std::string&  title = ""  ) 
+        : Asymmetry ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       // ======================================================================
       /// default constructor 
       Asymmetry () =  default ;
       // ======================================================================
       // copy 
-      Asymmetry ( const Asymmetry&    right       , 
-                  const char*         newname = 0 ) 
-        : FunTwoVars ( right , newname ) 
+      Asymmetry ( const Asymmetry& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
       {}
+      // ======================================================================
+      Asymmetry* clone ( const char* newname ) const override 
+      { return new Asymmetry ( *this , newname ) ; }
       // ======================================================================
       // destructor 
       virtual ~Asymmetry () {};
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -482,10 +632,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Power: public FunTwoVars 
+    class Power final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Power , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Power , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -501,18 +651,39 @@ namespace Ostap
               const std::string&  title = ""  ) 
         : Power ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Power ( RooAbsReal&         a           , 
+              const double        b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Power ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      /// constructor with two variables 
+      Power ( const double        a           ,
+              RooAbsReal&         b           , 
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Power ( name , title , RooFit::RooConst ( a ) , b ) 
+      {}
       // ======================================================================
       /// default constructor 
       Power () =  default ;
       // ======================================================================
       // copy 
-      Power ( const Power&   right       , 
-              const char*    newname = 0 ) 
-        : FunTwoVars ( right , newname ) 
+      Power ( const Power& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
       {}
+      // ======================================================================
+      Power* clone ( const char* newname ) const override 
+      { return new Power ( *this , newname ) ; }
       // ======================================================================
       // destructor 
       virtual ~Power() {} ;
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -521,10 +692,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Abs final : public FunTwoVars 
+    class Abs final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Abs , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Abs , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -540,6 +711,20 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Abs ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Abs ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Abs ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Abs ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Abs ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Abs  ( const std::string& name  , 
              const std::string& title , 
@@ -551,10 +736,17 @@ namespace Ostap
       Abs () =  default ;
       // ======================================================================
       // copy 
-      Abs ( const Abs&     right       , 
-            const char*    newname = 0 ) 
-        : FunTwoVars ( right , newname ) 
+      Abs ( const Abs& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
       {}
+      // ======================================================================
+      Abs* clone ( const char* newname ) const override 
+      { return new Abs ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -563,10 +755,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Exp final : public FunTwoVars 
+    class Exp final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Exp , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Exp , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -582,12 +774,39 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Exp ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Exp ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Exp ( name , title , a , RooFit::RooConst ( b )  )
+      {}
+      /// constructor with two variables 
+      Exp ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Exp ( name , title , RooFit::RooConst ( a ) , b  )
+      {}
       /// constructor with one variable
       Exp  ( const std::string& name  , 
              const std::string& title , 
              RooAbsReal&        a     ) 
         : Exp ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Exp ( const Exp& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Exp* clone ( const char* newname ) const override 
+      { return new Exp ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -596,10 +815,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Log final : public FunTwoVars
+    class Log final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Log , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Log , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -615,12 +834,39 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Log  ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Log ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Log  ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Log ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Log  ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Log  ( const std::string& name  , 
              const std::string& title , 
              RooAbsReal&        a     ) 
         : Log ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Log ( const Log& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Log* clone ( const char* newname ) const override 
+      { return new Log ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -629,10 +875,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Log10 final : public FunTwoVars 
+    class Log10 final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Log10 , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Log10 , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -648,12 +894,39 @@ namespace Ostap
               const std::string&  title = ""  ) 
         : Log10  ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Log10 ( RooAbsReal&         a           , 
+              const double        b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Log10  ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Log10 ( const double        a           ,
+              RooAbsReal&         b           , 
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Log10  ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Log10  ( const std::string& name  , 
                const std::string& title , 
                RooAbsReal&        a     ) 
         : Log10 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Log10 ( const Log10& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Log10* clone ( const char* newname ) const override 
+      { return new Log10 ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -662,10 +935,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Erf final : public FunTwoVars
+    class Erf final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Erf , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Erf , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -681,12 +954,99 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Erf ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Erf ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Erf ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Erf ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Erf ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Erf  ( const std::string& name  , 
              const std::string& title , 
              RooAbsReal&        a     ) 
         : Erf ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Erf ( const Erf& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Erf* clone ( const char* newname ) const override 
+      { return new Erf ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Erfc
+     *  Evaluate \f$ erfc(ab) \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Erfc final : public TwoVars
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Erfc , 2 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Erfc  ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     , 
+              RooAbsReal&        b     ) ;
+      /// constructor with two variables 
+      Erfc ( RooAbsReal&         a           , 
+             RooAbsReal&         b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Erfc ( name , title , a , b )
+      {}
+      /// constructor with two variables 
+      Erfc ( RooAbsReal&         a           , 
+             const double        b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Erfc ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Erfc ( const double        a           ,
+             RooAbsReal&         b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Erfc ( name , title , RooFit::RooConst ( a ) , b )
+      {}
+      /// constructor with one variable
+      Erfc  ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     ) 
+        : Erfc ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      // copy 
+      Erfc ( const Erfc& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Erfc* clone ( const char* newname ) const override 
+      { return new Erfc ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -695,10 +1055,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Gamma: public FunTwoVars 
+    class Gamma final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Gamma , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Gamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -714,12 +1074,39 @@ namespace Ostap
               const std::string&  title = ""  ) 
         : Gamma ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      Gamma ( RooAbsReal&         a           , 
+              const double        b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Gamma ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      Gamma ( const double        a           ,
+              RooAbsReal&         b           , 
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Gamma ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Gamma  ( const std::string& name  , 
                const std::string& title , 
                RooAbsReal&        a     ) 
         : Gamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Gamma ( const Gamma& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Gamma* clone ( const char* newname ) const override 
+      { return new Gamma ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -728,10 +1115,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class LGamma: public FunTwoVars
+    class LGamma final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::LGamma , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::LGamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -747,12 +1134,39 @@ namespace Ostap
                const std::string&  title = ""  ) 
         : LGamma ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      LGamma ( RooAbsReal&         a           , 
+               const double        b           ,
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : LGamma ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      LGamma ( const double        a           ,
+               RooAbsReal&         b           , 
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : LGamma ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       LGamma  ( const std::string& name  , 
                 const std::string& title , 
                 RooAbsReal&        a     ) 
         : LGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      LGamma ( const LGamma& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      LGamma* clone ( const char* newname ) const override 
+      { return new LGamma ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -761,10 +1175,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class IGamma: public FunTwoVars 
+    class IGamma final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::IGamma , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::IGamma , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -780,12 +1194,39 @@ namespace Ostap
                const std::string&  title = ""  ) 
         : IGamma ( name , title , a , b )
       {}
+      /// constructor with two variables 
+      IGamma ( RooAbsReal&         a           , 
+               const double        b           ,
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : IGamma ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables 
+      IGamma ( const double        a           ,
+               RooAbsReal&         b           , 
+               const std::string&  name  = ""  , 
+               const std::string&  title = ""  ) 
+        : IGamma ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       IGamma  ( const std::string& name  , 
                 const std::string& title , 
                 RooAbsReal&        a     ) 
         : IGamma ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      IGamma ( const IGamma& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      IGamma* clone ( const char* newname ) const override 
+      { return new IGamma ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -794,10 +1235,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Sin: public FunTwoVars 
+    class Sin final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Sin , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Sin , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -813,12 +1254,39 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Sin ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Sin ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Sin ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Sin ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Sin ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Sin ( const std::string& name  , 
             const std::string& title , 
             RooAbsReal&        a     ) 
         : Sin ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Sin ( const Sin& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Sin* clone ( const char* newname ) const override 
+      { return new Sin ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -827,10 +1295,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Cos: public FunTwoVars 
+    class Cos final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Cos , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Cos , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -846,12 +1314,39 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Cos ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Cos ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Cos ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Cos ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  ,            
+            const std::string&  title = ""  ) 
+        : Cos ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Cos ( const std::string& name  , 
             const std::string& title , 
             RooAbsReal&        a     ) 
         : Cos ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Cos ( const Cos& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Cos* clone ( const char* newname ) const override 
+      { return new Cos ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     };
     // =========================================================================
@@ -860,10 +1355,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Tan final : public FunTwoVars
+    class Tan final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Tan , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Tan , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -879,6 +1374,20 @@ namespace Ostap
             const std::string&  title = ""  ) 
         : Tan ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Tan ( RooAbsReal&         a           , 
+            const double        b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Tan ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Tan ( const double        a           ,
+            RooAbsReal&         b           , 
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Tan ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Tan ( const std::string& name  , 
             const std::string& title , 
@@ -886,17 +1395,150 @@ namespace Ostap
         : Tan ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
       // ======================================================================
+      // copy 
+      Tan ( const Tan& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Tan* clone ( const char* newname ) const override 
+      { return new Tan ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
     }; //
+    // ========================================================================
+    /** @class Sinh
+     *  Evaluate \f$ \sinh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Sinh final : public TwoVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Sinh , 2 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Sinh  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Sinh ( RooAbsReal&         a           , 
+            RooAbsReal&         b           ,
+            const std::string&  name  = ""  , 
+            const std::string&  title = ""  ) 
+        : Sinh ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      Sinh ( RooAbsReal&         a           , 
+             const double        b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Sinh ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      /// constructor with two variables
+      Sinh ( const double        a           ,
+             RooAbsReal&         b           , 
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Sinh ( name , title , RooFit::RooConst ( a ) , b ) 
+      {}
+      /// constructor with one variable
+      Sinh ( const std::string& name  , 
+            const std::string& title , 
+            RooAbsReal&        a     ) 
+        : Sinh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      // copy 
+      Sinh ( const Sinh& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Sinh* clone ( const char* newname ) const override 
+      { return new Sinh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Cosh
+     *  Evaluate \f$ \cosh ab  \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Cosh final : public TwoVars 
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Cosh , 2 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Cosh  ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     , 
+             RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Cosh ( RooAbsReal&         a           , 
+             RooAbsReal&         b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Cosh ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      Cosh ( RooAbsReal&         a           , 
+             const double        b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Cosh ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      /// constructor with two variables
+      Cosh ( const double        a           ,
+             RooAbsReal&         b           , 
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Cosh ( name , title , RooFit::RooConst ( a ) , b ) 
+      {}
+      /// constructor with one variable
+      Cosh ( const std::string& name  , 
+            const std::string& title , 
+            RooAbsReal&        a     ) 
+        : Cosh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      // copy 
+      Cosh ( const Cosh& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Cosh* clone ( const char* newname ) const override 
+      { return new Cosh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    };
     // ========================================================================
     /** @class Tanh
      *  Evaluate \f$ \tanh ab  \f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Tanh: public FunTwoVars
+    class Tanh final : public TwoVars
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Tanh , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Tanh , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -912,12 +1554,99 @@ namespace Ostap
              const std::string&  title = ""  ) 
         : Tanh ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Tanh ( RooAbsReal&         a           , 
+             const double        b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Tanh ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Tanh ( const double        a           ,
+             RooAbsReal&         b           , 
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Tanh ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Tanh ( const std::string& name  , 
              const std::string& title , 
              RooAbsReal&        a     ) 
         : Tanh ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
+      // ======================================================================
+      // copy 
+      Tanh ( const Tanh& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Tanh* clone ( const char* newname ) const override 
+      { return new Tanh ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    }; //
+    // ========================================================================
+    /** @class Sech
+     *  Evaluate \f$ \sech ab = \frac{1}{ \cosh a b }   \f$
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
+     *  @date 2019-11-21
+     */
+    class Sech final : public TwoVars
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Sech , 2 ) ;  // power function
+      // ========================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Sech  ( const std::string& name  , 
+              const std::string& title , 
+              RooAbsReal&        a     , 
+              RooAbsReal&        b     ) ;
+      /// constructor with two variables
+      Sech ( RooAbsReal&         a           , 
+             RooAbsReal&         b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Sech ( name , title , a , b )
+      {}
+      /// constructor with two variables
+      Sech ( RooAbsReal&         a           , 
+             const double        b           ,
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Sech ( name , title , a , RooFit::RooConst ( b ) ) 
+      {}
+      /// constructor with two variables
+      Sech ( const double        a           ,
+             RooAbsReal&         b           , 
+             const std::string&  name  = ""  , 
+             const std::string&  title = ""  ) 
+        : Sech ( name , title , RooFit::RooConst ( a ) , b ) 
+      {}
+      /// constructor with one variable
+      Sech ( const std::string& name  , 
+             const std::string& title , 
+             RooAbsReal&        a     ) 
+        : Sech ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
+      {}
+      // ======================================================================
+      // copy 
+      Sech ( const Sech& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Sech* clone ( const char* newname ) const override 
+      { return new Sech ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
       // ======================================================================
     }; //
     // ========================================================================
@@ -926,10 +1655,10 @@ namespace Ostap
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
-    class Atan2: public FunTwoVars 
+    class Atan2 final : public TwoVars 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Atan2 , 1 ) ;  // power function
+      ClassDefOverride(Ostap::MoreRooFit::Atan2 , 2 ) ;  // power function
       // ========================================================================
     public:
       // ======================================================================
@@ -945,6 +1674,20 @@ namespace Ostap
               const std::string&  title = ""  ) 
         : Atan2 ( name , title , a , b )
       {}
+      /// constructor with two variables
+      Atan2 ( RooAbsReal&         a           , 
+              const double        b           ,
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Atan2 ( name , title , a , RooFit::RooConst ( b ) )
+      {}
+      /// constructor with two variables
+      Atan2 ( const double        a           ,
+              RooAbsReal&         b           , 
+              const std::string&  name  = ""  , 
+              const std::string&  title = ""  ) 
+        : Atan2 ( name , title , RooFit::RooConst ( a ) , b )
+      {}
       /// constructor with one variable
       Atan2 ( const std::string& name  , 
               const std::string& title , 
@@ -952,17 +1695,30 @@ namespace Ostap
         : Atan2 ( name , title , a , RooRealConstant::value ( 1.0 ) ) 
       {}
       // ======================================================================
+      // copy 
+      Atan2 ( const Atan2& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+      {}
+      // ======================================================================
+      Atan2* clone ( const char* newname ) const override 
+      { return new Atan2 ( *this , newname ) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
     }; //
     // ========================================================================
     /** @class Id
-     *  Trivial variable: identical trnaformation 
+     *  Trivial variable: identical transformation 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2020-03-17
      */ 
     class Id final : public OneVar 
     {
       // ========================================================================
-      ClassDef(Ostap::MoreRooFit::Id , 1 ) ;  // sum of RooAbsReal objects
+      ClassDefOverride(Ostap::MoreRooFit::Id , 1 ) ;  // sum of RooAbsReal objects
       // ========================================================================
     public:
       // ========================================================================
@@ -1002,21 +1758,56 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-//       // ======================================================================
-//       RooSpan<double> evaluateBatch 
-//         ( std::size_t begin     , 
-//           std::size_t batchSize ) const override
-//       { return m_x.arg().evaluateBatch ( begin , batchSize  ) ; }
-//       // ======================================================================
-// #endif
-      // ======================================================================
-    protected:
-      // ======================================================================
       // the actual evaluation of the result 
       Double_t evaluate () const override ;    
       // ======================================================================
-    }; //    
+    }; //
+    // ========================================================================    
+    /** @class ProductPdf
+     *  Oversimplified product of two PDF
+     *  - It is useful to bypass some "features" of RooFit
+     *  - it can be rather inefficient 
+     *  @attention all native roofit optimisations are not applied 
+     *  for this case!      
+     */
+    class ProductPdf : public RooAbsPdf
+    {
+      // ========================================================================
+      ClassDefOverride(Ostap::MoreRooFit::ProductPdf , 1 ) ;  // sum of RooAbsReal objects
+      // ========================================================================
+    public:
+      // ======================================================================== 
+      /** constructor from name, title and two pdfs
+       *  @param name  name 
+       *  @param title name 
+       *  @param pdf1 the first pdf 
+       *  @param pdf2 the second pdf 
+       */
+      ProductPdf ( const char* name  , 
+                   const char* title , 
+                   RooAbsPdf&  pdf1  , 
+                   RooAbsPdf&  pdf2  ) ;
+      /// copy constructor 
+      ProductPdf ( const ProductPdf& right    , 
+                   const char*       name = 0 ) ;
+      /// destructor 
+      virtual ~ProductPdf() ;
+      /// clone 
+      ProductPdf* clone ( const char* newname ) const override ;
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// the main method 
+      Double_t evaluate () const override ;
+      // ========================================================================
+    protected:
+      // ========================================================================
+      /// pdf1
+      RooRealProxy m_pdf1 ; // the first pdf 
+      /// pdf2
+      RooRealProxy m_pdf2 ; // the second pdf 
+      // ======================================================================
+    } ;
     // ========================================================================    
   } //                                   The end of namespace Ostap::MoreRooFit  
   // ==========================================================================

@@ -34,7 +34,7 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
-import ROOT, os  
+import ROOT, os, sys   
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 try :
     from cString import StringIO
@@ -309,8 +309,9 @@ if arguments.Profile :
 # =============================================================================
 ## set ROOT into batch mode 
 # =============================================================================
-ROOT.gROOT.SetBatch ( arguments.batch )
-if ROOT.gROOT.IsBatch() : logger.info ('Batch processing is activated') 
+groot = ROOT.ROOT.GetROOT() 
+groot.SetBatch ( arguments.batch )
+if groot.IsBatch() : logger.info ('Batch processing is activated') 
 
 import ostap.fixes.fixes 
 
@@ -320,18 +321,19 @@ import ostap.fixes.fixes
 import ostap.core.build_dir
 if arguments.build_dir :
     
-    from ostap.utils.basic import good_dir , make_dir 
+    from ostap.utils.basic   import make_dir
+    from ostap.utils.cleanup import writeable 
     bdir = arguments.build_dir
     
-    if   good_dir ( bdir )                    : pass 
+    if   writeable ( bdir )                   : pass 
     elif bdir and not os.path.exists ( bdir ) : make_dir ( bdir ) 
 
-    if good_dir ( bdir ) :
+    if writeable ( bdir ) :
         ROOT.gSystem.SetBuildDir ( bdir )
         logger.info ( 'Build directory for ROOT: %s' % ostap.core.build_dir.build_dir )
         ostap.core.build_dir.build_dir = bdir 
         
-    del bdir, good_dir, make_dir
+    del bdir, writeable , make_dir
     
 # =============================================================================
 ## ostap startup: history, readlines, etc... 
@@ -412,11 +414,12 @@ PARAMETERS     = []
 def _load_macro_ ( macro , silent = True ) :
     """Load ROOT macro"""
     logger.debug  ("Try to load macro '%s'" % macro )
+    groot = ROOT.ROOT.GetROOT() 
     if silent :
         from ostap.logger.utils import rootError
-        with rootError() : sc = ROOT.gROOT.LoadMacro ( macro )
+        with rootError() : sc = groot.LoadMacro ( macro )
     else :
-        sc = ROOT.gROOT.LoadMacro ( macro )
+        sc = groot.LoadMacro ( macro )
         
     if sc :
         # - Interactive mode: print traceback and continue
@@ -616,11 +619,15 @@ if python_scripts :
 if PARAMETERS : 
     logger.info ('PARAMETERS    : %s' % PARAMETERS )
 
+
+if  sys.version_info > (3,) :
+    from importlib import reload 
+
 # =============================================================================
 if '__main__' == __name__ : logger.info ( 'ostap is ready'  ) 
 else                      : logger.info ( 'ostap is loaded' )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

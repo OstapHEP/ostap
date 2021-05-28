@@ -30,7 +30,7 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================    
 from ostap.utils.cleanup import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_chopping_' ) 
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-chopping-' ) 
 
 if not os.path.exists( data_file ) :
     import random
@@ -184,7 +184,7 @@ category = lambda s :  int ( s.evt*137 + 813*s.run ) % N
 
 ## prepare dataset with TMVA/Chopping result
 
-from ostap.fitting.selectors import SelectorWithVars,  Variable     
+from ostap.fitting.pyselectors import SelectorWithVars,  Variable     
 ## 1) Book RooDataset                 
 variables = [
     Variable ( 'var1' , 'variable#1' ) ,
@@ -240,7 +240,7 @@ methods = reader.methods[:]
 
 
 ## 3)  Run Ostap to   fill   RooDataSet 
-from ostap.fitting.selectors import SelectorWithVars     
+from ostap.fitting.pyselectors import SelectorWithVars     
 dsS = SelectorWithVars (
     variables = variables    ,
     selection = "var1 < 100" , 

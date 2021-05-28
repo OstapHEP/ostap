@@ -19,6 +19,7 @@
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
 // ============================================================================
 // LHCbMath
@@ -771,7 +772,7 @@ double Ostap::Math::psi ( const double x )
 {
   //
   // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_psi_e ( x , &result ) ;
@@ -882,6 +883,31 @@ double Ostap::Math::gauss_cdf ( const double x     ,
   static const double s_sqrt2 = std::sqrt( 2.0 ) ;
   const double y = ( x - mu ) / ( s_sqrt2 * std::abs ( sigma ) ) ;
   return 0.5 * ( 1 + std::erf ( y ) ) ;
+}
+// ============================================================================
+/*  Student's t-CDF 
+ *  \f[ f(t;\nu) = \left\{
+ *  \begin{array}{ll}
+ *   1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\ge0 \\
+ *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\<0
+ *  \end{array} \right. f]
+ *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+ *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+ *  @param  t t-value 
+ *  @param  nu parameter nu , $\nu>0$
+ */
+// ============================================================================
+double Ostap::Math::student_cdf 
+( const double t  , 
+  const double nu ) 
+{
+  const double anu = std::abs ( nu ) ; // NB!!
+  //
+  const double xt    = anu / ( t * t + anu ) ;
+  const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * anu , 0.5 , xt ) ;
+  return t >= 0 ? 1 - value : value ;
 }
 // ============================================================================
 namespace 
@@ -1291,7 +1317,162 @@ Ostap::Math::barrier_g
 // ============================================================================
 
 
+// ============================================================================
+/*  modified Bessel function of the second kind 
+ *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_e 
+ *  @see gsl_sf_bessel_K1_e 
+ *  @see gsl_sf_bessel_Kn_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_e ( x , &result ) :
+    gsl_sf_bessel_Kn_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_K0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_K1_e" : 
+                "Error from gsl_sf_bessel_Kn_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_scaled_e 
+ *  @see gsl_sf_bessel_K1_scaled_e 
+ *  @see gsl_sf_bessel_Kn_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn_scaled 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_scaled_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_scaled_e ( x , &result ) :
+    gsl_sf_bessel_Kn_scaled_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( ( 0 == n ) ? "Error from gsl_sf_bessel_K0_scaled_e" : 
+                ( 1 == n ) ? "Error from gsl_sf_bessel_K1_scaled_e" : 
+                "Error from gsl_sf_bessel_Kn_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** modified Bessel function of the second kind  
+ *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu_scaled 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn_scaled ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_scaled_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
-// The END 
+/* Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
+ * 
+ * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
+ *  \f$ V_2(m; \mu,\Gamma,\sigma) \equiv  S_2(m;\mu,\Gamma)\ast G(\delta m;\sigma)\f$ 
+ *  where 
+ *  - \f$ S_2 = \frac{1}{\pi}\frac{\mu\Gamma}{ (m^2-\mu^2)^2 + \mu^2\Gamma^2 } \f$    
+ *  - \f$ G(\delta m ; \sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} 
+ *     \mathrm{e}^{-\frac{1}{2} \left( \frac{\delta m }{\sigma} \right)^2} \f$$
+ *  
+ *  \f$ V_2(m; \mu,\Gamma,\sigma = \frac{H_2(a,u_1,u_2)}{2\sqrt{\pi}\sigma^2}\f$, where 
+ *  - \f$ u_1 = \frac{m-\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ u_2 = \frac{m+\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ a   = \frac{\mu\Gamma}{2\sigma^2} \f$
+ *
+ *  \f[ H_2(a,u_1,u_2) = 
+ *   \frac{a}{\pi} \int_{-\infty}{+\infty}  
+ *    \frac{dt}{  (u_1-t)^2(u_2-t0^2 + a^2 } \f] 
+ * @see Kycia, Radoslaw A.; Jadach, Stanislaw. 
+ *      "Relativistic Voigt profile for unstable particles in high energy physics". 
+ *      Journal of Mathematical Analysis and Applications. 463 (2): 1040–1051 
+ *      arXiv:1711.09304. doi:10.1016/j.jmaa.2018.03.065. ISSN 0022-247X.
+ * @see https://arxiv.org/abs/1711.09304
+ */
+// ============================================================================
+double Ostap::Math::H2 ( const double a  , 
+                         const double u1 , 
+                         const double u2 ) 
+{
+  if ( a  < 0 ) { return H2 ( std::abs ( a ) , u1 , u2 ) ; }
+  return 0 ;
+}
+
+
+
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

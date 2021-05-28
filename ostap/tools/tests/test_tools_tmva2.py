@@ -32,7 +32,7 @@ else :
     logger = getLogger ( __name__ )
 # ==============================================================================
 from ostap.utils.cleanup import CleanUp
-data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'test_tools_tmva2_' )
+data_file = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-test-tools-tmva2-' )
 if not os.path.exists( data_file ) :
     import random 
     nB = 10000
@@ -142,7 +142,7 @@ if os.path.exists ( trainer.output_file ) :
 
 ## prepare dataset with TMVA result
 
-from ostap.fitting.selectors import SelectorWithVars, Variable     
+from ostap.fitting.pyselectors import SelectorWithVars, Variable     
 ## 1) Book RooDataset                 
 variables = [
     Variable( 'var1' , 'variable#1' ) ,

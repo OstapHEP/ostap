@@ -141,8 +141,9 @@ def test_model_16() :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
     logger.info('Saving all objects into DBASE')
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
@@ -156,10 +157,10 @@ if '__main__' == __name__ :
     
     from ostap.utils.timing import timing
 
-    with timing ('test_model_16'    ) : test_model_16    ()          
+    with timing ('test_model_16'   , logger ) : test_model_16    ()          
     
     ## check finally that everything is serializeable:
-    with timing ( 'save to DB'     ) : test_db ()          
+    with timing ( 'save to DB'     , logger ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

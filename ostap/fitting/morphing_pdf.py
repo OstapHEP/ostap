@@ -119,8 +119,8 @@ class Morphing1D_pdf (PDF) :
         
         ## create the PDF  
         self.pdf = ROOT.RooMomentMorph (
-            "morph_%s"     % name ,
-            "morphing(%s)" % name ,
+            self.roo_name ( 'morph_' ) ,
+            "Morphing %s" % self.name  , 
             self.mu               , ## morphing variable
             observables           , ## observables 
             pdflst                , ## ordered list of PDFs  
@@ -287,8 +287,8 @@ class Morphing2D_pdf (PDF) :
         
         ## create the PDF  
         self.pdf = ROOT.RooMomentMorphND (
-            "morph2_%s"     % name  ,
-            "morphing2(%s)" % name  ,
+            self.roo_name ( 'morph2_' )   ,
+            "Morphing 2D %s" % self.name  , 
             morph_vars              , ## morphing variables 
             observables             , ## observables 
             self.grid               , ## morphing grid 

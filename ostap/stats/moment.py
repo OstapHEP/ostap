@@ -41,9 +41,8 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.stats.moment' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 from   ostap.core.ostap_types import integer_types, num_types 
-from   ostap.core.core        import Ostap, VE 
-# =============================================================================
-root_version = ROOT.gROOT.GetVersionInt() 
+from   ostap.core.core        import Ostap, VE
+from   ostap.core.meta_info   import root_version_int 
 # =============================================================================
 # new stuff: Ostap::Math::Moment_<N> 
 # =============================================================================
@@ -182,8 +181,11 @@ def _om_cm2 ( obj , order  ) :
 
     if order * 2  <= obj.order :
         ##
-        if root_version >= 62000 : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
-        else                     : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
+        if   root_version_int >= 62200 :
+            T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+            return T ( obj ) 
+        elif root_version_int >= 62000 : T = Ostap.Math.Moments._central_moment_2 [ order , obj.order ]
+        else                       : T = Ostap.Math.Moments._central_moment_2 ( order , obj.order )
         ## 
         M = Ostap.Math.Moments()
         return T ( M , obj )
@@ -208,7 +210,10 @@ def _om_cm3 ( obj , order  ) :
 
     if order * 2  <= obj.order :
         ##
-        if root_version >= 62000 : T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+        if   root_version_int >= 62200 :
+            T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
+            return T ( obj ) 
+        elif root_version_int >= 62000 : T = Ostap.Math.Moments._central_moment_3 [ order , obj.order ]
         else                     : T = Ostap.Math.Moments._central_moment_3 ( order , obj.order )
         ##
         M = Ostap.Math.Moments()

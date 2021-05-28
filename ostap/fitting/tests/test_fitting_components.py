@@ -20,6 +20,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -290,13 +291,20 @@ def test_nonextended3 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass
+    with timing ( "Extedende1"     , logger ) : 
+        test_extended1    ()
+        
+    with timing ( "Extedende2"     , logger ) : 
+        test_extended2    ()
+        
+    with timing ( "non-Extedende1" , logger ) : 
+        test_nonextended1 ()
+        
+    with timing ( "non-Extedende2" , logger ) : 
+        test_nonextended2 () 
 
-    test_extended1    () 
-    test_extended2    () 
-    test_nonextended1 () 
-    test_nonextended2 () 
-    test_nonextended3 () 
+    with timing ( "non-Extedende3" , logger ) : 
+        test_nonextended3 () 
     
 # =============================================================================
 ##                                                                      The END 

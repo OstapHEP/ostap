@@ -81,15 +81,15 @@ namespace Ostap
   public: // derived quantities & aliases  
     // ======================================================================
     /// number of entries 
-    unsigned long long   nEntries   () const { return m_n        ; }
+    unsigned long long   nEntries   () const { return m_n    ; }
     /// variance
-    double               variance   () const { return m_mu2 ; }
+    double               variance   () const { return m_mu2  ; }
     /// dispersion 
-    double               dispersion () const { return m_mu2 ; }
+    double               dispersion () const { return m_mu2  ; }
     /// r.m.s of value
     double               rms        () const ;
     /// mean value of counter
-    double               mean       () const { return m_mu  ; }
+    double               mean       () const { return m_mu   ; }
     /// error in mean value of counter
     double               meanErr    () const ;
     // ======================================================================

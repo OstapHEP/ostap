@@ -9,6 +9,7 @@
 #include <cmath>
 #include <vector>
 #include <complex>
+#include <array>
 #include <algorithm>
 // ============================================================================
 // Ostap
@@ -82,29 +83,57 @@ namespace Ostap
                   const double                xmin  = 0 ,
                   const double                xmax  = 1 ) ;
       // ======================================================================
-      /// constructor from N+1 coefficients
+      /** constructor from N+1 coefficients
+       *  @param pars list of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( const std::vector<double>&  pars      ,
                   const double                xmin  = 0 ,
                   const double                xmax  = 1 ) ;
       // ======================================================================
-      /// constructor from N+1 coefficients
+      /** constructor from N+1 coefficients
+       *  @param pars list of coefficients 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( std::vector<double>&& pars      ,
                   const double          xmin  = 0 ,
                   const double          xmax  = 1 ) ;
       // ======================================================================
-      /// construct the basic bernstein polinomial  B(k,N)
+      /** construct the basic bernstein polinomial  B(k,N)
+       *  @param basic the basci Bernstein polynomial \f$ B^k_n\f$
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein  ( const Basic&              basic     ,
                    const double              xmin  = 0 ,
                    const double              xmax  = 1 ) ;
       // ======================================================================
-      /// template constructor from sequence of parameters
-      template <class ITERATOR>
-      Bernstein ( ITERATOR                 first ,
-                  ITERATOR                 last  ,
-                  const double             xmin  ,
-                  const double             xmax  ) ;
+      /** templated constructor from the sequence of parameters
+       *  @param first begin-iterator for the sequnce of parameters 
+       *  @param last  end-iterator for the sequnce of parameters 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      Bernstein ( ITERATOR     first     ,
+                  ITERATOR     last      ,
+                  const double xmin  = 0 ,
+                  const double xmax  = 1 ) 
+        : Ostap::Math::PolySum  ( first , last )
+        , m_xmin ( std::min ( xmin, xmax ) )
+        , m_xmax ( std::max ( xmin, xmax ) )
+        , m_aux  ( degree () + 2 )
+      {}
       // ======================================================================
-      /// constructor  from Bernstein polynomial from *different* domain
+      /** constructor  from Bernstein polynomial from *different* domain
+       *  @param poly Bernstein polynomial 
+       *  @param xmin low-edge 
+       *  @param xmax high-edge 
+       */
       Bernstein ( const Bernstein& poly ,
                   const double     xmin ,
                   const double     xmax ) ;
@@ -250,7 +279,7 @@ namespace Ostap
       /** construct Bernstein polynomial from its roots
        *
        *  Polinomial has a form
-       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
@@ -266,7 +295,7 @@ namespace Ostap
       /** construct Bernstein polynomial from its roots
        *
        *  Polinomial has a form
-       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_i)(x-c_i^*) \f$
+       *  \f$ B(x) = \prod_i (x-r_i) \prod_j (x-c_j)(x-c_j^*) \f$
        *
        *  @param xmin low  edge for Bernstein polynomial
        *  @param xmax high edge for Bernstein polynomial
@@ -317,16 +346,6 @@ namespace Ostap
       // ======================================================================
       /// Is it a constant function:   \f$ f^{\prime} \equiv 0 \f$ ?
       bool   constant   () const ;
-      /// Is it a decreasing function: \f$ f^{\prime} \le 0 \f$ ?
-      bool   decreasing () const ;
-      /// Is it a increasing function: \f$ f^{\prime} \ge 0 \f$ ?
-      bool   increasing () const ;
-      /// Is it a monotonical function ?
-      bool   monotonic  () const { return increasing () || decreasing () ; }
-      /// Is it a convex   function: \f$ f^{\prime\prime}\ge 0 \f$ ?
-      bool   convex     () const ;
-      /// Is it a concave  function: \f$ f^{\prime\prime}\le 0 \f$ ?
-      bool   concave    () const ;
       // ======================================================================
     public: // convert from local to global variables
       // ======================================================================
@@ -567,6 +586,11 @@ namespace Ostap
       /// the right edge of interval
       double m_xmax  ;                             // the right edge of interval
       // ======================================================================
+    private :
+      // ======================================================================
+      /// auxillary storage used for de calsteljo algorithm 
+      mutable std::vector<long double> m_aux ;             // auxillary storage
+      // ======================================================================
     };
     // ========================================================================
     ///  Bernstein plus      constant
@@ -758,20 +782,7 @@ namespace Ostap
 // ============================================================================
 // implementation of templated stuff 
 // ============================================================================
-// template constructor from sequence of parameters
-// ============================================================================
-template <class ITERATOR>
-Ostap::Math::Bernstein::Bernstein
-( ITERATOR                 first ,
-  ITERATOR                 last  ,
-  const double             xmin  ,
-  const double             xmax  )
-  : Ostap::Math::PolySum ( first , last )
-  , m_xmin ( std::min ( xmin, xmax ) )
-  , m_xmax ( std::max ( xmin, xmax ) )
-{}
-// ============================================================================
-/*  construct Bernstein interpolant
+/*  Construct Bernstein interpolant
  *  @param xbegin start of vector of abscissas
  *  @param xend   end   of vector of abscissas
  *  @param ybegin start if vector of function values (the same size)
@@ -798,9 +809,7 @@ Ostap::Math::Bernstein::Bernstein
   const double xmax   , 
   XADAPTER     xvalue , 
   YADAPTER     yvalue )
-  : Ostap::Math::PolySum ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) -1 ) 
-  , m_xmin ( std::min ( xmin , xmax ) )
-  , m_xmax ( std::max ( xmin , xmax ) )
+  : Bernstein ( xbegin == xend ? 0 : std::distance ( xbegin , xend  ) - 1 , xmin , xmax ) 
 {
   const unsigned int N  = std::distance ( xbegin , xend ) ;
   //
@@ -959,7 +968,7 @@ namespace Ostap
     double right_line_hull ( const Ostap::Math::Bernstein& b ) ;
   } 
   // ==========================================================================
-}
+} //                                                The end of namespace  Ostap 
 // ============================================================================
 // some  specific interpolation part 
 // ============================================================================
@@ -1396,6 +1405,64 @@ namespace Ostap
                   const double                  xmax ) ;
       // ======================================================================      
     } //                            end of namespace Ostap::Math::Interpolation
+    // ========================================================================
+    /** Convert the linear polynomial \f$ p(x) = ax+b \f$ into Bernstein form 
+     *  \f$ b(x) = \alpha_0 ( 1 - x ) + \alpha_1 x \f$
+     *  @param a coefficient \f$ a \$ for \f$ p(x) = ax+b\f$
+     *  @param b coefficient \f$ b \$ for \f$ p(x) = ax+b\f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 \f$
+     */ 
+    // inline std::array<double,2> 
+    // inline std::tuple<double,double>
+    inline std::vector<double>
+    poly_to_bernstein 
+    ( const double a , 
+      const double b ) { return {{ b , a + b }} ; }
+    // ========================================================================
+    /** Convert the quadratic polynomial \f$ p(x) = ax^2+bx+c \f$ into Bernstein form 
+     *  \f$ b(x) = \alpha_0  (1-x)^2 + \alpha_1 2x(1-x) + \alpha_2  x^2\f$
+     *  @param a coefficient \f$ a \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @param b coefficient \f$ b \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @param c coefficient \f$ c \$ for \f$ p(x) = ax^2+bx+x\f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 , \aalpha_2\f$
+     */ 
+    // inline std::array<double,3> 
+    // inline std::tuple<double,double,double>
+    inline std::vector<double>
+    poly_to_bernstein 
+    ( const double a , 
+      const double b ,
+      const double c ) { return {{ c , b + 2 * c , a + b + c }} ; }
+    // ========================================================================
+    /** Create Bernstein coefficients for the linear polynomial 
+     *  \f$ p(x) = x-x_0 = \alpha_0 (1-x) + \alpha_1 x \f$  
+     *  @param x0 root of linear polynomial \f$ p(x) = x - x0 \f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 \f$
+     */ 
+    // inline std::array<double,2> 
+    // inline std::tuple<double,double>
+    inline std::vector<double>
+    bernstein_from_roots 
+    ( const double x0 ) 
+    { return {{ -x0 , 1 - x0 }}; }
+    // ========================================================================
+    /** Create Bernstein coefficients for the quadratic polynomial 
+     *  \f$ p(x) = (x-x_0)(x-x_1) = \alpha_0 (1-x)^2 + \alpha_1 2x(1-x) + \alpha_2 x^2\f$
+     *  @param x0 root of quadratic polynomial \f$ p(x) = (x - x_0)(x-x_1) \f$
+     *  @param x1 root of quadratic polynomial \f$ p(x) = (x - x_0)(x-x_1) \f$
+     *  @return array of coefficients \f$ \alpha_0,  \alpha_1 , \alpha_2 \f$
+     */ 
+    // inline std::array<double,3> 
+    // inline std::tuple<double,double,double>
+    inline std::vector<double>
+    bernstein_from_roots 
+    ( const double x0 ,
+      const double x1 ) 
+    { 
+      const double s = x0 + x1 ;
+      const double p = x0 * x1 ;
+      return {{ 1 + p - s , p - 0.5 * s , p }}; 
+    }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

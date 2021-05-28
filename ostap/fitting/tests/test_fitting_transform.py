@@ -21,6 +21,7 @@ import ostap.fitting.models        as     Models
 from   ostap.fitting.transform_pdf import TrPDF
 from   ostap.fitting.funbasic      import Fun1D
 from   builtins                    import range
+from   ostap.utils.timing          import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -63,7 +64,7 @@ def  test_transform () :
     
     
     r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
-    logger.info ( 'Fit x:\%s' % r1.table() ) 
+    logger.info ( 'Fit x:\n%s' % r1.table() ) 
     
     lx = dataset.lx
     LX = Fun1D (  lx , lx )
@@ -73,13 +74,14 @@ def  test_transform () :
     tgauss  = TrPDF ( pdf = gauss , new_var = NX )
     
     r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
-    logger.info ( 'Fit log10(x):\%s' % r2.table() ) 
+    logger.info ( 'Fit log10(x):\n%s' % r2.table() ) 
 
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_transform    () 
+    with timing ("transform" , logger ) :  
+        test_transform    () 
     
 # =============================================================================
 ##                                                                      The END 

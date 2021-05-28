@@ -214,7 +214,7 @@ def pdf_sum ( pdf1 , pdf2 ) :
             
     elif isinstance ( pdf1 , _2D.PDF2 ) or  isinstance ( pdf2 , _2D.PDF2 ) : return NotImplemented
     
-    elif isinstance ( pdf1 , _1D.PDF1 ) and isinstance ( pdf2 , _1D.PDF1 ) :
+    elif isinstance ( pdf1 , _1D.PDF  ) and isinstance ( pdf2 , _1D.PDF  ) :
         
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         

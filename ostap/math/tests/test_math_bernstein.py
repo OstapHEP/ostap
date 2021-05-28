@@ -18,34 +18,40 @@ else                       : logger = getLogger ( __name__              )
 import random  
 import ostap.math.models 
 import ostap.math.bernstein
-from   ostap.core.core  import Ostap
-
+from   ostap.core.core      import Ostap
+from   ostap.utils.timing   import timing 
 # ============================================================================
 ##  test solution of equation  B(x) = c
 def test_solve ():
     """Test solution of equation  B(x) = c 
     """
-
-    logger.info ('test_solve') 
+    logger = getLogger("test_solve")
+    
     # 1) construct function with known roots
     
     ## roots in [0,1]
-    troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
+    troots  =          [  random.uniform(0.001,0.999) for i in  range ( 5 ) ]
+    troots.sort() 
+    
     ## roots in [1,10]
-    roots   = troots + [  random.uniform(1.01,9.99) for i in  range(4) ]
+    roots   = troots + [  random.uniform(1.001,9.999) for i in  range ( 4 ) ]
+    roots.sort ()
+    
     ## complex roots  
-    croots  = [  complex ( random.uniform(-3,0),random.gauss(0,3) )  for i in  range(4) ]
-
+    croots  = [ complex ( random.uniform(-3,-1) , random.gauss ( 0 , 3 ) ) for i in range (  4) ]
+    croots += [ complex ( random.uniform( 2, 4) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
+    
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
-
-    ##  find roots of Bernstein  polynomial 
-        
+    
+    logger.info ( "Bernstein: %s" % bs ) 
+    
+    ##  find roots of Bernstein  polynomial     
     rr = bs.solve()
-    logger.info ('Roots found : %s' % list( rr ) )
+    logger.info ('Roots found : [%s]' %  ( ', '.join ( "%.6f" % r for r in rr  )  ) )
     
     troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
 
 # ============================================================================
 ##  check number of roots using Sturm' sequence 
@@ -53,32 +59,43 @@ def test_nroots ():
     """Check number of roots using Sturm' sequence 
     """
 
-    logger.info ('test_nroots') 
+    logger = getLogger("test_nroots")
+    
     # 1) construct function with known roots
     
     ## roots in [0,1]
-    troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
-    ## roots in [1,10]
-    roots   = troots + [  random.uniform(1.01,9.99) for i in  range(4) ]
-    ## complex roots  
-    croots  = [  complex ( random.uniform(-3,0),random.gauss(0,3) )  for i in  range(4) ]
+    troots  =          [  random.uniform(0.01,0.99) for i in  range ( 6 ) ]
+    troots.sort() 
 
+    ## roots in [1,10]
+    roots   = troots + [  random.uniform(1.01,9.99) for i in  range ( 4 ) ]
+    roots.sort ()
+    
+    ## complex roots  
+    croots  = [ complex ( random.uniform(-3 , -1 ) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
+    croots += [ complex ( random.uniform( 3 ,  5 ) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
+    
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
 
 
     troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
     
-    for i in  range(20)  :
-        x1 = random.uniform (  0 , 0.70 )
+    for i in  range( 20 )  :
+        
+        x1 = random.uniform (  0 , 0.80 )
         x2 = random.uniform ( x1 , 1.00 )
-        x2 = bs.xmax() 
+
         nr = bs.nroots ( x1 , x2 )
-        nc = 0
+        nt = 0
         for r in  troots :
-            if x1 < r <= x2 :  nc=+1 
-        logger.info ('Roots between [%s,%s) : %d/%d '  % ( x1  , x2 , nr , nc ) )
+            if x1 <= r < x2 :  nt += 1
+
+        if nr != nt : 
+            logger.error ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
+        else : 
+            logger.info  ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
         
        
 # ============================================================================
@@ -87,7 +104,7 @@ def test_interpolation ():
     """Test bernstein interpolation
     """
 
-    logger.info ('test_interpolation')
+    logger = getLogger("test_interpolation")
 
     from math import sin,pi, sqrt
     
@@ -112,16 +129,17 @@ def test_division ():
     """Test polynomial division
     """
 
-    logger.info ('test_division')
+    logger = getLogger("test_division")
+
     # 1) construct function with known roots
     
     ## roots in [0,1]
     troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
+    troots.sort() 
     ## complex roots  
     croots  = [ complex ( random.uniform(-3, 0),random.gauss(0,3) )  for i in range(3) ]
 
-    troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    logger.info ('Roots true  : [%s]' % ( ', '.join( "%.6f"  % r for r in troots ) ) )    
 
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , troots      , croots )
@@ -130,11 +148,11 @@ def test_division ():
     b3 = Ostap.Math.Bernstein (  0 , 1 , troots      )
 
     a1,r1 = divmod ( bs, b1 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r1.norm () , a1.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r1.norm () , ', '.join ( "%.6f" % r for r in a1.solve() ) ) )
     a2,r2 = divmod ( bs, b2 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r2.norm () , a2.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r2.norm () , ', '.join ( "%.6f" % r for r in a2.solve() ) ) )
     a3,r3 = divmod ( bs, b3 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r3.norm () , a3.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r3.norm () , ', '.join ( "%.6f" % r for r in a3.solve() ) ) )
 
 # =============================================================================
 def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
@@ -142,12 +160,12 @@ def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
     if d > tolerance :
         raise ValueError ( message + ' |%s-%s|=%s>%s' % ( a , b , d , tolerance ) )
 
-
 # =========================================================================----
 ## test for elevate/reduce
 def test_elevatereduce () :
 
-    logger.info ('test_elevatereduce')
+    logger = getLogger("test_elevatereduce")
+
     BP = Ostap.Math.Bernstein
     
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
@@ -165,13 +183,14 @@ def test_elevatereduce () :
             check_equality ( y  , ye  , 'Invalid elevate' , 1.e-6 )
             check_equality ( y  , yr  , 'Invalid reduce'  , 1.e-6 )
             
-    logger.info ('Elevate/reduce is OK' )
+    logger.info ('Elevate/reduce  is OK' )
 
 # ==============================================================================
 ## test  for polynomials 
 def test_poly () :
     
-    logger.info ('test_poly')
+    logger = getLogger("test_poly")
+
     BP = Ostap.Math.Bernstein
     
     # 1) create & evaluate the polynom 
@@ -181,7 +200,7 @@ def test_poly () :
     
     for i in  range(500) :
         x = random.uniform ( b.xmin() , b.xmax() )
-        y = b(x)
+        y = b ( x ) 
         check_equality ( y , 1 , 'Invalid polynom value:' )
         
     logger.info ('Constant   poly is OK' )
@@ -204,10 +223,10 @@ def test_poly () :
 def test_even () :
 
     
-    logger.info ('test_even')
+    logger = getLogger("test_even")
+
     BP = Ostap.Math.BernsteinEven
-    
-    
+        
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
     for i in  b  : b[i] = random.uniform(-10,10)
     
@@ -228,7 +247,7 @@ def test_even () :
 ## test  for monotonic polynomial 
 def test_monotonic () :
     
-    logger.info ('test_monothonic')
+    logger = getLogger("test_monotonic")
 
     ## 8-9) check for Monotonic 
     BPM = Ostap.Math.Monotonic
@@ -273,7 +292,7 @@ def test_convex () :
     """Test for Convex positive polynmomials 
     """
     
-    logger.info ('test_convex')
+    logger = getLogger("test_convex")
     BPC = Ostap.Math.Convex
     
     b_11 = BPC ( 5 , 0 , 2 , True  , True  )
@@ -320,7 +339,7 @@ def test_convexonly () :
     """Test for Convex-Only positive polynmomials 
     """
     
-    logger.info ('test_convexonly')
+    logger = getLogger("test_convexonly")
     BPC = Ostap.Math.ConvexOnly
     
     b_11 = BPC ( 5 , 0 , 2 , True  )
@@ -359,7 +378,7 @@ def test_integration () :
     """Test for polynomial interation
     """
     
-    logger.info ('test_integration')
+    logger = getLogger("test_integration")
     
     BP = Ostap.Math.Bernstein
     
@@ -383,7 +402,7 @@ def test_integration () :
         if 0 < ds < abs ( dd ) * 10**6 :
             raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
-    logger.info ('Integration     is  OK' )
+    logger.info ('Integration     is OK' )
 
 # =============================================================================
 ## test transformations
@@ -391,8 +410,9 @@ def test_transformation () :
     """Test for transformation
     """
     
-    logger.info ('test_transformation')
+    logger = getLogger("test_transformation")
 
+    
     BP = Ostap.Math.Bernstein
     MS = Ostap.Math.Polynomial   ## monomial sum 
     CS = Ostap.Math.ChebyshevSum ## chebyshev sum 
@@ -404,53 +424,53 @@ def test_transformation () :
     for i in range ( 50 ) :
         
         for i in b  : b[i] = random.uniform ( -10 , 10 ) 
-    
-        ## monomial sum 
+        
+        ## Monomial sum 
         ms = MS ( b  )
         bm = BP ( ms ) 
-
-        ## chebyshev sum 
+        
+        ## Chebyshev sum 
         cs = CS ( b  )
         bc = BP ( cs ) 
-
-        ## chebyshev sum 
+        
+        ## Legendre  sum 
         ls = LS ( b  )
         bl = BP ( ls ) 
-
+        
         for i in range( 100 ) :
             
             x1 = random.uniform ( b.xmin() , b.xmax() )
-
+            
             bv = b ( x1 )
             
-            check_equality ( bv , ms(x1) , 'Invalid Bernstein->Monomial  transformation' )
-            check_equality ( bv , bm(x1) , 'Invalid Bernstein<-Monomial  transformation' )
+            check_equality ( bv , ms ( x1 ) , 'Invalid Bernstein->Monomial  transformation' )
+            check_equality ( bv , bm ( x1 ) , 'Invalid Bernstein<-Monomial  transformation' )
             
-            check_equality ( bv , cs(x1) , 'Invalid Bernstein->Chebyshev transformation' )
-            check_equality ( bv , bc(x1) , 'Invalid Bernstein<-Chebyshev transformation' )
+            check_equality ( bv , cs ( x1 ) , 'Invalid Bernstein->Chebyshev transformation' )
+            check_equality ( bv , bc ( x1 ) , 'Invalid Bernstein<-Chebyshev transformation' )
             
-            check_equality ( bv , ls(x1) , 'Invalid Bernstein->Legendre  transformation' )
-            check_equality ( bv , bl(x1) , 'Invalid Bernstein<-Legendre  transformation' )
-
-
-    logger.info ('Transformation  is  OK' )
+            check_equality ( bv , ls ( x1 ) , 'Invalid Bernstein->Legendre  transformation' )
+            check_equality ( bv , bl ( x1 ) , 'Invalid Bernstein<-Legendre  transformation' )
+            
+    logger.info ('Transformation  is OK' )
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_poly           ()
-    test_even           ()
-    test_monotonic      ()
-    test_convex         () 
-    test_convexonly     ()
     test_solve          ()
     test_nroots         ()
     test_interpolation  ()
     test_division       ()
     test_elevatereduce  ()
+    test_poly           ()
+    test_even           ()
+    test_monotonic      ()
+    test_convex         () 
+    test_convexonly     ()
     test_integration    ()
     test_transformation ()
 
+
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

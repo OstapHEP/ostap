@@ -20,6 +20,7 @@ import ROOT, random
 import ostap.fitting.roofit 
 from   ostap.core.core       import VE, dsID
 from   builtins              import range
+from   ostap.utils.timing    import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -187,58 +188,159 @@ def test_sech () :
     models.add ( reso_sech )
 
 # =============================================================================
-## Bukin
+## Logistic 
 # =============================================================================
-def test_bukin () :
+def test_logistic () :
     
-    logger.info ('Test ResoBukin: Bukin resolution model' )
-    from   ostap.fitting.resolution import ResoBukin
-    reso_bukin = ResoBukin ( 'Bukin' , mass ,  0.1 ,rho = (0, 0 , 10 ) )
-    reso_bukin.sigma .release()
-    reso_bukin.rho   .release()
+    logger.info ('Test ResoLogistic: logistic (sech-squared) resolution model' )
+    from   ostap.fitting.resolution import ResoLogistic
+    reso_log = ResoLogistic ( 'Logistic' , mass ,  0.1 )
+    reso_log.sigma .release()
     
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
-        result, frame = reso_bukin. fitTo ( dataset0 )
-        result, frame = reso_bukin. fitTo ( dataset0 , draw = True )
+        result, frame = reso_log. fitTo ( dataset0 )
+        result, frame = reso_log. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        logger.info ( 'ResoBukin:  RMS        %s ' % reso_bukin.rms          () )  
-        logger.info ( 'ResoBukin:  FWHM       %s ' % reso_bukin.fwhm         () )
+        logger.info ( 'ResoLog :   RMS        %s ' % reso_log.rms          () )  
+        logger.info ( 'ResoLog :   FWHM       %s ' % reso_log.fwhm         () )
+        logger.info ( "ResoLog :   fit results\n%s" % result.table ( title = 'Logistic/sech-squared resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso_log )
+
+
+# =============================================================================
+## symmetric Bukin
+# =============================================================================
+def test_bukin () :
+    
+    logger.info ('Test ResoBukin: symmetric Bukin resolution model' )
+    from   ostap.fitting.resolution import ResoBukin
+    reso = ResoBukin ( 'Bukin' , mass ,  0.1 ,rho = (0, 0 , 10 ) )
+    reso.sigma .release()
+    reso.rho   .release()
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoBukin:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoBukin:  FWHM       %s ' % reso.fwhm         () )
         logger.info ( "ResoBukin: fit results\n%s" % result.table ( title = 'symmetric Bukin resolution model' , prefix = '# ' ) )
         
-    models.add ( reso_bukin )
+    models.add ( reso )
+
+# =============================================================================
+## symmetric Johnson's SU 
+# =============================================================================
+def test_johnsonSU () :
+    
+    logger.info ('Test JohnsonSU: symmetric JohnsonSU  resolution model' )
+    from   ostap.fitting.resolution import ResoJohnsonSU 
+    reso = ResoJohnsonSU ( 'JohnsonSU' , mass ,
+                           delta = ( 1.7 , 1.e-6 , 1000 ) ,
+                           lambd = ( 0.2 , 1.e-6 , 1000 ) ) 
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoJohnsonSU:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoJohnsonSU:  FWHM       %s ' % reso.fwhm         () )
+        logger.info ( "ResoJohnsonSU: fit results\n%s" % result.table ( title = 'symmetric JohnsonSU resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso )
+
+
+
+# =============================================================================
+## Sinh-Asinh
+# =============================================================================
+def test_sinhasinh () :
+    
+    logger.info ('Test SinhAsinh: symmetric SinhAsinh resolution model' )
+    from   ostap.fitting.resolution import ResoSinhAsinh
+    reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,  delta = ( 0.7 , 1.e-5 , 1000 ) )
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoSinhAsinh:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoSinhAsinh:  FWHM       %s ' % reso.fwhm         () )
+        logger.info ( "ResoSinhAsinh: fit results\n%s" % result.table ( title = 'symmetric SinhAsinh resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso )
 
 
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
         db['dataset'  ] = dataset0
+        for m in models : db['model %s' % m.name ] = m
         db['models'   ] = models
         db.ls() 
         
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_gauss  () ## single Gaussian resolution model
-    test_2gauss () ## double Gaussian resolution model
-    test_apo2   () ## symmetric Apollonios resoltuion model
-    test_cb2    () ## double-sided Crystal Ball resoltuion model
-    test_sech   () ## hyperbolic secant resolution model
-    test_bukin  () ## Bukin resolution model
+    with timing ("Gauss"     , logger ) :  
+        test_gauss      () ## single Gaussian resolution model
+        
+    with timing ("2-Gauss"   , logger ) :  
+        test_2gauss     () ## double Gaussian resolution model
+        
+    with timing ("Apo2"      , logger ) :  
+        test_apo2       () ## symmetric Apollonios resoltuion model
+        
+    with timing ("CB2"       , logger ) :  
+        test_cb2        () ## double-sided Crystal Ball resoltuion model
+        
+    with timing ("Sech"      , logger ) :  
+        test_sech       () ## hyperbolic secant resolution model
+
+    with timing ("Logistic"  , logger ) :  
+        test_logistic   () ## logistic resolution model
+        
+    with timing ("Bukin"     , logger ) :  
+        test_bukin      () ## Bukin resolution model
+    
+    with timing ("SinhAsinh" , logger ) :  
+        test_sinhasinh  () ## SinhAsinh resolution model
+
+    with timing ("JohnsonSU" , logger ) :  
+        test_johnsonSU  () ## JohnsonSU resolution model
     
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing ("Save to DB"    , logger ) :  
+        test_db ()          
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # ============================================================================= 

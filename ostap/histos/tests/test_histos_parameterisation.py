@@ -14,7 +14,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random, ostap.histos.param, ostap.histos.histos, ostap.fitting.funcs
+import ROOT, random, time
 from   builtins import range
 # =============================================================================
 # logging 
@@ -25,6 +25,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+import ostap.histos.param
+import ostap.histos.histos
+import ostap.fitting.funcs
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 use_scipy = False 
@@ -36,22 +39,22 @@ except ImportError :
     
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
-from ostap.core.core    import hID
+from ostap.core.core    import hID , fID 
 from ostap.utils.timing import timing
 
-h1 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
-h2 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
-h3 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
-h4 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
-h5 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
-h6 = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
+h1 = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
+h2 = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 
+h3 = ROOT.TH1F ( hID () , 'increasing concave' , 100 , 0 , 1 ) ; h3.Sumw2 () 
+h4 = ROOT.TH1F ( hID () , 'decreasing concave' , 100 , 0 , 1 ) ; h4.Sumw2 () 
+h5 = ROOT.TH1F ( hID () , 'symmetric  convex ' , 100 , 0 , 1 ) ; h5.Sumw2 () 
+h6 = ROOT.TH1F ( hID () , 'symmetric  concave' , 100 , 0 , 1 ) ; h6.Sumw2 () 
 
-f1 = ROOT.TF1  ( 'f3'  , '(x-1)**2'         , 0 , 1 )
-f2 = ROOT.TF1  ( 'f4'  , 'x**2'             , 0 , 1 )
-f3 = ROOT.TF1  ( 'f3'  , '1-(x-1)**2'       , 0 , 1 )
-f4 = ROOT.TF1  ( 'f4'  , '1-x**2'           , 0 , 1 )
-f5 = ROOT.TF1  ( 'f5'  , '4*(x-0.5)**2'     , 0 , 1 )
-f6 = ROOT.TF1  ( 'f5'  , '1-4*(x-0.5)**2'   , 0 , 1 )
+f1 = ROOT.TF1  ( fID ()  , '(x-1)**2'       , 0 , 1 )
+f2 = ROOT.TF1  ( fID ()  , 'x**2'           , 0 , 1 )
+f3 = ROOT.TF1  ( fID ()  , '1-(x-1)**2'     , 0 , 1 )
+f4 = ROOT.TF1  ( fID ()  , '1-x**2'         , 0 , 1 )
+f5 = ROOT.TF1  ( fID ()  , '4*(x-0.5)**2'   , 0 , 1 )
+f6 = ROOT.TF1  ( fID ()  , '1-4*(x-0.5)**2' , 0 , 1 )
 
 entries = 100000
 
@@ -71,6 +74,8 @@ for i in range ( 0 , entries ) :
 # h5 - non-monotonic convex     (symmetric)
 # h6 - non-monotonic concave    (symmetric)
 
+## all histograms 
+histos = h1 , h2 , h3 , h4 , h5 , h6
 
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
@@ -89,7 +94,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
         dd = _integral ( _fund_ , xmin , xmax )
         
     import math
-    return math.sqrt(dd/(d1*d2))
+    return "%.4e" % math.sqrt(dd/(d1*d2))
 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
@@ -121,113 +126,95 @@ def diff3 ( func , histo ) :
         
     return _diff2_ ( _fun1 , _fun2 , histo.xmin() , histo.xmax() )
 
+
+
 # =============================================================================
 def test_bernstein_sum() :
 
-    with timing ( 'Bezier[4]' ) :
-        rB1 = h1.bernstein_sum ( 4 )
-        rB2 = h2.bernstein_sum ( 4 )
-        rB3 = h3.bernstein_sum ( 4 )
-        rB4 = h4.bernstein_sum ( 4 )
-        rB5 = h5.bernstein_sum ( 4 )
-        rB6 = h6.bernstein_sum ( 4 )
-        logger.info ( 'Bezier[4]: diff      %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+    logger = getLogger("test_bernstein_sum")
+
+    with timing ( 'Bernstein-sum[6]' , logger ) :
+        params  = [ h.bernstein_sum ( 6 ) for h in histos ]
+    
+    for h , f in zip ( histos , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
 
 # =============================================================================
 def test_bernsteineven_sum() :
             
+    logger = getLogger("test_bernsteineven_sum")
+
+    with timing ( 'Bernstein-(even)-sum[6]' , logger ) :
+        params  = [ h.bernsteineven_sum ( 6 ) for h in histos[4:] ]
     
-    with timing ( 'BezierEven[2]' , logger ) :
-        rB1 = h1.bernsteineven_sum ( 2 )
-        rB2 = h2.bernsteineven_sum ( 2 )
-        rB3 = h3.bernsteineven_sum ( 2 )
-        rB4 = h4.bernsteineven_sum ( 2 )
-        rB5 = h5.bernsteineven_sum ( 2 )
-        rB6 = h6.bernsteineven_sum ( 2 )
-        logger.info ( 'BezierEven[2]: diff  %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+    for h , f in zip ( histos[4:] , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
 
 # =============================================================================
 def test_legendre_sum() :
     
-    with timing ( 'Legendre[4]' , logger ) :
-        rB1 = h1.legendre_sum ( 4 )
-        rB2 = h2.legendre_sum ( 4 )
-        rB3 = h3.legendre_sum ( 4 )
-        rB4 = h4.legendre_sum ( 4 )
-        rB5 = h5.legendre_sum ( 4 )
-        rB6 = h6.legendre_sum ( 4 )
-        logger.info ( 'Legendre[4]: diff    %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+    logger = getLogger("test_legendre_sum")
+
+    with timing ( 'Legendre-sum[6]' , logger ) :
+        params  = [ h.legendre_sum ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
         
 # =============================================================================
 def test_chebyshev_sum() :
     
-    with timing ( 'Chebyshev[4]' , logger ) :
-        rB1 = h1.chebyshev_sum ( 4 )
-        rB2 = h2.chebyshev_sum ( 4 )
-        rB3 = h3.chebyshev_sum ( 4 )
-        rB4 = h4.chebyshev_sum ( 4 )
-        rB5 = h5.chebyshev_sum ( 4 )
-        rB6 = h6.chebyshev_sum ( 4 )
-        logger.info ( 'Chebyshev[4]: diff   %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+    logger = getLogger("test_chebyshev_sum")
+    
+    with timing ( 'Chebyshev-sum[6]' , logger ) :
+        params  = [ h.chebyshev_sum ( 6 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
 
 # =============================================================================
 def test_fourier_sum() :
-    
-    with timing ( 'Fourier[12]' , logger ) :
-        rB1 = h1.fourier_sum ( 12 )
-        rB2 = h2.fourier_sum ( 12 )
-        rB3 = h3.fourier_sum ( 12 )
-        rB4 = h4.fourier_sum ( 12 )
-        rB5 = h5.fourier_sum ( 12 )
-        rB6 = h6.fourier_sum ( 12 )
-        logger.info ( 'Fourier[12]: diff    %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+            
+    logger = getLogger("test_fourier_sum")
+
+    with timing ( 'Fourier-sum[16]' , logger ) :
+        params  = [ h.fourier_sum ( 16 ) for h in histos ]
+
+    for h , f in zip ( histos , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
 
 # =============================================================================
 def test_cosine_sum() :
-    
+
+    logger = getLogger("test_cosine_sum")
     if not use_scipy :
-        logger.warning("No scipy is avilable, skip 'cosine_sum' test")
+        logger.warning("No scipy is avilable, skip the test test")
         return
 
-    with timing ( 'Cosine[12]' , logger ) :
-        rB1 = h1.cosine_sum ( 12 )
-        rB2 = h2.cosine_sum ( 12 )
-        rB3 = h3.cosine_sum ( 12 )
-        rB4 = h4.cosine_sum ( 12 )
-        rB5 = h5.cosine_sum ( 12 )
-        rB6 = h6.cosine_sum ( 12 )
-        logger.info ( 'Cosine[12]: diff     %s ' %  [ diff1(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
-
+    with timing ( 'Cosine-sum[16]' , logger ) :
+        params  = [ h.cosine_sum ( 16 ) for h in histos ]
+        
+    for h , f in zip ( histos , params ) :
+        h.draw()
+        f.draw('same')
+        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+        time.sleep  (1) 
+        
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -243,5 +230,5 @@ if '__main__' == __name__ :
     test_cosine_sum        ()
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

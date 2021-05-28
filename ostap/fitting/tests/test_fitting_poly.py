@@ -21,6 +21,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent 
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -168,7 +169,7 @@ def test_mspline () :
     
     logger.info ("Test positive decreasing spline of order 3 with 2 inner knots ")
     spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
-    model  = Models.MSpline_pdf ( 'S3' , x , spline )
+    model  = Models.MSpline_pdf ( 'M3' , x , spline )
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
@@ -210,7 +211,8 @@ def test_cspline () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
+
+    logger.info('Saving all objects into DBASE')    
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
     with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
@@ -222,16 +224,24 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_poly4       () ## Polynomial (4)
-    test_monotonic4 () ## Monotonic polynomial (4)
-    test_convex4     () ## Convex polynomial (4)
-    test_expopoly2   () ## Exponent times positive polynomial (2)
-    test_pspline     () ## Positive spline of order 3 with two knots 
-    test_mspline     () ## Positive monotonic spline of order 3 with two knots 
-    test_cspline     () ## Positive monotonic convex spline of order 3 with two knots 
+    with timing ( "Poly4" , logger ) : 
+        test_poly4       () ## Polynomial (4)
+    with timing ( "Monotonic4" , logger ) : 
+        test_monotonic4 () ## Monotonic polynomial (4)
+    with timing ( "Convex4"   , logger ) : 
+        test_convex4     () ## Convex polynomial (4)
+    with timing ( "ExpoP2"    , logger ) : 
+        test_expopoly2   () ## Exponent times positive polynomial (2)
+    with timing ( "p-Spline"  , logger ) :         
+        test_pspline     () ## Positive spline of order 3 with two knots 
+    with timing ( "m-Spline"  , logger ) :         
+        test_mspline     () ## Positive monotonic spline of order 3 with two knots 
+    with timing ( "c-Spline"  , logger ) :         
+        test_cspline     () ## Positive monotonic convex spline of order 3 with two knots 
 
     ## check finally that everything is serializeable:
-    test_db          ()          
+    with timing ( "Save to DB"  , logger ) :         
+        test_db          ()          
 
 # =============================================================================
 ##                                                                      The END 

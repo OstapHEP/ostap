@@ -87,7 +87,7 @@ class StatVarTask(Task) :
         return self.__output 
         
     ## merge results 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         
         from ostap.stats.counters import WSE
 
@@ -110,9 +110,14 @@ class StatVarTask(Task) :
 #  chain    = ...
 #  chain.pStatVar ( .... ) 
 #  @endcode 
-def pStatVar ( chain        , what , cuts = ''    ,
-               nevents = -1 ,
-               first   =  0 , chunk_size = 100000 , max_files = 10 , ppservers = () , silent = True ) :
+def pStatVar ( chain               ,
+               what                ,
+               cuts       = ''     ,
+               nevents    = -1     ,
+               first      =  0     ,
+               chunk_size = 100000 ,
+               max_files  = 10     ,
+               silent     = True   , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>> chain    = ...
     >>> chain.pstatVar( 'mass' , 'pt>1') 
@@ -135,7 +140,7 @@ def pStatVar ( chain        , what , cuts = ''    ,
     ch     = Chain ( chain , first = first , nevents = nevents )
 
     task   = StatVarTask ( what , cuts )
-    wmgr   = WorkManager ( ppservers = ppservers , silent = silent )
+    wmgr   = WorkManager ( silent = silent , **kwargs )
 
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 

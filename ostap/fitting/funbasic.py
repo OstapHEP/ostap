@@ -18,7 +18,8 @@ __all__     = (
     'Fun1D'             , ## wrapper for 1D-function
     'Fun2D'             , ## wrapper for 2D-function
     'Fun3D'             , ## wrapper for 3D-function
-    'make_fun'          , ## helper functno to reate FUNC-objects 
+    'make_fun'          , ## helper functno to reate FUNC-objects
+    'SETPARS'           , ## context manager to keep/preserve parameters 
     )
 # =============================================================================
 import ROOT, math, sys 
@@ -369,11 +370,11 @@ class FUNC(XVar) :
     #  pdf     = ...
     #  dataset = ...
     #  params  = { 'A' : 10 , 'B' : ... }
-    #  pdf.load_params ( dataset , params ) 
+    #  pdf.load_params ( params, dataset ) 
     #  params  = ( A , B , C , ... )
-    #  pdf.load_params ( dataset , params )  
+    #  pdf.load_params ( params , dataset )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {} , silent = False  ) :
+    def load_params ( self , params = {} , dataset = None , silent = False , **kwargs ) :
         """Load parameters from
         - external dictionary `{ name : value }`
         - sequence of `RooAbsReal` objects
@@ -382,13 +383,19 @@ class FUNC(XVar) :
         >>> pdf      = ...
         >>> dataset = ... 
         >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
+        >>> pdf.load_params ( params , dataset  ) 
         >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
+        >>> pdf.load_params ( params , dataset )  
         """
-        ## nothing to load 
-        if not params : return 
 
+        if dataset :
+            assert     isinstance ( dataset , ROOT.RooAbsData ) , "load_params: invalid type of ``dataset':%s'" % type ( dataset ) 
+        else :
+            dataset = ROOT.nullptr
+            
+        if params :
+            assert not isinstance ( params  , ROOT.RooAbsData ) , "load_params: invalid type of ``params'':%s" % type ( params ) 
+            
         if isinstance ( params , ROOT.RooFitResult ) :
             params = params.dct_params () 
         
@@ -408,7 +415,7 @@ class FUNC(XVar) :
                     pv = p.getVal ()   
                     if vv != pv : 
                         p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
                         table.append ( item ) 
                     keys.add ( key )
 
@@ -428,7 +435,7 @@ class FUNC(XVar) :
                     pv = p.getVal () 
                     if vv != pv :
                         p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
+                        item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
                         table.append ( item ) 
                     keys.add  ( i )
 
@@ -436,6 +443,24 @@ class FUNC(XVar) :
             for i , pp in enumerate ( params ) :  
                 if i in keys : continue
                 not_used.append ( pp )
+
+        ## explicit parameters 
+        keys = set()        
+        for key in kwargs :
+            for p in pars :
+                if not hasattr ( p  , 'setVal' ) : continue
+                if p.name != key                 : continue
+                
+                v  = kwargs [key]
+                vv = float ( v  )
+                pv = p.getVal ()   
+                if vv != pv : 
+                    p.setVal   ( vv )
+                    item = p.name , "%-15.7g" % pv , "%-+15.7g" % vv 
+                    table.append ( item ) 
+                keys.add ( key )
+                
+            not_used |= set ( kwargs.keys() ) - keys 
 
         if not silent :
             
@@ -811,6 +836,45 @@ class FUNC(XVar) :
         return sp_maximum_1D (  self , xmin , xmax , x0 )
 
     # ================================================================================
+    ## Check the ranges for variables  in dataset 
+    def check_ranges ( self , dataset , range = '' ) :
+        """Check the ranges for varibales in dataset 
+        """
+
+        import ostap.trees.cuts
+        
+        cuts = '' 
+        for v in self.vars :
+            
+            ## has range? 
+            if ( hasattr ( v , 'hasMin' ) and not v.hasMin() ) and \
+               ( hasattr ( v , 'hasMax' ) and not v.hasMax() ) : continue
+            
+            if not v in dataset                                : continue
+            
+            vv_minmax = v.minmax ()
+            if not vv_minmax : continue
+
+            ##variable in dataset 
+            vd = getattr ( dataset , v.name , None )
+            if vd is None    : continue
+
+            vd_minmax = vd.minmax()
+            if not vd_minmax : continue
+
+            vcut1 = ROOT.TCut ( '%s<%.17g'  % ( vd.name      , vd_minmax[0] ) )
+            vcut2 = ROOT.TCut ( '%.17g<=%s' % ( vd_minmax[1] , vd.name      ) )
+            if   cuts : cuts  = cuts | ( vcut1 | vcut2 )
+            else      : cuts  =          vcut1 | vcut2 
+
+
+        if dataset and not cuts : return  True
+
+        has_entry  = dataset.hasEntry ( cuts , range ) if range else dataset.hasEntry ( cuts )
+        
+        return not has_entry 
+    
+    # ================================================================================
     ## visualise the function 
     #  @code
     #  fun.draw ) 
@@ -883,13 +947,71 @@ class FUNC(XVar) :
             #
             ## Draw the frame!
             #
-            if not ROOT.gROOT.IsBatch() :
+            groot = ROOT.ROOT.GetROOT()
+            if not groot.IsBatch() :
                 with rootWarning (): frame.draw ( kwargs.pop ( 'draw_options','' ) )
             
             if kwargs :
                 self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
 
             return frame
+
+# =============================================================================
+## Context manager to keep/preserve the parameters for function/pdf
+#  @code
+#  pdf = ...
+#  with SETPARS ( pdf ) :
+#  ...   <do something here with pdf>
+#
+#  @endcode 
+class SETPARS(object) :
+    """Context manager to keep/preserve the parameters for function/pdf
+    >>> pdf = ...
+    >>> with SETPARS ( pdf ) :
+    ...   <do something here with pdf>
+    """
+
+    ## constructor with the function and dataset 
+    def __init__ ( self , fun , dataset = None ) :
+
+        self.__params  = {}
+        self.__fun     = fun        
+        if dataset is None : dataset = ROOT.nullptr         
+        self.__dataset = dataset 
+
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+
+        params = self.__fun.parameters ( self.__dataset )
+        for par in params :
+            self.__params [ par ] = float ( params [ par ] )
+            
+        return self
+    
+    ## context manager: EXIT
+    def __exit__ ( self , *_ ) :
+        
+        if self.__params : 
+            self.__fun.load_params ( params = self.__params , dataset = self.__dataset , silent = True )
+            
+        self.__fun     = None
+        self.__params  = {}
+        self.__dataset = ROOT.nullptr 
+        
+    @property
+    def fun ( self ) :
+        """``fun'': the actual function/pdf"""
+        return self.__fun
+    
+    @property
+    def dataset ( self ) :
+        """``dataset'': the dataset"""
+        return self.__dataset
+
+    @property
+    def params( self ) :
+        """``params'': dictionary of parameters"""
+        return self.__params
 
 # =============================================================================
 ## @class Fun1D

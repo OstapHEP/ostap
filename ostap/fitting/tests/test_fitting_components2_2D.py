@@ -16,12 +16,12 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
-from ostap.fitting.background import make_bkg 
-
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent
+from   builtins                 import range
+from   ostap.fitting.background import make_bkg 
+from   ostap.utils.timing       import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -161,7 +161,8 @@ def test_comp_2dSymfit () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_comp_2dSymfit    () 
+    with  timing( "2dSym-fit" ,   logger ) : 
+        test_comp_2dSymfit    () 
     
 # =============================================================================
 ##                                                                      The END 

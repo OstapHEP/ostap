@@ -28,7 +28,6 @@ and it has limitations related to the pickling.
 The upgraded module relies on <code>pathos</code> suite that
 has very attractive functionality and solve the issues with pickling
 @see https://github.com/uqfoundation/pathos
-
 """
 # =============================================================================
 __version__ = '$Revision$'
@@ -36,18 +35,22 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'Task'          , ## the base class for task
+    'TaskManager'   , ## the base class for task-manager 
     'GenericTask'   , ## the generic ``templated'' task
+    'FuncTask'      , ## the simple ``function'' task
     'Statistics'    , ## helper class to collect statistics 
     'StatMerger'    , ## helper class to merge   statistics
     'TaskMerger'    , ## simple merger for task results
     'task_executor' , ## helper function to execute Task  
-    'func_executor' , ## helper function to execute callable 
+    'func_executor' , ## helper function to execute callable
     )
 # =============================================================================
-import operator, abc  
 from   ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.paralllel.task' )
-else                      : logger = getLogger ( __name__               ) 
+if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
+else                      : logger = getLogger ( __name__              )
+# =============================================================================
+import operator, abc  
+from   itertools   import repeat, count 
 # ==============================================================================
 ## @class Task
 #  Basic base class to encapsulate any processing
@@ -63,9 +66,9 @@ else                      : logger = getLogger ( __name__               )
 #  - <code>environment</code>: additional environmental variables 
 #  - <code>append_to</code>: append some path-like enviroment varibales 
 #  - <code>prepend_to</code>: prepend some path-like enviroment varibales 
-#  - <code>dot_in_path</code>: shoud the '.' be added to sysy.path?
+#  - <code>dot_in_path</code>: shoud the '.' be added to sys.path?
 #  @author Pere MATO Pere.Meto@cern.ch
-class Task ( object ) :
+class Task(object) :
     """ Basic base class to encapsulate any processing that is
     going to be processed in parallel.
     User class must inherit from it and implement the methods
@@ -86,12 +89,16 @@ class Task ( object ) :
     def __new__( cls , *args , **kwargs):
         obj = super( Task , cls).__new__( cls )
         ## define the local trash 
-        
+
         obj.__directory   = None
         obj.__environment = {}
         obj.__prepend_to  = {}
         obj.__append_to   = {}
         obj.__dot_in_path = None
+        obj.__batch       = None  
+        obj.__batch_set   = False
+        obj.__build       = None
+        obj.__build_set   = False 
         
         return obj
 
@@ -124,7 +131,7 @@ class Task ( object ) :
 
     ## Collect and merge the results (invoked at local host)
     @abc.abstractmethod 
-    def merge_results     ( self , result ) :
+    def merge_results     ( self , result , jobid = -1 ) :
         """Collect and merge the results (invoked at local host)"""
         pass
 
@@ -160,14 +167,18 @@ class Task ( object ) :
         """``environment'' : additional environment for the job"""
         return self.__environment
     
+    @environment.setter
+    def environment ( self , value ) :
+        self.__environment.update (value ) 
+    
     @property
     def append_to ( self ) :
-        """``append_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        """``append_to'' : a dictionary of environment variables to be appended"""
         return self.__append_to
 
     @property
     def prepend_to ( self ) :
-        """``prepend_to'' : a dictionary of enbvironemtn varibales to be appended"""
+        """``prepend_to'' : a dictionary of environment variables to be appended"""
         return self.__prepend_to
     
     @property
@@ -178,6 +189,37 @@ class Task ( object ) :
     @dot_in_path.setter 
     def dot_in_path ( self , value ) :
         self.__dot_in_path = value
+
+    @property
+    def batch_set ( self ) :
+        """``batch_set'' : is ``batch'' property activated?"""
+        return self.__batch_set
+    
+    @property
+    def batch ( self ) :
+        """``batch'' : use Batch mode for processing?"""
+        return self.__batch
+
+    @batch.setter
+    def batch ( self , value ) :
+        self.__batch     = True if value else False
+        self.__batch_set = True
+
+    @property
+    def build ( self ) :
+        """``build'': use this as a build directory"""
+        return self.__build
+    @build.setter
+    def build ( self , value ) :
+        self.__build     = value
+        self.__build_set = True
+        
+    @property
+    def build_set ( self ) :
+        """``build_set'': is build directory defined?"""
+        return self.__build_set
+
+    
         
 # =============================================================================
 ## @class GenericTask
@@ -193,7 +235,8 @@ class GenericTask(Task) :
     """Generic ``templated'' task for parallel processing.
     One needs to  define three functions/functors:
     - processor   :         output = processor   ( jobid , item ) 
-    - merger      : updated_output = merger ( old_output , new_output )
+    - merger      : updated_output = merger    ( old_output , new_output )
+    - collector   : updated_output = collector ( old_output , new_output , job_id )
     - initializer :         output = initializer (      )  
     - directory   : change to this directory  (if it exists)
     - environment : additional environment for the job 
@@ -204,14 +247,16 @@ class GenericTask(Task) :
     def __init__ ( self                ,
                    processor           ,
                    merger      = None  ,
+                   collector   = None  ,
                    initializer = tuple ,
                    directory   = None  ,
                    environment = {}    ,
                    append_to   = {}    ,
                    prepend_to  = {}    ) :
-        """Generic task for parallel processing. One needs to define three functions/functors
+        """Generic task for the parallel processing. One needs to define three functions/functors
         - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
+        - collector   : updated_output = collector   ( old_output , new_output , job_id )
         - initializer :         output = initializer (      )  
         - directory   : change to this directory  (if it exists) 
         - environment : additional environment for the job 
@@ -219,12 +264,13 @@ class GenericTask(Task) :
         - prepend_to  : additional variables to be ''prepended''
         """
 
-        if not merger :
+        if not merger and not collector :
             import operator
-            merger = operator.iadd
+            merger = operator.add
 
         self.__processor   = processor
         self.__merger      = merger
+        self.__collector   = collector
         self.__initializer = initializer
         self.__output      = None
         
@@ -236,7 +282,7 @@ class GenericTask(Task) :
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
-        """Local initialization (executed once in parent process)"""
+        """Local initialization (executed once in the parent process)"""
         self.__output = self.initializer () if self.initializer else None 
         
     # =========================================================================
@@ -247,14 +293,17 @@ class GenericTask(Task) :
         
     # =========================================================================
     ## merge results 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         """Merge processing results"""
-        self.__output = self.merger ( self.__output , result )
+        if self.collector : 
+            self.__output = self.collector ( self.__output , result , jobid )
+        else :
+            self.__output = self.merger    ( self.__output , result )
 
     # =========================================================================
     ## get the final  results
     def results ( self ) :
-        """Get the final(merged) results"""
+        """Get the final(merged/collected) results"""
         return self.__output
 
     # =========================================================================
@@ -264,6 +313,84 @@ class GenericTask(Task) :
         - Signature: output = processor ( item ) 
         """
         return self.__processor
+    @property
+    def merger     ( self ) :
+        """``merger'' : the actual fuction to merge results
+        - Signature: updated_output = merger ( old_output , new_output )         
+        """
+        return self.__merger
+    @property
+    def collector  ( self ) :
+        """``collector'' : the actual fuction to merge/collect results
+        - Signature: updated_output = collector ( old_output , new_output , jobid )         
+        """
+        return self.__collector
+    @property
+    def initializer ( self ) :
+        """``initializer'' : the actual fuction to initialize local output  
+        - Signature: output = initializer() 
+        """
+        return self.__initializer
+
+# =============================================================================
+## Simple task to execute the callable object/function  
+class FuncTask(Task) :
+    """Simple task for parallel processing.
+    - func        : function 
+    - merger      : updated_output = merger      ( old_output , new_output )
+    - initializer :         output = initializer (      )  
+    - directory   : change to this directory  (if it exists) 
+    - environment : additional environment for the job 
+    - append_to   : additional variables to be ''appended''
+    - prepend_to  : additional variables to be ''prepended''
+    """
+    def __init__ ( self                ,
+                   func                ,
+                   merger      = None  ,
+                   initializer = tuple ,
+                   directory   = None  ,
+                   environment = {}    ,
+                   append_to   = {}    ,
+                   prepend_to  = {}    ) :
+        
+        self.__function    = func
+        self.__merger      = merger
+        self.__output      = None
+
+        self.__initializer = initializer
+        self.__output      = None
+        
+        self.directory     = directory
+        self.environment  . update ( environment ) 
+        self.append_to    . update ( append_to   ) 
+        self.prepend_to   . update ( prepend_to  ) 
+
+    # =========================================================================
+    ## local initialization (executed once in parent process)
+    def initialize_local   ( self ) :
+        """Local initialization (executed once in parent process)"""
+        self.__output = self.initializer () if self.initializer else None 
+        
+    # =========================================================================
+    ## the main   processing method 
+    def process ( self , jobid , *params ) :
+        result = self.__function ( jobid , *params )
+        self.__output = result 
+        return result
+
+    # =========================================================================
+    ## merge results 
+    def merge_results ( self , result ) :
+        """Merge processing results"""
+        if  self.merger : 
+            self.__output = self.merger ( self.__output , result )
+    
+    # =========================================================================
+    ## get the final  results
+    def results ( self ) :
+        """Get the final (merged) results"""
+        return self.__output
+
     @property
     def merger     ( self ) :
         """``merger'' : the actual fuction to merge results
@@ -361,6 +488,7 @@ class StatMerger(object) :
         """``merged'' : get the full merged statistic"""
         return self.__merged 
 
+    # =========================================================================
     ## Print the job execution statistics
     #  @code 
     #  merged = ...
@@ -453,14 +581,14 @@ class StatMerger(object) :
 
 
 # =============================================================================
-## Merge task results 
+## Merge/combine task results 
 #  @code
 #  merger = TaskMerger()
 #  jobs   = pool.uimap  ( .... )
 #  for result , stat in jobs :
 #      merger += result
 #  merged = merger.result 
-#  @encode 
+#  @encode
 class TaskMerger(object) :
     """Merge task resuls
     >>> merger = TaskMerger()
@@ -469,13 +597,13 @@ class TaskMerger(object) :
     ...    merger += result 
     ... merged = merger.result
     """
-    def __init__ ( self , merger = operator.iadd , init = None  ) :
+    def __init__ ( self , merger = operator.add , init = None  ) :
         
         self.__merger = merger
         self.__result = init    
-        
+        self.__nmerged = 0 
     # ========================================================================= 
-    ## Merge task results
+    ## Merge/combine  task results
     #  @code
     #  merger = TaskMerger()
     #  jobs   = pool.uimap  ( .... )
@@ -491,7 +619,7 @@ class TaskMerger(object) :
         ...    merger += result 
         ... merged = merger.result
         """
-        self.merge  ( result ) 
+        self.merge ( result ) 
         return self
     
     # ========================================================================= 
@@ -503,7 +631,7 @@ class TaskMerger(object) :
     #      merger.merge ( result )
     #  merged = merger.result
     #  @encode 
-    def merge    ( self , result ) :
+    def merge ( self , result ) :
         """Merge task results
         >>> merger = TaskMerger()
         >>> jobs   = pool.uimap  ( .... )
@@ -519,19 +647,34 @@ class TaskMerger(object) :
             self.__result += result 
         elif hasattr ( self.__result , '__add__'  ) or hasattr ( result , '__radd__' ) :
             self.__result  = self.__result +  result
+        elif hasattr ( self.__result , 'append'   ) :
+            self.__result.append  ( result ) 
+        elif hasattr ( self.__result , 'add'      ) :
+            self.__result.add     ( result ) 
         else :
             raise TypeError ( 'TaskMerger: no merge is defined for %s and %s' % ( type ( self.__result ) , type ( result ) ) )
+
+        self.__nmerged += 1
         
         return self
         
     @property
     def result  ( self ) :
-        """``result'' : get the merged results"""
+        """``result'' : the merged results"""
         return self.__result
     
+    @property
+    def nmerged  ( self ) :
+        """``nmerged'' : number of merged results"""
+        return self.__nmerged
+
+    def __nonzero__ ( self ) : return 0 < self.__nmerged
+    def __bool__    ( self ) : return 0 < self.__nmerged
+    def __len__     ( self ) : return     self.__nmerged
+
 # =============================================================================
 ## helper function to execute the task and collect statistic
-#  (unfornately due to limitation of <code>parallel python</code> one cannot
+#  (unfortunately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 #  @see Task 
 def task_executor ( item ) :
@@ -540,7 +683,7 @@ def task_executor ( item ) :
     use python decorators here :-(
     - see Task 
     """
-    
+
     ## unpack
     task  = item [ 0  ]
     jobid = item [ 1  ] 
@@ -593,15 +736,30 @@ def task_executor ( item ) :
         sys.path  = ['.'] + sys.path
         logger.debug ( "Task %s: '.' is added to sys.path" % jobid )
         
-    ## perform remote  inialization (if needed) 
-    task.initialize_remote ( jobid ) 
-        
-    with Statistics ()  as stat :    
-        result = task.process ( jobid , *args ) 
-        return result , stat
+    if task.batch_set :
+        from ostap.utils.utils    import Batch       as batch_context 
+    else :
+        from ostap.utils.utils    import NoContext   as batch_context 
 
+    if task.build_set :
+        from ostap.core.build_dir import UseBuildDir as build_context
+    else :
+        from ostap.utils.utils    import NoContext   as build_context 
+        
+
+    ## use build & batch context 
+    with build_context ( task.build ), batch_context ( task.batch ) : 
+        
+        ## perform remote  inialization (if needed) 
+        task.initialize_remote ( jobid ) 
+        
+        with Statistics ()  as stat :    
+            result = task.process ( jobid , *args ) 
+            return jobid , result , stat
+
+        
 # =============================================================================
-## helper function to execute the function and collect stattistic
+## helper function to execute the function and collect statisticc
 #  (unfornately due to limitation of <code>parallel python</code> one cannot
 #  use decorators here :-(
 def func_executor ( item ) :
@@ -609,20 +767,274 @@ def func_executor ( item ) :
     - unfornately due to limitation of ``parallel python'' one cannot
     use python decorators here :-(
     """
-
     ## unpack
     fun   = item [ 0  ]
     jobid = item [ 1  ] 
-    args  = item [ 2: ] 
+    args  = item [ 2: ]
     
-    with Statistics ()  as stat :
-        return fun ( jobid , *args ) , stat 
+    from ostap.utils.utils import batch 
+    with batch ( True ) :
+        
+        with Statistics ()  as stat :
+            return jobid , fun ( jobid , *args ) , stat 
+        
+# ============================================================================
+## @class TaskManager
+#   Abstract base class for the work manager for parallel processing  
+class TaskManager(object) :
+    """Abstract base class for the work manager for paralell processing 
+    """
     
+    __metaclass__ = abc.ABCMeta
+
+    def __init__  ( self           ,
+                    ncpus          ,
+                    silent = False ) :
+        
+        self.__ncpus  = ncpus        
+        self.__silent = silent
+            
+    # =========================================================================
+    ## process Task or callable object :
+    #  - process <code>Task</code>:
+    #  @code
+    #  class MyTask(Task) : ....
+    #  my_task = MyTask ( ... ) 
+    #  wm = WorkManager ( ... )
+    #  result = wm.process ( my_task , items )
+    #  @endcode
+    #  -  process callable object 
+    #  @code
+    #  def my_fun ( jobid , x ) :
+    #      return x**2 
+    #  wm = WorkManager ( ... )
+    #  items = range ( 10 )
+    #  ## get list of squares as a result 
+    #  result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
+    #  ## get sum of them 
+    #  result2 =  wm.process ( my_fun , items , merger = TaskMerger () )    
+    #  @endcode
+    def process ( self , task , args , **kwargs ) :
+        """Process callable object or Task :
+        
+        - process Task
+        
+        >>> class MyTask(Task) : ....
+        >>> my_task = MyTask ( ... ) 
+        >>> wm = WorkManager ( ... )
+        >>> result = wm.process ( my_task , items )
+        
+        -  process callable object
+        
+        >>> def my_fun ( jobid , x ) : return x**2 
+        >>> wm = WorkManager ( ... )
+        >>> items = range ( 10 )
+        >>> result1 =  wm.process ( my_fun , items , merger = TaskMerger ( lambda  a,b : a+[b] , init = [] ) )
+        >>> result2 =  wm.process ( my_fun , items , merger = TaskMerger () )    
+        
+        """
+        
+        job_chunk = kwargs.pop ( 'chunk_size', 10000 )
+        
+        from ostap.utils.utils import chunked 
+        chunks    = list ( chunked ( args , job_chunk ) )
+
+        if isinstance ( task , Task ) :
+            result = self.__process_task ( task , chunks , **kwargs )
+        else : 
+            result = self.__process_func ( task , chunks , **kwargs )
+        
+        return result 
+
+    # ===================================================================================
+    ## Helper internal method for parallel processing of
+    #  the plain function with chunks of data
+    def __process_func ( self , task , chunks  , **kwargs ) :
+        """Helper internal method for parallel processiing of
+        the plain function with chunks of data
+        """
+        from ostap.utils.cidict import cidict
+        my_args = cidict( kwargs )
+        
+        from timeit import default_timer as _timer
+        start = _timer()
+        
+        init      = my_args.pop ( 'init'      , None )
+        merger    = my_args.pop ( 'merger'    , None )
+        collector = my_args.pop ( 'collector' , None )
+        
+        ## mergers for statistics & results
+        if   not merger and not collector :
+            logger.warning ( "Neither ``merger'' nor ``collector'' are specified for merging!")
+        elif     merger and     collector :
+            logger.warning ( "Both    ``merger'' and ``collector'' are specified for merging!")
+            
+        ## mergers for statistics 
+        merged_stat    = StatMerger ()
+        merged_stat_pp = StatMerger ()
+
+        ## start index for the jobs 
+        index = 0
+
+        ## initialize the results 
+        results = init
+
+        from ostap.utils.progress_bar import ProgressBar
+        ## total number of jobs  
+        njobs = sum  ( len ( c ) for c in chunks )
+        with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
+            
+            while chunks :
+
+                chunk = chunks.pop ( 0 ) 
+                
+                jobs_args = zip ( repeat ( task ) , count ( index ) , chunk )
+
+                ## call for the actual jobs handling method 
+                for jobid , result , stat in self.iexecute ( func_executor    ,
+                                                             jobs_args        ,
+                                                             progress = False ) :
+                    
+                    merged_stat += stat
+                    
+                    ## merge results if merger or collector are provided 
+                    if   merger    : results = merger    ( results , result ) 
+                    elif collector : results = collector ( results , result , jobid )
+                    
+                    bar += 1 
+
+                index           += len ( chunk )
+                
+                pp_stat = self.get_pp_stat() 
+                if pp_stat : merged_stat_pp  += pp_stat 
+
+        ## print statistics 
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
+        ##
+        return results 
+
+    # ===================================================================================
+    ## helper internal method to process the task with chunks of data 
+    def __process_task  ( self , task , chunks , **kwargs ) :
+        """Helper internal method to process the task with chunks of data 
+        """
+            
+        from timeit import  default_timer as _timer
+        start = _timer()
+
+        ## inialize the task
+        task.initialize_local ()
+        
+        ## mergers for statistics 
+        merged_stat    = StatMerger ()
+        merged_stat_pp = StatMerger ()
+
+        ## start index for jobs
+        index = 0 
+
+        ## total number of jobs 
+        njobs = sum  ( len ( c ) for c in chunks ) 
+        from ostap.utils.progress_bar import ProgressBar
+        with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
+
+            while chunks :
+
+                chunk = chunks.pop ( 0 ) 
+                
+                jobs_args = zip ( repeat ( task ) , count ( index ) , chunk )
+
+                for jobid , result , stat in self.iexecute ( task_executor    ,
+                                                             jobs_args        ,
+                                                             progress = False ) :
+
+                    ## merge statistics 
+                    merged_stat += stat
+
+                    ## merge/collect resuls
+                    task.merge_results ( result , jobid )
+
+                    bar += 1 
+
+                index           += len ( chunk )
+                
+                pp_stat = self.get_pp_stat() 
+                if pp_stat : merged_stat_pp  += pp_stat 
+
+        ## finalize the task 
+        task.finalize () 
+        self.print_statistics ( merged_stat_pp , merged_stat , _timer() - start )
+        ## 
+        return task.results ()
+    
+    @property
+    def silent ( self ) :
+        """``silent'' : silent processing?"""
+        return self.__silent
+
+    @property
+    def ncpus ( self ) :
+        """``ncpus'' : number of CPUs"""
+        return self.__ncpus
+
+    # ===========================================================================
+    ## get PP-statistics if/when posisble 
+    @abc.abstractmethod
+    def get_pp_stat ( self ) : 
+        """Get PP-statistics if/when posisble 
+        """
+        return None 
+
+    # =========================================================================
+    ## process the bare <code>executor</code> function
+    #  @param job   function to be executed
+    #  @param jobs_args the arguments, one entry per job 
+    #  @return iterator to results 
+    #  @code
+    #  mgr  = WorManager  ( .... )
+    #  job  = ...
+    #  args = ...
+    #  for result in mgr.iexecute ( func , args ) :
+    #  ...
+    #  ... 
+    #  @endcode
+    #  It is a "bare minimal" interface
+    #  - no statistics
+    #  - no summary printout 
+    #  - no merging of results   
+    @abc.abstractmethod 
+    def iexecute ( self , job , jobs_args , progress = False ) :
+        """Process the bare `executor` function
+        >>> mgr  = WorManager  ( .... )
+        >>> job  = ...
+        >>> args = ...
+        >>> for result in mgr.iexecute ( job , args ) :
+        ...
+        ...
+        It is a ``minimal'' interface
+        - no statistics
+        - no summary prin
+        - no merging of results  
+        """
+        return None
+    
+    # =========================================================================
+    ## print the job execution statistics 
+    def print_statistics ( self , stat_pp , stat_loc , cputime = None ) :
+        """Print the job execution statistics 
+        """        
+        if self.silent : return
+
+        if stat_pp.njobs == stat_loc.njobs : 
+            stat_pp .print_stats ( 'pp-' , cputime )
+        else : 
+            stat_loc.print_stats ( 'qq-' , cputime )
+                
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
-    docme ( __name__ , logger = logger )    
+    docme ( __name__ , logger = logger )
+    
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

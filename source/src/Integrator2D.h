@@ -14,7 +14,7 @@
 #include "cubature.h"         // cubature 
 #include "syncedcache.h"      // the cache 
 #include "local_hash.h"       // hash_combine 
-#include "Ostap/StatEntity.h" // hash_combine 
+#include "local_gsl.h"        // hash_combine 
 // ============================================================================
 namespace Ostap
 {
@@ -62,9 +62,9 @@ namespace Ostap
         // ====================================================================
         Result cubature 
         ( const Fun*          fun                  , 
-          const unsigned      maxcalls   = 20000   ,
-          const double        aprecision = 1.e-8   , 
-          const double        rprecision = 1.e-8   ,
+          const unsigned      maxcalls   = 50000   ,
+          const double        aprecision = s_APRECISION , 
+          const double        rprecision = s_RPRECISION ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
           const unsigned long line       = 0       ,       // line number 
@@ -97,9 +97,9 @@ namespace Ostap
         Result cubature
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
-          const unsigned      maxcalls   = 20000   ,
-          const double        aprecision = 1.e-8   , 
-          const double        rprecision = 1.e-8   ,
+          const unsigned      maxcalls   = 50000   ,
+          const double        aprecision = s_APRECISION , 
+          const double        rprecision = s_RPRECISION ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
           const unsigned long line       = 0       ) const // line number 

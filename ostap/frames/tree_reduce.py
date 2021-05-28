@@ -112,7 +112,7 @@ class ReduceTree(CleanUp):
              raise TypeError('Invalid  selection type %s/%s' %  ( selection , type ( selection ) ) )
 
         if not output : 
-            output = self.tempfile ( prefix = 'frame-' , suffix = '.root' )
+            output = self.tempfile ( prefix = 'ostap-frame-' , suffix = '.root' )
             ## logger.debug ( 'ReduceTree: output file is %s' % output )  
             if not tmp_keep : self.trash.add ( output  )
 

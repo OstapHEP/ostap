@@ -9,6 +9,7 @@
 // ============================================================================
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_gamma.h"
+#include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_cdf.h"
 // ============================================================================
@@ -19,6 +20,7 @@
 // ============================================================================
 //  Local
 // ============================================================================
+#include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
 #include "local_hash.h"
@@ -142,15 +144,15 @@ namespace
       (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
   }
-  // ==========================================================================
-  // Studen-t'
-  // ==========================================================================
-  inline double student_cdf (  const double t , const double nu ) 
-  {
-    const double xt    = nu / ( t * t + nu ) ;
-    const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
-    return t >= 0 ? 1 - value : value ;
-  }
+  // // ==========================================================================
+  // // Studen-t'
+  // // ==========================================================================
+  // inline double student_cdf (  const double t , const double nu ) 
+  // {
+  //   const double xt    = nu / ( t * t + nu ) ;
+  //   const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
+  //   return t >= 0 ? 1 - value : value ;
+  // }
   // ==========================================================================
 }
 // ============================================================================
@@ -250,7 +252,10 @@ double Ostap::Math::BifurcatedGauss::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigmaL , m_sigmaR ) ; }
+{
+  static const std::string s_name = "BiFurcatedGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigmaL , m_sigmaR ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -413,7 +418,10 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::DoubleGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_fraction , m_scale ) ; }
+{
+  static const std::string s_name = "DoubleGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_fraction , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -495,7 +503,10 @@ bool Ostap::Math::Gauss::setPeak ( const double value )
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Gauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Gauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -627,7 +638,10 @@ double  Ostap::Math::GenGaussV1::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV1::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "GenGaussV1" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -779,7 +793,10 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV2::tag () const 
-{ return std::hash_combine ( m_xi , m_alpha , m_kappa ) ; }
+{ 
+  static const std::string s_name = "GenGaussV2" ;
+  return std::hash_combine ( s_name , m_xi , m_alpha , m_kappa ) ; 
+}
 // ============================================================================
 
 
@@ -887,7 +904,10 @@ double Ostap::Math::SkewGauss::sigma  () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGauss::tag () const 
-{ return std::hash_combine ( m_xi , m_omega , m_alpha ) ; }
+{ 
+  static const std::string s_name = "SkewGauss" ;
+  return std::hash_combine ( m_xi , m_omega , m_alpha ) ; 
+}
 // ============================================================================
 
 
@@ -1162,7 +1182,10 @@ double Ostap::Math::Bukin::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Bukin::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; }
+{ 
+  static const std::string s_name = "Bukin" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; 
+}
 // ============================================================================
 
 
@@ -1390,7 +1413,10 @@ void Ostap::Math::Novosibirsk::integrate()
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Novosibirsk::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_tau ) ; }
+{ 
+  static const std::string s_name = "Novosibirsk" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_tau ) ; 
+}
 // ============================================================================
 
 
@@ -1562,7 +1588,10 @@ double Ostap::Math::CrystalBall::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBall::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_alpha , m_n ) ; }
+{
+  static const std::string s_name = "CrystalBall" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n ) ; 
+}
 // ============================================================================
 
 
@@ -1626,7 +1655,10 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Needham::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; }
+{
+  static const std::string s_name = "Needham" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; 
+}
 // ============================================================================
 
 
@@ -1673,7 +1705,10 @@ double Ostap::Math::CrystalBallRightSide::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallRightSide::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  -1 ) ; }
+{  
+  static const std::string s_name = "CrystalBallRightSide" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  -1 ) ;
+}
 // ============================================================================
 
 
@@ -1931,9 +1966,13 @@ double Ostap::Math::CrystalBallDoubleSided::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
+{ 
+  static const std::string s_name = "CrystalBallDoubleSide" ;
+  return std::hash_combine ( s_name    , 
+                             m_m0      , m_sigma , 
                              m_alpha_L , m_n_L   , 
-                             m_alpha_R , m_n_R   ) ; }
+                             m_alpha_R , m_n_R   ) ; 
+}
 // ============================================================================
 
 
@@ -2124,8 +2163,10 @@ double Ostap::Math::Apollonios::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
-                             m_alpha   , m_n     , m_b ) ; }
+{ 
+  static const std::string s_name = "Apollonios" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n , m_b ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2267,7 +2308,10 @@ double Ostap::Math::Apollonios2::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios2::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
+{ 
+  static const std::string s_name = "Apollonios2" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -2374,7 +2418,10 @@ double Ostap::Math::Atlas::integral () const { return 1 ; }
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Atlas::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Atlas" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -2456,7 +2503,10 @@ double Ostap::Math::Sech::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Sech::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Sech" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2510,7 +2560,10 @@ double Ostap::Math::Losev::mode () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Losev::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "Losev" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // =============================================================================
 // evaluate the function 
 // =============================================================================
@@ -2654,7 +2707,10 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Logistic::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Logistic" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ;
+}
 // ============================================================================
 
 
@@ -2753,7 +2809,7 @@ double Ostap::Math::StudentT::cdf ( const double y ) const
 {
   //
   const double  t    = ( y - M () ) / sigma () ;
-  return student_cdf ( t , nu() ) ;
+  return Ostap::Math::student_cdf ( t , nu() ) ;
 }
 // ============================================================================
 // get the integral 
@@ -2775,7 +2831,10 @@ double Ostap::Math::StudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::StudentT::tag () const 
-{ return std::hash_combine ( m_M , m_s , m_n ) ; }
+{ 
+  static const std::string s_name = "StudentT" ;
+  return std::hash_combine ( s_name , m_M , m_s , m_n ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2921,11 +2980,11 @@ double Ostap::Math::BifurcatedStudentT::cdf ( const double y ) const
   if ( y <= M() ) 
   {
     const double  t    = ( y - M () ) / sigmaL () ;
-    return     2 * n_2 / ( n_1 + n_2 ) * student_cdf (  t , nuL () ) ;  
+    return     2 * n_2 / ( n_1 + n_2 ) * Ostap::Math::student_cdf (  t , nuL () ) ;  
   }
   //
   const   double  t    = ( y - M () ) / sigmaR () ;
-  return   1 - 2 * n_1 / ( n_1 + n_2 ) * student_cdf ( -t , nuR () ) ;  
+  return   1 - 2 * n_1 / ( n_1 + n_2 ) * Ostap::Math::student_cdf ( -t , nuR () ) ;  
 }
 // ============================================================================
 // get the integral 
@@ -2947,7 +3006,10 @@ double Ostap::Math::BifurcatedStudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedStudentT::tag () const 
-{ return std::hash_combine ( m_M , m_sL , m_sR  , m_nL , m_nR ) ; }
+{  
+  static const std::string s_name = "BiFurcatedStudentT" ;
+  return std::hash_combine ( s_name , m_M , m_sL , m_sR  , m_nL , m_nR ) ; 
+}
 // ============================================================================
 
 
@@ -3041,7 +3103,10 @@ double Ostap::Math::SinhAsinh::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SinhAsinh::tag () const 
-{ return std::hash_combine ( m_mu , m_sigma , m_epsilon , m_delta ) ; }
+{  
+  static const std::string s_name = "SinhAsinh" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_epsilon , m_delta ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -3155,7 +3220,10 @@ double Ostap::Math::JohnsonSU::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::JohnsonSU::tag () const 
-{ return std::hash_combine ( m_xi , m_lambda , m_delta , m_gamma ) ; }
+{ 
+  static const std::string s_name = "JohnsonSU" ;
+  return std::hash_combine ( s_name , m_xi , m_lambda , m_delta , m_gamma ) ; 
+}
 // ============================================================================
 
 
@@ -3245,7 +3313,10 @@ double Ostap::Math::Slash::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Slash::tag () const 
-{ return std::hash_combine ( m_mu , m_scale ) ; }
+{ 
+  static const std::string s_name = "Slash" ;
+  return std::hash_combine ( s_name , m_mu , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -3342,11 +3413,11 @@ double Ostap::Math::RaisingCosine::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::RaisingCosine::tag () const 
-{ return std::hash_combine ( m_mu , m_s ) ; }
+{ 
+  static const std::string s_name = "RasisingCosine" ;
+  return std::hash_combine ( s_name , m_mu , m_s ) ; 
+}
 // ============================================================================
-
-
-
 
 
 // ============================================================================
@@ -3424,7 +3495,10 @@ double Ostap::Math::AsymmetricLaplace::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::AsymmetricLaplace::tag () const 
-{ return std::hash_combine ( m_mu , m_lambdaL , m_lambdaR ) ; }
+{ 
+  static const std::string s_name = "AsymmetricLaplace" ;
+  return std::hash_combine ( s_name , m_mu , m_lambdaL , m_lambdaR ) ; 
+}
 // ============================================================================
 
 
@@ -3603,9 +3677,186 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::QGaussian::tag () const 
-{ return std::hash_combine ( m_mean , m_q , m_scale ) ; }
+{ 
+  static const std::string s_name = "QGaussian" ;
+  return std::hash_combine ( s_name , m_mean , m_q , m_scale ) ; 
+}
 // ============================================================================
- 
+
+// ============================================================================
+/* constructor from mu, sigma, zeta and kappa 
+ *  @param mu    related to location 
+ *  @param beta  related to asymmetry
+ *  @param sigma related to width 
+ *  @param zeta  related to what ?
+ */
+// ============================================================================
+Ostap::Math::Hyperbolic::Hyperbolic
+( const double mu     ,   // related to location 
+  const double sigma  ,   // related to withs  
+  const double zeta   ,   // shape parameter
+  const double kappa  )   // related to asymmetry 
+  : m_mu    ( mu    ) 
+  , m_sigma ( -1    )
+  , m_zeta  ( -1    )
+  , m_kappa ( kappa )
+  , m_A     (  0    )  
+  , m_K1    (  0    )
+{
+  setSigma ( sigma ) ;
+  setZeta  ( zeta  ) ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setZeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_zeta ) ) { return false ; }
+  m_zeta = avalue ;
+  //
+  if ( m_zeta > 1.e-7 )
+  {
+    m_K1 = m_zeta                  * Ostap::Math::bessel_Kn_scaled ( 1 , m_zeta )          ;
+    m_A  = std::pow ( m_zeta , 2 ) * Ostap::Math::bessel_Kn_scaled ( 2 , m_zeta ) / m_K1   ;
+  }
+  else 
+  {
+    m_K1 = 1 ;
+    m_A  = 2 ;
+  }
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setKappa ( const double value ) 
+{
+  if ( s_equal ( value , m_kappa ) ) { return false ; }
+  m_kappa = value ;
+  return true ;
+}
+// ============================================================================
+// calculate the mean of the distribution  
+// ============================================================================
+double Ostap::Math::Hyperbolic::mean () const 
+{ return m_mu + m_kappa * m_sigma ; }
+// ============================================================================
+// get the actual mode of the distribution
+// ============================================================================
+double Ostap::Math::Hyperbolic::mode () const 
+{ return m_mu + m_kappa * m_sigma * m_zeta / m_A ; }
+// ============================================================================
+// get the variance/dispersion 
+// ============================================================================
+double Ostap::Math::Hyperbolic::variance () const 
+{
+  double var = m_sigma * m_sigma ;
+  //
+  if ( s_zero ( m_kappa ) ) { return var ; }  // RETURN 
+  //
+  const double beta2  = std::pow ( beta () , 2 ) ;
+  if ( s_zero ( beta2   ) ) { return var ; }  // RETURN 
+  //
+  const double gamma4 = std::pow ( gamma2() , 2 ) ;
+  //
+  const double t1 = ( 1.e-7 > m_zeta ) ? 8.0 : 
+    std::pow ( m_zeta , 3 ) * Ostap::Math::bessel_Kn_scaled ( 3 , m_zeta ) / m_K1 ;
+  //
+  const double t2 = m_A * m_A ;
+  //
+  var += beta2 / gamma4 * ( t1 - t2 ) ;
+  //
+  return var;
+}
+// ============================================================================
+// evaluate  pdf  for the Hyperbolic distribution
+// ============================================================================
+double Ostap::Math::Hyperbolic::pdf ( const double x ) const 
+{
+  //
+  const double dx =  ( x - m_mu ) / m_sigma ;
+  //
+  const double cc = m_kappa * m_kappa + m_A ;
+  //
+  const double q  = 
+    m_zeta - std::sqrt ( cc * m_zeta * m_zeta / m_A + cc * dx * dx ) + m_kappa * dx  ;
+  //
+  return std::exp ( q ) * m_A / ( 2 * m_sigma * std::sqrt ( cc ) * m_K1 ) ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// =========================================================================
+double Ostap::Math::Hyperbolic::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  const double m1    = mode () ;
+  const double m2    = mean () ;
+  const double mmin  = std::min ( m1 , m2 ) ;
+  const double mmax  = std::max ( m1 , m2 ) ;
+  const double mlow  = mmin - 5 * m_sigma ;
+  const double mhigh = mmax + 5 * m_sigma ;
+  //
+  const double mc [] = { mmin - 3.0 * m_sigma , 
+                         mmax + 3.0 * m_sigma , 
+                         mlow , mhigh         } ;
+  //
+  for ( const double c : mc ) 
+  { if ( low < c  && c < high ) { return integral ( low , c ) + integral ( c , high ) ; } }
+  //
+  // in tails 
+  const bool in_tail = ( high <= mlow ) || ( low >= mhigh ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Hyperbolic> s_integrator {} ;
+  static char s_message[] = "Integral(Hyperbolic)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size () ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Hyperbolic::tag () const 
+{ 
+  static const std::string s_name = "Hyperbolic" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_zeta , m_kappa  ) ; 
+}
+// ============================================================================
+
 
 // ============================================================================
 //                                                                      The END 

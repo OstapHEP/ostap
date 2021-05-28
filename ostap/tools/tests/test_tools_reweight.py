@@ -30,10 +30,10 @@ else :
 logger.info ( 'Test for Reweighting machinery')
 # =============================================================================
 from ostap.utils.cleanup import CleanUp
-testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='test_tools_reweight_' )
+testdata   = CleanUp.tempfile ( suffix = '.root' , prefix ='ostap-test-tools-reweight-' )
 tag_data   = 'DATA_histogram'
 tag_mc     = 'MC_tree'
-dbname     = CleanUp.tempfile ( suffix = '.db'   , prefix ='test_tools_reweight_' )
+dbname     = CleanUp.tempfile ( suffix = '.db'   , prefix ='ostap-test-tools-reweight-' )
 
 if os.path.exists ( testdata ) : os.remove ( testdata ) 
 if os.path.exists ( dbname   ) : os.remove ( dbname   ) 
@@ -102,8 +102,8 @@ else :
 #
 ## make reweighting iterations
 # 
-from   ostap.tools.reweight     import Weight, makeWeights, WeightingPlot, W2Data
-from   ostap.fitting.selectors  import SelectorWithVars, Variable 
+from   ostap.tools.reweight         import Weight, makeWeights, WeightingPlot, W2Data
+from   ostap.fitting.pyselectors    import SelectorWithVars, Variable 
 import ostap.parallel.parallel_fill
 
 # =============================================================================
@@ -116,11 +116,11 @@ variables  = [ Variable ( 'x'  , 'x-variable' , 0  , 100 ) ]
 # =============================================================================
 ## start iterations:
 for iter in range ( 1 , maxIter + 1  ) :    
+    
+    tag = 'Reweighting iteration #%d' % iter
+    logger.info ( allright ( tag ) ) 
 
-
-    logger.info ( allright ( 'Reweighting iteration %d ' % iter ) ) 
-
-    with timing ( 'Prepare MC-dataset:' , logger = logger ) : 
+    with timing ( tag + ': prepare MC-dataset:' , logger = logger ) : 
 
         # =============================================================================
         ## 0) The weighter object
@@ -131,65 +131,47 @@ for iter in range ( 1 , maxIter + 1  ) :
         selector = SelectorWithVars ( variables , '0<x && x<100 ' , silence = True )
         mctree.process ( selector , silent = True )
         mcds     = selector.data ## dataset
-
-    with timing ( 'Add weight to MC-dataset' , logger = logger ) : 
+        
+    with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
       
         ## 1b) add "weight" variable to the dataset
         mcds.add_reweighting ( weighter , name = 'weight' )
+        if 1 == iter % 10  : logger.info ( ( tag + ' MCDATA:\n%s' ) %  mcds )
         
-        logger.info ('MCDATA:\n%s' %  mcds )
-        
-    with timing ( 'Make one reweighting iteration:' , logger = logger ) : 
+    with timing ( tag + ': make actual reweighting:' , logger = logger ) :
         # ==============================================================================
         ## 2) update weights
-        plots = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
-        more  = makeWeights ( mcds , plots , dbname , delta = 0.001 ,
-                              tag = 'Reweight/%s' % iter )
+        plots   = [ WeightingPlot( 'x'   , 'weight' , 'x-reweight'  , hdata , hmc ) ]    
+        more    = makeWeights ( mcds               ,
+                                plots              ,
+                                dbname             ,
+                                delta      = 0.005 ,
+                                minmax     = 0.01  ,
+                                power      = 1.05  , ## tiny ``overreweighting''
+                                make_plots = False , 
+                                tag        = tag   )
         
-    with timing ( 'Project weighted MC-dataset:' , logger = logger ) : 
+    with timing ( tag + ': project weighted MC-dataset:' , logger = logger ) : 
        # ==============================================================================
        ## 3) make MC-histogram 
        mcds .project  ( hmc , 'x' , 'weight'  )
 
-    with timing ( 'Compare DATA and MC distributions:' , logger = logger ) :  
+    with timing ( tag + ': compare DATA and MC distributions:' , logger = logger ) :  
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
-        logger.info    ( 'Compare DATA and MC for iteration #%d' % iter )
+        logger.info  ( tag + ': compare DATA and MC for iteration #%d' % iter )
 
         hh = 'Iteration#%d: ' % iter 
-
+        
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis 
-        logger.info ( hh + 'DATA(x)  %% MC(x)  comparison:\n%s' %
-                      hdata.cmp_prnt ( hmc , 'DATA' , 'MC' , 'DATA(x)  vs MC(x)'  , prefix = '# ') )
+        title = tag + ': DATA vs MC comparison'
+        logger.info ( '%s:\n%s' % ( title , hdata.cmp_prnt
+                                    ( hmc , density = True , title = title , prefix = '# ' ) ) )
         
-        
-        ## 4b) calculate the ``distances''
-        dist = hdata.cmp_dist ( hmc , density = True )
-        logger.info ( hh + 'DATA-MC "distance"      %s' % dist )
-        
-        ## 4c) calculate the ``orthogonalit''      
-        cost = hdata.cmp_cos  ( hmc , density = True )
-        logger.info ( hh + 'DATA-MC "orthogonality" %s' % cost )
-
-        ## 4d) try to fit it DATA with MC and vice versa 
-        fit1 = hdata.cmp_fit ( hmc   , density = True )
-        if fit1 and 0 == fit1.Status() :
-            logger.info ( 'hh + Fit DATA with MC   Prob=%.3g[%%] ' % ( fit1.Prob() * 100 ) )
-        fit2 = hmc  .cmp_fit ( hdata , density  = True )
-        if fit2 and 0 == fit2.Status() :
-            logger.info ( 'hh + Fit MC   with DATA Prob=%.3g[%%] ' % ( fit2.Prob() * 100 ) )
-            
-        ## 4e) make chi2-comparison between data and MC
-        c2ndf , prob = hdata.cmp_chi2 ( hmc   , density = True )
-        logger.info ( 'hh + DATA/MC: chi2/ndf (%.4g) and Prob %.5g%% ' % ( c2ndf , prob*100 ) )
-        c2ndf , prob = hmc  .cmp_chi2 ( hdata , density = True )
-        logger.info ( 'hh + MC/DATA: chi2/ndf (%.4g) and Prob %.5g%% ' % ( c2ndf , prob*100 ) )
-        
-        ## 4f) get min/max difference betwen data and MC 
-        mn , mx = hdata.cmp_minmax ( hmc    , diff = lambda a,b : a/b , density = True )
-        logger.info ( "hh + DATA(x)  / MC(x)  ``min/max-distance'' (%s)/(%s)[%%] at xmin/xmax=%.1f/%.1f" % (
-            (100*mn[1]-100).toString ( '%+.1f+-%.1f' ) ,
-            (100*mx[1]-100).toString ( '%+.1f+-%.1f' ) , mn[0]  , mx[0] ) )
+        ## 4b) compare them        
+        title = tag + ': DATA vs MC difference'
+        logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
+                                    ( hmc , density = True , title = title , prefix = '# ' ) ) )
         
     # =========================================================================
     ## prepare the plot of weighted MC for the given iteration
@@ -224,5 +206,5 @@ mc_density  .draw ('e1 same')
 time.sleep(10)
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

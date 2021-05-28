@@ -178,67 +178,42 @@ double Ostap::Math::Jackson::jackson_A7
 // ============================================================================
 Ostap::Math::FormFactor::~FormFactor (){}
 // ============================================================================
-// default constructor
-// ============================================================================
-Ostap::Math::FormFactors::Jackson::Jackson() 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( nullptr ) 
-  , m_what ( "" )
-{}
-// ============================================================================
 // constructor from enum
 // ============================================================================
 Ostap::Math::FormFactors::Jackson::Jackson
 ( const Ostap::Math::FormFactors::JacksonRho rho ) 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( nullptr     )
+  : Ostap::Math::FormFactor()
+  , m_rho  ( rho         )
   , m_what ( "Jackson()" ) 
 {
-  switch ( rho )
+  switch ( m_rho )
   {
   case   Ostap::Math::FormFactors::Jackson_0  :
-    m_rho  = &Ostap::Math::Jackson::jackson_0  ; 
-    m_what = "Jackson(Jackson_0)" ;
+    m_what = "Jackson(Jackson_0)"  ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A2 :
-    m_rho  = &Ostap::Math::Jackson::jackson_A2 ; 
     m_what = "Jackson(Jackson_A2)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A3 :
-    m_rho  = &Ostap::Math::Jackson::jackson_A3 ; 
     m_what = "Jackson(Jackson_A3)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A4 :
-    m_rho = &Ostap::Math::Jackson::jackson_A4 ; 
     m_what = "Jackson(Jackson_A4)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A5 :
-    m_rho = &Ostap::Math::Jackson::jackson_A5 ;
     m_what = "Jackson(Jackson_A5)" ;
     break ;
   case   Ostap::Math::FormFactors::Jackson_A7 :
-    m_rho = &Ostap::Math::Jackson::jackson_A7 ; 
     m_what = "Jackson(Jackson_A7)" ;
     break ;
-  default         :
-    m_rho = nullptr ; 
+  default : ;
   }
-  //
 }
 // ============================================================================
 // unique tag/label
 // ============================================================================
 std::size_t Ostap::Math::FormFactors::Jackson::tag      () const
 { return std::hash<std::string>{} ( m_what ) ; }
-// ============================================================================
-// constructor from function itself 
-// ============================================================================
-Ostap::Math::FormFactors::Jackson::Jackson
-( const Ostap::Math::FormFactors::rho_fun rho ) 
-  : Ostap::Math::FormFactor() 
-  , m_rho  ( rho                ) 
-  , m_what ( "Jackson(rho_fun)" )    
-{ if ( !m_rho ) { m_rho = &Ostap::Math::Jackson::jackson_0 ; } }
 // ============================================================================
 // virtual destructor 
 // ============================================================================
@@ -255,10 +230,21 @@ Ostap::Math::FormFactors::Jackson:: clone() const
 double Ostap::Math::FormFactors::Jackson::operator() 
   ( const double m  , const double m0 ,
     const double m1 , const double m2 ) const
-{ 
-  return nullptr == m_rho ? ( m / m0 )  : ( m / m0 ) * 
-    ( (*m_rho) ( m  , m0 , m1 , m2 ) / 
-      (*m_rho) ( m0 , m0 , m1 , m2 ) ) ; 
+{
+  return 
+    Ostap::Math::FormFactors::Jackson_0 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_0   ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A2 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A2  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A3 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A3  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A4 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A4  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A5 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A5  ( m , m0 , m1 , m2 ) : 
+    Ostap::Math::FormFactors::Jackson_A7 == m_rho ? 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_A7  ( m , m0 , m1 , m2 ) : 
+    ( m / m0 ) * Ostap::Math::Jackson::jackson_0   ( m , m0 , m1 , m2 ) ;
 }
 // ============================================================================
 // Blatt-Weisskopf formfactors 
@@ -378,23 +364,10 @@ double Ostap::Math::FormFactors::BlattWeisskopf::operator()
 // unique tag/label
 // ============================================================================
 std::size_t Ostap::Math::FormFactors::BlattWeisskopf::tag      () const
-{ return std::hash_combine ( m_what , m_L , m_b ) ; }
-// ============================================================================
-/* constructor from the generic object, unique tag and desription
- *  @param ff  the formfactor 
- *  @param tag the unique tag 
- *  @param description  description 
- */
-// ============================================================================
-Ostap::Math::FormFactors::GenericFF::GenericFF
-( const Ostap::Math::FormFactors::GenericFF::formfactor& ff          ,
-  const std::size_t                                      tag         , 
-  const std::string&                                     description ) 
-  : Ostap::Math::FormFactor() 
-  , m_ff  ( ff )
-  , m_tag ( std::hash_combine ( description , tag , std::string ( "GenericFF" ) ) ) 
-  , m_description ( description ) 
-{}
+{
+  static const std::string s_name = "BlattWeisskopf";
+  return std::hash_combine ( s_name , m_what , m_L , m_b ) ; 
+}
 // ============================================================================
 // clone operation 
 // ============================================================================
@@ -403,6 +376,38 @@ Ostap::Math::FormFactors::GenericFF::clone() const
 { return new Ostap::Math::FormFactors::GenericFF ( *this ) ; }
 // ============================================================================
 
+// ============================================================================
+// constructor 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor::NoFormFactor () 
+  : FormFactor() 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor::~NoFormFactor () {}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Math::FormFactors::NoFormFactor*
+Ostap::Math::FormFactors::NoFormFactor::clone() const 
+{ return new NoFormFactor() ; }
+// ===========================================================================
+// unique tag/label
+// ============================================================================
+std::size_t Ostap::Math::FormFactors::NoFormFactor::tag      () const
+{ 
+  static const std::string s_name = "NoFormFactor";
+  return std::hash_combine ( s_name ,  describe () ) ; 
+}
+// ============================================================================
+// describe the formfactor
+// ============================================================================
+std::string Ostap::Math::FormFactors::NoFormFactor::describe () const
+{ return "NoFormFactor"; }
+// ============================================================================
+
+   
 
             
 
@@ -436,7 +441,26 @@ bool Ostap::Math::ChannelBW::setGamma0 ( const double value )
   return true ;
 }
 // ============================================================================
+/*  get the single channel amplitude
+ *  \f[ \mathcal{A} =\left( m_0^2 - s - i D (s,m_0) \right)^{-1} \f] 
+ *  @param s   \f$ s  \f$ -parameter
+ *  @param m0  \f$ m_0\f$-parameter  
+ *  @return amplitude 
+ */
+// ============================================================================
+std::complex<double> 
+Ostap::Math::ChannelBW::amplitude 
+( const double s , 
+  const double m0 ) const 
+{ 
+  const std::complex<double> d = m0 * m0 - s - s_j * D ( s , m0 ) ;
+  return 1.0 / d ;
+}
+// ============================================================================
 
+
+
+// #if ROOT_VERSION_CODE >= ROOT_VERSION(6,23,1)
 // // ============================================================================
 // // Generic Breit-Wigner channel 
 // // ============================================================================
@@ -462,7 +486,7 @@ bool Ostap::Math::ChannelBW::setGamma0 ( const double value )
 // Ostap::Math::ChannelGeneric::ChannelGeneric
 // ( const double                                 gamma       , 
 //   const Ostap::Math::ChannelGeneric::Fun_N2&   fN2         , 
-//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
+//   Ostap::Math::ChannelGeneric::Fun_DR          fD          , 
 //   const Ostap::Math::ChannelGeneric::Fun_rho&  frho        , 
 //   const double                                 sthreshold  , 
 //   const std::size_t                            tag         ,
@@ -483,7 +507,7 @@ bool Ostap::Math::ChannelBW::setGamma0 ( const double value )
 // // ============================================================================
 // Ostap::Math::ChannelGeneric::ChannelGeneric
 // ( const double                                 gamma       , 
-//   Ostap::Math::ChannelGeneric::Fun_Dr          fD          , 
+//   Ostap::Math::ChannelGeneric::Fun_DR          fD          , 
 //   const double                                 sthreshold  , 
 //   const std::size_t                            tag         ,
 //   const std::string&                           description )
@@ -523,6 +547,7 @@ bool Ostap::Math::ChannelBW::setGamma0 ( const double value )
 // std::string Ostap::Math::ChannelGeneric::describe() const
 // { return m_description ; }
 // // ============================================================================
+// #endif 
 
 
 
@@ -555,11 +580,14 @@ Ostap::Math::ChannelWidth::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelWidth::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelWidth" ) ,
+{ 
+  static const std::string s_name = "ChannelWidth" ;
+  return std::hash_combine  ( s_name         ,
                               gamma0      () , 
                               m_sthreshold   , 
                               m_description  , 
-                              m_tag          ) ; }
+                              m_tag          ) ; 
+}
 // ============================================================================
 
 
@@ -590,11 +618,14 @@ Ostap::Math::ChannelGamma::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGamma::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelGamma" ) ,
+{ 
+  static const std::string s_name = "ChannelGamma" ;
+  return std::hash_combine  ( s_name         , 
                               gamma0      () , 
                               m_sthreshold   , 
                               m_description  , 
-                              m_tag          ) ; }
+                              m_tag          ) ; 
+}
 // ============================================================================
 
 
@@ -638,8 +669,10 @@ double Ostap::Math::ChannelCW::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelCW::tag () const
-{ return std::hash_combine  ( std::string ( "ChannelCW" ) ,
-                              ps2 () . tag () , gamma0 () ) ; }
+{
+  static const std::string s_name = "ChannelCW" ;
+  return std::hash_combine  ( s_name , ps2 () . tag () , gamma0 () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -692,7 +725,7 @@ Ostap::Math::Channel::Channel
   const unsigned short          L     )
   : ChannelCW    ( gamma , m1 , m2 ) 
   , m_L          ( L        )
-  , m_formfactor ( nullptr  ) 
+  , m_formfactor ( new Ostap::Math::FormFactors::NoFormFactor () )
 {}
 // ============================================================================
 /*  constructor from all parameters and no formfactor
@@ -820,7 +853,8 @@ Ostap::Math::Channel::D
 // ============================================================================
 std::size_t Ostap::Math::Channel::tag() const
 { 
-  return std::hash_combine ( std::string ( "Channel")      , 
+  static const std::string s_name = "Channel" ;
+  return std::hash_combine ( s_name , 
                              Ostap::Math::ChannelCW::tag() , 
                              m_L       , 
                              m_formfactor  ? m_formfactor->tag() : 0 ) ;
@@ -994,8 +1028,10 @@ double Ostap::Math::Channel0::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::Channel0::tag() const
-{ return std::hash_combine ( std::string ("Channel0") , 
-                             Ostap::Math::Channel::tag() , qs () ) ; }
+{ 
+  static const std::string s_name = "Channel0" ;
+  return std::hash_combine ( s_name , Ostap::Math::Channel::tag() , qs () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -1156,9 +1192,15 @@ double  Ostap::Math::BW::integral
   if ( t >= high ) { return                    0   ; }
   if ( t >  low  ) { return integral  ( t , high ) ; }
   //
-  // split into reasonable sub intervals
+  // split into reasonable sub intervals according to gamma-parameters 
+  double g0 = gamma () ;
+  if ( 0 < m_m0 ) 
+  {
+    // check the imaginary part at the pole and use it as "width"
+    const double gX = std::abs ( std::imag ( 1.0 / amplitude ( m_m0 ) ) / m_m0 ) ;
+    if ( 0 < gX ) { g0 = gX ; }
+  }
   //
-  const double g0 = gamma () ;
   if ( 0 < g0 ) 
   {
     //
@@ -1338,6 +1380,15 @@ Ostap::Math::BreitWigner::BreitWigner
   : BW ( m0 , c )
 {}
 // ============================================================================
+/// copy constructor 
+// ============================================================================
+Ostap::Math::BreitWigner::BreitWigner  
+( const Ostap::Math::BreitWigner& bw ) 
+  : BW ( bw ) 
+{}
+// ============================================================================
+
+// ============================================================================
 // clone it 
 // ============================================================================
 Ostap::Math::BreitWigner*
@@ -1493,8 +1544,9 @@ Ostap::Math::ChannelFlatte::D
 // get unique tag/label 
 // ============================================================================
 std::size_t Ostap::Math::ChannelFlatte::tag() const
-{ return std::hash_combine ( std::string ( "ChannelFlatte" ) , 
-                             Ostap::Math::ChannelCW::tag () ) ; }
+{ 
+  static const std::string s_name = "ChannelFlatte" ;
+  return std::hash_combine ( s_name , Ostap::Math::ChannelCW::tag () ) ; }
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -1533,8 +1585,12 @@ Ostap::Math::Flatte::Flatte
   add ( ChannelFlatte ( 1  , mB1 , mB2 ) ) ;
   add ( ChannelCW     ( g0 , mA1 , mA1 ) ) ;
   //
-  const double g1 = std::abs ( m0g1  / m0   ) ;
+  const double g1 = std::abs ( m0g1    / m0 ) ;
   const double g2 = std::abs ( g2og1 ) * g1   ;
+  //
+  Ostap::Assert ( 3 ==   nChannels()            , 
+                  "Invalid number of channels!" , 
+                  "Ostap:Math::Flatte::Flatte"  ) ;
   //
   m_channels[0] -> setGamma0 ( g1 ) ;
   m_channels[1] -> setGamma0 ( g2 ) ;
@@ -1542,14 +1598,23 @@ Ostap::Math::Flatte::Flatte
   //
 }
 // ============================================================================
+// copy contructor
+// ============================================================================
+Ostap::Math::Flatte::Flatte 
+( const Ostap::Math::Flatte& fl ) 
+  : BW ( fl ) 
+{}
+// ============================================================================
 Ostap::Math::Flatte*
 Ostap::Math::Flatte::clone() const { return new Ostap::Math::Flatte ( *this ) ; }
 // ============================================================================
 // unique tag
 // ============================================================================
 std::size_t Ostap::Math::Flatte::tag () const
-{ return std::hash_combine ( std::string ( "Flatte")  ,
-                             Ostap::Math::BW::tag () ) ; }
+{ 
+  static const std::string s_name = "Flatte" ;
+  return std::hash_combine ( s_name , Ostap::Math::BW::tag () ) ; 
+}
 
 
 
@@ -2095,9 +2160,10 @@ Ostap::Math::Channel23L::clone () const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::Channel23L::tag () const
-{ return std::hash_combine ( std::string ( "Channel23L" ) , 
-                             m_channel->tag () , 
-                             m_ps.tag       () ) ; }
+{ 
+  static const std::string s_name = "Channel23L" ;
+  return std::hash_combine ( s_name , m_channel->tag () , m_ps.tag () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2178,9 +2244,10 @@ Ostap::Math::ChannelNR::D
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelNR::tag () const
-{ return std::hash_combine ( std::string ( "ChannelNR" ) , 
-                             gamma0 () ,
-                             m_m1 , m_m2 , m_m3 ) ; }
+{ 
+  static const std::string s_name = "ChannelNR" ;
+  return std::hash_combine ( s_name , gamma0 () , m_m1 , m_m2 , m_m3 ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2199,25 +2266,22 @@ std::string Ostap::Math::ChannelNR::describe() const
 // ============================================================================
 /* constructor from the Dalitz configuration and 
  *  the squared matrix element
- *  @param dalitz Dalizt configriation
+ *  @param dalitz Dalitz configriation
  *  @param me2 squared matrix element \f$ M^2 (s,s_1,s_2) \equiv \frac{1}{2J+1}\sum_i \left| \mathcal{A} \right| \f$
  */
 // ============================================================================
 Ostap::Math::GammaBW3::GammaBW3 
 ( const Ostap::Kinematics::Dalitz0&     dalitz , 
   Ostap::Math::GammaBW3::MatrixElement2 me2    , 
-  const std::size_t                     tag    ) 
+  const std::size_t                     tag    , 
+  const unsigned short                  n1     , 
+  const unsigned short                  n2     )
   : m_me2    ( me2    ) 
   , m_dalitz ( dalitz )
   , m_tag    ( tag    )
+  , m_n1     ( n1     )
+  , m_n2     ( n2     )
 {}
-// ============================================================================
-// Ostap::Math::GammaBW3::GammaBW3 
-// ( const Ostap::Kinematics::Dalitz0& dalitz , 
-//   const Ostap::Decays::IDecay&      decay  , 
-//   const std::size_t                 tag    ) 
-//   : GammaBW3 ( dalitz , MatrixElement2 ( Ostap::Decays::Decay ( decay ) ) , tag )
-// {}
 // ============================================================================
 // the main method 
 // ============================================================================
@@ -2226,7 +2290,7 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
   return Ostap::Math::DalitzIntegrator::integrate_s1s2 
-    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag ) / ( s * std::sqrt ( s ) ) ;
+    ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / s  ;
 }
 // ============================================================================
 // constructor from (partial) width
@@ -2417,9 +2481,10 @@ double Ostap::Math::ChannelGS::rho_s
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGS::tag () const
-{ return std::hash_combine ( std::string ( "ChannelGS" ) , 
-                             gamma0 () ,
-                             m_mpi     ) ; }
+{ 
+  static const std::string s_name = "ChannelGS" ;
+  return std::hash_combine ( s_name , gamma0 () , m_mpi ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2453,9 +2518,10 @@ Ostap::Math::ChannelQ::clone() const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelQ::tag () const
-{ return std::hash_combine ( std::string ( "ChannelQ" ) , 
-                             gamma0    () ,
-                             m_ps2.tag () ) ; }
+{ 
+  static const std::string s_name = "ChannelGS" ;
+  return std::hash_combine ( s_name , gamma0 () , m_ps2.tag () ) ; 
+}
 // ============================================================================
 // describe the channel 
 // ============================================================================
@@ -2481,10 +2547,13 @@ Ostap::Math::ChannelGLR::clone() const
 // unique tag for this lineshape 
 // ============================================================================
 std::size_t Ostap::Math::ChannelGLR::tag () const
-{ return std::hash_combine ( std::string ( "ChannelGLR" ) ,
-                             m_tag             ,
-                             m_description     ,
-                             gamma0    () ) ;  }
+{
+  static const std::string s_name = "ChannelGLR " ;
+  return std::hash_combine ( s_name ,
+                             m_tag  ,
+                             m_description  ,
+                             gamma0    () ) ; 
+}
 // ============================================================================
 
 
@@ -2625,10 +2694,10 @@ bool Ostap::Math::LASS::setE ( const double x )
 // unique label/tag 
 // ============================================================================
 std::size_t Ostap::Math::LASS::tag () const 
-{ return std::hash_combine  ( std::string ("LASS") , 
-                              BW::tag     (      ) , 
-                              m_a , m_b , m_e      ) ; }
-
+{
+  static const std::string s_name = "LASS" ;
+  return std::hash_combine  ( s_name , BW::tag () , m_a , m_b , m_e ) ; 
+}
 // ============================================================================
 /*  constructor from Breit-Wigner, Phase-space and flags 
  *  @param bw Breit-Wigner shape 
@@ -2769,10 +2838,144 @@ double Ostap::Math::BWPS::integral
 // unique label/tag 
 // ============================================================================
 std::size_t Ostap::Math::BWPS::tag () const 
-{ return std::hash_combine  ( std::string ( "BWPS" ) , 
-                              m_ps .tag () , 
-                              m_bw->tag () , 
-                              m_rho , m_N2 ) ; }
+{
+  static const std::string s_name = "BWPS" ;
+  return std::hash_combine  ( s_name , m_ps .tag () , m_bw->tag () , m_rho , m_N2 ) ; 
+}
+
+// ============================================================================
+/*  constructor from Breit-Wigner, Phase-space and flags 
+ *  @param bw Breit-Wigner shape 
+ *  @param M  mass of the "mother" particle 
+ *  @param m1 mass of the 1st      particle 
+ *  @param m2 mass of the 2nd      particle 
+ *  @param m0 mass of the 3rd      particle 
+ *  @param L  the orbital momentum between  
+ *  system of 1st and 2nd particles and the 3rd particle
+ */
+// ============================================================================
+Ostap::Math::BW3L::BW3L
+( const Ostap::Math::BW& bw , 
+  const double           M  ,   
+  const double           m1 ,         
+  const double           m2 ,       
+  const double           m3 ,       
+  const unsigned short   L  ) 
+  : m_bw ( bw.clone() ) 
+  , m_M  ( M  ) 
+  , m_m1 ( m1 ) 
+  , m_m2 ( m2 ) 
+  , m_m3 ( m3 ) 
+  , m_L  ( L  ) 
+  , m_p0 ( 1  )
+  , m_workspace () 
+{
+  Ostap::Assert ( 0 <  M           ,
+                  "Invalid mother mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m1          , 
+                  "Invalid 1st    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m2          ,
+                  "Invalid 2nd    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( 0 <= m3          , 
+                  "Invalid 3rd    mass"           , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( m1 + m2 + m3 < M , 
+                  "Invalid combination of masses" , "Ostap:Math::BW3L" ) ;
+  Ostap::Assert ( m_bw -> threshold () < M - m3 , 
+                  "Inconsistent BW-threshold"     , "Ostap:Math::BW3L" ) ;
+  // cache:
+  const double xmid = 0.5 * ( xmin () + xmax () ) ;
+  m_p0 = Ostap::Math::PhaseSpace2::q ( m_M , xmid , m_m3  ) ;
+  //
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Math::BW3L::BW3L 
+( const Ostap::Math::BW3L& right )
+  : m_bw  ( right.m_bw->clone () )   
+  , m_M   ( right.m_M  ) 
+  , m_m1  ( right.m_m1 ) 
+  , m_m2  ( right.m_m2 ) 
+  , m_m3  ( right.m_m3 ) 
+  , m_L   ( right.m_L  ) 
+  , m_p0  ( right.m_p0 )
+  , m_workspace()
+{}
+// ============================================================================
+// evaluate the function 
+// ============================================================================
+double Ostap::Math::BW3L::evaluate   ( const double x ) const 
+{
+  if ( x <= xmin() || x >= xmax() ) { return 0 ; }           // RETURN
+  //
+  const double p  = Ostap::Math::PhaseSpace2::q ( m_M , x , m_m3  ) ;
+  if ( p <= 0                     ) { return 0 ; }          //  RETURN
+  //
+  return (*m_bw)(x) * std::pow ( p / m_p0 , 2 * m_L + 1 ) ;
+}
+// ============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BW3L::integral() const 
+{ return integral ( xmin () , xmax () ) ; }
+// =============================================================================
+// evaluate the integral 
+// ============================================================================
+double Ostap::Math::BW3L::integral
+( const double x_low  , 
+  const double x_high ) const 
+{
+  if       ( s_equal ( x_high , x_low ) ) { return 0 ; } 
+  else if  (           x_high < x_low   ) { return -1 * integral ( x_high , x_low ) ; }
+  //
+  const double x_mn = xmin () ;
+  const double x_mx = xmax () ;
+  //
+  if  ( x_mx < x_low || x_mn > x_high ) { return 0 ; }
+  //
+  const double xlow  = std::max ( x_mn , x_low  ) ;
+  const double xhigh = std::min ( x_mx , x_high ) ;
+  //
+  if ( xhigh <= xlow ) { return 0 ; }
+  //
+  if ( ( xhigh - xlow ) > 0.2 * ( x_mx - x_mn ) ) 
+  {
+    const double xmid = 0.5 * ( xlow + xhigh ) ;
+    return integral ( xlow , xmid ) + integral ( xmid , xhigh ) ; 
+  }
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<BW3L> s_integrator {} ;
+  static char s_message [] = "Integral(BW3P)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      xlow    , xhigh     ,          // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      m_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// unique label/tag 
+// ============================================================================
+std::size_t Ostap::Math::BW3L::tag () const 
+{ 
+  static const std::string s_name = "BW3L" ;
+  return std::hash_combine ( s_name , m_bw -> tag () , m_M , m_m1 , m_m2 , m_m3 , m_L ) ; 
+}
+// ============================================================================
 
 
 // ============================================================================

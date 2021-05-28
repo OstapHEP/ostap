@@ -5,6 +5,7 @@
 // ============================================================================
 #include "RVersion.h"
 #include "RooAbsPdf.h"
+#include "RooConstVar.h"
 // ============================================================================
 // Ostap
 // ============================================================================
@@ -118,7 +119,6 @@ Double_t Ostap::MoreRooFit::Bernstein::analyticalIntegral
 // ============================================================================
 
 
-
 // ============================================================================
 // constructor from the variable, range and list of coefficients
 // ============================================================================
@@ -147,6 +147,23 @@ Ostap::MoreRooFit::Monotonic::Monotonic
   Ostap::Assert ( m_monotonic.npars() == ::size ( m_pars ), s_INVALIDPARS , s_v2 , 512 ) ;
   //
 }
+// ============================================================================
+// constructor from the variable, range and list of coefficients
+// ============================================================================
+Ostap::MoreRooFit::Monotonic::Monotonic
+( const std::string& name       ,
+  const std::string& title      ,
+  RooAbsReal&        xvar       ,
+  const bool         increasing , 
+  const double       xmin       , 
+  const double       xmax       ,
+  const RooArgList&  pars       ) 
+  : Monotonic ( name , title , 
+                xvar , increasing , xmin , xmax ,
+                RooFit::RooConst ( 0.0 ) , 
+                RooFit::RooConst ( 1.0 ) ,
+                pars ) 
+{}
 // =============================================================================
 // copy constructor 
 // =============================================================================

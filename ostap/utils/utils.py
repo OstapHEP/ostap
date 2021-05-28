@@ -70,8 +70,17 @@ __all__     = (
     ## 
     'log_range'          , ## helper loop over values between xmin and xmax in log
     ## 
-    'lrange'             , ## helper loop over values between xmin and xmax in log   
-   )
+    'lrange'             , ## helper loop over values between xmin and xmax in log
+    ##
+    'split_range'        , ## helper generator to splti large range into smaller chunks
+    ##
+    'chunked'            , ## break *iterable* into chunks of length *n*:
+    'divide'             , ## divide the elements from *iterable* into *n* parts
+    'grouper'            , ## collect data into fixed-length chunks or blocks"
+    ##
+    'checksum_files'     , ## get SHA512 sum for sequence of files 
+    )
+
 # =============================================================================
 import ROOT, time, os , sys, math ## attention here!!
 from   builtins            import range
@@ -334,13 +343,15 @@ class Batch(object) :
     ## contex manahger: ENTER
     def __enter__ ( self ) :
         import ROOT
-        self.old_state = ROOT.gROOT.IsBatch()
-        if self.old_state != self.__batch : ROOT.gROOT.SetBatch ( self.__batch ) 
+        groot = ROOT.ROOT.GetROOT()
+        self.old_state = groot.IsBatch()
+        if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
         import ROOT
-        if self.old_state != ROOT.gROOT.IsBatch() : ROOT.gROOT.SetBatch( self.old_state ) 
+        groot = ROOT.ROOT.GetROOT()
+        if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
 
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state
@@ -361,38 +372,60 @@ def batch( batch = True ) :
 #  @code
 #  with KeepCWD ( new_dir ) :
 #    ....
-#  @endcode 
+#  @endcode
+#  - No action if no directory is specified 
 class KeepCWD(object) :
     """context manager to keep the current working directory
     >>> with KeepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
     def __init__ ( self , new_dir = '' ) :
-        self.cwd     = os.getcwd() 
-        self.new_dir = new_dir
         
+        self.__old_dir = os.getcwd ()
+        self.__new_dir = new_dir
+
+    ## ENTER : context mamager 
     def __enter__ (  self ) :
-        self.cwd = os.getcwd() 
-        if self.new_cdir and os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
-            os.chdir ( self.new_dir )
-            return self
         
-    def __exit__ ( self , *_ ) :
-        if os.path.exists ( self.cwd ) and os.path.isdir ( self.cwd ) :
-            os.chdir ( os.cwd ) 
+        self.__old_dir = os.getcwd()
+        
+        if   self.new_dir :
+            os.chdir ( self.new_dir )
             
+        return self
+        
+    ## EXIT : context mamager 
+    def __exit__ ( self , *_ ) :
+        
+        if os.path.exists ( self.old_dir ) and os.path.isdir ( self.old_dir ) :
+            os.chdir ( self.old_dir )
+            
+    @property
+    def old_dir ( self ) :
+        """``old_dir'' : old working directory"""
+        return self.__old_dir
+
+    @property
+    def new_dir ( self ) :
+        """``new_dir'' : new current working directory"""
+        return self.__new_dir 
+
+    
 # =============================================================================
 ## context manager to keep the current working directory
 #  @code
 #  with keepCWD ( new_dir ) :
 #    ....
 #  @endcode 
+#  - No action if no directory is specified 
 def keepCWD ( new_dir = '' ) :
-    """context manager to keep the current working directory
+    """Context manager to keep the current working directory
     >>> with keepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
-    return KeepCWD (  new_dir ) 
+    return KeepCWD ( new_dir ) 
         
 # =============================================================================
 ## @class KeepCanvas
@@ -701,65 +734,164 @@ def cmd_exists ( command ) :
     """
     return which ( command ) is not None
 
-## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
+# =============================================================================
+## @class VRange
+#  Helper looper over the values between vmin and vmax :
+#  @code
+#  for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class VRange(object) :
+    """Helper looper over the values between vmin and vmax :
+    >>> for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert isinstance ( n , integer_types ) and 0 < n,\
+               'VRange: invalid N=%s/%s' % ( n  , type ( n ) ) 
+        
+        self.__vmin = vmin
+        self.__vmax = vmax
+        self.__n    = n 
 
+    @property
+    def vmin  ( self ) :
+        """``vmin'' : minimal value"""
+        return self.__vmin
+    @property
+    def vmax  ( self ) :
+        """``vmax'' : maximal value"""
+        return self.__vmax    
+    @property
+    def n ( self )  :
+        """``n'' : number of steps"""
+        return self.__n
 
+    def __len__     ( self ) : return self.__n + 1
+    def __iter__    ( self ) :
+        
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield self.vmin * f1 + f2 * self.vmax
+                
 # =============================================================================
 ## loop over values between xmin and xmax 
 #  @code
 #  for x in vrange ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def vrange ( xmin , xmax , n = 100 ) :
+def vrange ( vmin , vmax , n = 100 ) :
     """ Loop  over range of values between xmin and xmax 
-    >>> for x in vrange ( xmin , xmax , 200 ) :
-    ...                print (x) 
+    >>> for v in vrange ( vmin , vmax , 200 ) :
+    ...                print (v) 
     """
-    assert isinstance ( n , integer_types ) and 0 < n,\
-           'vrange: invalid N=%s/%s' % ( n  , type ( n ) ) 
+    return VRange ( vmin , vmax , n )
 
-    fn = 1.0 / float ( n ) 
-    for i in range ( n + 1 ) :
-        #
-        if   0 == i : yield xmin
-        elif n == i : yield xmax
-        else        :
-            f2 = i * fn
-            f1 = 1 - f2
-            yield xmin * f1 + f2 * xmax 
 
+# =============================================================================
+## @class LRange
+#  Helper looper over the values between vmin and vmax using log-steps 
+#  @code
+#  for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class LRange(VRange) :
+    """Helper looper over the values between vmin and vmax using log-steps
+    >>> for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert 0 < vmin  and 0 < vmax,\
+           'LRange: invalid  non-positive vmin/ymax values: %s/%s' %  ( vmin , vmax )
+
+        super ( LRange , self ).__init__ ( vmin , vmax , n ) 
+
+        self.__lmin = math.log10 ( self.vmin )
+        self.__lmax = math.log10 ( self.vmax )
+                
+    @property
+    def lmin  ( self ) :
+        """``lmin'' : log10(minimal value)"""
+        return self.__lmin
+    @property
+    def lmax  ( self ) :
+        """``lmax'' : log10(maximal value)"""
+        return self.__lmax    
+
+    def __iter__    ( self ) :
+
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
+            
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
 #  @code
 #  for x in log_range ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def log_range ( xmin , xmax , n = 100 ) :
-    """:oop over values between xmin and xmax in log-scale 
+def log_range ( vmin , vmax , n = 100 ) :
+    """Loop over values between xmin and xmax in log-scale 
     >>> for x in log_range ( xmin , xmax , 200 ) :
     >>>      print (x) 
     """
-    assert 0 < xmin  and 0 < xmax,\
-           'log_range: invalid  xmin/xmax values: %s/%s' %  ( xmin , xmax )
-
-    ## loop
-    for x in vrange ( math.log10 ( xmin ) , math.log10 ( xmax ) , n ) :
-        yield 10.0**x 
+    return LRange ( vmin , vmax , n )
 
 # =============================================================================
 ## loop over values between xmin and xmax in log-scale 
 #  @code
-#  for x in lrange ( xmin , xmax , 200 ) : ## ditto 
-#         print (x) 
+#  for v in lrange ( vmin , vmax , 200 ) : ## ditto 
+#         print (v) 
 #  @endcode
-def lrange ( xmin , xmax , n = 100 ) :
-    """:oop over values between xmin and xmax in log-scale 
-    >>> for x in lrange ( xmin , xmax , 200 ) :  ## ditto 
-    >>>      print (x) 
+def lrange ( vmin , vmax , n = 100 ) :
+    """:oop over values between vmin and vmax in log-scale 
+    >>> for v in lrange ( vmin , vmax , 200 ) :  ## ditto 
+    >>>      print (v) 
     """
-    for x in log_range ( xmin , xmax , n ) : yield x 
-        
+    return LRange ( vmin , vmax , n )
 
+# =============================================================================
+## split range into smaller chunks:
+#  @code
+#  for i in split_range ( 0 , 10000 , 200 ) :
+#     for j in range (*i) :
+#          ... 
+#  @endcode 
+def split_range ( low , high , num ) :
+    """Split range into smaller chunks:
+    >>> for i in split_range ( 0 , 10000 , 200 ) :
+    >>>     for j in range (*i) :
+    >>>         ... 
+    """
+    if high <= low or num < 1 :
+        
+        yield low , low 
+        
+    else : 
+        
+        next = low + num 
+        while next < high :
+            yield low , next
+            low   = next
+            next += num 
+            
+        yield low , high
 
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word
@@ -783,6 +915,199 @@ def gen_password ( len = 12 ) :
     ## 
     return result
 
+
+# =============================================================================
+
+try :
+    
+    from more_itertools import chunked, divide 
+    
+except ImportError :
+    
+    from itertools import islice
+    from functools import partial
+    
+    # =========================================================================
+    ## Return first *n* items of the iterable as a list
+    #  @code 
+    #  take(3, range(10))  ## [0, 1, 2]
+    #  take(5, range(3))   ## [0, 1, 2]
+    #  @endcode
+    #
+    #  The function is copied from <code>more_itertools</code> 
+    def take(n, iterable):
+        """Return first *n* items of the iterable as a list.
+        
+        >>> take(3, range(10))
+        [0, 1, 2]
+        >>> take(5, range(3))
+        [0, 1, 2]
+        
+        Effectively a short replacement for ``next`` based iterator consumption
+        when you want more than one item, but less than the whole iterator.
+        
+        - the function is copied from `more_itertools`
+        """
+        return list(islice(iterable, n))
+    
+    # =========================================================================
+    ## Break *iterable* into lists of length *n*:
+    #  @code
+    #  list(chunked([1, 2, 3, 4, 5, 6], 3)) ## [[1, 2, 3], [4, 5, 6]]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, the last
+    #  returned list will be shorter:
+    #  @code 
+    #  list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3)) ## [[1, 2, 3], [4, 5, 6], [7, 8]]
+    #  @endcode 
+    #  <code>chunked</code> is useful for splitting up a computation on a large number
+    #  of keys into batches, to be pickled and sent off to worker processes. One
+    #  example is operations on rows in MySQL, which does not implement
+    #  server-side cursors properly and would otherwise load the entire dataset
+    #  into RAM on the client.
+    # 
+    #  The function is copied from <code>more_itertools</code>
+    def chunked(iterable, n):
+        """Break *iterable* into lists of length *n*:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
+        [[1, 2, 3], [4, 5, 6]]
+        
+        If the length of *iterable* is not evenly divisible by *n*, the last
+        returned list will be shorter:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3))
+        [[1, 2, 3], [4, 5, 6], [7, 8]]
+        
+        To use a fill-in value instead, see the :func:`grouper` recipe.
+        
+        :func:`chunked` is useful for splitting up a computation on a large number
+        of keys into batches, to be pickled and sent off to worker processes. One
+        example is operations on rows in MySQL, which does not implement
+        server-side cursors properly and would otherwise load the entire dataset
+        into RAM on the client.
+        
+        - the function is copied from `more_itertools`
+        """
+        return iter(partial(take, n, iter(iterable)), [])
+
+    # =========================================================================
+    ## Divide the elements from *iterable* into *n* parts, maintaining order.
+    #  @code 
+    #  >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+    #  >>> list(group_1)
+    #  ...    [1, 2, 3]
+    #  >>> list(group_2)
+    #  ... [4, 5, 6]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, then the
+    #  length of the returned iterables will not be identical:
+    #  @code 
+    #  >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+    #  >>> [list(c) for c in children]
+    #  ... [[1, 2, 3], [4, 5], [6, 7]]
+    #  @endcode
+    # 
+    # If the length of the iterable is smaller than n, then the last returned
+    # iterables will be empty:
+    # @code
+    # >>> children = divide(5, [1, 2, 3])
+    # >>> [list(c) for c in children]
+    # ... [[1], [2], [3], [], []]
+    # @endcode
+    # 
+    # This function will exhaust the iterable before returning and may require
+    # significant storage. If order is not important, see :func:`distribute`,
+    # which does not first pull the iterable into memory.
+    #
+    # The function is copied from <code>more_itertools</code>
+    def divide ( n , iterable):
+        """Divide the elements from *iterable* into *n* parts, maintaining
+        order.
+        
+        >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+        >>> list(group_1)
+        [1, 2, 3]
+        >>> list(group_2)
+        [4, 5, 6]
+        
+        If the length of *iterable* is not evenly divisible by *n*, then the
+        length of the returned iterables will not be identical:
+        
+        >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+        >>> [list(c) for c in children]
+        [[1, 2, 3], [4, 5], [6, 7]]
+        
+        If the length of the iterable is smaller than n, then the last returned
+        iterables will be empty:
+        
+        >>> children = divide(5, [1, 2, 3])
+        >>> [list(c) for c in children]
+        [[1], [2], [3], [], []]
+        
+        This function will exhaust the iterable before returning and may require
+        significant storage. If order is not important, see :func:`distribute`,
+        which does not first pull the iterable into memory.
+        
+        - the function is copied from `more_itertools`
+        """
+        if n < 1:
+            raise ValueError('n must be at least 1')
+
+        seq = tuple(iterable)
+        q, r = divmod(len(seq), n)
+        
+        ret = []
+        for i in range(n):
+            start = (i * q) + (i if i < r else r)
+            stop = ((i + 1) * q) + (i + 1 if i + 1 < r else r)
+            ret.append(iter(seq[start:stop]))
+            
+        return ret
+        
+if ( 3 , 0 ) <= python_version :
+    from itertools import zip_longest
+else :
+    from itertools import izip_longest as zip_longest
+
+# =============================================================================
+## Collect data into fixed-length chunks or blocks"
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+
+# ========================================================================================
+## calculate SHA512-checksum for the files
+#  @see hashlib
+#  @see hashlib.sha512
+#  @code
+#  s =  checksum_files ( 'a.txt', 'b.bin' ) 
+#  @endcode
+#  Non-existing files are ignored 
+#  @param files  list of filenames
+#  @return checksum for these files 
+def checksum_files ( *files ) :
+    """Calculate SHA512-checksum for the files
+    >>> s =  checksum_files ( 'a.txt', 'b.bin' ) 
+    Non-existing files are ignored 
+    - see `hashlib`
+    - see `hashlib.sha512`
+    """
+    import hashlib
+    hash_obj = hashlib.sha512 ()
+    for fname in files :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) : 
+            with open ( fname , "rb" ) as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_obj.update(chunk)
+                    
+    return hash_obj.hexdigest()
+
+
+
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -792,5 +1117,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*' ) 
             
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

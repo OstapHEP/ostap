@@ -1,7 +1,120 @@
+
 ## New features 
-  1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
-  
+
+  1. reenable `pathos` for (3.6<=python & 0.3<=dill )
+
 ## Backward incompatible changes: 
+
+## Bug fixes:
+
+
+# v1.6.2.0
+
+## New features 
+
+  1. make names of created `PDF` and `RooAbsPdf` objects unique..  It is not yet 100%, but a good step in this direction. 
+  1. add "cut-off" functions and PDFs
+  1. improve treatment of "tags" for C++ models. 
+  1. improve spline <--> graph relations 
+  1. add `ds_combine` functions to combine two datasets with weights 
+  1. add `Ostap::Utils::storeError`, 'Ostap::Utils::storeAsymnError' helper functions 
+  1. add methods `wname`, `store_error` and `store_asym_errors` to `ROOT.RooDataSet` 
+  1, add `PSSmear2_pdf` generic smearing of the left edge of the phase space 
+  1. more coherency for different `Ostap::Math::PhaseSpace*` classes 
+  1. extend and improve `PSLeftExpoPol_pdf` and `PSLeft_pdf`, make them more coherent 
+  1. add functionality for jackknife and bootstrap analyses for fit biases and error estimates 
+  1. better output report from Jackknife and Boostrap studies
+  1. add parameter `frequency` to toys, toys2, jackknife and boostrap tools `ostap/fitting/toys.py`
+  1. propagare `more_vars` to the output reports of Jackknife and Boostrap studies
+  1. allow derived quantitites to be added into the output table of `RooFitResult`
+  1. add `getitem` stuff for `RooFitResult` to allow interchange with dictionaries 
+  1. add `split_range` generator to splti large range into smaller chunks 
+  1. make creation and managemenbt of temporary files and directories more robust, probably more efficient, use better namings, ...
+  1. add `timeout` parameter for `sqlitedict` and `sqliteshelve`
+  1. make use of `berkeleydb` for 3.6<=python
+
+ 
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+  1. fix assertion statement in `dalitz.py` 
+  1. fix a bug in analytic  three-body phase space for cases with zero masses 
+  1. fix a bug in numerical three-body phase space for case with all zero masses 
+  1. fix a bug in `__getitem__` for range/slice/index sequecne for the weighted datasets - the event weigth was propagates incorrectly. Thanks to Dmitry Pereima.
+
+
+# v1.6.1.0
+
+## New features 
+
+ 1. Add `Ostap::Math::Hyperbolic` hyperbolic distribition 
+ 1. Add `Ostap::Models::Hyperbolic` hyperbolic distribition 
+ 1. Add `Hyperbilic_pdf` hyperbolic distribition 
+ 1. Add `ROOT.TGraph.merge`
+ 1. Improve treatment of GSL errors 
+
+
+## Backward incompatible changes: 
+
+## Bug fixes:
+
+ 1. Fix some tiny incorrectnesses in `Ostap/MatrixUtils2.h`
+ 1. Fix small problem in `ostap.utils.utils.KeepCWD` context manager 
+ 1. Tiny fix in `graph_summary`
+
+# v1.6.0.0
+
+## New features 
+
+  1. Add `FlattePS_pdf` - similar to `BWPS_pdf`
+  1. Make few important steps towards ROOT 6.23/01 ("New PYROOT"). Full  adaptation is not yet achieved, there   are some pending problems with effective inheritance from C++ classes (namely `TSelector`, `PyPDF`, `PyVAR`, ...). There are also some puzzling  crashes... 
+  1. rename  tests, make test selection more transparent and easy to navigate back 
+  1. rename `ostap/fitting/selectors.py` to `ostap/fitting/pyselectors.py` to avoid the name clash for `python3` 
+  1. add helper script `pplaunch` to launch remote pp-servers via ssh tunnels
+  1. update `PyVar`, `PyVar2`, `PyPdf`,`PyPdf2`
+  1. (almost) complete update for new PyROOT 
+  1. fix `test_fitting_minuit_weighted` - thanks to Dima Golubkov
+  1. make more  coherent treatment of ROOT issues 
+  1. fix `minuit` for new PyROOT  (signature of `FCN` is different!)
+  1. minor update for `minuit` : from now allow access  by parameter name:
+```
+minuit        = ...
+minuit['p2']  = 10 
+minuit.minos   ('p1','p2',...)
+minuit.release ('p3')
+```   
+  1. update `pptunnel` + `pplaunch` with better and more informative output 
+  1. add `Ostap::Math::BW3L`, `Ostap::Models::BW3L`,  `BW3L_pdf` and extend  test `ostap/fitting/tests/tests_fitting_breiwigner.py` - resurrected version of the Breit-Wigner profile from 3-body decays 
+  1. add check for `more_itertools`, provide   replacement for `chunked` when `more_itertools`  is not available 
+  1. update `Ostap::Math::NSphere` and `Ostap::Math::Positive` such that for null-parameters the reusltin poisitve function is a constant. The trick is based on properties of Chebyshev polynomials of 1st,. 2nd, 3rd and 4th kind.   
+  1. `ostap.logger.table` add parameter `alignment` that specifies the column alignment.
+  1. `ostap.parallel.task` add parameter `batch`, that allows to execute the tasks in `batch` mode 
+  1. re-add  generic Breit-wigner channel `Ostap::Math::ChannelGeneric` (for ROOT>=6.23/01 only) 
+  1. add method `amplitude` for `Ostap::Math::ChannelBW`
+  1. re-remove  generic Breit-wigner channel `Ostap::Math::ChannelGeneric`
+  1. change the default `sample` argument for `PDF.generate` from `False` to `True`
+  1. tiny fix for the table column alignment 
+  1. add `#include <string>` for `NSphere.h` - for  certain configuration it prevents compile error (thanks to Abdul-Kerim Gusseinov) 
+  1. Add parameter `accept_fun` for  `toys` - that allows to (re)define the accepance criteria, the default corresponds to `accept_fit` function from `ostap.fitting.toys` module, that checks the    fit status (0) and covariance matrix status ( 3 or -1)   
+  1. Add parameter `fit_fun` for  `toys` - that allows to (re)define the default "fit"-policy 
+  1. Add parameter `gen_fun` for  `toys` - that allows to (re)define the default "generation"-policy 
+  1. `test_plotting_summary_graph.py` : add call for `ROOT.gPad.RedrawAxis` -  thanks to Tom Blake 
+  1. add `**kwargs` for all `parallel`-methods, arguments are used for `WorkManager`
+  1. remove `evaluateBatch` form all PDFs (folloiimng evolution of ROOT). We need to  gradually introduce `evaluateSpan`
+  1. `Ostap::Math::GammaBW3`: use 1/s factor instead of 1/s^3/2. thanks to Misha Mikhasenko! 
+  1. Add symmetic   Sinh-Asinh resolution  model `ResoSinhAsinh`
+  1. Add symmetic Jonhson's SU resolution  model `ResoJohnsonSU`
+  1. fix for the new signature of `TDirectory::CurrentDirectory()` method 
+  1. fix/rewrite/improve `ostap.histos.compare` module 
+  1. improve reweighting machinery: make it more tunable (and less automatic) and more suitable for multidimensional reweighting. 
+  1. Add new context manager `SETPARS` and use it in `PDF.wilks` , `PDF.wilks2` , `PDF.draw_nll`, `PDF.graph_nll`, `PDF.graph_profile` 
+  1. Add logistic/"sech-squared" resolution model `ResoLogistic`
+  1. Improve `PDG.graph_profile/PDF.graph_nll` : add `draw` argument to draw the graph in progress  
+  1. Better (but not perfect yet) treatment/assignement of the unique names for many intermediate objects 
+
+## Backward incompatible changes: 
+  1. Reweighting machinery: different signature of `makeWeights` function -  new argument `make_plots`, different meaning of argument `power`,  different return value
 
 ## Bug fixes:
   1. fix bugs in `Ostap::Math::BWPS`

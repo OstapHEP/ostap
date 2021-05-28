@@ -11,7 +11,7 @@
 # ============================================================================= 
 from   __future__        import print_function
 # ============================================================================= 
-import ROOT, random
+import ROOT, time 
 import ostap.fitting.roofit 
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import Ostap, std, VE, dsID
@@ -37,6 +37,8 @@ m_pi     = 139 *  MeV
 m_rho    = 770 * MeV
 g_rho    = 150 * MeV
 
+m_etap   = 958 *  MeV 
+
 m_phi    = 1019.46 * MeV
 g_phi    =   4.249 * MeV
 m_K      = 493.677 * MeV
@@ -48,9 +50,17 @@ m0_f0    = 980   * MeV
 m0g1_f0  = 0.165 * GeV**2 * 4.21 
 g2og1_f0 = 1/4.21 
 
+models   = set() 
 
-def test_breitwigner_rho () : 
-
+# =============================================================================
+## Different rho0 parameterizations 
+def test_breitwigner_rho () :
+    """Different rho0 parameterizations
+    """
+    
+    logger  = getLogger ( "test_breitwigner_rho" )
+    logger.info ( "Rho0 shapes" ) 
+                  
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Rho0 ( m_rho ,   g_rho , m_pi )
     
@@ -90,10 +100,24 @@ def test_breitwigner_rho () :
     f1.draw ()
     f2.draw ( 'same' )
     f3.draw ( 'same' )
+
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
+    models.add ( model1 )
+    models.add ( model2 )
+    models.add ( model3 )
     
+    time.sleep ( 2 ) 
 
 # =============================================================================
+## Different phi0 parameterizations 
 def test_breitwigner_phi () : 
+    """Different phi0 parameterizations
+    """
+    
+    logger  = getLogger ( "test_breitwigner_phi" )
+    logger.info ( "Phi0 shapes" ) 
 
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
@@ -110,14 +134,25 @@ def test_breitwigner_phi () :
     bw2.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 4 )
     bw3.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 5 )
 
-    logger.info ("bw1 fraction %s" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info ("bw2 fraction %s" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info ("bw3 fraction %s" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw1 fraction %.4f" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw2 fraction %.4f" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    logger.info ("bw3 fraction %.4f" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
+    
+    time.sleep ( 2 ) 
 
 # =============================================================================
+## Phi  shapes woth    phase space   corrections 
 def test_breitwigner_phi_ps () : 
-## if 1 < 2 :
+    """Phi  shapes woth    phase space   corrections 
+    """
     
+    logger  = getLogger ( "test_breitwigner_phi_ps" )
+    logger.info ( "Phi0 shapes with phase space corrections" ) 
+
     ## 1) P-wave Breit-Wigner with Jackson's formfactor 
     bw1 = Ostap.Math.Phi0 ( m_phi , g_phi , m_K )
 
@@ -135,13 +170,17 @@ def test_breitwigner_phi_ps () :
     f2 = Ostap.Math.BWPS ( bw2 , ps , True , True )
     f3 = Ostap.Math.BWPS ( bw3 , ps , True , True )
     
+
     f1.draw (          linecolor = 2 )
     f2.draw ( 'same' , linecolor = 4 )
     f3.draw ( 'same' , linecolor = 5 )
 
-    logger.info (" f1 fraction %s" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info (" f2 fraction %s" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
-    logger.info (" f3 fraction %s" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
+    logger.info (" f1 fraction %.4f" % (  f1.integral ( 1.1 * GeV , 1.5 * GeV ) /  f1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+
+    logger.info (" f2 fraction %.4f" % (  f2.integral ( 1.1 * GeV , 1.5 * GeV ) /  f2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
+    
+    logger.info (" f3 fraction %.4f" % (  f3.integral ( 1.1 * GeV , 1.5 * GeV ) /  f3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
 
     mass    = ROOT.RooRealVar  ('mass' , 'm(KK)' , 0.96 * GeV , 1.5 * GeV ) 
     
@@ -194,15 +233,87 @@ def test_breitwigner_phi_ps () :
     fr4.draw('same')
     fr5.draw('same')
     
+    models.add ( bw1    )
+    models.add ( bw2    )
+    models.add ( bw3    )
+
+    models.add ( flatte )
+    models.add ( flatte_ps )
+
+    models.add ( f1     )
+    models.add ( f2     )
+    models.add ( f3     )
+    models.add ( p1     )
+    models.add ( p2     )
+    models.add ( p3     )
+    models.add ( f0_980 )
+    models.add ( f0_ps  )
+
+    time.sleep ( 2 ) 
+
+# =============================================================================
+## Rho0 shape from eta'  decays
+def test_breitwigner_rho_more () : 
+    """Rho0 shape from eta'  decays
+    """
+    
+    logger  = getLogger ( "test_breitwigner_rho_more" )
+    logger.info ( "Rho0 shape from eta'  decays" ) 
+
+    ## Rho-profile with Gounaris-Sakurai lineshape
+    ch4 = Ostap.Math.ChannelGS   ( g_rho , m_pi ) 
+    bw4 = Ostap.Math.BreitWigner ( m_rho , ch4  )
+
+    ## Rho-profile from eta' decays
+    bw5 = Ostap.Math.BW3L        ( bw4 , m_etap , m_pi , m_pi , 0 , 1 )
+    
+    
+    mass    = ROOT.RooRealVar  ('mass' , 'm(pipi)' , 200 * MeV , 1.6 * GeV ) 
+
+    model4 = Models.BreitWigner_pdf ( 'BW4' , bw4 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
+    model5 = Models.BW3L_pdf        ( 'BW5' , bw5 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
+
+    f4 = model4.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
+    f5 = model5.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
+    
+    f5.draw ()
+    f4.draw ( 'same' )
+
+    models.add ( bw4    )
+    models.add ( bw5    )
+    models.add ( model4 )
+    models.add ( model5 )
+
+    time.sleep ( 2 ) 
+
+# =============================================================================
+## check that everything is serializable
+def test_db() :
+    """check that everything is serializable
+    """
+
+    
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
+        for i, m in enumerate ( models ) :
+            db ['model/%2d: %s' % ( i , type ( m ).__name__  ) ] = m
+        db['models'   ] = models
+        db.ls() 
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    ##  pass 
-    test_breitwigner_rho    ()
-    test_breitwigner_phi    ()
-    test_breitwigner_phi_ps ()
-    
-    
+ 
+    test_breitwigner_rho      ()        
+    test_breitwigner_phi      ()       
+    test_breitwigner_phi_ps   ()
+    test_breitwigner_rho_more ()
+
+    ## check finally that everything is serializeable:
+    test_db ()
+
 # =============================================================================
 ##                                                                      The END  
 # =============================================================================

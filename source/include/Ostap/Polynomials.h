@@ -7,6 +7,8 @@
 // STD& STL 
 // ============================================================================
 #include <functional>
+#include <type_traits>
+#include <initializer_list>
 #include <vector>
 #include <cmath>
 // ============================================================================
@@ -194,6 +196,9 @@ namespace Ostap
       static inline double integral   ( const double xlow  , 
                                         const double xhigh ) ;  
       // ======================================================================      
+      /// get the value of the integral between -1 and 1 
+      static inline double integral   ( ) ;  
+      // ======================================================================      
     public:
       // ======================================================================      
       /// get the array of roots 
@@ -222,6 +227,9 @@ namespace Ostap
                                         const double xhigh ) 
       { return xhigh - xlow ;} 
       // ======================================================================      
+      /// get the value of the integral between -1 and 1  
+      static inline double integral   () { return 2 ; }
+      // ======================================================================      
     public:
       // ======================================================================      
       /// get roots 
@@ -249,6 +257,9 @@ namespace Ostap
       static inline double integral   ( const double xlow  , 
                                         const double xhigh ) 
       { return 0.5 * ( xhigh - xlow ) * ( xhigh + xlow ) ; }
+      // ======================================================================      
+      /// get the value of the integral between -1 and 1  
+      static inline double integral   () { return 0 ; }
       // ======================================================================      
     public: 
       // ======================================================================      
@@ -298,14 +309,19 @@ namespace Ostap
           Chebyshev_<N-1>::evaluate ( xlow  ) ) / ( 2 * ( N - 1 ) ) ;         
     }
     // ========================================================================
-
+    /// get the value of the integral between -1 and 1 
+    template <unsigned int N >
+    inline double Chebyshev_<N>::integral ( ) 
+    { return 1 == N % 2 ? 0 : 2.0 / ( 1.0 - N * N ) ; }
+    // ========================================================================
+    
     // ========================================================================
     //  Chebyshev 2nd kind 
     // ========================================================================
     template <unsigned int N> class  ChebyshevU_ ;
     // ========================================================================
     /** @class ChebychevU_
-     *  Efficient evaluator of Chebyshev polynomial of the secon kind 
+     *  Efficient evaluator of Chebyshev polynomial of the second kind 
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2011-04-19
      */
@@ -1059,6 +1075,10 @@ namespace Ostap
       double integral   ( const double low  , 
                           const double high ) const ;
       // ======================================================================
+      /// get the integral between -1 and 1  
+      double integral   () const 
+      { return 1 == m_N % 2 ? 0.0 : 2.0 / ( 1.0 - m_N * m_N ) ; }
+      // ======================================================================
     public: // roots & extrema 
       // ======================================================================
       /// get all roots   of the polynomial 
@@ -1268,15 +1288,13 @@ namespace Ostap
       /// constructor from  the list of parameters 
       Parameters (       std::vector<double>&& pars   ) ;
       /// templated constructor from the sequnce of parameters 
-      template <class ITERATOR>
+      template <typename ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
       Parameters ( ITERATOR begin , 
                    ITERATOR end   )
         : m_pars ( begin , end )
       {}
-      /// copy constructor  
-      /// Parameters ( const Parameters&  ) = default ;
-      /// move constructor  
-      /// Parameters (       Parameters&& ) = default ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1289,19 +1307,35 @@ namespace Ostap
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool setPar          ( const unsigned short k , const double value ) ;
+      bool setPar          ( const unsigned short k , const double value ) 
+      { return k < m_pars.size() ?  _setPar ( k , value ) : false ; }
       /** set k-parameter
        *  @param k index
        *  @param value new value 
-       *  @return true iof parameter is actually changed 
+       *  @return true if parameter is actually changed 
        */
       bool setParameter    ( const unsigned short k , const double value )
       { return setPar      ( k , value ) ; }
+      /** set several/all parameters at once 
+       *  @param begin  start itertaor for the sequence of coefficients 
+       *  @param end    end   iterator for the sequence of coefficients 
+       *  @return true if at least one parameter is actually changed 
+       */
+      template <class ITERATOR>
+      inline bool setPars ( ITERATOR begin  , 
+                            ITERATOR end    ) ;
+      /** set several/all parameters at once 
+       *  @param pars (NIPUT) vector of parameters 
+       *  @return true if at least one parameter is actually changed 
+       */
+      inline bool setPars ( const std::vector<double>& pars ) 
+      { return setPars ( pars.begin() , pars.end() ) ; }
+      // ======================================================================
       /// get the parameter value
       double  par          ( const unsigned short k ) const
       { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
       /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
+      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }      
       /// get all parameters:
       const std::vector<double>& pars () const { return m_pars ; }
       // ======================================================================
@@ -1317,12 +1351,36 @@ namespace Ostap
       /// swap two parameter sets 
       void swap ( Parameters& right ) ;
       // ======================================================================
+    private:
+      // ======================================================================
+      /** set k-parameter
+       *  @param k index
+       *  @param value new value 
+       *  @return true if parameter is actually changed 
+       */
+      bool _setPar ( const unsigned short k , const double value ) ;
+      // ======================================================================
     protected :
       // ======================================================================
       /// parameters 
       std::vector<double> m_pars ; //  vector of parameters 
       // ======================================================================
     } ;
+    // ========================================================================
+    /** set several/all parameters at once 
+     *  @param pars (NIPUT) vector of parameters 
+     *  @return true if at least one parameter is actually changed 
+     */
+    template <class ITERATOR>
+    inline bool Parameters::setPars ( ITERATOR begin  , 
+                                      ITERATOR end    ) 
+    {
+      bool update = false ;
+      const unsigned int   N = m_pars.size()  ;
+      for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
+      { update = _setPar ( k  , *begin ) || update ; }
+      return update ;
+    }
     // ========================================================================
     /** @class PolySum
      *  Base class for polynomial sums 
@@ -1341,7 +1399,9 @@ namespace Ostap
       /// constructor from vector of parameters 
       PolySum (       std::vector<double>&& pars ) ;
       /// constructor from sequence of parameters 
-      template <class ITERATOR>
+      template <typename ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
         PolySum ( ITERATOR begin , 
                   ITERATOR end   )
         : Parameters ( begin , end )
@@ -1385,11 +1445,13 @@ namespace Ostap
                    const double               low    =  -1  , 
                    const double               high   =   1  ) ;
       /// template constructor from sequence of parameters 
-      template <class ITERATOR>
-        Polynomial ( ITERATOR                 first , 
-                     ITERATOR                 last  , 
-                     const double             xmin  , 
-                     const double             xmax  ) 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,double>::value> >
+      Polynomial ( ITERATOR                 first , 
+                   ITERATOR                 last  , 
+                   const double             xmin  , 
+                   const double             xmax  ) 
         : Ostap::Math::PolySum ( first , last ) 
         , m_xmin ( std::min ( xmin, xmax ) )
         , m_xmax ( std::max ( xmin, xmax ) )

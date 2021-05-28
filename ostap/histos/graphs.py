@@ -556,7 +556,12 @@ def _hToGraph_ ( h1 , funcx , funcy ) :
     return graph
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph2 ( 0.1 ) ## shift for 10% of bin width
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph2 ( h1 , bias ) :
@@ -574,14 +579,19 @@ def hToGraph2 ( h1 , bias ) :
     return _hToGraph_ ( h1 , funcx , funcy ) 
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute) 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph3 ( h1 , bias ) :
     """ Convert  1D-histogram into graph with small shift in x
     Useful for overlay of very similar plots
     >>> h1 = ....
-    >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 0.1 (absolute)    
+    >>> g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute)    
     """
     for p in h1.items() :
         x = p[1]
@@ -614,12 +624,17 @@ ROOT.TH1D.toGraph3 = hToGraph3
 #   x, y = graph.point ( 3  ) 
 #   @endcode
 def _gr_point_ ( graph , point ) :
-    """Get the point fmorm the graph :
+    """Get the point from the graph :
     >>> graph = ...
     >>> x, y = graph.point ( 3  )
     >>> x, y = graph.get_point ( 3  ) ## ditto 
     """
-    if isinstance ( point , integer_types ) and 0 <= point < len ( graph ) :
+    assert isinstance ( point , integer_types ) , 'invalid index type'
+
+    ## allow negative indices  
+    if point < 0 : point += len ( graph ) 
+    
+    if 0 <= point < len ( graph ) :
         
         x = ctypes.c_double ( 0.0 )
         y = ctypes.c_double ( 1.0 )
@@ -628,7 +643,7 @@ def _gr_point_ ( graph , point ) :
 
         return float ( x.value ) , float ( y.value )
     
-    raise IndexError ( "Invalid index %s" % p ) 
+    raise IndexError ( "Invalid index %s" % point ) 
     
 
 ROOT.TGraph.    point = _gr_point_
@@ -644,12 +659,22 @@ ROOT.TGraph.get_point = _gr_point_
 #  @see TGraph::Eval
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _gr_call_ ( graph , x , spline = None , opts = '' ) :
-    """ Use graph as function
+def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
+    """ Use graph as a function
     >>> graph = ...
     >>> y     = graph ( 0.2 ) 
     """
-    ## if not spline : spline = ROOT.MakeNullPointer(ROOT.TSpline)
+    N = len ( graph )
+    
+    assert 0 < N , 'Empty graph cannot be used as a function!'
+    if   1 == N : return graph.point ( 0 ) [1] 
+                
+    if not spline :
+        spline = ROOT.nullptr
+        if 3 < len( graph ) :
+            if 's' in opts or 'S' in opts :
+                spline = self.spline3  ( opts , *args )
+            
     return graph.Eval ( float( x ) , spline , opts )
 
 # =============================================================================
@@ -662,7 +687,7 @@ def _gr_call_ ( graph , x , spline = None , opts = '' ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
-    """Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
+    r"""Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
     It is not very efficient, but OK 
     >>> graph = ...
     >>> i     = graph.integral ( 0 , 1 )
@@ -674,7 +699,7 @@ def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
     tf1 = graph.asTF1()
     return tf1.Integral( xlow , xhigh ) 
         
-# =============================================================================
+# ============================================================================
 ## iterate over points in TGraphErrors
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -822,6 +847,9 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     >>> graph[4] = x,y 
     """
     #
+    
+    if ipoint < 0 : ipoint += len ( graph )
+    
     if not ipoint in graph    : raise IndexError
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point'")
@@ -1275,73 +1303,21 @@ def _gr2_getslice_ ( graph , i , j ) :
 #  s     = graph.sorted() 
 #  @endcode
 #  @date   2016-03-28 
-def _gr0_sorted_ ( graph , reverse = False ) :
+def _gr_sorted_ ( graph , reverse = False ) :
     """Make sorted graph
     >>> graph = ...
     >>> s     = graph.sorted() 
     """
     
+    ## make new graph 
+    new_graph = graph.Clone() 
+
     oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraph ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
+    sitems = sorted ( oitems , key = lambda s : s [ 1 ] , reverse = reverse )
 
     ip = 0 
     for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr1_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1].value() , reverse = reverse )
-    
-    new_graph = ROOT.TGraphErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr2_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraphAsymmErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
+        new_graph [ ip ] = item [ 1 : ]
         ip += 1
 
     return new_graph 
@@ -1515,14 +1491,10 @@ ROOT.TGraph            .__getslice__  = _gr0_getslice_
 ROOT.TGraphErrors      .__getslice__  = _gr1_getslice_
 ROOT.TGraphAsymmErrors .__getslice__  = _gr2_getslice_
 
-ROOT.TGraph            .sorted        = _gr0_sorted_
-ROOT.TGraphErrors      .sorted        = _gr1_sorted_
-ROOT.TGraphAsymmErrors .sorted        = _gr2_sorted_ 
-
+ROOT.TGraph            .sorted        = _gr_sorted_
 
 ROOT.TGraph            .filter        = _gr_filter_
 ROOT.TGraph            .remove        = _gr_remove_
-
 
 # ==========================================================================
 import ostap.math.math_ve as mve
@@ -2387,6 +2359,80 @@ ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 
 
 # =============================================================================
+## append the graph with new point
+#  @code
+#  point = x , y
+#  graph.append ( *point ) 
+#  @endcode
+def _gr_append_ ( graph , *point ) :
+    """ append the graph with new point
+    >>> point = x , y
+    >>> graph.append ( *point ) 
+    """
+    last = len ( graph )
+    graph.SetPoint ( last , 0 , 0 )
+    graph [ last ] = point
+    ##
+    return len ( graph )
+
+# =============================================================================
+## pop the point fro mthe graph
+#  @code
+#  graph = ...
+#  graph.pop ( 3 ) ## pop the point #3
+#  graph.pop (   ) ## pop th elast point 
+#  @endcode
+def _gr_pop_  ( graph , i = None ) :
+    """Pop the point fro mthe graph
+    >>> graph = ...
+    >>> graph.pop ( 3 ) ## pop the point #3
+    >>> graph.pop (   ) ## pop th elast point 
+    """
+
+    if i is None :
+        
+        last  = len ( graph )
+        if 1 <= last : 
+            point = graph [ -1 ] 
+            graph.RemovePoint ( last - 1 )
+            return point
+        
+        return None
+    
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+
+    point = graph [ i ]
+    graph.RemovePoint ( i )
+    return point
+
+# =============================================================================
+## swap two points in the graph
+#  @code
+#  graph = ...
+#  graph.swap ( 1 , 6 ) 
+#  @endcode 
+def _gr_swap_ ( grap , i , j ) :
+
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+    
+    if j < 0 : j += len ( graph )
+    if not j in graph : raise IndexError ( "Point #%s is not in graph!" % j )
+
+    pi = graph [ i ]
+    pj = graph [ j ]
+    
+    graph [ i ] = pj 
+    graph [ j ] = pi
+    
+    return graph
+
+ROOT.TGraph.append    =  _gr_append_
+ROOT.TGraph.swap      =  _gr_swap_ 
+ROOT.TGraph.pop       =  _gr_pop_ 
+
+# =============================================================================
 ## Transpose the graphs
 # =============================================================================
 
@@ -2560,6 +2606,162 @@ ROOT.TMultiGraph.xmin    = _gr_xmin_
 ROOT.TMultiGraph.ymin    = _gr_ymin_  
 ROOT.TMultiGraph.xmax    = _gr_xmax_ 
 ROOT.TMultiGraph.ymax    = _gr_ymax_ 
+
+# ==============================================================================
+## merge two graphs into a common graph
+#  @code
+#  gr1 = ...
+#  gr2 = ...
+#  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+#  @endcode
+#  The method relies on <code>TGraph::Merge</code>, and the type of result is inherited fron the first argument 
+#  @see TGraph::Merge 
+def _gr_merge_ ( graph , graph2 , sort = False ) :
+    """Merge two graphs into a common graph
+    >>> gr1 = ...
+    >>> gr2 = ...
+    >>>  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+    The method relies on `ROOT.TGraph.Merge`, and the type of result is inherited from the first argument 
+    - see ROOT.TGraph.Merge 
+    """
+
+    ## clone the first argument 
+    result = graph.Clone()
+
+    lst = ROOT.TList()
+    lst.Add ( graph2  )
+    result.Merge( lst )
+    
+    del lst
+    
+    ## SORT if required 
+    if sort : result = result.sort()
+    
+    return result 
+    
+# ==============================================================================
+ROOT.TGraph            .merge         = _gr_merge_
+
+
+
+# ===============================================================================
+## get hash-value for the graph
+#  @code
+#  graph = ...
+#  hash ( graph ) 
+#  @endcode
+#  @see Ostap::Utils::hash_graph 
+def _gr_hash_ ( graph ) :
+    """Get hash value for the graph
+    >>> graph = ...
+    >>> hash ( graph ) 
+    - see Ostap.Utils.hash_graph 
+    """
+    from   ostap.core.core import Ostap    
+    h = Ostap.Utils.hash_graph ( graph )
+    #
+    return hash ( h ) 
+
+ROOT.TGraph            .__hash__         = _gr_hash_
+
+# ==============================================================================
+## get 3-spline for the given graph
+#  @code
+#  graph  = ...
+#  spline = graph.spline3() 
+#  @endcode
+#  @see TSpline3 
+def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
+    """Get 3-spline for the given graph
+    >>> graph  = ...
+    >>> spline = graph.spline3()
+    - see ROOT.TSpline3 
+    """
+    
+    prev_hash , spline3 = 0 , None 
+
+    attr = '__hash_spline3'
+    
+    if hasattr ( graph , attr ) :
+        prev_hash , spline3 = getattr ( graph , attr ) 
+
+    status    = hash ( graph   ) , opts.lower() , args
+
+    curr_hash = hash ( status  )
+        
+    if curr_hash != prev_hash or not spline3 :
+        spline3 = ROOT.TSpline3 ( 'spline' , graph , opts , *args )
+        
+    setattr ( graph , attr , ( curr_hash , spline3 ) ) 
+    
+    return spline3
+
+
+ROOT.TGraph            .spline3      =   _gr_spline3_
+
+# =============================================================================
+## get possible boundary  conditions for  graphs
+#  @code
+#  graph = ...
+#  b1   = graph.cond  ( 'b1' ) ## 1st derivative at start point
+#  b2   = graph.cond  ( 'b2' ) ## 2nd derivative at the begin
+#  e1   = graph.cond  ( 'e1' ) ## 1st derivative at start point 
+#  e2   = graph.cond  ( 'e2' ) ## 2nd derivative at the end 
+#  @endcode
+def _gr_bcond_  ( graph , opts )  :
+    """ Get possible boundary  conditions for  graphs
+    >>> graph = ...
+    >>> b1   = graph.bcond  ( 'b1' ) ## 1st derivative at start point
+    >>> b2   = graph.bcond  ( 'b2' ) ## 2nd derivative at the begin
+    >>> e1   = graph.bcond  ( 'e1' ) ## 1st derivative at start point 
+    >>> e2   = graph.bcond  ( 'e2' ) ## 2nd derivative at the end 
+    """
+    assert  2<= len ( graph ), 'At least two points are required for get a boundary condditions!'
+    
+    opts = opts.lower()
+    
+    assert opts in ( 'b1' , 'e1' , 'b2' , 'e2' ), 'Invalid boundary condition %s is requested' % opts
+
+    gr = graph.sorted()
+    
+    if   opts == 'b1' :
+        
+        x0 , y0 = gr.point (  0 )
+        x1 , y1 = gr.point (  1 )
+        
+        return ( y1 - y0 ) / ( x1 - x0 )
+    
+    elif opts == 'e1' :
+        
+        x0 , y0 = gr.point ( -2 )
+        x1 , y1 = gr.point ( -1 )
+        
+        return ( y1 - y0 ) / ( x1 - x0 )
+
+    assert  3<= len ( graph ), 'At least three points are required for get a boundary condditions!'
+
+    if opts == 'b2' :
+        
+        x0 , y0 = gr.point (  0 )
+        x1 , y1 = gr.point (  1 )
+        x2 , y2 = gr.point (  2 )
+        
+    elif opts == 'e2' : 
+    
+        x0 , y0 = gr.point ( -3 )
+        x1 , y1 = gr.point ( -2 )
+        x2 , y2 = gr.point ( -1 )
+        
+    dx01 = x0 - x1
+    dx02 = x0 - x2
+    dx12 = x1 - x2
+        
+    return 2 * ( y0 * dx12 - y1 * dx02 + y2 * dx01 ) / ( dx01 * dx02 * dx12 )
+
+    
+        
+ROOT.TGraph            .bcond  =   _gr_bcond_
+    
 
 
 # =============================================================================
@@ -2834,7 +3036,6 @@ def fill_area ( fun1                     ,
     graph.SetFillStyle(3013) 
     return graph 
 
-
 # ==============================================================================
 ##  transpose the arrow
 #   @code
@@ -2942,6 +3143,29 @@ def _text_transpose_ ( text ) :
 ROOT.TText.transpose = _text_transpose_
 ROOT.TText.T         = _text_transpose_
 
+
+# =============================================================================
+## Use <code>TSpline</code> as a function
+#  @code
+#  spline = ...
+#  value = spline ( 10  ) 
+#  @endcode
+#  See TSpline
+#  See TSpline3
+#  See TSpline5
+def _spl_call_ ( spline , x ) :
+    """ Use `TSpline`as a function
+    >>> spline = ...
+    >>> value = spline ( 10  ) 
+    - see ROOT.TSpline
+    - see ROOT.TSpline3
+    - see ROOT.TSpline5
+    """
+    return spline.Eval ( x )
+
+ROOT.TSpline. __call__  = _spl_call_
+
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TH1F              ,
@@ -2952,7 +3176,8 @@ _decorated_classes_ = (
     ROOT.TArrow            ,  
     ROOT.TBox              ,
     ROOT.TLine             , 
-    ROOT.TText
+    ROOT.TText             ,
+    ROOT.TSpline 
     )
 
 
@@ -3052,6 +3277,9 @@ _new_methods_      = (
     ROOT.TGraph . __probit__ ,
     ROOT.TGraph . __pow__    ,
     #
+    ROOT.TGraph . append     ,
+    ROOT.TGraph . swap       ,    
+    #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
     ROOT.TGraphErrors .     items     ,
@@ -3133,11 +3361,13 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors .__getslice__  ,
     #
     ROOT.TGraph            .sorted        ,
-    ROOT.TGraphErrors      .sorted        ,
-    ROOT.TGraphAsymmErrors .sorted        ,
     #
     ROOT.TGraph            .filter        ,
     ROOT.TGraph            .remove        ,
+    ROOT.TGraph            .merge         ,
+    ROOT.TGraph            .spline3       ,
+    ROOT.TGraph            .bcond         ,
+    ROOT.TGraph            .__hash__      ,
     ##
     ROOT.TGraph.transpose                 ,
     ROOT.TGraph.T                         ,     
@@ -3146,6 +3376,8 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors.transpose      ,
     ROOT.TGraphAsymmErrors.T              ,
     ##
+    ROOT.TSpline          . __call__      , 
+    ## 
     _color_   ,
     _red_     ,
     _blue_    ,

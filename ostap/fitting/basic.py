@@ -44,10 +44,11 @@ from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phases ,  
                                         fit_status , cov_qual , H1D_dset , get_i  )
-from   ostap.fitting.funbasic  import FUNC
+from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
-from   ostap.fitting.roocmdarg import check_arg
+from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args 
 import ostap.histos.histos 
+from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
@@ -71,11 +72,11 @@ def all_args ( *args ) :
     """
     ## try to find 
     for a in args :
-        if   isinstance ( a , arg_types )      : pass
+        if   isinstance ( a , arg_types ) : pass
         elif isinstance ( a , tuple     ) and \
              1 <= len ( a ) <= 3          and \
-             all_numerics ( *a ) : pass
-        else                                   : return False 
+             all_numerics ( *a )          : pass
+        else                              : return False 
         
     return True 
 
@@ -226,14 +227,15 @@ class PDF (FUNC) :
         - Signal(x)*Signal(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms1
+    
     @property
-    def crossterms2 ( self ) :
+    def crossterms2 ( self ) : 
         """``cross-terms'': cross-components for multidimensional PDFs e.g.
         - Signal(y)*Background(x)               for 2D-fits,
         - Signal(x)*Background(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms2
-    
+        
     @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
@@ -243,7 +245,7 @@ class PDF (FUNC) :
     def  histo_data ( self  , value ) :
         if   value is None :
             self.__histo_data = value 
-        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooDataHist ) :
+        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooAbsData ) :
             self.__histo_data = value 
         else :
             raise AttributeError("``histo_data'' has invalid type %s/%s" % (   value , type(value) ) )
@@ -315,11 +317,37 @@ class PDF (FUNC) :
         #
         ## treat the arguments properly
         #
-        opts = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
-        opts = self.parse_args ( dataset , *opts , **kwargs )
-        if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
+        opts     = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
+        opts     = self.parse_args ( dataset , *opts , **kwargs )
+        
+        if silent :
+            pl = check_arg ('PrintLevel'      , *opts ) 
+            if not pl : opts = opts + ( ROOT.RooFit.PrintLevel      ( -1    ) , )
+            vl = check_arg ('Verbose'         , *opts )
+            if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
+            pe = check_arg ('PrintEvalErrors' , *opts )
+            if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
+                
+        weighted = dataset.isWeighted() if dataset else False
+        if weighted :
+            sw2 = check_arg ( 'SumW2Error'      , *opts )
+            aer = check_arg ( 'AsymptoticError' , *opts )
+            if not sw2 and not aer :
+                self.warning ( "fitTo: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset!" )
 
-        ## play a bit with the binning cache for convolutions 
+        if 1 < len ( self.vars ) :
+            rng = check_arg ( 'Range' , *opts ) 
+            if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
+
+        ## check fit ranges 
+        rng = check_arg ( 'RangeByName' , *opts )
+        ok  = self.check_ranges ( dataset , rng.getString(0) if rng else '' )
+        if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
+
+        if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
+            self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
+
+        ## play a bit with the binning cache for 1D-convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
             xv  = getattr ( dataset , self.xvar.name , None )
@@ -327,22 +355,17 @@ class PDF (FUNC) :
                 nb2 = xv.getBins('cache')
                 if  nb1 != nb2 :
                     xv.setBins ( max (  nb1 , nb2 ) , 'cache' )
-                    self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
+                    if not silent :
+                        self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
             elif xv :
                 xv.setBins (        nb1         , 'cache' )
-                self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
+                if not silent : 
+                    self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
 
-        if dataset.isWeighted () : 
-            sw = check_arg ( 'sumw2'      , *opts )
-            ae = check_arg ( 'asymptotic' , *opts )
-            if not sw and not ae : 
-                self.warning ("fitTo: neither SumW2 nor Asymptotic are specified for weighted dataset!")
-                
-        #
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None
-            result          = self.pdf.fitTo ( dataset , *opts ) 
+            result          = self.pdf.fitTo ( dataset , *self.merge_args ( 8 , *opts ) ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -422,6 +445,15 @@ class PDF (FUNC) :
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
 
+        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
+        
+        if   result and 0 == result.status() and not silent :
+            logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and ( not cov2_good ) and not silent : 
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and not silent :
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
+
         frame = None
         
         ## draw it if requested
@@ -442,10 +474,6 @@ class PDF (FUNC) :
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
         ## ##
-        ## if   not silent and result and 0 == result.status() :
-        ##     logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
-        ## elif not silent and result :
-        ##     logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
                          
         return result, frame 
 
@@ -464,7 +492,7 @@ class PDF (FUNC) :
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
 
         if args :
-            self.error ( "___DRAW: " + str ( args ) )
+            self.error ( "_draw: " + str ( args ) )
         
         for i , cmp in enumerate ( what ) :
 
@@ -715,7 +743,8 @@ class PDF (FUNC) :
             #
             ## Draw the frame!
             #
-            if not ROOT.gROOT.IsBatch() :
+            groot = ROOT.ROOT.GetROOT()
+            if not groot.IsBatch() :
                 with rootWarning (): frame.draw( kwargs.pop ( 'draw_options','' ) )
             
             residual =  kwargs.pop ( 'residual' , False )
@@ -741,8 +770,8 @@ class PDF (FUNC) :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )
-                if 0 < binw : self.info ( 'chi2/ndf: %s, binwidth: %s' %  ( frame.chi2ndf , binw ) )
-                else        : self.info ( 'chi2/ndf: %s' %                  frame.chi2ndf          )
+                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
+                else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
                 
             if not residual and not pull:
                 return frame
@@ -806,7 +835,7 @@ class PDF (FUNC) :
             else :                
                 ## convert it! 
                 self.debug ('Create new H1D_dset'        ) 
-                self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = histo , xaxis = self.xvar , density = density , silent = silent )
                 data            = self.histo_data.dset
 
             if  self.xminmax() :
@@ -857,7 +886,7 @@ class PDF (FUNC) :
             # if histogram, convert it to RooDataHist object:
             xminmax = dataset.xminmax() 
             with RangeVar( self.xvar , *xminmax ) :                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset 
                 histo           = dataset 
                 
@@ -925,7 +954,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data   = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data   = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset          = self.histo_data.dset
                 kwargs [ 'ncpu' ] = 2   
                 return self.draw_nll ( var     = var      ,
@@ -985,7 +1014,7 @@ class PDF (FUNC) :
 
         from ostap.fitting.variables import KeepBinning
         
-        with KeepBinning ( var ) :
+        with SETPARS ( self , dataset ) , KeepBinning ( var ) :
 
             if bins :
                 var.bins = bins
@@ -995,7 +1024,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            result.plotOn ( frame , *largs  )
+            result.plotOn ( frame , *self.merge_args ( 8 , *largs ) )
             
             import ostap.histos.graphs
             
@@ -1008,7 +1037,7 @@ class PDF (FUNC) :
                                         
             ## scale it if needed
             if 1 != sf :
-                logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
+                logger.info ('draw_nll: apply scale factor of %.4g due to dataset weights' % sf )
                 graph  = frame.getObject ( 0 )
                 graph *= sf 
                 
@@ -1028,10 +1057,9 @@ class PDF (FUNC) :
                 frame.SetYTitle  ( '' )
                 frame.SetZTitle  ( '' )
                 
-        
-
-        ## draw it! 
-        if not ROOT.gROOT.IsBatch() :
+        ## draw it!
+        groot = ROOT.ROOT.GetROOT()        
+        if not groot.IsBatch() :
             with rootWarning ():
                 if draw : frame.draw ( kwargs.get('draw_options', '' ) )
 
@@ -1083,22 +1111,24 @@ class PDF (FUNC) :
         sf   = dataset.sFactor() 
 
         self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
-        return self.pdf.createNLL ( dataset , *opts ) , sf 
+        return self.pdf.createNLL ( dataset , *self.merge_args ( 7 , *opts ) ) , sf 
 
     # =========================================================================
-    ## get NLL/profile-graph for the variable, using the specified bscissas
+    ## get NLL/profile-graph for the variable, using the specified abscissas
     #  @code
     #  pdf   = ...
     #  graph = pdf.graph_nll ( 'S'                      ,
     #                          vrange ( 0 , 100 , 100 ) ,
     #                          dataset                  )
     #  @endcode
-    def graph_nll ( self            ,
-                    variable        , 
-                    values          ,
-                    dataset         ,
-                    silent  = True  ,
-                    args    = ()    , **kwargs ) :
+    def graph_nll ( self             ,
+                    variable         , 
+                    values           ,
+                    dataset          ,
+                    silent   = True  ,
+                    draw     = False ,
+                    subtract = True  , 
+                    args     = ()    , **kwargs ) :
         """Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
         >>> graph = pdf.graph_nll ( 'S'                     ,
@@ -1116,32 +1146,46 @@ class PDF (FUNC) :
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
 
-        ## 2) collect NLL values 
+        import ostap.histos.graphs
+        ## 2) create graph if drawing reqested 
+        graph = ROOT.TGraph () if draw else None 
+            
+        ## 3) collect NLL values 
         results   = []
         vmin      = None
-        with SETVAR  ( var ) :
+        with SETPARS ( self , dataset ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for v in progress_bar  ( values , silent = silent ) :
                 var.setVal ( v )
                 n   = nLL.getVal() 
                 res = v , n
                 results.append ( res )
-                vmin = n if vmin is None else min ( vmin , n ) 
-        
+                vmin = n if vmin is None else min ( vmin , n )
+                if draw :
+                    graph.SetPoint ( len ( graph ) , v , n ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ( "ap" )  
+
         ## 3) create graph
-        import ostap.histos.graphs
         graph = ROOT.TGraph ( len ( results ) )
-        results.sort () 
+        results.sort ()
+        ymin   = None 
         for i , point in enumerate ( results ) :
             x , y = point 
-            if vmin is None : graph [ i ] = x , y
-            else            : graph [ i ] = x , y - vmin 
+            graph [ i ]  = x , y 
+            ymin = y if ymin is None else min ( ymin , y )
             
+       ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_nll: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_nll: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
             
+        if draw : graph.draw ('ap')
+
         return graph 
 
     # =========================================================================
@@ -1152,19 +1196,27 @@ class PDF (FUNC) :
     #                              vrange ( 0 , 12.5 , 10  ) ,
     #                              dataset                   )
     #  @endcode
-    def graph_profile ( self            ,
-                        variable        , 
-                        values          ,
-                        dataset         ,
-                        fix     = []    ,
-                        silent  = True  ,
-                        args    = ()    , **kwargs ) :
+    def graph_profile ( self             ,
+                        variable         , 
+                        values           ,
+                        dataset          ,
+                        fix      = []    ,
+                        silent   = True  ,
+                        draw     = False ,
+                        subtract = True  , 
+                        args     = ()    , **kwargs ) :
         """Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
-        >>> graph = pdf.graph_profile ( 'S'                     ,
-        ...                             range ( 0 , 12.5 , 20 ) ,
-        ...                             dataset                 )
+        >>> graph = pdf.graph_profile ( 'S'                      ,
+        ...                             vrange ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                  )
         """
+        
+        vals = [ v for v in values ]
+        assert vals, 'graph_profile: no points are specified!'
+                
+        vmin = min ( vals )
+        vmax = max ( vals )
 
         ## 1) create NLL 
         nLL , sf = self.nll ( dataset , silent = silent ,  args = args , **kwargs )
@@ -1174,6 +1226,10 @@ class PDF (FUNC) :
         pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+
+        if var.minmax () :            
+            minv = min ( var.getMin () , vmin )
+            maxv = max ( var.getMax () , vmax )
 
         vars = ROOT.RooArgSet ( var )
         for f in fix :
@@ -1186,32 +1242,45 @@ class PDF (FUNC) :
                                   'LL-profile(%s,%s)' % ( var.name , self.name ) ,
                                   nLL , vars )
 
-        ## 2) collect pLL values 
+        ## 2) create graph if requested 
+        import ostap.histos.graphs
+        graph = ROOT.TGraph () if draw else None 
+                        
+
+        ## 3) collect pLL values 
         results = [] 
-        vmin    = None 
-        with SETVAR  ( var ) :
+        with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
-            for  v in progress_bar ( values , silent = silent )  :
+            for i , v in enumerate ( progress_bar ( vals , silent = silent )  ) :
                 var.setVal ( v )
                 p   = pLL.getVal() 
                 res = v , p 
                 results.append ( res )
-                vmin = p if vmin is None else min ( vmin , p ) 
-             
-        ## 3) create graph 
-        import ostap.histos.graphs
-        graph = ROOT.TGraph ( len ( results ) )
+                if draw :
+                    graph.SetPoint ( len ( graph ) , v , p ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ("ap")  
+                    
+        ## 4) re-create the graph
+        graph   = ROOT.TGraph ( len ( results ) )
         results.sort ()
+        ymin    = None 
         for i , point  in enumerate ( results ) :
-            x , y = point 
-            if vmin is None : graph [ i ] = x , y
-            else            : graph [ i ] = x , y - vmin 
-            
+            x , y = point
+            graph [ i ]  = x , y 
+            ymin = y if ymin is None else min ( ymin , y )
+                    
+        ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_profile: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
-            
+
+        if draw : graph.draw ('ap')
+        
         return graph 
         
     # ========================================================================
@@ -1241,7 +1310,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
@@ -1268,7 +1337,7 @@ class PDF (FUNC) :
             if 0 < maxv.cov2 () : error = maxv.error() 
             maxv = maxv.value ()
             
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
             
             nll , sf = self.nll ( dataset         ,
                                   silent = silent ,
@@ -1303,7 +1372,7 @@ class PDF (FUNC) :
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
@@ -1342,7 +1411,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silnet = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks2 ( var            = var             ,
@@ -1383,7 +1452,7 @@ class PDF (FUNC) :
             maxv = maxv.value ()
 
         vname = var.GetName() 
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
 
             ## fix "fixed" variables and redefine range for main variable
             mn = min ( minv , maxv - error )
@@ -1425,7 +1494,7 @@ class PDF (FUNC) :
             dnll = nll_min - nll_max
 
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
         
             ## convert the difference in likelihoods into sigmas/significance
@@ -1539,25 +1608,27 @@ class PDF (FUNC) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( 10000 ) ## generate dataset
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
                    binning  = None  ,
-                   sample   = False , 
+                   sample   = True  , ##  sample number of events ?  
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( 10000 ) ## generate dataset 
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
+        
+        ## sample number of events in dataset ?
         nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
 
@@ -1581,7 +1652,6 @@ class PDF (FUNC) :
             varset = vs  
 
         from ostap.fitting.variables import KeepBinning
-
             
         with KeepBinning ( self.xvar ) : 
 
@@ -2143,6 +2213,32 @@ class PDF (FUNC) :
         dataset.project ( hdata , self.xvar.name )
         return self.pull_histo ( hdata ) 
         
+    # ==========================================================================
+    ## make 2D-cpontours
+    # ==========================================================================
+    def contours ( self              ,
+                   var1              ,
+                   var2              ,
+                   dataset           ,
+                   levels  = ( 1 , ) ,
+                   npoints = 100     ,
+                   **kwargs          ) :
+        
+        ## create the minuit 
+        mn = self.minuit ( dataset , **kwargs )
+        
+        ## get the parametrs
+        pars = self.params ( dataset ) 
+        assert var1 in pars , "Variable %s is not a parameter"   % var1
+        if not isinstance ( var1 , ROOT.RooAbsReal ) : var1 = pars [ var1 ]
+        assert var2 in pars , "Variable %s is not a parameter"   % var2
+        if not isinstance ( var2 , ROOT.RooAbsReal ) : var2 = pars [ var2 ]
+        del pars 
+
+        import ostap.fitting.roofitresult
+        status = mn.migrad( tag = 'contours' )
+
+        return mn.contour ( var1 , var2 , npoints , *levels ) 
 
         
     # ==========================================================================
@@ -2247,7 +2343,7 @@ class PDF (FUNC) :
                                    fracs     = fractions )
         fracs  = ROOT.RooArgList()
         for f in fs : fracs.add ( f ) 
-        pdf    = ROOT.RooAddPdf ( name , title , pdfs , fracs , recursive )
+        pdf    = ROOT.RooAddPdf ( self.roo_name ( name ) , title , pdfs , fracs , recursive )
         ##
         self.aux_keep.append ( pdf   )
         self.aux_keep.append ( pdfs  )
@@ -2488,8 +2584,13 @@ class MASS(MASSMEAN) :
                    sigma_title = ''   ) : 
             
         ## base class 
-        MASSMEAN.__init__ ( self , name , xvar , mean )
-
+        MASSMEAN.__init__ ( self                    ,
+                            name       = name       ,
+                            xvar       = xvar       , 
+                            mean       = mean       ,
+                            mean_name  = mean_name  ,
+                            mean_title = mean_title )
+        
         self.__limits_sigma = ()        
         if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
             mn , mx   = self.xminmax()
@@ -2556,7 +2657,7 @@ class MASS(MASSMEAN) :
 class RESOLUTION(MASS) :
     """Helper base class  to parameterize the resolution
     - It allows setting of the ``mean'' to zero,
-    - It containg ``fudge-factor'' for the resolution parameter ``sigma''
+    - It contains ``fudge-factor'' for the resolution parameter ``sigma''
     - It simplify creation of the soft/gaussian constraint for the ``fudge-factor''    
     """
     ## constructor
@@ -2565,18 +2666,29 @@ class RESOLUTION(MASS) :
     #  @param sigma  sigma/resoltuion parameter 
     #  @param mean   "mean"-variable
     #  @param fudge  "fudge-factor" to be aplied to sigma
-    def __init__ ( self            ,
-                   name            ,
-                   xvar     = None ,
-                   sigma    = None , 
-                   mean     = None ,
-                   fudge    = 1.0  ) :
+    def __init__ ( self               ,
+                   name               ,
+                   xvar        = None ,
+                   sigma       = None , 
+                   mean        = None ,
+                   fudge       = 1.0  ,
+                   mean_name   = ''   ,
+                   mean_title  = ''   ,
+                   sigma_name  = ''   ,
+                   sigma_title = ''   ) :
+        
+        ## mean-value
+        if mean is None : mean = ROOT.RooRealConstant.value ( 0 ) 
         
         with CheckMean ( False ) :
-            super(RESOLUTION,self).__init__ ( name  = name  ,
-                                              xvar  = xvar  ,
-                                              sigma = sigma ,
-                                              mean  = mean  )
+            super(RESOLUTION,self).__init__ ( name        = name        ,
+                                              xvar        = xvar        ,
+                                              sigma       = sigma       ,
+                                              mean        = mean        ,
+                                              mean_name   = mean_name   ,
+                                              mean_title  = mean_title  ,
+                                              sigma_name  = sigma_name  ,
+                                              sigma_title = sigma_title )
             
         self.__fudge            = fudge
         
@@ -2649,12 +2761,14 @@ class Flat1D(PDF) :
     """The most trival 1D-model - constant
     >>> pdf = Flat1D ( 'flat' , xvar = ... )
     """
-    def __init__ ( self , xvar , name = 'Flat1D' , title = '' ) :
+    def __init__ ( self , xvar , name = '' , title = '' ) :
         
+        name = name if name else self.generate_name ( prefix = 'flat1D_')
         PDF.__init__ ( self  , name , xvar ) 
         
-        if not title : title = 'flat1(%s)' % name 
-        self.pdf = Ostap.Models.Uniform ( name , title , self.xvar )
+        if not title : title = 'flat1(%s)' % name
+        
+        self.pdf = Ostap.Models.Uniform ( self.roo_name ( 'flat_' ) , title , self.xvar )
         assert 1 == self.pdf.dim() , 'Flat1D: wrong dimensionality!'
         
         ## save configuration
@@ -2696,8 +2810,9 @@ class Generic1D_pdf(PDF) :
         """
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert pdf  and isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
+
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix )
         
-        name = name if name else prefix + pdf.GetName () + suffix 
         ## initialize the base 
         PDF . __init__ ( self , name , xvar , special = special )
         ##
@@ -2783,7 +2898,7 @@ class Sum1D(PDF) :
         else :
             raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf2, type(pdf2) , xvar , type(xvar) ) )
 
-        name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
+        name = name if name else self.generate_name ( prefix = 'sum1D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
 
         ## initialize the base class
         PDF.__init__ ( self , name , xvar )
@@ -2800,7 +2915,8 @@ class Sum1D(PDF) :
                                             self.pdf2.pdf )
         self.alist2     = ROOT.RooArgList ( self.fraction )
         
-        self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'sum1_' ) ,
+                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
                                     self.pdf1.pdf ,
                                     self.pdf2.pdf ,
                                     self.fraction )
@@ -2846,7 +2962,6 @@ class Sum1D(PDF) :
 
 
 # =============================================================================
-_ROOT_VERSION = ROOT.gROOT.GetVersionInt() 
     
 # =============================================================================
 ## Helper function to create the PDF/PDF2/PDF3
@@ -2856,15 +2971,16 @@ def make_pdf ( pdf , args , name = '' ) :
     """Helper function to create the PDF/PDF2/PDF3
     """
     
-    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), 'make_pdf: Invalid type %s' % type ( pdf )
+    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), \
+           'make_pdf: Invalid type %s' % type ( pdf )
     
     name = name if name else "PDF_from_%s" % pdf.name
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) :
-        if 62000 <= _ROOT_VERSION : 
+        if 62000 <= root_version_int : 
             pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
         else :
-            raise TypeError("RooWrapperPdf is not available for ROOT %s" % _ROOT_VERSION )
+            raise TypeError("make_pdf: RooWrapperPdf is not available for ROOT %s" % root_version_int )
         
     num = len ( args )
     if   1 == num :
@@ -2901,8 +3017,8 @@ class Shape1D_pdf(PDF) :
         
         ## create the actual pdf
         self.pdf = Ostap.Models.Shape1D.create  (
-            "s1D_%s"      % self.name , 
-            "shape1D(%s)" % self.name ,
+            self.roo_name ( 'shape1_' ) , 
+            "Shape-1D %s" % self.name ,
             self.xvar                 ,
             self.shape                ) 
 
@@ -2933,7 +3049,7 @@ class H1D_pdf(H1D_dset,PDF) :
                    order   = 0     , ## interpolation order 
                    silent  = False ) :
         
-        H1D_dset.__init__ ( self , histo , xvar , density , silent )
+        H1D_dset.__init__ ( self , histo = histo , xaxis = xvar , density = density , silent = silent )
         PDF     .__init__ ( self , name  , self.xaxis ) 
 
         assert isinstance ( order, integer_types ) and 0 <= order ,\
@@ -2944,8 +3060,8 @@ class H1D_pdf(H1D_dset,PDF) :
             ## finally create PDF :
             self.__vset = ROOT.RooArgSet  ( self.xvar )        
             self.pdf    = ROOT.RooHistPdf (
-                'hpdf_%s'             % name ,
-                'Histo1PDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
+                self.roo_name ( 'histo1_' ) ,
+                'Histo-1D PDF: %s/%s' % ( histo.GetName() , histo.GetTitle() ) , 
                 self.__vset , 
                 self.dset   ,
                 order       )
@@ -3100,16 +3216,15 @@ class Fit1D (PDF) :
             backgrounds      = [] 
             
         ## wrap signal if needed 
-        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
+        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone()
         ## if bare RooFit pdf,  fit variable must be specified
         elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
             self.__signal = Generic1D_pdf ( signal , xvar , prefix = 'S_' , suffix = suffix )
         else :
             raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
-        
+
         if not name :
-            name = 'Fit%s' % self.__signal.name 
-            if suffix : name += '_' + suffix 
+            name = self.generate_name ( prefix = 'Fit%s' % self.__signal.name , suffix = suffix ) 
 
         ## Init base class
         PDF.__init__ ( self , name , self.__signal.xvar )             
@@ -3198,7 +3313,7 @@ class Fit1D (PDF) :
                                                 recursive = True          ,
                                                 fractions = fB            )
             ## new background
-            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BACKGROUND_' , suffix =  suffix )
+            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BKG_' , suffix =  suffix )
             self.__all_backgrounds = ROOT.RooArgList ( bkg )
             self.__bkgs            = bkgs 
             self.__background_fractions = fracs 
@@ -3217,7 +3332,7 @@ class Fit1D (PDF) :
                                                 recursive = True     ,
                                                 fractions = fC       ) 
             ## save old background
-            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'COMPONENT_' , suffix = suffix )
+            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'CMP_' , suffix = suffix )
             self.__all_components = ROOT.RooArgList ( cmp )
             self.__components_fractions = fracs 
             self.verbose('%2d components  are combined into single COMPONENT'    % len ( cmps ) )
@@ -3302,8 +3417,8 @@ class Fit1D (PDF) :
         ## The final PDF
         #       
 
-        pdfname  = "Fit1D_"    + self.name
-        pdftitle = "Fit1D(%s)" % self.name
+        pdfname  = self.roo_name ( 'fit1d_' ) 
+        pdftitle = "Fit1D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         
         if not self.extended :
@@ -3400,6 +3515,21 @@ class Fit1D (PDF) :
     def more_components ( self ) :
         """additional ``other'' components"""
         return tuple( self.__more_components  )
+
+    @property
+    def signals_all ( self ) :
+        """``signals_all'' : list of all signal components (possible merged)"""
+        return ( self.signal, ) + self.more_signals
+    
+    @property
+    def backgrounds_all ( self ) :
+        """``backgrounds_all'' : list of all background components (possible merged)"""
+        return ( self.background, ) + self.more_backgrounds
+
+    @property
+    def components_all ( self ) :
+        """``components_all'' : list of all other components (possible merged)"""
+        return self.more_components 
     
     @property
     def fS ( self  ) :
@@ -3418,7 +3548,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__signal_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3438,7 +3568,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__background_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for f "  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
                 
     @property
@@ -3458,7 +3588,7 @@ class Fit1D (PDF) :
         for f , v in zip ( self.__components_fractions , value ) :
             vv = float ( v )
             if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
             f.setVal   ( vv ) 
             
     @property
@@ -3497,7 +3627,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
     
     @property
@@ -3535,7 +3665,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv  , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property
@@ -3573,7 +3703,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property 
@@ -3609,7 +3739,7 @@ class Fit1D (PDF) :
 
             vv = float ( v  )
             if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
+                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
             s.setVal   ( vv ) 
 
     @property

@@ -43,8 +43,11 @@ def test_dill () :
                                                  sys.version_info.micro ) )
     logger.info ( "ROOT   version: %s"       % ROOT.gROOT.GetVersion()  )
     
-    if dill and dill.__version__ : 
-        logger.info ( "dill   version: %s"       % dill.__version__      )
+    if   dill and hasattr ( dill , '__version__' )  and dill.__version__  : 
+        logger.info ( "dill   version: %s"       % dill.__version__  )
+    elif dill and hasattr ( dill ,   'version'   )  and dill.version      : 
+        logger.info ( "dill   version: %s"       % dill.version      )
+        
         
     try : 
         p = pickle.dumps  ( h )
@@ -57,6 +60,18 @@ def test_dill () :
         logger.info  ("Histogram is successfully serialized using dill!")
     except :
         logger.error ("Histogram cannot be serialized using dill!")
+
+    try : 
+        p = pickle.loads ( pickle.dumps  ( h ) ) 
+        logger.info  ("Histogram is successfully serialized/deserialized using pickle!")
+    except :
+        logger.error ("Histogram cannot be serialized/deserialized using pickle!")
+        
+    try : 
+        d = dill.loads ( dill  .dumps  ( h )  ) 
+        logger.info  ("Histogram is successfully serialized/deserialized using dill!")
+    except :
+        logger.error ("Histogram cannot be serialized/deserialized using dill!")
 
 
 # =============================================================================

@@ -3,7 +3,7 @@ Ostap Project
 [![Build Status](https://travis-ci.org/OstapHEP/ostap.svg?branch=master)](https://travis-ci.org/OstapHEP/ostap)
 [![Coverage Status](https://coveralls.io/repos/github/OstapHEP/ostap/badge.svg?branch=master)](https://coveralls.io/github/OstapHEP/ostap?branch=master)
 [![Build Status](https://dev.azure.com/OstapHep/OstapHep/_apis/build/status/OstapHEP.ostap?branchName=master)](https://dev.azure.com/OstapHep/OstapHep/_build/latest?definitionId=5&branchName=master)
-[![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
+[![pipeline status](https://gitlab.cern.ch/ostapHep/ostaphep/badges/master/pipeline.svg?ignore_skipped=true)](https://gitlab.cern.ch/ostapHep/ostaphep/commits/master)
 [![Join the chat at https://gitter.im/OstapHEP/ostap](https://badges.gitter.im/OstapHEP/ostap.svg)](https://gitter.im/OstapHEP/ostap?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![DOI](https://zenodo.org/badge/81464356.svg)](https://zenodo.org/badge/latestdoi/81464356)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/ostaphep/badges/version.svg)](https://anaconda.org/conda-forge/ostaphep)
@@ -24,7 +24,7 @@ Key features include:
 
 Dependencies
 ------------
-- _mandatory_: [ROOT], [RooFit]
+- _mandatory_: [ROOT] version `<6.22` or `>=6.24`, [RooFit]
 - _highly desirable_: [numpy]
    - mandatory for Fast Fourier Transform, used in histogram/function parameterization;
    - optional for some other issues, in particular for the prime number treatment;  
@@ -38,7 +38,12 @@ Dependencies
    - nice format of tables 
          - in particular for nice printout for `TTree`, `TChain`, `RooDataSet`, ... ;
    - `ostap` offers a home-made replacement with a bit reduced functionalty.  
-- _optional_ (only for python3) : [bsddb3]
+- _desirable_: [more_itertoos]
+   - `chunked` stuff is used in parallelization for spliting jobs into chunks 
+   - `ostap` offers a home-made replacement  
+- _optional_ (only for python3,  `3.6<=version` ) : [berkeleydb]
+   - python interface to Berkeley DB (`libdb` needs to be installed!)
+- _optional_ (only for python3,  `3.3<=version<3.10` ) : [bsddb3]
    - python interface to Berkeley DB (`libdb` needs to be installed!)
    
 Setup
@@ -58,4 +63,6 @@ The possible  setup options are described  [here](INSTALL.md)
 [ppt]: https://github.com/uqfoundation/ppft
 [multiprocessing]:https://docs.python.org/2/library/multiprocessing.html
 [terminaltables]: https://pypi.org/project/terminaltables
+[more_itertools]: https://pypi.org/project/more-itertools/
+[berkeleydb]: https://pypi.org/project/berkeleydb/
 [bsddb3]: https://pypi.org/project/bsddb3/

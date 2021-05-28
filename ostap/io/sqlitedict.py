@@ -112,14 +112,14 @@ def issqlite3 ( filename ) :
     >>> ok = issqlite3 ( 'mydbase' ) 
     - see https://stackoverflow.com/questions/12932607/how-to-check-if-a-sqlite3-database-exists-in-python
     """
-    
+
     if not   os.path.exists  ( filename ) : return False
     if not   os.path.isfile  ( filename ) : return False
     if 100 > os.path.getsize ( filename ) : return False
     
     with io.open ( filename  , 'rb' ) as f :
         hdr = f.read(100)
-        return hdr[:16] == 'SQLite format 3\x00'
+        return hdr[:16] == b'SQLite format 3\x00'
     
     return False 
 
@@ -203,7 +203,7 @@ class SqliteDict(DictClass):
                  ## tablename='unnamed',
                  tablename='ostap',
                  flag='c',
-                 autocommit=False, journal_mode="DELETE", encode=encode, decode=decode):
+                 autocommit=False, journal_mode="DELETE", encode=encode, decode=decode, timeout = 30 ):
         """
         Initialize a thread-safe sqlite-backed dictionary. The dictionary will
         be a table `tablename` in database file `filename`. A single file (=database)
@@ -238,9 +238,9 @@ class SqliteDict(DictClass):
         self.in_temp = filename is None
         if self.in_temp:
             ## import tempfile
-            ## filename = tempfile.mktemp  ( prefix = 'tmpdb-'  , suffix = '.sqldb' )
+            ## filename = tempfile.mktemp  ( prefix = 'ostap-tmpdb-'  , suffix = '.sqldb' )
             import ostap.utils.cleanup as CU 
-            filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.sqldb' )
+            filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.sqldb' )
             # randpart = hex(random.randint(0, 0xffffff))[2:]
             # filename = os.path.join(tempfile.gettempdir(), 'sqldict' + randpart)
 
@@ -265,8 +265,10 @@ class SqliteDict(DictClass):
         self.journal_mode = journal_mode
         self.encode = encode
         self.decode = decode
+        self.timeout = timeout 
 
-        with Connect ( self.filename , self.flag ) :
+
+        with Connect ( self.filename , self.flag , self.timeout ) :
             pass  
         
         logger.debug ("opening Sqlite table %r in %s" % (tablename, filename))
@@ -278,7 +280,10 @@ class SqliteDict(DictClass):
             self.clear()
 
     def _new_conn(self):
-        return SqliteMultithread(self.filename, self.flag , autocommit=self.autocommit, journal_mode=self.journal_mode)
+        return SqliteMultithread(self.filename, self.flag ,
+                                 autocommit=self.autocommit,
+                                 journal_mode=self.journal_mode,
+                                 timeout = self.timeout )
 
     def __enter__(self):
         if not hasattr(self, 'conn') or self.conn is None:
@@ -411,7 +416,7 @@ class SqliteDict(DictClass):
         #    cursor = conn.execute(GET_TABLENAMES)
         #    res = cursor.fetchall()
 
-        with Connect ( filename, 'r' ) as conn:
+        with Connect ( filename, 'r' , self.timeout ) as conn:
             cursor = conn.execute(GET_TABLENAMES)
             res    = cursor.fetchall()
 
@@ -488,12 +493,13 @@ class SqliteMultithread(Thread):
     in a separate thread (in the same order they arrived).
 
     """
-    def __init__(self, filename, flag , autocommit, journal_mode):
+    def __init__(self, filename, flag , autocommit, journal_mode , timeout = 5 ):
         super(SqliteMultithread, self).__init__()
         self.filename = filename
         self.flag     = flag 
         self.autocommit = autocommit
         self.journal_mode = journal_mode
+        self.timeout = timeout 
         # use request queue of unlimited size
         self.reqs = Queue()
         self.setDaemon(True)  # python2.5-compatible
@@ -504,9 +510,9 @@ class SqliteMultithread(Thread):
     def run(self):
         
         if self.autocommit:
-            connect = Connect(self.filename, self.flag , isolation_level=None, check_same_thread=False)
+            connect = Connect(self.filename, self.flag , self.timeout , isolation_level=None, check_same_thread=False)
         else:
-            connect = Connect(self.filename, self.flag , check_same_thread=False)
+            connect = Connect(self.filename, self.flag , self.timeout , check_same_thread=False)
 
         with connect as conn :
             return self.run__ (  conn )

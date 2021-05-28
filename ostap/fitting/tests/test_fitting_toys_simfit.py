@@ -29,6 +29,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import dsID
 from   ostap.logger.utils   import rooSilent
 import ostap.fitting.toys   as     Toys
+from   ostap.utils.timing   import timing 
 
         
 # =============================================================================
@@ -149,7 +150,8 @@ def test_toys_simfit_1 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_toys_simfit_1 () 
+    with timing ( "simfit-1" , logger ) :
+        test_toys_simfit_1 () 
 
 # =============================================================================
 ##                                                                      The END 

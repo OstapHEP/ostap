@@ -26,7 +26,7 @@ __all__     = (
     've_adjust'       , ## adjust the efficiency to be in physical range
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
-    'Histo3DFun'      , ## 3D-histogram as function object 
+    'Histo3DFun'      , ## 3D-histogram as function object
     )
 # =============================================================================
 import ROOT, sys, math, ctypes
@@ -50,6 +50,7 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               isint    , islong    ,
                               natural_entry        ,
                               natural_number       )
+from   ostap.math.base        import frexp10 
 from   ostap.core.ostap_types import integer_types, num_types , long_type
 import ostap.plotting.draw_attributes 
 # =============================================================================
@@ -64,13 +65,15 @@ def _h_new_init_ ( self , *args ) :
     """Modified TH* constructor:
     - ensure that created object/histogram goes to ROOT main memory
     """
-    with ROOTCWD() :
-        ROOT.gROOT.cd() 
-        self._old_init_   ( *args )
-        self.SetDirectory ( ROOT.gROOT )  ## NB! 
+    with ROOTCWD () :
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
+        init = self._old_init_   ( *args )
+        self.SetDirectory ( groot )  ## NB! 
         ## optionally:
         if not self.GetSumw2() : self.Sumw2()
-
+        return init 
+    
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
 #  - it automatically assign unique ID
@@ -87,12 +90,13 @@ def _h_new_clone_ ( self , name = '' , title = ''  ) :
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID()
+    if not name : name = hID ()
     #
     with ROOTCWD() :
-        ROOT.gROOT.cd() 
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
         nh = self._old_clone_ ( name )
-        nh.SetDirectory ( ROOT.gROOT ) ## ATTENTION!
+        nh.SetDirectory ( groot )
         ## optionally 
         if not nh.GetSumw2() : nh.Sumw2()
         
@@ -114,9 +118,9 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
 
     if hasattr ( h , '_new_init_' ) and hasattr ( h , '_old_init_' ) : pass
     else : 
-        h._old_init_  =  h.__init__ 
-        h._new_init_  = _h_new_init_
-        h.__init__    = _h_new_init_
+        h._old_init_ =  h.__init__ 
+        h._new_init_ = _h_new_init_
+        ## h.__init__   = _h_new_init_  
 
 # =============================================================================
 # Decorate histogram axis and iterators 
@@ -179,7 +183,7 @@ def _h1_get_item_ ( h1 , ibin ) :
     nb = a.GetNbins ()
     #
     if     1 <=  ibin <= nb : pass
-    elif   1 <= -ibin <= nb : ibin += ( nb + 1 ) 
+    elif   1 <= -ibin <= nb : ibin += ( nb + 1 )
     else                    : raise IndexError 
     #
     val = h1.GetBinContent ( ibin ) 
@@ -4481,6 +4485,8 @@ def _bin_overlap_2D_ ( x1 , y1 , x2 , y2 ) :
 
 
 
+## print ('QUQUQU!!')
+
 
 # ==============================================================================
 ## rebin 1D-histogram with NUMBERS 
@@ -5375,26 +5381,42 @@ _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
 
 # =============================================================================
 ## calculate bin-by-bin ``standardized moment''
+#  \f$ s_n = \frac{\mu_n}{\sigma^n} = \frac{\int (x-\mu)^n h(x) dx }{\sigma^n} \f$
 #  @see https://en.wikipedia.org/wiki/Standardized_moment
+#  for <code>exp_moment=True</code> it calculates
+#  \f$ \sign \mu_n \\frac{ \left| \mu_n \right|^{1/n} } {\sigma }\f$  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-09-04
-def _h1_std_moment_ ( h1 , order ) :
+def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
     """Get ``bin-by-bin'' ``standardized moment''
     >>> histo = ...
     >>> cmom  = histo.stdMoment ( 4 ) 
      - see https://en.wikipedia.org/wiki/Standardized_moment
+     For `exp_moment==True`, it calcualtes the value
+      sign(cmom)*(abs(cmom)**1.0/order)
+     
     """
     #
+
     if   1 == order : return VE ( 0 , 0 ) 
     elif 2 == order : return VE ( 1 , 1 )
     #
-    mom   = h1.centralMoment ( order )
-    
+    mom   = h1.centralMoment ( order )    
     sigma = math.sqrt ( h1.rms().value() )
     
-    return mom / ( sigma ** order ) 
+    if exp_moment :
+        
+        mm = abs ( mom ) ** ( 1. / order )
+        if mom.value() < 0 : mm *= -1 
+        moment = mm / sigma
 
+    else :
 
+        moment = mom / ( sigma ** order ) 
+        
+
+    return moment 
+    
 # =============================================================================
 ## get skewness
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5862,16 +5884,34 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 ## draw the line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _level_ ( self , level = 0 , linestyle = 2 ) :
+def _level_ ( self , level = 0 , **kwargs ) :
     """Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
+    >>> h.hline ( 5 ) ## ditto
     """
-    mn,mx = self.xminmax() 
+    mn,mx = self.xminmax()
     line = ROOT.TLine ( mn , level , mx , level )
-    line.SetLineStyle ( linestyle )
-    self._line_ = line
-    self._line_.Draw() 
-    return self._line_
+    line.draw ( **kwargs )
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line
+
+# =============================================================================
+## draw the vertical line for the histogram 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21 
+def _vline_ ( self , x , ymin = 0 , ymax = None , **kwargs ) :
+    """Draw vertical line for the histogram
+    >>> h.vline ( 5 )    
+    """
+    if ymax is None : ymax = self.GetMaximum() 
+    mn , mx = ymin , ymax 
+    line = ROOT.TLine ( x , mn , x , mx )
+    line.draw( **kwargs ) 
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line 
+
 # =============================================================================
 ## draw null-level for histogram  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5887,16 +5927,21 @@ ROOT.TH1F. level = _level_
 ROOT.TH1D. null  = _null_
 ROOT.TH1F. null  = _null_
 
+ROOT.TH1F. hline = _level_
+ROOT.TH1F. vline = _vline_
+ROOT.TH1D. hline = _level_
+ROOT.TH1D. vline = _vline_
+
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin ( left = True )  
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
@@ -5905,7 +5950,7 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin ( left = True )  
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     _a = h1.GetXaxis()
     _e = list ( _a.edges() ) 
@@ -5934,14 +5979,14 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
     return hn 
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_left() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
@@ -5951,19 +5996,19 @@ def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_left()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , True , value , width )
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(1)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_right() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
@@ -5973,7 +6018,7 @@ def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_right()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , False , value , width ) 
 
@@ -5986,7 +6031,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -5998,7 +6043,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  - 2: min y
 #  - 3: max y 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -6012,7 +6057,7 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 2: min y
     - 3: max y 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h2.GetXaxis()
@@ -6071,7 +6116,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
     _h.add_fake_side       = _h2_add_fake_side_
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -6085,7 +6130,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  - 4: min z
 #  - 5: max z 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -6100,7 +6145,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 4: min z
     - 5: max z 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h3.GetXaxis()
@@ -6704,7 +6749,7 @@ def axis_bins ( bins         ) :
     bins.sort()
     #
     if 2 > len ( bins ) :
-        raise AtributeError("axis_bins: insufficient length of bins: %s" % bins )
+        raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
     #
     from array import array 
     return ROOT.TAxis ( len ( bins ) - 1 , array ( 'd' , bins ) )
@@ -6954,6 +6999,7 @@ def _h_same_dims_ ( histo , another ) :
 
 ROOT.TH1. same_dims = _h_same_dims_
 
+
 # =============================================================================
 ## same binning?
 def _h_same_bins_ ( histo , another ) :
@@ -6992,12 +7038,55 @@ def _h_same_bins_ ( histo , another ) :
 
 ROOT.TH1. same_bins = _h_same_bins_
     
-#
+# =============================================================================
+## histogram dimension
+#  Get dimension of the histogram
+#  @code
+#  histo = ...
+#  d     =  histo.dim() 
+#  @endcode
+def _h_dim_ ( self  ) :
+    """Get dimension of the histogram
+    >>> histo = ...
+    >>> d     =  histo.dim() 
+    """
+    if   isinstance ( self , ROOT.TH3 ) : return 3
+    elif isinstance ( self , ROOT.TH2 ) : return 2
+    
+    return 1 
+
+ROOT.TH1 .dim = _h_dim_
 
 # =============================================================================
-## transfrom the x-axis for the 1D-historgam
+## Get tuple of bins-dimensions 
+#  @code
+#  histo = ...
+#  nb    = histo.n_bins () 
+#  @endcode
+def _h_n_bins_ ( self ) :
+    """Get tuple of bins-dimensions 
+    >>> histo = ...
+    >>> nb    = histo.n_bins () 
+    """
+    if   isinstance ( self , ROOT.TH3 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        az = self.SetZaxis()
+        return ax.GetNbins() , ay.GetNbins(), az.xGetNbins() 
+    elif isinstance ( self , ROOT.TH2 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        return ax.GetNbins() , ay.GetNbins()
+    
+    ax = self.SetXaxis()
+    return ax.GetNbins() ,
+
+ROOT.TH1 .n_bins = _h_n_bins_
+
+# =============================================================================
+## transfrom the x-axis for the 1D-histogram
 def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
-    """Transfrom the x-axis for the 1D-historgam
+    """Transfrom the x-axis for the 1D-histogram
     """
     ax =  h1.GetXaxis()
     e  =  ax.edges()
@@ -7050,7 +7139,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
 #  @endcode
 #  Histogram is transformed as raw histigram (no Jacobian correction is applied)
 def _h1_transform_x_numbers_ ( h1 , fun ) :
-    """Make a historgam transfromation:
+    """Make a histogram transfromation:
     H(x)  ->  H'(y(x))
     where transformation is defined  y=fun(x)
     >>> h  = ...
@@ -7156,12 +7245,17 @@ ROOT.TH1.__hash__ = _h_hash_
 # =============================================================================
 
 # =============================================================================
-## represent historgam as ``density''
+## represent histogram as ``density''
 #  - the function with unit integral over the range
 def _h_density_ ( h1 ) :
-    """Represent historgam as  ``density''
+    """Represent histogram as  ``density''
     - the function with unit integral over the range
     """
+    ii = h1.integrate().value()
+    if isequal ( ii , 1.0 ) :
+        ## it is already density!, return the clone 
+        return h1.clone()
+    
     ## take into account bin width
     h  = h1.rescale_bins(1)
     ##  rescale to unit integral in range
@@ -7172,6 +7266,102 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
            ROOT.TH2F , ROOT.TH2D ,
            ROOT.TH3F , ROOT.TH3D ) :
     t.density = _h_density_
+
+# =============================================================================
+## Fill the histogram from iterable/generator/...
+#  @code
+#
+#  h1 = ... ## 1D histogram 
+#  h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#  
+#  h2  = ... ## 2D histogram#
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  h3  = ... ## 2D histogram#
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  @endcode 
+def _h_fill_loop_ ( histo , filler ) :
+    """Fill the histogram from iterable/generator/...
+    >>> 
+    >>> h1 = ... ## 1Dhistogram 
+    >>> h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h2  = ... ## 2D-histogram
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h3  = ... ## 3D-histogram
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    """
+
+    num = 0 
+    for item in filler :
+        num += 1
+        histo.Fill ( *item ) 
+
+    return num  
+
+ROOT.TH1.fill_loop = _h_fill_loop_
+
+
+# ==============================================================================
+## split the histogram into <code>n</code> sub-histograms 
+#  @code
+#  h1 = ...
+#  histos = h1.split(10) 
+#  @endcode 
+def _h1_split1_ ( h1 , n ) :
+    """Split the histogram into `n` sub-histograms
+    >>> h1 = ...
+    >>> histos = h1.split(10) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of sub-histograms %s' % n
+    
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import divide as _divide 
+    bins   = _divide ( n , range ( 1 , N ) )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] + 1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+# ==============================================================================
+## split the histogram into sub-histograms with at most <code>n</code> bins 
+#  @code
+#  h1 = ...
+#  histos = h1.split_bins(10) 
+#  @endcode 
+def _h1_split2_ ( h1 , n ) :
+    """Split the histogram into sub-histograms with at most <code>n</code> bins 
+    >>> h1 = ...
+    >>> histos = h1.split_bins ( 10 ) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of bins  %s' % n
+
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import chunked as _chunked
+    bins   = _chunked ( range ( 1 , N ) , n )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] +1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+for h in ( ROOT.TH1F , ROOT.TH1D ) :
+    h.split      = _h1_split1_
+    h.split_bins = _h1_split2_
+
 
 # =============================================================================
 _decorated_classes_ = (
@@ -7593,6 +7783,10 @@ _new_methods_   = (
     ROOT.TH1F.null   ,
     ROOT.TH1D.level  ,
     ROOT.TH1F.level  ,
+    ROOT.TH1D.vline  ,
+    ROOT.TH1F.vline  ,
+    ROOT.TH1D.hline  ,
+    ROOT.TH1F.hline  ,
     #
     ROOT.TAxis.edges ,
     #
@@ -7715,6 +7909,9 @@ _new_methods_   = (
     ROOT.TH1  . allInts      ,
     ROOT.TH1  . natural      ,
     #
+    ROOT.TH1  . dim          ,
+    ROOT.TH1  . n_bins       ,
+    #
     ROOT.TH1.uniform_bins    ,
     ROOT.TH1.uniform         ,
     #
@@ -7724,7 +7921,12 @@ _new_methods_   = (
     ROOT.TH1F.dumpAsText     ,
     #
     ROOT.TH1F.transform_X_numbers  ,
-    ROOT.TH1F.transform_X_function 
+    ROOT.TH1F.transform_X_function ,
+    ##
+    ROOT.TH1   . fill_loop   ,
+    
+    ROOT.TH1F  . split       ,
+    ROOT.TH1F  . split_bins  ,
     )
 
 # =============================================================================
@@ -7735,5 +7937,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger ) 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -25,6 +25,7 @@
 __all__ = (
     'banner'       , ## Ostap banner 
     'version'      , ## Ostap version 
+    'version_int'  , ## Ostap version as integer 
     'version_info' , ## version info as named tuple
     'build_date'   , ## Ostap build/reelase date (as string)
     'build_time'   , ## Ostap build/release time (as datetime)
@@ -38,10 +39,18 @@ import datetime
 from   collections import namedtuple
 # =============================================================================
 version      = __version__
-VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak'))
-version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ , @OSTAP_VERSION_MINOR@ , @OSTAP_VERSION_PATCH@ , @OSTAP_VERSION_TWEAK@ )
+VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
+version_info = VersionInfo ( @OSTAP_VERSION_MAJOR@ ,
+                             @OSTAP_VERSION_MINOR@ ,
+                             @OSTAP_VERSION_PATCH@ ,
+                             @OSTAP_VERSION_TWEAK@ )
 build_date   = __date__
 build_time   = datetime.datetime.utcfromtimestamp ( @OSTAP_BUILD_UTCUNIX@ )
+version_int  = version_info.tweak                   +\
+               version_info.patch             * 100 +\
+               version_info.minor       * 100 * 100 +\
+               version_info.major * 100 * 100 * 100 
+               
 # =============================================================================
 ##
 import ostap.fixes.fixes

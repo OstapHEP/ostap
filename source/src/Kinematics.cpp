@@ -19,6 +19,10 @@
 // ============================================================================
 #include "Math/Boost.h"
 // ============================================================================
+// Local
+// ============================================================================
+#include "local_math.h"
+// ============================================================================
 /** @file 
  *  Implementation file for functions from the file Ostap/Kinematics.h
  *  @date 2019-07-12 
@@ -927,6 +931,7 @@ double Ostap::Kinematics::phasespace2_bk
 /** three-body phase space 
  */
 // ============================================================================
+#include <iostream> 
 double Ostap::Kinematics::phasespace3 
 ( const double x  , 
   const double m1 , 
@@ -934,13 +939,67 @@ double Ostap::Kinematics::phasespace3
   const double m3 ) 
 {
   //
+  static const double s_norm = 0.125 * M_PI * M_PI ;
+  //
   double xm1 = std::max ( 0.0 , m1 ) ;
   double xm2 = std::max ( 0.0 , m2 ) ;
   double xm3 = std::max ( 0.0 , m3 ) ;
   //
   if ( x <= xm1 + xm2 + xm3 ) { return 0 ; } //   RETURN
   //
-  static const double s_norm = 0.125 * M_PI * M_PI ;
+  const bool zero1 = s_zero ( xm1 ) ; xm1 = zero1 ? 0.0 : xm1 ;
+  const bool zero2 = s_zero ( xm2 ) ; xm2 = zero2 ? 0.0 : xm2 ;   
+  const bool zero3 = s_zero ( xm3 ) ; xm3 = zero3 ? 0.0 : xm3 ;   
+  //
+  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; } //   RETURN
+  //
+  // make the proper ordering  
+  if ( xm1 < xm2 || xm2 < xm3 )
+  {
+    if ( xm1 < xm2 ) { std::swap ( xm1 , xm2 ) ; }
+    if ( xm2 < xm3 ) { std::swap ( xm2 , xm3 ) ; if ( xm1 < xm2 ) { std::swap ( xm1 , xm2 ) ; } } 
+    return phasespace3 ( x , xm1 , xm2 , xm3 ) ;  
+  }  
+  //
+  // 1) all masses are zero 
+  if      (  zero1 &&  zero2 && zero3 ) { return s_norm * x * x ; } // all masses are zero 
+  // 2) one mass is zero 
+  else if ( !zero1 && !zero2 && zero3 )  
+  {    
+    // E.Byckling, K.Kajantie V.5 
+    const double m1_2 = xm1 * xm1 ;
+    const double m2_2 = xm2 * xm2 ;
+    // 
+    const double summ2 =            m1_2 + m2_2   ;
+    const double difm2 = std::abs ( m1_2 - m2_2 ) ;
+    //
+    const double s     = x * x ;
+    const double sqlam = std::sqrt ( Ostap::Kinematics::triangle ( s , m1_2 , m2_2 ) ) ;
+    //
+    double res   = sqlam * ( s + summ2 ) / ( s * s ) ;
+    res += 2 * difm2 * std::log ( ( s * summ2 - difm2 * difm2  + difm2 * sqlam )    / ( 2 * xm1  * xm2 * s ) ) / s ;
+    res -= 2 * ( s * summ2 - 2  * m1_2 * m2_2 ) * std::log ( ( s - summ2  + sqlam ) / ( 2 * xm1 * xm2      ) ) / ( s * s ) ;
+    //
+    return s_norm * s * res ;  
+  }
+  // 3) two masses are zero 
+  else if ( !zero1 && zero2 && zero3 ) 
+  {
+    // E.Byckling, K.Kajantie V.5 
+    const double m1_2 = xm1 * xm1 ;
+    // 
+    const double summ2 = m1_2 ;
+    const double difm2 = m1_2 ;
+    //
+    const double s     = x * x ;
+    const double sqlam = std::sqrt ( Ostap::Kinematics::triangle ( s , m1_2 , 0 ) ) ;
+    //
+    double res   = sqlam * ( s + summ2 ) / ( s * s ) ;
+    res += 2 * m1_2 * std::log ( m1_2 / s ) / s ;
+    //
+    return s_norm * s * res ;
+  }
+  //
   //
   const double p2    = x * x ;
   const double M     = x     ;
@@ -959,7 +1018,13 @@ double Ostap::Kinematics::phasespace3
   //
   const double k = std::sqrt ( Qm / Qp ) ;
   //
-  if  ( 1 - k < 1.e-10 ) { return s_norm * p2 ; }  // RETURN 
+  std::cout 
+    << " Qp= " << Qp
+    << " Qm= " << Qm
+    << " k = " << k 
+    << std::endl ;
+ 
+  //  if  ( 1 - k < 1.e-10 ) { return s_norm * p2 ; }  // RETURN 
   //
   const double sqrt_Qp  = std::sqrt ( Qp ) ;
   //

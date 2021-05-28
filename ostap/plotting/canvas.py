@@ -58,7 +58,8 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
         cnv  = ROOT.TCanvas ( name , 'Ostap' , width , height )
         ## adjust newly created canvas
         ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
-        if not ROOT.gROOT.IsBatch() :
+        groot = ROOT.ROOT.GetROOT() 
+        if not groot.IsBatch() :
             dw = width  - cnv.GetWw()
             dh = height - cnv.GetWh()
             cnv.SetWindowSize ( width + dw , height + dh )
@@ -245,7 +246,7 @@ class AutoPlots ( object ) :
                 directory = None
                 
         if not directory :
-            directory = tempfile.mkdtemp ( prefix = 'plots_' )
+            directory = tempfile.mkdtemp ( prefix = 'ostap-plots-' )
             logger.info ( 'AutoPlots: use directory "%s"' % directory ) 
 
         ## check the validity of pattern
@@ -464,7 +465,8 @@ def canvas_partition ( canvas                        ,
 
             canvas.cd(0)
             pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
-            pad   = ROOT.gROOT.FindObject ( pname )
+            groot = ROOT.ROOT.GetROOT()
+            pad   = groot.FindObject ( pname )
             if pad : del pad
             pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
 
@@ -605,7 +607,8 @@ def canvas_vsplit ( canvas                        ,
             
         canvas.cd ( 0 )
         pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
-        pad   = ROOT.gROOT.FindObject ( pname )
+        groot = ROOT.ROOT.GetROOT()
+        pad   = groot.FindObject ( pname )
         if pad : del pad
         pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
         

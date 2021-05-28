@@ -298,8 +298,9 @@ def _tt_project_ ( tree               ,
     ## 
     hname = histo 
     if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
-    elif isinstance ( histo , str       ) : 
-        h = ROOT.gROOT.FindObject ( hname )
+    elif isinstance ( histo , str       ) :
+        groot = ROOT.ROOT.GetROOT()
+        h     = groot.FindObject ( hname )
         if h and isinstance ( h , ROOT.TH1 ) : histo = h
 
     ## reset it!
@@ -353,14 +354,15 @@ def _tt_project_ ( tree               ,
 
     ## the basic case 
     with ROOTCWD() :
-        ROOT.gROOT.cd ()
+        groot = ROOT.ROOT.GetROOT() 
+        groot.cd ()
         ## make projection
         ## print 'HERE:   %s/%s' %  ( hname , type ( hname ) ) 
         result = tree.Project ( hname , what , cuts , *args[:-1] )
         if   isinstance ( histo , ROOT.TH1 ) :
             return result, histo
         elif isinstance ( histo , str      ) :
-            h = ROOT.gROOT.FindObject ( hname )
+            h = groot.FindObject ( hname )
             if h : return result, h
 
     return result, histo
@@ -1659,6 +1661,9 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
         args = mmap ,
 
     else : 
+
+        
+
         
         for n in names : 
             assert not n in tree.branches() ,'Branch %s already exists!' % n
@@ -1723,7 +1728,7 @@ def add_reweighting ( tree , weighter , name = 'weight' ) :
     ## create the weigthting function 
     wfun = W.W2Tree ( weighter )
     
-    return data.add_new_branch (  name , wfun ) 
+    return tree.add_new_branch (  name , wfun ) 
 
 ROOT.TTree.add_reweighting = add_reweighting
     
@@ -2081,7 +2086,7 @@ class Chain(CleanUp) :
                 
                 if isinstance ( topdir , ROOT.TFile ) : self.__files = topdir.GetName() ,
                 else :
-                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'tree-' )
+                    fname  = CleanUp.tempfile ( suffix = '.root' , prefix = 'ostap-tree-' )
                     from ostap.core.core import ROOTCWD
                     with ROOTCWD() : 
                         import ostap.io.root_file

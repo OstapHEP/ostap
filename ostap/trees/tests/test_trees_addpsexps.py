@@ -129,7 +129,7 @@ def test_add_to_dataset ( NEXP =  10 ) :
     data = Data ( 'S' , files )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
 
-    import ostap.fitting.selectors 
+    import ostap.fitting.pyselectors 
     dataset , _ = data.chain.fill_dataset ( ['mass','pt','eta'] )
 
     logger.info ( 'Initial dataset:\n%s' % dataset.table ( prefix = '# ' ) )

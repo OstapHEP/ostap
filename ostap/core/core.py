@@ -9,6 +9,8 @@
 """Core objects for ostap 
 """
 # =============================================================================
+from   __future__        import print_function
+# ============================================================================= 
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
@@ -42,8 +44,8 @@ __all__     = (
     'islong'           ,  ## Is float value actually long ?
     'inrange'          ,  ## Is float walue in range ?  
     ##
-    'natural_entry'    ,  ## natual entry?   @see Gaudi::Math::natural_entry 
-    'natural_number'   ,  ## natual numnber? @see Gaudi::Math::natural_number
+    'natural_entry'    ,  ## natural entry?  @see Ostap::Math::natural_entry 
+    'natural_number'   ,  ## natural nunber? @see Ostap::Math::natural_number
     ##
     'valid_pointer'    ,  ## Is it a valid C++ pointer?
     ##
@@ -59,10 +61,7 @@ __all__     = (
     )
 # =============================================================================
 import math, sys, os 
-import ROOT
-import cppyy
-cpp = cppyy.gbl
-std = cpp.std
+import ROOT, cppyy
 # =============================================================================
 # logging 
 # =============================================================================
@@ -72,7 +71,9 @@ else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
-from   ostap.math.base      import ( Ostap    ,
+## ROOT.ROOT.EnableThreadSafety()
+
+from   ostap.math.base      import ( Ostap    , std     , cpp ,  
                                      iszero   , isequal ,
                                      isint    , islong  ,
                                      inrange  , strings , 
@@ -83,89 +84,102 @@ from   sys                  import version_info  as python_version
 from   ostap.math.ve        import VE
 from   ostap.stats.counters import SE , WSE 
 from   builtins             import range
+from   ostap.core.meta_info import root_info  
 # =============================================================================
 
+## @var global ROOT/gROOT object 
 binomEff        = Ostap.Math.binomEff
 binomEff2       = Ostap.Math.binomEff2
 zechEff         = Ostap.Math.zechEff
 wilsonEff       = Ostap.Math.wilsonEff
 agrestiCoullEff = Ostap.Math.agrestiCoullEff
-
+# =============================================================================
+## helper function for case-insensitive dictionary with ignorance of underscores and blanks 
+cidict_fun = lambda k : k.lower().replace('_','').replace(' ','')
 # =============================================================================
 ## @class ROOTCWD
 #  context manager to preserve current directory (rather confusing stuff in ROOT)
 #  @code
-#  print ROOT.gROOT.CurrentDirectory() 
+#  groot = ROOT.ROOT.GetROOT()
+#  print groot.CurrentDirectory() 
 #  with ROOTCWD() :
-#     print ROOT.gROOT.CurrentDirectory() 
+#     print groot.CurrentDirectory() 
 #     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-#     print ROOT.gROOT.CurrentDirectory() 
-#  print ROOT.gROOT.CurrentDirectory() 
+#     print groot.CurrentDirectory() 
+#  print groot.CurrentDirectory() 
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
 #  @date 2015-07-30
 class ROOTCWD(object) :
     """Context manager to preserve current directory
     (rather confusing stuff in ROOT) 
-    >>> print ROOT.gROOT.CurrentDirectory() 
+    >>> print the_ROOT.CurrentDirectory() 
     >>> with ROOTCWD() :
-    ...     print ROOT.gROOT.CurrentDirectory() 
+    ...     print the_ROOT.CurrentDirectory() 
     ...     rfile = ROOT.TFile( 'test.root' , 'recreate' )
-    ...     print ROOT.gROOT.CurrentDirectory() 
-    ... print ROOT.gROOT.CurrentDirectory() 
+    ...     print the_ROOT.CurrentDirectory() 
+    ... print the_ROOT.CurrentDirectory() 
     """
     def __init__ ( self ) :
         self._dir = None
-        
+
+    def __del__ ( self ) :
+        del self._dir
+
     ## context manager ENTER 
     def __enter__ ( self ) :
         "Save current working directory"
-        self._dir = ROOT.gROOT.CurrentDirectory()
-        return self 
+        self._dir = None
+
+        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
+            
+        groot     = ROOT.ROOT.GetROOT ()
+        if groot :
+            cwd = groot.CurrentDirectory()
+            if root_info < ( 6, 23, 1 ) : pass
+            else                        : cwd = cwd.load() 
+            if cwd : self._dir = cwd
+                           
+            ## self._dir = ROOT.TDirectory.TContext()
+            ## pass
         
+        return self
+
     ## context manager EXIT 
     def __exit__  ( self , *_ ) :
         "Make the previous directory current again"
+
+        ## ROOT::TDirectory::TContext appears in ROOT 6/23/01
         if self._dir :
 
             odir = self._dir
+                
+            self._dir = None
             
-            ## is is a directory in the file?
-            fdir = odir.GetFile ()
-            if not fdir : odir.cd()
-            else        :
-                ## check that fiel is still Open 
-                if fdir.IsOpen() : odir.cd()
-                
+            fdir = odir.GetFile () if isinstance ( odir , ROOT.TDirectoryFile ) else None
             
-            #if  isinstance ( self._dir , ROOT.TFile ) :
-            #    if self._dir.IsOpen() : self._dir.cd()
+            if fdir and not fdir.IsOpen () :
                 
+                groot = ROOT.ROOT.GetROOT ()
+                groot.cd ()
                 
-        self._dir = None 
+            else :
+                odir.cd()
 
-root_version_int = ROOT.gROOT.GetVersionInt() 
+            del self._dir
+            
+        self._dir = None
+            
 # =============================================================================
 ## global identifier for ROOT objects 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @see Ostap::Utils::rootID 
 #  @date   2011-06-07
 def rootID ( prefix = 'o_' ) :
     """ Construct the unique ROOT-id 
     """
-    _fun = lambda i : prefix + '%d'% i
-    
-    _root_ID = 1000
-    ## 
-    with ROOTCWD() : ## keep the current working directory:
-        
-        _id  = _fun ( _root_ID )
-        grd  = ROOT.gROOT
-        while grd.FindObject ( _id ) :
-                
-            _root_ID += 10 
-            _id       = _fun ( _root_ID ) 
-            
-    return _id                 ## RETURN
+    return  Ostap.Utils.rootID ( prefix )
+
 # =============================================================================
 ## global ROOT identified for function objects 
 def funcID  () : return rootID  ( 'f_' )
@@ -194,7 +208,8 @@ def cwd() :
     """ Get current directory in ROOT
     >>> d = cdw() 
     """
-    return ROOT.gROOT.CurrentDirectory()
+    groot = ROOT.ROOT.GetROOT ()
+    return groot.CurrentDirectory()
 
 # =================================== ===============================================
 ## get current directory in ROOT
@@ -205,7 +220,8 @@ def pwd() :
     """ Get current directory in ROOT
     >>> print pwd() 
     """
-    return ROOT.gROOT.CurrentDirectory().GetPath() 
+    groot = ROOT.ROOT.GetROOT ()
+    return groot.CurrentDirectory().GetPath() 
 
 # =============================================================================
 _FAILURE = Ostap.StatusCode.FAILURE 
@@ -218,18 +234,18 @@ def _sc_print_ ( sc ) :
     BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list ( range ( 8 ) )
     ##
     from ostap.logger.colorized import colored_string
-    if   sc.isSuccess     () : return colored_string( 'SUCCESS'     , WHITE , GREEN  , True ) 
-    elif sc.isRecoverable () : return colored_string( 'RECOVERABLE' , RED   , YELLOW , True ) 
+    if   sc.isSuccess     () : return colored_string ( 'SUCCESS'     , WHITE , GREEN  , True ) 
+    elif sc.isRecoverable () : return colored_string ( 'RECOVERABLE' , RED   , YELLOW , True ) 
     elif _FAILURE != sc.getCode  () :
-        return colored_string('FAILURE[%d]' % sc.getCode() , YELLOW , RED   , True )
-    return colored_string('FAILURE' , YELLOW , RED , True ) 
+        return colored_string ( 'FAILURE[%d]' % sc.getCode() , YELLOW , RED   , True )
+    return colored_string ( 'FAILURE' , YELLOW , RED , True ) 
         
 StatusCode = Ostap.StatusCode 
 StatusCode .__repr__ = _sc_print_
 StatusCode .__str__  = _sc_print_
 
-SUCCESS = StatusCode(Ostap.StatusCode.SUCCESS)
-FAILURE = StatusCode(Ostap.StatusCode.FAILURE)
+SUCCESS = StatusCode ( Ostap.StatusCode.SUCCESS )
+FAILURE = StatusCode ( Ostap.StatusCode.FAILURE )
 
 _valid_pointer_ = Ostap.Utils.valid_pointer
 # =============================================================================
@@ -286,7 +302,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         """
         
         from ostap.utils.cidict import cidict
-        kw = cidict ( transform = lambda k : k.lower().replace('_','') , **kwargs )
+        kw = cidict ( transform = cidict_fun , **kwargs )
         
         ## Line
         
@@ -330,7 +346,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         with rootWarning() , rooSilent ( 2 )  :
             result = obj.Draw( option , *args )
             
-        pad = ROOT.gROOT.GetSelectedPad()
+        groot = ROOT.ROOT.GetROOT ()
+        pad   = groot.GetSelectedPad()
         if   pad and not ROOT.gPad :
             c = pad.GetCanvas()
             if c : c.Update()
@@ -409,16 +426,45 @@ def loop_items ( d ) :
     """
     return items_loop ( d ) 
 
+# =============================================================================
+## valid TDirectory?
+#  - check valid C++ TDirectory pointer 
+#  - for file directories check validity of the file
+#  @code
+#  odir = ...
+#  if odir : ...
+#  @endcode
+def _rd_valid_ ( rdir ) :
+    """Valid TDirectory ?
+    - check valid C++ TDirectory pointer 
+    - for file directories check validity of the file 
+    >>> odir = ...
+    >>> if odir : ...
+    """
+
+    ## check validity of C++ pointer 
+    if not valid_pointer ( rdir ) : return False
+
+    ## for the file directories check the validity of the file 
+    if isinstance ( rdir , ROOT.TDirectoryFile ) :
+        fdir = rdir.GetFile()
+        if not valid_pointer ( fdir ) or not fdir.IsOpen () or fdir.IsZombie () :
+            return False 
+
+    return True 
+        
+ROOT.TDirectory.__bool__     = _rd_valid_
+ROOT.TDirectory.__nonzero__  = _rd_valid_
 
 # =============================================================================
 ## define the build directory for ROOT 
 import ostap.core.build_dir 
 
-
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.TObject ,
-    ROOT.TNamed  ,   
+    ROOT.TObject    ,
+    ROOT.TNamed     ,
+    ROOT.TDirectory , 
     )
 
 _new_methods_       = (

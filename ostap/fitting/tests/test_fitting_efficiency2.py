@@ -12,13 +12,15 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random, math 
-import ostap.fitting.roofit 
+import ROOT, random, math, time  
+import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
-from   ostap.core.core          import cpp, VE, dsID
+from   ostap.core.core          import cpp, VE, dsID,    Ostap 
 from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.utils        import timing
+from   ostap.core.meta_info     import old_PyROOT
+from   builtins                 import range 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -43,12 +45,20 @@ B  = 0.8
 C  = 0.5
 X0 = 6.0
 
+# =============================================================================
+## Simple python function to   parameterize efficiency
 def eff  ( x , a , b ,  c , x0 ) :
+    """Simple python function to   parameterize efficiency"""
+    
     return a + 0.5 * b * ( 1.0 + math.tanh ( c * 1.0 * ( x - x0 ) ) ) 
 
-def eff0 ( x ) : return eff ( x , A , B , C , X0 ) 
+# =============================================================================
+## simple python function to parameterize efficiency
+def eff0 ( x ) :
+    """Simple python function to parameterize efficiency"""
+    return eff ( x , A , B , C , X0 ) 
 
-emax       = 1.0  
+emax       = 1.0
 
 for i in range ( 1000 ) :
     
@@ -67,88 +77,271 @@ np     = 20
 dx     = (xmax-xmin)/np 
 points = [ dx * i for i in range ( np + 1 ) ]
 
-a       = ROOT.RooRealVar    ( 'a'  , 'a'  , 0.09 , 0.0  , 0.2 )
-b       = ROOT.RooRealVar    ( 'b'  , 'b'  , 0.50 , 0.1  , 0.9 )
-c       = ROOT.RooRealVar    ( 'c'  , 'c'  , 0.05 , 0.01 , 5   )
-x0      = ROOT.RooRealVar    ( 'x0' , 'x0' , 4    , 1    , 9   )
+a       = ROOT.RooRealVar    ( 'a'  , 'a'  , A  , 0.0     , 2 * A  )
+b       = ROOT.RooRealVar    ( 'b'  , 'b'  , B  , 0.5 * B , 2 * B  )
+c       = ROOT.RooRealVar    ( 'c'  , 'c'  , C  , 0.1 * C , 5 * C  )
+x0      = ROOT.RooRealVar    ( 'x0' , 'x0' , X0 , X0 - 2  , X0 + 2 )
 
 vars    = ROOT.RooArgList ( x , a , b , c , x0 ) 
+vars2   = ROOT.RooArgList ( x , a , b , c , x0 ) 
 
-#x0.fix ( X0 )
-#c .fix ( C  )
-#b .fix ( B  )
+# =================================================================================
+## make comparison table 
+def make_table ( func , title , prefix = "# ") :
+
+    rows = [ ( 'x' , 'fitted eff [%]' , 'true eff [%]' , 'delta [%]' ) ]
+    for p in points :
+
+        e1  = 100 * func (  p , error = True ) 
+        e2  = 100 * eff0 ( p )
+        d   = e1 - e2    
+        row = "%4.2f" % p , \
+              "%s"    %  e1.toString ( '(%5.2f+-%4.2f)'  ) ,\
+              "%.2f"  %  e2  ,\
+              "%s"    %  d .toString ( '(%5.2f+-%4.2f)'  )
+        
+        rows.append ( row )
+    from ostap.logger.table import table
+    return table ( rows , title = title , prefix = prefix ) 
     
 # =============================================================================
-# use RooFormulaVar to parameterise efficiency:
+## use RooFormulaVar to parameterise efficiency:
 def test_formula () :
-## if 1 < 2 :
+    """Use RooFormulaVar to parameterise efficiency:
+    """
+    logger = getLogger("test_formula") 
     
+
+    ## create RooFormularVar 
     effFunc = ROOT.RooFormulaVar ( "effFunc" , "a+0.5*b*(1+tanh((x-x0)*c))" , vars )
     
-    eff1 = Efficiency1D( 'E1' , effFunc , cut  = acc , xvar = x )
-    r1 = eff1.fitTo ( ds )
-    r1 = eff1.fitTo ( ds )
-    f1 = eff1.draw  ( ds , nbins = 20 )
-    print(r1)
-    for p in points :
-        print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff1 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
+    with timing ("Using-RooFormularVar" , logger ) :
+        
+        eff1 = Efficiency1D( 'E1' , effFunc , cut  = acc , xvar = x )
 
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r1   = eff1.fitTo ( ds , silent = True )
+        
+        
+        logger.info ( "Fit result using-RooFormularVar \n%s" % r1.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using  RooFormulaVar)\n%s" % make_table (
+            eff1 , title = 'using RooFormulaVer') )
+
+    time.sleep(2)
+    
 # =============================================================================
-def test_pyvar () :
-## if 1 < 2 : 
-
+## use PyVAR stuff
+#  @attention For *OLD* PyROOT only!
+def test_pyVAR () :
+    """Yse PyVAR stuff
+    - For *old* PyROOT only!
+    """
+    logger = getLogger("test_pyVAR") 
+    
+    if not old_PyROOT :
+        logger.warning ("test is enabled only for *OLD* PyROOT!")
+        return 
+    
     from ostap.fitting.pyvar import PyVAR
-    class MyVar(PyVAR) :
-
+    
+    # =========================================================================
+    ## @class MyEff2
+    #  Local "pythonic" variable
+    #  @see PyVAR
+    class MyEff2(PyVAR) :
+        """Local ``pythonic'' variable
+        """
         def  evaluate ( self ) :
 
             vlist = self.varlist
-
-            _x  = float ( vlist[0] )
-            _a  = float ( vlist[1] ) 
-            _b  = float ( vlist[2] ) 
-            _c  = float ( vlist[3] ) 
-            _x0 = float ( vlist[4] ) 
-
-            r = eff ( _x , _a , _b , _c , _x0 )
             
-            return r 
+            _x  = float ( vlist [ 0 ] )
+            _a  = float ( vlist [ 1 ] ) 
+            _b  = float ( vlist [ 2 ] ) 
+            _c  = float ( vlist [ 3 ] ) 
+            _x0 = float ( vlist [ 4 ] ) 
+            
+            return eff ( _x , _a , _b , _c , _x0 )
         
-    myEff2 = MyVar ( 'myEff2' , vars = vars , title = 'title' )
+    myEff2  = MyEff2 ( 'myEff2' , vars = vars , title = 'title' )
+    the_fun = myEff2.var
     
-    eff2 = Efficiency1D( 'E2' , myEff2.var , cut  = acc , xvar = x )
+    with timing ("Using-PyVAR" , logger ) :
+        
+        
+        eff2 = Efficiency1D( 'E2' , the_fun , cut  = acc , xvar = x )
+        
+        a .fix ( A )
+        b .fix ( B )
+        c .value = C
+        x0.value = X0
 
-    r2 = eff2.fitTo ( ds )
-    r2 = eff2.fitTo ( ds )
-    f2 = eff2.draw  ( ds , nbins = 20 )
-    print(r2)
-    for p in points :
-        print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff2 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
+        r2   = eff2.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r2   = eff2.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r2   = eff2.fitTo ( ds , silent = True )
+        
+        logger.info ( "Fit result using-PyVAR \n%s" % r2.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using PyVAR)\n%s" % make_table (
+            eff2 , title = 'using PyVAR') )
 
+    time.sleep(2)
+    
 # =============================================================================
-def test_pyvar2 () :
-
+## use PyVAR2
+def test_pyVAR2 () :
+    """Use PyVAR2
+    """
+    
+    logger = getLogger("test_pyVAR2") 
+    
     from ostap.fitting.pyvar import PyVAR2
-
     
     myEff3 = PyVAR2 ( name = 'myEff3' , vars = vars , function  = eff )
     
-    eff3 = Efficiency1D( 'E3' , myEff3.var , cut  = acc , xvar = x )
-
-    r2 = eff3.fitTo ( ds )
-    r2 = eff3.fitTo ( ds )
-    f2 = eff3.draw  ( ds , nbins = 20 )
-    print(r2)
-    for p in points :
-        print(' Point/Eff %4.1f %s%% %.2f%%'   % ( p , (100*eff3 ( p , error = True )).toString ( '(%5.2f+-%4.2f)' ) , 100*eff0(p) ))
+    with timing ("Using-PyVAR2" , logger ) :
+        
+        eff3 = Efficiency1D( 'E3' , myEff3.var , cut  = acc , xvar = x )
+        
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
+        
+        r3   = eff3.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r3   = eff3.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r3   = eff3.fitTo ( ds , silent = True )
 
     
+        logger.info ( "Fit result using-PyVAR2 \n%s"     % r3.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using PyVAR2)\n%s" % make_table (
+            eff3 , title = 'using PyVAR2') )
+
+    time.sleep(2)
+
+# =============================================================================
+## use PyVar stuff
+#  @attention For *NEW* PyROOT only!
+def test_pyVar () :
+    """use PyVar stuff
+    - For *NEW* PyROOT only!
+    """
+    
+    logger = getLogger("test_pyVar") 
+    
+    if old_PyROOT :
+        logger.warning ("test is enabled only for *NEW* PyROOT!")
+        return
+    
+    # =========================================================================
+    ## @class MyEff4
+    #  Local ``pythonic'' variable
+    class MyEff4 (Ostap.Functions.PyVar) :
+        
+        def __init__ ( self , name , title ,  variables ) :
+
+            vlist = ROOT.RooArgList()
+            for v in   variables : vlist.add ( v ) 
+            super(MyEff4,self).__init__ ( name , title , vlist )
+                        
+        def clone ( self , newname ) :
+            
+            name = newname if newname else self.name             
+            nv = MyEff4( name ,  self.title  , self.variables()  )
+            ROOT.SetOwnership ( nv ,  False )             
+            return nv 
+        
+        def evaluate ( self ) :
+            
+            vlist = self.variables() 
+            
+            _x  = float ( vlist [ 0 ] )
+            _a  = float ( vlist [ 1 ] ) 
+            _b  = float ( vlist [ 2 ] ) 
+            _c  = float ( vlist [ 3 ] ) 
+            _x0 = float ( vlist [ 4 ] ) 
+            
+            return eff ( _x , _a , _b , _c , _x0 )
+        
+    myEff4  = MyEff4 ( 'myEff4' , variables = vars , title = 'title' )
+    the_fun = myEff4
+        
+    with timing ("Using-PyVar" , logger ) :
+        
+        eff4 = Efficiency1D( 'E4' , the_fun , cut  = acc , xvar = x )
+
+        a.fix ( A )
+        b.fix ( B )
+        c .value = C
+        x0.value = X0
+        
+        r4   = eff4.fitTo ( ds , silent = True )
+        
+        a.release ()
+        b.release ()
+        
+        c .fix ()
+        x0.fix ()
+        
+        r4   = eff4.fitTo ( ds , silent = True )
+        
+        c .release()
+        x0.release()
+        
+        r4   = eff4.fitTo ( ds , silent = True )
+
+
+        logger.info ( "Fit result using-PyVar \n%s"      % r4.table ( prefix = "# ") )
+        logger.info ( "Compare with true efficiency (using  PyVar)\n%s" % make_table (
+            eff4 , title = 'using PyVar') )
+    
+    time.sleep(2)
+
 # =============================================================================
 if '__main__' == __name__ :
     
-    with timing ('RooFormulaVar : ') : test_formula ()
-    with timing ('PyVAR         : ') : test_pyvar   ()
-    with timing ('PyVAR2        : ') : test_pyvar2  ()
+    test_formula ()
+    test_pyVAR   ()
+    test_pyVAR2  ()
+    test_pyVar   ()
 
 
 # =============================================================================

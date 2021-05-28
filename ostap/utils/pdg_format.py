@@ -46,8 +46,8 @@ __all__ = (
     )
 # ===============================================================================
 import ROOT,           math
-from   ostap.math.ve   import cpp, VE
-from   ostap.math.base import frexp10 
+from   ostap.math.ve   import VE
+from   ostap.math.base import Ostap , frexp10 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -60,8 +60,8 @@ else                       : logger = getLogger ( __name__                 )
 ## round to nearest integer, rounds half integers to nearest even integer 
 #  It is just a simple wrapper around boost::numeric::converter 
 #  @see Ostap::Math::round 
-cpp_round   = cpp.Ostap.Math.round
-cpp_round_N = cpp.Ostap.Math.round_N 
+cpp_round   = Ostap.Math.round
+cpp_round_N = Ostap.Math.round_N 
 
 # =============================================================================
 ## get ``mantissa'' (1<=m<10) and exponent for radix10
@@ -283,8 +283,8 @@ def pdg_format ( value , error , latex = False ) :
         elif c == 2 and q == 3 : q = 0
         
 
-        if latex : fmt = "$(%%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q )
-        else     : fmt =  "(%%.%df +/- %%.%df)*10^{%%d}"      % ( q , q )
+        if latex : fmt = r"$(%%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q )
+        else     : fmt =   "(%%.%df +/- %%.%df)*10^{%%d}"       % ( q , q )
 
         v  /= 10**(3*n)
         e  /= 10**(3*n)
@@ -296,8 +296,8 @@ def pdg_format ( value , error , latex = False ) :
         
         q = abs ( q ) 
 
-        if latex : fmt = "$%%.%df \pm %%.%df$" % ( q , q )
-        else     : fmt =  "%%.%df +/- %%.%df"  % ( q , q )
+        if latex : fmt = r"$%%.%df \pm %%.%df$" % ( q , q )
+        else     : fmt =   "%%.%df +/- %%.%df"  % ( q , q )
         ##
 
         return fmt % ( v , e )
@@ -364,8 +364,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
         if   c == 3 and q == 3 : q = 1
         elif c == 2 and q == 3 : q = 0
         
-        if latex : fmt = "$(%%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q )
-        else     : fmt =  "(%%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q )
+        if latex : fmt = r"$(%%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q )
+        else     : fmt =   "(%%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q )
 
         v  /= 10**(3*n)
         e1 /= 10**(3*n)
@@ -378,8 +378,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
         
         q = abs ( q ) 
 
-        if latex : fmt = "$%%.%df \pm %%.%df \pm %%.%df$" % ( q , q , q )
-        else     : fmt =  "%%.%df +/- %%.%df +/- %%.%df"  % ( q , q , q )
+        if latex : fmt = r"$%%.%df \pm %%.%df \pm %%.%df$" % ( q , q , q )
+        else     : fmt =   "%%.%df +/- %%.%df +/- %%.%df"  % ( q , q , q )
         ##
 
         return fmt % ( v , e1 , e2 )
@@ -448,8 +448,8 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
         if   c == 3 and q == 3 : q = 1
         elif c == 2 and q == 3 : q = 0
 
-        if latex : fmt = "$(%%.%df \pm %%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q , q )
-        else     : fmt =  "(%%.%df +/- %%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q , q )
+        if latex : fmt = r"$(%%.%df \pm %%.%df \pm %%.%df \pm %%.%df)\cdot10^{%%d}$" % ( q , q , q , q )
+        else     : fmt =   "(%%.%df +/- %%.%df +/- %%.%df +/- %%.%df)*10^{%%d}"      % ( q , q , q , q )
 
         v  /= 10**(3*n)
         e1 /= 10**(3*n)
@@ -463,8 +463,8 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
         
         q = abs ( q ) 
 
-        if latex : fmt = "$%%.%df \pm %%.%df \pm %%.%df \pm %%.%df$" % ( q , q , q , q )
-        else     : fmt =  "%%.%df +/- %%.%df +/- %%.%df +/- %%.%df"  % ( q , q , q , q )
+        if latex : fmt = r"$%%.%df \pm %%.%df \pm %%.%df \pm %%.%df$" % ( q , q , q , q )
+        else     : fmt =   "%%.%df +/- %%.%df +/- %%.%df +/- %%.%df"  % ( q , q , q , q )
         ##
 
         return fmt % ( v , e1 , e2 , e3 )

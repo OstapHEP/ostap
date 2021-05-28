@@ -89,12 +89,12 @@ ROOT.RooCategory.labels = _rc_labels_
 #                 wvars  , { 'cc' : dsn_cc ,  'zz' : dsn_00 } ,
 #                 args = ( ROOT.RooFit.WeightVar( 'SS_sw' ) , ) )
 #  @endcode
-def combined_data ( sample        ,
-                    varset        , 
-                    datasets      ,
-                    name     = '' ,
-                    title    = '' ,
-                    args     = () ) :
+def combined_data ( sample          ,
+                    varset          , 
+                    datasets        ,
+                    name     = ''   ,
+                    title    = ''   ,
+                    args     = ()   ) :
     """
      Create combined  dataset for simultaneous fit
 
@@ -112,10 +112,14 @@ def combined_data ( sample        ,
      
      """
     
-    labels = sample.labels()
+    labels  = sample.labels()
     
     largs   = [ ROOT.RooFit.Index ( sample ) ] 
 
+
+    weights = set() 
+    ds_keep = []
+    
     for label in labels :
 
         dset = None 
@@ -131,21 +135,47 @@ def combined_data ( sample        ,
 
         assert not dset.isNonPoissonWeighted () ,\
                'Weighted data cannot be combined!'
-                    
-        largs.append (  ROOT.RooFit.Import ( label , dset ) )
 
+        if not dset.isWeighted () :
+            largs.append (  ROOT.RooFit.Import ( label , dset ) )
+        else :
+            uwdset , wnam = dset.unWeighted ()
+            assert uwdset and wnam, "Cannot ``unweight'' dataset!"
+            largs.append (  ROOT.RooFit.Import ( label , uwdset ) )
+            ds_keep.append ( uwdset ) 
+            weights.add    ( wnam   )
+
+    assert len ( weights ) < 2 , 'Invalid number of weights %s' % list ( weights )
+
+    weight = weights.pop() if weights else None 
+    
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
 
     args = args + tuple ( largs )
-
+        
     vars = ROOT.RooArgSet()
     if   isinstance ( varset , ROOT.RooArgSet  ) : vars = varset
     elif isinstance ( varset , ROOT.RooAbsReal ) : vars.add ( varset )
     else :
         for v in varset : vars.add ( v )
         
-    return ROOT.RooDataSet ( name , title , vars , *args )
+    if weight :
+        args = args + ( ROOT.RooFit.WeightVar ( weight ) , )
+        if not weight in vars : 
+            wvar = ROOT.RooRealVar ( weight , 'weigth variable' , 1 , -1.e+100 , 1.e+100 ) 
+            vars.add ( wvar ) 
+
+    ds = ROOT.RooDataSet ( name , title , vars , *args )
+
+    while ds_keep :
+        d = ds_keep.pop()
+        d.reset()
+        del d
+        
+    
+    return ds
+
 
 # =============================================================================
 ## create combined binned dataset for simultaneous fit
@@ -236,9 +266,9 @@ def combined_hdata ( sample        ,
     d2 = 0 < nd2
     d3 = 0 < nd3
     
-    assert ( not d1 and not d2 ) or \
-           ( not d2 and not d3 ) or \
-           ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
+    ## assert ( not d1 and not d2 ) or \
+    ##       ( not d2 and not d3 ) or \
+    ##       ( not d3 and not d1 ) , 'Mismatch in histogram dimensions!'
             
     name  = name  if name  else dsID()
     title = title if title else 'Data for simultaneous fit/%s' % sample.GetName()
@@ -248,10 +278,10 @@ def combined_hdata ( sample        ,
     else :  
         for v in varset : varlst.add ( v )
 
-    assert ( d3 and 3 == len ( varlst ) ) or \
-           ( d2 and 2 == len ( varlst ) ) or \
-           ( d1 and 1 == len ( varlst ) )  , \
-           'Invalid dimension of dataset!'
+    ## assert ( d3 and 3 == len ( varlst ) ) or \
+    ##       ( d2 and 2 == len ( varlst ) ) or \
+    ##       ( d1 and 1 == len ( varlst ) )  , \
+    ##       'Invalid dimension of dataset!'
     
     return ROOT.RooDataHist ( name , title , varlst , sample  , mm ) 
     
@@ -286,8 +316,7 @@ class Sim1D(PDF) :
         assert isinstance ( sample , ROOT.RooCategory ),\
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
-        if not name  : name  = 'SimFit_'                 +          sample.GetName()
-        if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
+        name = name if name else self.generate_name ( prefix = 'sim1D_%s_' % sample.GetName() )
         
         self.__sample     = sample 
         self.__categories = {}
@@ -330,9 +359,10 @@ class Sim1D(PDF) :
         ## initialize the base 
         PDF.__init__ ( self , name , xvar = _xvar ) 
         
-        self.pdf = ROOT.RooSimultaneous ( 'sim_' + self.name , 
-                                          title              , 
-                                          self.sample        )
+        self.pdf = ROOT.RooSimultaneous (
+            self.roo_name ( 'sim1d_' ) ,
+            title if title else "Simultaneous %s" % self.name , 
+            self.sample )
 
         keys = self.categories.keys()
         for key in sorted ( keys ) :
@@ -568,7 +598,7 @@ class SimFit ( MakeVar ) :
     - see RooSimultaneous
 
     Note that this class is *not* PDF, but it behaves rather similar to PDF,
-    and, in partcualr has such methods as 
+    and, in partcular has such methods as 
     - fitTo
     - draw
     - nll
@@ -597,8 +627,8 @@ class SimFit ( MakeVar ) :
         assert isinstance ( sample , ROOT.RooCategory ),\
                'Invalid type for "sample":' % ( sample ,  type ( sample ) )
         
-        if not name  : name  = 'SimFit_'                 +          sample.GetName()
-        if not title : title = 'Simultaneous PDF(%s,%s)' % ( name , sample.GetName() )
+        name = name if name else self.generate_name ( prefix = 'simfit_%s_' % sample.GetName() )
+        
 
         ## propagate the name 
         self.name = name
@@ -634,7 +664,10 @@ class SimFit ( MakeVar ) :
 
             
         sim_pdf     = PDF ( self.name + '_Sim' , xvar = _xv )            
-        sim_pdf.pdf = ROOT.RooSimultaneous ( 'Sim_' + self.name , title , self.sample )
+        sim_pdf.pdf = ROOT.RooSimultaneous (
+            self.roo_name ( 'simfit_' ) ,
+            title if title else "Simultaneous %s" % self.name , 
+            self.sample )
         
         keys = self.categories.keys()
         for key in sorted ( keys ) :
@@ -1094,23 +1127,23 @@ class SimFit ( MakeVar ) :
     #  model  = ....
     #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self                  , 
                    nEvents               , 
                    varset        = None  ,
                    args          = ()    ,
                    binning       = {}    ,
-                   sample        = False , 
+                   sample        = True  , 
                    category_args = {}    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
         >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
 
         labels = self.sample.labels()
@@ -1165,18 +1198,17 @@ class SimFit ( MakeVar ) :
     #  params  = ( A , B , C , ... )
     #  pdf.load_params ( dataset , params )  
     #  @endcode 
-    def load_params ( self , dataset = None , params = {}  , silent = False ) :
+    def load_params ( self , params = {}  , dataset = None , silent = False , **kwargs ) :
         """Load parameters from external dictionary <code>{ name : value }</code>
         #  or sequence of <code>RooAbsReal</code> objects
         >>> pdf      = ...
         >>> dataset = ... 
         >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
+        >>> pdf.load_params ( params , dataset ) 
         >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
+        >>> pdf.load_params ( params , dataset )  
         """
-        ## nothing to load 
-        return self.pdf.load_params ( dataset , params , silent )
+        return self.pdf.load_params ( params = params , dataset = dataset , silent = silent , **kwargs )
 
     # =========================================================================
     ##  Does this function depend on this variable,
@@ -1310,5 +1342,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

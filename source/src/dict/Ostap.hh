@@ -2,7 +2,7 @@
 #ifndef OSTAP_OSTAP_HH 
 #define OSTAP_OSTAP_HH 1
 // ============================================================================
-#include "Python.h"
+// #include "Python.h"
 // ============================================================================
 // Include files
 // ============================================================================
@@ -41,6 +41,7 @@
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/HistoDump.h"
+#include "Ostap/HistoHash.h"
 #include "Ostap/HistoInterpolation.h"
 #include "Ostap/HistoInterpolators.h"
 #include "Ostap/HistoMake.h"
@@ -93,6 +94,7 @@
 #include "Ostap/PyVar.h"     
 #include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
+#include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/StatVar.h"

@@ -88,8 +88,8 @@ class BernsteinPoly ( FUNC , ParamsPoly ) :
         
         ## create the function
         self.fun    = Ostap.MoreRooFit.Bernstein (
-            'bpol_%s'       % self.name ,
-            'Bernstein(%s)' % self.name ,
+            self.roo_name ( 'bpol_' )   ,
+            'Bernstein %s' % self.name  ,
             self.xvar                   ,
             xmin                        ,
             xmax                        ,
@@ -144,8 +144,8 @@ class MonotonicPoly(FUNC,ShiftScalePoly) :
 
         ## create the function
         self.fun    = Ostap.MoreRooFit.Monotonic (
-            'mpol_%s'       % self.name ,
-            'Bernstein(%s)' % self.name ,
+            self.roo_name ( 'mpol_' )   ,
+            '%s Bernstein %s' % ( "increasing" if increasing else "decreasing" , self.name ) , 
             self.xvar                   ,
             self.increasing             ,
             xmin                        ,
@@ -219,8 +219,10 @@ class ConvexPoly(FUNC,ShiftScalePoly) :
         
         ## create the function
         self.fun    = Ostap.MoreRooFit.Convex (
-            'cpol_%s'       % self.name ,
-            'Bernstein(%s)' % self.name ,
+            self.roo_name ( 'cpol_' )   ,
+            '%s %s Bernstein %s' % ( "convex"     if convex     else "concave"    ,
+                                     "increasing" if increasing else "decreasing" ,
+                                     self.name ) , 
             self.xvar                   ,
             self.increasing             ,
             self.iconvex                ,
@@ -303,8 +305,8 @@ class ConvexOnlyPoly(FUNC,ShiftScalePoly) :
         
         ## create the function
         self.fun    = Ostap.MoreRooFit.ConvexOnly (
-            'cpol_%s'       % self.name ,
-            'Bernstein(%s)' % self.name ,
+            self.roo_name ( 'copol_' )   ,
+            '%s Bernstein %s' % ( "convex" if convex else "concave" , self.name ) , 
             self.xvar                   ,
             self.iconvex                ,
             xmin                        ,
@@ -373,8 +375,8 @@ class ScaleAndShift ( FUNC ) :
            
         self.__bc = Ostap.MoreRooFit.Product  ( self.b , self.c )
         self.fun  = Ostap.MoreRooFit.Addition (
-            "scaleshift_%s"   % self.name ,
-            "Scale&Shift(%s)" % self.name ,
+            self.roo_name ( 'ss_' )      ,
+            "Scale&Shift %s" % self.name ,
             self.a      ,
             self.__bc  
             )
@@ -394,7 +396,7 @@ class ScaleAndShift ( FUNC ) :
     def a ( self , value ) :
         vv = float ( value )
         if self.__a.minmax () and not vv in self.__a  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__a.minmax() , self.__a.name ) )
         self.__a.setVal ( vv )
 
     @property
@@ -405,7 +407,7 @@ class ScaleAndShift ( FUNC ) :
     def b ( self , value ) :
         vv = float ( value )
         if self.__b.minmax () and not vv in self.__b  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__b.minmax() , self.__b.name ) )
         self.__b.setVal ( vv )
     
     @property

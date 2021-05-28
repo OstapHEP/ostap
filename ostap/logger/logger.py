@@ -14,19 +14,31 @@ import logging, os, sys
 __all__ = (
     'getLogger'      , ## get (configured) logger
     'setLogging'     , ## set disable level according to MSG.Level
+    'KeepLevel'      , ## context manager to control output level 
     'LogLevel'       , ## context manager to control output level 
+    'keepLevel'      , ## helper function to control output level
     'logLevel'       , ## helper function to control output level
     'logVerbose'     , ## helper function to control output level
     'logDebug'       , ## helper function to control output level
     'logInfo'        , ## helper function to control output level
     'logWarning'     , ## helper function to control output level
     'logError'       , ## helper function to control output level
+    'logFatal'       , ## helper function to control output level
     'logColor'       , ## context manager to switch on  color logging locally  
     'logNoColor'     , ## context manager to switch off color logging locally  
     'noColor'        , ## context manager to switch off color logging locally  
     'keepColor'      , ## context manager preserve to preserve coloring
     'make_colors'    , ## force colored logging 
     'reset_colors'   , ## reset colored logging
+    ##
+    'threshold'      , ## current global threshold 
+    'enabled'        , ## is givel level allowed by the global thresholds?
+    'enabledVerbose' , ## is VERBOSE  level allowed by the global thresholds?
+    'enabledDebug'   , ## is DEBUG    level allowed by the global thresholds?
+    'enabledInfo'    , ## is INFO     level allowed by the global thresholds?
+    'enabledWarning' , ## is WARNING  level allowed by the global thresholds?
+    'enabledError'   , ## is ERROR    level allowed by the global thresholds?
+    'enabledFatal'   , ## is FATAL    level allowed by the global thresholds?
     ##
     'ALL', 'VERBOSE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'FATAL' ,
     )
@@ -60,7 +72,7 @@ def _verbose2_(msg, *args, **kwargs):
     """Log a message with severity 'VERBOSE' on the root logger.
     """
     if not logging.root.handlers : logging.basicConfig()
-    logging.root.verbose (msg, *args, **kwargs)
+    logging.root.verbose ( msg , *args , **kwargs )
 
 # =============================================================================
 # add method 'verbose' to logger 
@@ -83,7 +95,7 @@ def setLogging ( output_level ) :
 
 # =============================================================================
 ## define standard logging names
-logging_levels = { logging.CRITICAL : 'FATAL'   ,
+logging_levels = { logging.CRITICAL : 'FATAL  ' ,
                    logging.WARNING  : 'WARNING' ,
                    logging.DEBUG    : 'DEBUG  ' ,
                    logging.INFO     : 'INFO   ' ,
@@ -99,16 +111,78 @@ from ostap.utils.basic import isatty
 
 # =============================================================================
 ## The basic configuration 
-if isatty() :
+if isatty () :
     logging.basicConfig (
-        level    = logging.INFO        ,
+        ## level    = logging.NOTSET      ,
+        level    = 1                   ,
         format   = logging_format      ,
         datefmt  = logging_date_format )
 else :
     logging.basicConfig (
-        level    = logging.INFO        ,
+        ## level    = logging.NOTSET      ,
+        level    = 1                   ,
         format   = logging_file_format ,
         datefmt  = logging_date_format )
+
+# =============================================================================
+## Get current global threshold
+def threshold()  :
+    """Get current global threshold
+    """
+    return logging.root.manager.disable
+
+# =============================================================================
+## Are prints at the givel level enabled?
+def enabled  ( level ) :
+    """Are prints at the givel level enabled?
+    """
+    return threshold() < level
+
+# =============================================================================
+## Are VERBOSE  prints  enabled? 
+def enabledVerbose() :
+    """Are VERBOSE  prints  enabled?
+    """
+    return enabled ( logging.VERBOSE ) 
+
+# =============================================================================
+## Are DEBUG  prints  enabled? 
+def enabledDebug() :
+    """Are DEBUG prints  enabled?
+    """
+    return enabled ( logging.DEBUG ) 
+
+# =============================================================================
+## Are INFO  prints  enabled? 
+def enabledInfo () :
+    """Are INFO prints  enabled?
+    """
+    return enabled ( logging.INFO ) 
+
+# =============================================================================
+## Are WARNING  prints  enabled? 
+def enabledWarning () :
+    """Are WARNING prints  enabled?
+    """
+    return enabled ( logging.WARNING ) 
+
+# =============================================================================
+## Are ERROR prints  enabled? 
+def enabledError  () :
+    """Are ERROR prints  enabled?
+    """
+    return enabled ( logging.ERROR ) 
+
+
+# =============================================================================
+## Are FATAL prints  enabled? 
+def enabledFatal  () :
+    """Are FATAL prints  enabled?
+    """
+    return enabled ( logging.CRITICAL ) 
+
+
+    
 
 # =============================================================================
 ## get configured logger
@@ -116,10 +190,10 @@ else :
 #  logger1 = getLogger ( 'LOGGER1' )
 #  logger2 = getLogger ( 'LOGGER2' , level = logging.INFO )
 #  @endcode 
-def getLogger ( name   = 'ostap' ,
-                format = ''      ,
-                level  = None    ,
-                stream = None    ) :
+def getLogger ( name   = 'ostap'        ,
+                format = ''             ,
+                level  = 1              ,
+                stream = None           ) :
     
     """Get the proper logger
     >>> logger1 = getLogger ( 'LOGGER1' )
@@ -127,7 +201,8 @@ def getLogger ( name   = 'ostap' ,
     """
     #
     logger = logging.getLogger ( name )
-    logger.propagate = True  ## ???
+    logger.propagate = True   ## ???
+    ##  logger.propagate = False  ## ???
 
     ## if not logger.handlers :         
     ##     lh  = logging.StreamHandler ( stream ) if stream else logging.StreamHandler ()            
@@ -141,6 +216,28 @@ def getLogger ( name   = 'ostap' ,
     #
     return logger
 
+
+# =============================================================================
+## @class KeepLevel
+#  Keep logging level 
+#  @code
+#  with keepLevel() :
+#       ...do something... 
+#  @endcode
+class KeepLevel(object) :
+    """Temporarily enable/disable certain logger levels
+    >>> with keepLevel( logging.CRITICAL ) :
+    ...  do something here ...
+    """
+    ## context manager: ENTER 
+    def __enter__ ( self ) :
+        self.old_level = logging.root.manager.disable
+        return self
+
+    ## context manager: EXIT 
+    def __exit__ ( self , *_ ) :        
+        logging.disable ( self.old_level )
+
 # =============================================================================
 ## @class LogLevel
 #  Temporarily enable/disable certain logger levels
@@ -148,7 +245,7 @@ def getLogger ( name   = 'ostap' ,
 #  with LogLevel( logging.CRITICAL ) :
 #       ...do something... 
 #  @endcode
-class LogLevel(object) :
+class LogLevel(KeepLevel) :
     """Temporarily enable/disable certain logger levels
     >>> with LogLevel( logging.CRITICAL ) :
     ...  do something here ...
@@ -159,14 +256,23 @@ class LogLevel(object) :
 
     ## context manager: ENTER 
     def __enter__ ( self ) :
-        self.old_level = logging.root.manager.disable
+        KeepLevel.__enter__ ( self ) 
         logging.disable ( self.new_level )
         return self
-
-    ## context manager: EXIT 
-    def __exit__ ( self , *_ ) :        
-        logging.disable ( self.old_level )
         
+# =============================================================================
+#  Keep the logging level
+#  @code
+#  with keepLevel() :
+#       ...do something... 
+#  @endcode
+def keepLevel () :
+    """Keep logging level 
+    >>> with keepLevel() :
+    >>>  ...do something...
+    """
+    return KeepLevel ()
+
 # =============================================================================
 #  Temporarily enable/disable certain logger levels
 #  @code
@@ -244,6 +350,19 @@ def logError   () :
     """       
     return logLevel (  logging.ERROR   - 1 )
 
+# =============================================================================
+#  Temporarily enable/disable all loggers with level less then FATAL
+#  @code
+#  with logFatal() :
+#       ...do something... 
+#  @endcode
+def logFatal   () :
+    """Temporarily disable all loggers with level less then ERROR
+    >>> with logWarning() :
+    >>>  ...do something...
+    """       
+    return logLevel (  logging.FATAL   - 1 )
+
 
 # =============================================================================
 ## BASIC   colorization
@@ -299,13 +418,14 @@ def make_colors () :
     logging.addLevelName ( logging.ERROR    ,  makeName ( logging.ERROR    , fg = YELLOW , bg  = RED    , blink     = True , bgb = True , fgb = True ) )
     logging.addLevelName ( logging.INFO     ,  makeName ( logging.INFO     , bg = BLUE   , fg  = WHITE  ) )
     logging.addLevelName ( logging.DEBUG    ,  makeName ( logging.DEBUG    , bg = GREEN  , fg  = WHITE  ) )
+    logging.addLevelName ( logging.VERBOSE  ,  makeName ( logging.VERBOSE  , bg = YELLOW , fg  = WHITE  , bgb = True , fgb = True ) )
 
     __colored_logger.append ( 1 ) 
     return with_colors() 
 
 # =============================================================================
 ## @class ColorLogging
-#  Simple context manager to swicth on coloring
+#  Simple context manager to switch on coloring
 #  @code
 #  with ColorLogging():
 #      ... do something ... 
@@ -464,6 +584,7 @@ if log_file :
     import atexit    
     atexit.register ( func )
 
+logging.disable ( logging.INFO - 1 )  
 # =============================================================================
 if __name__ == '__main__' :
 
@@ -473,7 +594,9 @@ if __name__ == '__main__' :
 
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
- 
+    
+    with noColor() : pass
+    
     logger.verbose  ( 'This is VERBOSE  message'  ) 
     logger.debug    ( 'This is DEBUG    message'  ) 
     logger.info     ( 'This is INFO     message'  ) 
@@ -520,16 +643,70 @@ if __name__ == '__main__' :
         logger.error    ( 'This is ERROR    message'  ) 
         logger.fatal    ( 'This is FATAL    message'  ) 
         logger.critical ( 'This is CRITICAL message'  ) 
-        
-    logger.verbose  ( 'This is VERBOSE  message'  ) 
-    logger.debug    ( 'This is DEBUG    message'  ) 
-    logger.info     ( 'This is INFO     message'  ) 
-    logger.warning  ( 'This is WARNING  message'  ) 
-    logger.error    ( 'This is ERROR    message'  ) 
-    logger.fatal    ( 'This is FATAL    message'  ) 
-    logger.critical ( 'This is CRITICAL message'  ) 
-    logger.info ( 80*'*'  )
 
+    logger.info ( " -----> With VERBOSE threshold") 
+    with logVerbose() : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+    logger.info ( " -----> With DEBUG   threshold") 
+    with logDebug () : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+    logger.info ( " -----> With INFO    threshold") 
+    with logInfo () : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+    logger.info ( " -----> With WARNING threshold") 
+    with logWarning () : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+    logger.info ( " -----> With ERROR   threshold") 
+    with logError () : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+    logger.info ( " -----> With FATAL   threshold") 
+    with logFatal () : 
+        logger.verbose  ( 'This is VERBOSE  message'  ) 
+        logger.debug    ( 'This is DEBUG    message'  ) 
+        logger.info     ( 'This is INFO     message'  ) 
+        logger.warning  ( 'This is WARNING  message'  ) 
+        logger.error    ( 'This is ERROR    message'  ) 
+        logger.fatal    ( 'This is FATAL    message'  ) 
+        logger.critical ( 'This is CRITICAL message'  )
+
+        
+    logger.info ( 80*'*'  )
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

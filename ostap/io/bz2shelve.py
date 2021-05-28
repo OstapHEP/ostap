@@ -192,7 +192,7 @@ class Bz2Shelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.tbz' , '.tbz2' , '.bz2' , '.bz2db' 
+    extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
     def __init__(
         self                                   ,
@@ -272,7 +272,7 @@ class Bz2Shelf(CompressShelf):
                 return tuple ( items )
             
         import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-db' )
         with bz2.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )                
@@ -377,7 +377,7 @@ class TmpBz2Shelf(Bz2Shelf):
 
         ## create temporary file name 
         import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.bz2db' )
+        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.bz2db' )
         
         Bz2Shelf.__init__ ( self        ,  
                             filename    ,

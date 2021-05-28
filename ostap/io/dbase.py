@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-# @file compress_dbase.py
+# @file ostap/io/dbase.py
 # 
 # Helper module to use databases
 #
@@ -16,352 +16,232 @@ __date__    = "2020-05-16"
 __version__ = "$Revision:$" 
 # =============================================================================
 __all__ = (
-    'whichdb'  , ## guess database type  
-    'dbopen'   , ## open database
-    'Item'     , ## item: named tuple (time,payload)
+    'whichdb'    , ## guess database type  
+    'dbopen'     , ## open database
+    'Item'       , ## item: named tuple (time,payload)
     )
 # =============================================================================
-import sys, os, collections  
-from   ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.compress_shelve' )
-else                      : logger = getLogger ( __name__                   )
+import sys, os, collections
+from   ostap.logger.logger  import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dbase' )
+else                      : logger = getLogger ( __name__         )
+# =============================================================================
+from ostap.io.sqlitedict import SqliteDict, issqlite3
 # =============================================================================
 ## named tuple to DB-item: (time, payload)
 Item = collections.namedtuple ( 'Item', ( 'time' , 'payload' ) )
 # =============================================================================
-if  sys.version_info.major < 3 :   ## PYTHON2 
+if sys.version_info < ( 3, 0 ) :
+    import anydbm                   as std_db
+    from   whichdb import whichdb   as std_whichdb 
+else :
+    import dbm                      as std_db
+    std_whichdb = std_db.whichdb
+# =============================================================================
+## Check for Berkeley DB
+# =============================================================================
+use_bsddb3     = False
+use_berkeleydb = False
 
-    import anydbm 
-    from whichdb              import whichdb   as _whichdb
-
-    from ostap.io.sqlitedict  import issqlite3 
-    from ostap.io.sqlitedict  import SqliteDict
+## make a try to use berkeleydb
+if  ( 3 , 6 ) <= sys.version_info :
     
-    # =====================================================================
-    ##  Guess which db package to use to open a db file.
-    #  
-    #   Return values:
-    #  - None if the database file can't be read;
-    #  - empty string if the file can be read but can't be recognized
-    #  - the name of the dbm submodule (e.g. "ndbm" or "gnu") if recognized.
-    #   
-    # Importing the given module may still fail, and opening the
-    # database using that module may still fail.
-    # 
-    #  - Actually it is a bit extended  form of <code>whichdb.whichdb</code>
-    #   that accounts for  <code>sqlite3</code>
-    def whichdb ( filename  ) :
-        """Guess which db package to use to open a db file.
+    try :        
+        import berkeleydb
+        use_berkeleydb   = True
         
-        Return values:
+        berkeleydb_open_mode = {
+            'r' : berkeleydb.db.DB_RDONLY ,
+            'w' : 0                       ,
+            'c' : berkeleydb.db.DB_CREATE , 
+            'n' : berkeleydb.db.DB_CREATE
+            }
         
-        - None if the database file can't be read;
-        - empty string if the file can be read but can't be recognized
-        - the name of the dbm submodule (e.g. 'ndbm' or 'gnu') if recognized.
-        
-        Importing the given module may still fail, and opening the
-        database using that module may still fail.
-        
-        - Actually it is a bit extended  form of `whichdb.whichdb`
-        that accounts for `sqlite3`
-        """
-
-        tst = _whichdb ( filename )
-        if tst or tst is None          : return tst
-
-        if issqlite3 ( filename ) : return "sqlite3"
-
-        return  tst 
-
-    # =====================================================================
-    ## Open or create database at path given by *file*.
-    # 
-    #  Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-    #  for read-write access of an existing database, 'c' for read-write access
-    #  to a new or existing database, and 'n' for read-write access to a new
-    #  database.
-    # 
-    #  Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-    #  only if it doesn't exist; and 'n' always creates a new database.
-    # 
-    #  - Actually it is a bit extended  form of <code>dbm.open</code>, that
-    #    accounts for <code>sqlite3</code>
-    def dbopen ( file , flag = 'r' , mode=0o666 , **kwargs ):
-        """Open or create database at path given by *file*.
-        
-        Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-        for read-write access of an existing database, 'c' for read-write access
-        to a new or existing database, and 'n' for read-write access to a new
-        database.
-        
-        Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-        only if it doesn't exist; and 'n' always creates a new database.
-        
-        - Actually it is a bit extended  form of `dbm.open` that  accounts for `sqlite3`
-        """
-        
-        result = whichdb ( file  ) if 'n' not in flag  else None
-        
-        if result is None :
+        ## open Berkeley DB 
+        def berkeleydb_open ( filename                          ,
+                              flags    = 'c'                    ,
+                              mode     = 0o660                  ,
+                              filetype = berkeleydb.db.DB_HASH  ,
+                              dbenv    = None                   ,
+                              dbname   = None                   ,
+                              decode   = lambda s : s           ,
+                              encode   = lambda s : s           ) :            
+            """ Open Berkeley DB
+            """
+            assert flags in berkeleydb_open_mode, \
+                   "berkeleydb_open: invali dpoe mode %s" % flags
             
-            # db doesn't exist or 'n' flag was specified to create a new db
+            db = berkeleydb.db.DB ( dbenv )
+            db.open ( filename , dbname , filetype , berkeleydb_open_mode [ flags ]  , mode )
             
-            if 'c' in flag or 'n' in flag:
+            return db
                 
-                # file doesn't exist and the new flag was used so use bsddb3                     
-                return anydbm.open ( file , flag , mode )  
-            
-            raise anydbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
+    except ImportError :
         
-        elif result is 'sqlite3' :
-            
-            return SqliteDict ( filename = file , flag = flag , **kwargs )
-        
-        return anydbm.open ( file , flag , mode )  
+            berkeleydb      = None 
+            use_berkeleydb  = False 
 
-
-else :                              ## PYTHON3   
-
+## make a try for dbddb3 
+if ( 3 , 3 ) <= sys.version_info < ( 3 , 10 ) : 
     
-    ## for python3 <code>bdsdb</code> is not a part of the standard library
-    ##  make a try to use <code>bdsdb3</code>
+    try :        
+        import bsddb3
+        use_bsddb3  = True        
+    except ImportError  :        
+        bsddb3      = None 
+        use_bsddb3  = False 
+
+
+# =============================================================================
+##  Guess which db package to use to open a db file.
+#  
+#   Return values:
+#  - None if the database file can't be read;
+#  - empty string if the file can be read but can't be recognized
+#  - the name of the dbm submodule (e.g. "ndbm" or "gnu") if recognized.
+#   
+# Importing the given module may still fail, and opening the
+# database using that module may still fail.
+# 
+#  - Actually it is a bit extended  form of <code>dbm.whichdb</code>
+#   that accounts for  <code>bsddb3</code> and <code>sqlite3</code>
+def whichdb ( filename  ) :
+    """Guess which db package to use to open a db file.
     
+    Return values:
+    
+    - None if the database file can't be read;
+    - empty string if the file can be read but can't be recognized
+    - the name of the dbm submodule (e.g. 'ndbm' or 'gnu') if recognized.
+    
+    Importing the given module may still fail, and opening the
+    database using that module may still fail.
+    
+    - Actually it is a bit extended  form of `dbm.whichdb`
+    that accounts for `bsddb3` and `sqlite3`
+    """
+    
+    ## use the standard function 
+    tst = std_whichdb ( filename  )
+
+    ## identified or non-existing DB  ? 
+    if tst or tst is None     : return tst
+    
+    ## sqlite3 ?
+    if issqlite3 ( filename ) : return 'sqlite3'
+
+    import io , struct
     
     try :
-        import bsddb3
-    except ImportError :
-        bsddb3 = None
         
-    from ostap.io.sqlitedict  import issqlite3 
-    from ostap.io.sqlitedict  import SqliteDict
+        with io.open ( filename  ,'rb' ) as f :
+            # Read the start of the file -- the magic number
+            s16 = f.read(16)
+            
+    except OSError :
+        return None
+    
+    s = s16[0:4]
+    
+    # Return "" if not at least 4 bytes
+    if len ( s ) != 4:
+        return ""
 
-    if bsddb3 :
-        ## <code>bdsdb3</code> is available, try to use it as a defauld database 
+    if s == b'root'  :
+        return 'root'
 
-        import dbm, io, struct 
+    # Convert to 4-byte int in native byte order -- return "" if impossible
+    try:
+        ( magic, ) = struct.unpack("=l", s)
+    except struct.error:
+        return ""
+
+    # Check for GNU dbm
+    if magic in (0x13579ace, 0x13579acd, 0x13579acf):
+        return "dbm.gnu"
+
+    # Check for old Berkeley db hash file format v2
+    if magic in ( 0x00061561 , 0x61150600 ):
+        return "bsddb185"
+
+    # Later versions of Berkeley db hash file have a 12-byte pad in
+    # front of the file type
+    try:
+        (magic,) = struct.unpack("=l", s16[-4:])
+    except struct.error:
+        return ""
+
+    # Check for BSD hash
+    if magic in ( 0x00061561 , 0x61150600 ):
+        return "berkeleydb" if use_berkeleydb else "bsddb3"
+
+    ## unknown 
+    return ""
+
+
+# =====================================================================
+## Open or create database at path given by *file*.
+# 
+#  Optional argument *flag* can be 'r' (default) for read-only access, 'w'
+#  for read-write access of an existing database, 'c' for read-write access
+#  to a new or existing database, and 'n' for read-write access to a new
+#  database.
+# 
+#  Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
+#  only if it doesn't exist; and 'n' always creates a new database.
+# 
+#  - Actually it is a bit extended  form of <code>dbm.open</code>, that
+#    accounts for <code>bsbdb3</code> and <code>sqlite3</code>
+def dbopen ( file , flag = 'r' , mode = 0o666 , concurrent = True , **kwargs ):
+    """Open or create database at path given by *file*.
+    
+    Optional argument *flag* can be 'r' (default) for read-only access, 'w'
+    for read-write access of an existing database, 'c' for read-write access
+    to a new or existing database, and 'n' for read-write access to a new
+    database.
+    
+    Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
+    only if it doesn't exist; and 'n' always creates a new database.
+    
+    - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3` and `sqlite3`
+    """
+
+    if 'n' in flag and os.path.isfile ( file ) :
+        os.unlink ( file ) 
+ 
+    check = whichdb ( file ) if 'n' not in flag  else None
+
+    if 'c' in flag and '' == check :
+        check = None 
+        os.unlink ( file ) 
         
-        # =====================================================================
-        ##  Guess which db package to use to open a db file.
-        #  
-        #   Return values:
-        #  - None if the database file can't be read;
-        #  - empty string if the file can be read but can't be recognized
-        #  - the name of the dbm submodule (e.g. "ndbm" or "gnu") if recognized.
-        #   
-        # Importing the given module may still fail, and opening the
-        # database using that module may still fail.
-        # 
-        #  - Actually it is a bit extended  form of <code>dbm.whichdb</code>
-        #   that accounnt for  <code>bdsdb3</code> and <code>sqlite3</code>
-        def whichdb ( filename  ) :
-            """Guess which db package to use to open a db file.
+    # 'n' flag is specified  or dbase does not exist and c flag is specified 
+    if 'n' in flag or ( check is None and 'c' in flag ) : 
+                
+        if concurrent and use_berkeleydb :
+            return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
-            Return values:
-            
-            - None if the database file can't be read;
-            - empty string if the file can be read but can't be recognized
-            - the name of the dbm submodule (e.g. 'ndbm' or 'gnu') if recognized.
-            
-            Importing the given module may still fail, and opening the
-            database using that module may still fail.
-            
-            - Actually it is a bit extended  form of `dbm.whichdb`
-            that accounts for `bsddb3` and `sqlite3`
-            """
-            
-            ## use the standard function 
-            tst = dbm.whichdb ( filename  )
-            
-            ## identified or non-existing DB  ? 
-            if tst or tst is None : return tst
+        if concurrent and use_bsddb3     :
+            return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
-            ## non-identified DB  
-            
-            ## check for bsddb magic numbers (from python2)
-            try : 
-                with io.open ( filename  ,'rb' ) as f :
-                    # Read the start of the file -- the magic number
-                    s16 = f.read(16)
-            except OSError :
-                return None
-            
-            s = s16[0:4]
-            
-            # Return "" if not at least 4 bytes
-            if len(s) != 4:
-                return ""
-            
-            # Convert to 4-byte int in native byte order -- return "" if impossible
-            try:
-                ( magic, ) = struct.unpack("=l", s)
-            except struct.error:
-                return ""
-            
-            # Check for GNU dbm
-            if magic in (0x13579ace, 0x13579acd, 0x13579acf):
-                return "dbm.gnu"
-            
-            # Check for old Berkeley db hash file format v2
-            if magic in (0x00061561, 0x61150600):
-                return "bsddb185"
-            
-            # Later versions of Berkeley db hash file have a 12-byte pad in
-            # front of the file type
-            try:
-                (magic,) = struct.unpack("=l", s16[-4:])
-            except struct.error:
-                return ""
-            
-            # Check for BSD hash
-            if magic in (0x00061561, 0x61150600):
-                return "bsddb3"
+        if concurrent :
+            return SqliteDict ( filename = file , flag = flag , **kwargs )
 
-            if issqlite3 ( filename ) : return 'sqlite3'
-                
-            # Unknown
-            return ""
+        return std_db.open ( file , flag , mode ) 
 
-        # =====================================================================
-        ## Open or create database at path given by *file*.
-        # 
-        #  Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-        #  for read-write access of an existing database, 'c' for read-write access
-        #  to a new or existing database, and 'n' for read-write access to a new
-        #  database.
-        # 
-        #  Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-        #  only if it doesn't exist; and 'n' always creates a new database.
-        # 
-        #  - Actually it is a bit extended  form of <code>dbm.open</code>, that
-        #    accounts for <code>bsbdb3</code> and <code>sqlite3</code>
-        def dbopen ( file , flag = 'r' , mode=0o666 , **kwargs ):
-            """Open or create database at path given by *file*.
-            
-            Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-            for read-write access of an existing database, 'c' for read-write access
-            to a new or existing database, and 'n' for read-write access to a new
-            database.
-            
-            Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-            only if it doesn't exist; and 'n' always creates a new database.
-            
-            - Actually it is a bit extended  form of `dbm.open` that  accounts for `bsddb3` and `sqlite3`
-            """
-            
-            result = whichdb ( file  ) if 'n' not in flag  else None
-            
-            if result is None :
-                
-                # db doesn't exist or 'n' flag was specified to create a new db
-                
-                if 'c' in flag or 'n' in flag:
-                    
-                    # file doesn't exist and the new flag was used so use bsddb3 
-                    
-                    return bsddb3.hashopen ( file , flag , mode ) 
-                
-                raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
-            
-            elif result in ( 'bsddb' , 'dbhash' , 'bsddb3' , 'bsddb185' ) :
-                
-                return bsddb3.hashopen ( file , flag , mode ) 
+    if use_berkeleydb and check in ( 'berkeleydb' , 'bsddb3' , 'dbhash' ) :
+        return berkeleydb_open ( file , flag , mode , **kwargs ) 
 
-            elif result is 'sqlite3' :
-                
-                return SqliteDict ( filename = file , flag = flag , *kwargs )
-                                    
-            return dbm.open ( file , flag , mode )  
+    if use_bsddb3     and check in ( 'berkeleydb' , 'bsddb3' , 'bsddb' , 'dbhash' , 'bsddb185' ) :
+        return bsddb3.hashopen ( file , flag , mode , **kwargs ) 
 
-        
-    else :
-        
-        import dbm
-        
-        # =====================================================================
-        ##  Guess which db package to use to open a db file.
-        #  
-        #   Return values:
-        #  - None if the database file can't be read;
-        #  - empty string if the file can be read but can't be recognized
-        #  - the name of the dbm submodule (e.g. "ndbm" or "gnu") if recognized.
-        #   
-        # Importing the given module may still fail, and opening the
-        # database using that module may still fail.
-        # 
-        #  - Actually it is a bit extended  form of <code>dbm.whichdb</code>
-        #   that accounnt for <code>sqlite3</code?
-        def whichdb ( filename  ) :
-            """Guess which db package to use to open a db file.
-            
-            Return values:
-            
-            - None if the database file can't be read;
-            - empty string if the file can be read but can't be recognized
-            - the name of the dbm submodule (e.g. 'ndbm' or 'gnu') if recognized.
-            
-            Importing the given module may still fail, and opening the
-            database using that module may still fail.
-            
-            - Actually it is a bit extended  form of `dbm.whichdb`
-            that accounts for `sqlite3`
-            """
-            
-            tst = dbm.whichdb ( filename )
-            if tst or tst is None : return tst
-            
-            if issqlite3 ( filename ) : return "sqlite3"
-        
-            return  tst 
-        
-        # =====================================================================
-        ## Open or create database at path given by *file*.
-        # 
-        #  Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-        #  for read-write access of an existing database, 'c' for read-write access
-        #  to a new or existing database, and 'n' for read-write access to a new
-        #  database.
-        # 
-        #  Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-        #  only if it doesn't exist; and 'n' always creates a new database.
-        # 
-        #  - Actually it is a bit extended  form of <code>dbm.open</code>, that
-        #    accounts for <code>sqlite3</code>
-        def dbopen ( file , flag = 'r' , mode=0o666 , **kwargs ):
-            """Open or create database at path given by *file*.
-            
-            Optional argument *flag* can be 'r' (default) for read-only access, 'w'
-            for read-write access of an existing database, 'c' for read-write access
-            to a new or existing database, and 'n' for read-write access to a new
-            database.
-            
-            Note: 'r' and 'w' fail if the database doesn't exist; 'c' creates it
-            only if it doesn't exist; and 'n' always creates a new database.
-            
-            - Actually it is a bit extended  form of `dbm.open` that  accounts for `sqlite3`
-            """
-            
-            result = whichdb ( file  ) if 'n' not in flag  else None
-            
-            if result is None :
-                
-                # db doesn't exist or 'n' flag was specified to create a new db
-                
-                if 'c' in flag or 'n' in flag:
-                    
-                    # file doesn't exist and the new flag was used so use bsddb3                     
-                    return dbm.open ( file , flag , mode )  
-                
-                raise dbm.error[0] ( "db file '%s' doesn't exist; use 'c' or 'n' flag to create a new db" % file )
-            
-            elif result is 'sqlite3' :
-                
-                return SqliteDict ( filename = name , flag = flag , **kwargs )
-                                    
-            return dbm.open ( file , flag , mode )  
+    if check == 'sqlite3' :
+        return SqliteDict ( filename = file , flag = flag , **kwargs )
 
-        
+    return std_db.open ( file , flag , mode )  
+    
 # =============================================================================
-## get disk size of data-base=like object
+## get disk size of data-base-like object
 #  @code
 #  num, size = dbsize ( 'mydb' ) 
 #  @endcode  

@@ -43,21 +43,24 @@ namespace Ostap
        *   @param n      number of subtractions  
        *   @param scale  scale factor (e.g. sign)
        *   @param tag    unique tag/label for cacheing 
+       *   @param rescale rescale function for better numerical precison 
        *   @param size   size of integration workspace  
        */
       template <class FUNCTION>
-      KramersKronig ( FUNCTION             rho       ,
-                      const double         omega0    ,
-                      const unsigned short n     = 0 ,
-                      const double         scale = 1 ,                      
-                      const std::size_t    tag   = 0 ,
-                      const std::size_t    size  = 0 )
-        : m_rho        ( rho    )
-        , m_omega0     ( omega0 )
-        , m_n          ( n      )
-        , m_scale      ( scale  )          
-        , m_tag        ( tag    )          
-        , m_integrator ( size   )
+      KramersKronig ( FUNCTION             rho         ,
+                      const double         omega0      ,
+                      const unsigned short n       = 0 ,
+                      const double         scale   = 1 ,                      
+                      const std::size_t    tag     = 0 ,
+                      const unsigned short rescale = 0 , 
+                      const std::size_t    size    = 0 )
+        : m_rho        ( rho     )
+        , m_omega0     ( omega0  )
+        , m_n          ( n       )
+        , m_scale      ( scale   )          
+        , m_tag        ( tag     ) 
+        , m_rescale    ( rescale ) 
+        , m_integrator ( size    )
       {}
       // ======================================================================
     public:
@@ -73,13 +76,14 @@ namespace Ostap
        */
       template <class FUNCTION>
       inline static KramersKronig
-      create  ( FUNCTION             rho        ,
-                const double         omega0     ,
-                const unsigned short n      = 0 ,
-                const double         scale  = 1 , 
-                const std::size_t    tag    = 0 ,
-                const std::size_t    size   = 0 )
-      { return KramersKronig ( rho , omega0 , n , scale , tag , size ) ; }
+      create  ( FUNCTION             rho         ,
+                const double         omega0      ,
+                const unsigned short n       = 0 ,
+                const double         scale   = 1 , 
+                const std::size_t    tag     = 0 ,
+                const unsigned short rescale = 0 ,
+                const std::size_t    size    = 0 )
+      { return KramersKronig ( rho , omega0 , n , scale , tag , rescale , size ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -93,9 +97,7 @@ namespace Ostap
        * @see Ostap::Math::Integrator
        * @see Ostap::Math::Integrator::kramers_kronig
        */
-      double operator() ( const double x ) const
-      { return m_scale * m_integrator.kramers_kronig 
-          ( std::cref ( m_rho ) , x , m_omega0 , m_n , m_tag ) ; }
+      double operator() ( const double x ) const ;
       // ======================================================================
     public:
       // ====================================================================== 
@@ -120,6 +122,8 @@ namespace Ostap
       double                         m_scale      ; // scale factor (e.g. sign) 
       /// unique tag/label 
       std::size_t                    m_tag        ; // unique tag/label 
+      /// rescale fnuction for better numerical precision 
+      unsigned short                 m_rescale    ; // #rescale points 
       /// Integrator
       Ostap::Math::Integrator        m_integrator ; // integrator 
       // ======================================================================

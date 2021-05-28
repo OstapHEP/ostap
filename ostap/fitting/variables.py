@@ -29,9 +29,9 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random, array 
-from   ostap.core.core  import VE, hID 
+from   ostap.core.core  import VE, hID
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
-                                       integer_types , string_types )   
+                                       integer_types , string_types )
 # =============================================================================
 # logging 
 # =============================================================================
@@ -546,11 +546,11 @@ def _rav_getvale_ ( self ) :
     """
     v = self.getVal()
     e = self.getError() 
-    return VE ( v , e*e ) if e>0 else v
+    return VE ( v , e * e ) if e > 0 else v
 
 # =============================================================================
 def _rav_setval_  ( self , value ) :
-    """Assign the valeu for the variable 
+    """Assign the value for the variable 
     >>> var = ...
     >>> var.value = 10 
     """
@@ -565,7 +565,7 @@ def _rav_setvalc_  ( self , value ) :
     >>> var.value = 10 
     """
     value = float ( value )
-    mn,mx  = self.getMin(), self.getMax() 
+    mn , mx  = self.getMin(), self.getMax() 
     if not mn <= value <= mx :
         logger.warning('Value %s is out the range [%s,%s]' %  ( value  , mn , mx ) ) 
     self.setVal ( value ) 
@@ -712,7 +712,7 @@ def  total_ratio ( var1 , var2 ) :
     assert isinstance ( var2 , ROOT.RooAbsReal,\
                         "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
     
-    name     =  var1.name ,  var2.name 
+    name     = var1.name ,  var2.name 
     total    = add_var   ( var1 , var2 ,
                            name  = 'Total_%s_%s'               % names ,
                            title = 'Total yields of %s and %s' % names )

@@ -24,6 +24,7 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 import ROOT
 from   ostap.parallel.parallel import Task, WorkManager
+
 # =============================================================================
 ## The simple task object for more efficient fill of RooDataSet from TChain 
 #  @see GaudiMP.Parallel
@@ -71,11 +72,11 @@ class  FillTask(Task) :
         all = 0 == first and ( nevents < 0 or ll <= nevents )
         
         if self.trivial and all : 
-            import ostap.fitting.selectors
+            import ostap.fitting.pyselectors
             self.__output = chain.make_dataset ( self.variables , self.selection , silent = True ) 
             return self.__output 
 
-        from   ostap.fitting.selectors import SelectorWithVars
+        from   ostap.fitting.pyselectors import SelectorWithVars
         
         ## use selector  
         selector = SelectorWithVars ( self.variables ,
@@ -101,7 +102,7 @@ class  FillTask(Task) :
         return self.__output 
 
     ## merge results/datasets 
-    def merge_results ( self, result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         
         if result :
             ds , stat = result
@@ -138,9 +139,8 @@ def pprocess ( chain               ,
                shortcut   = True   ,   ## important 
                chunk_size = 100000 ,   ## important 
                max_files  = 5      ,
-               ppservers  = ()     ,
                use_frame  =  20000 ,   ## important 
-               silent     = False  ) :
+               silent     = False  , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -165,7 +165,7 @@ def pprocess ( chain               ,
         chunk_size = -1
         
     task  = FillTask ( variables , selection , trivial , use_frame )
-    wmgr  = WorkManager ( ppservers  = ppservers  , silent    = silent    )
+    wmgr  = WorkManager ( silent     = silent     , **kwargs )
     trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
     wmgr.process( task , trees )
     del trees
@@ -184,7 +184,7 @@ def pprocess ( chain               ,
         stat.processed   ,
         stat.total       ,
         skipped          ,
-        selector.cuts()  , dataset ) )            
+        selector.cuts()  , dataset.table ( prefix = '# ' ) ) )             
     
     return 1 
 

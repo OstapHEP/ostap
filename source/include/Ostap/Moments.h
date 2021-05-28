@@ -44,7 +44,7 @@ namespace  Ostap
     // ========================================================================
     /** @class Moment_  Ostap/Moments.h 
      *  Simple class to keep/calculate 
-     *  the suubable high-order central momentts
+     *  the high-order central momentts
      *  \f[  \mu_n \equiv \frac{1}{N} \sum_{i}  \left( x_i - \bar{x} \right)^n \f] 
      *  It implements the (single-pass) algorithm 
      *  @see  Pebay, P., Terriberry, T.B., Kolla, H. et al. 
@@ -145,7 +145,8 @@ namespace  Ostap
     // ========================================================================
     /// initialize the helper array of binomial coefficients
     template <unsigned short N>
-    constexpr std::array<unsigned long long,N+1> Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
+    constexpr std::array<unsigned long long,N+1> 
+    Moment_<N>::s_Ck { Ostap::Math::choose_array<N>() } ;
     // ========================================================================
     /// increment with some value
     template <unsigned short N>
@@ -780,7 +781,7 @@ namespace  Ostap
     
     // ========================================================================
     /**  @class Moments 
-     *   collectionn  of static functions dealing with moments 
+     *   Collection of static functions dealing with moments 
      */
     class Moments
     {
@@ -789,7 +790,7 @@ namespace  Ostap
       // ======================================================================
     private: 
       // ======================================================================
-      /** @var s_INVALID_CENTRAL_MOMENT ; 
+      /** @var s_INVALID_MOMENT ; 
        *  the invalid value of the central moment 
        */ 
       static const double s_INVALID_MOMENT ;
@@ -972,7 +973,7 @@ namespace  Ostap
       // ======================================================================
       /** get the central moment of order \f$ N \f$  with 
        *  the estimate of the uncertainty (with \f$O(n^{-2})\f$~precision
-       *  - the error estimaet is possible only when \f$ 2N \le K \f$!
+       *  - the error estimate is possible only when \f$ 2N \le K \f$!
        *  @aparam m counter 
        *  @return moment with uncertainty for non-empty counter 
        *          <code>s_INVALID_MOMENT</code> for empty counters 
@@ -1043,7 +1044,7 @@ namespace  Ostap
       template <unsigned short N, typename std::enable_if<(3<N),int>::type = 0 >
       static inline VE kurtosis ( const WMoment_<N>& m ) 
       {
-        if ( m.size() < 3 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
+        if ( m.size() < 4 ) { return VE  ( s_INVALID_MOMENT , -1 )  ; }
         const auto n = m.nEff () ;
         const double m4 = m.moment ( 4 ) ;
         const double m2 = m.moment ( 2 ) ;

@@ -19,6 +19,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import Ostap, VE, dsID
 from   ostap.logger.utils   import rooSilent 
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -312,10 +313,11 @@ def test_splinesym2D() :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
@@ -326,18 +328,28 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_polypos2D    ()
-    test_polypossym2D ()
-    test_pspol2D      ()    
-    test_pspolsym2D   () 
-    test_expopspol2D  ()
-    test_expopol2D    () 
-    test_expopolsym2D ()
-    test_spline2D     () 
-    test_splinesym2D  () 
+    with timing (  "popypos2D"      , logger ) : 
+        test_polypos2D    ()
+    with timing (  "popypos2D-sym"  , logger ) : 
+        test_polypossym2D ()
+    with timing (  "pspol2D"        , logger ) : 
+        test_pspol2D      ()    
+    with timing (  "pspol2D-sym"    , logger ) : 
+        test_pspolsym2D   () 
+    with timing (  "exppspol2D"     , logger ) : 
+        test_expopspol2D  ()
+    with timing (  "exppol2D"       , logger ) : 
+        test_expopol2D    () 
+    with timing (  "exppspol2-sym"  , logger ) : 
+        test_expopolsym2D ()
+    with timing (  "spline2d"       , logger ) : 
+        test_spline2D     () 
+    with timing (  "spline2d-sym"   , logger ) : 
+        test_splinesym2D  () 
     
     ## check finally that everything is serializeable:
-    test_db           ()          
+    with timing (  "Save to DB"     , logger ) : 
+        test_db           ()          
     
 # =============================================================================
 ##                                                                     The END 

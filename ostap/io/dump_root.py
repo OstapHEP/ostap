@@ -111,7 +111,8 @@ __all__ = (
     )
 # =============================================================================
 import ROOT
-import ostap.io.root_file 
+import ostap.io.root_file
+from   ostap.core.meta_info import root_version_int 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.io.dump_root' )
@@ -120,8 +121,8 @@ else                      : logger = getLogger ( __name__             )
 # dump list of objects into ROOT-file 
 def dump_root ( objects , rfile  = '' ) :
 
-    if not rfile : 
-        rfile = 'ROOT_Objects_%s.root ' % ROOT.gROOT.GetVersionInt()
+    if not rfile :
+        rfile = 'ROOT_Objects_%s.root' % root_version_int
 
     if isinstance ( objects , ROOT.TObject ) : objects = [ objects ]
     

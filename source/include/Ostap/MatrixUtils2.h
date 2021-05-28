@@ -360,13 +360,61 @@ namespace Ostap
       // ======================================================================
       template <class M>
       struct IAdd<M,M>     
-      { static void iadd ( const M& m1 , const M& m2 ) { m1 += m2 ; } } ;
+      { static void iadd ( M& m1 , const M& m2 ) { m1 += m2 ; } } ;
       // ======================================================================
       template <class M>
       struct ISub<M,M>
-      { static void isub ( const M& m1 , const M& m2 ) { m1 -= m2 ; } } ;
+      { static void isub ( M& m1 , const M& m2 ) { m1 -= m2 ; } } ;
       
-      
+      // ======================================================================
+      template <class T,unsigned int D1,unsigned int D2>
+      struct IAdd<ROOT::Math::SMatrix<T,D1,D2> ,
+                  ROOT::Math::SMatrix<T,D1,D2> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2> M ;
+        static void iadd ( M& m1 , const M& m2 ) { m1 += m2 ; }
+      }; 
+      // ======================================================================
+      template <class T,unsigned int D1,unsigned int D2>
+      struct ISub<ROOT::Math::SMatrix<T,D1,D2> ,
+                  ROOT::Math::SMatrix<T,D1,D2> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2> M ;
+        static void isub ( M& m1 , const M& m2 ) { m1 -= m2 ; }
+      }; 
+      // ======================================================================
+      template <class T,unsigned int D1,unsigned int D2,class R>
+      struct IAdd<ROOT::Math::SMatrix<T,D1,D2,R> ,
+                  ROOT::Math::SMatrix<T,D1,D2,R> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R> M ;
+        static void iadd ( M& m1 , const M& m2 ) { m1 += m2 ; }
+      }; 
+      // =====================================================================
+      template <class T,unsigned int D1,unsigned int D2,class R>
+      struct ISub<ROOT::Math::SMatrix<T,D1,D2,R> ,
+                  ROOT::Math::SMatrix<T,D1,D2,R> >
+      {
+        typedef ROOT::Math::SMatrix<T,D1,D2,R> M ;
+        static void isub ( M& m1 , const M& m2 ) { m1 -= m2 ; }
+      };
+      // ======================================================================
+      template <class T,unsigned int D>
+      struct IAdd<ROOT::Math::SVector<T,D> ,
+                  ROOT::Math::SVector<T,D> >
+      {
+        typedef ROOT::Math::SVector<T,D> M ;
+        static void iadd ( M& m1 , const M& m2 ) { m1 += m2 ; }
+      }; 
+      // ======================================================================
+      template <class T,unsigned int D>
+      struct ISub<ROOT::Math::SVector<T,D> ,
+                  ROOT::Math::SVector<T,D> >
+      {
+        typedef ROOT::Math::SVector<T,D> M ;
+        static void isub ( M& m1 , const M& m2 ) { m1 -= m2 ; }
+      };
+
       // ======================================================================
       // ADD
       // ======================================================================

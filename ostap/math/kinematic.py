@@ -38,15 +38,12 @@ import ROOT, math
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger
+from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.kinematic' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from ostap.math.base  import cpp , COMPLEX 
+from ostap.math.base        import Ostap , COMPLEX 
 from ostap.core.ostap_types import num_types
-
-## C++ namespace Ostap 
-Ostap = cpp.Ostap
 
 ## ROOT::Math namespace
 _RM = ROOT.ROOT.Math
@@ -390,7 +387,7 @@ if not hasattr ( math , 'acoth' ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-07-19
 class EtaVsP(object) :
-    """
+    r"""
     Very simple function \f$ \eta = \eta(p) \$  for the fixed transverse momentum
     """
     def __init__ ( self , pt ) :
@@ -405,7 +402,7 @@ class EtaVsP(object) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-07-19
 class EtaVsPt(object) :
-    """Very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum"""
+    r"""Very simple function \f$ \eta = \eta(p_T) \$  for the fixed momentum"""
     def __init__ ( self , p  ) :
         assert isinstance ( p , num_types ) and 0<=p , "P is invalid!"
         self.p = float ( p )

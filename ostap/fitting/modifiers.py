@@ -12,11 +12,15 @@ __version__ = "$Revision:"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2018-11-29"
 __all__     = (
-    'Product1D_pdf' , ## make a product of 1D PDFs
-    'Modify1D_pdf'  , ## modify 1D pdf with a positive polynomials 
+    'Product1D_pdf'     , ## make a product of 1D PDFs
+    'Modify1D_pdf'      , ## modify 1D pdf with a positive polynomials
+    'CutOff_pdf'        , ## Cut-off PDF
+    'CutOffGauss_pdf'   , ## Gaussian cut-off
+    'CutOffStudent_pdf' , ## Student's t-like/power law cut-off    
     )
 # =============================================================================
 import ROOT, math
+from   ostap.core.core     import Ostap 
 from   ostap.fitting.basic import PDF , Generic1D_pdf
 # =============================================================================
 from   ostap.logger.logger import getLogger
@@ -35,6 +39,12 @@ models = []
 #  @endcode
 #  @see RooProdPdf
 #  @attention it could be rather CPU-inefficient!
+#
+#  Parameter <code>use_roo</code> correspodmn to usage of <code>RooProdPdf</code>,
+#  and therefore certain CPU optimisations are applied, however this approah
+#  has some problems with convolution PDF, where <code>use_roo=False</code>
+#  is recommended, but it causes large CPU consumption.
+# 
 #  @author Vanya BELYAEV Ivan.Belyaeve@itep.ru
 #  @date 2018-11-29  
 class Product1D_pdf(PDF) :
@@ -46,13 +56,19 @@ class Product1D_pdf(PDF) :
     >>> pdf  = Product1D_pdf( pdf1 , pdf2 )
     
     - attention: it could be rather CPU-inefficient!
+    - parameter `use_roo`  correspodmn to usage of `RooProdPdf`, 
+    and therefore certain CPU optimisations are applied,
+    however this approah has some problems with convolution PDF,
+    where `use_roo=False` is recommended, but it causes large CPU consumption.
+    
     """
-    def __init__ ( self         ,
-                   pdf1         ,
-                   pdf2         ,
-                   xvar  = None ,
-                   name  = ''   ,
-                   title = ''   ) :
+    def __init__ ( self           ,
+                   pdf1           ,
+                   pdf2           ,
+                   xvar    = None ,
+                   name    = ''   ,
+                   title   = ''   ,
+                   use_roo = True ) :  ## UseRooFit or Ostap for product?
         
         self.__pdf__1 = pdf1
         self.__pdf__2 = pdf2
@@ -87,9 +103,7 @@ class Product1D_pdf(PDF) :
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
-        
-        if not name  : name  = "product_%s_%s"  % ( self.pdf1.name , self.pdf2.name )
-        if not title : title = "Product(%s,%s)" % ( self.pdf1.name , self.pdf2.name )
+        name = name if name else self.generate_name ( prefix = "product_%s_%s_"  % ( self.pdf1.name , self.pdf2.name ) )
 
         ## initialize the base class
         PDF.__init__ ( self , name , xvar =  xvar )
@@ -103,16 +117,26 @@ class Product1D_pdf(PDF) :
         if   2 == em2 : self.warning ( "pdf2 ``must-be-extended''" )
         elif 1 == em2 : self.warning ( "pdf2  ``can-be-extended''" )
 
-        ## finally build PDF 
-        self.pdf = ROOT.RooProdPdf ( name , title , self.pdf1.pdf , self.pdf2.pdf )
+        self.__use_roo = True if use_roo else False
+        
+        ## finally build PDF
+
+        PDFTYPE = ROOT.RooProdPdf if self.use_roo else Ostap.MoreRooFit.ProductPdf 
+
+        self.pdf = PDFTYPE  (
+            self.roo_name ( 'prod1_' ) ,
+            title if title else 'Product of two pdfs %s' % self.name  ,
+            self.pdf1.pdf ,
+            self.pdf2.pdf )
 
         ## save configuration for cloning
         self.config = {
-            'pdf1'  : self.pdf1  ,
-            'pdf2'  : self.pdf2  ,
-            'xvar'  : self.xvar  ,
-            'name'  : self.name  ,
-            'title' : self.title ,            
+            'pdf1'    : self.pdf1    ,
+            'pdf2'    : self.pdf2    ,
+            'xvar'    : self.xvar    ,
+            'name'    : self.name    ,
+            'title'   : self.title   ,            
+            'use_roo' : self.use_roo ,            
             }
         
     @property
@@ -124,7 +148,12 @@ class Product1D_pdf(PDF) :
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
         return self.__pdf2
-
+    
+    @property
+    def use_roo ( self ) :
+        """``use_roo'' : use RooProdPdf or Ostap.MoreRooFit.ProductPdf ?"""
+        return self.__use_roo 
+    
     ## redefine the clone 
     def clone ( self , **kwargs ) :
         """ Redefine the clone
@@ -159,14 +188,15 @@ class Modify1D_pdf(Product1D_pdf) :
     
     - attention: it could be rather CPU-inefficient!
     """
-    def __init__ ( self         ,
-                   pdf          ,
-                   power = 1    ,
-                   xvar  = None ,
-                   name  = ''   ,
-                   xmin  = None ,
-                   xmax  = None ,
-                   title = ''   ) :
+    def __init__ ( self           ,
+                   pdf            ,
+                   power   = 1    ,
+                   xvar    = None ,
+                   name    = ''   ,
+                   xmin    = None ,
+                   xmax    = None ,
+                   title   = ''   ,
+                   use_roo = True ) :
         
         assert isinstance ( power , int ) and 0 <= power,\
                "Invalid ``power''   %s" % power
@@ -185,11 +215,10 @@ class Modify1D_pdf(Product1D_pdf) :
         assert isinstance ( xvar , ROOT.RooAbsReal ),\
                "Invalid ``xvar'':%s/%s" % ( xvar , type  ( xvar ) ) 
 
-        if not name  : name  = "modify_%s_%s"  % ( pdf.name , power )
-        if not title : title = "Modify(%s,%s)" % ( pdf.name , power )
+        name = name if name else self.generate_name ( prefix = "modify_%s_%s"  % ( pdf.name , power ) )
 
         from ostap.fitting.background import PolyPos_pdf
-        pdf2 = PolyPos_pdf( 'M_%s_%s' % ( pdf.name , power ) ,
+        pdf2 = PolyPos_pdf( self.generate_name ( 'M_%s_%s' % ( pdf.name , power ) ) ,
                             xvar  = xvar  ,
                             power = power ,
                             xmin  = xmin  ,
@@ -198,12 +227,13 @@ class Modify1D_pdf(Product1D_pdf) :
         self.__pdf_2 = pdf2
         
         ## initialize the base
-        Product1D_pdf.__init__ ( self          ,
-                                 pdf1  = pdf   ,
-                                 pdf2  = pdf2  , 
-                                 xvar  = xvar  ,
-                                 name  = name  ,
-                                 title = title )         
+        Product1D_pdf.__init__ ( self              ,
+                                 pdf1    = pdf     ,
+                                 pdf2    = pdf2    , 
+                                 xvar    = xvar    ,
+                                 name    = name    ,
+                                 title   = title   ,
+                                 use_roo = use_roo )         
 
         ## for drawing...
         
@@ -214,18 +244,19 @@ class Modify1D_pdf(Product1D_pdf) :
         for c in self.pdf1.crossterms2 : self.crossterms2.add ( c )
         
         self.config = {
-            'name'  : self.name  ,
-            'pdf'   : self.pdf1  ,
-            'xvar'  : self.xvar  ,
-            'power' : power      ,
-            'xmin'  : xmin       ,
-            'xmax'  : xmin       ,
-            'title' : self.title ,            
+            'name'    : self.name    ,
+            'pdf'     : self.pdf1    ,
+            'xvar'    : self.xvar    ,
+            'power'   : power        ,
+            'xmin'    : xmin         ,
+            'xmax'    : xmin         ,
+            'title'   : self.title   ,
+            'use_roo' : self.use_roo 
             }
-
+        
     @property
     def old_pdf ( self ):
-        """``old_pdf''  : original (non-modifier) PDF"""
+        """``old_pdf''  : original (not modified) PDF"""
         return self.pdf1
     
     ## redirect any other attributes to original PDF
@@ -238,6 +269,231 @@ class Modify1D_pdf(Product1D_pdf) :
 
 models.append ( Modify1D_pdf )
 
+
+# =============================================================================
+# @class CutOffGauss_pdf
+#  Useful function for smooth Gaussian cut-off:
+#  \f[ f(x;x_0;\sigma) = \left\{ 
+#    \begin{array}{ll}
+#    1  & \mathrm{for~} x \le x_0  \\
+#    \mathrm{e}^{-\frac{1}{2}\left( \frac{ (x-x_0)^2}{\sigma^2} \right)}
+#       & \mathrm{for~} x >   x_0 
+#    \end{array}\right. \f] 
+# @see Ostap::Math::CutOffGauss
+# @see Ostap::Models::CutOffGauss
+class CutOffGauss_pdf(PDF) :
+    """ Useful function for smooth Gaussian-like  cut-off
+    - see Ostap.Math.CutOffGauss
+    - see Ostap.Models.CutOffGauss
+    """
+    def __init__ ( self  ,
+                   name  ,
+                   xvar  ,
+                   right ,
+                   x0    ,
+                   sigma ) :
+        
+        PDF.__init__ ( self , name , xvar = xvar ) 
+        
+        self.__x0   = self.make_var  ( x0       ,
+                                       'x0_%s'           % name ,
+                                       '#x_{0}(%s)'      % name , x0 , x0 )
+        
+        self.__sigma = self.make_var ( sigma   ,
+                                       'csigma_%s'       % name ,
+                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+        
+        self.__right = True if right else False
+        
+        self.pdf = Ostap.Models.CutOffGauss (
+            self.roo_name ( 'cofg_'  )         , 
+            'Gaussian cut-off %s' % self.name  ,
+            self.xvar                          ,
+            self.right                         , 
+            self.x0                            ,
+            self.sigma                         ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'x0'    : self.x0    ,
+            'right' : self.right , 
+            'sigma' : self.sigma ,
+            }
+        
+    @property
+    def x0 ( self ) :
+        """``x0'' : threshold/location parameter for Gaussial cut-off"""
+        return self.__x0
+    @x0.setter 
+    def x0 ( self , value ) :
+        self.set_value ( self.__x0 , value ) 
+
+    @property
+    def sigma ( self ) :
+        """``sigma'' : width parameter for Gaussial cut-off"""
+        return self.__sigma
+    @sigma.setter 
+    def sigma ( self , value ) :
+        self.set_value ( self.__sigma , value ) 
+    
+    @property
+    def right ( self ) :
+        """``right'' : parameter of the Gaussian cut-off"""
+        return self.__right 
+
+    @property
+    def left ( self ) :
+        """``left'' : parameter of the Gaussian cut-off"""
+        return not self.right 
+
+
+models.append ( CutOffGauss_pdf )
+
+
+
+# =============================================================================
+# @class CutOffStudent_pdf
+#  Useful function for smooth Student's t=-like (power-law) cut-off:
+#  \f[ f(x;x_0;\sigma) = \left\{ 
+#    \begin{array}{ll}
+#    1  & \mathrm{for~} x \le x_0  \\
+#    \left( \frac{1}{\nu} \left( \frac{(x-x_0)}{\sigma^2} \right)^{ - \frac{\nu+1}{2}} \right) 
+#       & \mathrm{for~} x >   x_0 
+#    \end{array}\right. \f] 
+# @see Ostap::Math::CutOffGauss
+# @see Ostap::Models::CutOffGauss
+class CutOffStudent_pdf(PDF) :
+    """ Useful function for smooth Student's t=-like (power-law) cut-off:
+    - see Ostap.Math.CutOffStudent
+    - see Ostap.Models.CutOffStudent
+    """
+    def __init__ ( self  ,
+                   name  ,
+                   xvar  ,
+                   right ,
+                   x0    ,
+                   nu    ,
+                   sigma ) :
+        
+        PDF.__init__ ( self , name , xvar = xvar ) 
+        
+        self.__x0   = self.make_var   ( x0       ,
+                                        'x0_%s'      % name ,
+                                        '#x_{0}(%s)' % name , x0 , x0 )
+        
+        self.__nu   = self.make_var  ( nu    ,
+                                       'nu_%s'        % name ,
+                                       '#nu_{CB}(%s)' % name , nu , nu , 0 , 1000 )
+        
+        self.__sigma = self.make_var ( sigma   ,
+                                       'sigma_%s'        % name ,
+                                       '#sigma_{CB}(%s)' % name , sigma , sigma , 0 , 1.e+6 ) 
+
+
+        self.__right = True if right else False
+        
+        self.pdf = Ostap.Models.CutOffStudent (
+            self.roo_name ( 'cofs_'  )          , 
+            "Student's t-like cut-off %s" % self.name  ,
+            self.xvar                          ,
+            self.right                         , 
+            self.x0                            ,
+            self.nu                            ,
+            self.sigma                         ) 
+        
+        ## save the configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'right' : self.right , 
+            'x0'    : self.x0    ,
+            'nu'    : self.nu    ,
+            'sigma' : self.sigma ,
+            }
+        
+    @property
+    def x0 ( self ) :
+        """``x0'' : threshold/location parameter for Student's t-like cut-off"""
+        return self.__x0
+    @x0.setter 
+    def x0 ( self , value ) :
+        self.set_value ( self.__x0 , value ) 
+
+    @property
+    def sigma ( self ) :
+        """``sigma'' : width parameter for Student's t-like cut-off"""
+        return self.__sigma
+    @sigma.setter 
+    def sigma ( self , value ) :
+        self.set_value ( self.__sigma , value ) 
+
+    @property
+    def nu ( self ) :
+        """``nu'' : power parameter for Student's t-like cut-off"""
+        return self.__nu
+    @nu.setter 
+    def nu ( self , value ) :
+        self.set_value ( self.__nu , value ) 
+    
+    @property
+    def right ( self ) :
+        """``right'' : parameter of the Student's t-like cut-off"""
+        return self.__right 
+
+    @property
+    def left ( self ) :
+        """``left'' : parameter of the Student's t-like cut-off"""
+        return not self.right 
+
+
+models.append ( CutOffStudent_pdf )
+
+
+# ==============================================================================
+# @class CutOff_pdf
+# Trivial wrapper for <code>Product1D_pdf</code>
+class CutOff_pdf(Product1D_pdf) :
+    """Trivial wrapper for `Product1D_pdf`
+    """
+    def __init__ ( self           ,
+                   pdf            ,
+                   cutoff         ,
+                   xvar    = None , 
+                   name    = ''   ,
+                   title   = ''   ,
+                   use_roo = True ) :
+
+        Product1D_pdf.__init__ ( self          ,
+                                 pdf1    = pdf    ,
+                                 pdf2    = cutoff ,
+                                 xvar    = xvar   ,
+                                 name    = name   ,
+                                 title   = title ,
+                                 use_roo = use_roo )
+                                 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name     ,
+            'pdf'     : self.orig_pdf ,
+            'cutoff'  : self.cutoff   ,
+            'xvar'    : self.xvar     ,
+            'title'   : self.title    ,
+            'use_roo' : self.use_roo  ,
+            }
+        
+    @property
+    def orig_pdf  ( self ) :
+        """``orig_pdf'' : original PDF"""
+        return self.pdf1
+
+    @property
+    def cutoff   ( self ) :
+        """``cutoff'' : PDF ised for cut-off"""
+        return self.pdf2
+    
 # =============================================================================
 if '__main__' == __name__ : 
 
@@ -245,5 +501,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

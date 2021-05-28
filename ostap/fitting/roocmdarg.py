@@ -13,11 +13,15 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
-    'match_arg' , ## check the argument name mathhing 
-    'check_arg' , ## check the presense of argument in the list 
+    'match_arg'      , ## check the argument name mathhing 
+    'check_arg'      , ## check the presense of argument in the list
+    'nontrivial_arg' , ## check the presense of nontrivial arguments 
     ) 
 # =============================================================================
 import ROOT
+from   ostap.core.ostap_types       import string_types, integer_types 
+from   ostap.utils.utils            import chunked
+import ostap.fitting.roocollections 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -168,10 +172,11 @@ def _rca_print_ ( self ) :
     elif 'Integrate'            == name : return 'Integrate(%s)'       %   self.getBool () 
     elif 'Minimizer'            == name : return "Minimizer('%s','%s')"% ( self.getString ( 0 ) ,
                                                                            self.getString ( 1 ) )                                                                           
-    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'          %   self.getBool () 
-    elif 'BatchMode'            == name : return 'BatchMode(%s)'       %   self.getBool () 
-    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)' %   self.getBool () 
-    
+    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'           %   self.getBool () 
+    elif 'BatchMode'            == name : return 'BatchMode(%s)'        %   self.getBool () 
+    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)'  %   self.getBool () 
+
+    elif 'IntegrateBins'        == name : return 'IntegrateBins(%.16g)' %   self.getDouble ( 0 ) 
     
     ## RooAbsPdf::paramOn arguments
     if   'Label'                == name : return "Label('%s')"         %    self.getString ( 0 )
@@ -202,7 +207,7 @@ def _rca_print_ ( self ) :
     elif 'ZVar'                 == name : return "ZVar({.})"
     elif 'AxisLabel'            == name : return "AxisLabel('%s')"     % self.getString ( 0 )
     elif 'Scaling'              == name : return "Scaling(%s)"         % self.getBool   (   )
-    
+   
     ## RooAbsReal::createHistogram arguments
     if   'IntrinsicBinning'     == name : return "IntrinsicBinning(%s)" % self.getBool  (   )
     
@@ -290,9 +295,28 @@ def _rca_print_ ( self ) :
 
     ## ? 
     if   'MultiArg'               == name :
-        return "MultiArg(%s)" % [ i for i in self.subArgs() ]
+        return "MultiArg(%s)" % [ i for i in self.subArgs() if i.name ]
     
     return name
+
+# ============================================================================
+## flatten the list of arguments/commands  
+def flat_args ( *args ) :
+    """Flatten the list of arguments/commands
+    """
+    
+    if not args : return ()
+    
+    flat = []
+    for arg in args :
+
+        if arg.name != "MultiArg" : flat.append ( arg )
+        else :
+            lst = [ i for i in arg.subArgs() if i.name ]
+            flat = flat + list ( flat_args ( *lst ) ) 
+
+    return tuple ( flat ) 
+
 
 # =============================================================================
 ## check if the argument name matches the pattern
@@ -331,7 +355,6 @@ def match_arg ( pattern , arg ) :
     
     return False 
 
-    
 # =============================================================================
 ## Check the presense of the arg in the list
 #  @code
@@ -349,16 +372,67 @@ def check_arg  ( pattern , *args ) :
     - <code>fnmatch</code> matching
     - <code>regex</code> matching 
     """
-    
-    for arg in args :
 
-        if   match_arg ( pattern , arg ) : return arg 
-        elif arg.GetName() == "MultiArg" :
-            for ia in arg.subArgs() :
-                if match_arg ( pattern , ia ) : return ia
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+        if  match_arg ( pattern , arg ) : return arg 
                 
     return None
 
+# =============================================================================
+## check at least one command  different form the trivial commands  
+def nontrivial_arg ( trivia , *args ) :
+    """Check at least one command  different form the trivial commands
+    """
+
+    if not args : return False
+    
+    if isinstance ( trivia , string_types ) :
+        trivia = trivia ,
+
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+
+        for pattern in trivia :
+            
+            if match_arg ( pattern , arg ) : break 
+            
+        else :
+
+            return True
+
+    return False 
+
+# ==============================================================================
+## merge arguments into smaller chunks
+#  @code
+#  args = ...
+#  margs = merge_args ( 3 , *args ) 
+#  @endcode 
+def merge_args ( num , *args ) : 
+    """merge arguments into smaller chunks
+    args = ...
+    margs = merge_args ( 3 , *args ) 
+    """
+    assert isinstance ( num , integer_types ) and 1 <= num ,\
+           "merge_args: invalid chunk size ``%s''" % num
+    
+    if len ( args ) < num : return tuple ( args ) 
+
+    lst   = flat_args ( *args ) 
+    keep  = [ l for l in lst ]
+    
+    while num < len ( lst ) : 
+        
+        nlst = chunked ( lst , 4 )
+        ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ] 
+        for l in ll : keep.append ( l )  
+        
+        lst = tuple ( ll )
+
+    return lst 
 
 # =============================================================================
 def _rca_bool_ ( self ) :
@@ -390,5 +464,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

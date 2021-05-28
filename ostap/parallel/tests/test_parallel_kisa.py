@@ -85,11 +85,11 @@ def prepare_data ( tmpdir , nfiles =  100 ,  nentries = 100 , ppservers = () , s
     wmgr  = Parallel.WorkManager( ppservers = ppservers , silent = silent )
 
     from ostap.utils.cleanup import CleanUp
-    tmpfile = CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir )
+    tmpfile = CleanUp.tempfile ( prefix = 'ostap-test-kisa-' , suffix = '.root' , dir = tmpdir )
     
     fname = '%s/test_kisa_%d.root'
     
-    files = [ CleanUp.tempfile ( prefix = 'test_kisa_' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
+    files = [ CleanUp.tempfile ( prefix = 'ostap-test-kisa-' , suffix = '.root' , dir = tmpdir ) for i in range(nfiles) ]
     
     wmgr.process (  task , [  ( f , nentries ) for f in files  ] )
     
@@ -145,7 +145,7 @@ def MASS1  ( s ) : return s.mass
 # =============================================================================
 def test_kisa2 () :
        
-    from ostap.fitting.selectors import SelectorWithVars, Variable  
+    from ostap.fitting.pyselectors import SelectorWithVars, Variable  
     variables = [
         Variable   ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
         Variable   ( 'c2dtf' , 'chi2(dtf)'    , -1    , 10   ) , 
@@ -156,7 +156,6 @@ def test_kisa2 () :
     from sys import version_info  as python_version
     if  python_version.major < 3 :
         variables.append ( Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) )
-
     
     ppservers = () ## 'lxplus051' , )
     ## ppservers = 'auto'
@@ -169,19 +168,19 @@ def test_kisa2 () :
     with timing('%d files in sequence %s' % ( nf , len( data.chain )  ) ) :
         selector = SelectorWithVars  (
             variables = variables ,
-            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+            selection = '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = False
             )
         chain =  data.chain[:nf]
         st = chain.process ( selector , silent = False , shortcut = True )
         ds = selector.data
         del selector 
-    logger.info ( 'Dataset:\n%s' % ds )
+    logger.info ( 'Dataset (sequential):\n%s' % ds.table()  )
     
     with timing('%s files in parallel %s' % ( len ( data.files ) , len( data.chain ) ) ) :
         selector = SelectorWithVars  (
             variables = variables ,
-            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+            selection = '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = True 
             )
         st = data.chain.pprocess ( selector               ,
@@ -191,55 +190,55 @@ def test_kisa2 () :
                                    ppservers  = ppservers )
         ds = selector.data 
         del selector 
-    logger.info ( 'Dataset:\n%s' % ds )
+    logger.info ( 'Dataset (paralell):\n%s' % ds.table ( prefix = '# ' ) )
 
+# =============================================================================
+def test_kisa3 () :
 
-## # =============================================================================
-## def test_kisa3 () :
-
-##     h1  = ROOT.TH1D('h1','',100,0,20)
-##     h1 += lambda x : x
+    h1  = ROOT.TH1D('h1','',100,0,20)
+    h1 += lambda x : x
     
-##     from  ostap.trees.funcs import H1DFunc
-##     xh1 = H1DFunc ( histo = h1 , xvar = 'pt' ) 
+    ## from  ostap.trees.funcs import H1DFunc
+    ## xh1 = H1DFunc ( histo = h1 , xvar = 'pt' ) 
+    from  ostap.trees.funcs import FuncTH1 
+    xh1 = FuncTH1 ( histo = h1 , xvar = 'pt' ) 
     
-##     from ostap.fitting.selectors import SelectorWithVars, Variable  
-##     variables = [
-##         ##Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
-##         Variable   ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
-##         Variable   ( 'c2dtf' , 'chi2(dtf)'    , -1    , 10   ) , 
-##         Variable   ( 'xpt'   , 'chi2(dtf)'    , -1    , 30   , xh1 ) , 
-##         ##Variable ( 'mass2' , 'mass(mu+mu-)' , 1 , 5 , MASS()  ) , 
-##         ##Variable ( 'mass3' , 'mass(mu+mu-)' , 1 , 5 , 'mass'  ) 
-##         ]
+    from ostap.fitting.pyselectors import SelectorWithVars, Variable  
+    variables = [
+        Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
+        Variable ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
+        Variable ( 'c2dtf' , 'chi2(dtf)'    , -1    , 10   ) , 
+        ## Variable ( 'xpt'   , 'xpt'          , -1    , 30   , xh1 ) , 
+        Variable ( 'mass2' , 'mass(mu+mu-)' , 1 , 5 , MASS()  ) , 
+        Variable ( 'mass3' , 'mass(mu+mu-)' , 1 , 5 , 'mass'  ) 
+        ]
 
     
-##     with timing('fill it!' ) :
-##         selector = SelectorWithVars  (
-##             variables = variables ,
-##             selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
-##             silence   = False
-##             )
-##         chain =  data.chain
-##         st = chain.process ( selector , silent = False , shortcut = True )
-##         ds = selector.data
-##         del selector 
-
+    with timing('fill it!' ) :
+        selector = SelectorWithVars  (
+            variables = variables ,
+            selection =  '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
+            silence   = True 
+            )
+        chain =  data.chain
+        st = chain.pprocess ( selector , silent = False , shortcut = True )
+        ds = selector.data
+        del selector 
+    logger.info ( 'Dataset (paralell):\n%s' % ds.table ( prefix = '# ' ) )
+        
 # =============================================================================
 if '__main__' == __name__ :
 
     
     test_kisa  ()
     test_kisa2 ()
-
-
-    #test_kisa3 ()
+    
+    test_kisa3 ()
     
     ## pass
 
 
-    
-    
+      
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

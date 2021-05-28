@@ -41,31 +41,54 @@ namespace
   // =========================================================================
 } //                                           the end of anonnnymous namespace 
 // ============================================================================
-/** constructor
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+// ============================================================================
+/*  constructor
  *  @param self python objects
  *  @param tree pointer to the tree
  */
 // ============================================================================
 Ostap::Functions::PyFuncTree::PyFuncTree 
-( PyObject* self , const TTree* tree )
+( PyObject*    self  , 
+  const TTree* tree )
   : Ostap::IFuncTree () 
   , m_tree ( tree )
   , m_self ( self ) 
-{
-  if ( nullptr != m_self ) { Py_INCREF( m_self ) ; }
-}
+{ if ( nullptr != m_self ) { Py_INCREF( m_self ) ; } }
+// ============================================================================
+#else 
+// ============================================================================
+/*  constructor
+ *  @param self python objects
+ *  @param tree pointer to the tree
+ */
+// ============================================================================
+Ostap::Functions::PyFuncTree::PyFuncTree 
+( const TTree* tree )
+  : Ostap::IFuncTree () 
+  , m_tree ( tree )
+{}
+// ============================================================================
+#endif 
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Functions::PyFuncTree::~PyFuncTree() { Py_XDECREF ( m_self ) ; }
+Ostap::Functions::PyFuncTree::~PyFuncTree() 
+{
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  Py_XDECREF ( m_self ) ;
+#endif 
+}
 // ============================================================================
 // the basic 
 // ============================================================================
 double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
-{
-  
+{ 
   /// redefine the current  tree 
   if ( nullptr != t ) { m_tree = t ; }
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+  //
   Ostap::Assert ( m_self                   , 
                   "self*  points to NULL"  , 
                   "PyFuncTree::operator()" , 
@@ -75,25 +98,60 @@ double Ostap::Functions::PyFuncTree::operator() ( const TTree* t ) const
                   "PyFuncTree::operator()" , 
                   Ostap::StatusCode(401)   ) ;
   return call_method ( m_self , s_method ) ;
+  //
+#else 
+  //
+  return evaluate () ;
+  //
+#endif 
 }
 // ============================================================================
-/** constructor
+// function that needs to be redefiend in python 
+// ============================================================================
+double Ostap::Functions::PyFuncTree::evaluate () const { return -1000 ; }
+// ============================================================================
+
+
+
+// ============================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+// ============================================================================
+/* constructor
  *  @param self python objects
  *  @param tree pointer to the tree
  */
 // ============================================================================
 Ostap::Functions::PyFuncData::PyFuncData 
-( PyObject* self , const RooAbsData* data )
+( PyObject* self , 
+  const RooAbsData* data )
   : Ostap::IFuncData () 
   , m_data ( data )
   , m_self ( self ) 
-{
-  if ( 0 != m_self ) { Py_INCREF( m_self ) ;} 
-}
+{ if ( 0 != m_self ) { Py_INCREF( m_self ) ;} }
+// ============================================================================
+#else 
+// ============================================================================
+/* constructor
+ *  @param self python objects
+ *  @param tree pointer to the tree
+ */
+// ============================================================================
+Ostap::Functions::PyFuncData::PyFuncData 
+( const RooAbsData* data )
+  : Ostap::IFuncData () 
+  , m_data ( data )
+{}
+// ============================================================================
+#endif
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::Functions::PyFuncData::~PyFuncData() { Py_XDECREF ( m_self ) ; }
+Ostap::Functions::PyFuncData::~PyFuncData() 
+{
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+  Py_XDECREF ( m_self ) ;
+#endif 
+}
 // ============================================================================
 // the basic 
 // ============================================================================
@@ -101,6 +159,9 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
 {
   /// redefine the current  tree 
   if ( nullptr != d ) { m_data = d ; }
+  //
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+  //
   Ostap::Assert ( m_self                   , 
                   "self*  points to NULL"  , 
                   "PyFuncData::operator()" , 
@@ -110,10 +171,20 @@ double Ostap::Functions::PyFuncData::operator() ( const RooAbsData* d ) const
                   "PyFuncData::operator()" , 
                   Ostap::StatusCode(401)   ) ;
   return call_method ( m_self , s_method ) ;
+  //
+#else 
+  //
+  return evaluate () ;
+  //
+#endif 
 }  
+// ============================================================================
+// function that needs to be redefiend in python 
+// ============================================================================
+double Ostap::Functions::PyFuncData::evaluate () const { return -1000 ; }
 // ============================================================================
 
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================
 

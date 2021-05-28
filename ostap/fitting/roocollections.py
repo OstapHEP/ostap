@@ -22,7 +22,7 @@ __all__     = (
     'KeepArgs'  , ## context manager to preserve the content of the list
     ) 
 # =============================================================================
-import ROOT, random
+import ROOT, sys, random
 from   ostap.core.core         import Ostap
 from   ostap.core.ostap_types  import string_types 
 import ostap.fitting.variables
@@ -32,6 +32,9 @@ import ostap.fitting.variables
 from ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.fitting.roocollections' )
 else                       : logger = getLogger( __name__ )
+# =============================================================================
+if (3,3) < sys.version_info : from collections.abc import Container
+else                        : from collections     import Container
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -102,7 +105,7 @@ _new_methods_ += [
     ROOT.RooArgList. __setitem__   ,
 ]    
 
-## ============================================================================
+# =============================================================================
 ## helper function to print collection
 def _rs_list_ ( self ) :
     _l = []
@@ -118,6 +121,29 @@ def _rs_list_ ( self ) :
             _l.append (  str ( i )    )
             
     return _l ;
+
+# =============================================================================
+## Get tuple of names for the objects in <code>RooAbsCollection</code>
+#  @code
+#  collection = ...
+#  names = collection.names ()  
+#  @endcode
+#  @see RooArgList
+#  @see RooArgSet
+#  @see RooAbsCollection
+def _rac_names_ ( self ) :
+    """ Get tuple of names for the objects in `ROOT.RooAbsCollection`
+    >>> collection = ...
+    >>> names = collection.names ()  
+    - see `ROOT.RooArgList`
+    - see `ROOT.RooArgSet`
+    - see `ROOT.RooAbsCollection`
+    """
+    return tuple ( [ i.name for i in self ] ) 
+
+ROOT.RooAbsCollection . names = _rac_names_
+ROOT.RooArgList.names         = _rac_names_
+ROOT.RooArgSet .names         = _rac_names_
 
 # =============================================================================
 ## printout for RooArgList 
@@ -175,16 +201,21 @@ def _ras_contains_ ( self , aname ) :
 
 # =============================================================================
 ## some decoration over RooArgSet 
-ROOT.RooArgSet . __len__       = lambda s   : s.getSize()
-ROOT.RooArgSet . __iter__      = _ras_iter_ 
-ROOT.RooArgSet . __getattr__   = _ras_getattr_ 
-ROOT.RooArgSet . __getitem__   = _ras_getitem_ 
-ROOT.RooArgSet . __contains__  = _ras_contains_ 
-ROOT.RooArgSet . __nonzero__   = lambda s   : 0 != len ( s ) 
+ROOT.RooArgSet . __len__           = lambda s   : s.getSize()
+ROOT.RooArgSet . __iter__          = _ras_iter_ 
+ROOT.RooArgSet . __getattr__       = _ras_getattr_ 
+ROOT.RooArgSet . __getitem__       = _ras_getitem_ 
+ROOT.RooArgSet . __contains__      = _ras_contains_ 
+ROOT.RooArgSet . __nonzero__       = lambda s   : 0 != len ( s ) 
         
-ROOT.RooArgSet     . __str__   = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
-ROOT.RooArgSet     . __repr__  = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
-ROOT.RooLinkedList . __repr__  = lambda s : str (  _rs_list_ ( s ) )
+ROOT.RooArgSet     . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
+ROOT.RooArgSet     . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
+ROOT.RooLinkedList . __repr__      = lambda s : str (  _rs_list_ ( s ) )
+
+ROOT.RooAbsCollection.__iter__     = _ras_iter_
+ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize()
+ROOT.RooAbsCollection. __nonzero__ = lambda s   : 0 != len ( s ) 
+
 
 # =============================================================================
 ## iterator for class RooLinkedList
@@ -213,7 +244,8 @@ _new_methods_ += [
     ROOT.RooArgSet . __repr__     ,
     ]
 
-ROOT.RooLinkedList.add = ROOT.RooLinkedList.Add
+ROOT.RooLinkedList.add     = ROOT.RooLinkedList.Add
+ROOT.RooLinkedList.__len__ = ROOT.RooLinkedList.GetSize
 
 _new_methods_ += [
     ROOT.RooLinkedList . __len__  ,
@@ -229,8 +261,7 @@ def _ral_iadd_ ( self , other ) :
     >>> lst = ....
     >>> lst += another_lst
     """
-    from collections import Container as _CNT
-    _RAC = ROOT.RooAbsCollection
+    _CNT = Container
     _RAC = ROOT.RooAbsCollection
     _RAA = ROOT.RooAbsArg      
     if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
@@ -250,12 +281,12 @@ def _ral_add_ ( self , other ) :
     >>> set2 = ...
     >>> lst2 = lst1 + set2 
     """
-    from collections import Container as _CNT
+    _CNT = Container
     _RAC = ROOT.RooAbsCollection
     _RAA = ROOT.RooAbsArg  
     if not isinstance ( other , ( _CNT, _RAC , _RAA ) ) : return NotImplemented
     if     isinstance ( other , str )                   : return NotImplemented
-    _clone = self.clone('')
+    _clone  = self.clone('')
     _clone += other
     return _clone
 
@@ -399,13 +430,20 @@ _new_methods_ += [
     ROOT.RooArgSet     . symmetric_difference ,
     ROOT.RooArgSet     . __sub__  , 
     ROOT.RooArgSet     . __or__   , 
-    ROOT.RooArgSet     . __ior__  , 
+    ROOT.RooArgSet     . __ior__  ,
+    ##
+    ROOT.RooAbsCollection . __iter__  ,
+    ROOT.RooAbsCollection . __len__   ,
+    ROOT.RooAbsCollection . names     ,
+    ##
+    ROOT.RooArgList       . names     ,
+    ROOT.RooArgSet        . names     ,    
     ##
     ]
 
 # =============================================================================
 ## @class KeepArg
-#  Simple contect manager for temporary redefitnnnonn of some mutable collection
+#  Simple contect manager for temporary redefiniiton of some mutable collection
 #  @code
 #  signals = ...
 #  new_signals = ...
@@ -433,9 +471,9 @@ class  KeepArgs(object) :
         
     def __enter__ ( self ) :
 
-        ## preserve the content of old list 
+        ## preserve the content of the old list 
         self.__content = [ i for i in self.__old_list ]
-        ## cleat the old list 
+        ## clear the old list 
         self.__old_list.clear ()
         ## fill it with the content of new list 
         for i in self.__new_list : self.__old_list.add ( i )
@@ -453,9 +491,10 @@ class  KeepArgs(object) :
     
 # =============================================================================
 _decorated_classes_ = (
-    ROOT.RooArgSet     , 
-    ROOT.RooArgList    , 
-    ROOT.RooLinkedList , 
+    ROOT.RooArgSet        , 
+    ROOT.RooArgList       , 
+    ROOT.RooLinkedList    , 
+    ROOT.RooAbsCollection , 
     )
 
 _new_methods_ = tuple ( _new_methods_ ) 
@@ -467,5 +506,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

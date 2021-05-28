@@ -625,7 +625,7 @@ class Mode(Median) :
         _mode = 3.0 * _median - 2.0 * _mean
         _fnm  = func ( _mode ,  *args )
 
-        ## make interval small enough 
+        ## make the interval small enough 
         for i in range ( 10 ) :
 
             if abs ( mx - mn ) * 20 < abs ( self.xmax -  self.xmin ) : break
@@ -677,12 +677,12 @@ class Mode(Median) :
 
 # =============================================================================
 ## @class Width
-#  Calculate the full width at half heigh for the distribution or function  
+#  Calculate the full width at half height for the distribution or function  
 #  @code
 #  xmin,xmax = 0,math.pi 
 #  width     = Width ( xmin,xmax )  ## specify min/max
-#  x1,x2     = width ( math.sin  )
-#  fwhm      = x2-x1
+#  x1 , x2   = width ( math.sin  )
+#  fwhm      = x2 - x1
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-07-12
@@ -690,38 +690,43 @@ class Width(Mode) :
     """Calculate the mode for the distribution or function  
     >>> xmin,xmax = 0,math.pi 
     >>> width     = Width ( xmin,xmax )  ## specify min/max
-    >>> x1,x2     = width ( math.sin )
-    >>> fwhm      = x2-x1
+    >>> x1 , x2   = width ( math.sin )
+    >>> fwhm      = x2 - x1
     """
     def __init__ ( self , xmin , xmax , height_factor = 0.5 ) :
         Mode.__init__ ( self , xmin , xmax )
         self._hfactor = height_factor
         
     ## calculate the width
-    def __call__ ( self , func , *args ) :
+    def __call__ ( self , func , mode = None , *args ) :
         ##
 
-        ## get the position of the mode
-        m0  = Mode.__call__ ( self , func , *args )
-
+        ## mode is specified 
+        if isinstance ( mode , float )        and \
+           self.xmin < mode < self.xmax       and \
+           func ( self.xmin ) < func ( mode ) and \
+           func ( self.xmax ) < func ( mode ) :  m0 = mode
+        else :
+            ## mode needs to be calculated
+            m0 = Mode.__call__ ( self , func , *args )
+            
         ## function  value at the maximum
-        v0      = func ( m0 , *args )
+        v0      = float ( func ( m0 , *args ) ) 
 
         ## half height 
         vheight = 1.0 * v0 * self._hfactor
         
-        ifun = lambda x,*a : float(func (x,*a))-vheight
+        ifun = lambda x,*a : float ( func ( x , *a ) ) - vheight
 
         from ostap.math.rootfinder import findroot
         x1 = findroot ( ifun , self.xmin , m0        , args = args )
         x2 = findroot ( ifun , m0        , self.xmax , args = args ) 
         
-        return x1,x2
+        return x1 , x2
 
     def __str__ ( self ) :
         return "Width(%s,%s,%s)" % ( self.xmin , self.xmax , self._hfactor)
     
-
 # =============================================================================
 ## @class CL_symm
 #  Calcualate symmetic confidence interval around x0
@@ -984,7 +989,7 @@ class CL_asymm(object) :
 #  considering function to be PDF 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
-def sp_action ( func , actor , xmin = None , xmax = None ) :
+def sp_action ( func , actor , xmin = None , xmax = None , *args , **kwargs ) :
     """Calculate some statistical quantities of variable, considering function to be PDF 
     """
     ##
@@ -1006,7 +1011,7 @@ def sp_action ( func , actor , xmin = None , xmax = None ) :
     ## instantiate calculator and use it 
     calc = actor ( xmn , xmx )
     ##
-    return calc  ( func )
+    return calc  ( func , *args , **kwargs )
 
 # =============================================================================
 ## get the N-moment of variable, considering function to be PDF 
@@ -1201,7 +1206,7 @@ def mode ( func , xmin = None , xmax = None ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
-def width ( func , xmin = None , xmax = None , height_factor = 0.5 ) :
+def width ( func , xmin = None , xmax = None , height_factor = 0.5 , mode = None ) :
     """ Get the width for the distribution
     >>> fun   = ...
     >>> x1,x2 = width ( fun ,  xmin = 10 , xmax = 50 )
@@ -1211,23 +1216,23 @@ def width ( func , xmin = None , xmax = None , height_factor = 0.5 ) :
     ## use it! 
     ## get the functions from ostap.stats.moments
     actor = lambda x1,x2 : Width  ( x1 , x2 , height_factor ) 
-    return sp_action ( func , actor , xmin , xmax )
+    return sp_action ( func , actor , xmin , xmax , mode = mode )
 
 # =============================================================================
 ## get the FWHM, considering function to be PDF 
 #  @code 
 #  >>> fun   = ...
-#  >>> width = fwhm ( fun ,  xmin = 10 , xmax = 50 )
+#  >>> width = fwhm ( fun , xmin = 10 , xmax = 50 )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-11
-def fwhm ( func , xmin = None , xmax = None  ) :
+def fwhm ( func , xmin = None , xmax = None , mode = None ) :
     """ Get the width for the distribution
     >>> fun   = ...
     >>> x1,x2 = width ( fun ,  xmin = 10 , xmax = 50 )
     >>> fwhm  = x2-x1   
     """
-    x1 , x2 = width ( func , xmin = xmin , xmax = xmax , height_factor = 0.5 )
+    x1 , x2 = width ( func , xmin = xmin , xmax = xmax , height_factor = 0.5 , mode = mode )
     return  x2 - x1
 
 # =============================================================================

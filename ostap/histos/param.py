@@ -137,33 +137,48 @@ import ROOT
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger 
+from ostap.logger.logger    import getLogger 
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.param' )
 else                       : logger = getLogger( __name__             )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities for Histo objects')
 # =============================================================================
-from ostap.core.core     import cpp, VE, funID, Ostap
-from ostap.math.param    import ( legendre_sum      ,
-                                  chebyshev_sum     ,
-                                  fourier_sum       ,
-                                  cosine_sum        ,
-                                  bezier_sum        ,
-                                  bernstein_sum     , 
-                                  beziereven_sum    ,
-                                  bernsteineven_sum )
-from ostap.core.ostap_types    import integer_types, long_type
+from ostap.core.core        import cpp, VE, funID, Ostap
+from ostap.math.param       import ( legendre_sum      ,
+                                     chebyshev_sum     ,
+                                     fourier_sum       ,
+                                     cosine_sum        ,
+                                     bezier_sum        ,
+                                     bernstein_sum     , 
+                                     beziereven_sum    ,
+                                     bernsteineven_sum )
+from ostap.core.ostap_types import integer_types, long_type
+from collections            import namedtuple 
+                        
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
 # =============================================================================
-
+## result of the historgam  parameterisation based on TH1::Fit 
+ParamFITInfo = namedtuple ( 'ParamFITInfo' , ( 'tf1'       ,   ## ROOT TF1 object 
+                                               'fitobject' ,   ## Fittting object 
+                                               'funobject' ,   ## original function object 
+                                               'fitresult' ,   ## result of TH1::Fit
+                                               'norm'      ) ) ## normalization factor
+# =============================================================================
+## result of the historgam  parameterisation based on RooFit
+ParamPDFInfo = namedtuple ( 'ParamPDFInfo' , ( 'fitresult' ,   ## RooFitResult
+                                               'pdf'       ,   ## Fit PDF 
+                                               'funobject' ,   ## the function object 
+                                               'norm'      ,   ## normalization factor 
+                                               'pdffun'    ,   ## PDF_fun object
+                                               'plot'      ) ) ## RooPlot object 
 # =============================================================================
 ## represent 1D-histo as polynomial sum 
 def _h1_param_sum_ ( h1              ,
                      fun_obj         ,
                      fit_type        ,  
-                     opts  = 'SQ0I'  ,
+                     opts  = 'SQ0'   ,
                      xmin  = inf_neg ,
                      xmax  = inf_pos ,
                      fixes = ()      ) :
@@ -192,14 +207,22 @@ def _h1_param_sum_ ( h1              ,
             fun.SetParameter ( i + 1 , 0  )
             fun.SetParLimits ( i + 1 , -1.75 * pi  , 1.75 * pi ) 
             
-    if not opts                   : opts  = 'S'
-    if 0 > opts.upper().find('S') : opts += 'S'
+    if not opts                : opts  = 'S'
+    if not 'S' in opts.upper() : opts += 'S'
     
+    if len ( h1 ) < 100 and not 'I' in opts.upper() :
+        logger.info ("param_sum: add fitting option 'I' ") 
+        opts += 'I'
+        
+    if h1.GetXaxis().IsVariableBinSize() and not 'I' in opts.upper() :
+        logger.info ("param_sum: add fitting option 'I' ") 
+        opts += 'I'
+        
     ## fitting options:
     fopts = opts,'',xmin,xmax 
 
     ## fix parameters 
-    for i,v in fixes :
+    for i , v in fixes :
         fun.FixParameter ( i , v )
         
     if hasattr ( bfit , 'norm' ) and bfit.norm() :
@@ -208,19 +231,43 @@ def _h1_param_sum_ ( h1              ,
         r  = fun.Fit( h1 , opts+'0Q', '', xmin , xmax )
         fun.ReleaseParameter(0)
         
+    import ostap.fitting.fitresult
+    from   ostap.fitting.utils      import fit_status
+    from   ostap.logger.colorized  import attention
+
     r = fun.Fit( h1 , *fopts )
-        
-    if 0 != r.Status() :
-        logger.info ( 'Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+    
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name = type ( b ) . __name__
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.debug   ( 'Fit status is %s [%s]\n%s' % ( status , b_name ,  rtable ) )
         if hasattr ( bfit , 'norm' ) and bfit.norm() : 
             fun.FixParameter ( 0 , _integral_ )
             for i in range ( 0 , b.npars() ) : fun.SetParameter ( i + 1 , 0  )
             r = fun.Fit( h1 , *fopts )
             fun.ReleaseParameter ( 0 )
-        r = fun.Fit( h1 , *fopts )
+        r = fun.Fit ( h1 , *fopts )
+
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.info    ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.debug   ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
+        if hasattr ( bfit , 'norm' ) and bfit.norm() : 
+            fun.FixParameter ( 0 , _integral_ )
+            for i in range ( 0 , b.npars() ) : fun.SetParameter ( i + 1 , 0  )
+            r = fun.Fit( h1 , *fopts )
+            fun.ReleaseParameter ( 0 )
+        r = fun.Fit ( h1 , *fopts )
             
-    if 0 != r.Status() :
-        logger.warning ( 'Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.warning ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.debug   ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
         r = fun.Fit( h1, *fopts )        
         if hasattr ( bfit , 'norm' ) and bfit.norm() : 
             fun.FixParameter ( 0 , _integral_ )
@@ -228,17 +275,24 @@ def _h1_param_sum_ ( h1              ,
             r = fun.Fit(h1, *fopts)
             fun.ReleaseParameter( 0 )
         r = fun.Fit ( h1 , *fopts )
-        if 0 != r.Status() :
-            logger.error ('Fit status is  %d [%s]' % ( r.Status() , type(b).__name__ ) )
+
+    if r.Status() :
+        status = attention ( fit_status ( r.Status() ) ) 
+        b_name =  type ( b ) . __name__ 
+        rtable = r.table ( title = 'Fit result for %s' % b_name , prefix = '# ' )
+        logger.error   ( 'Fit status is %s [%s]' % ( status , b_name ) )
+        logger.info    ( 'Fit result [%s]\n%s'   % ( b_name , rtable ) )
 
     bfit.fitresult = r
     
-    norm = VE(1,0)
+    norm = VE ( 1 , 0 )
     if hasattr ( bfit , 'norm' ) and bfit.norm() : 
-        bfit.fitnorm = r[0]
-        norm         = r[0]
+        bfit.fitnorm = r [ 0 ]
+        norm         = r [ 0 ]
         
-    return bfit.fun , bfit , b , bfit.fitresult, norm 
+    params = ParamFITInfo ( bfit.fun , bfit , b , bfit.fitresult , norm ) 
+    h1._param_FIT_info = params 
+    return params
 
 # =============================================================================
 ## represent 1D-histo as Bernstein polynomial
@@ -341,7 +395,7 @@ def _h1_bernsteineven_ ( h1 , halfdegree , opts = 'SQ0' , xmin = inf_neg , xmax 
 def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Chebyshev sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.chebyshev ( 5 )  ## make a fit... 
 
     >>> tf1        = b[0]    ## TF1 object
@@ -366,7 +420,7 @@ def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_p
 # =============================================================================
 ## represent 1D-histo as Legendre polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.legendre ( 5 )     ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -382,7 +436,7 @@ def _h1_chebyshev_ ( h1 , degree , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_p
 def _h1_legendre_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Legendre sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.legendre ( 5 )  ## make a fit...
 
     >>> tf1        = b[0]    ## TF1 object
@@ -455,7 +509,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 # =============================================================================
 ## represent 1D-histo as Fourier polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.fourier ( 3 )      ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -471,7 +525,7 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
 def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Fourier sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.fourier ( 3 )  ## make a fit... 
         
     >>> tf1        = b[0]    ## TF1 object
@@ -498,7 +552,7 @@ def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg 
 # =============================================================================
 ## represent 1D-histo as cosine Fourier polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.cosine ( 3 )       ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -514,7 +568,7 @@ def _h1_fourier_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg 
 def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Cosine Fourier sum 
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.cosine ( 3 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -541,7 +595,7 @@ def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as plain vanilla polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.polinomial ( 5 )  ## make a fit... 
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -556,7 +610,7 @@ def _h1_cosine_ ( h1 , degree , fejer = False , opts = 'SQ0I' , xmin = inf_neg ,
 #  @endcode 
 def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as plain vanilla polynomial    
-    >>> h = ... # the historgam    
+    >>> h = ... # the histogram    
     >>> b = h.polinomial ( 5 )  ## make a fit... 
     
     >>> tf1        = b[0]    ## TF1 object
@@ -571,7 +625,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func  = cpp.Ostap.Math.Polynomial ( degree , xmin , xmax ) 
+    func  = Ostap.Math.Polynomial ( degree , xmin , xmax ) 
     #
     my = h1.accumulate().value()/h1.bins()
     func.setPar( 0, my )
@@ -583,7 +637,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
 # =============================================================================
 ## represent 1D-histo as B-spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.bSpline ( degree = 3 , innerknots = 3  )
 #  b = h.bSpline ( degree = 3 , innerknots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -599,7 +653,7 @@ def _h1_polinomial_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_p
 #  @endcode 
 def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as B-spline polynomial    
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.bSpline ( degree = 3 , knots = 3  )
     >>> b = h.bSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
@@ -618,12 +672,12 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.BSpline ( xmin , xmax , knots , degree )
+        func = Ostap.Math.BSpline ( xmin , xmax , knots , degree )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.BSpline ( _knots , degree )
+        func = Ostap.Math.BSpline ( _knots , degree )
         
     ##
     from ostap.fitting.param import H_fit 
@@ -633,7 +687,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as POSITIVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.positive     ( 5 ) ## 5 is degree
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -648,7 +702,7 @@ def _h1_bspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 #  @endcode 
 def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Positive Bernstein polynomial
-    >>> h = ...              ## the historgam
+    >>> h = ...              ## the histogram
     >>> b = h.positive ( 5 ) ## 5 is degree
     
     >>> tf1        = b[0]    ## TF1 object
@@ -663,7 +717,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.Positive ( N , xmin , xmax )
+    func = Ostap.Math.Positive ( N , xmin , xmax )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -671,7 +725,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
 # =============================================================================
 ## represent 1D-histo as POSITIVE EVEN bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.positiveeven ( 2 ) ## 2 is half-degree
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -687,7 +741,7 @@ def _h1_positive_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
 def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Positive Even Bernstein polynomial
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.positiveeven ( 2 ) ## 2 is half-degree
     
     >>> tf1        = b[0] ## TF1 object
@@ -702,7 +756,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.PositiveEven ( N , xmin , xmax )
+    func = Ostap.Math.PositiveEven ( N , xmin , xmax )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -711,7 +765,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 # =============================================================================
 ## represent 1D-histo as MONOTONIC bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.monotonic ( 5 , increasing = True )
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -727,7 +781,7 @@ def _h1_positiveeven_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos 
 def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos  ) :
     """Represent histo as Monotonic Bernstein polynomial
     
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.monotonic ( 5 , increasing = True )
     
     >>> tf1        = b[0] ## TF1 object
@@ -742,7 +796,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func  = cpp.Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
+    func  = Ostap.Math.Monotonic ( N , xmin , xmax , increasing )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -751,7 +805,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
 # =============================================================================
 ## represent 1D-histo as MONOTONIC CONVEX/CONCAVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convex ( 5 , increasing = True , convex = False )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -766,7 +820,7 @@ def _h1_monotonic_ ( h1 , N , increasing = True , opts = 'SQ0' , xmin = inf_neg 
 #  @endcode 
 def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Monotonic Convex/Concave  Bernstein polynomial    
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.convex ( 5 , increasing = True , convex = False )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -778,11 +832,11 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
     >>> x = ...
     >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
     >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.Convex ( N , xmin , xmax , increasing , convex )
+    func = Ostap.Math.Convex ( N , xmin , xmax , increasing , convex )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -791,7 +845,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
 # =============================================================================
 ## represent 1D-histo as CONVEX bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convexpoly ( 5 )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -806,7 +860,7 @@ def _h1_convex_ ( h1 , N , increasing = True , convex = True , opts = 'SQ0' ,  x
 #  @endcode 
 def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Convex Bernstein polynomial
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.convexpoly ( 5 )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -821,7 +875,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , True )
+    func = Ostap.Math.ConvexOnly ( N , xmin , xmax , True )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -829,7 +883,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
 # =============================================================================
 ## represent 1D-histo as CONCAVE bernstein polynomial
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.concavepoly ( 5 )    
 # 
 #  tf1        = b[0]        ## TF1 object
@@ -845,7 +899,7 @@ def _h1_convexpoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) 
 def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as Concave  Bernstein polynomial
 
-    >>> h = ...           ## the historgam
+    >>> h = ...           ## the histogram
     >>> b = h.concavepoly ( 5 )    
     
     >>> tf1        = b[0] ## TF1 object
@@ -860,7 +914,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
     """
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
-    func = cpp.Ostap.Math.ConvexOnly ( N , xmin , xmax , False )
+    func = Ostap.Math.ConvexOnly ( N , xmin , xmax , False )
     # 
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -868,7 +922,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
 # =============================================================================
 ## represent 1D-histo as positive B-spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b  = h.pSpline ( degree = 3 , knots = 3  )
 #  b  = h.pSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -885,7 +939,7 @@ def _h1_concavepoly_ ( h1 , N , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos )
 def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive B-spline 
     
-    >>> h  = ... # the historgam
+    >>> h  = ... # the histogram
     >>> b  = h.pSpline ( degree = 3 , knots = 3  )
     >>> b  = h.pSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 
@@ -903,12 +957,12 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
+        func = Ostap.Math.PositiveSpline ( xmin , xmax , knots , degree  )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.PositiveSpline ( _knots , degree )
+        func = Ostap.Math.PositiveSpline ( _knots , degree )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -916,7 +970,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 # =============================================================================
 ## represent 1D-histo as positive monotonic spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.mSpline ( degree = 3 , knots = 3  , increasing = True  )
 #  b = h.mSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ] )
 #  b = h.mSpline ( degree = 3 , knots = 3  , increasing = False )
@@ -934,7 +988,7 @@ def _h1_pspline_ ( h1 , degree = 3 , knots = 3 , opts = 'SQ0' , xmin = inf_neg ,
 def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos ) :
     """Represent histo as positive monotonic  spline 
     
-    >>> h  = ... # the historgam
+    >>> h  = ... # the histogram
     
     >>> b  = h.mSpline ( degree = 3 , knots = 3  , increasing = True  )
     >>> b  = h.mSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ] )
@@ -955,12 +1009,12 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
+        func = Ostap.Math.MonotonicSpline ( xmin , xmax , knots , degree , increasing )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func = cpp.Ostap.Math.MonotonicSpline ( knots , degree , increasing )
+        func = Ostap.Math.MonotonicSpline ( knots , degree , increasing )
     #
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -968,7 +1022,7 @@ def _h1_mspline_ ( h1 , degree = 3 , knots = 3 , increasing = True , opts = 'SQ0
 # =============================================================================
 ## represent 1D-histo as monotonic convex/concave spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
 #  b = h.cSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -992,7 +1046,7 @@ def _h1_cspline_ ( h1                   ,
                    xmax       = inf_pos ) :
     """Represent histo as positive monotonic convex/concave spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.cSpline ( degree = 3 , knots = 3  , increasing = True , convex = False )
     >>> b = h.cSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 
@@ -1010,12 +1064,12 @@ def _h1_cspline_ ( h1                   ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
+        func = Ostap.Math.ConvexSpline ( xmin , xmax , knots , degree , increasing , convex  )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
+        func   = Ostap.Math.ConvexSpline ( _knots , order , increasing , convex )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
@@ -1024,7 +1078,7 @@ def _h1_cspline_ ( h1                   ,
 # =============================================================================
 ## represent 1D-histo as positive convex spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.convexSpline ( degree = 3 , knots = 3 )
 #  b = h.convexSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 # 
@@ -1046,7 +1100,7 @@ def _h1_convexspline_ ( h1                 ,
                         xmax     = inf_pos ) :
     """Represent histo as positive convex spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.convexSpline ( degree = 3 , knots = 3 )
     >>> b = h.convexSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
@@ -1064,12 +1118,12 @@ def _h1_convexspline_ ( h1                 ,
     xmax = min ( xmax , h1.xmax() )  
     #
     if isinstance ( knots , integer_types ) and 0 <= knots :
-        func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
+        func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , True )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( mn , mx ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , True )
+        func   = Ostap.Math.ConvexOnlySpline ( _knots , order , True )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts , xmin , xmax ) 
@@ -1077,7 +1131,7 @@ def _h1_convexspline_ ( h1                 ,
 # =============================================================================
 ## represent 1D-histo as positive concave spline
 #  @code
-#  h = ...                  ## the historgam
+#  h = ...                  ## the histogram
 #  b = h.concaveSpline ( degree = 3 , knots = 3 )
 #  b = h.concaveSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
 #
@@ -1099,7 +1153,7 @@ def _h1_concavespline_ ( h1               ,
                          xmax   = inf_pos ) :
     """Represent histo as positive convcave spline  
     
-    >>> h = ... # the historgam
+    >>> h = ... # the histogram
     >>> b = h.concaveSpline ( degree = 3 , knots = 3 )
     >>> b = h.concaveSpline ( degree = 3 , knots = [ 0.1 , 0.2, 0.8, 0.9 ]  )
     
@@ -1118,12 +1172,12 @@ def _h1_concavespline_ ( h1               ,
     #
     #
     if isinstance ( knots , integer_types ) :
-        func = cpp.Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
+        func = Ostap.Math.ConvexOnlySpline ( xmin , xmax , knots , degree , False )
     else :
         from ostap.math.base import doubles
         _knots = doubles ( xmin , xmax ) 
         for k in knots : _knots.push_back( k )
-        func   = cpp.Ostap.Math.ConvexOnlySpline ( _knots , order , False )
+        func   = Ostap.Math.ConvexOnlySpline ( _knots , order , False )
         
     from ostap.fitting.param import H_Nfit
     return _h1_param_sum_ ( h1 , func , H_Nfit , opts ) 
@@ -1187,26 +1241,32 @@ def _h1_pdf_ ( h1 , pdf_type , pars , *args, **kwargs ) :
     """Parameterize positive histogram with certain PDF
     """
     ##
-    mn,mx = h1.minmax()
+    mn , mx = h1.minmax()
     if mn.value() < 0 or mx.value() <= 0 :
         raise AttributeError("Histo goes to negative %s/%s" % ( mn , mx ) )
     ##
     if not hasattr ( h1 , 'xvar' ) :
         h1.xvar = ROOT.RooRealVar ( 'x' + h1.GetName() , 'xvar(%s)' % h1.GetName() , *h1.xminmax() )
 
-    ## create pdf 
-    pdf  = pdf_type     ( 'pdf_' + h1.GetName() , h1.xvar , *pars )
+    ## create pdf
+    from ostap.fitting.utils import MakeVar 
+    name = MakeVar.generate_name (  'pdf_' + h1.GetName() )
+    ##
+    pdf  = pdf_type     ( name , h1.xvar , *pars )
     ## fit the histogram 
-    r,f  = pdf.fitHisto ( h1 , *args, **kwargs )
+    r , f  = pdf.fitHisto ( h1 , *args, **kwargs )
     ##
     func = pdf.pdf.function()
     ##
     from ostap.fitting.roofit import PDF_fun
     pdf_fun = PDF_fun( pdf.pdf , h1.xvar , *h1.xminmax() )
     ##
-    norm = VE (  h1.integrate().value() , 0 ) 
-    return r , pdf , func , norm , pdf_fun, f  
-
+    norm = VE ( h1.integrate().value() , 0 )
+    ##
+    params = ParamPDFInfo ( r , pdf , func , norm , pdf_fun , f )
+    h1._param_PDF_info = params
+    return params 
+    
 # =============================================================================
 ## parameterize/fit histogram with the positive polynomial
 #  @code
@@ -1654,7 +1714,7 @@ def _h1_pdf_pspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , (tuple,list) ) : 
         ## create the spline with uniform binning 
-        PS     = cpp.Ostap.Math.PositiveSpline
+        PS     = Ostap.Math.PositiveSpline
         spline = PS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] )
     #
     from ostap.fitting.background import PSpline_pdf
@@ -1685,7 +1745,7 @@ def _h1_pdf_mspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) :
         ## create the spline with uniform binning 
-        MS     = cpp.Ostap.Math.MonotonicSpline
+        MS     = Ostap.Math.MonotonicSpline
         spline = MS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] )
         #
     from ostap.fitting.background import MSpline_pdf
@@ -1715,7 +1775,7 @@ def _h1_pdf_cspline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , (tuple,list) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexSpline
+        CS     = Ostap.Math.ConvexSpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , spline[2] , spline[3] )
     #
     from ostap.fitting.background import CSpline_pdf
@@ -1746,7 +1806,7 @@ def _h1_pdf_convexSpline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexOnlySpline
+        CS     = Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , True )
         #
     from ostap.fitting.background import CPSpline_pdf
@@ -1777,7 +1837,7 @@ def _h1_pdf_concaveSpline_ ( h1 , spline , *args , **kwargs ) :
     #
     if isinstance ( spline , ( tuple , list ) ) : 
         ## create the spline with uniform binning 
-        CS     = cpp.Ostap.Math.ConvexOnlySpline
+        CS     = Ostap.Math.ConvexOnlySpline
         spline = CS ( h1.xmin() , h1.xmax() , spline[1] , spline[0] , False )
         #
     from ostap.fitting.background import CPSpline_pdf
@@ -2149,5 +2209,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

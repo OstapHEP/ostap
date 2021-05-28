@@ -42,6 +42,7 @@ Empricial PDFs to describe narrow peaks :
   - Slash shape
   - RasingCosine shape
   - Q-Gaussian shape
+  - Hyperbolic distribution
   - Asymmetric Laplace shape
   - Sech  shape
   - Losev  shape
@@ -98,6 +99,7 @@ __all__ = (
     'Slash_pdf'              , ## Symmetie peak with vey heavy tails 
     'RaisingCosine_pdf'      , ## Raising cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
+    'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
@@ -130,9 +132,9 @@ __all__ = (
     'Voigt_pdf'            , ## Voigt-profile 
     'PseudoVoigt_pdf'      , ## Voigt-profile 
     'BWI_pdf'              , ## Breit-Wigner with interference 
-    'BW23L_pdf'            , ## BW23L
+    'BW3L_pdf'             , ## BW3L
+    'BWPS_pdf'             , ## BWPS
     'BWMC_pdf'             , ## BWMC
-    'Swanson_pdf'          , ## Swanson's S-wave cusp
     #
     ## "Other" distributions 
     #
@@ -178,9 +180,12 @@ __all__ = (
     'Linear_pdf'           , ## positive linear polynom 
     'Parabolic_pdf'        , ## positive parabolic polynom  
     ## the native RooFit background shapes
-    'RooPoly_pdf'       , ## wrapper for RooPolynomial 
-    'RooCheb_pdf'       , ## wrapper for RooChebyshev 
+    'RooPoly_pdf'          , ## wrapper for RooPolynomial 
+    'RooCheb_pdf'          , ## wrapper for RooChebyshev 
     ##
+    'CutOff_pdf'           , ## Cut-off 
+    'CutOffGauss_pdf'      , ## Gaussian cut-off 
+    'CutOffStudent_pdf'    , ## Student's t-like /power law cut-off 
     #
     ## 2D non-factorazable models
     #
@@ -235,7 +240,6 @@ __all__ = (
     ##
     'Convolution_pdf'   , ## generic convolution PDF
     ##
-    'PyPDF'              , ## helper class to implement ``pure-python'' PDF 
     )
 # =============================================================================
 import ROOT, math
@@ -271,8 +275,6 @@ logger.debug ("Import adjustment           models from ``adjust''"       )
 from ostap.fitting.adjust        import *  
 logger.debug ("Import modifiers                   from ``modifiers''"    )
 from ostap.fitting.modifiers     import *
-logger.debug ("Import PyPDF                       from ``pypdf''"        )
-from ostap.fitting.pypdf         import PyPDF
 logger.debug ("Import functions                   from ``roofuncs''"     )
 from ostap.fitting.roofuncs      import * 
 

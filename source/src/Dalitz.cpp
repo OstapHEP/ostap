@@ -443,7 +443,7 @@ double Ostap::Kinematics::Dalitz0::J
   const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
   const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
   //
-  return f1 <= 0 ? 0.0 : f2 <= 0 ? 0.0 : std::sqrt ( f1 * f2 ) / ( 2 * s2 ) ;
+  return f1 <= 0 || f2 <= 0? 0.0 : std::sqrt ( f1 * f2 ) / ( 2 * s2 ) ;
 }
 // ============================================================================
 /*  "transpose it", such that \f$ s_{i1} \f$ and \f$ s_{i2}\f$ 

@@ -20,6 +20,7 @@ import ostap.fitting.models        as     Models
 from   ostap.fitting.morphing_pdf  import Morphing1D_pdf, Morphing2D_pdf 
 from   ostap.utils.utils           import vrange
 from   builtins                    import range
+from   ostap.utils.timing          import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,6 +39,11 @@ for i in range ( N ) :
 
 # ============================================================================
 def test_morphing1 () :
+
+    logger = getLogger ('test_morphing1')    
+    if ROOT.gROOT.GetVersionInt() < 62301 :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return 
 
     pdf1 = Models.Gauss_pdf ( 'G1' , xvar = mass , mean = 10 , sigma = 1 )
     pdf2 = Models.Gauss_pdf ( 'G2' , xvar = mass , mean = 10 , sigma = 2 )
@@ -58,9 +64,13 @@ def test_morphing1 () :
     logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
 # ============================================================================
-## def test_morphing2 () :
-if 1 < 2 :
+def test_morphing2 () :
     
+    logger = getLogger ('test_morphing2')    
+    if ROOT.gROOT.GetVersionInt() < 62301 :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return 
+
     pdf11 = Models.Gauss_pdf ( 'G11' , xvar = mass , mean =  8 , sigma = 1 )
     pdf12 = Models.Gauss_pdf ( 'G12' , xvar = mass , mean = 10 , sigma = 1 )
     pdf13 = Models.Gauss_pdf ( 'G13' , xvar = mass , mean = 12 , sigma = 1 )
@@ -96,9 +106,10 @@ if 1 < 2 :
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass 
-    ## test_morphing1   () 
-    ## test_morphing2   () 
+    with timing ("Morphing1"   , logger ) :  
+        test_morphing1   () 
+    with timing ("Morphing2"   , logger ) :  
+        test_morphing2   () 
     
 # =============================================================================
 ##                                                                      The END 

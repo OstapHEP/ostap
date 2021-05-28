@@ -24,6 +24,7 @@ import ostap.fitting.roofit
 import ostap.fitting.models as     Models 
 from   ostap.core.core      import dsID
 from   ostap.logger.utils   import rooSilent
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -142,7 +143,8 @@ def test_simfit1 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_simfit1 () 
+    with timing( "simfit-1" ,   logger ) :  
+        test_simfit1 () 
 
 # =============================================================================
 ##                                                                      The END 

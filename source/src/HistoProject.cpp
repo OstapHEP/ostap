@@ -78,18 +78,19 @@ Ostap::HistoProject::project
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // selection weight 
-    const double sw = selection ? selection -> getVal () : 1.0 ;
     // data weight 
     const double dw = weighted  ? data      -> weight () : 1.0 ;
+    if ( !dw ) { continue ; }                         // SKIP    
+    //
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    if ( !sw ) { continue ; }                         // SKIP    
     //
     // calculate the total weight 
     const double w = sw * dw ;
+    if ( !w  ) { continue ; }                          // SKIP 
     //
-    // skip null weights 
-    if ( !w ) { continue ; }
-    //
-    // calculate the values (only for non-zero weights)
+    // calculate the x-value (only for non-zero weights)
     const double xvalue = expression.getVal()  ;
     //
     // check the range 
@@ -100,8 +101,9 @@ Ostap::HistoProject::project
     //
     if  ( weighted )
     {
-      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
-      if  ( !s_zero ( we ) && s_equal ( we , w ) )
+      const double dwe = data -> weightError ( RooAbsData::SumW2 ) ;
+      const double we  = ( dwe ? dwe : dw ) * sw ;
+      if  ( !s_equal ( we , w ) )
       {
         const int    bin    = histo -> FindBin     ( xvalue ) ;
         const double binerr = histo -> GetBinError ( bin    ) ;
@@ -153,21 +155,23 @@ Ostap::HistoProject::project2
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // selection weight 
-    const double sw = selection ? selection -> getVal () : 1.0 ;
     // data weight 
     const double dw = weighted  ? data      -> weight () : 1.0 ;
+    if ( !dw ) { continue ; }   // SKIP
+    //
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    if ( !sw ) { continue ; }   // SKIP    
+    //
     // calculate the total weight 
     const double w = sw * dw ;
+    if ( !w  ) { continue ; }   // SKIP 
     //
-    // skip null weights 
-    if ( !w ) { continue ; }
-    //
-    // calculate the values (only for non-zero weights)
+    // calculate the x-value (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
     // check the range 
     if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
-    // calculate the values (only for non-zero weights)
+    // calculate the y-value (only for non-zero weights)
     const double yvalue = yexpression.getVal()  ;
     // check the range 
     if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
@@ -177,8 +181,9 @@ Ostap::HistoProject::project2
     //
     if  ( weighted )
     {
-      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
-      if  ( !s_zero ( we ) && s_equal ( we , w ) ) 
+      const double dwe = data -> weightError ( RooAbsData::SumW2 ) ;
+      const double we  = ( dwe ? dwe : dw ) * sw ;
+      if  ( !s_equal ( we , w ) ) 
       {
         const int    bin    = histo -> FindBin     ( xvalue , yvalue ) ;
         const double binerr = histo -> GetBinError ( bin    ) ;
@@ -234,21 +239,25 @@ Ostap::HistoProject::project3
     //
     if ( 0 == data->get( entry)  ) { break ; }                    // BREAK
     //
-    // selection weight 
-    const double sw = selection ? selection -> getVal () : 1.0 ;
     // data weight 
     const double dw = weighted  ? data      -> weight () : 1.0 ;
+    if ( !dw ) { continue ; }    // SKIP 
+    //
+    // selection weight 
+    const double sw = selection ? selection -> getVal () : 1.0 ;
+    if ( !sw ) { continue ; }    // SKIP 
+    //
     // calculate the total weight 
     const double w = sw * dw ;
+    if ( !w  ) { continue ; }    // SKIP 
     //
-    // skip null weights 
-    if ( !w ) { continue ; }
-    //
-    // calculate the values (only for non-zero weights)
+    // calculate the x-value (only for non-zero weights)
     const double xvalue = xexpression.getVal()  ;
     if ( xmax <= xvalue || xvalue < xmin ) { continue ; }
+    // calculate the y-value (only for non-zero weights)
     const double yvalue = yexpression.getVal()  ;
     if ( ymax <= yvalue || yvalue < ymin ) { continue ; }
+    // calculate the z-value (only for non-zero weights)
     const double zvalue = zexpression.getVal()  ;
     if ( zmax <= zvalue || zvalue < zmin ) { continue ; }
     //
@@ -257,8 +266,9 @@ Ostap::HistoProject::project3
     //
     if  ( weighted )
     {
-      const double we = data -> weightError ( RooAbsData::SumW2 ) * sw ;
-      if  ( !s_zero ( we )  && s_equal ( we , w ) )
+      const double dwe = data -> weightError ( RooAbsData::SumW2 ) ;
+      const double we  = ( dwe ? dwe : dw ) * sw ;
+      if  ( !s_equal ( we , w ) )
       {
         const int    bin    = histo -> FindBin     ( xvalue , yvalue , zvalue ) ;
         const double binerr = histo -> GetBinError ( bin    ) ;

@@ -76,14 +76,14 @@ class LinAlgT(LA.LinAlg) :
         return mtrx.GetNcols()
 
     # ========================================================================
-    ## get number ofelemets in TVectorT 
+    ## get number of elements in TVectorT 
     #  @code
     #  tvec = ...
     #  size = mtrx.kSize  
     #  @endcode  
     @staticmethod
     def T_KSIZE ( tvec ) :
-        """Get number of elememnt in TVectorT 
+        """Get number of elements in TVectorT 
         >>> tvec = ...
         >>> tvec = tvec.kSize 
         """
@@ -374,18 +374,17 @@ for t in ( 'double' ,) :
     v  = ROOT.TVectorT      ( t  )
     LinAlgT.deco_vector     ( v  ) 
     
+
 import atexit
 atexit.register ( LinAlgT.CLEANUP ) 
 
 # =============================================================================
-_decorated_classes_ = (
-    )
+_decorated_classes_ = ()
 
 _decorated_classes_ = _decorated_classes_ + tuple ( LinAlgT.decorated_vectors  )
 _decorated_classes_ = _decorated_classes_ + tuple ( LinAlgT.decorated_matrices )
 
-_new_methods_ = (
-    )
+_new_methods_ = ()
 # =============================================================================
 if '__main__' == __name__ :
         

@@ -17,6 +17,7 @@ __all__    = () ## nothing to import
 import ROOT, random
 import ostap.fitting.roofit 
 from   ostap.logger.utils   import rooSilent 
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -87,23 +88,32 @@ def test_add () :
     logger.info ( 'l2+d  : %s'  % ( l2 + d  ) )
     logger.info ( 'l3+d  : %s'  % ( l3 + d  ) )
 
-    logger.info ( 'c+l1  : %s'  % ( c  + l1 ) )
-    logger.info ( 'c+l2  : %s'  % ( c  + l2 ) )
-    logger.info ( 'c+l3  : %s'  % ( c  + l3 ) )
+    ## logger.info ( 'c+l1  : %s'  % ( c  + l1 ) )
+    ## logger.info ( 'c+l2  : %s'  % ( c  + l2 ) )
+    ## logger.info ( 'c+l3  : %s'  % ( c  + l3 ) )
 
-    logger.info ( 'd+l1  : %s'  % ( d  + l1 ) )
-    logger.info ( 'd+l2  : %s'  % ( d  + l2 ) )
-    logger.info ( 'd+l3  : %s'  % ( d  + l3 ) )
+    ## logger.info ( 'd+l1  : %s'  % ( d  + l1 ) )
+    ## logger.info ( 'd+l2  : %s'  % ( d  + l2 ) )
+    ## logger.info ( 'd+l3  : %s'  % ( d  + l3 ) )
     
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_len      ()
-    test_contains ()
-    test_getitem  ()
-    test_sums     ()
-    test_add      ()
+    with timing ( "len"       , logger ) : 
+        test_len      ()
+        
+    with timing ( "contains"  , logger ) : 
+        test_contains ()
+        
+    with timing ( "getitem"   , logger ) : 
+        test_getitem  ()
+        
+    with timing ( "sums"      , logger ) : 
+        test_sums     ()
+        
+    with timing ( "add"       , logger ) : 
+        test_add      ()
     
 # =============================================================================
 ##                                                                      The END 

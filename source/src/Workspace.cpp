@@ -36,15 +36,15 @@ Ostap::Math::WorkSpace::WorkSpace
   , m_size      ( 0       )
 {}
 // ============================================================================
-// (move constructor
+// move constructor
 // ============================================================================
 Ostap::Math::WorkSpace::WorkSpace
 (       Ostap::Math::WorkSpace&& right  )
   : m_workspace ( nullptr )
   , m_size      ( 0       )
 { 
-  std::swap ( m_workspace , right.m_workspace ) ; 
-  std::swap ( m_size      , right.m_size      ) ; 
+  // std::swap ( m_workspace , right.m_workspace ) ; 
+  // std::swap ( m_size      , right.m_size      ) ; 
 }
 // ============================================================================
 // destructor
@@ -78,12 +78,7 @@ Ostap::Math::WorkSpace::operator=
 // ============================================================================
 Ostap::Math::WorkSpace&
 Ostap::Math::WorkSpace::operator=
-(       Ostap::Math::WorkSpace&& right ) 
-{ 
-  std::swap  ( m_workspace ,  right.m_workspace ) ;
-  std::swap  ( m_size      ,  right.m_size      ) ;
-  return *this ;
-}
+(       Ostap::Math::WorkSpace&& /* right */ ) { return *this ; }
 // ============================================================================
 // swap
 // ============================================================================

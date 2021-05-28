@@ -494,12 +494,12 @@ bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
 // ============================================================================
 // set k-parameter
 // ============================================================================
-bool Ostap::Math::Parameters::setPar 
+bool Ostap::Math::Parameters::_setPar 
 ( const unsigned short k , const double value ) 
 {
   if ( m_pars.size() <= k            ) { return false ; }
   if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  m_pars[k] = value ;
+  m_pars [ k ] = value ;
   return true ;
 }
 // ============================================================================

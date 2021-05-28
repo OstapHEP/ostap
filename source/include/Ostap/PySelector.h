@@ -4,9 +4,19 @@
 // ============================================================================
 // Include files
 // ============================================================================
-// ROOT
+// Ostap
+// ============================================================================
+#include "Ostap/OstapPyROOT.h"
+// ============================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
 // ============================================================================
 #include "TPySelector.h"
+// ============================================================================
+#else 
+// ============================================================================
+#include "TSelector.h"
+// ============================================================================
+#endif 
 // ============================================================================
 // Forward declaratios
 // ============================================================================
@@ -16,28 +26,120 @@ class TChain ;            // ROOT
 namespace Ostap
 {
   // ==========================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+  typedef TPySelector ROOT_Selector ;
+#else 
+  typedef   TSelector ROOT_Selector ;
+#endif
+  // ==========================================================================
   /** @class Selector PySelector.h Ostap/PySelector.h
    *  Helper class for implementation of "python TSelector".
    *  The fix has been kindly provided by Wim Lavrijsen
    *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
    *  @date   2011-01-21
    */
-  class Selector : public  TPySelector
+  // ==========================================================================
+  class Selector : public ROOT_Selector
   {
     // ========================================================================
   public:
     // ========================================================================
-    ClassDef(Ostap::Selector, 1) ;
+    ClassDefOverride(Ostap::Selector, 2) ;
     // ========================================================================
   public:
     // ========================================================================
     /// constructor 
-    Selector
-    ( TTree*    tree = 0 , 
-      PyObject* self = 0 ) ;
+    // ========================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+    // ========================================================================
+    Selector ( PyObject* self , TTree* tree = nullptr ) ;
+    // ========================================================================
+#else 
+    // ========================================================================
+    Selector ( TTree*    tree ) ;
+    Selector () :  Selector ( nullptr ) {}
+    // ========================================================================
+#endif 
     // ========================================================================
     /// destructor
     virtual ~Selector() ;
+    // ========================================================================
+  public: // the basic innterface 
+    // ========================================================================
+    /// init 
+    void   Init           ( TTree*   tree       ) override ;
+    /// begin 
+    void   Begin          ( TTree*   tree       ) override ;
+    /// initialize the slave 
+    void   SlaveBegin     ( TTree*   tree       ) override ;
+    /** process 
+     *  Note:
+     *  - internally  calls  <code>GetEntry</code>
+     *  - increment the event counter 
+     *  @see Ostap::Selector::GetEntry 
+     *
+     *  It is different for "old" and "new" PyROOT
+     *  - for "new" PyROOT it  calls <code>process_entry</code>
+     *  - for "old" PyROOT it finally invokes python "Process", therefore 
+     *    it is important that pythonic <code>Process</code> 
+     *    invokes <code>process_entry</code>:
+     *  @code
+     *  ... def Process  ( self , entry ) :
+     *  ...     return self.process_entry () 
+     *  @endcode 
+     *  @see Ostap::Selector::GetEntry 
+     *  @see Ostap::Selector::process_entry 
+     */  
+    Bool_t Process        ( Long64_t entry      ) override ;
+    /// notify 
+    Bool_t Notify         ()                      override ;
+    /// terminate the slave 
+    void   SlaveTerminate ()                      override ;
+    /// terminate
+    void   Terminate      ()                      override ;
+    /// get entry 
+    Int_t  GetEntry       ( Long64_t entry      , 
+                            Int_t    getall = 0 ) override ;
+    /// Version 
+    Int_t  Version        () const                override ;
+    // ========================================================================
+  public: // Ostap-specific 
+    // ========================================================================
+    /// process an entry 
+    virtual bool process_entry () { return true ; } ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /// get the tree 
+    TTree* get_tree() const ;
+    ///  set the tree 
+    void   set_tree  ( TTree* tree ) ;
+    // ========================================================================
+    /** event counter 
+     *  - useless for PROOF
+     *  - useful for interactive python
+     *  incremented in Ostap::Selector::Process 
+     */
+    unsigned long long event           () const { return   m_event ; }
+    // ========================================================================
+  protected:
+    // ========================================================================
+    /// increment the event counter 
+    unsigned long long increment_event ()       { return ++m_event ; }
+    // ========================================================================
+  private:
+    // ========================================================================
+    /// number of processed events 
+    unsigned long long  m_event { 0 } ; // number of processed events 
+    // ========================================================================
+  private: 
+    // ========================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT
+    //
+#else 
+    /// the tree 
+    TTree* m_tree { nullptr } ; // the tree 
+#endif
     // ========================================================================
   } ;
   // ==========================================================================
@@ -51,15 +153,12 @@ namespace Ostap
    *     - ROOT.TTree  does have method <c>TTree.Process</c>  with TSelector as argument 
    *     - ROOT.TChain has *NO*  method <c>TChain.Process</c> with TSelector as argument 
    *  This trick allows to access these methods indirectly.
-   *
    *  It is due to "python-unfriendly" signature of TTree::Process method  
-   *
    *  @author Vanya BELYAEV Ivan.Belyaev Ivan.Belyaev@cern.ch
    *  @date 2010-11-21
    */
-  class Process 
+  namespace Utils 
   {
-  public:
     // ========================================================================
     /** helper function to use TTree::Process in python 
      * 
@@ -73,7 +172,6 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date   2011-01-21
      */
-    static
     long process
     ( TTree*             tree      ,
       TSelector*         selector  ) ;
@@ -91,7 +189,6 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date   2013-02-10
      */
-    static
     long process
     ( TTree*              tree         ,
       TSelector*          selector     , 
@@ -110,7 +207,6 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date   2011-01-21
      */
-    static 
     long process 
     ( TChain*    chain     ,
       TSelector* selector  ) ;
@@ -128,7 +224,6 @@ namespace Ostap
      *  @author Vanya Belyaev Ivan.Belyaev@cern.ch
      *  @date   2013-02-10
      */
-    static 
     long process 
     ( TChain*             chain        ,
       TSelector*          selector     ,

@@ -19,6 +19,7 @@ __all__     = (
 # =============================================================================
 from   builtins import range 
 import ROOT
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 import ostap.math.linalg      
@@ -93,7 +94,32 @@ def _rfr_param_  ( self , pname , float_only = False ) :
         elif hasattr ( pname , 'getName' ) : pname = pname.getName ()
         elif hasattr ( pname , 'name'    ) : pname = pname.   name () 
     p = self.parameters ( float_only )[ pname ] 
-    return p 
+    return p
+
+# =============================================================================
+## check if certain parameter (or index) is in <code>RooFitResult</code> object
+#  @code
+#  fit_result = ...
+#  print ( 1      in fit_results ) 
+#  print ( 'mean' in fit_results ) 
+#  print ( 'A'    in fit_results ) 
+#  @endcode 
+def _rfr_contains_ ( self , label ) :
+    """Check if certain parameter (or index) is in <code>RooFitResult</code> object
+    >>> fit_result = ...
+    >>> print ( 1      in fit_results ) 
+    >>> print ( 'mean' in fit_results ) 
+    >>> print ( 'A'    in fit_results ) 
+    """
+    
+    if   isinstance ( label , integer_types ) :
+        return 0 <= label < len ( self.floatParsFinal() ) + len ( self.constPars () )
+    elif isinstance ( label , string_types  ) :
+        return label in  self.floatParsFinal() or label in self.constPars ()
+    elif isinstance ( label , ROOT.RooAbsArg ) :
+        return label.GetName() in self
+    
+    return False 
 
 # =============================================================================
 ## iterator over fit results 
@@ -140,7 +166,6 @@ def _rfr_corr_  ( self , var1 , var2 ) :
     if var1 in self.constPars() : return 0.0
     if var2 in self.constPars() : return 0.0
     #
-    print ('asking for', var1, var2) 
     return self.correlation ( var1 , var2 ) 
 
 # =============================================================================
@@ -270,12 +295,16 @@ def _rfr_max_cor_ ( self , v ) :
     
 # ===============================================================================
 ## get fit-parameter as attribute
+#  @code
+#  fit_result = ...
+#  sigma = fit_resul.sigma 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-03
 def _rfr_getattr_ ( self , att ) :
     """Get fit-parameter as attribute
     >>> r = ....
-    >>> print r.sigma 
+    >>> print( 'sigma is', r.sigma)
     """
     ##
     pars = self.floatParsFinal()
@@ -288,6 +317,31 @@ def _rfr_getattr_ ( self , att ) :
         
     raise AttributeError ( 'RooFitResult: invalid attribute %s ' % att )
 
+# =============================================================================
+## get fit-parameter through the key/name 
+#  @code
+#  fit_result = ...
+#  sigma = fit_result['sigma']
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-08-03
+def _rfr_getitem_ ( self , key  ) :
+    """Get fit-parameter through the key/name 
+    >>> fit_result = ...
+    >>> sigma = fit_result['sigma']
+    """
+    
+    ##
+    pars = self.floatParsFinal()
+    for p in pars :
+        if key == p.GetName() : return p      
+    #
+    pars = self.constPars()
+    for p in pars :
+        if key == p.GetName() : return p
+        
+    raise KeyError ( 'RooFitResult: invalid key %s ' % key  )
+    
 # ===========================================================================
 ## get correct estimate of sum of two (or more) variables,
 #  taking into account correlations
@@ -508,18 +562,25 @@ def _rfr_evaluate_ ( self , func , args , partial = () ) :
 #  result = ...
 #  result.table() 
 #  @endcode 
-def _rfr_table_ ( r , title = '' , prefix = '' ) :
+def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     """ print RooFitResult  as a table
     >>> result = ...
     >>> result.table() 
     """
 
     from  ostap.fitting.utils    import fit_status, cov_qual
-    rows = [] 
-    if r.status() :
-        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) ) , '' 
+    rows = []
+
+    ##  1. fit status
+    status = r.status() 
+    if status :
+        row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) , '' 
         rows.append ( row )
-        
+    else :
+        row = 'Status'                , '' , allright  ( fit_status ( status ) ) , '' 
+        rows.append ( row )
+
+    ## 2. minumum NLL
     s , n = pretty_float ( r.minNll() )
     if n : n = '[10^%+d]' % n
     else : n = '' 
@@ -575,11 +636,11 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = p , n , '  ' + s , ''  
+        row = p , n , '  ' + s + ' (fix)' , ''  
         crows.append ( row ) 
 
     ## floating parameters 
-    frows = [] 
+    frows    = []
     for p in pars_float :
         v , a = pars_float [ p ]
 
@@ -591,22 +652,39 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        cc = 'Not available'
-        if 0 <= cq :             
+        cc = 'Not available' if root_info < ( 6 , 24 ) else ''
+        if 0 <= cq and root_info < ( 6 , 24 ) : 
             mxr , mxv = r.max_cor    ( p )
-            gc        = r.globalCorr ( p )
-            
+            gc    = r.globalCorr ( p )
+
             cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
             if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
             
         row = p , n , s , cc
         frows.append ( row ) 
 
+    ## more parameters
+    mrows = []
+    for p in sorted ( more_vars ) :
+        
+        func  = more_vars [ p ]
+        
+        v     = func ( r )
+        
+        s , n = pretty_ve  ( v ) 
+        
+        if n : n = '[10^%+d]' % n
+        else : n = '' 
+
+        cc = 'derived'
+        row = p , n , s , cc
+        mrows.append ( row ) 
+
     crows.sort()
     frows.sort()
 
-    all = rows + crows + frows
-
+    all = rows + crows + frows + mrows  
+    
     import ostap.logger.table as T
 
     all = T.align_column ( all , 0 , 'left' )
@@ -617,8 +695,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     for l in range ( len ( rows ) , len ( all ) ) :
         line = all [ l ]
         line = list ( line ) 
-        line [ 0 ] = allright ( line[0] )
-        all  [ l ] = tuple ( line  ) 
+        line [ 0 ] = allright ( line [ 0 ] )
+        all  [ l ] = tuple    ( line       ) 
 
     if title : 
         return T.table ( all , title = title         , prefix = prefix )
@@ -773,10 +851,11 @@ def _rm_contour_ ( self                   ,
            'Invalid number of points %s' % npoints
     
     res  = self.save () 
-    
-    ## var1 = res.param ( var1 ) [ 1 ] 
-    ## var2 = res.param ( var2 ) [ 1 ] 
-
+    if not isinstance ( var1 , ROOT.RooAbsReal ) : 
+        var1 = res.param ( var1 ) [ 1 ]
+    if not isinstance ( var2 , ROOT.RooAbsReal ) :         
+        var2 = res.param ( var2 ) [ 1 ] 
+            
     n = 6 * [ 0.0 ]
     for i , l in enumerate ( levels ) :
         if len ( n ) <= i : break
@@ -793,7 +872,8 @@ def _rm_contour_ ( self                   ,
 if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
     ROOT.RooMinimizer._old_contour_ = ROOT.RooMinimizer.contour 
     _rm_contour_.__doc__ += '\n' + ROOT.RooMinimizer.contour.__doc__
-    ROOT.RooMinimizer. contour  = _rm_contour_ 
+    ROOT.RooMinimizer. new_contour  = _rm_contour_ 
+    ROOT.RooMinimizer. contour      = _rm_contour_ 
 
 # =============================================================================
 ## some decoration over RooFitResult
@@ -801,7 +881,9 @@ ROOT.RooFitResult . __repr__        = _rfr_print_
 ROOT.RooFitResult . __str__         = _rfr_print_
 ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
+ROOT.RooFitResult . __getitem__     = _rfr_getitem_ 
 ROOT.RooFitResult . __iter__        = _rfr_iter_
+ROOT.RooFitResult . __contains__    = _rfr_contains_
 ROOT.RooFitResult . iteritems       = _rfr_iteritems_
 ROOT.RooFitResult . dct_params      = _rfr_dct_params_
 ROOT.RooFitResult . parameters      = _rfr_params_
@@ -837,6 +919,7 @@ _new_methods_ += [
     ROOT.RooFitResult . __call__         ,
     ROOT.RooFitResult . __getattr__      ,
     ROOT.RooFitResult . __iter__         ,
+    ROOT.RooFitResult . __contains__     ,
     ROOT.RooFitResult . iteritems        ,
     ROOT.RooFitResult . parameters       ,
     ROOT.RooFitResult . params           ,
@@ -880,5 +963,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

@@ -553,7 +553,7 @@ class TmpRootShelf(RootShelf):
         
         ## create temporary file name 
         import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.root' )
+        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.root' )
         
         RootShelf.__init__ ( self                                   ,
                              filename                               ,

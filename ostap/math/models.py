@@ -72,7 +72,8 @@ def tf1  ( self                 ,
     args     = kwargs.pop ( 'args'     , ()   )
     npx      = kwargs.pop ( 'npx'      , 250  )
     callme   = kwargs.pop ( 'callable' , self ) 
-
+    title    = kwargs.pop ( 'title'    , None )
+    
     if hasattr ( self , '_wo1' ) and callme is not self._wo1.callme :
         del self._wo1 
         
@@ -96,7 +97,9 @@ def tf1  ( self                 ,
     
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
-    fun.SetNpx ( npx )
+
+    if title is None : title = str ( self )            
+    fun.SetTitle ( title ) 
     ##
     return fun 
 
@@ -118,6 +121,7 @@ def tf2 ( self ,
     """
     ##
     callme   = kwargs.pop ( 'callable' , self ) 
+    title    = kwargs.pop ( 'title'    , self ) 
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
     if not self._wo2                 : self._wo2 = _WO2_ ( callme )
@@ -152,6 +156,9 @@ def tf2 ( self ,
     fun = ROOT.TF2 ( funID ()  , _wo , xmin , xmax , ymin , ymax , npars , *args )
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
+    #
+    if title is None : title = str ( self ) 
+    fun.SetTitle ( title ) 
     #
     return fun 
 
@@ -227,6 +234,18 @@ def tf3 ( self ,
     #
     return fun 
 
+positives = ( Ostap.Math.Positive          ,
+              Ostap.Math.PositiveEven      , 
+              Ostap.Math.Monotonic         , 
+              Ostap.Math.Convex            , 
+              Ostap.Math.ConvexOnly        , 
+              Ostap.Math.PositiveSpline    , 
+              Ostap.Math.MonotonicSpline   , 
+              Ostap.Math.ConvexSpline      ,
+              Ostap.Math.ConvexOnlySpline  ,
+              Ostap.Math.ExpoPositive      ,
+              Ostap.Math.TwoExpoPositive   ) 
+
 # =============================================================================
 ## draw the function 
 def f1_draw ( self , opts ='' , **kwargs ) :
@@ -236,28 +255,21 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     """
     
     if hasattr ( self , '_tf1' ) :
-        xmin  = kwargs.get ( 'xmin'  , None )
-        xmax  = kwargs.get ( 'xmax'  , None )
-        if   not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
+        
+        xmin  = kwargs.get ( 'xmin' , None )
+        xmax  = kwargs.get ( 'xmax' , None )
+        npx   = kwargs.get ( 'npx'  , None )
+        
+        if 'callable' in kwargs                                : del self._tf1
+        elif not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
         elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
-
-        if 'callable' in kwargs : del self._tf1
-
+        elif not npx  is None and npx  != self._tf1.GetXmax () : del self._tf1 
+        
     if not hasattr ( self , '_tf1'  ) :
         
         self._tf1        =  tf1 ( self , **kwargs )
         
-        if type(self) in ( Ostap.Math.Positive          ,
-                           Ostap.Math.PositiveEven      , 
-                           Ostap.Math.Monotonic        , 
-                           Ostap.Math.Convex            , 
-                           Ostap.Math.ConvexOnly        , 
-                           Ostap.Math.PositiveSpline    , 
-                           Ostap.Math.MonotonicSpline  , 
-                           Ostap.Math.ConvexSpline      ,
-                           Ostap.Math.ConvexOnlySpline  ,
-                           Ostap.Math.ExpoPositive      ,
-                           Ostap.Math.TwoExpoPositive   ) :                                
+        if type ( self ) in positives :
             self._tf1.SetMinimum(0)
             
     kwargs.pop ( 'xmin'     , None )
@@ -328,13 +340,13 @@ def f3_draw ( self , opts ='' , **kwargs ) :
 
 # =============================================================================
 ## get the regular complex value for amplitude 
-def _amp_ ( self , x ) :
+def _amp_ ( self , x , *a ) :
     """ Get the complex value for amplitude
     >>> fun
     >>> a = fun.amp ( x )    
     """
-    v = self.amplitude ( x )
-    return complex( v.real () , v.imag () ) 
+    v = self.amplitude ( x , *a )
+    return complex( v ) 
 
 
 # ==============================================================================
@@ -343,12 +355,12 @@ def _amp_ ( self , x ) :
 #  f = ...
 #  r = f.amp_real ( x ) 
 # @endcode
-def _amp_re_ ( self, x ) :
+def _amp_re_ ( self, x , *a ) :
     """Get   the real part of amplitude
     >>> f = ...
     >>> r = f.amp_real ( x )     
     """
-    return complex ( self.amp ( x ) ).real 
+    return complex ( self.amp ( x , *a ) ).real 
     
 # ==============================================================================
 ## get the imaginary part of amplitude
@@ -356,12 +368,12 @@ def _amp_re_ ( self, x ) :
 #  f = ...
 #  r = f.amp_imag ( x ) 
 # @endcode
-def _amp_im_ ( self, x ) :
+def _amp_im_ ( self, x , *a ) :
     """Get   the imaginary part of amplitude
     >>> f = ...
     >>> r = f.amp_imag ( x )     
     """    
-    return complex ( self.amp ( x ) ).imag
+    return complex ( self.amp ( x , *a ) ).imag
 
 # ==============================================================================
 ## get the phase of amplitude
@@ -369,12 +381,12 @@ def _amp_im_ ( self, x ) :
 #  f = ...
 #  r = f.amp_phase ( x ) 
 # @endcode
-def _amp_phase_ ( self, x ) :
+def _amp_phase_ ( self, x , *a ) :
     """Get   the phase of amplitude
     >>> f = ...
     >>> r = f.amp_phase ( x )     
     """    
-    return cmath.phase (  complex ( self.amp ( x ) ) )
+    return cmath.phase (  complex ( self.amp ( x , *a ) ) )
 
 # =============================================================================
 ## build the Argand diagram/graph 
@@ -382,7 +394,7 @@ def _amp_phase_ ( self, x ) :
 #  f = ...
 #  g = f.argand ( x , xmin = ...  , xmax = ... ) 
 #  @@endcode 
-def _amp_argand_ ( self , xmin , xmax , npx =  500 ) : 
+def _amp_argand_ ( self , xmin , xmax , npx =  500 , args = () ) : 
     """Build the Argand diagram/graph 
     >>> f = ...
     >>> g = f.argand ( x , xmin = ...  , xmax = ... ) 
@@ -391,7 +403,7 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 ) :
     from ostap.utils.utils import vrange
     g = ROOT.TGraph  ( npx + 1 ) 
     for i , x in enumerate ( vrange ( xmin , xmax , npx ) ) :
-        a = complex ( self.amp ( x ) )        
+        a = complex ( self.amp ( x , *args ) )        
         g[i] = a.real, a.imag
     return g
 
@@ -399,14 +411,17 @@ def _amp_argand_ ( self , xmin , xmax , npx =  500 ) :
 ## Ostap.Math.LASS            . amp = _amp_
 ## Ostap.Math.LASS23L         . amp = _amp_
 ## Ostap.Math.Bugg23L         . amp = _amp_
-Ostap.Math.Flatte          . amp = _amp_
+## Ostap.Math.Flatte          . amp = _amp_
 ## Ostap.Math.Flatte2         . amp = _amp_
 ## Ostap.Math.Flatte23L       . amp = _amp_
-Ostap.Math.BW              . amp = _amp_
+## Ostap.Math.BW              . amp = _amp_
 ## Ostap.Math.Swanson         . amp = _amp_
 
-for m in  ( Ostap.Math.Flatte ,
-            Ostap.Math.BW     ) :
+for m in  ( Ostap.Math.Flatte    ,
+            Ostap.Math.BW        ,
+            Ostap.Math.BWPS      ,
+            Ostap.Math.BW3L      ,
+            Ostap.Math.ChannelBW ) :
     m.amp       = _amp_ 
     m.amp_real  = _amp_re_ 
     m.amp_imag  = _amp_im_ 
@@ -942,6 +957,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Kstar0                 ,
                Ostap.Math.Phi0                   , 
                Ostap.Math.BWPS                  ,
+               Ostap.Math.BW3L                  ,
                ## Ostap.Math.Rho0FromEtaPrime       ,
                Ostap.Math.Flatte                 ,
                ## Ostap.Math.Flatte2                ,
@@ -985,6 +1001,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.QGaussian              ,
                Ostap.Math.RaisingCosine          ,
                Ostap.Math.Sigmoid                ,
+               Ostap.Math.Hyperbolic             ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
@@ -1000,7 +1017,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                ##
                Ostap.Math.GammaBW3    , 
                ## helper stufff
-               Ostap.Functions.PyCallable        , 
+               ## Ostap.Functions.PyCallable        , 
                Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
                D.Derivative                      ,
@@ -1018,6 +1035,9 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Max                    ,
                Ostap.Math.Apply                  ,
                Ostap.Math.KramersKronig          ,
+               ##
+               Ostap.Math.CutOffGauss            ,
+               Ostap.Math.CutOffStudent          ,
                ##
                ) :
     model.tf1          =  tf1 
@@ -1242,7 +1262,7 @@ def sp_maximum_1D_ ( pdf , xmin , xmax , x0 , *args ) :
 ## decorate 1D-PDFs
 # =============================================================================
 
-                 
+"""                 
 
 for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.BreitWignerMC      , 
@@ -1270,7 +1290,8 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              ## Ostap.Models.Bugg               ,
              ## Ostap.Models.LASS23L            ,
              ## Ostap.Models.Bugg23L            , 
-             ## Ostap.Models.BW23L              , 
+             Ostap.Models.BWPS               , 
+             Ostap.Models.BW3L               , 
              Ostap.Models.PolyPositive       ,
              Ostap.Models.ExpoPositive       ,
              Ostap.Models.TwoExpoPositive    ,
@@ -1301,6 +1322,7 @@ for pdf in ( Ostap.Models.BreitWigner        ,
              Ostap.Models.Weibull            ,
              Ostap.Models.RaisingCosine      ,
              Ostap.Models.QGaussian          ,
+             Ostap.Models.Hyperbolic         ,
              Ostap.Models.Tsallis            ,
              Ostap.Models.QGSM               ,
              Ostap.Models.BifurcatedGauss    ,
@@ -1393,6 +1415,9 @@ for pdf in ( Ostap.Models.Poly3DPositive    ,
     if sp_minimum_3D and not hasattr ( pdf , 'minimum' ) : pdf.minimum = sp_minimum_3D_
     if sp_maximum_3D and not hasattr ( pdf , 'maximum' ) : pdf.maximum = sp_maximum_3D_
 
+
+"""
+
 # =============================================================================
 ## set, get & iterator
 from ostap.math.bernstein import _p_set_par_ , _p_get_par_, _p_iter_ 
@@ -1479,10 +1504,10 @@ def _random_generate_bernstein3D_ ( fun , num = 1 ) :
         x = _uniform_ ( xmn , xmx ) 
         y = _uniform_ ( ymn , ymx ) 
         z = _uniform_ ( zmn , zmx )
-        if v >= _uniform_ ( 0 , vmx ) :
+        if fun ( x , y, z ) >= _uniform_ ( 0 , vmx ) :
             i+= 1 
-            yield x,y,z
-
+            yield x , y , z
+            
 # =============================================================================
 ## Get random number from 2D bernstein-like distribuitions
 #  @code
@@ -1546,7 +1571,66 @@ for p in ( Ostap.Math.Positive3D    ,
     p.generate = _random_generate_bernstein3D_
     p.shoot    = _random_shoot_bernstein3D_
          
+# =============================================================================
+# 
+# =============================================================================
+## generate random numbers from single-mode distribution 
+#  @code
+#  >>> fun = ...
+#  >>> for x in fun.generate( 1000 ) : print x 
+#  @endcode
+def _random_generate_mode_ ( fun , num = 1 , vmax = None , mode = None ) :
+    """Generate random numbers from single-mode distribution 
+    >>> fun = ...
+    >>> for x in fun.generate( 1000 ) : print x 
+    """
+    xmn  = fun.xmin ()
+    xmx  = fun.xmax ()
 
+    if vmax is None or vmax <= 0 : 
+
+        if mode is None or not xmn <= mode <= xmx :
+            mode = fun.mode ()
+
+        vmax  = fun ( mode )
+
+    while i < num : 
+        x = _uniform_ ( xmn , xmx ) 
+        if fun ( x ) >= _uniform_ ( 0 , vmax ) :
+            i += 1 
+            yield x 
+
+# =============================================================================
+## Get random number from single-mode ditributions 
+#  @code
+#  >>> fun = ...
+#  >>> print fun.shoot() 
+#  @endcode
+def _random_shoot_mode_ ( fun , vmax = None , mode  = None ) :
+    """Get random number from single-mode distribuitions
+    >>> fun = ...
+    >>> print fun.shoot()  
+    """
+    xmn  = fun.xmin ()
+    xmx  = fun.xmax ()
+
+    if vmax is None or vmax <= 0 :
+
+        if mode is None or not xmn <= mode <= xmx :
+            mode = fun.mode ()
+            
+        vmax = fun ( mode )
+        
+    while True : 
+        x = _uniform_ ( xmn , xmx ) 
+        if fun ( x ) >= _uniform_ (   0 , vmax ) : 
+            return x 
+
+
+for m in ( Ostap.Math.PhaseSpaceNL , ) :
+    m.generate = _random_generate_mode_
+    m.shoot    = _random_shoot_mode_
+    
 # =============================================================================
 ## add complex amplitudes 
 # =============================================================================
@@ -1579,7 +1663,8 @@ def _bw_str_   ( bw ) :
     return "BreitWigner  (%s,%s)" % ( bw.m0() , bw.channel  () )
 def _bwmc_str_ ( bw ) :
     """Self-printout for multi-channel Breit-Wigner function"""
-    return "BreitWignerMC(%s,%s)" % ( bw.m0() , bw.channels () )
+    channels = [ bw.channel( i ) for i in range ( bw.nChannels() ) ]
+    return "BreitWignerMC(%s,%s)" % ( bw.m0() , channels )
 
 Ostap.Math.BreitWigner  .__str__  = _bw_str_
 Ostap.Math.BreitWigner  .__repr__ = _bw_str_
@@ -1614,6 +1699,7 @@ _decorated_classes_ = set( [
     Ostap.Math.BW                     ,
     Ostap.Math.BreitWignerMC          ,
     Ostap.Math.BWPS                   ,
+    Ostap.Math.BW3L                   ,
     ## Ostap.Math.Swanson                ,
     ##
     Ostap.Math.Chebyshev              ,
@@ -1770,77 +1856,77 @@ _decorated_classes_ = set( [
     Ostap.Math.Expo2DPol      ,
     Ostap.Math.Expo2DPolSym   ,
     ##
-    Ostap.Models.BreitWigner        , 
-    Ostap.Models.BreitWignerMC      , 
-    Ostap.Models.BWI                , 
-    Ostap.Models.Flatte             ,
-    Ostap.Models.Bukin              ,
-    Ostap.Models.PhaseSpace2        ,
-    Ostap.Models.PhaseSpaceNL       ,
-    Ostap.Models.PhaseSpace23L      ,
-    Ostap.Models.PhaseSpaceLeft     ,
-    Ostap.Models.PhaseSpaceRight    ,
-    Ostap.Models.PhaseSpacePol      ,
-    Ostap.Models.PhaseSpaceLeftExpoPol ,
-    Ostap.Models.Needham            ,
-    Ostap.Models.CrystalBall        ,
-    Ostap.Models.CrystalBallRS      ,
-    Ostap.Models.CrystalBallDS      , 
-    Ostap.Models.Apollonios         ,
-    Ostap.Models.Apollonios2        , 
-    Ostap.Models.GramCharlierA      , 
-    Ostap.Models.Voigt              ,
-    Ostap.Models.PseudoVoigt        ,
-    Ostap.Models.Logistic           ,
-    ## Ostap.Models.LASS               ,
-    ## Ostap.Models.Bugg               ,
-    ## Ostap.Models.LASS23L            ,
-    ## Ostap.Models.Bugg23L            , 
-    ## Ostap.Models.BW23L              , 
-    Ostap.Models.PolyPositive       ,
-    Ostap.Models.ExpoPositive       ,
-    Ostap.Models.TwoExpoPositive    ,
-    Ostap.Models.PositiveSpline     ,
-    Ostap.Models.MonotonicSpline   , 
-    ##
-    Ostap.Models.StudentT           ,
-    Ostap.Models.BifurcatedStudentT , 
-    Ostap.Models.GammaDist          , 
-    Ostap.Models.GenGammaDist       , 
-    Ostap.Models.Amoroso            ,
-    Ostap.Models.LogGammaDist       ,
-    Ostap.Models.Log10GammaDist     ,
-    Ostap.Models.LogGamma           ,
-    Ostap.Models.BetaPrime          ,
-    Ostap.Models.Landau             ,
-    Ostap.Models.SinhAsinh          , 
-    Ostap.Models.JohnsonSU          ,
-    Ostap.Models.Atlas              ,
-    Ostap.Models.Sech               ,
-    Ostap.Models.Losev              ,
-    ## Ostap.Models.Swanson            ,
-    Ostap.Models.Argus              ,
-    Ostap.Models.Slash              ,
-    Ostap.Models.AsymmetricLaplace  ,
-    Ostap.Models.Tsallis            ,
-    Ostap.Models.QGSM               ,
-    Ostap.Models.BifurcatedGauss    ,
-    Ostap.Models.GenGaussV1         , 
-    Ostap.Models.GenGaussV2         , 
-    ##
-    Ostap.Models.Poly2DPositive     ,
-    Ostap.Models.Poly2DSymPositive  , 
-    Ostap.Models.PS2DPol            ,
-    Ostap.Models.PS2DPolSym         , 
-    Ostap.Models.PS2DPol2           ,
-    Ostap.Models.PS2DPol2Sym        , 
-    Ostap.Models.PS2DPol3           ,
-    Ostap.Models.PS2DPol3Sym        , 
-    Ostap.Models.ExpoPS2DPol        , 
-    Ostap.Models.Expo2DPol          ,
-    Ostap.Models.Expo2DPolSym       , 
-    Ostap.Models.Spline2D           ,
-    Ostap.Models.Spline2DSym        ,
+    ## Ostap.Models.BreitWigner        , 
+    ## Ostap.Models.BreitWignerMC      , 
+    ## Ostap.Models.BWI                , 
+    ## Ostap.Models.Flatte             ,
+    ## Ostap.Models.Bukin              ,
+    ## Ostap.Models.PhaseSpace2        ,
+    ## Ostap.Models.PhaseSpaceNL       ,
+    ## Ostap.Models.PhaseSpace23L      ,
+    ## Ostap.Models.PhaseSpaceLeft     ,
+    ## Ostap.Models.PhaseSpaceRight    ,
+    ## Ostap.Models.PhaseSpacePol      ,
+    ## Ostap.Models.PhaseSpaceLeftExpoPol ,
+    ## Ostap.Models.Needham            ,
+    ## Ostap.Models.CrystalBall        ,
+    ## Ostap.Models.CrystalBallRS      ,
+    ## Ostap.Models.CrystalBallDS      , 
+    ## Ostap.Models.Apollonios         ,
+    ## Ostap.Models.Apollonios2        , 
+    ## Ostap.Models.GramCharlierA      , 
+    ## Ostap.Models.Voigt              ,
+    ## Ostap.Models.PseudoVoigt        ,
+    ## Ostap.Models.Logistic           ,
+    ## ## Ostap.Models.LASS               ,
+    ## ## Ostap.Models.Bugg               ,
+    ## ## Ostap.Models.LASS23L            ,
+    ## ## Ostap.Models.Bugg23L            , 
+    ## ## Ostap.Models.BW23L              , 
+    ## Ostap.Models.PolyPositive       ,
+    ## Ostap.Models.ExpoPositive       ,
+    ## Ostap.Models.TwoExpoPositive    ,
+    ## Ostap.Models.PositiveSpline     ,
+    ## Ostap.Models.MonotonicSpline   , 
+    ## ##
+    ## Ostap.Models.StudentT           ,
+    ## Ostap.Models.BifurcatedStudentT , 
+    ## Ostap.Models.GammaDist          , 
+    ## Ostap.Models.GenGammaDist       , 
+    ## Ostap.Models.Amoroso            ,
+    ## Ostap.Models.LogGammaDist       ,
+    ## Ostap.Models.Log10GammaDist     ,
+    ## Ostap.Models.LogGamma           ,
+    ## Ostap.Models.BetaPrime          ,
+    ## Ostap.Models.Landau             ,
+    ## Ostap.Models.SinhAsinh          , 
+    ## Ostap.Models.JohnsonSU          ,
+    ## Ostap.Models.Atlas              ,
+    ## Ostap.Models.Sech               ,
+    ## Ostap.Models.Losev              ,
+    ## ## Ostap.Models.Swanson            ,
+    ## Ostap.Models.Argus              ,
+    ## Ostap.Models.Slash              ,
+    ## Ostap.Models.AsymmetricLaplace  ,
+    ## Ostap.Models.Tsallis            ,
+    ## Ostap.Models.QGSM               ,
+    ## Ostap.Models.BifurcatedGauss    ,
+    ## Ostap.Models.GenGaussV1         , 
+    ## Ostap.Models.GenGaussV2         , 
+    ## ##
+    ## Ostap.Models.Poly2DPositive     ,
+    ## Ostap.Models.Poly2DSymPositive  , 
+    ## Ostap.Models.PS2DPol            ,
+    ## Ostap.Models.PS2DPolSym         , 
+    ## Ostap.Models.PS2DPol2           ,
+    ## Ostap.Models.PS2DPol2Sym        , 
+    ## Ostap.Models.PS2DPol3           ,
+    ## Ostap.Models.PS2DPol3Sym        , 
+    ## Ostap.Models.ExpoPS2DPol        , 
+    ## Ostap.Models.Expo2DPol          ,
+    ## Ostap.Models.Expo2DPolSym       , 
+    ## Ostap.Models.Spline2D           ,
+    ## Ostap.Models.Spline2DSym        ,
     ##
     Ostap.Math.Positive       ,
     Ostap.Math.PositiveEven   ,  

@@ -3,13 +3,18 @@
 // ============================================================================
 // Include files
 // ============================================================================
-// Python
+// Ostap
 // ============================================================================
-#include "Python.h"
+#include "Ostap/OstapPyROOT.h"
 // ============================================================================
 // Ostap
 // ============================================================================
 #include "Ostap/IFuncs.h"
+// ============================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+struct  _object ;
+typedef _object PyObject ;
+#endif 
 // ============================================================================
 namespace Ostap 
 {
@@ -28,12 +33,26 @@ namespace Ostap
     {
     public :
       // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+      // ======================================================================
       /** constructor
        *  @param self python object
        *  @param tree pointer to the tree
        */
       PyFuncTree ( PyObject*    self = 0 , 
                    const TTree* tree = 0 );
+      // ======================================================================
+#else 
+      // ======================================================================
+      /** constructor
+       *  @param self python object
+       *  @param tree pointer to the tree
+       */
+      PyFuncTree ( const TTree* tree ) ;
+      /// default constructor 
+      PyFuncTree () : PyFuncTree ( nullptr ) {}
+      // ======================================================================
+#endif 
       // ======================================================================
       /// destructor 
       virtual ~PyFuncTree() ;
@@ -43,7 +62,12 @@ namespace Ostap
       /// the basic 
       double operator() ( const TTree* tree = 0 ) const override ;
       // ======================================================================
-   public:
+    public:
+      // ======================================================================
+      /// function that needs to be redefiend in python 
+      virtual double evaluate () const ;
+      // ======================================================================
+    public:
       // ======================================================================
       /// get the pointer to TTree
       const TTree* tree () const { return m_tree ; }
@@ -55,8 +79,10 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
       // self reference for python instance 
       PyObject*               m_self { nullptr } ; // self reference for python instance 
+#endif 
       // ======================================================================
     } ;
     // ========================================================================
@@ -68,12 +94,25 @@ namespace Ostap
     {
     public :
       // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
+      // ======================================================================
       /** constructor
        *  @param self python object
        *  @param data pointer to the data
        */
       PyFuncData ( PyObject*         self = 0 , 
                    const RooAbsData* data = 0 );
+      // ======================================================================
+#else 
+      // ======================================================================
+      /** constructor
+       *  @param self python object
+       *  @param data pointer to the data
+       */
+      PyFuncData ( const RooAbsData* data ) ;
+      PyFuncData () : PyFuncData ( nullptr ) {} ;
+      // ======================================================================
+#endif 
       // ======================================================================
       /// destructor 
       virtual ~PyFuncData () ;
@@ -82,6 +121,9 @@ namespace Ostap
       // ======================================================================
       /// the basic 
       double operator() ( const RooAbsData* data = 0 ) const override ;
+      // ======================================================================
+      /// function that needs to be redefiend in python 
+      virtual double evaluate () const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -95,8 +137,10 @@ namespace Ostap
       // ======================================================================
     private :
       // ======================================================================
+#if defined(OSTAP_OLD_PYROOT) && OSTAP_OLD_PYROOT 
       // self reference for python instance 
       PyObject* m_self { nullptr } ; ; // self-reference for python instance 
+#endif 
       // ======================================================================
      } ;
     // ========================================================================

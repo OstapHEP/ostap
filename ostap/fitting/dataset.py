@@ -20,16 +20,28 @@ __all__     = (
     'setStorage' , ## define the default storage for  RooDataStore 
     'useStorage' , ## define (as context) the default storage for  RooDataStore
     'ds_draw'    , ## draw varibales from RooDataSet 
-    'ds_project' , ## project variables from RooDataSet to histogram 
+    'ds_project' , ## project variables from RooDataSet to histogram
+    'ds_combine' , ## combine two datasets with weights 
     )
 # =============================================================================
-import ROOT, random, math, sys 
+import ROOT, random, math, sys, ctypes  
 from   builtins               import range
 from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
 from   ostap.core.ostap_types import integer_types, string_types  
+from   ostap.math.base        import islong
+import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
 import ostap.fitting.printable
+# =============================================================================
+if   ( 3 , 5 ) <= sys.version_info  : from collections.abc import Generator, Collection, Sequence, Iterable  
+elif ( 3 , 3 ) <= sys.version_info  :
+    from collections.abc import Collection, Sequence, Iterable  
+    from types           import GeneratorType as Generator 
+else :
+    from collections     import Sequence , Iterable            
+    from collections     import Container     as Collection
+    from types           import GeneratorType as Generator 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -59,38 +71,109 @@ def _rad_iter_ ( self ) :
     for i in range ( 0 , _l ) :
         yield self.get ( i )
 
+
 # =============================================================================
 ## access to the entries in  RooAbsData
 #  @code
 #  dataset = ...
-#  event   = dataset[4]
-#  events  = dataset[0:1000]
-#  events  = dataset[0:-1:10]
+#  event   = dataset[4]            ## index 
+#  events  = dataset[0:1000]       ## slice 
+#  events  = dataset[0:-1:10]      ## slice 
+#  events  = dataset[ (1,2,3,10) ] ## seqeucne of indices  
 #  @eendcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-03-31
-def _rad_getitem_ ( self , i ) :
+def _rad_getitem_ ( data , index ) :
     """Get the entry from RooDataSet
     >>> dataset = ...
-    >>> event  = dataset[4]
-    >>> events = dataset[0:1000]
-    >>> events = dataset[0:-1:10]
+    >>> event  = dataset[4]                 ## index 
+    >>> events = dataset[0:1000]            ## slice
+    >>> events = dataset[0:-1:10]           ## slice 
+    >>> events = dataset[ (1,2,3,4,10) ]    ## sequnce of indices 
     """
-    if   isinstance ( i , slice ) :
-        
-        start , stop , step = i.indices ( len ( self ) )
-                              
-        if 1 == step : return self.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
-        
-        result = self.emptyClone( dsID() )
-        for j in range ( start , stop , step ) : result.add ( self [j] ) 
-        return result
-    
-    elif isinstance ( i , integer_types ) and 0<= i < len ( self ) :
-        return self.get ( i )
-    
-    raise IndexError ( 'Invalid index %s'% i )
 
+    N = len ( data )
+    
+    if isinstance ( index , integer_types ) and index < 0 :
+        index += N
+
+    if isinstance ( index , integer_types ) and 0 <= index  < N :
+        
+        return data.get ( index )  ## should we add weight here? 
+   
+    elif isinstance ( index , range ) :
+
+        ## simpel case 
+        start , stop , step = index.start , index.stop , index.step
+        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+                
+    elif isinstance ( index , slice ) :
+        
+        start , stop , step = index.indices ( N )
+                              
+        if 1 == step : return data.reduce ( ROOT.RooFit.EventRange ( start , stop ) )
+
+        index = range ( start , stop , step ) 
+
+
+    ## the actual loop over entries 
+    if isinstance ( index , ( Generator , Collection , Sequence ) ) :
+
+        weighted = data.isWeighted                    ()
+        se       = weighted and data.store_error      ()
+        sae      = weighted and data.store_asym_error ()
+
+        result = data.emptyClone ( dsID () )
+        for i in index :
+
+            j = int ( i )                 ## the content must be convertible tointegers 
+
+            if j < 0 : j += N             ## allow negative indicees 
+            
+            if not 0 <= j < N :           ## is adjusted integer in the proper range ? 
+                logger.error ( 'Invalid index %d, skip it' % j ) 
+                continue  
+            
+            vars = data.get ( j )
+            
+            if   weighted and sae :
+                wel , weh = data.weight_errors()
+                result.add ( vars , data.weight () , wel , weh ) 
+            elif weighted and se  :
+                we        = data.weightError()
+                result.add ( vars , data.weight () , we  ) 
+            elif weighted         :
+                result.add ( vars , data.weight () ) 
+            else : 
+                result.add ( vars ) 
+            
+        return result
+
+    raise IndexError ( 'Invalid index %s'% index )
+
+# ==============================================================================
+## Get (asymmetric) weigth errors for the current entry in dataset
+#  @code
+#  dataset = ...
+#  weight_error_low, weight_error_high = dataset.weightErrors() 
+#  @endcode
+#  @see RooAbsData::weightError
+def _rad_weight_errors( data , *etype ) :
+    """ Get (asymmetric) weigth errors for the current entry in dataset
+    >>> dataset = ...
+    >>> weight_error_low, weigth_error_high = dataset.weight_errors () 
+    - see ROOT.RooAbsData.weightError
+    """
+    ##
+    if not w.isWeighted () : return 0.0, 0.0
+    ##
+    wel = ctypes.c_double ( 0.0 )
+    weh = ctypes.c_double ( 0.0 )
+    data.weightError ( wel , weh )
+    #
+    return float ( wel.value ) , float ( weh.value )
+
+        
 # =============================================================================
 ## Get variables in form of RooArgList 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -261,6 +344,94 @@ def  _rad_mod_ ( self , fraction ) :
 
     return NotImplemented
 
+# =============================================================================
+## Make dataset with removed i-th element  (for Jackknife/bootstrapping)
+#  @code
+#  dataset = ...
+#  N = len ( dataset)
+#  for index in range ( N ) :
+#    ds_i = dataset - index
+#  @endcode 
+def _rds_sub_ ( dataset , index ) :
+    """Make dataset with removed i-th element  (for Jackknife/bootstrapping)
+    >>> dataset = ...
+    >>> N = len ( dataset)
+    >>> for index in range ( N ) :
+    >>> ... ds_i = dataset - index
+    """
+    N = len ( dataset )
+    
+    if 1 < N and isinstance ( index , integer_types ) :
+
+        if index < 0 : index += N  ## allow negative indices 
+
+        if not 0 <= index < N : return NotImplemented
+        
+        if   0 == index     : return dataset.reduce ( ROOT.RooFit.EventRange ( 1 , N     ) )
+        elif N == index + 1 : return dataset.reduce ( ROOT.RooFit.EventRange ( 0 , N - 1 ) )
+
+        ds1 = dataset.reduce ( ROOT.RooFit.EventRange ( 0         , index ) )
+        ds2 = dataset.reduce ( ROOT.RooFit.EventRange ( index + 1 , N     ) )
+
+        result = ds1 + ds2
+
+        ds1.clear()
+        ds2.clear()
+
+        assert len ( result ) + 1 == N , 'Invalid length of the resulting dataset!'
+        
+        return result
+    
+    return NotImplemented
+        
+# ============================================================================
+## Jackknife generator: generates data sets with removed i-th element
+#  @code
+#  dataset = ...
+#  for ds in ds.jackknife() :
+#  ...
+#  @endcode 
+def _rds_jackknife_ ( dataset , low = 0 , high = None ) :
+    """Jacknife generator
+    >>> dataset = ...
+    >>> for ds in ds.jackknife() :
+    >>> ...
+    """
+    N = len ( dataset )
+    
+    if high == None : high = N
+    
+    if 1 < N : 
+        for i in range ( low , high ) :
+            ds_i = dataset - i        ## this is the line 
+            yield ds_i               
+            ds_i.clear()             
+            del ds_i
+
+# =============================================================================
+## Boostrap generator
+#  @code
+#  dataset = ...
+#  for ds in dataset.bootstrap ( 100 ) :
+#  ...
+#  @endcode
+def _rds_bootstrap_ ( dataset , size = 100 , extended = False ) :
+    """ Boostrap generator
+    >>> dataset = ...
+    >>> for ds in dataset.bootstrap ( 100 ) :
+    >>> ...
+    """
+
+    from   ostap.stats.bootstrap  import bootstrap_indices, extended_bootstrap_indices 
+
+    N    = len ( dataset )
+    bgen = bootstrap_indices ( N , size = size ) if not extended else extended_bootstrap_indices ( N , size = size ) 
+    
+    for indices in bgen : 
+        ds = dataset [ indices ] 
+        yield ds
+        ds.clear()
+        del ds
 
 # =============================================================================
 ## get (random) sub-sample from the dataset
@@ -377,6 +548,7 @@ ROOT.RooAbsData . __mod__       = _rad_mod_
 ROOT.RooAbsData . __div__       = _rad_div_
 ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 
+
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
@@ -386,6 +558,10 @@ ROOT.RooAbsData . sumVar_       = _sum_var_old_
 ROOT.RooAbsData . statVar       = _stat_var_ 
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
+
+ROOT.RooDataSet . __sub__       = _rds_sub_
+ROOT.RooDataSet . jackknife     = _rds_jackknife_
+ROOT.RooDataSet . bootstrap     = _rds_bootstrap_
 
 
 _new_methods_ += [
@@ -498,19 +674,23 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
     if isinstance ( histo , str ) :
-    
-        obj = ROOT.gROOT     .FindObject    ( histo )
+
+        groot = ROOT.ROOT.GetROOT() 
+        obj   = groot     .FindObject    ( histo )
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gROOT     .FindObjectAny ( histo )
+        obj   = groot     .FindObjectAny ( histo )
         if instance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gDirectory.FindObject    ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
-        obj = ROOT.gDirectory.FindObjectAny ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
-            return ds_project ( dataset , obj , what , cuts , *args )
+
+        gdir = ROOT.directory.CurrentDirectory()
+        if gdir : 
+            obj  = gdir.FindObject    ( histo )
+            if instance ( obj  , ROOT.TH1 ) :
+                return ds_project ( dataset , obj , what , cuts , *args )
+            obj  = gdir.FindObjectAny ( histo )
+            if instance ( obj  , ROOT.TH1 ) :
+                return ds_project ( dataset , obj , what , cuts , *args )
 
     ## what it is ????
     if  1 <= len ( what ) \
@@ -522,7 +702,6 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
-    
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
         sc = Ostap.HistoProject.project3 ( dataset ,
                                            histo   , 
@@ -533,7 +712,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             logger.error ( "Error from Ostap.HistoProject.project3 %s" % sc )
             return None
         return histo
-    elif isinstance ( histo , ROOT.TH2 ) and 2 == len ( what )  :
+    elif isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() and 2 == len ( what )  :
         sc = Ostap.HistoProject.project2 ( dataset ,
                                            histo   , 
                                            what[1] ,
@@ -542,7 +721,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             logger.error ( "Error from Ostap.HistoProject.project2 %s" % sc )
             return None
         return histo
-    elif isinstance ( histo , ROOT.TH1 ) and 1 == len ( what )  :
+    elif isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() and 1 == len ( what )  :
         sc = Ostap.HistoProject.project  ( dataset ,
                                            histo   , 
                                            what[0] , cuts , *args )
@@ -609,7 +788,7 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
     
     if 1 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax  ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         histo = ROOT.TH1F ( hID() , w1 , 200 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
@@ -617,27 +796,27 @@ def ds_draw ( dataset , what , cuts = '' , opts = '' , *args ) :
 
     if 2 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax  ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         w2        = what[1] 
-        mn2 , mx2 = ds_var_minmax  ( dataset , w2 , cuts )
+        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         histo = ROOT.TH2F ( hID() , "%s:%s" % ( w1 , w2 ) ,
-                            50 , mn1 , mx1 ,
-                            50 , mn2 , mx2 )  ; histo.Sumw2()
+                            50 , mn2 , mx2 ,
+                            50 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
         return histo
 
     if 3 == len ( what )  :
         w1        = what[0] 
-        mn1 , mx1 = ds_var_minmax ( dataset , w1 , cuts )
+        mn1 , mx1 = ds_var_range ( dataset , w1 , cuts )
         w2        = what[1] 
-        mn2 , mx2 = ds_var_minmax ( dataset , w2 , cuts )
+        mn2 , mx2 = ds_var_range ( dataset , w2 , cuts )
         w3        = what[2] 
-        mn3 , mx3 = ds_var_minmax ( dataset , w3 , cuts )
+        mn3 , mx3 = ds_var_range ( dataset , w3 , cuts )
         histo = ROOT.TH3F ( hID() , "%s:%s:%s" % ( w1 , w2 , w3 ) ,
-                            20 , mn1 , mx1 ,
+                            20 , mn3 , mx3 ,
                             20 , mn2 , mx2 ,
-                            20 , mn2 , mx2 )  ; histo.Sumw2()
+                            20 , mn1 , mx1 )  ; histo.Sumw2()
         ds_project ( dataset , histo , what , cuts , *args  )
         histo.Draw( opts )
         return histo
@@ -680,8 +859,8 @@ def ds_var_minmax ( dataset , var , cuts = '' , delta = 0.0 )  :
     if isinstance ( var , ROOT.RooAbsReal ) : var = var.GetName() 
     if cuts : s = dataset.statVar ( var , cuts )
     else    : s = dataset.statVar ( var )
-    mn,mx = s.minmax()
-    if mn < mn and 0.0 < delta :
+    mn , mx = s.minmax()
+    if mn < mx and 0.0 < delta :
         dx   = delta * 1.0 * ( mx - mn )  
         mx  += dx   
         mn  -= dx   
@@ -694,7 +873,50 @@ _new_methods_ += [
     ROOT.RooDataSet .vminmax ,
     ]
 
+# =============================================================================
+## Is there at least one entry that satisfy selection criteria?
+#  @code
+#  dataset = ...
+#  dataset.hasEntry ( 'pt>100' )
+#  dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
+#  dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
+#  dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
+#  @endcode
+#  @see Ostap::StatVar::hasEntru
+def _ds_has_entry_ ( dataset , selection , *args ) : 
+    """Is there at leats one entry that satoisfies selection criteria?
+    >>> dataset = ...
+    >>> dataset.hasEntry ( 'pt>100' )
+    >>> dataset.hasEntry ( 'pt>100' , 0, 1000 ) ## 
+    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
+    >>> dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
+    - see Ostap.StatVar.hasEntru
+    """
+    result = Ostap.StatVar.hasEntry ( dataset , selection , *args ) 
+    return True if result else False 
 
+ROOT.RooAbsData.hasEntry  = _ds_has_entry_
+ROOT.RooAbsData.has_entry = _ds_has_entry_
+
+_new_methods_ += [
+    ROOT.RooAbsData.hasEntry  , 
+    ROOT.RooAbsData.has_entry , 
+    ]
+
+# =============================================================================
+## find sutable range for drawing a variable 
+def ds_var_range ( dataset , var , cuts = '' ) :
+    """Find suitable range for drawing a variable
+    """
+
+    ## min/max values
+    
+    mn , mx = ds_var_minmax ( dataset , var , cuts )
+
+    from ostap.math.base import axis_range
+    
+    return axis_range ( mn , mx , delta = 0.05 )
+    
 # =============================================================================
 ## clear dataset storage
 if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
@@ -711,19 +933,23 @@ if not hasattr ( ROOT.RooDataSet , '_old_reset_' ) :
         s = self.store()
         if s : s.reset()
         self._old_reset_()
-        return len(self)
-    ROOT.RooDataSet.reset = _ds_new_reset_
+        return len ( self )
+    
+    ## ROOT.RooDataSet.reset = _ds_new_reset_
+    ROOT.RooDataSet.clear = _ds_new_reset_
+    ROOT.RooDataSet.erase = _ds_new_reset_
+    ## ROOT.RooDataSet.Reset = _ds_new_reset_
 
-ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
-ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
-ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.clear = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.erase = ROOT.RooDataSet.reset
+# ROOT.RooDataSet.Reset = ROOT.RooDataSet.reset
+
 ROOT.RooDataSet.get_var       = get_var
 
 _new_methods_ += [
     ROOT.RooDataSet .clear ,
     ROOT.RooDataSet .erase ,
-    ROOT.RooDataSet .Reset ,
-
+    
     ROOT.RooDataSet .get_var ,
     ]
 
@@ -759,7 +985,7 @@ _new_methods_ += [
 #  @date 2019-05-30
 # =============================================================================
 def _rad_sFactor_ ( data ) :
-    """Get the s-factor for   (weighted) dataset, where
+    """Get the s-factor for (weighted) dataset, where
     s-factor is defined as
      s_{w} equiv frac{ sum w_i}{ sum w_i^2}
      
@@ -773,6 +999,9 @@ def _rad_sFactor_ ( data ) :
     if 0 == data.numEntries() :
         logger.warning ("RooAbsData.sFactor: dataset is empty, return 1.0")
         return 1.0
+
+    if not data.isWeighted() :
+        return 1.0 
     
     sf = Ostap.SFactor.sFactor ( data )
     if    0 >  sf.cov2() :
@@ -823,9 +1052,48 @@ _new_methods_ += [
     ROOT.RooAbsData .sFactor      
     ]
 
+# =============================================================================
+## clone dataset
+#  @code
+#  dataset = ...
+#  cloned  = datatset.clone ( 'new_name') 
+#  @endcode
+def _rds_clone_ ( dataset , name = '' ) :
+    """Clone dataset
+    >>> dataset = ...
+    >>> cloned  = datatset.clone ( 'new_name') 
+    """
+    name = name if name else dsID () 
+    
+    return ROOT.RooDataSet ( dataset , name ) 
 
 # =============================================================================
-## add variable to dataset 
+## clone dataset
+#  @code
+#  dataset = ...
+#  cloned  = datatset.clone ( 'new_name') 
+#  @endcode
+def _rdh_clone_ ( dataset , name = '' ) :
+    """Clone dataset
+    >>> dataset = ...
+    >>> cloned  = datatset.clone ( 'new_name') 
+    """
+    name = name if name else dsID () 
+    
+    return ROOT.RooDataHist ( dataset , name ) 
+
+if not hasattr ( ROOT.RooDataSet  , 'clone' ) :
+    ROOT.RooDataSet .clone = _rds_clone_
+
+if not hasattr ( ROOT.RooDataHist , 'clone' ) :
+    ROOT.RooDataHist.clone = _rdh_clone_
+    
+# =============================================================================
+## add variable to dataset
+#  @code
+#  dataset = ...
+#  dataset.addVar ( 'NewVar' , 'A+B/3' )
+#  @endcode 
 def _rds_addVar_ ( dataset , vname , formula ) : 
     """Add/calculate variable to RooDataSet
 
@@ -962,13 +1230,15 @@ def _rds_makeWeighted_ ( dataset , wvarname , varset = None , cuts = '' , vname 
 
     ##
     formula =  0 <= wvarname.find ( '(' ) and wvarname.find( '(' ) < wvarname.find ( ')' )
-    formula = formula or 0 <  wvarname.find ( '*' ) 
-    formula = formula or 0 <  wvarname.find ( '/' )     
+    formula = formula or 0 <= wvarname.find ( '*' ) 
+    formula = formula or 0 <= wvarname.find ( '/' )     
     formula = formula or 0 <= wvarname.find ( '+' ) 
     formula = formula or 0 <= wvarname.find ( '-' )     
-    formula = formula or 0 <  wvarname.find ( '&' )     
-    formula = formula or 0 <  wvarname.find ( '|' )     
-
+    formula = formula or 0 <= wvarname.find ( '&' )     
+    formula = formula or 0 <= wvarname.find ( '|' )     
+    formula = formula or 0 <= wvarname.find ( '^' )     
+    formula = formula or 0 <= wvarname.find ( '%' )
+    
     if formula :
         wname    = 'W' or vname 
         while wname in dataset : wname += 'W'
@@ -1001,9 +1271,9 @@ def _rds_unWeighted_ ( dataset , weight = '' ) :
     """
     if not dataset.isWeighted() :
         logger.error ("unweight: dataset is not weighted!") 
-        return None, ''
+        return dataset , ''
     
-    ds , w = Ostap.Utils.unweight (  dataset , weight )  
+    ds , w = Ostap.Utils.unweight ( dataset , weight )  
     return ds , w 
 
 # =============================================================================
@@ -1582,6 +1852,267 @@ _new_methods_ += [
 
 
 # =============================================================================
+## get the name of weigth variable in dataset
+#  @code
+#  dataset = ...
+#  wname   = dataset.wname() 
+#  @endcode 
+#  @see Ostap::Utils::getWeight
+def _ds_wname_ ( dataset ) :
+    """Get the name of weigth variable in dataset
+    >>> dataset = ...
+    >>> wname   = dataset.wname() 
+    """
+    
+    if not dataset.isWeighted() : return '' ## UNWEIGHTED!
+
+    attr = '_weight_var_name'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.getWeight (  dataset )
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+# =============================================================================
+
+
+# =============================================================================
+## Are weight errors stored in dataset?
+#  @code
+#  dataset     = ...
+#  store_error = dataset.store_error () 
+#  @endcode
+#  The function checks the <code>StoreError</code> and 
+#   <code>StoreAsymError</code> attributes for the weight variable 
+#  @see Ostap::Utils::storeError
+def _ds_store_error_ ( dataset ) :
+    """Are weight errors stored in dataset?
+    >>> dataset     = ...
+    >>> store_error = dataset.store_error () 
+    The function checks the `StoreError` and 
+    `StoreAsymError` attributes for the weight variable 
+    - see Ostap::Utils::storeError
+    """
+    
+    if not dataset.isWeighted() : return False ## UNWEIGHTED!
+    
+    attr = '_store_weeight_error'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.storeError  (  dataset )
+        wn = True if wn else False
+        
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+# =============================================================================
+
+# =============================================================================
+## Are asymmetric weight errors stored in dataset?
+#  @code
+#  dataset     = ...
+#  store_error = dataset.store_asym_error () 
+#  @endcode
+#  The function checks the <code>StoreAsymError</code> attribute for the weight variable 
+#  @see Ostap::Utils::storeError
+def _ds_store_asym_error_ ( dataset ) :
+    """Are weight errors stored in dataset?
+    >>> dataset     = ...
+    >>> store_error = dataset.store_asym_error () 
+    The function checks the `StoreAsymError` attributes for the weight variable 
+    - see Ostap::Utils::storeAsymError
+    """
+    
+    if not dataset.isWeighted() : return False ## UNWEIGHTED!
+    
+    attr = '_store_asym_weight_error'
+    if not hasattr ( dataset , attr ) :
+        
+        wn = Ostap.Utils.storeAsymError  (  dataset )
+        wn = True if wn else False
+        
+        setattr ( dataset , attr , wn ) 
+        
+    return getattr ( dataset , attr , '' )
+
+# =============================================================================
+
+ROOT.RooDataSet.wname            = _ds_wname_
+ROOT.RooDataSet.store_error      = _ds_store_error_
+ROOT.RooDataSet.store_asym_error = _ds_store_asym_error_
+
+_new_methods_ += [
+    ROOT.RooDataSet.wname            , 
+    ROOT.RooDataSet.store_error      , 
+    ROOT.RooDataSet.store_asym_error ,
+    ]
+
+# =============================================================================
+
+
+# =============================================================================
+## Combine two datasets with some weights
+#  @code
+#  dataset1 = ... 
+#  dataset2 = ...
+#  dataset  = ds_combine ( dataset1 , dataset2 , 1.0 , -0.1 )
+#  @endcode
+#  - Input datasets may be weighted
+#  - Output dataset  is weighted 
+def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = '' , logger = logger ) :
+    """ Combine two datasets with some weights
+    >>> dataset1 = ... 
+    >>> dataset2 = ...
+    >>> dataset  = ds_combine ( dataset1 , dataset2 , 1.0 , -0.1 ) 
+    - Input datasets may be weighted
+    - Output dataset  is always weighted 
+    """
+
+    r1 = float ( r1 )
+    r2 = float ( r2 )
+
+    w1 , w2  = '', ''
+
+    ## number of entries 
+    n1  , n2  = len      ( ds1 ) , len ( ds2 )
+    ## statistics of weights
+    st1 , st2 = ds1.statVar('1') , ds2.statVar('1')
+    ## sum of weights
+    sw1 , sw2 = VE ( st1.sum()   , st1.sumw2() ) , VE ( st2.sum() , st2.sumw2() )
+    ## s-factor
+    sf1 , sf2 = st1.sum() / st1.sumw2() , st2.sum() / st2.sumw2()
+    
+    ## 
+    if ds1.isWeighted() : ds1 , w1 = ds1.unWeighted ()
+    if ds2.isWeighted() : ds2 , w2 = ds2.unWeighted ()
+    ##
+    if w2 and not w2 in ds1 : ds1.addVar ( w2 , '1' )
+    if w1 and not w1 in ds2 : ds2.addVar ( w1 , '1' )
+    ## 
+    v1 = set ( ds1.branches () )
+    v2 = set ( ds2.branches () )
+    ##
+    if v1 != v2 :
+
+        v12 = v1 - v2
+        if v12 : logger.warning ("ds_combine: first  dataset contains %d extra columns: %s" % ( len ( v12 ) , list ( v1 - v2 ) ) )
+        
+        v21 = v2 - v1
+        if v21 : logger.warning ("ds_combine: second dataset contains %d extra columns: %s" % ( len ( v21 ) , list ( v2 - v1 ) ) ) 
+
+        cv = v1.intersection ( v2 )
+
+        assert cv, 'ds_combine: datasets have no common columns!'
+        
+        ds1s = ds1.subset ( cv )
+        ds2s = ds2.subset ( cv )
+        
+        if w1 : ds1.clear () 
+        if w2 : ds2.clear ()
+        
+        ds1 = ds1s        
+        ds2 = ds2s
+
+
+    ## construct the name for new common weight variable
+    new_weight = weight if weight else 'weight'
+    i = 0 
+    while ( new_weight in ds1 ) or ( new_weight in ds2 )  :
+        new_weight = "%s_%d" % ( new_weight , i )
+        i += 1
+
+    ## define new weigths for datasets
+    if 1 == r1 : weight1 =       '%s' %        w1   if w1 else '1'
+    else       : weight1 = '%.16g*%s' % ( r1 , w1 ) if w1 else '%.16g' % r1
+    if 1 == r2 : weight2 =       '%s' %        w2   if w2 else '1'
+    else       : weight2 = '%.16g*%s' % ( r2 , w2 ) if w2 else '%.16g' % r2
+    
+    ds1.addVar ( new_weight , weight1 )
+    ds2.addVar ( new_weight , weight2 )
+    
+    ## add two datasets together 
+    ds = ds1 + ds2
+
+    ## apply common weight 
+    dsw = ds.makeWeighted ( new_weight )
+
+    ## statistics 
+    n , sw , sf = len ( dsw ) , dsw.sumVar('1') , dsw.sFactor() 
+
+    if not silent :
+
+        rows = [  ( ''        , 'A' , 'B' , '%+.6g*A%+.6g*B' % ( r1 , r2 ) ) ] 
+
+        row  =  'Size'        , '%d' % n1 , '%s' % n2  , '%d' % n
+        rows.append ( row )
+
+        if w1 or w2 :
+            row  = 'Weight      (original)' , w1 , w2 , ''
+            rows.append ( row )
+            
+        row = 'Weight      (updated)' , new_weight , new_weight , new_weight
+        rows.append ( row )
+                
+        row  =  'Sum weights (original) ' ,  \
+               ( "%+13.6g +- %-13.6g" % ( sw1.value()  , sw1.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw2.value()  , sw2.error() ) ) , '' 
+        rows.append ( row )
+
+        st1n , st2n = ds1.statVar ( new_weight ) , ds2.statVar( new_weight )
+        
+        sw1n , sw2n = VE ( st1n.sum()   , st1n.sumw2() ) , VE ( st2n.sum() , st2n.sumw2() )
+        row  =  'Sum weights (updated) ' , \
+               ( "%+13.6g +- %-13.6g" % ( sw1n.value() , sw1n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw2n.value() , sw2n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( sw  .value() , sw  .error() ) ) ,
+        
+        rows.append ( row )
+        
+        mw1 , mw2 , mw = st1.mean() , st2.mean() ,  sw / n
+        row  =  'Mean weight (original)' , \
+               ( "%+13.6g +- %-13.6g" % ( mw1.value() , mw1.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw2.value() , mw2.error() ) ) , ''               
+        rows.append ( row )
+
+        mw1n , mw2n = st1n.mean () , st2n.mean ()  
+        row  =  'Mean weight (updated)' , \
+               ( "%+13.6g +- %-13.6g" % ( mw1n.value() , mw1n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw2n.value() , mw2n.error() ) ) , \
+               ( "%+13.6g +- %-13.6g" % ( mw  .value() , mw  .error() ) ) 
+        rows.append ( row )
+
+        row  =  's-factor    (original)' , "%+13.6g" % sf1 , "%+13.6g" % sf2 , ''
+        rows.append ( row )
+        
+        ## s-factor
+        sf1n , sf2n = st1n.sum() / st1n.sumw2() , st2n.sum() / st2n.sumw2()
+        
+        row  =  's-factor    (updated)' , "%+13.6g" % sf1n , "%+13.6g" % sf2n , "%+13.6g" % sf
+        rows.append ( row )
+
+        row  =  'R'                  , "%+13.6g" % r1  , "%+13.6g" % r2  , '' 
+        rows.append ( row )
+        
+        import ostap.logger.table as Table
+        title = title if title else 'Combine two datasets: %+.6g*A%+.6g*B' % ( r1 , r2 )
+        table = Table.table ( rows               ,
+                              title     = title  ,
+                              alignment = 'lccc' ,
+                              prefix    = "# "   )
+        logger.info ( '%s:\n%s' % ( title  , table ) )
+    
+    ## cleanup
+    
+    if w1 or v1 != v2 : ds1.clear()
+    if w2 or v1 != v2 : ds2.clear()
+    
+    ds.clear()
+
+    
+    return dsw
+
+
+# ============================================================================
 
 from  ostap.stats.statvars import data_decorate as _dd
 _dd ( ROOT.RooAbsData )

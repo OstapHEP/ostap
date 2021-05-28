@@ -151,26 +151,43 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw1 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
+        in_range = None
+        if in_range2        and  not in_range3 :
+            in_range = 'aux3_rng12_%s'  % self.name
+        elif not in_range2  and      in_range3 :
+            in_range = 'aux3_rng13_%s'  % self.name
+        elif in_range2  and in_range3:
+            if  not isinstance ( in_range2 , tuple ):
+                in_range = in_range2
+            elif not isinstance ( in_range3 , tuple ):
+                in_range = in_range3
+            else:
+                in_range = 'aux3_rng123_%s' % self.name
+
+
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            range_name = 'aux3_rng12_%s' % self.name
             with rooSilent ( 3 ) :
-                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )
+                self.yvar.setRange ( in_range, in_range2[0] , in_range2[1] )
                 if dataset:
-                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
-            in_range2  = range_name 
+                    dataset.get_var(self.yvar.GetName()).setRange ( in_range, in_range2[0] , in_range2[1] )
+#            in_range2  = range_name 
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            range_name = 'aux3_rng13_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                self.zvar.setRange ( in_range , in_range3[0] , in_range3[1] )
                 if dataset:
-                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
-            in_range3  = range_name 
+                    dataset.get_var(self.zvar.GetName()).setRange ( in_range, in_range3[0] , in_range3[1] )
+     #       in_range3  = range_name 
 
-        in_range = []
-        if in_range2 : in_range.append ( in_range2 )
-        if in_range3 : in_range.append ( in_range3 )
-        in_range = tuple ( in_range )
+       
+      #  if in_range2 and in_range3: 
+       #     in_range= in_range3 
+       # elif in_range2:
+       #     in_range=  in_range2 
+       # elif in_range3:
+       #     in_range= in_range3 
+
+       
         
         return self.draw ( drawvar  = self.xvar , 
                            dataset  = dataset   ,
@@ -212,28 +229,33 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw2 ( dataset , nbins = 100 , in_range1 = 'QUQU1') ## draw results
         
         """
-        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            range_name = 'aux3_rng21_%s' % self.name
-            with rooSilent ( 3 ) : 
-                self.xvar.setRange ( range_name , in_range1[0] , in_range1[1] )  
-                if dataset:
-                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+        in_range=None
 
-            in_range1  = range_name
+        if in_range1  and  not in_range3:
+            in_range = 'aux3_rng21_%s' % self.name
+        elif not in_range1  and in_range3:
+            in_range = 'aux3_rng23_%s' % self.name
+        elif in_range1  and in_range3:
+            if  not isinstance ( in_range1 , tuple ):
+                in_range = in_range1
+            elif  not isinstance ( in_range3 , tuple ):
+                in_range = in_range3
+            else:
+                in_range = 'aux3_rng213_%s' % self.name
+
+        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( in_range , in_range1[0] , in_range1[1] )  
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( in_range , in_range1[0] , in_range1[1] )
+
 
         if in_range3 and isinstance ( in_range3 , tuple ) and 2 == len ( in_range3 ) :
-            range_name = 'aux3_rng23_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.zvar.setRange ( range_name , in_range3[0] , in_range3[1] )
+                self.zvar.setRange ( in_range, in_range3[0] , in_range3[1] )
                 if dataset:
-                    dataset.get_var(self.zvar.GetName()).setRange ( range_name , in_range3[0] , in_range3[1] )
+                    dataset.get_var(self.zvar.GetName()).setRange (in_range , in_range3[0] , in_range3[1] )
 
-            in_range3  = range_name 
-
-        in_range = []
-        if in_range1 : in_range.append ( in_range1 )
-        if in_range3 : in_range.append ( in_range3 )
-        in_range = tuple ( in_range )
         
         return self.draw ( drawvar  = self.yvar , 
                            dataset  = dataset   ,
@@ -274,28 +296,32 @@ class PDF3 (PDF2,FUNC3) :
         >>> fx  = model.draw3 ( dataset , nbins = 100 , in_range2 = 'QUQU2') ## draw results
         
         """
-        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
-            range_name = 'aux3_rng31_%s' % self.name
-            with rooSilent ( 3 ) : 
-                self.xvar.setRange ( range_name ,  in_range1[0] , in_range1[1] )       
-                if dataset:
-                    dataset.get_var(self.xvar.GetName()).setRange ( range_name , in_range1[0] , in_range1[1] )
+        in_range=None
 
-            in_range1  = range_name 
+        if in_range1  and  not in_range2:
+            in_range = 'aux3_rng31_%s' % self.name
+        elif not in_range1  and in_range2:
+            in_range = 'aux3_rng32_%s' % self.name
+        elif in_range1  and in_range2:
+            if  not isinstance ( in_range1 , tuple ):
+                in_range = in_range1
+            elif  not isinstance ( in_range2 , tuple ):
+                in_range = in_range2
+            else:
+                in_range = 'aux3_rng312_%s' % self.name
+
+        if in_range1 and isinstance ( in_range1 , tuple ) and 2 == len ( in_range1 ) :
+            with rooSilent ( 3 ) : 
+                self.xvar.setRange ( in_range ,  in_range1[0] , in_range1[1] )       
+                if dataset:
+                    dataset.get_var(self.xvar.GetName()).setRange ( in_range , in_range1[0] , in_range1[1] )
 
         if in_range2 and isinstance ( in_range2 , tuple ) and 2 == len ( in_range2 ) :
-            range_name = 'aux3_rng32_%s' % self.name
             with rooSilent ( 3 ) : 
-                self.yvar.setRange ( range_name , in_range2[0] , in_range2[1] )    
+                self.yvar.setRange ( in_range , in_range2[0] , in_range2[1] )    
                 if dataset:
-                    dataset.get_var(self.yvar.GetName()).setRange ( range_name , in_range2[0] , in_range2[1] )
+                    dataset.get_var(self.yvar.GetName()).setRange ( in_range , in_range2[0] , in_range2[1] )
 
-            in_range2  = range_name 
-
-        in_range = []
-        if in_range1 : in_range.append ( in_range1 )
-        if in_range2 : in_range.append ( in_range2 )
-        in_range = tuple ( in_range )
         
         return self.draw ( drawvar  = self.zvar , 
                            dataset  = dataset   ,
@@ -389,24 +415,24 @@ class PDF3 (PDF2,FUNC3) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( 10000 ) ## generate dataset
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample =   True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
                    binning  = {}    ,
-                   sample   = False , 
+                   sample   = True  , 
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( 10000 ) ## generate dataset
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
         nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
@@ -1007,7 +1033,7 @@ class Generic3D_pdf(PDF3) :
         assert isinstance ( zvar , ROOT.RooAbsReal ) , "``zvar'' must be ROOT.RooAbsReal"
         assert isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf''  must be ROOT.RooAbsReal"
 
-        name = name if name else prefix + pdf.GetName () + suffix         
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix ) 
         PDF3  . __init__ ( self , name , xvar , yvar , zvar , special = special )
 
         if not self.special : 
@@ -1104,8 +1130,7 @@ class Sum3D(PDF3) :
             raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
         
 
-        name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
-        
+        name = name if name else self.generate_name ( prefix = 'sum3D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
         PDF3.__init__ ( self , name , xvar , yvar , zvar )
 
         self.__pdf1     = pdf1
@@ -1121,8 +1146,9 @@ class Sum3D(PDF3) :
         self.alist2 = ROOT.RooArgList (
             self.__fraction  )
         
-        self.pdf = ROOT.RooAddPdf ( name , 
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1,self.alist2 )
+        self.pdf = ROOT.RooAddPdf (
+            self.roo_name ( 'sum3_' ) , 
+            '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1,self.alist2 )
         
         if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
         if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
@@ -1177,8 +1203,9 @@ class Flat3D(PDF3) :
     """The most trival 3D-model - constant
     >>> pdf = Flat3D( 'flat' , xvar = ...  , yvar = ... , zvar = ... )
     """
-    def __init__ ( self , xvar , yvar , zvar , name = 'Flat3D'  , title = '' ) :
-        
+    def __init__ ( self , xvar , yvar , zvar , name = ''  , title = '' ) :
+
+        name = name if name else self.generate_name ( prefix = 'flat3D_')                            
         PDF3.__init__ ( self  , name , xvar , yvar , zvar ) 
         
         if not title : title = 'flat3(%s)' % name 
@@ -1275,8 +1302,8 @@ class Model3D(PDF3) :
                 self.__ymodel.pdf ,
                 self.__zmodel.pdf ,
                 )
-            self.pdf = ROOT.RooProdPdf ( name , title , self.__plst )
-
+            self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'flat3_' )  , title , self.__plst )
+            
         ## save configuration 
         self.config = {
             'name'   : self.name   ,
@@ -1329,8 +1356,8 @@ class Shape3D_pdf(PDF) :
         
         ## create the actual pdf
         self.pdf = Ostap.Models.Shape3D.create  (
-            "s3D_%s"      % self.name , 
-            "shape3D(%s)" % self.name ,
+            self.roo_name ( 'shape3_' ) , 
+            "Shape-3D %s" % self.name ,
             self.xvar                 ,
             self.yvar                 ,
             self.zvar                 ,
@@ -1376,13 +1403,13 @@ class H3D_pdf(H3D_dset,PDF3) :
         assert isinstance ( order, integer_types ) and 0 <= order ,\
                'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
         
-       #
+        #
         ## finally create PDF :
         #
         with roo_silent ( silent ) : 
             self.pdf    = ROOT.RooHistPdf (
-                'hpdf_%s'            % name ,
-                'Histo3PDF(%s/%s/%s)' % ( name , histo3.GetName() , histo2.GetTitle() ) , 
+                self.roo_name ( 'histo3_' ) , 
+                'Histo-3D PDF: %s/%s' % ( histo3.GetName() , histo2.GetTitle() ) , 
                 self.__vset  , 
                 self.dset    ,
                 order        )
@@ -1654,23 +1681,24 @@ class Fit3D (PDF3) :
         # =====================================================================
         
         self.__sss_cmp  = Model3D (
-            'SSS_' + self.name  , self.__signal_x , self.__signal_y , self.__signal_z )
+            self.generate_name ( 'SSS_' + self.name  ) ,
+            self.__signal_x , self.__signal_y , self.__signal_z )
         
         # =====================================================================
         ## 2-4) Three terms:  ( 2 signals )  x ( 1 background ) 
         # =====================================================================
         
-        self.__bkg_1x    = self.make_bkg ( bkg_1x , 'Bkg1X_BSS' + self.name , self.xvar )
-        self.__bkg_1y    = self.make_bkg ( bkg_1y , 'Bkg1Y_SBS' + self.name , self.yvar )
-        self.__bkg_1z    = self.make_bkg ( bkg_1z , 'Bkg1Z_SSB' + self.name , self.zvar )
+        self.__bkg_1x    = self.make_bkg ( bkg_1x , self.generate_name ( 'Bkg1X_BSS' + self.name ) , self.xvar )
+        self.__bkg_1y    = self.make_bkg ( bkg_1y , self.generate_name ( 'Bkg1Y_SBS' + self.name ) , self.yvar )
+        self.__bkg_1z    = self.make_bkg ( bkg_1z , self.generate_name ( 'Bkg1Z_SSB' + self.name ) , self.zvar )
         
-        self.__ssb_cmp = Model3D ( "SSB_" + self.name ,
+        self.__ssb_cmp = Model3D ( self.generate_name ( "SSB_" + self.name ) ,
                                    self.__signal_x , self.__signal_y , self.__bkg_1z   ,
                                    title = "Signal(x) x Signal(y) x Background1(x)" )
-        self.__sbs_cmp = Model3D ( "SBS_" + self.name ,
+        self.__sbs_cmp = Model3D ( self.generate_name ( "SBS_" + self.name ) ,
                                    self.__signal_x , self.__bkg_1y   , self.__signal_z , 
                                    title = "Signal(x) x Background1(y) x Signal(z)" ) 
-        self.__bss_cmp = Model3D ( "BSS_" + self.name ,
+        self.__bss_cmp = Model3D ( self.generate_name ( "BSS_" + self.name ) ,
                                    self.__bkg_1x   , self.__signal_y , self.__signal_z ,
                                    title = "Background1(x) x Signal(y) x Signal(z)" )
         
@@ -1711,15 +1739,15 @@ class Fit3D (PDF3) :
         if   bkg_2xy and isinstance ( bkg_2xy , PDF2 ) :
             self.__bkg_2xy = bkg_2xy
         elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) : 
-            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , 'Bkg2XY_' + self.name )
+            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , self.generate_name ( 'Bkg2XY_' + self.name ) )
         elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :            
             from ostap.fitting.models_2d import make_B2D
-            self.__bkg_2xy = make_B2D ( 'Bkg2XY_' + self.name  , self.xvar , self.yvar , *bkg_2xy )
+            self.__bkg_2xy = make_B2D ( self.generate_name ( 'Bkg2XY_' + self.name ) , self.xvar , self.yvar , *bkg_2xy )
         else :
 
-            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + self.name , self.xvar )    
-            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_S2B' + self.name , self.yvar )                    
-            self.__bkg_2xy = Model2D ( 'Bkg2XY_' + self.name ,
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , self.generate_name ( 'Bkg2X_S2B' + self.name ) , self.xvar )    
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )                    
+            self.__bkg_2xy = Model2D ( self.generate_name ( 'Bkg2XY_' + self.name ) ,
                                        self.__bkg_2x     ,
                                        self.__bkg_2y     ,
                                        title =  'Backrgound2(x) x Background2(y)' )
@@ -1727,41 +1755,41 @@ class Fit3D (PDF3) :
         if   bkg_2xz and isinstance ( bkg_2xz , PDF2 ) :
             self.__bkg_2xz = bkg_2xz
         elif bkg_2xz and isinstance ( bkg_2xz , ROOT.RooAbsPdf ) : 
-            self.__bkg_2xz = Generic2D_pdf ( bkg_2xz  , self.xvar , self.zvar , 'Bkg2XZ_' + self.name )
+            self.__bkg_2xz = Generic2D_pdf ( bkg_2xz  , self.xvar , self.zvar , self.generate_name ( 'Bkg2XZ_' + self.name ) ) 
         elif bkg_2xz and isinstance ( bkg_2xz , ( tuple , list ) ) :            
             from ostap.fitting.models_2d import make_B2D
-            self.__bkg_2xz = make_B2D ( 'Bkg2XZ_' + self.name  , self.xvar , self.zvar , *bkg_2xz )
+            self.__bkg_2xz = make_B2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) , self.xvar , self.zvar , *bkg_2xz )
         else :
-            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , 'Bkg2X_S2B' + self.name , self.xvar )    
-            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + self.name , self.zvar )                                
-            self.__bkg_2xz = Model2D ( 'Bkg2XZ_' + self.name ,                                     
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg ( bkg_2x , self.generate_name ( 'Bkg2X_S2B' + self.name ) , self.xvar )    
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )                                
+            self.__bkg_2xz = Model2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) ,                                     
                                        self.__bkg_2x         ,
                                        self.__bkg_2z         , 
-                                       title =  'Backrgound2(x) x Background2(z)' )
+                                       title =  'Background2(x) x Background2(z)' )
             
         if   bkg_2yz and isinstance ( bkg_2yz , PDF2 ) :
             self.__bkg_2yz = bkg_2yz
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) : 
-            self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , 'Bkg2YZ_' + slef.name )
+            self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , self.generate_name ( 'Bkg2YZ_' + self.name ) )
         elif bkg_2yz and isinstance ( bkg_2yz , ( tuple , list ) ) :            
             from ostap.fitting.models_2d import make_B2D
-            self.__bkg_2yz = make_B2D ( 'Bkg2YZ_' + self.name , self.yvar , self.zvar , *bkg_2yz )
+            self.__bkg_2yz = make_B2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) , self.yvar , self.zvar , *bkg_2yz )
         else :            
-            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , 'Bkg2Y_S2B' + self.name , self.yvar )    
-            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , 'Bkg2Z_S2B' + self.name , self.zvar )                                
-            self.__bkg_2yz = Model2D ( 'Bkg2YZ_'  + self.name ,
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg ( bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )    
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( bkg_2z , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )                                
+            self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_'  + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     ,
                                        title =  'Background2(y) x Background2(z)' )
 
         self.__sbb_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "SBB_" + self.name , "Signal(x) x Background(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "SBB_" + self.name ) , "Signal(x) x Background(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bsb_cmp = Generic3D_pdf (
-            ROOT.RooProdPdf ( "BSB_" + self.name , "Signal(y) x Background(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BSB_" + self.name ) , "Signal(y) x Background(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bbs_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "BBS_" + self.name , "Signal(z) x Background(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BBS_" + self.name ) , "Signal(z) x Background(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         
         # =====================================================================
@@ -1801,19 +1829,19 @@ class Fit3D (PDF3) :
         if   bkg_3D and isinstance ( bkg_3D , PDF3 ) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
-            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , 'BBB_' + self.name )
+            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , self.generate_name ( 'BBB_' + self.name ) )
         elif bkg_3D and isinstance ( bkg_3D , (  tuple , list ) ) :
             from ostap.fitting.models_3d import make_B3D 
-            self.__bbb_cmp = make_B3D ( 'BBB_' + self.name ,
+            self.__bbb_cmp = make_B3D ( self.generate_name ( 'BBB_' + self.name ) ,
                                         self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
             
-            self.__bkg_3x = self.make_bkg ( bkg_3x , 'Bkg3X_BBB' + self.name , self.xvar )
-            self.__bkg_3y = self.make_bkg ( bkg_3y , 'Bkg3Y_BBB' + self.name , self.yvar )
-            self.__bkg_3z = self.make_bkg ( bkg_3z , 'Bkg3Z_BBB' + self.name , self.zvar )
+            self.__bkg_3x = self.make_bkg ( bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )
+            self.__bkg_3y = self.make_bkg ( bkg_3y , self.generate_name ( 'Bkg3Y_BBB' + self.name ) , self.yvar )
+            self.__bkg_3z = self.make_bkg ( bkg_3z , self.generate_name ( 'Bkg3Z_BBB' + self.name ) , self.zvar )
             
             self.__bbb_cmp = Model3D (
-                "BBB_" + self.name ,
+                self.generate_name ( "BBB_" + self.name ) ,
                 self.__bkg_3x ,
                 self.__bkg_3y ,
                 self.__bkg_3z ,
@@ -1888,8 +1916,8 @@ class Fit3D (PDF3) :
         #
         ## build the final PDF 
         #
-        pdfname  = "Fit3D_"    + self.name
-        pdftitle = "Fit3D(%s)" % self.name
+        pdfname  = self.roo_name ( "fit3d_" )
+        pdftitle = "Fit3D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
         
@@ -2425,22 +2453,22 @@ class Fit3DSym (PDF3) :
         ## 2) ( 2 signals )  x ( 1 background )
         # =====================================================================
         
-        self.__bkg_1x = self.make_bkg (        bkg_1x , 'Bkg1X_BSS' + self.name , self.xvar )
-        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , 'Bkg1Y_SBS' + self.name , self.yvar )
-        self.__bkg_1z = self.make_bkg ( self.__bkg_1x , 'Bkg1Z_SSB' + self.name , self.zvar )
+        self.__bkg_1x = self.make_bkg (        bkg_1x , self.generate_name ( 'Bkg1X_BSS' + self.name ) , self.xvar )
+        self.__bkg_1y = self.make_bkg ( self.__bkg_1x , self.generate_name ( 'Bkg1Y_SBS' + self.name ) , self.yvar )
+        self.__bkg_1z = self.make_bkg ( self.__bkg_1x , self.generate_name ( 'Bkg1Z_SSB' + self.name ) , self.zvar )
         
-        self.__ssb_cmp_raw = Model3D ( "SSB_raw" + self.name  ,
+        self.__ssb_cmp_raw = Model3D ( self.generate_name ( "SSB_raw" + self.name ) ,
                                        self.__signal_x , self.__signal_y , self.__bkg_1z   ,
                                        title = "Signal(x) x Signal(y) x Background1(z)" )
-        self.__sbs_cmp_raw = Model3D ( "SBS_raw" + self.name  ,
+        self.__sbs_cmp_raw = Model3D ( self.generate_name ( "SBS_raw" + self.name ) ,
                                        self.__signal_x , self.__bkg_1y   , self.__signal_z , 
                                        title = "Signal(x) x Background1(y) x Signal(z)" ) 
-        self.__bss_cmp_raw = Model3D ( "BSS_raw" + self.name  ,
+        self.__bss_cmp_raw = Model3D ( self.generate_name ( "BSS_raw" + self.name ) ,
                                        self.__bkg_1x   , self.__signal_y , self.__signal_z ,
                                        title = "Background1(x) x Signal(y) x Signal(z)" )
         
         self.__ssb_cmp     = Generic3D_pdf (
-            self.make_sum ( "SSB_" + self.name  ,
+            self.make_sum ( self.generate_name ( "SSB_" + self.name ) ,
                             "S(x)*S(y)*B(z)+S(x)*B(y)*S(z)+B(x)*S(y)*B(z)" ,
                             self.__ssb_cmp_raw.pdf ,
                             self.__sbs_cmp_raw.pdf ,
@@ -2480,51 +2508,51 @@ class Fit3DSym (PDF3) :
             
         elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) :
             
-            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , 'Bkg2XY_' + self.name )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , self.generate_name ( 'Bkg2XY_' + self.name ) )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                                     xvar = self.xvar             ,
                                                     yvar = self.zvar             )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2YZ_' + self.name ,
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                                     xvar = self.yvar             ,
                                                     yvar = self.zvar             )
         elif bkg_2xy and isinstance ( bkg_2xy , ( tuple , list ) ) :
 
             from ostap.fitting.models_2d import make_B2Dsym 
-            self.__bkg_2xy = make_B2Dsym ( 'Bkg2XY_' + self.name  , self.xvar , self.yvar  , *bkg_2xy )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xy = make_B2Dsym ( self.generate_name ( 'Bkg2XY_' + self.name ) , self.xvar , self.yvar  , *bkg_2xy )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                                     xvar = self.xvar             ,
                                                     yvar = self.zvar             )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2YZ_' + self.name ,
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                                     xvar = self.yvar             ,
                                                     yvar = self.zvar             )              
         else :
 
-            self.__bkg_2x  = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + self.name , self.xvar )        
-            self.__bkg_2y  = self.make_bkg ( self.__bkg_2x , 'Bkg2Y_S2B' + self.name , self.yvar )        
-            self.__bkg_2z  = self.make_bkg ( self.__bkg_2x , 'Bkg2Z_S2B' + self.name , self.zvar )
+            self.__bkg_2x  = self.make_bkg (        bkg_2x , self.generate_name ( 'Bkg2X_S2B' + self.name ) , self.xvar )        
+            self.__bkg_2y  = self.make_bkg ( self.__bkg_2x , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )        
+            self.__bkg_2z  = self.make_bkg ( self.__bkg_2x , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )
             
-            self.__bkg_2xy = Model2D ( 'Bkg2XY_' + self.name ,
+            self.__bkg_2xy = Model2D ( self.generate_name ( 'Bkg2XY_' + self.name ) ,
                                        self.__bkg_2x     ,
                                        self.__bkg_2y     , title =  'Background2(x,y)' )
-            self.__bkg_2xz = Model2D ( 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xz = Model2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                        self.__bkg_2x     ,
                                        self.__bkg_2z     , title =  'Background2(x,z)' )
-            self.__bkg_2yz = Model2D ( 'Bkg2YZ_' + self.name ,
+            self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
             
         self.__sbb_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "SBB_raw_" + self.name , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bsb_cmp_raw = Generic3D_pdf (
-            ROOT.RooProdPdf ( "BSB_raw_" + self.name , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bbs_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "BBS_raw_" + self.name , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
             self.xvar , self.yvar , self.zvar )
 
         self.__sbb_cmp     = Generic3D_pdf (
-            self.make_sum( "SBB_" + self.name ,
+            self.make_sum( self.generate_name ( "SBB_" + self.name ) ,
                            "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
                            self.__sbb_cmp_raw.pdf ,
                            self.__bsb_cmp_raw.pdf ,
@@ -2556,17 +2584,17 @@ class Fit3DSym (PDF3) :
         if   bkg_3D and isinstance ( bkg_3D , PDF3 ) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
-            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , 'BBB_' + self.name )
+            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , self.generate_name ( 'BBB_' + self.name ) )
         elif bkg_3D and isinstance ( bkg_3D , (  tuple , list )  ) :
             from ostap.fitting.models_3d import make_B3Dsym
-            self.__bbb_cmp = make_B3Dsym ( 'BBB_' + self.name  , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            self.__bbb_cmp = make_B3Dsym ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
             
-            self.__bkg_3x  = self.make_bkg (        bkg_3x , 'Bkg3X_BBB' + self.name , self.xvar )        
-            self.__bkg_3y  = self.make_bkg ( self.__bkg_3x , 'Bkg3Y_BBB' + self.name , self.yvar )        
-            self.__bkg_3z  = self.make_bkg ( self.__bkg_3x , 'Bkg3Z_BBB' + self.name , self.zvar )
+            self.__bkg_3x  = self.make_bkg (        bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )        
+            self.__bkg_3y  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Y_BBB' + self.name ) , self.yvar )        
+            self.__bkg_3z  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Z_BBB' + self.name ) , self.zvar )
             
-            self.__bbb_cmp = Model3D ( "BBB_" + self.name ,
+            self.__bbb_cmp = Model3D ( self.generate_name ( "BBB_" + self.name ) ,
                                        self.__bkg_3x      ,
                                        self.__bkg_3y      ,
                                        self.__bkg_3z      , title = "Background(x,y,z)" )
@@ -2629,8 +2657,8 @@ class Fit3DSym (PDF3) :
         #
         ## build the final PDF 
         #
-        pdfname  = "Fit3DSym_"    + self.name
-        pdftitle = "Fit3DSym(%s)" % self.name
+        pdfname  = self.roo_name ( "fit3ds_" ) 
+        pdftitle = "Fit3DSym %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
 
@@ -3202,13 +3230,14 @@ class Fit3DMix (PDF3) :
         ## 1) All signals component 
         # =====================================================================
         self.__sss_cmp  = Model3D (
-            'SSS_' + self.name , self.__signal_x , self.__signal_y , self.__signal_z )
+            self.generate_name ( 'SSS_' + self.name ) ,
+            self.__signal_x , self.__signal_y , self.__signal_z )
         
         # =====================================================================
         ## 2) background x signal x  signal 
         # =====================================================================        
-        self.__bkg_1x  = self.make_bkg (  bkg_1x , 'Bkg1X_BSS' + self.name , self.xvar )
-        self.__bss_cmp = Model3D ( "BSS_" + self.name ,
+        self.__bkg_1x  = self.make_bkg (  bkg_1x , self.generate_name ( 'Bkg1X_BSS' + self.name ) , self.xvar )
+        self.__bss_cmp = Model3D ( self.generate_name ( "BSS_" + self.name ) ,
                                     self.__bkg_1x , self.__signal_y , self.__signal_z ,
                                     title = "Background1(x) x Signal(y) x Signal(z)" )
         
@@ -3216,18 +3245,18 @@ class Fit3DMix (PDF3) :
         ## 3) signal x (  signal x background + backround x signal ) 
         # =====================================================================
 
-        self.__bkg_1y  = self.make_bkg (        bkg_1y , 'Bkg1Y_SBS' + self.name  , self.yvar )
-        self.__bkg_1z  = self.make_bkg ( self.__bkg_1y , 'Bkg1Z_SSB' + self.name , self.zvar )
+        self.__bkg_1y  = self.make_bkg (        bkg_1y , self.generate_name ( 'Bkg1Y_SBS' + self.name ) , self.yvar )
+        self.__bkg_1z  = self.make_bkg ( self.__bkg_1y , self.generate_name ( 'Bkg1Z_SSB' + self.name ) , self.zvar )
         
-        self.__ssb_cmp_raw = Model3D ( "SSB_raw" + self.name ,
+        self.__ssb_cmp_raw = Model3D ( self.generate_name ( "SSB_raw" + self.name ) ,
                                        self.__signal_x , self.__signal_y , self.__bkg_1z   ,
                                        title = "Signal(x) x Signal(y) x Background1(z)" )
-        self.__sbs_cmp_raw = Model3D ( "SBS_raw" + self.name ,
+        self.__sbs_cmp_raw = Model3D ( self.generate_name ( "SBS_raw" + self.name ) ,
                                        self.__signal_x , self.__bkg_1y   , self.__signal_z , 
                                        title = "Signal(x) x Background1(y) x Signal(z)" ) 
 
         self.__ssb_sym_cmp  = Generic3D_pdf (
-            self.make_sum ( "SSB_" + self.name  ,
+            self.make_sum ( self.generate_name ( "SSB_" + self.name ) ,
                             "S(x)*S(y)*B(z)+S(x)*B(y)*S(z)" ,
                             self.__ssb_cmp_raw.pdf   ,
                             self.__sbs_cmp_raw.pdf ) ,
@@ -3268,19 +3297,19 @@ class Fit3DMix (PDF3) :
         if   bkg_2yz and isinstance ( bkg_2yz , PDF2 ) :            
             self.__bkg_2yz = bkg_2yz            
         elif bkg_2yz and isinstance ( bkg_2yz , ROOT.RooAbsPdf ) :            
-            self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , 'Bkg2YX_' + self.name )
+            self.__bkg_2yz = Generic2D_pdf ( bkg_2yz  , self.yvar , self.zvar , self.generate_name ( 'Bkg2YX_' + self.name ) ) 
         elif bkg_2yz and isinstance ( bkh_2yz , (  tuple , list ) ) :
             from ostap.fitting.models_2d import make_B2Dsym
-            self.__bkg_2yz = make_B2Dsym ( 'Bkg2YZ_' + self.name  , self.yvar , self.zvar , *bkg_2yz  )            
+            self.__bkg_2yz = make_B2Dsym ( self.generate_name ( 'Bkg2YZ_' + self.name ) , self.yvar , self.zvar , *bkg_2yz  )            
         else :
-            self.__bkg_2y = self.make_bkg (        bkg_2y , 'Bkg2Y_S2B' + self.name  , self.yvar )        
-            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + self.name , self.zvar )            
-            self.__bkg_2yz = Model2D ( 'Bkg2YZ_' + self.name ,
+            self.__bkg_2y = self.make_bkg (        bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )        
+            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )            
+            self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
             
         self.__sbb_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "SBB_raw_" + self.name , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
 
         # =====================================================================
@@ -3289,42 +3318,42 @@ class Fit3DMix (PDF3) :
         
         if   bkg_2xy and isinstance ( bkg_2xy , PDF2 ) :            
             self.__bkg_2xy = bkg_2xy
-            self.__bkg_2xz = bkg_2xy.clone ( name = 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xz = bkg_2xy.clone ( name = self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                              xvar = self.xvar             ,
                                              yvar = self.zvar             )            
         elif bkg_2xy and isinstance ( bkg_2xy , ROOT.RooAbsPdf ) :            
-            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , 'Bkg2XY_' + self.name )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xy = Generic2D_pdf ( bkg_2xy  , self.xvar , self.yvar , self.generate_name ( 'Bkg2XY_' + self.name ) )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                                     xvar = self.xvar         ,
                                                     yvar = self.zvar         )  
         elif bkg_2xy and isinstance ( bkg_2xy ,  ( tuple , list )  ) :
             from ostap.fitting.models_2d import make_B2D
-            self.__bkg_2xy = make_B2D ( 'Bkg2XY_' + self.name , self.xvar , self.yvar , *bkg_2xy  )
-            self.__bkg_2xz = self.__bkg_2xy.clone ( name = 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xy = make_B2D ( self.generate_name ( 'Bkg2XY_' + self.name ) , self.xvar , self.yvar , *bkg_2xy  )
+            self.__bkg_2xz = self.__bkg_2xy.clone ( name = self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                                     xvar = self.xvar         ,
                                                     yvar = self.zvar         )          
         else :
             
-            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg (        bkg_2x , 'Bkg2X_S2B' + self.name , self.xvar )        
-            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg (        bkg_2y , 'Bkg2Y_S2B' + self.name , self.yvar )        
-            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( self.__bkg_2y , 'Bkg2Z_S2B' + self.name , self.zvar )
+            if not self.__bkg_2x : self.__bkg_2x = self.make_bkg (        bkg_2x , self.generate_name ( 'Bkg2X_S2B' + self.name ) , self.xvar )        
+            if not self.__bkg_2y : self.__bkg_2y = self.make_bkg (        bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )        
+            if not self.__bkg_2z : self.__bkg_2z = self.make_bkg ( self.__bkg_2y , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )
             
-            self.__bkg_2xy = Model2D ( 'Bkg2XY_' + self.name , 
+            self.__bkg_2xy = Model2D ( self.generate_name ( 'Bkg2XY_' + self.name ) , 
                                        self.__bkg_2x         ,
                                        self.__bkg_2y         , title = 'Background2(x,y)' )
-            self.__bkg_2xz = Model2D ( 'Bkg2XZ_' + self.name ,
+            self.__bkg_2xz = Model2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                        self.__bkg_2x         ,
                                        self.__bkg_2z         , title = 'Background2(x,z)' )
             
         self.__bsb_cmp_raw = Generic3D_pdf (
-            ROOT.RooProdPdf ( "BSB_raw_" + self.name , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
             self.xvar , self.yvar , self.zvar )
         self.__bbs_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( "BBS_raw_" + self.name , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+            ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
             self.xvar , self.yvar , self.zvar )
 
         self.__bbs_sym_cmp     = Generic3D_pdf (
-            self.make_sum ( "SBB_" + self.name ,
+            self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
                             "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
                             self.__bsb_cmp_raw.pdf ,
                             self.__bbs_cmp_raw.pdf ) ,
@@ -3371,24 +3400,24 @@ class Fit3DMix (PDF3) :
         if   bkg_3D and isinstance ( bkg_3D , PDF3 ) :
             self.__bbb_cmp = bkg_3D
         elif bkg_3D and isinstance ( bkg_3D , ROOT.RooAbsPdf ) : 
-            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , 'BBB_' + self.name )
+            self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , self.generate_name ( 'BBB_' + self.name ) )
         elif bkg_3D and isinstance ( bkg_2D ,  ( tuple , list )  ) :
             from ostap.fitting.models_2d import make_B2DmixYZ 
-            self.__bkg_3D = make_B2DmixYZ ( 'BBB_' + self.name  , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            self.__bkg_3D = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
 
             if   bkg_3yz and isinstance ( bkg_3yz , PDF2 ) :
                 self.__bkg_3xy = bkg_3xy
             elif bkg_3yz and isinstance ( bkg_3yz , ROOT.RooAbsPdf ) :
-                self.__bkg_3yz = Generic2D_pdf ( bkg_3yz , self.yvar , self.zvar , 'Bkg3YZ_' + self.name )
+                self.__bkg_3yz = Generic2D_pdf ( bkg_3yz , self.yvar , self.zvar , self.generate_name ( 'Bkg3YZ_' + self.name ) )
             else :
-                self.__bkg_3y  = self.make_bkg (        bkg_3y , 'Bkg3Y_BBB' + self.name , self.yvar )        
-                self.__bkg_3z  = self.make_bkg ( self.__bkg_3y , 'Bkg3Z_BBB' + self.name , self.zvar )
-                self.__bkg_3yz = Model2D ( 'Bkg3YZ_' + self.name , self.__bkg_3y , self.__bkg_3z )
+                self.__bkg_3y  = self.make_bkg (        bkg_3y , self.generate_name ( 'Bkg3Y_BBB' + self.name ) , self.yvar )        
+                self.__bkg_3z  = self.make_bkg ( self.__bkg_3y , self.generate_name ( 'Bkg3Z_BBB' + self.name ), self.zvar )
+                self.__bkg_3yz = Model2D ( self.generate_name ( 'Bkg3YZ_' + self.name ) , self.__bkg_3y , self.__bkg_3z )
                 
-            self.__bkg_3x  = self.make_bkg ( bkg_3x , 'Bkg3X_BBB' + self.name  , self.xvar )
+            self.__bkg_3x  = self.make_bkg ( bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )
             self.__bbb_cmp = Generic3D_pdf (
-                ROOT.RooProdPdf ( "BBB_" + self.name ,
+                ROOT.RooProdPdf ( self.roo_name ( "BBB_" + self.name ) ,
                                   "Background3(x) x Background3(y,z)" ,
                                   self.__bkg_3x.pdf , self.__bkg_3yz.pdf ) ,
                 self.xvar , self.yvar , self.zvar ) 
@@ -3460,11 +3489,10 @@ class Fit3DMix (PDF3) :
         #
         ## build the final PDF 
         # 
-        pdfname  = "Fit3DMix_"    + self.name
-        pdftitle = "Fit3DMix(%s)" % self.name
+        pdfname  = self.roo_name ( "fit3dm_"  ) 
+        pdftitle = "Fit3DMix %s " % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-
 
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
@@ -3798,5 +3826,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

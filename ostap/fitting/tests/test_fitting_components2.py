@@ -19,6 +19,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -107,7 +108,8 @@ def test_components_2 () :
 
 if '__main__' == __name__ :
 
-    test_components_2   () 
+    with timing ("Components2" , logger ) : 
+        test_components_2   () 
     
 # =============================================================================
 ##                                                                      The END 

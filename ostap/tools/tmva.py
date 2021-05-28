@@ -45,6 +45,7 @@ else                       : logger = getLogger ( __name__           )
 # =============================================================================
 from ostap.core.core         import items_loop
 from ostap.core.ostap_types  import num_types, string_types
+from ostap.core.meta_info    import root_version_int 
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 # =============================================================================
@@ -79,7 +80,7 @@ class WeightsFiles(CleanUp) :
                 with tarfile.open ( weights_files , 'r' ) as tar :
                     ## tar.list() 
                     xmls   = [ f for f in xml_files ( tar ) ] 
-                    tmpdir = self.tempdir ( prefix = 'tmp-tmva-weights-' )
+                    tmpdir = self.tempdir ( prefix = 'ostap-tmva-weights-' )
                     tar.extractall ( path = tmpdir , members = xml_files ( tar ) )
                     logger.debug ('Un-tar into temporary directory %s' % tmpdir ) 
                     weights_files  = [ os.path.join ( tmpdir, x.name ) for x  in xmls ]
@@ -396,7 +397,7 @@ class Trainer(object):
         self.__pattern_xml = pattern_xml 
         self.__pattern_C   = pattern_C 
 
-        self.__multithread = multithread and 61800 <= ROOT.gROOT.GetVersionInt() 
+        self.__multithread = multithread and 61800 <= root_version_int 
 
     @property
     def name    ( self ) :
@@ -619,7 +620,7 @@ class Trainer(object):
         if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
 
         ## ROOT 6/18 crashes here...
-        ## if ROOT.gROOT.GetVersion() < 61800 : 
+        ## if root_version_int < 61800 : 
         ##    ROOT.TMVA.Tools.Instance()
 
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
@@ -842,11 +843,12 @@ class Trainer(object):
         from ostap.utils.utils import batch , cmd_exists 
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
-        with batch ( ROOT.gROOT.IsBatch () or not show_plots ) :
+        groot = ROOT.ROOT.GetROOT() 
+        with batch ( groot.IsBatch () or not show_plots ) :
  
             ROOT.TMVA.variables                              ( self.name , output     )
             
-            if 62000 > ROOT.gROOT.GetVersionInt() : 
+            if 62000 > root_version_int : 
                 ROOT.TMVA.correlations                       ( self.name , output     )
                 for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
                 ## ROOT.TMVA.mvaeffs                            ( self.name , output     )
@@ -1022,8 +1024,8 @@ class Reader(object)  :
         >>> weights_files = [ ('MPL','my_weights.xml') , ('BDTG','weights2.xml') ]
         
         """            
-        
-        if ROOT.gROOT.GetVersionInt() < 61800 : 
+
+        if root_version_int < 61800 : 
             ROOT.TMVA.Tools.Instance()
         
         verbose = True if verbose else False

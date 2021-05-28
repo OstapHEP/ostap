@@ -122,7 +122,9 @@ namespace Ostap
     /** build statistic for the <code>expression</code>
      *  @param tree (INPUT) the tree 
      *  @param expression (INPUT) the expression
-     *
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry      
+     *     
      *  @code
      *  tree = ... 
      *  stat = tree.statVar ( 'S_sw' ) 
@@ -141,6 +143,8 @@ namespace Ostap
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry      *
      *
      *  @code
      *  tree = ... 
@@ -161,6 +165,8 @@ namespace Ostap
      *  @param tree       (INPUT) the tree 
      *  @param expression (INPUT) the expression
      *  @param cuts       (INPUT) the selection criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry      *
      *
      *  @code
      *  tree = ... 
@@ -176,6 +182,90 @@ namespace Ostap
       const TCut&         cuts              ,
       const unsigned long first      = 0    ,
       const unsigned long last       = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param tree       (INPUT) the tree 
+     *  @param cuts       (INPUT) criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( TTree*              tree              , 
+      const std::string&  cuts              ,   
+      const unsigned long first      = 0    ,
+      const unsigned long last       = LAST ) ;      
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param tree       (INPUT) the tree 
+     *  @param cuts       (INPUT) criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( TTree*              tree              , 
+      const TCut&         cuts              ,   
+      const unsigned long first      = 0    ,
+      const unsigned long last       = LAST ) ;      
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param data       (INPUT) data 
+     *  @param cuts       (INPUT) criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( const RooAbsData*   data               , 
+      const std::string&  cuts               , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) ;
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param data       (INPUT) data 
+     *  @param cuts       (INPUT) criteria 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( const RooAbsData*   data               , 
+      const TCut&         cuts               , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) ;
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param data       (INPUT) data 
+     *  @param cuts       (INPUT) criteria 
+     *  @param cut_range  (INPUT) cut range 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( const RooAbsData*   data               , 
+      const std::string&  cuts               , 
+      const std::string&  cut_range          , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) ;
+    // ========================================================================
+    /** check if there is at least one entry that satisfies criteria 
+     *  @param data       (INPUT) data 
+     *  @param cuts       (INPUT) criteria 
+     *  @param cut_range  (INPUT) cut range 
+     *  @param first      (INPUT) the first entry 
+     *  @param last       (INPUT) the last entry
+     *  @return true if there exist at leats one entry 
+     */
+    static bool hasEntry 
+    ( const RooAbsData*   data               , 
+      const TCut&         cuts               , 
+      const std::string&  cut_range          , 
+      const unsigned long first      = 0     ,
+      const unsigned long last       = LAST  ) ;
     // ========================================================================
   public:
     // ========================================================================

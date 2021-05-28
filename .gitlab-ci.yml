@@ -1,31 +1,18 @@
+variables:
+  IMAGE_TAG: v0  # must be kept in sync with lb-docker-run
 stages:
   - build
   - test
-gcc7_lcg95:build:
-  stage: build
+  - tag
 
-  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+# ==== Build ====
+centos7-build:
+  stage: build
+  tags:
+    - docker-image-build
+  script: "echo" # unused but this line is required by GitLab CI
   variables:
-    CMTCONFIG: x86_64-centos7-gcc7-opt
-    LCG: LCG_95
-  script:
-    - "#!/usr/bin/env bash"
-    - "./scripts/bootstrap ${LCG}  ${CMTCONFIG}" 
-  artifacts:
-    paths:
-      - build
-gcc7_lcg95:test:
-  stage: test
-  variables:
-    CMTCONFIG: x86_64-centos7-gcc7-opt
-    LCG: LCG_95
-  script:
-    - "#!/usr/bin/env bash"
-    - "./scripts/test ${LCG}  ${CMTCONFIG}"
-  needs:
-    - job: gcc7_lcg95:build
-      artifacts: true
-  artifacts:
-    paths:
-      - build
-    when: on_failure
+    FROM: gitlab-registry.cern.ch/lhcb-docker/os-base/centos7-devel:latest
+    TO: ${CI_REGISTRY_IMAGE}/centos7-build:${IMAGE_TAG}.${CI_PIPELINE_IID}
+    DOCKER_FILE: Dockerfile
+    BUILD_ARG: IMAGE_NAME=centos7-build

@@ -186,25 +186,27 @@ class CompressShelf(shelve.Shelf,object):
 
         afiles = tuple ( [ self.dbname + suffix for suffix in (  '' , ',db' , '.dir' , '.pag' , '.dat' ) ] )
         ofiles = set ( [ i for i in glob.iglob  ( self.dbname + '*' ) if i in afiles ] ) 
-
-
+        
         if  3 <= python_version.major  :
             
             shelve.Shelf.__init__ (
-                self                           ,
-                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
+                self                          ,
+                dbopen ( self.dbname , flag = mode ) ,  ## decode = lambda s : s , encode = lambda s : c )  ,
+                
                 protocol                      ,
-                writeback                         ,
-                keyencoding                       )
+                writeback                     ,
+                keyencoding                   )
+            
         else :
             
             shelve.Shelf.__init__ (
-                self                              ,
-                dbopen ( self.dbname , mode , decode = lambda s : s , encode = lambda s : c )  ,
-                protocol                          ,
-                writeback                         ) 
+                self                          ,
+                dbopen ( self.dbname , flag = mode ) , ## decode = lambda s : s , encode = lambda s : c )  ,
+                protocol                      ,
+                writeback                     ) 
             self.keyencoding = keyencoding
-                    
+
+
         self.__opened        = True
         self.__mode          = mode        
 
@@ -219,7 +221,7 @@ class CompressShelf(shelve.Shelf,object):
             f     = self.dbname
             db    = self.dbtype            
             if os.path.exists ( f ) and os.path.isfile ( f ) and \
-                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' ) :  
+                   db in ( 'dbm.gnu' , 'gdbm' , 'dbhash' , 'bsddb185' , 'bsddb' , 'bsddb3' , 'sqlite3' , 'berkeleydb') :  
                 files.append  ( f )
             elif   f + '.db'  in nfiles  and db in ( 'dbm.ndmb' , 'dbm' ) :
                 files.append  ( f + '.db'  )
@@ -241,8 +243,8 @@ class CompressShelf(shelve.Shelf,object):
                 files.append  ( f + '.dir' )                
             elif   f + '.pag' in ofiles                           and db in ( 'dbm.dumb' , 'dumbdbm' ) :
                 files.append  ( f + '.pag' )
-            else  :
-                logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
+            ## else  :
+            ##    logger.error ( 'Cannot find DB for %s|%s' % ( self.dbname , self.dbtype ) ) 
 
             files.sort ()
             self.__files = tuple  ( files  )
@@ -256,13 +258,12 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and self.mode in ( 'c' , 'n' ) : write = True
         else                                                          : write = False 
         if write :
-            meta = meta_info()
             dct  = collections.OrderedDict() 
-            dct  [ 'Created by'                  ] = meta.User
+            dct  [ 'Created by'                  ] = meta_info.User
             dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
-            dct  [ 'Created with Ostap version'  ] = meta.Ostap
-            dct  [ 'Created with Python version' ] = meta.Python
-            dct  [ 'Created with ROOT version'   ] = meta.ROOT 
+            dct  [ 'Created with Ostap version'  ] = meta_info.Ostap
+            dct  [ 'Created with Python version' ] = meta_info.Python
+            dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
             dct  [ 'Pickle protocol'             ] = protocol 
             dct  [ 'Compress level'              ] = self.__compresslevel 
             self [ '__metainfo__' ] = dct
@@ -375,28 +376,28 @@ class CompressShelf(shelve.Shelf,object):
         else :
             import fnmatch
             good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
-        
+
         keys_ = self.keys()
         for k in sorted ( keys_ ) :
             if good ( k ) : yield k
 
     # =========================================================================
-    ## List the available keys (patterns included).
+    ##  Build the table of content(patterns included).
     #   Pattern matching is performed according to
     #  fnmatch/glob/shell rules [it is not regex!] 
     #  @code  
     #  db = ...
-    #  db.ls() ## all keys
-    #  db.ls ('*MC*')        
+    #  print ( db.table() ) 
+    #  print ( db.table ('*MC*') ) 
     #  @endcode 
-    def ls    ( self , pattern = '' , load = True ) :
-        """List the available keys (patterns included).
+    def table ( self , pattern = '' , load = True , prefix = '' ) :
+        """Build table of content (patterns included).
         Pattern matching is performed according to
         fnmatch/glob/shell rules [it is not regex!] 
 
         >>> db = ...
-        >>> db.ls() ## all keys
-        >>> db.ls ('*MC*')        
+        >>> print ( db.table () ) ## all keys
+        >>> print ( db.table ('*MC*') ) 
         
         """
         n  = os.path.basename ( self.dbname         )
@@ -418,6 +419,7 @@ class CompressShelf(shelve.Shelf,object):
         keys = [] 
         for k in self.ikeys ( pattern ): keys.append ( k )
         keys.sort()
+
         if keys : mlen = max ( [ len(k) for k in keys] ) + 2 
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
@@ -443,21 +445,23 @@ class CompressShelf(shelve.Shelf,object):
             else :
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
 
-            otype = ''
-            try :
-                if load : ot = type ( self       [ k ] )
-                else    : ot = type ( self.cache [ k ] )
-                otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
-            except KeyError :
-                pass
 
             rawitem = self.__get_raw_item__ ( k )
-            if isinstance ( rawitem , Item ) : timetag = rawitem.time
-            else                             : timetag = '' 
-            
+            if isinstance ( rawitem , Item ) :
+                timetag = rawitem.time
+                kobj    = rawitem.payload 
+            else                             :
+                timetag = ''
+                kobj    = rawitem  
+
+            ot   = type ( kobj )
+            if   hasattr ( ot , '__cpp_name__' ) : otype = ot.__cpp_name__ 
+            elif hasattr ( ot , '__cppname__'  ) : otype = ot.__cppname__
+            else                                 : otype = ot.__name__ 
+
             row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size  , timetag 
             table.append ( row )
-
+            
         
         import ostap.logger.table as T
         t      = type( self ).__name__
@@ -470,12 +474,51 @@ class CompressShelf(shelve.Shelf,object):
         if maxlen + 3 <= len ( title ) :
             title = '<.>' + title [ -maxlen : ] 
 
-        table = T.table ( table , title = title , prefix = '# ' )
-        ll    = getLogger ( n )
+        return T.table ( table , title = title , prefix = prefix , alignment = 'llcc')
+
+    # =========================================================================
+    ## List the available keys (patterns included).
+    #   Pattern matching is performed according to
+    #  fnmatch/glob/shell rules [it is not regex!] 
+    #  @code  
+    #  db = ...
+    #  db.ls() ## all keys
+    #  db.ls ('*MC*')        
+    #  @endcode 
+    def ls    ( self , pattern = '' , load = True , prefix = '# ' , logger = None ) :
+        """List the available keys (patterns included).
+        Pattern matching is performed according to
+        fnmatch/glob/shell rules [it is not regex!] 
+
+        >>> db = ...
+        >>> db.ls() ## all keys
+        >>> db.ls ('*MC*')        
+        
+        """
+
+        n  = os.path.basename ( self.dbname         )
+        ap = os.path.abspath  ( self.dbname         ) 
+        ap = os.path.abspath  ( self.nominal_dbname ) 
+
+        self.sync() 
+        fs = self.disk_size()  
+            
+        if    fs <= 0            : size = "???"
+        elif  fs <  1024         : size = str ( fs ) 
+        elif  fs <  1024  * 1024 :
+            size = '%.2fkB' % ( float ( fs ) / 1024 )
+        elif  fs <  1024  * 1024 * 1024 :
+            size = '%.2fMB' % ( float ( fs ) / ( 1024 * 1024 ) )
+        else :
+            size = '%.2fGB' % ( float ( fs ) / ( 1024 * 1024 * 1024 ) )
+
+        t     = type( self ).__name__
+        tab   = self.table ( pattern = pattern , load = load , prefix = prefix )
+        
+        ll    = logger if logger else getLogger ( n )
         line  = 'Database %s:%s|%s #keys: %d size: %s' % ( t , ap , self.dbtype , len ( self ) , size )
-        ll.info (  '%s\n%s' %  ( line , table ) )
-        
-        
+        ll.info (  '%s\n%s' %  ( line , tab ) )
+                
     # =========================================================================
     ## close and compress (if needed)
     def close ( self ) :
@@ -487,13 +530,12 @@ class CompressShelf(shelve.Shelf,object):
         elif  'sqlite3' != self.dbtype and 'e' == self.mode : write = True
         else                                                : write = False 
         if write : 
-            meta = meta_info () 
-            dct = self.get ( '__metainfo__' , {} )
+            dct  = self.get ( '__metainfo__' , {} )
             dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
-            dct  [ 'Updated by'                  ] = meta.User 
-            dct  [ 'Updated with Ostap version'  ] = meta.Ostap 
-            dct  [ 'Updated with Python version' ] = meta.Python 
-            dct  [ 'Updated with ROOT version'   ] = meta.ROOT   
+            dct  [ 'Updated by'                  ] = meta_info.User 
+            dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
+            dct  [ 'Updated with Python version' ] = meta_info.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT   
             self [ '__metainfo__' ] = dct
 
         if not self.silent : self.ls ()
@@ -600,10 +642,11 @@ class CompressShelf(shelve.Shelf,object):
         """ ``get-and-uncompress-item'' from dbase
         >>> value = dbase['item'] 
         """
+
         try:            
             value = self.cache [ key ]
         except KeyError:            
-            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] )            
+            value = self.uncompress_item ( self.dict [ key.encode ( self.keyencoding ) ] ) 
             if self.writeback : self.cache [ key ] = value
             
         return value
@@ -660,7 +703,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the temporary directory
     #  The directory will be cleaned-up and deleted at-exit.
     @classmethod
-    def tempdir ( cls , suffix = '=db-dir' , prefix = 'compress-shelve-dir-' , date = True  ) :
+    def tempdir ( cls , suffix = '=db-dir' , prefix = 'ostap-compress-shelve-dir-' , date = True  ) :
         """Create the temporary directory
         The directory will be cleaned-up and deleted at-exit.
         """
@@ -671,7 +714,7 @@ class CompressShelf(shelve.Shelf,object):
     ## Ccreate the name for the temproary file 
     #  The file will be deleted at-axit 
     @classmethod
-    def tempfile ( cls , suffix = '-db' , prefix = 'compress-shelve-' , dir = None , date = True  ) :
+    def tempfile ( cls , suffix = '-db' , prefix = 'ostap-compress-shelve-' , dir = None , date = True  ) :
         """Ccreate the name for the temproary file 
         The file will be deleted at-axit
         """
@@ -679,9 +722,9 @@ class CompressShelf(shelve.Shelf,object):
         return CU.tempfile ( suffix = suffix , prefix = prefix, dir = dir , date = date ) 
 
     # ========================================================================
-    ## guess the name of the database from the list of (incmpressed files)
+    ## guess the name of the database from the list of (uncompressed files)
     @classmethod
-    def dbase_name ( cls , files  ) :
+    def dbase_name ( cls , files ) :
         """ Guess the name of the database from the list of (uncompressed files)
         """
         

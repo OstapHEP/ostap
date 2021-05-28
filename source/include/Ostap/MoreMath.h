@@ -315,6 +315,22 @@ namespace Ostap
                        const double mu    = 0 ,
                        const double sigma = 1 ) ;
     // ========================================================================
+    /** Student's t-CDF 
+     *  \f[ f(t;\nu) = \left\{
+     *  \begin{array}{ll}
+     *  1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\ge0 \                                     \
+     *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\<0
+     *  \end{array} \right. f]
+     *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+     *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+     *  @param  t t-value 
+     *  @param  nu parameter nu , $\nu>0$
+     */
+    double student_cdf ( const double t  , 
+                         const double nu ) ;
+    // ========================================================================
     /** compute Owen's T-function
      *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 
      *  @see https://en.wikipedia.org/wiki/Owen%27s_T_function
@@ -425,6 +441,68 @@ namespace Ostap
      */
     double elliptic_KZ ( const double beta  , const double k   ) ;
 
+    // ========================================================================
+    /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
+     * 
+     * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
+     *  \f$ V_2(m; \mu,\Gamma,\sigma) \equiv  S_2(m;\mu,\Gamma)\ast G(\delta m;\sigma)\f$ 
+     *  where 
+     *  - \f$ S_2 = \frac{1}{\pi}\frac{\mu\Gamma}{ (m^2-\mu^2)^2 + \mu^2\Gamma^2 } \f$    
+     *  - \f$ G(\delta m ; \sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} 
+     *     \mathrm{e}^{-\frac{1}{2} \left( \frac{\delta m }{\sigma} \right)^2} \f$$
+     *  
+     *  \f$ V_2(m; \mu,\Gamma,\sigma = \frac{H_2(a,u_1,u_2)}{2\sqrt{\pi}\sigma^2}\f$, where 
+     *  - \f$ u_1 = \frac{m-\mu }{\sqrt{2}\sigma} \f$
+     *  - \f$ u_2 = \frac{m+\mu }{\sqrt{2}\sigma} \f$
+     *  - \f$ a   = \frac{\mu\Gamma}{2\sigma^2} \f$
+     *
+     *  \f[ H_2(a,u_1,u_2) = 
+     *   \frac{a}{\pi} \int_{-\infty}{+\infty}  
+     *    \frac{dt}{  (u_1-t)^2(u_2-t0^2 + a^2 } \f] 
+     * @see Kycia, Radoslaw A.; Jadach, Stanislaw. 
+     *      "Relativistic Voigt profile for unstable particles in high energy physics". 
+     *      Journal of Mathematical Analysis and Applications. 463 (2): 1040–1051 
+     *      arXiv:1711.09304. doi:10.1016/j.jmaa.2018.03.065. ISSN 0022-247X.
+     * @see https://arxiv.org/abs/1711.09304
+     */
+    double H2 ( const double a  , 
+                const double u1 , 
+                const double u2 ) ;
+    
+    
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_e 
+     *  @see gsl_sf_bessel_K1_e 
+     *  @see gsl_sf_bessel_Kn_e 
+     */
+    double bessel_Kn         ( const int   n  , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_scaled_e 
+     *  @see gsl_sf_bessel_K1_scaled_e 
+     *  @see gsl_sf_bessel_Kn_scaled_e 
+     */
+    double bessel_Kn_scaled  ( const int   n  , const double ) ;
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_e 
+     */
+    double bessel_Knu        ( const double nu , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_scaled_e 
+     */
+    double bessel_Knu_scaled ( const double  nu , const double x ) ;
+    
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

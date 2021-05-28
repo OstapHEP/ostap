@@ -96,9 +96,9 @@ class Files(object):
         #
         #
         
-        self.description  = description
-        self.maxfiles     = maxfiles
-        self.__silent     = silent 
+        self.__description  = description
+        self.maxfiles       = maxfiles
+        self.__silent       = silent 
 
         from copy import deepcopy
         self.__patterns   = list ( set ( deepcopy ( files ) ) )
@@ -131,6 +131,14 @@ class Files(object):
         """``files'' : the list of files"""
         return tuple ( self.__files    )
 
+    @property
+    def description ( self ) :
+        """``description'': descritptio of this collection"""
+        return self.__description
+    @description.setter
+    def description ( self , value ) :
+        self.__description = value
+        
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
@@ -195,7 +203,7 @@ class Files(object):
                'Invalid list of patterns %s' % patterns
         self.__patterns = list ( set ( patterns ) ) 
         self.__patterns.sort()
-
+    
     def __getstate__ ( self ) :
 
         return {
@@ -207,11 +215,11 @@ class Files(object):
             }
     
     def __setstate__ ( self , state ) :
-        self.__files     = state.get ( 'files'      , []    ) 
-        self.__patterns  = state.get ( 'patterns'   , []    )
-        self.description = state.get ( 'description', ''    )
-        self.maxfiles    = state.get ( 'maxfiles'   , -1    )
-        self.silent      = state.get ( 'silent'     , False )
+        self.__files       = state.get ( 'files'      , []    ) 
+        self.__patterns    = state.get ( 'patterns'   , []    )
+        self.__description = state.get ( 'description', ''    )
+        self.maxfiles      = state.get ( 'maxfiles'   , -1    )
+        self.silent        = state.get ( 'silent'     , False )
 
     ## add files 
     def add_files ( self , files ) :
@@ -249,9 +257,12 @@ class Files(object):
         f2 = set ( other.files    )
         p1 = set ( self .patterns )
         p2 = set ( other.patterns )
+
         
         self.set_files    ( f1 | f2 )
         self.set_patterns ( p1 | p2 )
+        
+        self.description = self.description + '\n' + other.description 
         
         return self
     
@@ -469,9 +480,8 @@ class Files(object):
         """
         if not output :
             import ostap.utils.cleanup as CU
-            output = CU.CleanUp.tempfile ( suffix = '.root' )
+            output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
             
-
         import subprocess
         
         args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]
@@ -668,7 +678,9 @@ class Data(Files):
         for f in other.files :
             if not f in self.files : 
                 self.chain. Add ( f )
-                
+
+        self.description = self.description + '\n' + other.description 
+                        
         return self
     
     ## get an intersection of two datasets 
@@ -999,7 +1011,10 @@ class Data2(Data):
         for f in other.files2 :
             if not f in self.files2 : 
                 self.chain2. Add   ( f )
-                self.__files2.append ( f ) 
+                self.__files2.append ( f )
+
+        self.description = self.description + '\n' + other.description 
+                
         return self 
 
     ## get an intersection of two datasets 

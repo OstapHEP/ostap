@@ -63,7 +63,7 @@ class PolyBase3(PDF3,Phases) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-01-10
 class PolyPos3D_pdf(PolyBase3) :
-    """Positive (non-factorizable!) polynomial in 3D:
+    r"""Positive (non-factorizable!) polynomial in 3D:
     
     The 3D-polynomial of order Nx*Ny*Nz, that is constrained 
     to be non-negative over the defined range
@@ -100,8 +100,8 @@ class PolyPos3D_pdf(PolyBase3) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Poly3DPositive (
-            'p3Dp_%s'            % name ,
-            'Poly3DPositive(%s)' % name ,
+            self.roo_name ( 'p3_' ) ,
+            'Positive 3D polynomial %s' % self.name ,
             self.x        ,
             self.y        ,
             self.z        ,
@@ -151,7 +151,7 @@ models.append ( PolyPos3D_pdf )
 #  @see Ostap::Models::Poly3DSymPositive
 #  @see Ostap::Math::Positive3DSym
 class PolyPos3Dsym_pdf(PolyBase3) :
-    """Positive (non-factorizable!) symmetric polynomial in 3D:
+    r"""Positive (non-factorizable!) symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
     to be non-negative ans symmetric over the  defined range
@@ -194,8 +194,8 @@ class PolyPos3Dsym_pdf(PolyBase3) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Poly3DSymPositive (
-            'p3Ds_%s'               % name ,
-            'Poly3DSymPositive(%s)' % name ,
+            self.roo_name ( 'p3s_' ) ,
+            'Positive symmetric 3D polynomial %s' % self.name ,
             self.x        ,
             self.y        ,
             self.z        ,
@@ -245,7 +245,7 @@ models.append ( PolyPos3Dsym_pdf )
 #  @see Ostap::Models::Poly3DMixPositive
 #  @see Ostap::Math::Positive3DMix
 class PolyPos3DmixXY_pdf(PolyBase3) :
-    """Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
+    r"""Positive (non-factorizable!)  x<-->y symmetric polynomial in 3D:
     
     The 3D-polynomial of order N*N*N, that is constrained 
     to be non-negative ans symmetric over the  defined range
@@ -283,8 +283,8 @@ class PolyPos3DmixXY_pdf(PolyBase3) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Poly3DMixPositive (
-            'p3DmXY_%s'               % name ,
-            'Poly3DMixPositiveXY(%s)' % name ,
+            self.roo_name ( 'p3m_' ) ,
+            'Positive 3D polynomial with mixed symmetry %s' % self.name ,
             self.x        ,
             self.y        ,
             self.z        ,
@@ -379,8 +379,8 @@ class PolyPos3DmixYZ_pdf(PolyBase3) :
         ## finally build PDF 
         # =====================================================================
         self.pdf = Ostap.Models.Poly3DMixPositive (
-            'p3DmYZ_%s'               % name ,
-            'Poly3DMixPositiveYZ(%s)' % name ,
+            self.roo_name ( 'p3m_' ) ,
+            'Positive 3D polynomial with mixed symmetry %s' % self.name ,
             self.y        , ## note "strange" order!
             self.z        , ## note "strange" order! 
             self.x        , ## note "strange" order! 
@@ -483,8 +483,8 @@ class PolyPos3DmixXZ_pdf(PolyBase3) :
         ## finally build PDF 
         # =====================================================================
         self.pdf = Ostap.Models.Poly3DMixPositive (
-            'p3DmXZ_%s'               % name ,
-            'Poly3DMixPositiveXZ(%s)' % name ,
+            self.roo_name ( 'p3m_' ) ,
+            'Positive 3D polynomial with mixed symmetry %s' % self.name ,
             self.x        , ## note "strange" order!
             self.z        , ## note "strange" order! 
             self.y        , ## note "strange" order! 
@@ -582,8 +582,8 @@ class RooKeys3D_pdf(PDF3) :
         
         ## create PDF
         self.pdf = ROOT.RooNDKeysPdf (
-            "rookeys3_%s"        % name ,
-            "RooNDKeysPdf(%s,3)" % name ,
+            self.roo_name ( 'keys3_' ) ,
+            'Keys 3D %s' % self.name ,
             self.__keys_vlst  ,
             self.data    ,
             self.options , 
@@ -764,5 +764,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

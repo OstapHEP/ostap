@@ -36,6 +36,10 @@ try :
 except ImportError :
     terminaltables = None
 # =============================================================================
+left   = '<' , 'l', 'left'  
+right  = '>' , 'r', 'right' 
+center = '^' , 'c', 'center' , '='
+# =============================================================================
 ## Format the list of rows as a  table (home-made primitive) 
 #  - Each row is a sequence of column cells.
 #  - The first row defines the column headers.
@@ -48,7 +52,7 @@ except ImportError :
 #  t = the_table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def the_table ( rows , title = '' , prefix = '' ) :
+def the_table ( rows , title = '' , prefix = '' , alignment = () ) :
     """Format the list of rows as a  table (home-made primitive) 
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -59,7 +63,10 @@ def the_table ( rows , title = '' , prefix = '' ) :
     >>> t = the_table ( table_data , 'Title' )
     >>> print (t)
     """
-    ## calculate the number of columns 
+    ## calculate the number of columns
+
+    rows = list ( rows )
+    
     nc  = 0
     for row in rows : nc = max ( nc , len ( row ) )
         
@@ -79,14 +86,19 @@ def the_table ( rows , title = '' , prefix = '' ) :
         delta = 1 + ( len ( title ) - totwidth ) // nc
         for c in widths : widths[c] += delta 
 
-    hformats = [  "{:^%d}"  % widths[c] for c in range ( nc ) ]
-    rformats = [ " {:^%d} " % widths[c] for c in range ( nc ) ]
+    hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
+    rformats = [ " {:^%d} " % widths [ c ] for c in range ( nc ) ]
 
-    # the first column is left  adjusted
-    rformats[ 0] = rformats[ 0].replace ( '^' , '<' ) 
-    # the last column  is right adjusted
-    rformats[-1] = rformats[-1].replace ( '^' , '>' ) 
-
+    for i , a in  zip ( range ( nc ) , alignment ) :
+        if a and isinstance ( a , str ) :
+            al = a.lower() 
+            if   al in left  :
+                hformats [ i ] = hformats [ i ].replace ( '^' , '<' )
+                rformats [ i ] = rformats [ i ].replace ( '^' , '<' )
+            elif al in right :
+                hformats [ i ] = hformats [ i ].replace ( '^' , '>' )
+                rformats [ i ] = rformats [ i ].replace ( '^' , '>' )
+            
     seps     = [   '-' * ( widths[c] + 2 ) for c in range ( nc ) ]
     sepline  = '+' + "+".join (  seps ) +  '+'
 
@@ -134,7 +146,7 @@ def the_table ( rows , title = '' , prefix = '' ) :
 #  t = table ( table_data , 'Title' )
 #  print (t)
 #  @endcode
-def table ( rows , title = '' , prefix = '' ) :
+def table ( rows , title = '' , prefix = '' , alignment = () ) :
     """Format the list of rows as a  table.
     - Each row is a sequence of column cells.
     - The first row defines the column headers.
@@ -163,24 +175,43 @@ def table ( rows , title = '' , prefix = '' ) :
         rows [0]   = header_row 
         rows = tuple ( rows )
         
+    rows = [ list(row) for row in rows ]
+
     if terminaltables and isatty () :
+
         
         table_instance = terminaltables.SingleTable ( rows , title)
-        table_instance.justify_columns[ 0] = 'left'
-        table_instance.justify_columns[ 2] = 'right'
-        return add_prefix (  table_instance.table , prefix ) 
+
+        cw = table_instance.column_widths
+        nc = len ( cw ) 
+        for i, a in zip ( range ( nc ) , alignment ) :
+            if a and isinstance ( a , str ) :
+                al = a.lower() 
+                if   al in left   : table_instance.justify_columns [ i ] = 'left'
+                elif al in right  : table_instance.justify_columns [ i ] = 'right'
+                elif al in center : table_instance.justify_columns [ i ] = 'center'
+
+        return add_prefix ( table_instance.table , prefix ) 
     
     elif terminaltables :
         
         title = allright ( title ) 
         table_instance = terminaltables.AsciiTable ( rows , title)
-        table_instance.justify_columns[ 0] = 'left'
-        table_instance.justify_columns[ 2] = 'right'
+
+        cw = table_instance.column_widths
+        nc = len ( cw ) 
+        for i, a in zip ( range ( nc ) , alignment ) :
+            if a and isinstance ( a , str ) :
+                al = a.lower() 
+                if   al in left   : table_instance.justify_columns [ i ] = 'left'
+                elif al in right  : table_instance.justify_columns [ i ] = 'right'
+                elif al in center : table_instance.justify_columns [ i ] = 'center'
+                
         t = table_instance.table 
         return add_prefix ( table_instance.table , prefix ) 
 
     ## use the local replacement 
-    return the_table ( rows , title , prefix )
+    return the_table ( rows , title , prefix , alignment = alignment )
     
 # =============================================================================
 ## get the true  table width 
@@ -202,11 +233,11 @@ def add_prefix ( table , prefix = '' ) :
     """Add certain prefix to  each line of the table
     >>> table = ...
     >>> table =  add_prefix ( table , '# ') 
-    """    
+    """
     return prefix + table.replace ( '\n' , '\n' + prefix ) if prefix else table 
 
 # ==============================================================================
-## Aling the certain column of the table
+## Align the certain column of the table
 #  @code
 #  aligned = align_column ( table , 1 , 'left' ) 
 #  @endcode 
@@ -264,13 +295,16 @@ if __name__ == '__main__' :
         ( 'Alice' , '?'          , '---'  ) ,
         ( 'Bob'   , 'unemployed' , ''     ) ]
     
-    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' ) ) 
-    logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' ) ) 
-    logger.info ( 'The table woth prefix is \n%s' %
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'rrr' ) ) 
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'lll' ) ) 
+    logger.info ( 'The table is \n%s' % table     ( table_data , 'Title' , alignment = 'ccc' ) ) 
+    logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' , alignment = 'rrr' ) ) 
+    logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' , alignment = 'lll' ) ) 
+    logger.info ( 'The table is \n%s' % the_table ( table_data , 'Title' , alignment = 'ccc' ) ) 
+    logger.info ( 'The table with prefix is \n%s' %
                   table     ( table_data , 'Title' , prefix = '# ' ) ) 
     logger.info ( 'The table with prefix is \n%s' %
                   the_table ( table_data , 'Title' , prefix = '# ' ) ) 
-    
     
     
 # =============================================================================

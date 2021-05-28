@@ -73,70 +73,73 @@ else                      : logger = getLogger ( __name__             )
 # fixes
 # =============================================================================
 import ostap.fixes.fixes
+from ostap.logger.utils import ROOTIgnore
 
 # =============================================================================
 logger.info ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
-from ostap.core.core import ( cpp      , Ostap     , 
-                              ROOTCWD  , rootID    , 
-                              funcID   , funID     , fID             ,
-                              histoID  , hID       , dsID            ,
-                              cwd      , pwd       ,
-                              VE       , SE        , WSE             ,
-                              binomEff , binomEff2 ,
-                              zechEff  , wilsonEff , agrestiCoullEff ,
-                              iszero   , isequal   ,
-                              isint    , islong    , natural_entry   ) 
-
-
+with ROOTIgnore ( 2001 ) : 
+    from ostap.core.core import ( cpp      , Ostap     , 
+                                  ROOTCWD  , rootID    , 
+                                  funcID   , funID     , fID             ,
+                                  histoID  , hID       , dsID            ,
+                                  cwd      , pwd       ,
+                                  VE       , SE        , WSE             ,
+                                  binomEff , binomEff2 ,
+                                  zechEff  , wilsonEff , agrestiCoullEff ,
+                                  iszero   , isequal   ,
+                                  isint    , islong    , natural_entry   ) 
+    
+    
 ## ## silently load RooFit library trick...
 ## from ostap.logger.utils import mute
 ## with mute() : _tmp = ROOT.RooRealVar
 ## del mute
 
 
-iLevel = int( ROOT.gErrorIgnoreLevel ) 
-ROOT.gROOT.ProcessLine("gErrorIgnoreLevel = 2001; " ) 
-
 # =============================================================================
 ## decorate histograms 
 # =============================================================================    
-from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
-                                  h1_axis     , h2_axes     , h3_axes     ,
-                                  axis_bins   , ve_adjust   , histoGuess  )
-
-
+with ROOTIgnore( 2001 ) : 
+    from ostap.histos.histos import ( binomEff_h1 , binomEff_h2 , binomEff_h3 ,
+                                      h1_axis     , h2_axes     , h3_axes     ,
+                                      axis_bins   , ve_adjust   , histoGuess  )
+    
+    
 # =============================================================================
 # Other decorations 
 # =============================================================================
-import ostap.trees.trees
-import ostap.trees.cuts
+with ROOTIgnore( 2001 ) : 
+    
+    import ostap.trees.trees
+    import ostap.trees.cuts
+    
+    import ostap.histos.param
+    import ostap.histos.compare
+    
+    import ostap.io.root_file
+    
+    import ostap.math.models
+    import ostap.utils.hepdata 
+    import ostap.utils.pdg_format 
+    
+    import ostap.plotting.canvas
+    
+    import ostap.fitting.minuit 
+    import ostap.fitting.roofit 
 
-import ostap.histos.param
-import ostap.histos.compare
-
-import ostap.io.root_file
-
-import ostap.math.models
-import ostap.utils.hepdata 
-import ostap.utils.pdg_format 
-
-import ostap.plotting.canvas
-
-import ostap.fitting.minuit 
-import ostap.fitting.roofit 
-
-
-import ostap.plotting.draw_attributes 
-
+    import ostap.plotting.draw_attributes 
+    
 # =============================================================================
 ## graphs 
 # =============================================================================
-from ostap.histos.graphs import makeGraph, hToGraph, hToGraph2, hToGraph3, lw_graph  
+with ROOTIgnore( 2001 ) :     
+    from ostap.histos.graphs import ( makeGraph , lw_graph  , 
+                                      hToGraph  , hToGraph2 , hToGraph3 )
 
-## restore the warnings level 
-ROOT.gROOT.ProcessLine("gErrorIgnoreLevel = %d; " % iLevel ) 
+    
 
+del ROOTIgnore 
 # =============================================================================
 if '__main__' == __name__ :
             

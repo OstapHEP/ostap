@@ -53,7 +53,7 @@ def _dp0_points_ ( dp , M , npoints = 250 ) :
     m2  = dp.m2 ()
     m3  = dp.m3 ()
 
-    assert m1 + m2 + m2 <= M, \
+    assert m1 + m2 + m3 <= M, \
            'Dalitz0.points: Invalid mass %s>%s+%s+%s' %  ( M , m1 , m2 , m3 )
     
     s   = M * M

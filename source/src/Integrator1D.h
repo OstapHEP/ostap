@@ -82,13 +82,13 @@ namespace Ostap
           const double               xlow                 ,           // low integration edge 
           const double               xhigh                ,           // high integration edge 
           gsl_integration_workspace* workspace            ,           // workspace
-          const double               aprecision = 1.e-8   ,           // absolute precision
-          const double               rprecision = 1.e-8   ,           // relative precision
+          const double               aprecision = s_APRECISION_GAQ ,  // absolute precision
+          const double               rprecision = s_RPRECISION_GAQ ,  // relative precision
           int                        limit      = -1      ,           // limit 
           const char*                reason     = nullptr ,           // message 
           const char*                file       = nullptr ,           // file name 
           const unsigned long        line       = 0                 , // line number          
-          const int                  rule       = GSL_INTEG_GAUSS51 , // integration rule 
+          const int                  rule       = GSL_INTEG_GAUSS61 , // integration rule 
           const std::size_t          tag        = 0                 ) const  // tag/label 
         {
           // cache? 
@@ -130,15 +130,15 @@ namespace Ostap
         // ====================================================================
         /// adaptive integrator 
         Result gaqi_integrate   
-        ( const gsl_function*        func                 ,       // the function
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const std::size_t          tag        = 0       ) const  // tag/label 
+        ( const gsl_function*        func                 ,           // the function
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_GAQI , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQI , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ,           // line number 
+          const std::size_t          tag        = 0       ) const     // tag/label 
         {          
           // cache? 
           if ( 0 != tag ) { return gaqi_integrate ( tag        , 
@@ -174,16 +174,16 @@ namespace Ostap
         // ====================================================================
         /// adaptive integrator 
         Result gaqiu_integrate   
-        ( const gsl_function*        func                 ,       // the function
-          const double               xlow                 ,       // low integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const std::size_t          tag        = 0       ) const // tag/label 
+        ( const gsl_function*        func                 ,            // the function
+          const double               xlow                 ,            // low integration edge 
+          gsl_integration_workspace* workspace            ,            // workspace
+          const double               aprecision = s_APRECISION_GAQIU , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQIU , // relative precision
+          int                        limit      = -1      ,            // limit 
+          const char*                reason     = nullptr ,            // message 
+          const char*                file       = nullptr ,            // file name 
+          const unsigned long        line       = 0       ,            // line number 
+          const std::size_t          tag        = 0       ) const      // tag/label 
         {          
           // cache? 
           if ( 0 != tag ) { return gaqiu_integrate ( tag        , 
@@ -221,16 +221,16 @@ namespace Ostap
         // ====================================================================
         /// adaptive integrator 
         Result gaqil_integrate   
-        ( const gsl_function*        func                 ,       // the function
-          const double               xhigh                ,       // high integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const std::size_t          tag        = 0       ) const // tag/label 
+        ( const gsl_function*        func                 ,            // the function
+          const double               xhigh                ,            // high integration edge 
+          gsl_integration_workspace* workspace            ,            // workspace
+          const double               aprecision = s_APRECISION_GAQIL , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQIL , // relative precision
+          int                        limit      = -1      ,            // limit 
+          const char*                reason     = nullptr ,            // message 
+          const char*                file       = nullptr ,            // file name 
+          const unsigned long        line       = 0       ,            // line number 
+          const std::size_t          tag        = 0       ) const      // tag/label 
         {
           // cache? 
           if ( 0 != tag ) { return gaqil_integrate ( tag        , 
@@ -267,18 +267,18 @@ namespace Ostap
         // ====================================================================        
         /// adaptive integrator 
         Result gaqp_integrate   
-        ( const gsl_function*        func                 ,       // the  function
-          const double               xlow                 ,       // low  integration edge 
-          const double               xhigh                ,       // high integration edge 
-          const std::vector<double>& pnts                 ,       // knowns singular points 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const std::size_t          tag        = 0       ) const // tag/label 
+        ( const gsl_function*        func                 ,           // the  function
+          const double               xlow                 ,           // low  integration edge 
+          const double               xhigh                ,           // high integration edge 
+          const std::vector<double>& pnts                 ,           // knowns singular points 
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_GAQP , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQP , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ,           // line number 
+          const std::size_t          tag        = 0       ) const     // tag/label 
         {
           // cache? 
           if ( 0 != tag ) { return gaqp_integrate ( tag        , 
@@ -322,18 +322,18 @@ namespace Ostap
         // ====================================================================
         /// Cauchy principal value adaptive integrator 
         Result gawc_integrate   
-        ( const gsl_function*        func                 ,       // the  function
-          const double               xlow                 ,       // low  integration edge 
-          const double               xhigh                ,       // high integration edge 
-          const double               c                    ,       // Cauchy's point
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const std::size_t          tag        = 0       ) const // tag/label 
+        ( const gsl_function*        func                 ,           // the  function
+          const double               xlow                 ,           // low  integration edge 
+          const double               xhigh                ,           // high integration edge 
+          const double               c                    ,           // Cauchy's point
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_QAWC , // absolute precision
+          const double               rprecision = s_RPRECISION_QAWC , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ,           // line number 
+          const std::size_t          tag        = 0       ) const     // tag/label 
         {
           // cache? 
           if ( 0 != tag ) { return gawc_integrate ( tag        , 
@@ -376,17 +376,17 @@ namespace Ostap
         /// adaptive integrator with cache 
         Result gaq_integrate   
         ( const std::size_t          tag                  ,  
-          const gsl_function*        func                 ,       // the function
-          const double               xlow                 ,       // low integration edge 
-          const double               xhigh                ,       // high integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ,       // line number 
-          const int                  rule       = GSL_INTEG_GAUSS51 ) const // integration rule 
+          const gsl_function*        func                 ,          // the function
+          const double               xlow                 ,          // low integration edge 
+          const double               xhigh                ,          // high integration edge 
+          gsl_integration_workspace* workspace            ,          // workspace
+          const double               aprecision = s_APRECISION_GAQ , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQ , // relative precision
+          int                        limit      = -1      ,          // limit 
+          const char*                reason     = nullptr ,          // message 
+          const char*                file       = nullptr ,          // file name 
+          const unsigned long        line       = 0       ,          // line number 
+          const int                  rule       = GSL_INTEG_GAUSS61 ) const // integration rule 
         {
           // ==================================================================
           static const std::string s_GAQ { "GAQ" } ;
@@ -425,14 +425,14 @@ namespace Ostap
         /// adaptive integrator with cache 
         Result gaqi_integrate
         ( const std::size_t          tag                  ,
-          const gsl_function*        func                 ,       // the function
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const gsl_function*        func                 ,           // the function
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_GAQI , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQI , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ) const     // line number 
         {
           //
           // ==================================================================
@@ -471,15 +471,15 @@ namespace Ostap
         /// adaptive integrator with cache 
         Result gaqiu_integrate
         ( const std::size_t          tag                  ,
-          const gsl_function*        func                 ,       // the function
-          const double               xlow                 ,       // low integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const gsl_function*        func                 ,            // the function
+          const double               xlow                 ,            // low integration edge 
+          gsl_integration_workspace* workspace            ,            // workspace
+          const double               aprecision = s_APRECISION_GAQIU , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQIU , // relative precision
+          int                        limit      = -1      ,            // limit 
+          const char*                reason     = nullptr ,            // message 
+          const char*                file       = nullptr ,            // file name 
+          const unsigned long        line       = 0       ) const      // line number 
         {
           //
           // ==================================================================
@@ -519,15 +519,15 @@ namespace Ostap
         /// adaptive integrator 
         Result gaqil_integrate
         ( const std::size_t          tag                  ,
-          const gsl_function*        func                 ,       // the function
-          const double               xhigh                ,       // upper integration edge 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+          const gsl_function*        func                 ,            // the function
+          const double               xhigh                ,            // upper integration edge 
+          gsl_integration_workspace* workspace            ,            // workspace
+          const double               aprecision = s_APRECISION_GAQIL , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQIL , // relative precision
+          int                        limit      = -1      ,            // limit 
+          const char*                reason     = nullptr ,            // message 
+          const char*                file       = nullptr ,            // file name 
+          const unsigned long        line       = 0       ) const      // line number 
         {
           //
           // ==================================================================
@@ -566,18 +566,18 @@ namespace Ostap
         // ====================================================================
         /// adaptive integrator with cache 
         Result gaqp_integrate   
-        ( const std::size_t          tag                  ,       // tag/label
-          const gsl_function*        func                 ,       // the  function
-          const double               xlow                 ,       // low  integration edge 
-          const double               xhigh                ,       // high integration edge 
-          const std::vector<double>& pnts                 ,       // knowns singular points 
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+        ( const std::size_t          tag                  ,           // tag/label
+          const gsl_function*        func                 ,           // the  function
+          const double               xlow                 ,           // low  integration edge 
+          const double               xhigh                ,           // high integration edge 
+          const std::vector<double>& pnts                 ,           // knowns singular points 
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_GAQP , // absolute precision
+          const double               rprecision = s_RPRECISION_GAQP , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ) const     // line number 
         {
           // ==================================================================
           static const std::string s_GAQP { "GAQP" } ;
@@ -621,18 +621,18 @@ namespace Ostap
         // ====================================================================
         /// Cauchy principal value adaptive integrator 
         Result gawc_integrate   
-        ( const std::size_t          tag                  ,       // tag/label    
-          const gsl_function*        func                 ,       // the  function
-          const double               xlow                 ,       // low  integration edge 
-          const double               xhigh                ,       // high integration edge 
-          const double               c                    ,       // Cauchy's point
-          gsl_integration_workspace* workspace            ,       // workspace
-          const double               aprecision = 1.e-8   ,       // absolute precision
-          const double               rprecision = 1.e-8   ,       // relative precision
-          int                        limit      = -1      ,       // limit 
-          const char*                reason     = nullptr ,       // message 
-          const char*                file       = nullptr ,       // file name 
-          const unsigned long        line       = 0       ) const // line number 
+        ( const std::size_t          tag                  ,           // tag/label    
+          const gsl_function*        func                 ,           // the  function
+          const double               xlow                 ,           // low  integration edge 
+          const double               xhigh                ,           // high integration edge 
+          const double               c                    ,           // Cauchy's point
+          gsl_integration_workspace* workspace            ,           // workspace
+          const double               aprecision = s_APRECISION_QAWC , // absolute precision
+          const double               rprecision = s_RPRECISION_QAWC , // relative precision
+          int                        limit      = -1      ,           // limit 
+          const char*                reason     = nullptr ,           // message 
+          const char*                file       = nullptr ,           // file name 
+          const unsigned long        line       = 0       ) const     // line number 
         {
           // ==================================================================
           static const std::string s_GAWC { "GAWC" } ;
