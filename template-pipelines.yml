@@ -16,16 +16,12 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   steps:
   - script: |
-     sudo wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list && \
-     sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 && \
-     sudo apt-get update
-     sudo apt-get install -y singularity-container
-     sudo apt-get install lsb-release
-     wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
-     sudo dpkg -i cvmfs-release-latest_all.deb
-     rm -f cvmfs-release-latest_all.deb
-     sudo apt-get update
-     sudo apt-get install cvmfs cvmfs-config-default
+     sudo yum update -y && \
+     sudo yum install -y epel-release && \
+     sudo yum update -y && \
+     sudo yum install -y singularity-runtime singularity
+     sudo yum install https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm
+     sudo yum install -y cvmfs
      sudo cvmfs_config setup
      echo  "CVMFS_REPOSITORIES=lhcb.cern.ch,grid.cern.ch,sft.cern.ch" | sudo tee -a  /etc/cvmfs/default.local > /dev/null
      echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
