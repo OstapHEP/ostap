@@ -39,7 +39,7 @@ jobs:
      sudo cvmfs_config chksetup
      echo $?
      sudo service autofs restart
-     singularity exec -B /cvmfs -B $PWD/ ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+     singularity exec -B /cvmfs -B $PWD/ ${{ parameters.dockername }} /bin/bash  ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}
     displayName: 'test stage'
   - task: PublishPipelineArtifact@0
     inputs:
