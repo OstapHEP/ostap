@@ -29,22 +29,14 @@ jobs:
      sudo cvmfs_config probe
     displayName: 'install cvmfs'
   - script: |
-      docker  create -v  /osya --name ostap-build   ${{ parameters.dockername }}
-      docker cp  .  ostap-build:/osya
-    displayName: 'docker container'
-  - script: |
-     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0  --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+     singularity exec -B /cvmfs -B $PWD/  ${{ parameters.dockername }} /bin/bash  ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}
     displayName: 'build stage'
   - script: |
      sudo cvmfs_config chksetup
      echo $?
      sudo service autofs restart
-     docker run --rm   -v /cvmfs:/cvmfs:shared --volumes-from ostap-build -u:0 --security-opt seccomp=unconfined ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
+     singularity exec -B /cvmfs -B $PWD/ ${{ parameters.dockername }} /bin/bash -c "cd /osya/ && ./scripts/test ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}"
     displayName: 'test stage'
-  - script: |
-     docker cp  ostap-build:/osya/build .
-    condition: always()
-    displayName: 'copy build result'
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName:   ${{ parameters.artifact }}
