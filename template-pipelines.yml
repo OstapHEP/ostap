@@ -27,6 +27,7 @@ jobs:
      echo  "CVMFS_HTTP_PROXY=DIRECT"  | sudo tee -a  /etc/cvmfs/default.local > /dev/null
      sudo service autofs restart
      sudo cvmfs_config probe
+     sudo apt-get install -y singularity-container
     displayName: 'install cvmfs'
   - script: |
      singularity exec -B /cvmfs -B $PWD/  ${{ parameters.dockername }} /bin/bash  ./scripts/bootstrap ${{ parameters.LCG }} ${{ parameters.CMTCONFIG }}
