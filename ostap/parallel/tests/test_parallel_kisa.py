@@ -200,8 +200,8 @@ def test_kisa3 () :
     
     ## from  ostap.trees.funcs import H1DFunc
     ## xh1 = H1DFunc ( histo = h1 , xvar = 'pt' ) 
-    from  ostap.trees.funcs import FuncTH1 
-    xh1 = FuncTH1 ( histo = h1 , xvar = 'pt' ) 
+    ## from  ostap.trees.funcs import FuncTH1 
+    ## xh1 = FuncTH1 ( histo = h1 , xvar = 'pt' ) 
     
     from ostap.fitting.pyselectors import SelectorWithVars, Variable  
     variables = [
