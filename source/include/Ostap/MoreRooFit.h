@@ -76,6 +76,28 @@ namespace Ostap
       /// clone 
       Addition* clone ( const char* newname ) const override ;
       // ======================================================================
+    public:
+      // ======================================================================
+      /// construct c1*a + c2*b 
+      Addition ( const std::string& name  , 
+                 const std::string& title ,
+                 RooAbsReal&        a     ,
+                 RooAbsReal&        b     ,
+                 RooAbsReal&        c1    ,
+                 RooAbsReal&        c2    ) ;
+      // ======================================================================
+      /// construct c1*a + c2*b 
+      Addition ( const std::string& name  , 
+                 const std::string& title ,
+                 RooAbsReal&        a     ,
+                 RooAbsReal&        b     ,
+                 const double       c1    ,
+                 const double       c2    ) 
+        : Addition ( name , title , a , b , 
+                     RooFit::RooConst ( c1 ) , 
+                     RooFit::RooConst ( c2 ) ) 
+      {}
+      // ======================================================================
     }; // 
     // ========================================================================
     /** @class Product
@@ -173,10 +195,6 @@ namespace Ostap
       virtual ~Subtraction() ;
       /// clone 
       Subtraction* clone ( const char* newname ) const override ;
-      /// integrals 
-      Double_t analyticalIntegral ( Int_t code ,
-                                    const char* rangeName = 0 ) const override ;
-      Double_t evaluate           () const override ;    
       // ======================================================================
     }; // 
     // ========================================================================
