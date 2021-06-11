@@ -1,7 +1,16 @@
 
+
+
 ## New features 
 
   1. reenable `pathos` for (3.6<=python & 0.3<=dill )
+  1. add `statVars` for `RooAbsData`
+  1. largely reshuffle code for `statVar/statVars`
+  1. extend `Ostap::DataFrame`  
+  1. add `StatVar` and `WStatVar` lazy actions for DataFrame 
+  1. make user-fiennly frame -> histogram projetctions 
+  1. add `frame_table`, 'frame_project', `frame_statVar` and other functions
+    
 
 ## Backward incompatible changes: 
 

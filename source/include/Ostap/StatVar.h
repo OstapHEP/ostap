@@ -444,6 +444,106 @@ namespace Ostap
     // ========================================================================
   public:
     // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param data        (INPUT)  input data 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2018-11-04
+     */
+    static unsigned long statVars
+    ( const RooAbsData*               data              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) 
+    { return statVars ( data , result , expressions , std::string() , std::string () , first , last ) ; }
+    // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param data        (INPUT)  input data 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param cuts        (INPUT)  the selection  
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2021-06-04
+     */
+    static unsigned long statVars
+    ( const RooAbsData*               data              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const std::string&              cuts              ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) 
+    { return statVars ( data , result , expressions , cuts  , std::string() , first , last ) ; }
+    // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param data        (INPUT)  input data 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param cuts        (INPUT)  the selection  
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2021-06-04
+     */
+    static unsigned long statVars
+    ( const RooAbsData*               data              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const TCut&                     cuts              ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) ;
+    // ========================================================================    
+    /** build statistic for the <code>expressions</code>
+     *  @param data        (INPUT)  input data 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     *  @param cuts        (INPUT)  the selection 
+     *  @param cut_range   (INPUT)  cut range  
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2021-06-04
+     */
+    static unsigned long statVars
+    ( const RooAbsData*               data              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const std::string&              cuts              ,
+      const std::string&              cut_range         ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) ;
+    // ========================================================================
+    /** build statistic for the <code>expressions</code>
+     *  @param data        (INPUT)  input data 
+     *  @param result      (UPDATE) the output statistics for specified expressions 
+     *  @param expressions (INPUT)  the list of  expressions
+     #  @param cuts        (INPUT)  the selection  
+     *  @param first       (INPUT)  the first entry to process 
+     *  @param last        (INPUT)  the last entry to process (not including!)
+     *  @return number of processed entries 
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date   2021-06-04
+     */
+    static unsigned long statVars
+    ( const RooAbsData*               data              , 
+      std::vector<Statistic>&         result            , 
+      const std::vector<std::string>& expressions       ,
+      const TCut&                     cuts              ,
+      const std::string&              cut_range         ,
+      const unsigned long             first      = 0    ,
+      const unsigned long             last       = LAST ) ;
+    // ========================================================================
+  public:
+    // ========================================================================
     /** build statistic for the <code>expression</code>
      *  @param data       (INPUT) the data 
      *  @param expression (INPUT) the expression

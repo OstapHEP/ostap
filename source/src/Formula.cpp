@@ -1,9 +1,15 @@
 // ============================================================================
 // Include files 
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <string>
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "TTree.h"
+#include "TChain.h"
+#include "TFile.h"
 #include "TCut.h"
 // ============================================================================
 // Ostap
@@ -21,6 +27,16 @@
  *  @date 2013-05-06 
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  */
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  std::string formula_name ( const std::string& prefix     ,
+                             const std::string& expression ,
+                             const TTree*       tree       ) 
+  { return Ostap::tmp_name ( prefix , expression , tree , true ) ; }
+  // ==========================================================================
+} //                                             The end of anonymous namespace 
 // ============================================================================
 ClassImp(Ostap::Formula)
 // ============================================================================
@@ -43,13 +59,13 @@ Ostap::Formula::Formula
 Ostap::Formula::Formula
 ( const std::string& expression ,
   TTree*             tree       ) 
-  : Formula ( Ostap::tmp_name ( "formula_" , expression ) , expression , tree )
+  : Formula ( formula_name ( "formula_" , expression , tree ) , expression , tree )
 {}
 // ============================================================================
 Ostap::Formula::Formula
 ( const TCut&        expression ,
   TTree*             tree       ) 
-  : Formula ( Ostap::tmp_name ( "formula_" , expression.GetName()) , expression , tree )
+  : Formula ( formula_name ( "formula_" , expression.GetName() , tree ) , expression , tree )
 {}
 // ============================================================================
 // destructor 
@@ -94,5 +110,5 @@ Int_t Ostap::Formula::evaluate ( std::vector<double>& results )
   return d ;  
 }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

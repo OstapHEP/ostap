@@ -26,7 +26,8 @@ __all__     = (
 # =============================================================================
 import ROOT, random, math, sys, ctypes  
 from   builtins               import range
-from   ostap.core.core        import Ostap, VE, hID, dsID , valid_pointer
+from   ostap.core.core        import  ( Ostap, VE, hID, dsID ,
+                                        valid_pointer , split_string )
 from   ostap.core.ostap_types import integer_types, string_types  
 from   ostap.math.base        import islong
 import ostap.trees.cuts     
@@ -552,10 +553,11 @@ ROOT.RooAbsData . __truediv__   = ROOT.RooAbsData . __div__
 ROOT.RooAbsData . sample        = _rad_sample_
 ROOT.RooAbsData . shuffle       = _rad_shuffle_
 
-from ostap.trees.trees import _stat_var_, _stat_cov_ , _stat_covs_ , _sum_var_, _sum_var_old_
+from ostap.trees.trees import _stat_var_, _stat_vars_ , _stat_cov_ , _stat_covs_ , _sum_var_, _sum_var_old_
 ROOT.RooAbsData . sumVar        = _sum_var_ 
 ROOT.RooAbsData . sumVar_       = _sum_var_old_ 
 ROOT.RooAbsData . statVar       = _stat_var_ 
+ROOT.RooAbsData . statVars      = _stat_vars_ 
 ROOT.RooAbsData . statCov       = _stat_cov_ 
 ROOT.RooAbsData . statCovs      = _stat_covs_ 
 
@@ -882,7 +884,7 @@ _new_methods_ += [
 #  dataset.hasEntry ( 'pt>100' , 'fit_range' ) ## 
 #  dataset.hasEntry ( 'pt>100' , 'fit_range' , 0 , 1000 ) ## 
 #  @endcode
-#  @see Ostap::StatVar::hasEntru
+#  @see Ostap::StatVar::hasEntry
 def _ds_has_entry_ ( dataset , selection , *args ) : 
     """Is there at leats one entry that satoisfies selection criteria?
     >>> dataset = ...
@@ -1556,10 +1558,7 @@ def _ds_table_0_ ( dataset        ,
         return ''
 
     if isinstance ( variables ,  str ) :
-        variables = variables.strip ()
-        variables = variables.replace ( ',' , ' ' ) 
-        variables = variables.replace ( ';' , ' ' )
-        variables = variables.split ()
+        variables = split_string ( variables ,' ,:;' ) 
         
     if 1 == len ( variables ) : variables = variables [0]
 
@@ -1575,9 +1574,11 @@ def _ds_table_0_ ( dataset        ,
         
     #
     _vars = []
-    for v in vars :
-        vv   = getattr ( varset , v ) 
-        s    = dataset.statVar( v , cuts , first , last )  
+    
+    stat = dataset.statVars ( vars , cuts , first , last ) 
+    for v in  stat :
+        vv  = getattr ( varset , v )
+        s   = stat [ v ] 
         mnmx = s.minmax ()
         mean = s.mean   ()
         rms  = s.rms    ()
@@ -1586,20 +1587,20 @@ def _ds_table_0_ ( dataset        ,
                  ('%+.5g' % mean.value() ).strip() ,   ## 2
                  ('%.5g'  % rms          ).strip() ,   ## 3 
                  ('%+.5g' % mnmx[0]      ).strip() ,   ## 4
-                 ('%+.5g' % mnmx[1]      ).strip() )   ## 5
-            
+                 ('%+.5g' % mnmx[1]      ).strip() )   ## 5            
         _vars.append ( r )
+    _vars.sort() 
         
-    _vars.sort()
 
     tt = dataset.GetTitle()
+    
     if tt and tt != dataset.GetName() : 
         title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
     else :
-        title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () ) 
-        
-    title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
+        title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )             
 
+    title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
+        
     if not _vars :
         return report , 120 
 

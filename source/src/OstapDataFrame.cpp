@@ -6,25 +6,32 @@
 #include <string>
 #include <cstdio>
 // ===============================================================================
+// ROOT 
+// ===============================================================================
+#include "TNamed.h" 
+// ===============================================================================
+// Ostap
+// ===============================================================================
 // local
 // ===============================================================================
 #include "OstapDataFrame.h"
 #include "local_hash.h"
 // ===============================================================================
 std::string Ostap::tmp_name 
-( std::string        prefix , 
-  const std::string& name   )
+( const std::string&  prefix ,
+  const std::string&  name   ,
+  const TNamed*       named  ,
+  const bool          random ) 
 {
-  // the storage 
-  static char s_buffer [ 32 ] ;
-  //
-  std::size_t hv = 0 ;
-  std::hash_combine ( hv , name   ) ;
-  std::hash_combine ( hv , prefix ) ;
-  // 
-  std::size_t s = std::snprintf ( s_buffer , 32 , "%X" , hv ) ;
-  return prefix + std::string   ( s_buffer , s_buffer + s   ) ;
+  std::size_t hv = 
+    nullptr == named || random ? 
+    std::hash_combine ( prefix , name , random ) :
+    std::hash_combine ( prefix , name , random , 
+                        std::string ( named->GetName  () ) , 
+                        std::string ( named->GetTitle () ) ) ;
+  if ( random ) { hv = std::hash_combine ( prefix , hv , rand() ) ; }
+  return prefix + std::to_string ( hv ) ;
 }
 // ==========================================================================  
-// The END 
+//                                                                    The END 
 // ==========================================================================  

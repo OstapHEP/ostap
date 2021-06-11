@@ -20,7 +20,8 @@ __all__     = (
   ) 
 # =============================================================================
 import ROOT, os, math
-from   ostap.core.core        import std , Ostap, VE, hID, ROOTCWD
+from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
+                                       ROOTCWD , strings  , split_string ) 
 from   ostap.core.ostap_types import integer_types , long_type, string_types 
 import ostap.trees.param
 # =============================================================================
@@ -264,6 +265,7 @@ def _tt_project_ ( tree               ,
                    options    = ''    ,
                    nentries   = -1    ,
                    firstentry =  0    ,
+                   use_frame  = False , ## use DataFrame ? 
                    silent     = False ) :
     """Helper project method
     
@@ -352,13 +354,27 @@ def _tt_project_ ( tree               ,
         del hh, h1 
         return rr , histo
 
+    if use_frame and isinstance ( tree , ROOT.TTree ) :
+        
+        from ostap.frames.frames import DataFrame, frame_project
+        frame   = DataFrame ( tree , enable = False )
+        counter = fr.Filter( cuts ).Count()  if cuts else fr.Count() 
+        hh      = frame_project ( frame , histo , what , cuts )
+        return counter.GetValue () , hh 
+    
     ## the basic case 
     with ROOTCWD() :
         groot = ROOT.ROOT.GetROOT() 
         groot.cd ()
+
+        hh = histo.clone()
+        hn = hh.GetName() 
+
+        
         ## make projection
-        ## print 'HERE:   %s/%s' %  ( hname , type ( hname ) ) 
-        result = tree.Project ( hname , what , cuts , *args[:-1] )
+
+        result = tree.Project ( hn , what , cuts , *args[:-1] )
+        
         if   isinstance ( histo , ROOT.TH1 ) :
             return result, histo
         elif isinstance ( histo , str      ) :
@@ -402,12 +418,11 @@ ROOT.TTree .__contains__ = _rt_contains_
 ROOT.TChain.__contains__ = _rt_contains_
 
 # =============================================================================
-
-## get the statistic for certain expression in Tree/Dataset
+## get the statistic for certain expression(s) in Tree/Dataset
 #  @code
 #  tree  = ... 
-#  stat1 = tree.statVar( 'S_sw/effic' )
-#  stat2 = tree.statVar( 'S_sw/effic' ,'pt>1000')
+#  stat1 = tree.statVar ( 'S_sw/effic' )
+#  stat2 = tree.statVar ( 'S_sw/effic' , 'pt>1000' )
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-09-15
@@ -419,16 +434,17 @@ def _stat_var_ ( tree , expression , *cuts ) :
     >>> stat2 = tree.statVar ( 'S_sw/effic' ,'pt>1000')
     
     """
-
-    if isinstance ( expression , str ) :
-        from ostap.core.core import split_string
-        expression = split_string ( expression , ',;:' ) 
-        
-    if 1 != len ( expression ) :
-        return _stat_vars_ ( tree ,  expression , *cuts )
     
-    expression = expression[0] 
-
+    if isinstance ( expression , string_types ) :
+        
+        explist = split_string ( expression , ' ,;:' )         
+        if 1 != len ( explist ) :
+            return _stat_vars_ ( tree , explist , *cuts )  ## RETURRN
+        
+    else :
+        
+        return _stat_vars_ ( tree ,  expression , *cuts ) ## RETURN 
+    
     return Ostap.StatVar.statVar ( tree , expression , *cuts )
     
 ROOT.TTree     . statVar = _stat_var_
@@ -455,26 +471,24 @@ def _stat_vars_ ( tree , expressions , *cuts ) :
     - see Ostap::Math::StatVar
     - see Ostap::Math::StatVar::statVars 
     """
-    from ostap.core.core import std, strings, split_string, WSE 
-    
-    if isinstance ( expressions , str ) :
-        expressions = split_string ( expressions , ',;:' ) 
 
-    if not expressions : return {}    
-    if 1 == len ( expressions ) :
-        return _stat_var_ ( tree , expressions[0] , *cuts )
+    if isinstance ( expressions , string_types ) :
+        return _stat_var_ ( tree , expressions , *cuts ) 
+    
+    if not expressions : return {}
     
     vct = strings ( *expressions )
     res = std.vector(WSE)() 
 
     ll  = Ostap.StatVar.statVars ( tree , res , vct , *cuts )
-    assert res.size() == vct.size(), 'Invalid size of structures!'
+
+    assert res.size() == vct.size(), 'stat_vars: Invalid size of structures!'
 
     N = res.size()
     results = {} 
 
-    for i in range(N) :
-        results[ vct[i] ] = WSE ( res[i] ) 
+    for i in range ( N ) :
+        results[ vct [ i ] ] = WSE ( res[i] ) 
 
     return results 
 
@@ -1922,7 +1936,7 @@ def file_info ( fname ) :
 from ostap.utils.cleanup  import CleanUp
 # =============================================================================
 ## @class Chain
-#  simple class to keep pickable definitinon of tree/chain
+#  simple class to keep pickable definition of tree/chain
 #  it is needed for multiprcessing 
 class Chain(CleanUp) :
     """Simple class to keep definition of tree/chain ``pickable''

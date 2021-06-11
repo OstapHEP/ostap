@@ -29,7 +29,7 @@ __all__     = (
     'Histo3DFun'      , ## 3D-histogram as function object
     )
 # =============================================================================
-import ROOT, sys, math, ctypes
+import ROOT, sys, math, ctypes, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -47,13 +47,15 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               binomEff , binomEff2 ,
                               zechEff  , wilsonEff , agrestiCoullEff , 
                               iszero   , isequal   , inrange         , 
-                              isint    , islong    ,
+                              isint    , islong    , is_sorted       , 
                               natural_entry        ,
                               natural_number       )
 from   ostap.math.base        import frexp10 
-from   ostap.core.ostap_types import integer_types, num_types , long_type
+from   ostap.core.ostap_types import integer_types, num_types , long_type, sequence_types 
 import ostap.plotting.draw_attributes 
 # =============================================================================
+
+
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')
 # =============================================================================
@@ -4690,10 +4692,9 @@ def _h1_getslice_ ( h1 , i , j ) :
     edges = edges [i-1:j]
     
     typ = h1.__class__
-    from array import array
     result = typ ( hID  ()       ,
                    h1.GetTitle() ,
-                   len ( edges ) - 1 , array ( 'd' , edges ) )
+                   len ( edges ) - 1 , array.array ( 'd' , edges ) )
     
     result.Sumw2()
     result += h1
@@ -4703,7 +4704,97 @@ def _h1_getslice_ ( h1 , i , j ) :
 ROOT.TH1F  . __getslice__  =   _h1_getslice_ 
 ROOT.TH1D  . __getslice__  =   _h1_getslice_ 
 
+# =============================================================================
+## Create <code>TAxis</code>
+#  @code
+#  a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
+#  a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
+#  a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
+#  a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
+#  a = make_axis ( 0.0 , 1.0 , 2.0  )               ##   e1 , e2 , ...  
+#  @endcode
+def make_axis ( nbins , *bins ) :
+    """ Create <code>TAxis</code>    
+    >>> a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
+    >>> a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
+    >>> a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
+    >>> a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
+    >>> a = make_axis (  0.0 , 1.0 , 2.0 , 3.0 , 4.0 )   ##   e1 , e2 , ... 
+    """
+    
+    if   isinstance ( nbins , ROOT.TAxis ) : return nbins 
 
+    if isinstance ( nbins , integer_types ) and 0 < nbins :
+        
+        if 1 == len ( bins ) and isinstance ( bins [ 0 ] , sequence_types ) :
+            abins = [ float ( e ) for e in bins [ 0 ] ]
+            if nbins +1 <= len ( abins ) :
+                abins = abins [ : nbins + 1 ] 
+                if is_sorted ( abins ) : 
+                    return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
+                
+        elif 2 == len ( bins ) and \
+               isinstance ( bins [ 0 ] , num_types ) and \
+               isinstance ( bins [ 1 ] , num_types ) and bins [ 0 ] < bins [ 1 ] :
+            return ROOT.TAxis ( nbins , bins [ 0 ] , bins [ 1 ] )
+        
+        elif nbins + 1 <= len ( bins ) :                    
+            abins = [ float ( e ) for e in bins [ : nbins + 1 ] ]
+            if is_sorted ( abins ) : 
+                return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
+
+    elif isinstance ( nbins , sequence_types ) and not bins :
+        
+        abins = [ float ( e ) for e in nbins ]
+        if 2 <= len ( abins ) and is_sorted ( abins ) : 
+            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
+        
+    if isinstance ( nbins , num_types ) and bins : 
+        abins = [ float ( nbins ) ] + [ float ( e ) for e in bins ]
+        if is_sorted ( abins ) : 
+            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
+
+    raise ArgumentError('make_axis: invalid arguments %s' % str ( ( nbins , ) + bins ) ) 
+
+# =============================================================================
+## create TH1D from model 
+def h1_from_model ( model , *args ) :
+    
+    if isinstance ( model , ROOT.ROOT.RDF.TH1DModel ) :
+        
+        bins = model.fBinXEdges
+        if bins : return ROOT.TH1D ( model.fName , model.fNbinsX , array.array  ('d' , model.fBinXEdges ) ) 
+        else    : return ROOT.TH1D ( model.fName , model.fNbinsX , model.fXLow , model.fXUp               ) 
+
+    if isinstance ( model , ROOT.TAxis ) :
+        return h1_axis ( model , title = '1D histogram' , name = hID () , double = True )
+
+    preps = []    
+    aargs = [ model ] + list ( args )
+    
+    if 1 < len ( aargs ) and isistance ( aargs[0] , string_types ) :
+        preps.append ( aargs[0] )
+        aargs = aargs [1:]
+    if 1 < len ( aargs ) and isistance ( aargs[0] , string_types ) :
+        preps.append ( aargs[0] )
+        aargs = aargs [1:]
+
+    axis = None 
+    if 1 <= len  ( aargs ) :
+        try :
+            axis = make_axis ( *aargs )
+        except :
+            pass
+        
+    if not axis : return None  ## RETURN
+    
+    if   2 == len ( preps ) : name , title = preps 
+    elif 1 == len ( preps ) : name , title = hID () , preps [0]  
+    else                    : name , title = hID () , '1D histo'
+    
+    return h1_axis ( axis , title = title , name = name , double = True )
+
+        
 # =============================================================================
 ## make 1D-histogram from axis
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4726,10 +4817,9 @@ def h1_axis ( axis           ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH1 ) : typ = double
     else : typ = ROOT.TH1D if double else ROOT.TH1F
     #
-    from array import array 
     h1  = typ ( name  ,
                 title ,
-                len ( bins ) - 1 , array ( 'd' , bins ) )
+                len ( bins ) - 1 , array.array ( 'd' , bins ) )
     ##
     h1.Sumw2()
     return h1
@@ -4761,11 +4851,10 @@ def h2_axes ( x_axis            ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH2 ) : typ = double
     else : typ = ROOT.TH2D if double else ROOT.TH2F
     #
-    from array import array 
     h2  =  typ ( name  ,
                  title ,
-                 len ( x_bins ) - 1 , array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array ( 'd' , y_bins ) )
+                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
+                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) )
     ##
     h2.Sumw2()
     return h2
@@ -4801,12 +4890,11 @@ def h3_axes ( x_axis            ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : typ = double
     else : typ = ROOT.TH3D if double else ROOT.TH3F
     #
-    from array import array 
     return typ ( name  ,
                  title ,
-                 len ( x_bins ) - 1 , array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array ( 'd' , y_bins ) , 
-                 len ( z_bins ) - 1 , array ( 'd' , z_bins ) ) 
+                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
+                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) , 
+                 len ( z_bins ) - 1 , array.array ( 'd' , z_bins ) ) 
 
 
 
@@ -6751,8 +6839,7 @@ def axis_bins ( bins         ) :
     if 2 > len ( bins ) :
         raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
     #
-    from array import array 
-    return ROOT.TAxis ( len ( bins ) - 1 , array ( 'd' , bins ) )
+    return ROOT.TAxis ( len ( bins ) - 1 , array.array ( 'd' , bins ) )
     #
 
 # =============================================================================

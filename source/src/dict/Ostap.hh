@@ -25,6 +25,7 @@
 #include "Ostap/Combine.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
+#include "Ostap/DataFrameActions.h"
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/Digit.h"
 #include "Ostap/EigenSystem.h"

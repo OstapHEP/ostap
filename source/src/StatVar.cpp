@@ -1640,6 +1640,137 @@ Ostap::StatVar::statVar
   return result ;
 }
 // ============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const std::vector<std::string>& expressions ,
+  const TCut&                     cuts        ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  const std::string cuts_ = cuts.GetTitle() ;
+  return statVars ( data , result , expressions , cuts_ , "" , first , last ) ;
+}
+// ============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection  
+ *  @param cut_range   (INPUT)  cut range  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const std::vector<std::string>& expressions ,
+  const TCut&                     cuts        ,
+  const std::string&              cut_range   ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  const std::string cuts_ = cuts.GetTitle() ;
+  return statVars ( data , result , expressions , cuts_ , cut_range , first , last ) ;
+}
+// ============================================================================
+/** build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection 
+ *  @param cut_range   (INPUT)  cut range  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const std::vector<std::string>& expressions ,
+  const std::string&              cuts        ,
+  const std::string&              cut_range   ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  // 
+  const unsigned int N = expressions.size() ;
+  //
+  result.resize ( N ) ; 
+  for ( auto& r : result ) { r.reset () ; }
+  //
+  if ( expressions.empty()              ) { return 0 ; }
+  if ( nullptr == data || last <= first ) { return 0 ; }
+  if ( data->numEntries() <= first      ) { return 0 ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts       , *data , true ) } ;
+  //
+  typedef std::unique_ptr<Ostap::FormulaVar> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  //
+  for ( const auto& e : expressions  ) 
+  {
+    auto p = make_formula ( e , *data , false ) ;
+    if ( !p ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;  
+  }
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    //
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      const double v = formulas[i]->getVal () ;
+      result[i].add ( v , w ) ;
+    }
+    //
+  }
+  //
+  return result.empty() ? 0 : result[0].nEntries() ;
+}
+// ============================================================================
 /*  calculate the covariance of two expressions
  *  @param tree  (INPUT)  the input tree
  *  @param exp1  (INPUT)  the first  expresiion
