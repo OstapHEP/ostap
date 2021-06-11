@@ -72,7 +72,11 @@ namespace ROOT
         { m_slots [ slot % m_N ] += value ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like columns       
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
         void Exec ( unsigned int slot , const T &vs )
         { Ostap::StatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e += v ; } }
         // ===============================================================================
@@ -134,12 +138,20 @@ namespace ROOT
         { m_slots [ slot % m_N ].add ( value , weight ) ; } 
         // ====================================================================
         /// The basic method: increment the counter for the vector-like column of values        
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif 
         void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
         { Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } }
         // ===============================================================================
         /// The basic method: increment the counter for the vector-like coliumn of weight 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,16,0)
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+#else 
+        template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+#endif
         void Exec ( unsigned int slot , const double value , const T &ws )
         { Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & w : ws ) { e.add ( value , w   ) ; } }
         // ===============================================================================

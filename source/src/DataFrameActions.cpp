@@ -26,7 +26,11 @@
 // ============================================================================
 ROOT::Detail::RDF::StatVar::StatVar ()
   : m_result ( std::make_shared<Ostap::StatEntity>() ) 
-  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize() ) : 1u )
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
   , m_slots  ( this->m_N ) 
 {}
 // ============================================================================
@@ -43,7 +47,11 @@ void ROOT::Detail::RDF::StatVar::Finalize()
 // ============================================================================
 ROOT::Detail::RDF::WStatVar::WStatVar ()
   : m_result ( std::make_shared<Ostap::WStatEntity>() ) 
-  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize() ) : 1u )
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetThreadPoolSize     () ) : 1u )
+#else 
+  , m_N      ( ROOT::IsImplicitMTEnabled() ? std::max ( 1u , ROOT::GetImplicitMTPoolSize () ) : 1u )
+#endif
   , m_slots  ( this->m_N ) 
 {}
 // ============================================================================
