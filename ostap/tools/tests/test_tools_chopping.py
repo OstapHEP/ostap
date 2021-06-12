@@ -216,7 +216,7 @@ methods = reader.methods[:]
 
 ## # =============================================================================
 ## ## A: Use TMVA/Chopping  reader
-## #  - It can be slow, but it allows on-flight varibales transformation
+## #  - It can be slow, but it allows on-flight variables transformation
 ## #  - much more efficient alternativeis <code>addChoppingResponse</code> function
 ## # =============================================================================
 
@@ -321,7 +321,7 @@ for d in decisions :
     table.append ( row )
     
 import ostap.logger.table as T
-table  = T.table (  table , title = 'TMVA performance', prefix = '# ' , alignement = 'lcc' )
+table  = T.table (  table , title = 'TMVA performance', prefix = '# ' , alignment = 'lcc' )
 logger.info ( 'TMVA performance for Signal and Background\n%s' % table )
 
 # =============================================================================
