@@ -267,7 +267,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
             results [ e ] = r.GetValue()  
 
     if input_string and 1 == len ( result ) :
-        e , r = result.popitem()
+        e , r = results.popitem()
         return r
     
     return results 
