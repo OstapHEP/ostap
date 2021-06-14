@@ -31,6 +31,7 @@ __all__     = (
 # =============================================================================
 import textwrap 
 from   ostap.logger.colorized import infostr, allright, decolorize        
+from   ostap.utils.basic      import terminal_size 
 # =============================================================================
 try :
     import terminaltables
@@ -69,8 +70,6 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
     """
     ## calculate the number of columns
 
-    if wrap_width < 12 : wrap_width = max_width
-    
     rows = list ( rows )
     
     nc  = 0
@@ -91,14 +90,41 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
         while len  ( cols ) < nc : cols.append ('')             
         for i , c in enumerate ( cols ) :
             if not i in widths : widths[i] = 1
-            if i in wraps :
-                widths[i] = wrap_width
-            else : 
-                widths[i] = max ( widths[i] , len ( decolorize ( c ) ) )
+            widths [ i ] = max ( widths[i] , len ( decolorize ( c ) ) )
         cols = tuple ( cols )
         rows [ k ] = cols 
 
+    ## play with wrapped columns
+    while  wraps :
 
+        twidth = 1 + len ( prefix )
+        
+        for k in widths :
+            if not k in wraps :
+                twidth += widths [ k ] + 2
+                twidth += nc + 1                
+        _ , w = terminal_size()
+        if w <= twidth : break
+        
+        nw = len ( wraps ) 
+        ww = ( w - twidth ) - 2 * nw
+        ww , _ = divmod ( ww  , nw )
+
+        if 12 < wrap_width and wrap_width < ww :
+            ww = wrap_width
+            
+        if ww < 15 : break
+
+        lw = len ( wraps )                 
+        wraps = [ i for i in wraps if ww <= widths [i] ]
+        
+        if len ( wraps ) == lw  : break 
+
+        
+    for i in wraps :
+        widths [ i ] = min ( ww  , widths [ i ] ) 
+
+            
     hformats = [  "{:^%d}"  % widths [ c ] for c in range ( nc ) ]
     rformats = [ " {:^%d} " % widths [ c ] for c in range ( nc ) ]
 
@@ -118,7 +144,7 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
         for row in rows_ :
             cells = [] 
             for i , c in enumerate ( row ) :
-                if i in wraps and wrap_width < len ( c ) : cells.append ( textwrap.wrap ( indent + c , wrap_width ) )
+                if i in wraps and wrap_width < len ( c ) : cells.append ( textwrap.wrap ( indent + c , widths [ i ]  ) )
                 else          : cells.append ( [ c ] )
             nr = 0 
             for c in cells : nr = max ( nr , len ( c ) )
@@ -144,7 +170,7 @@ def the_table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = 
         for c in widths : widths[c] += delta 
 
             
-    seps     = [   '-' * ( widths[c] + 2 ) for c in range ( nc ) ]
+    seps     = [   '-' * ( widths [ c ]  + 2 ) for c in range ( nc ) ]
     sepline  = '+' + "+".join (  seps ) +  '+'
 
     table    = []
@@ -221,68 +247,63 @@ def table ( rows , title = '' , prefix = '' , alignment = () , wrap_width = -1 ,
         
     rows = [ list(row) for row in rows ]
 
-    if terminaltables and isatty () :
+    if not terminaltables :
         
+       ## use the local replacement 
+        return the_table ( rows , title , prefix , alignment = alignment )
+
+
+    if isatty () :
+        
+        title = allright ( title ) 
         table_instance = terminaltables.SingleTable ( rows , title )
-
-        cw = table_instance.column_widths
-        nc = len ( cw )
-
-        nw = 0
-        for a in alignment :
-            if a in wrapped : nw += 1
         
-        for i, a in zip ( range ( nc ) , alignment ) :
-            if a and isinstance ( a , str ) :
-                al = a.lower() 
-                if   al in left   : table_instance.justify_columns [ i ] = 'left'
-                elif al in right  : table_instance.justify_columns [ i ] = 'right'
-                elif al in center : table_instance.justify_columns [ i ] = 'center'
-                elif al in wrapped :
-                    maxw  = table_instance.column_max_width ( i )
-                    if 15 < wrap_width * nw < maxw : maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                    if maxw < 15 :                   maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                    if maxw < 15 :                   maxw = ( max_width  - 3 ) * nw if 1 < nw else max_width
-                    width = maxw / nw if 1 < nw else maxw 
-                    for l , line in enumerate ( table_instance.table_data ) :
-                        if width < len ( line [ i ] ) : 
-                            table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , width )
-
-        return add_prefix ( table_instance.table , prefix ) 
-    
-    elif terminaltables :
+    else :
         
         title = allright ( title ) 
         table_instance = terminaltables.AsciiTable ( rows , title)
+        
+    cw = table_instance.column_widths
+    nc = len ( cw )
 
-        cw = table_instance.column_widths
-        nc = len ( cw )
-
-        nw = 0
-        for a in alignment :
-            if a in wrapped : nw += 1
+    wraps = [   i  for (i,a) in enumerate ( alignment ) if a in wrapped ]
+    
+    if wraps : 
+        from terminaltables.width_and_alignment import max_dimensions
+        widths = max_dimensions ( table_instance.table_data    ,
+                                  table_instance.padding_left  ,
+                                  table_instance.padding_right ) [2] 
+        widths = sum ( l  for (i,l) in enumerate ( widths ) if not i in wraps ) 
+        widths += nc + 1 + len ( prefix ) + 4 + 2 * len ( wraps )              
+        _ , w = terminal_size()
+        ww = w - widths
+        ww , _ = divmod ( ww , len ( wraps ) )
+        
+        if   12 < ww and ww < wrap_width : wrap_width = ww
+        elif 12 < ww and wrap_width <= 0 : wrap_width = ww
+        
+        if wrap_width < 12 : wrap_width = max_width 
+    
+    nw = len ( wraps ) 
             
-        for i, a in zip ( range ( nc ) , alignment ) :
-            if a and isinstance ( a , str ) :
-                al = a.lower() 
-                if   al in left    : table_instance.justify_columns [ i ] = 'left'
-                elif al in right   : table_instance.justify_columns [ i ] = 'right'
-                elif al in center  : table_instance.justify_columns [ i ] = 'center'
-                elif al in wrapped :
-                    maxw  = table_instance.column_max_width ( i )
-                    if 15 < wrap_width * nw < maxw : maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                    if maxw < 15 :                   maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
-                    if maxw < 15 :                   maxw = ( max_width  - 3 ) * nw if 1 < nw else max_width
-                    width = maxw / nw if 1 < nw else maxw 
-                    for l , line in enumerate ( table_instance.table_data ) :
-                        if width < len ( line [ i ] ) :                             
-                            table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , width )
+    
+    for i, a in zip ( range ( nc ) , alignment ) :
+        if a and isinstance ( a , str ) :
+            al = a.lower() 
+            if   al in left   : table_instance.justify_columns [ i ] = 'left'
+            elif al in right  : table_instance.justify_columns [ i ] = 'right'
+            elif al in center : table_instance.justify_columns [ i ] = 'center'
+            elif al in wrapped :
+                maxw  = table_instance.column_max_width ( i )
+                if 15 < wrap_width * nw < maxw : maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
+                if maxw < 15 :                   maxw = ( wrap_width - 3 ) * nw if 1 < nw else wrap_width 
+                if maxw < 15 :                   maxw = ( max_width  - 3 ) * nw if 1 < nw else max_width
+                width = maxw / nw if 1 < nw else maxw 
+                for l , line in enumerate ( table_instance.table_data ) :
+                    if width < len ( line [ i ] ) : 
+                        table_instance.table_data[l][i] = textwrap. fill ( indent + line [ i ] , wrap_width  )
                         
-        t = table_instance.table 
-        return add_prefix ( table_instance.table , prefix ) 
-
-    ## use the local replacement 
-    return the_table ( rows , title , prefix , alignment = alignment )
+    return add_prefix ( table_instance.table , prefix ) 
     
 # =============================================================================
 ## get the true  table width 

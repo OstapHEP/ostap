@@ -241,14 +241,16 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         if e in vars :
             names [ e ] = e 
             continue
-        
+
+        used    = vars + tuple ( current.GetDefinedColumnNames() )
         vn      = var_name ( 'var_' , vars , e , *vars )
         current = current.Define ( vn , e )
         names [ e ] = vn
 
     cname = cuts 
     if cuts and not cuts in vars :
-        vn      = var_name ( 'cut_' , vars , cuts , *vars )
+        used    = vars + tuple ( current.GetDefinedColumnNames() )        
+        vn      = var_name ( 'cut_' , used , cuts , *vars )
         current = current.Define ( vn , cuts )
         cname   = vn
 
@@ -641,7 +643,7 @@ def frame_project ( frame , model , *what ) :
         if   w in  vars : nvars.append ( w )
         elif w in nvars : nvars.append ( w )
         else :
-            used    = vars + tuple ( nvars ) + tuple ( frame.GetDefinedColumnNames() )
+            used    = vars + tuple ( nvars ) + tuple ( current.GetDefinedColumnNames() )
             ww      = var_name ( 'var_' , used , *what )
             current = current.Define ( ww , w )
             nvars.append ( ww )
