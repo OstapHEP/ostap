@@ -302,7 +302,7 @@ class MakeVar ( object ) :
     def generate_name ( prefix = '' , suffix = '' ) :
         name = prefix + suffix 
         MakeVar.__numnames += 1            
-        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or not name :
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) :
             name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
             MakeVar.__numnames += 1            
         return name
@@ -322,7 +322,7 @@ class MakeVar ( object ) :
         regname = ROOT.RooNameReg.instance()
         name    = prefix + suffix
         MakeVar.__numnames += 1            
-        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or regname.known ( name ) or not name :
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( regname.known ( name ) ) or ( not name ) :
             name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
             MakeVar.__numnames += 1            
         return name

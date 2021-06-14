@@ -27,7 +27,7 @@ from   ostap.utils.timing       import timing
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_components' )
+    logger = getLogger ( 'test_fitting_components2_3D' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -42,8 +42,7 @@ varset  = ROOT.RooArgSet  ( m_x , m_y,m_z )
 dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )  
 
 
-
-m1 = VE(3,0.10**2)
+m1 = VE ( 3 ,0.10**2)
 m2 = VE(7,0.20**2)
 
 ## fill it with three gausissians, 5k events each
@@ -60,8 +59,9 @@ N_bbb = 250
 random.seed(0)
 
 ## fill it : 5000 events  Gauss * Gauss *Gauss
-for m in (m1,m2) : 
-    for i in range(0,N_sss) : 
+for m in ( m1 , m2 ) :
+    
+    for i in range ( N_sss) : 
         m_x.value = m.gauss() 
         m_y.value = m.gauss() 
         m_z.value = m.gauss() 
@@ -69,7 +69,7 @@ for m in (m1,m2) :
 
 
 ## fill it : 500 events  Gauss * const * Gauss  
-    for i in range(0,N_ssb) : 
+    for i in range ( N_ssb ) : 
         m_x.value = m.gauss() 
         m_y.value = random.uniform ( *m_y.minmax() )  
         m_z.value = m.gauss() 
@@ -77,49 +77,50 @@ for m in (m1,m2) :
         dataset.add ( varset  )
 
 ## fill it : 500 events  const * Gauss * Gauss
-    for i in range(0,N_sbs) : 
+    for i in range ( N_sbs ) : 
         m_x.value = random.uniform ( *m_x.minmax() ) 
         m_y.value = m.gauss() 
         m_z.value = m.gauss() 
         dataset.add ( varset  )
 
 ## fill it : 1000 events  const * const *Gauss
-    for i in range(0,N_sbb) :
+    for i in range ( N_sbb ) :
 
         m_x.value  = random.uniform ( *m_x.minmax() )
         m_y.value  = random.uniform ( *m_y.minmax() )
         m_z.value = m.gauss() 
         dataset.add ( varset  )
+
 ## fill it : 500 events    Gauss * Gauss * const 
-    for i in range(0,N_bss) : 
+    for i in range ( N_bss ) : 
         m_x.value = m.gauss() 
         m_y.value = m.gauss() 
         m_z.value = random.uniform ( *m_z.minmax() )
         dataset.add ( varset  )
+
 ## fill it : 100 events  Gauss * const * const  
-    for i in range(0,N_bsb) : 
+    for i in range ( N_bsb ) : 
         m_x.value = m.gauss() 
         m_y.value = random.uniform ( *m_y.minmax() )  
         m_z.value = random.uniform ( *m_y.minmax() )
         dataset.add ( varset  )
 
 ## fill it : 100 events  const * Gauss * const
-    for i in range(0,N_bbs) : 
+    for i in range ( N_bbs) : 
         m_x.value = random.uniform ( *m_x.minmax() ) 
         m_y.value = m.gauss() 
         m_z.value = random.uniform ( *m_y.minmax() )
         dataset.add ( varset  )
 
 ## fill it : 250 events  const * const * const
-    for i in range(0,N_bbb) :
+    for i in range ( N_bbb ) :
         m_x.value  = random.uniform ( *m_x.minmax() )
         m_y.value  = random.uniform ( *m_y.minmax() )
         m_z.value = random.uniform ( *m_y.minmax() )
         dataset.add ( varset  )
 
 
-logger.info ('Dataset: %s' % dataset )  
-
+logger.info ('Dataset:\n%s' % dataset.table ( prefix = '# ' ) )
 
 
 ## various fit components
@@ -136,58 +137,59 @@ bkg_y= bkg_x.clone ( name= 'By' , xvar =m_y )
 bkg_z= bkg_x.clone ( name='Bz' , xvar =m_z )
 
 # S(x)*S(y) component 
-ss_cmp=signal_x2*signal_y2
+ss_cmp = signal_x2 * signal_y2
 
 # S(x)*B(y) component 
-sb_cmp=signal_x2*bkg_y
+sb_cmp = signal_x2*bkg_y
 
 # B(x)*S(y) component 
-bs_cmp= bkg_x*signal_y2
+bs_cmp = bkg_x*signal_y2
 
 # B(x)*B(y) component 
-bb_cmp=bkg_x*bkg_y
+bb_cmp = bkg_x*bkg_y
 
 # S(x)*S(y)*S(z) component
-sss_cmp=ss_cmp*signal_z2
+sss_cmp = ss_cmp*signal_z2
 
 # S(x)*B(y)*S(z)+ B(x)*S(y)*S(z)+ S(x)*S(y)*B(z) component
-ssb=sb_cmp*signal_z2
-sbs=bs_cmp*signal_z2
-bss=ss_cmp*bkg_z
-ssb_=ssb+sbs
+ssb     = sb_cmp * signal_z2
+sbs     = bs_cmp * signal_z2
+bss     = ss_cmp * bkg_z
+ssb_    = ssb    + sbs
 
-ssb_cmp=ssb_+bss
+ssb_cmp = ssb_ + bss
 
-# S(x)*B(y)*B(z)+ B(x)*S(y)*B(z)+ B(x)*B(y)*S(z) component
-sbb=bb_cmp*signal_z2
-bsb=sb_cmp*bkg_z
-bbs=bs_cmp*bkg_z
-sbb_=sbb+bsb
+# S(x)*B(y)*B(z) + B(x)*S(y)*B(z) + B(x)*B(y)*S(z) component
+sbb  = bb_cmp * signal_z2
+bsb  = sb_cmp * bkg_z
+bbs  = bs_cmp * bkg_z
+sbb_ = sbb    + bsb
 
-sbb_cmp=bsb+bbs
+sbb_cmp = bsb+bbs
 
 # B(x)*B(y)*B(z) component
-bbb_cmp=bb_cmp*bkg_z
+bbb_cmp = bb_cmp * bkg_z
 
 
-
-
-
+# ========================================================================================
 
 def test_comp_3dSymfit () :
-    
+
+    logger = getLogger ( 'test_comp_2dSymFit' ) 
+
     logger.info ('Test  multi-component  3d Sym fit')
     
     model = Models.Fit3DSym (
-        name    = 'fitSym_comp', 
+        name        = 'fitSym_comp', 
         signal_x    = signal_x1, 
         signal_y    = signal_y1,
         signal_z    = signal_z1,
-        bkg_1x  = bkg_x ,
-        bkg_2x  = 'clone' ,        
-        components=[sss_cmp,ssb_cmp,sbb_cmp,bbb_cmp]
+        bkg_1x      = bkg_x ,
+        bkg_2x      = 'clone' ,
+        suffix      = '3D'    ,
+        components  = [ sss_cmp , ssb_cmp , sbb_cmp , bbb_cmp ]
         )
-    
+
     with rooSilent() : 
         ## components
         model.SSS.fix ( 5000 )
@@ -199,15 +201,13 @@ def test_comp_3dSymfit () :
         model.C[1].fix ( 2000 )
         model.C[2].fix ( 1000 )
         model.C[3].fix ( 250 )
-    
-                
+                    
         r = model.fitTo ( dataset , ncpu=8 )
 
         model.SSS.release (  )
         model.SSB.release (  )
         model.SBB.release (  )
         model.BBB.release (  )
-
         
         model.C[0].release (  )
         model.C[1].release (  )

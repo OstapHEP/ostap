@@ -1264,8 +1264,12 @@ class Model3D(PDF3) :
             self.__zmodel = Generic1D_pdf  ( zmodel , zvar )
         else : raise AttributeError ( "Invalid ``z-model'' attribute" )
         
-        ## initialize the base 
-        PDF3.__init__ (  self , name ,
+        name  = name if name  else self.generate_name ( 'Model3D_%s_%s_%s'  % ( self.xmodel.name ,
+                                                                                 self.ymodel.name ,
+                                                                                 self.zmodel.name ) )
+         ## initialize the base 
+        PDF3.__init__ (  self               ,
+                         name               ,
                          self.__xmodel.xvar ,
                          self.__ymodel.xvar ,
                          self.__zmodel.xvar ) 
@@ -1291,7 +1295,7 @@ class Model3D(PDF3) :
         if _triv_ ( self.xmodel ) and _triv_ ( self.ymodel ) and _triv_ ( self.zmodel ) :
             
             self.debug ('use Flat3D-model for the trivial product')
-            self.__flat = Flat3D ( self.xvar , self.yvar , self.zvar , name = name , title = title )
+            self.__flat = Flat3D ( self.xvar , self.yvar , self.zvar , name = self.generate_name ( name ) , title = title )
             self.pdf    = self.__flat.pdf
             
         else :
@@ -1302,7 +1306,7 @@ class Model3D(PDF3) :
                 self.__ymodel.pdf ,
                 self.__zmodel.pdf ,
                 )
-            self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'flat3_' )  , title , self.__plst )
+            self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'flat3_' ) , title , self.__plst )
             
         ## save configuration 
         self.config = {
@@ -1456,7 +1460,7 @@ class H3D_pdf(H3D_dset,PDF3) :
 #
 #  r = model.fitTo ( dataset ) ## fit dataset 
 #
-#  print r                       ## get results  
+#  print ( r )                   ## get results  
 #
 #  fx  = model.draw1 ()          ## visualize X-projection
 #  fy  = model.draw2 ()          ## visualize Y-projection
@@ -1476,7 +1480,7 @@ class Fit3D (PDF3) :
     ...      bkg_1y   = 0 ,
     ...      bkg_1z   = 0 )
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
-    >>> print r                       ## get results  
+    >>> print ( r  )                  ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
     >>> fy  = model.draw2 ()          ## visualize Y-projection
     >>> fz  = model.draw3 ()          ## visualize Z-projection
@@ -2593,11 +2597,12 @@ class Fit3DSym (PDF3) :
             self.__bkg_3x  = self.make_bkg (        bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )        
             self.__bkg_3y  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Y_BBB' + self.name ) , self.yvar )        
             self.__bkg_3z  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Z_BBB' + self.name ) , self.zvar )
-            
+
             self.__bbb_cmp = Model3D ( self.generate_name ( "BBB_" + self.name ) ,
                                        self.__bkg_3x      ,
                                        self.__bkg_3y      ,
                                        self.__bkg_3z      , title = "Background(x,y,z)" )
+        
         #
         ## coefficients
         #

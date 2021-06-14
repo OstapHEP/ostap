@@ -491,28 +491,32 @@ class PDF (FUNC) :
         elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
 
-        if args :
-            self.error ( "_draw: " + str ( args ) )
-        
+        ## if args :
+
         for i , cmp in enumerate ( what ) :
 
             st         = style  ( i ) if style and callable  ( style ) else ()
 
-            cmps       = ROOT.RooArgSet         ( cmp  )             
-            components = ROOT.RooFit.Components ( cmps )
+            component  = ROOT.RooFit.Components ( cmp.name )
             
             command    = ROOT.RooLinkedList()
-            command.add ( components )
             
-            for s in st         : command.add ( s )
-            for o in options    : command.add ( o ) 
-            for a in args       : command.add ( a )
- 
-            self.pdf .plotOn ( frame , command )
+            ### command.add ( components )            
+            ## for s in st         : command.add ( s )
+            ## for o in options    : command.add ( o ) 
+            ## for a in args       : command.add ( a )
+            ## print ('PLOT-ON:', i, cmp , [ (c,type(c)) for c in command ] ) 
+            ## self.pdf .plotOn ( frame , command )
+
+            from ostap.fitting.roocmdarg import merge_args
+            atup = tuple ( st ) + tuple ( options ) + args            
+            opts = merge_args ( 8 , *atup ) 
+            self.debug ( 'drawing component %s with options %s' % ( component , opts ) )  
+            self.pdf.plotOn ( frame , component , *merge_args ( 8 , *opts ) )
             
-            ncmps = [ c.GetName() for c in cmps ]
-            if 1 == len ( ncmps )  :  ncmps = ncmps[0]
-            self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
+            ## ncmps = [ c.GetName() for c in cmps ]
+            ## if 1 == len ( ncmps )  :  ncmps = ncmps[0]
+            ## self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
             
             del command
 

@@ -266,7 +266,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
             r = results [ e ]
             results [ e ] = r.GetValue()  
 
-    if input_string and 1 == len ( result ) :
+    if input_string and 1 == len ( results ) :
         e , r = results.popitem()
         return r
     
@@ -629,7 +629,9 @@ def frame_project ( frame , model , *what ) :
         
     if histo : histo.Reset()
     
-    vars  = frame.columns ()
+    ## get the list of currently known names
+    vars = tuple ( frame.GetColumnNames () ) 
+
     nvars = []
 
     current = frame 
@@ -639,7 +641,8 @@ def frame_project ( frame , model , *what ) :
         if   w in  vars : nvars.append ( w )
         elif w in nvars : nvars.append ( w )
         else :
-            ww      = var_name ( 'var_' , vars + tuple ( nvars ) , *what )
+            used    = vars + tuple ( nvars ) + tuple ( frame.GetDefinedColumnNames() )
+            ww      = var_name ( 'var_' , used , *what )
             current = current.Define ( ww , w )
             nvars.append ( ww )
             added = True 

@@ -1203,7 +1203,7 @@ class Model2D(PDF2) :
         if _triv_ ( self.xmodel ) and _triv_ ( self.ymodel ) :
             
             self.debug ('use Flat2D-model for the trivial product')
-            self.__flat = Flat2D ( self.xvar , self.yvar , name = name , title = title )
+            self.__flat = Flat2D ( self.xvar , self.yvar , name = self.generate_name ( name ) , title = title )
             self.pdf    = self.__flat.pdf  
             
         else :

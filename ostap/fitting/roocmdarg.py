@@ -73,6 +73,7 @@ def _rca_print_ ( self ) :
     
     ## RooAbsPdf::plotOn arguments
     if   'SelectCompSet'        == name : return 'Components({.})'
+    elif 'SelectCompSpec'       == name : return 'Components(%s)'        %    self.getString ( 0 )
     elif 'Normalization'        == name : return 'Normalization(%s,%d)'  % (  self.getDouble ( 0 ) ,
                                                                               self.getInt    ( 0 ) )  
 
