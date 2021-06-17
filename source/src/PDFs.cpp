@@ -7042,6 +7042,8 @@ Ostap::Models::Uniform::Uniform
   : RooAbsPdf  ( name , title ) 
   , m_dim      ( 1 ) 
   , m_x        ( "x" , "x-observable" , this , x )
+  , m_y        () 
+  , m_z        () 
 {}
 // ============================================================================
 // Flat in 2D
@@ -7055,6 +7057,7 @@ Ostap::Models::Uniform::Uniform
   , m_dim      ( 2 ) 
   , m_x        ( "x" , "x-observable" , this , x )
   , m_y        ( "y" , "y-observable" , this , y )
+  , m_z        () 
 {}
 // ============================================================================
 // Flat in 3D
@@ -7120,7 +7123,7 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 ( Int_t       code      , 
   const char* rangeName ) const 
 {
-  // 3D-itegral 
+  // 3D-integral 
   if      ( 3 == m_dim && 1 == code ) 
   {
     return 
@@ -7128,14 +7131,14 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
       ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;
   }
-  // 2D-itegral: x,z
+  // 2D-integral: x,z
   else if ( 3 == m_dim && 2 == code ) 
   {
     return 
       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
   }
-  // 2D-itegral: y,z
+  // 2D-integral: y,z
   else if ( 3 == m_dim && 3 == code ) 
   {
     return 
@@ -7167,8 +7170,6 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
     return 
       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) ;    
   }
-  //
-  assert ( 1 > 2 ) ;
   //
   return 0 ;
 }

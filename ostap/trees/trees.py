@@ -22,7 +22,10 @@ __all__     = (
 import ROOT, os, math
 from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
                                        ROOTCWD , strings  , split_string ) 
-from   ostap.core.ostap_types import integer_types , long_type, string_types 
+from   ostap.core.ostap_types import ( integer_types , long_type      ,
+                                       string_types  , sequence_types ,
+                                       sized_types   )                                        
+import ostap.histos.histos
 import ostap.trees.param
 # =============================================================================
 # logging 
@@ -240,21 +243,19 @@ ROOT.TChain.__call__  = _tc_call_
 #    >>> h1   = ROOT.TH1D(... )
 #    >>> tree.project ( h1           , 'm', 'chi2<10' ) ## use histo
 # 
-#    ## make invididual projections of 'm1' and 'm2' and make a sum of distributions
-#    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1           , ['m1','m2'] , 'chi2<10' ) ## use histo
-#
-#    ## make invididual projections of 'm1' and 'm2' and make a sum of distributions
-#    >>> h1   = ROOT.TH1D(... )
-#    >>> tree.project ( h1           , "m1,m2"     , 'chi2<10' )
-#    >>> tree.project ( h1           , "m1;m2"     , 'chi2<10' )
 #  @endcode
 #
-#  @param tree   the tree
-#  @param histo  the histogram or histogram name 
-#  @param what variable/expression to be projected.
-#              It could be a list/tuple of variables/expressions or just a comma-separated expression
-#  @param cuts expression for cuts/weights
+#  @param tree       (INPUT) the tree
+#  @param histo      (INPUT/UPDATE) the histogram or histogram name 
+#  @param what       (INPUT) variable/expression to be projected.
+#                            It could be a list/tuple of variables/expressions
+#                            or just a comma or semicolumn-separated expression
+#  @param cuts       (INPUT) expression for cuts/weights
+#  @param options    (INPUT) options to be propagated to <code>TTree.Project</code>
+#  @param nentries   (INPUT) number of entries to process
+#  @param firstentry (INPUT) first entry to process
+#  @param use_frame  (INPUT) use DataFrame for processing?
+#  @param silent     (INPUT) silent processing?
 #  @see TTree::Project
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-07-06
@@ -280,107 +281,124 @@ def _tt_project_ ( tree               ,
     >>> h1   = ROOT.TH1D(... )
     >>> tree.project ( h1           ,  'm', 'chi2<10' ) ## use histo
 
-    ## make invididual projections of m1 and m2 and make a sum of distributions
-    >>> h1   = ROOT.TH1D(... )
-    >>> tree.project ( h1           , ('m1','m2') , 'chi2<10' ) ## two variables 
-    >>> tree.project ( h1           , 'm1,m2'     , 'chi2<10' ) ## ditto
-    >>> tree.project ( h1           , 'm1;m2'     , 'chi2<10' ) ## ditto
-    
-    - tree  : the tree
     - histo : the histogram (or histogram name)
     - what  : variable/expression to project. It can be expression or list/tuple of expression or comma (or semicolumn) separated expression
     - cuts  : selection criteria/weights 
     """
     #
 
-    if nentries < 0 :
-        nentries = ROOT.TTree.kMaxEntries
-        
-    args = options , nentries , firstentry , silent
-    ## 
-    hname = histo 
-    if   hasattr    ( histo , 'GetName' ) : hname = histo.GetName()
-    elif isinstance ( histo , str       ) :
+    if nentries < 0 : nentries = ROOT.TTree.kMaxEntries
+
+    args = () 
+    if options or 0 < firstentry or 0 < nentries < ROOT.TTree.kMaxEntries :
+        args = options , nentries , firstentry
+
+
+    if   isinstance ( histo , ROOT.TH1     ) : hname = histo.GetName()
+    elif isinstance ( histo , string_types ) :
+        hname = histo
         groot = ROOT.ROOT.GetROOT()
         h     = groot.FindObject ( hname )
         if h and isinstance ( h , ROOT.TH1 ) : histo = h
+        else                                 : histo = None
+        
+    assert histo and isinstance ( histo , ROOT.TH1 ) ,\
+           "project: invalid type of ``histo'': %s " % type ( histo )
 
-    ## reset it!
-    if histo and isinstance ( histo , ROOT.TH1  ) : histo.Reset()
-    #
-    if isinstance ( cuts  , ROOT.TCut ) : cuts = str(cuts) 
-    if not what : return 0, histo
-    #
-    ## trivial 1-item list
-    if hasattr ( what , '__len__' ) and 1 == len ( what ) and not isinstance ( what , (str, ROOT.TCut) ): 
-        what = what[0]
+    ## reset the histogram 
+    histo.Reset() 
 
-    ## check for semicolumn-separated list of expressions:
-    if isinstance ( what , str ) and ';' in what : 
-        what = what.split(';')
-        if 1 == len(what) : what = what[0]
+    if isinstance ( cuts , ROOT.TCut ) : cuts = str ( cuts )
 
-    ## check for comma-separated list of expressions:
-    if isinstance ( what , str ) and ',' in what :
-        if '(' in what and ')' in what : pass 
-        else :
-            what = what.split(',')
-            if 1 == len( what ) : what = what[0]
+    ## comma, column or semicolumn separated list
+    if isinstance ( what , string_types ) :
+        ## attention! note reversed here! 
+        what = [ w.strip() for w in reversed ( split_string ( what , ',;:' ) ) ] ## attention! note reversed here! 
+        
+    assert isinstance ( what , sequence_types  ) and \
+           isinstance ( what , sized_types     ) and 1 <= len ( what ) ,\
+           "project: invalid ``what''/1: %s" % str ( what )
+    
+    what = [ w for w in what ]    
+    assert all ( isinstance ( w , string_types ) for w in what ) , \
+           "project: invalid ``what''/2: %s" % str ( what )
+    what = [ w.strip()  for w in what ]    
 
-    #
-    if   isinstance ( what  , str       ) : what =       what 
-    elif isinstance ( what  , ROOT.TCut ) : what = str ( what )  
-    elif isinstance ( histo , ROOT.TH1  ) : 
-        rr = 0 
-        hh = histo.clone()
-        for v in what :
-            r , h  = _tt_project_ ( tree , hh , v , cuts , options , *args )
-            rr    += r
+
+    ## special treatment for 1D histograms 
+    if 1 == histo.dim() and 1 < len ( what ) :
+        nr = 0
+        hh = histo.clone() 
+        for i , w in enumerate ( what ) : 
+            n , h = _tt_project_ ( tree , hh , w , cuts , *args , use_frame = use_frame , silent = silent )
             histo += h
-        hh.Delete()
-        del hh 
-        return rr , histo
-    elif isinstance ( histo , str ) :
-        ## process the head of the list: the first call creates the histo... 
-        rr, hh =  _tt_project_ ( tree , histo , what[0] , cuts , *args )
-        histo  = hh
-        if 1 == len ( what )   : return rr , histo
-        # normal processing of the tail of the list using created historgam 
-        hh      = histo.clone()
-        r1 , h1 = _tt_project_ ( tree , hh , what[1:] , cuts , *args )
-        rr     += r1
-        histo  += h1
-        hh.Delete()
-        del hh, h1 
-        return rr , histo
+            br    += n 
+        del hh
+        return nr , histo 
 
-    if use_frame and isinstance ( tree , ROOT.TTree ) :
+    ## number of variables must match the dimensionality of the histogram 
+    assert len ( what ) == histo.dim(), \
+           "project: dimension mismatch : ``what''/%d vs ``dim''/%d " % ( len ( what ) , histo.dim() ) 
+
+    ## use frame if requested and if possible 
+    if use_frame and isinstance ( tree , ROOT.TTree ) and not args :
         
         from ostap.frames.frames import DataFrame, frame_project
         frame   = DataFrame ( tree , enable = False )
-        counter = fr.Filter( cuts ).Count()  if cuts else fr.Count() 
+        counter = frame.Filter( cuts ).Count()  if cuts else frame.Count() 
         hh      = frame_project ( frame , histo , what , cuts )
         return counter.GetValue () , hh 
-    
+
     ## the basic case 
     with ROOTCWD() :
+        
         groot = ROOT.ROOT.GetROOT() 
         groot.cd ()
 
-        hh = histo.clone()
-        hn = hh.GetName() 
+        ## attention! note reversed here! 
+        vars = ' : '.join ( ( '(%s)' % w for w in reversed ( what ) ) )  ## attention! note reversed here! 
 
+        ## make temporary histogram
+        uid   = vars , cuts , histo.GetName() , tree.GetName() , args , use_frame , silent 
         
-        ## make projection
+        htemp = histo.clone ( prefix = 'htmp_%X_' % ( hash ( uid ) % 2**32 ) )
+        hname = htemp.GetName  () 
 
-        result = tree.Project ( hn , what , cuts , *args[:-1] )
+        ## make projection to temporary histogram 
+        result = tree.Project ( hname , vars  , cuts , *args )
+
+        if   0 == result :
+            
+            del htemp
+            return result , histo
         
-        if   isinstance ( histo , ROOT.TH1 ) :
+        elif 0 < result and result == htemp.GetEntries() :
+            
+            histo += htemp
+            
+            del htemp 
+            return result , histo 
+        
+        ## make a try extract the temporary histogram from ROOT memory 
+        hroot = groot.FindObject ( hname )
+        if hroot and ( hroot is htemp ) :
+            
+            histo += hroot 
+            
+            del hroot
+            del htemp
+            
             return result, histo
-        elif isinstance ( histo , str      ) :
-            h = groot.FindObject ( hname )
-            if h : return result, h
-
+        
+        else :
+            
+            logger.error( "project: cannot  access temporary histo")
+            
+            histo += htemp
+            
+            del hroot
+            del htemp 
+            
     return result, histo
 
 ROOT.TTree .project = _tt_project_
@@ -1556,9 +1574,9 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
 # 
 #   - adding 1D-histogram as function:
 #     for  each entry it gets the value of `mLb` variable
-#     and stores the value from the historgam in new `S_sw` variable:
+#     and stores the value from the histogram in new `S_sw` variable:
 #   @code
-#   >>> h  = ...  ## historgam, e.g. sPlot 
+#   >>> h  = ...  ## histogram, e.g. sPlot 
 #   >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
 #   >>> tree.add_new_branch ( 'S_sw' , fn )
 #   @endcode
@@ -1607,9 +1625,9 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     >>> tree.add_new_branch ( [ 'pt', 'eta' , 'ntracks' ] ,  h3 )
 
     - adding histogram as function: for  each entry it gets the value of `mLb` variable
-    and stores the value from the historgam in new `S_sw` variable:
+    and stores the value from the histogram in new `S_sw` variable:
     
-    >>> h  = ...  ## historgam, e.g. sPlot 
+    >>> h  = ...  ## histogram, e.g. sPlot 
     >>> fn = Ostap.Functions.FuncTH1 ( sph , 'mLb' )
     >>> tree.add_new_branch ( 'S_sw' , fn )
     

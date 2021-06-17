@@ -60,7 +60,8 @@ class WorkManager(TaskManager) :
                   ncpus     = 'autodetect' ,
                   ppservers = None         ,
                   pp        = False        ,
-                  silent    = False        , **kwargs ) :
+                  silent    = False        ,
+                  progress  = True         , **kwargs ) :
 
         ##
         if isinstance ( ncpus , int ) and 1 <= ncpus : pass
@@ -72,7 +73,7 @@ class WorkManager(TaskManager) :
             logger.warning ( "WorkManager: option ``ppservers'' is ignored" )
         
         ## initialize the base class 
-        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent )        
+        TaskManager.__init__  ( self , ncpus = ncpus , silent = silent , progress = progress )        
         
         self.pool   = MP.Pool ( self.ncpus )
 

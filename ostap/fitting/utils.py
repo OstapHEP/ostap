@@ -756,23 +756,30 @@ class MakeVar ( object ) :
         """
         assert isinstance ( num , integer_types ) and 1 <= num ,\
                "merge_args: invalid chunk size ``%s''" % num
+        
+        assert all ( isinstance ( a , ROOT.RooCmdArg ) for a in args ), \
+               "merge_args: invalid types %s | %s" %  ( args , [ type(a) for a in args ] ) 
 
-        ## no action 
+        ### no action ?
         if len ( args ) < num : return args
 
-        from   ostap.utils.utils  import chunked
+        from   ostap.utils.utils  import chunked                
+        self.aux_keep.append (  args ) 
 
-        lst   = flat_args ( *args )
+        ## flat  = flat_args    ( *args )        
+        ## self.aux_keep.append (  flat ) 
+
+        lst   = args 
         
-        self.aux_keep.append ( lst )
-                
+        NC = 8 if ( 1 != len ( lst ) % 8 )  else 7
+        
         while num < len ( lst ) : 
+
+            chunks = chunked ( lst , NC )
+            mlst   = [ ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks ]
             
-            nlst = chunked ( lst , 4 )
-            ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ]
-            
-            self.aux_keep.append ( ll ) 
-            lst = tuple ( ll )
+            self.aux_keep.append ( mlst ) 
+            lst = tuple ( mlst )
             
         return lst 
         

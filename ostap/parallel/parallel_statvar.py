@@ -70,60 +70,36 @@ class StatVarTask(Task) :
         - number of entries to process
         """
 
-        print ('I AM HERE START/1', jobid, item ) 
         import ROOT
         from ostap.logger.utils import logWarning
         with logWarning() :
             import ostap.core.pyrouts 
             import ostap.trees.trees 
 
-        print ('I AM HERE START/2', jobid, item )
-        
         chain   = item.chain 
         first   = item.first
         last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
         
-        print ('I AM HERE START/3', jobid, item )
-
         from ostap.trees.trees  import _stat_vars_
-
-        print ('I AM HERE START/4', jobid , self.what , self.cuts , first , last , type ( chain )  )
 
         self.__output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
 
-        print ('I AM HERE END', jobid, item )
-        
         return self.__output 
         
     ## merge results 
     def merge_results ( self , result , jobid = -1 ) :
         
-        print ('I AM HERE MERGE/1', jobid )
-
         from ostap.stats.counters import WSE
-
         
         if not self.__output : self.__output = result
         else               :
-            print ('I AM HERE MERGE/2', jobid )
-            
             assert type( self.__output ) == type ( result ) , 'Invalid types for merging!'
-
-            print ('I AM HERE MERGE/3', jobid )
-
             if isinstance ( self.__output , dict ) :
-                print ('I AM HERE MERGE/4', jobid , result.keys() )
-
                 for key in result : 
                     if    key in self.output : self.__output [ key ] += result [ key ]
                     else                     : self.__output [ key ]  = result [ key ] 
             else :
-                
-                print ('I AM HERE MERGE/5', jobid )
-                
                 self.__output += result
-
-            print ('I AM HERE MERGE/6', jobid )
 
     ## get the results 
     def results ( self ) : return self.__output 
@@ -147,26 +123,23 @@ def pStatVar ( chain               ,
     >>> chain    = ...
     >>> chain.pstatVar( 'mass' , 'pt>1') 
     """
-
-    print ( 'I am pStatVar/1' ) 
     ## few special/trivial cases
 
+    print ( 'I am pStatVar' )
+    
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
     
     if 0 <= first and 0 < nevents < chunk_size :
-        print ( 'I am pStatVar/1.1' ) 
+        print ( 'I am pStatVar/0' )
         return chain.statVar ( what , cuts , first , last )
     elif isinstance ( chain , ROOT.TChain ) :
-        print ( 'I am pStatVar/1.2' ) 
-        if chain.nFiles() < 3 and len ( chain ) < chunk_size :
-            print ( 'I am pStatVar/1.3' ) 
+        if 1 == chain.nFiles() and len ( chain ) < chunk_size :
+            print ( 'I am pStatVar/1' )
             return chain.statVar ( what , cuts , first , last )                         
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
-        print ( 'I am pStatVar/1.4' ) 
+        print ( 'I am pStatVar/2' )
         return chain.statVar ( what , cuts , first , last ) 
-
-    print ( 'I am pStatVar/2' ) 
-
+    
     from ostap.trees.trees import Chain
     ch     = Chain ( chain , first = first , nevents = nevents )
 
@@ -175,11 +148,8 @@ def pStatVar ( chain               ,
 
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
-    print ( 'I am pStatVar/3' , len(trees)  ) 
-
+    print ( 'statvar-pprocess', chain.GetName() , len(trees) ) 
     wmgr.process ( task , trees )
-
-    print ( 'I am pStatVar/4' , len(trees)  ) 
 
     del trees
     del ch    
@@ -188,8 +158,10 @@ def pStatVar ( chain               ,
     
     return results 
 
-ROOT.TChain.pstatVar = pStatVar 
-ROOT.TTree .pstatVar = pStatVar
+ROOT.TChain.pstatVar  = pStatVar 
+ROOT.TTree .pstatVar  = pStatVar
+ROOT.TChain.pstatVars = pStatVar 
+ROOT.TTree .pstatVars = pStatVar
 
 # =============================================================================
 _decorated_classes_ = (
@@ -198,8 +170,10 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
-    ROOT.TTree .pstatVar,
-    ROOT.TChain.pstatVar,
+    ROOT.TTree .pstatVar  ,
+    ROOT.TChain.pstatVar  ,
+    ROOT.TTree .pstatVars ,
+    ROOT.TChain.pstatVars ,
     )
 
 # =============================================================================

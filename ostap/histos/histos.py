@@ -85,14 +85,14 @@ def _h_new_init_ ( self , *args ) :
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , name = '' , title = ''  ) :
+def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' ) :
     """Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID ()
+    if not name : name = hID ( prefix = prefix )
     #
     with ROOTCWD() :
         groot = ROOT.ROOT.GetROOT()

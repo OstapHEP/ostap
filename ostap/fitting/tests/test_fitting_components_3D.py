@@ -131,45 +131,45 @@ signal_x2 = Models.Gauss_pdf ( name='G2x'  , xvar = m_x  , mean = m2.value() , s
 signal_y2 = signal_x2.clone ( name='G2y'  , xvar = m_y   ) 
 signal_z2 = signal_x2.clone ( name='G2z'  , xvar = m_z   )
 
-bkg_x= make_bkg ( -1      , 'Bx' , m_x )
-bkg_y= bkg_x.clone ( name= 'By' , xvar =m_y )
-bkg_z= bkg_x.clone ( name='Bz' , xvar =m_z )
+bkg_x     = make_bkg ( -1      , 'Bx' , m_x        )
+bkg_y     = bkg_x.clone ( name = 'By' , xvar = m_y )
+bkg_z     = bkg_x.clone ( name = 'Bz' , xvar = m_z )
 
-# S(x)*S(y) component 
-ss_cmp=signal_x2*signal_y2
+## # S(x)*S(y) component 
+## ss_cmp=signal_x2*signal_y2
 
-# S(x)*B(y) component 
-sb_cmp=signal_x2*bkg_y
+## # S(x)*B(y) component 
+## sb_cmp=signal_x2*bkg_y
 
-# B(x)*S(y) component 
-bs_cmp= bkg_x*signal_y2
+## # B(x)*S(y) component 
+## bs_cmp= bkg_x*signal_y2
 
-# B(x)*B(y) component 
-bb_cmp=bkg_x*bkg_y
+## # B(x)*B(y) component 
+## bb_cmp=bkg_x*bkg_y
 
-# S(x)*S(y)*S(z) component
-sss_cmp=ss_cmp*signal_z2
+## # S(x)*S(y)*S(z) component
+## sss_cmp=ss_cmp*signal_z2
 
-#  S(x)*S(y)*B(z) component
-ssb_cmp=sb_cmp*signal_z2
+## #  S(x)*S(y)*B(z) component
+## ssb_cmp=sb_cmp*signal_z2
 
-#  S(x)*B(y)*S(z) component
-sbs_cmp=bs_cmp*signal_z2
+## #  S(x)*B(y)*S(z) component
+## sbs_cmp=bs_cmp*signal_z2
 
-#  S(x)*B(y)*B(z) component
-sbb_cmp=bb_cmp*signal_z2
+## #  S(x)*B(y)*B(z) component
+## sbb_cmp=bb_cmp*signal_z2
 
-#  B(x)*S(y)*S(z) component
-bss_cmp=ss_cmp*bkg_z
+## #  B(x)*S(y)*S(z) component
+## bss_cmp=ss_cmp*bkg_z
 
-#  B(x)*S(y)*B(z) component
-bsb_cmp=sb_cmp*bkg_z
+## #  B(x)*S(y)*B(z) component
+## bsb_cmp=sb_cmp*bkg_z
 
-#  B(x)*B(y)*B(z) component
-bbs_cmp=bs_cmp*bkg_z
+## #  B(x)*B(y)*B(z) component
+## bbs_cmp=bs_cmp*bkg_z
 
-#  B(x)*B(y)*B(z) component
-bbb_cmp=bb_cmp*bkg_z
+## #  B(x)*B(y)*B(z) component
+## bbb_cmp=bb_cmp*bkg_z
 
 
 
@@ -178,18 +178,28 @@ bbb_cmp=bb_cmp*bkg_z
 # =============================================================================
 ## Test  multi-component  3d fit'
 def test_comp_3dfit () :
+## if 1 < 2 :
     
     logger.info ('Test  multi-component  3d fit')
-    
+
     model = Models.Fit3D (
-        name    = 'fit_comp', 
-        signal_x    = signal_x1, 
-        signal_y    = signal_y1,
-        signal_z    = signal_z1,
-        bkg_1x  = bkg_x ,
-        bkg_1y  = bkg_y ,
-        bkg_1z  = bkg_z ,
-        components=[sss_cmp,ssb_cmp,sbs_cmp,sbb_cmp,bss_cmp,bsb_cmp,bbs_cmp,bbb_cmp]
+        name        = 'fit_comp', 
+        signal_x    = signal_x1 , 
+        signal_y    = signal_y1 ,
+        signal_z    = signal_z1 ,
+        bkg_1x      = bkg_x     ,
+        bkg_1y      = bkg_y     ,
+        bkg_1z      = bkg_z     ,
+        suffix      = "_1"      ,
+        ## ##
+        ## components = [ sss_cmp ,
+        ##                ssb_cmp ,
+        ##                sbs_cmp ,
+        ##                sbb_cmp ,
+        ##                bss_cmp ,
+        ##                bsb_cmp ,
+        ##                bbs_cmp ,
+        ##                bbb_cmp ]
         )
     
     with rooSilent() : 
@@ -203,14 +213,14 @@ def test_comp_3dfit () :
         model.BSB.fix ( 100 )
         model.BBB.fix ( 250 )
 
-        model.C[0].fix ( 5000 )
-        model.C[1].fix ( 500 )
-        model.C[2].fix ( 500 )
-        model.C[3].fix ( 1000 )
-        model.C[4].fix ( 500 )
-        model.C[5].fix ( 100 )
-        model.C[6].fix ( 100 )
-        model.C[7].fix ( 250 )
+        ## model.C[0].fix ( 5000 )
+        ## model.C[1].fix ( 500 )
+        ## model.C[2].fix ( 500 )
+        ## model.C[3].fix ( 1000 )
+        ## model.C[4].fix ( 500 )
+        ## model.C[5].fix ( 100 )
+        ## model.C[6].fix ( 100 )
+        ## model.C[7].fix ( 250 )
     
                 
         r = model.fitTo ( dataset , ncpu=8 )
@@ -225,17 +235,17 @@ def test_comp_3dfit () :
         model.BBB.release (  )
 
         
-        model.C[0].release (  )
-        model.C[1].release (  )
-        model.C[2].release (  )
-        model.C[3].release (  )
-        model.C[4].release (  )
-        model.C[5].release (  )
-        model.C[6].release (  )
-        model.C[7].release (  )
+        ## model.C[0].release (  )
+        ## model.C[1].release (  )
+        ## model.C[2].release (  )
+        ## model.C[3].release (  )
+        ## model.C[4].release (  )
+        ## model.C[5].release (  )
+        ## model.C[6].release (  )
+        ## model.C[7].release (  )
         
         r = model.fitTo ( dataset , ncpu=8 )
-
+        
         model.draw1 (  dataset )
         model.draw2 (  dataset )
         model.draw3 (  dataset )

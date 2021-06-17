@@ -787,13 +787,15 @@ class TaskManager(object) :
     
     __metaclass__ = abc.ABCMeta
 
-    def __init__  ( self           ,
-                    ncpus          ,
-                    silent = False ) :
+    def __init__  ( self            ,
+                    ncpus           ,
+                    silent  = False ,
+                    progress = True ) :
         
-        self.__ncpus  = ncpus        
-        self.__silent = silent
-            
+        self.__ncpus    = ncpus        
+        self.__silent   = silent
+        self.__progress = True if progress else False
+        
     # =========================================================================
     ## process Task or callable object :
     #  - process <code>Task</code>:
@@ -882,7 +884,7 @@ class TaskManager(object) :
         from ostap.utils.progress_bar import ProgressBar
         ## total number of jobs  
         njobs = sum  ( len ( c ) for c in chunks )
-        with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
+        with ProgressBar ( max_value = njobs , silent = not self.progress ) as bar :
             
             while chunks :
 
@@ -935,14 +937,14 @@ class TaskManager(object) :
         ## total number of jobs 
         njobs = sum  ( len ( c ) for c in chunks ) 
         from ostap.utils.progress_bar import ProgressBar
-        with ProgressBar ( max_value = njobs , silent = self.silent ) as bar :
+        with ProgressBar ( max_value = njobs , silent = not self.progress ) as bar :
 
             while chunks :
 
                 chunk = chunks.pop ( 0 ) 
                 
                 jobs_args = zip ( repeat ( task ) , count ( index ) , chunk )
-
+                
                 for jobid , result , stat in self.iexecute ( task_executor    ,
                                                              jobs_args        ,
                                                              progress = False ) :
@@ -970,6 +972,11 @@ class TaskManager(object) :
     def silent ( self ) :
         """``silent'' : silent processing?"""
         return self.__silent
+
+    @property
+    def progress ( self ) :
+        """``progress'' : show progress bar?"""
+        return self.__progress
 
     @property
     def ncpus ( self ) :

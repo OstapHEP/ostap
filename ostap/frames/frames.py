@@ -23,7 +23,7 @@ __all__     = (
 # =============================================================================
 import ROOT
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, split_string  
+from   ostap.core.core        import cpp, Ostap, strings, split_string  
 from   ostap.core.ostap_types import integer_types, string_types  
 from   ostap.logger.utils     import multicolumn
 from   ostap.utils.basic      import terminal_size, isatty
@@ -69,7 +69,7 @@ def var_name ( prefix , used_names , *garbage ) :
 #  @see ROOT::EnableImplicitMT 
 #  @see ROOT::DisableImplicitMT
 #  @see ROOT::IsImplicitMTEnabled
-def _fr_new_init_ ( self , *args , **kwargs ) :
+def _fr_new_init_ ( self , name , *args , **kwargs ) :
     """Modify the DataFrame constuctor to allow (semi)automatic
     manipulations wth ROOT.ROOT.EnableImplicitMT/DisableImplicitMT
     - see ROOT.ROOT.EnableImplicitMT 
@@ -87,8 +87,8 @@ def _fr_new_init_ ( self , *args , **kwargs ) :
     elif not mt and     ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.DisableImplicitMT ()
         logger.info ( 'DataFrame: ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
-    
-    return  self._fr_old_init_ ( *args , **kwargs )
+        
+    self._fr_old_init_ ( name , *args , **kwargs ) 
 
 if not hasattr ( DataFrame , '_fr_old_init_' ) :
     DataFrame._fr_old_init_ = DataFrame.__init__
@@ -725,11 +725,11 @@ _new_methods_       = (
 
 
 # =============================================================================
-if (6,16) <= root_info :
+if ( 6 , 25 ) <= root_info :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
     DataFrame.statVars  = _fr_statVar_new_
-    __all__ = __all__ + ( 'frame_statVar' , ) 
+    __all__ = __all__ + ( 'frame_statVar' , 'frame_statVars' ) 
     _new_methods_      = _new_methods_ + ( DataFrame.statVars , ) 
     
 # =============================================================================

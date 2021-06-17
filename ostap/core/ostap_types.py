@@ -24,6 +24,7 @@ __all__     = (
     'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
     'sequence_types'  , ## sequence types 
+    'sized_types'     , ## sized types 
     ##
     'is_integer'      , ## is a value of int-like type?
     'is_number'       , ## is a value of numeric  type?
@@ -62,12 +63,12 @@ else :
     python_version = 2 
     import collections     as C
 # =============================================================================
-if   ( 3 , 5 ) <= python_version : from collections.abc import Generator, Collection, Sequence, Iterable  
+if   ( 3 , 5 ) <= python_version : from collections.abc import Generator, Collection, Sequence, Iterable, Sized   
 elif ( 3 , 3 ) <= python_version :
-    from collections.abc import Collection, Sequence, Iterable  
+    from collections.abc import Collection, Sequence, Iterable, Sized   
     from types           import GeneratorType as Generator 
 else :
-    from collections     import Sequence , Iterable            
+    from collections     import Sequence , Iterable , Sized            
     from collections     import Container     as Collection
     from types           import GeneratorType as Generator 
 
@@ -79,6 +80,7 @@ listlike_types = list_types + ( set , C.Sequence )
 dict_types     = dict ,
 dictlike_types = dict ,               C.Mapping  
 sequence_types = list_types + ( Sequence , Collection , Iterable , Generator )
+sized_types    = Sized , 
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

@@ -100,6 +100,7 @@ class PDF (FUNC) :
         self.__combined_signals      = ROOT.RooArgList ()
         self.__combined_backgrounds  = ROOT.RooArgList ()
         self.__combined_components   = ROOT.RooArgList ()
+
         ## take care about sPlots 
         self.__splots          = []
         self.__histo_data      = None
@@ -364,7 +365,7 @@ class PDF (FUNC) :
 
         ## define silent context
         with roo_silent ( silent ) :
-            self.fit_result = None
+            self.fit_result = None            
             result          = self.pdf.fitTo ( dataset , *self.merge_args ( 8 , *opts ) ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
@@ -491,15 +492,10 @@ class PDF (FUNC) :
         elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
 
-        ## if args :
-
         for i , cmp in enumerate ( what ) :
 
             st         = style  ( i ) if style and callable  ( style ) else ()
-
             component  = ROOT.RooFit.Components ( cmp.name )
-            
-            command    = ROOT.RooLinkedList()
             
             ### command.add ( components )            
             ## for s in st         : command.add ( s )
@@ -508,19 +504,16 @@ class PDF (FUNC) :
             ## print ('PLOT-ON:', i, cmp , [ (c,type(c)) for c in command ] ) 
             ## self.pdf .plotOn ( frame , command )
 
-            from ostap.fitting.roocmdarg import merge_args
             atup = tuple ( st ) + tuple ( options ) + args            
-            opts = merge_args ( 8 , *atup ) 
-            self.debug ( 'drawing component %s with options %s' % ( component , opts ) )  
-            self.pdf.plotOn ( frame , component , *merge_args ( 8 , *opts ) )
+            opts = self.merge_args ( 6 , *atup ) 
+            ## self.debug ( 'drawing component %s with options %s' % ( component , opts ) )  
+            self.pdf.plotOn ( frame , component , *opts )
             
             ## ncmps = [ c.GetName() for c in cmps ]
             ## if 1 == len ( ncmps )  :  ncmps = ncmps[0]
             ## self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
             
-            del command
-
-                                            
+        
     # ================================================================================
     ## draw fit results
     #  @code
@@ -643,12 +636,10 @@ class PDF (FUNC) :
                 data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
             if dataset :
-                command  = ROOT.RooLinkedList()
-                for o in data_options : command.add ( o )
-                for a in args         : command.add ( o )
-                invisible = ROOT.RooFit.Invisible()  
-                command.add ( invisible ) 
-                dataset .plotOn ( frame , command )
+
+                commands = data_options 
+                commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
+                dataset .plotOn ( frame ,  *self.merge_args ( 6 , *commands ) )
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
@@ -724,17 +715,15 @@ class PDF (FUNC) :
             ## the total fit curve
             #
             totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            self.pdf .plotOn ( frame , *totoptions )
-            kwargs.pop ( 'total_fit_options' , () )            
+            self.pdf .plotOn ( frame , *self.merge_args ( 6 , *totoptions ) )
+            kwargs.pop ( 'total_fit_options' , () )
+            
             #
             ## draw data once more
             #
             if dataset :
-                command    = ROOT.RooLinkedList()
-                for o in data_options : command.add ( o )
-                for a in args         : command.add ( a ) 
-                dataset .plotOn ( frame , command )
-                del command
+                commands = data_options + args
+                dataset .plotOn ( frame , *self.merge_args ( 6 , *commands )  )
 
             #
             ## suppress ugly axis labels
@@ -1028,7 +1017,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            result.plotOn ( frame , *self.merge_args ( 8 , *largs ) )
+            result.plotOn ( frame , *self.merge_args ( 6 , *largs ) )
             
             import ostap.histos.graphs
             
@@ -2323,7 +2312,34 @@ class PDF (FUNC) :
             ufracs.append ( f )
             
         return ufracs
-    
+
+    # =============================================================================
+    ## make a product of pdfs
+    #  actually a simple wrapper over <code>RooProdPdf</code> 
+    def make_prod ( self , name , title , *pdfs ) :
+        """Make a product of pdfs
+        actually a simple wrapper over <code>RooProdPdf</code> 
+        """
+
+        assert 2 <= len ( pdfs ) , 'make_prod: Invalid number of components %s' % len ( pdfs )
+
+        self.keep_aux.append ( pdfs  )
+        pdf_list = ROOT.RooArgList ()
+        tit = ""
+        
+        for i , pdf in enumerate ( pdfs ) :
+            
+            pdf_ = pdf.pdf if isinstance ( pdf , PDF ) else pdf 
+            assert isinstance  ( pdf_ , ROOT.RooAbsPdf  ) ,\
+                   'make_prod: invalid type of ``pdf%d'': %s' %  ( i , type ( pdf ) )
+            
+            pdf_list.Add ( pdf_ )
+
+        if not title : title = ' x '.join ( p.name for p in pdfs )
+        
+        ## construct the final PDF 
+        return ROOT.RooProdPdf ( self.roo_name ( name ) , title , pdf_list ) 
+
     # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
     def add_pdf ( self             ,
@@ -3306,7 +3322,7 @@ class Fit1D (PDF) :
             self.verbose('%2d signals     are combined into single SIGNAL'     % len ( sigs ) )
             self.combined_signals.add ( sig ) 
 
-        ## combine background components into single backhround (if needed ) 
+        ## combine background components into single background (if needed ) 
         self.__background_fractions = () 
         if combine_backgrounds and 1 < len( self.backgrounds ) :            
             bkg , fracs , bkgs = self.add_pdf ( self.backgrounds          ,

@@ -311,10 +311,9 @@ def flat_args ( *args ) :
     flat = []
     for arg in args :
 
-        if arg.name != "MultiArg" : flat.append ( arg )
-        else :
-            lst = [ i for i in arg.subArgs() if i.name ]
-            flat = flat + list ( flat_args ( *lst ) ) 
+        lst = [ i for i in arg.subArgs () ]
+        if lst : flat += list ( flat_args ( *lst )  )
+        else   : flat.append ( arg )
 
     return tuple ( flat ) 
 
@@ -420,9 +419,11 @@ def merge_args ( num , *args ) :
     assert isinstance ( num , integer_types ) and 1 <= num ,\
            "merge_args: invalid chunk size ``%s''" % num
     
-    if len ( args ) < num : return tuple ( args ) 
+    if len ( args ) < num : return args
 
-    lst   = flat_args ( *args ) 
+    orig  = [ a for a in args ] 
+    ## lst   = flat_args ( *args )
+    lst   = [ a for a in args ] 
     keep  = [ l for l in lst ]
     
     while num < len ( lst ) : 

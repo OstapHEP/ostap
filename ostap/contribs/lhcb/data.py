@@ -77,27 +77,37 @@ class DataAndLumi(Data2):
     >>> print data.getLumi() 
     """
 
-    def __init__( self                ,
-                  chain               ,
-                  files       = []    ,
-                  description = ''    , 
+    def __init__( self                 ,
+                  chain                ,
+                  files       = []     ,
+                  description = ''     , 
                   lumi_chain  = 'GetIntegratedLuminosity/LumiTuple' , 
-                  maxfiles    = 1000000                             ,
-                  silent      = False ,
-                  missing     = True  ) :  
+                  maxfiles    = 100000 ,
+                  check       = True   ,
+                  silent      = False  ) :  
 
-        if not description :
-            description = chain.GetName() if hasattr ( chain , 'GetName' ) else str(chain)
-        Data2.__init__ ( self , chain , lumi_chain , files , description , maxfiles  , silent , quick = False , missing1st = missing , missing2nd = False ) 
-        self.lumi = self.chain2 
-
-    def __getstate__ ( self ) :
-        return Data2.__getstate__( self )
-
-    def __setstate__ ( self , state ) :
-        Data2.__setstate__ ( self , state )                   
-        self.lumi  = self.chain2 
+        chain      =      chain if isinstance (      chain , str ) else      chain.name
+        lumi_chain = lumi_chain if isinstance ( lumi_chain , str ) else lumi_chain.name
         
+        if not description :
+            description = "ROOT.TChain(%s)+lumi %s" % ( chain , lumi_chain )
+            
+        Data2.__init__ ( self                      ,
+                         chain1      = chain       ,
+                         chain2      = lumi_chain  ,
+                         files       = files       ,
+                         description = description ,
+                         maxfiles    = maxfiles    ,
+                         check       = check       , 
+                         silent      = silent      ) 
+
+    # =========================================================================
+    @property
+    def lumi ( self ) :
+        """``lumi'': recreate and return luminosity chain (same as ``chain2'')
+        """
+        return self.chain2
+    
     ## get the luminosity 
     def getLumi ( self ):
         """Get the luminosity
@@ -114,11 +124,11 @@ class DataAndLumi(Data2):
     def __str__(self):
         
         l   = self.getLumi()
-        nf  = len ( self.files   )
-        nf2 = len ( self.files2  )
-        nc  = len ( self.chain   )
-        ne  = len ( self.e_list1 )
-        ne2 = len ( self.e_list2 )
+        nf  = len ( self.files      )
+        nf2 = len ( self.files2     )
+        nc  = len ( self.chain      )
+        ne  = len ( self.bad_files1 )
+        ne2 = len ( self.bad_files2 )
         
         sf  = set ( self.files ) == set ( self.files2 )
         
@@ -128,123 +138,6 @@ class DataAndLumi(Data2):
         else :            
             return "<Luminosity: {}pb-1; #files: {}; Entries: {}; No/empty: {}/{}>"   .format( l , nf ,       nc , ne , ne2 ) if sf else \
                    "<Luminosity: {}pb-1; #files: {}/{}; Entries: {}; No/empty: {}/{}>".format( l , nf , nf2 , nc , ne , ne2 )
-
-
-    ## get an intersection of two datasets 
-    def __and__ (  self , other ) :
-        """ get intersection of two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 & ds2 ## get intersection
-        >>> ds  = ds1 & ds2 ## ditto
-        """
-        if not isinstance ( other , DataAndLumi ) : return NotImplemented
-        
-        result          = DataAndLumi (
-            chain       = self.chain .GetName() ,
-            lumi_chain  = self.chain2.GetName() ,
-            files       = []                    ,
-            description = self.description      , 
-            maxfiles    = self.maxfiles         ,
-            silent      = True                  )
-        
-        f1  = set ( self .files   )
-        f1o = set ( other.files   )
-        f2  = set ( self .files2  )
-        f2o = set ( other.files2  )
-        p   = set ( self .patterns )
-        po  = set ( other.patterns )
-        
-        result.set_files    ( f1 & f1o )
-        result.set_files2   ( f2 & f2o )        
-        result.set_patterns ( p  | po  )
-        result.e_list1  = self.e_list1 | other.e_list1
-        result.e_list2  = self.e_list2 | other.e_list2
-        result.silent   = self.silent
-        
-        for f in result.files  : result.chain .Add ( f ) 
-        for f in result.files2 : result.chain2.Add ( f ) 
-            
-        return result
-
-
-
-    ## clone it !
-    def clone  ( self ) :
-        """ Clone the  object
-        """
-        result          = DataAndLumi (
-            chain       = self.chain .GetName() ,
-            lumi_chain  = self.chain2.GetName() ,
-            files       = []                    ,
-            description = self.description      , 
-            maxfiles    = self.maxfiles         ,
-            silent      = True                  )
-        
-        for f in self.files  : result.chain .Add ( f ) 
-        for f in self.files2 : result.chain2.Add ( f ) 
-            
-        result.chain1  = result.chain
-        result.lumi    = result.chain2
-
-        result.set_files    ( self.files    ) 
-        result.set_files2   ( self.files2   ) 
-        result.set_patterns ( self.patterns ) 
-        result.e_list1  = deepcopy ( self.e_list1  ) 
-        result.e_list2  = deepcopy ( self.e_list2  ) 
-        
-        return result 
-
-    ## reload!
-    def reload ( self , silent = True ) :
-        ## 
-        Data2.reload ( self , silent ) 
-        ##
-        self.lumi    = self.chain2 
- 
-    # =========================================================================
-    ##  Get a sub-sample
-    #   @code
-    #   files = ...
-    #   f1 = files.sample ( 5   ) ##  5     files
-    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
-    #   @endcode
-    def sample ( self , n , sort = True , **kwargs ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files.sample ( 5   ) ##  5     files
-        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
-        """
-        files = self.sample_files ( n , sort )
-        return DataAndLumi ( files       = files ,
-                             chain       = kwargs.get ( 'chain'       , self.chain1.GetName() ) ,
-                             lumi_chain  = kwargs.get ( 'lumi_chain'  , self.chain2.GetName() ) ,                             
-                             description = kwargs.get ( 'description' , self.description      ) ,
-                             maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles         ) ,
-                             silent      = kwargs.get ( 'silent'      , self.silent           ) ,
-                             missing     = kwargs.get ( 'missing'     , self.missing1st       ) )
-
-    # =========================================================================
-    ##  Get an element or slice 
-    #   @code
-    #   files = ...
-    #   f1 = files[5] 
-    #   f2 = files[4:10]
-    #   @endcode
-    def __getitem__ ( self , item ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files[5] 
-        >>> f2 = files[4:10]
-        """
-        files = self.files[ item ]
-        return DataAndLumi ( files       = files                  ,
-                             chain       = self.chain1.GetName () ,
-                             lumi_chain  = self.chain2.GetName () ,                             
-                             description = self.description       ,
-                             maxfiles    = self.maxfiles          ,
-                             silent      = self.silent            ,
-                             missing     = self.missing1st        )
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -261,5 +154,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*' ) 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

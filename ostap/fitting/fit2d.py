@@ -1186,8 +1186,6 @@ class Model2D(PDF2) :
 
         name  = name  if name  else self.generate_name ( 'Model2D_%s_%s'  % ( self.xmodel.name , self.ymodel.name ) )
         
-        title = title if title else 'Model2D %s|%s' % ( self.xmodel.name , self.ymodel.name )
-        
         ## initialize the base 
         PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
 
@@ -1210,8 +1208,8 @@ class Model2D(PDF2) :
             
             ## build the final PDF 
             self.pdf = ROOT.RooProdPdf (
-                self.roo_name ( 'prod2_' ) , 
-                title ,
+                self.roo_name ( 'model2_' ) , 
+                title             ,
                 self.__xmodel.pdf ,
                 self.__ymodel.pdf )
 

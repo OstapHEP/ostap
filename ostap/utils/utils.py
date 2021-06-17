@@ -78,7 +78,9 @@ __all__     = (
     'divide'             , ## divide the elements from *iterable* into *n* parts
     'grouper'            , ## collect data into fixed-length chunks or blocks"
     ##
-    'checksum_files'     , ## get SHA512 sum for sequence of files 
+    'checksum_files'     , ## get SHA512 sum for sequence of files
+    ##
+    'balanced'           , ## Simple utility to check balanced parenthesis/brackets, etc...
     )
 
 # =============================================================================
@@ -1106,6 +1108,32 @@ def checksum_files ( *files ) :
                     
     return hash_obj.hexdigest()
 
+# =============================================================================
+## Simple utility to check balanced parenthesis/brackets, etc...
+#  @code
+#  expression = ' .... '
+#  ok = balanced ( expression ) 
+#  @encode 
+def  balanced ( expression , left = '([' , right = ')]' ) :
+    """Simple utility to check balanced parenthesis/brackets, etc...
+    >>> expression = ' .... '
+    >>> ok = balanced ( expression ) 
+    """
+    
+    assert left and len(left) == len ( right ) ,\
+           'balanced: invalid left/right arguments!'
+    
+    stack = []
+    for i in expression :
+        if   i in left  : stack.append ( i )
+        elif i in right :
+            pos = right.index ( i )
+            if stack  and  left[ pos ] == stack [ -1 ] :
+                stack.pop()
+            else :
+                return False
+
+    return True if not stack else False 
 
 
 # =============================================================================

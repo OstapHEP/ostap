@@ -10,7 +10,8 @@
   1. add `StatVar` and `WStatVar` lazy actions for DataFrame 
   1. make user-fiennly frame -> histogram projetctions 
   1. add `frame_table`, 'frame_project', `frame_statVar` and other functions
-    
+  1. simplify `trees/data_utils.py` make it more robust and reduce number of alive `TChain` instances 
+
 
 ## Backward incompatible changes: 
 
