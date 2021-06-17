@@ -2323,7 +2323,8 @@ class PDF (FUNC) :
 
         assert 2 <= len ( pdfs ) , 'make_prod: Invalid number of components %s' % len ( pdfs )
 
-        self.keep_aux.append ( pdfs  )
+        self.aux_keep.append ( pdfs  )
+        
         pdf_list = ROOT.RooArgList ()
         tit = ""
         
