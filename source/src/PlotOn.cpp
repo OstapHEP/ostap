@@ -18,7 +18,7 @@
  *  @author Vanya Belyaev  Ivan.Belyaev@itep.ru
  */
 // ============================================================================
-RooPlot* Ostap::Utils::plotOn	(	const RooAbsReal* value , 
+RooPlot* Ostap::Utils::plotOn	(	const RooAbsReal* value, 
                                 RooPlot*  	      frame ,
                                 const RooCmdArg&  arg1  ,
                                 const RooCmdArg&  arg2  ,

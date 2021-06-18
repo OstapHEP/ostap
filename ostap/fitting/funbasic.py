@@ -933,7 +933,7 @@ class FUNC(XVar) :
             ## the total fit curve
             #
             coptions   = self.draw_option ( 'curve_options' , **kwargs )
-            self.fun .plotOn ( frame ) ##  , *coptions )
+            self.plotOn ( self.fun , frame , *coptions )
             kwargs.pop ( 'curve_options' , () )            
             #
             #
@@ -956,6 +956,40 @@ class FUNC(XVar) :
 
             return frame
 
+    # =========================================================================
+    ## invoke <cdoe>what.plotOn (frame , *options)</code> command
+    #  - merge arguments using <code>RooFit::MultiArg</code> to shorted list
+    #  @see RooFit::MultiArg 
+    def plotOn ( self , what , frame , *options ) :
+        """Invoke `what.plotOn (frame , *options)` command
+        - merge arguments using `ROOT.RooFit::MultiArg` to shorted list
+        - see `ROOT.RooFit.MultiArg`
+        """
+        
+        NARGS = 8
+        
+        assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
+               "plotOn: invalid argument types: %s" % list ( options  ) 
+        
+        ## for ``small'' number of arguments use the standard function 
+        if len ( options ) <= NARGS :
+            return what.plotOn ( frame  , *options )
+
+        ## merge arguments to get shorter list        
+
+        head = options [            : NARGS - 1 ]
+        tail = options [ NARGS - 1  :           ]
+        
+        from   ostap.utils.utils  import chunked
+        if 1 == len ( tail ) % NARGS  : chunks = chunked ( tail , NARGS - 1  )
+        else                          : chunks = chunked ( tail , NARGS      )
+        
+        new_options = head + tuple ( ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks )
+
+        self.debug ( 'plotOn: merged options: %s' % str ( new_options ) ) 
+        return self.plotOn ( what , frame , *new_options ) 
+
+               
 # =============================================================================
 ## Context manager to keep/preserve the parameters for function/pdf
 #  @code

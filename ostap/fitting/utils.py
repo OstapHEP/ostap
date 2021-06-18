@@ -40,8 +40,6 @@ __all__     = (
     'ShiftScalePoly'    , ##  helper class for RooFit polynomials
     #
     "NameDuplicates"    , ## allow/disallow name duplicates
-    #
-    'plotOn'            , ## helper  
     )
 # =============================================================================
 import ROOT, math, random 
@@ -2407,36 +2405,35 @@ def get_i ( what , i , default = None ) :
 #  @see RooAbsData::plotOn
 #  @see RooAbsPdf::plotOn
 #  Ostap::Utils::plotOn
-def plotOn ( what , frame, *args ) :
+def plotOn ( what , frame, *options ) :
     """Plot data/pdf
     - see ROOT.RooAbsData.plotOn
     - see ROOT.RooAbsReal.plotOn
     - see Ostap.Utils.plotOn
     """
-
-    NA = 8
     
-    assert all ( isinstance ( a , ROOT.RooCmdArg ) for a in args ), \
-           "plotOn: invalid argument types: %s" % list ( args ) 
-
-    ## for ``small'' number of argument use standard function 
-    if len ( args ) <= 8 :
-        return Ostap.Utils.plotOn ( what , frame , *args )
-
-    ## merge arguments to get shorted list
+    NARGS = 8
     
-    lst = [ a for a in args ]
+    assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
+           "plotOn: invalid argument types: %s" % list ( options  ) 
+    
+        ## for ``small'' number of arguments use the standard function 
+    if len ( options ) <= NARGS :
+        return what.plotOn ( frame  , *options )
 
+    ## merge arguments to get shorter list        
+    head = options [            : NARGS - 1 ]
+    tail = options [ NARGS - 1  :           ]
+    
     from   ostap.utils.utils  import chunked
+    if 1 == len ( tail ) % NARGS  : chunks = chunked ( tail , NARGS - 1  )
+    else                          : chunks = chunked ( tail , NARGS      )
     
-    if 1 == len ( lst ) % NA  : chunks = chunked ( lst , NA - 1  )
-    else                      : chunks = chunked ( lst , NA      )
+    new_options = head + tuple ( ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks )
     
-    new_args = [ ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks ] 
-    
-    result = plotOn ( what , frame , *new_args ) 
+    logger.debug ( 'plotOn: merged options: %s' % str ( new_options ) ) 
+    return plotOn ( what , frame , *new_options ) 
 
-    return result 
         
 # =============================================================================
 ## consruct MsgTopic

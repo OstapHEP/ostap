@@ -43,7 +43,7 @@ from   ostap.core.ostap_types  import ( is_integer     , string_types   ,
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phases ,  
-                                        fit_status , cov_qual , H1D_dset , get_i  , plotOn )
+                                        fit_status , cov_qual , H1D_dset , get_i )
 from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
 from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args 
@@ -500,11 +500,12 @@ class PDF (FUNC) :
         for i , cmp in enumerate ( what ) :
 
             st         = style  ( i ) if style and callable  ( style ) else ()
+            
             component  = ROOT.RooFit.Components ( cmp.name )
 
-            atup = tuple ( options ) + tuple ( st ) + args 
-            self.debug ( 'drawing component %s with options %s' % ( cmp.name , atup ) )             
-            plotOn ( self.pdf , frame , component , *atup  )
+            atup = args + tuple ( options ) + tuple ( st ) 
+            self.debug  ( 'drawing component %s with options %s' % ( cmp.name , ( component, ) + atup ) )             
+            self.plotOn ( self.pdf , frame , component , *atup  )
             
     # ================================================================================
     ## draw fit results
@@ -631,8 +632,7 @@ class PDF (FUNC) :
 
                 commands = data_options 
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
-                ## dataset .plotOn ( frame ,  *self.merge_args ( 6 , *commands ) )
-                plotOn ( dataset , frame , *commands ) 
+                self.plotOn ( dataset , frame , *commands ) 
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
@@ -708,7 +708,7 @@ class PDF (FUNC) :
             ## the total fit curve
             #
             totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            plotOn ( self.pdf , frame , *totoptions ) 
+            self.plotOn ( self.pdf , frame , *totoptions ) 
             kwargs.pop ( 'total_fit_options' , () )
             
             #
@@ -716,7 +716,7 @@ class PDF (FUNC) :
             #
             if dataset :
                 commands = data_options + args
-                plotOn ( dataset , frame , *commands )
+                self.plotOn ( dataset , frame , *commands )
 
             #
             ## suppress ugly axis labels
@@ -1010,7 +1010,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            plotOn ( result , frame , *largs )
+            self.plotOn ( result , frame , *largs )
             
             import ostap.histos.graphs
             
