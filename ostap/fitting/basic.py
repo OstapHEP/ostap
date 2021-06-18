@@ -43,16 +43,21 @@ from   ostap.core.ostap_types  import ( is_integer     , string_types   ,
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
 from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phases ,  
-                                        fit_status , cov_qual , H1D_dset , get_i  )
+                                        fit_status , cov_qual , H1D_dset , get_i  , plotOn )
 from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
 from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args 
 import ostap.histos.histos 
-from   ostap.core.meta_info    import root_version_int 
+from   ostap.core.meta_info    import root_info  
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+## if (6,25) <= root_info :
+##    ROOT.RooAbsPdf .plotOn = ROOT.RooAbsPdf._plotOn
+##    ROOT.RooAbsData.plotOn = ROOT.RooAbsData._plotOn
+    
 # =============================================================================
 ## @var arg_types
 #  list of "good" argument  types 
@@ -496,24 +501,11 @@ class PDF (FUNC) :
 
             st         = style  ( i ) if style and callable  ( style ) else ()
             component  = ROOT.RooFit.Components ( cmp.name )
-            
-            ### command.add ( components )            
-            ## for s in st         : command.add ( s )
-            ## for o in options    : command.add ( o ) 
-            ## for a in args       : command.add ( a )
-            ## print ('PLOT-ON:', i, cmp , [ (c,type(c)) for c in command ] ) 
-            ## self.pdf .plotOn ( frame , command )
 
-            atup = tuple ( st ) + tuple ( options ) + args            
-            opts = self.merge_args ( 6 , *atup ) 
-            ## self.debug ( 'drawing component %s with options %s' % ( component , opts ) )  
-            self.pdf.plotOn ( frame , component , *opts )
+            atup = tuple ( options ) + tuple ( st ) + args 
+            self.debug ( 'drawing component %s with options %s' % ( cmp.name , atup ) )             
+            plotOn ( self.pdf , frame , component , *atup  )
             
-            ## ncmps = [ c.GetName() for c in cmps ]
-            ## if 1 == len ( ncmps )  :  ncmps = ncmps[0]
-            ## self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
-            
-        
     # ================================================================================
     ## draw fit results
     #  @code
@@ -639,7 +631,8 @@ class PDF (FUNC) :
 
                 commands = data_options 
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
-                dataset .plotOn ( frame ,  *self.merge_args ( 6 , *commands ) )
+                ## dataset .plotOn ( frame ,  *self.merge_args ( 6 , *commands ) )
+                plotOn ( dataset , frame , *commands ) 
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
@@ -715,7 +708,7 @@ class PDF (FUNC) :
             ## the total fit curve
             #
             totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            self.pdf .plotOn ( frame , *self.merge_args ( 6 , *totoptions ) )
+            plotOn ( self.pdf , frame , *totoptions ) 
             kwargs.pop ( 'total_fit_options' , () )
             
             #
@@ -723,7 +716,7 @@ class PDF (FUNC) :
             #
             if dataset :
                 commands = data_options + args
-                dataset .plotOn ( frame , *self.merge_args ( 6 , *commands )  )
+                plotOn ( dataset , frame , *commands )
 
             #
             ## suppress ugly axis labels
@@ -1017,7 +1010,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            result.plotOn ( frame , *self.merge_args ( 6 , *largs ) )
+            plotOn ( result , frame , *largs )
             
             import ostap.histos.graphs
             
@@ -2314,34 +2307,6 @@ class PDF (FUNC) :
         return ufracs
 
     # =============================================================================
-    ## make a product of pdfs
-    #  actually a simple wrapper over <code>RooProdPdf</code> 
-    def make_prod ( self , name , title , *pdfs ) :
-        """Make a product of pdfs
-        actually a simple wrapper over <code>RooProdPdf</code> 
-        """
-
-        assert 2 <= len ( pdfs ) , 'make_prod: Invalid number of components %s' % len ( pdfs )
-
-        self.aux_keep.append ( pdfs  )
-        
-        pdf_list = ROOT.RooArgList ()
-        tit = ""
-        
-        for i , pdf in enumerate ( pdfs ) :
-            
-            pdf_ = pdf.pdf if isinstance ( pdf , PDF ) else pdf 
-            assert isinstance  ( pdf_ , ROOT.RooAbsPdf  ) ,\
-                   'make_prod: invalid type of ``pdf%d'': %s' %  ( i , type ( pdf ) )
-            
-            pdf_list.Add ( pdf_ )
-
-        if not title : title = ' x '.join ( p.name for p in pdfs )
-        
-        ## construct the final PDF 
-        return ROOT.RooProdPdf ( self.roo_name ( name ) , title , pdf_list ) 
-
-    # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
     def add_pdf ( self             ,
                   pdflist          ,
@@ -2998,7 +2963,7 @@ def make_pdf ( pdf , args , name = '' ) :
     name = name if name else "PDF_from_%s" % pdf.name
     
     if not isinstance ( pdf , ROOT.RooAbsPdf ) :
-        if 62000 <= root_version_int : 
+        if (6,20) <= root_info : 
             pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
         else :
             raise TypeError("make_pdf: RooWrapperPdf is not available for ROOT %s" % root_version_int )

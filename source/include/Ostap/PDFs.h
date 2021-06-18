@@ -5904,16 +5904,16 @@ namespace Ostap
       // the actual evaluation of function
       Double_t evaluate() const override;
       // ======================================================================
-    public:  // integrals
-      // ======================================================================
-      Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
-      Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
-      // ======================================================================
+    // public:  // integrals
+    //   // ======================================================================
+    //   Int_t    getAnalyticalIntegral
+    //     ( RooArgSet&     allVars      ,
+    //       RooArgSet&     analVars     ,
+    //       const char* /* rangename */ ) const override;
+    //   Double_t analyticalIntegral
+    //     ( Int_t          code         ,
+    //       const char*    rangeName    ) const override;
+    //   // ======================================================================
     public:
       // ======================================================================
       //  dimensionality of the PDF
@@ -6132,7 +6132,7 @@ namespace Ostap
     // ========================================================================
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
-} //                                                  end of namespace Analysis
+} //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END
 // ============================================================================

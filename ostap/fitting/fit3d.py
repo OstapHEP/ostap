@@ -1300,7 +1300,6 @@ class Model3D(PDF3) :
             
         else :
 
-            ## self.pdf = self.make_prod ( 'model3_' , title , self.xmodel , self.ymodel , self.zmodel )
             
             ## build pdf         
             self.__plst = ROOT.RooArgList (
@@ -1789,11 +1788,18 @@ class Fit3D (PDF3) :
                                        self.__bkg_2z     ,
                                        title =  'Background2(y) x Background2(z)' )
 
-        self.__sbb_cmp = Generic3D_pdf ( self.make_prod ( 'SBB_' + self.name , "Signal(x) x Background(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) , 
+        ## create components 
+        self.__sbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( 'SBB_' + self.name )     ,
+                                                           "Signal(x) x Background(y,z)"            ,
+                                                           self.__signal_x.pdf , self.__bkg_2yz.pdf ) , 
                                          self.xvar , self.yvar , self.zvar )
-        self.__bsb_cmp = Generic3D_pdf ( self.make_prdd ( "BSB_" + self.name , "Signal(y) x Background(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+        self.__bsb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_" + self.name )     ,
+                                                           "Signal(y) x Background(x,z)"            ,
+                                                           self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
                                          self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp = Generic3D_pdf ( self.make_prod ( "BBS_" + self.name , "Signal(z) x Background(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+        self.__bbs_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_" + self.name )     ,
+                                                           "Signal(z) x Background(x,y)"            ,
+                                                           self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
                                          self.xvar , self.yvar , self.zvar )
         
         # =====================================================================
@@ -2544,12 +2550,19 @@ class Fit3DSym (PDF3) :
             self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
-            
-        self.__sbb_cmp_raw = Generic3D_pdf ( self.make_prod ( "SBB_raw_" + self.name , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+
+        ## make components 
+        self.__sbb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name )  ,
+                                                               "Signal(x) x Background2(y,z)"            ,
+                                                               self.__signal_x.pdf , self.__bkg_2yz.pdf  ) ,
                                              self.xvar , self.yvar , self.zvar )
-        self.__bsb_cmp_raw = Generic3D_pdf ( self.make_prod ( "BSB_raw_" + self.name , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+        self.__bsb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name )  ,
+                                                               "Signal(y) x Background2(x,z)"            ,
+                                                               self.__signal_y.pdf , self.__bkg_2xz.pdf  ) ,
                                              self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp_raw = Generic3D_pdf ( self.make_prod ( "BBS_raw_" + self.name , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+        self.__bbs_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name )  ,
+                                                               "Signal(z) x Background2(x,y)"            ,
+                                                               self.__signal_z.pdf , self.__bkg_2xy.pdf  ) ,
                                              self.xvar , self.yvar , self.zvar )
 
         self.__sbb_cmp     = Generic3D_pdf ( self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
@@ -3308,9 +3321,11 @@ class Fit3DMix (PDF3) :
             self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
-            
-        self.__sbb_cmp = Generic3D_pdf ( self.make_prod ( "SBB_raw_" + self.name , "Signal(x) x Background2(y,z)" ,
-                                                          self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
+
+        ## make component 
+        self.__sbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) ,
+                                                           "Signal(x) x Background2(y,z)"           ,
+                                                           self.__signal_x.pdf , self.__bkg_2yz.pdf  ) ,
                                          self.xvar , self.yvar , self.zvar )
         
         # =====================================================================
@@ -3345,10 +3360,15 @@ class Fit3DMix (PDF3) :
             self.__bkg_2xz = Model2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                        self.__bkg_2x         ,
                                        self.__bkg_2z         , title = 'Background2(x,z)' )
-            
-        self.__bsb_cmp_raw = Generic3D_pdf ( self.make_prod ( "BSB_raw_" + self.name , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+
+        ## make components 
+        self.__bsb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) ,
+                                                               "Signal(y) x Background2(x,z)"           ,
+                                                               self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
                                              self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp_raw = Generic3D_pdf ( self.make_prod ( "BBS_raw_" + self.name , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+        self.__bbs_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) ,
+                                                               "Signal(z) x Background2(x,y)"           ,
+                                                               self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
                                              self.xvar , self.yvar , self.zvar )
 
         self.__bbs_sym_cmp     = Generic3D_pdf ( self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
@@ -3401,7 +3421,8 @@ class Fit3DMix (PDF3) :
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , self.generate_name ( 'BBB_' + self.name ) )
         elif bkg_3D and isinstance ( bkg_2D ,  ( tuple , list )  ) :
             from ostap.fitting.models_2d import make_B2DmixYZ 
-            self.__bkg_3D = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            ##self.__bkg_3D = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            self.__bbb_cmp = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
 
             if   bkg_3yz and isinstance ( bkg_3yz , PDF2 ) :
@@ -3415,8 +3436,10 @@ class Fit3DMix (PDF3) :
                 
             self.__bkg_3x  = self.make_bkg ( bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )
 
-        self.__bbb_cmp = Generic3D_pdf ( self.make_prod ( "BBB_" + self.name , "Background3(x) x Background3(y,z)" ,
-                                                          self.__bkg_3x.pdf , self.__bkg_3yz.pdf ) ,
+            ## make component 
+            self.__bbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBB_" + self.name )  ,
+                                                               "Background3(x) x Background3(y,z)"   ,
+                                                           self.__bkg_3x.pdf , self.__bkg_3yz.pdf ) ,
                                          self.xvar , self.yvar , self.zvar ) 
             
         # =====================================================================
@@ -3453,7 +3476,6 @@ class Fit3DMix (PDF3) :
             self.__sbb     ,
             self.__bbs     ,
             self.__bbb     )
-        
         
         ## treat additional components (if specified)
         self.__nums_components = [] 

@@ -39,7 +39,9 @@ __all__     = (
     'ParamsPoly'        , ##  helper class for RooFit polynomials
     'ShiftScalePoly'    , ##  helper class for RooFit polynomials
     #
-    "NameDuplicates"    , ## allow/disallow name duplicates 
+    "NameDuplicates"    , ## allow/disallow name duplicates
+    #
+    'plotOn'            , ## helper  
     )
 # =============================================================================
 import ROOT, math, random 
@@ -2401,6 +2403,42 @@ def get_i ( what , i , default = None ) :
     return default
         
 # =============================================================================
+## plot data/pdf
+#  @see RooAbsData::plotOn
+#  @see RooAbsPdf::plotOn
+#  Ostap::Utils::plotOn
+def plotOn ( what , frame, *args ) :
+    """Plot data/pdf
+    - see ROOT.RooAbsData.plotOn
+    - see ROOT.RooAbsReal.plotOn
+    - see Ostap.Utils.plotOn
+    """
+
+    NA = 8
+    
+    assert all ( isinstance ( a , ROOT.RooCmdArg ) for a in args ), \
+           "plotOn: invalid argument types: %s" % list ( args ) 
+
+    ## for ``small'' number of argument use standard function 
+    if len ( args ) <= 8 :
+        return Ostap.Utils.plotOn ( what , frame , *args )
+
+    ## merge arguments to get shorted list
+    
+    lst = [ a for a in args ]
+
+    from   ostap.utils.utils  import chunked
+    
+    if 1 == len ( lst ) % NA  : chunks = chunked ( lst , NA - 1  )
+    else                      : chunks = chunked ( lst , NA      )
+    
+    new_args = [ ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks ] 
+    
+    result = plotOn ( what , frame , *new_args ) 
+
+    return result 
+        
+# =============================================================================
 ## consruct MsgTopic
 #  @see RooFit::MsgTopic
 #  @code
@@ -2510,6 +2548,7 @@ if not hasattr (  Ostap.Utils.AddTopic , '_old_init_' ) :
     Ostap.Utils.AddTopic.__enter__  = lambda s : s
     Ostap.Utils.AddTopic.__exit__   = lambda s,*_ : s.exit() 
     
+
 
 # ================================================================================
 ## remove topic from Roofit message streams
