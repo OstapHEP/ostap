@@ -7102,78 +7102,78 @@ Ostap::Models::Uniform::clone ( const char* name ) const
 // ============================================================================
 Double_t Ostap::Models::Uniform::evaluate() const { return 1 ; }
 // ============================================================================
-// Int_t Ostap::Models::Uniform::getAnalyticalIntegral
-// ( RooArgSet&     allVars      , 
-//   RooArgSet&     analVars     ,
-//   const char* /* rangename */ ) const 
-// {
-//   //
-//   if      ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_y , m_z ) ) { return 1 ; }
-//   else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_z       ) ) { return 2 ; }
-//   else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_y , m_z       ) ) { return 3 ; }
-//   else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_x , m_y       ) ) { return 4 ; }
-//   else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_z             ) ) { return 5 ; }
-//   else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_y             ) ) { return 6 ; }
-//   else if ( 1 <= m_dim && matchArgs ( allVars , analVars , m_x             ) ) { return 7 ; }
-//   //
-//   return 0 ;
-// }
-// // ============================================================================
-// Double_t Ostap::Models::Uniform::analyticalIntegral 
-// ( Int_t       code      , 
-//   const char* rangeName ) const 
-// {
-//   // 3D-integral 
-//   if      ( 3 == m_dim && 1 == code ) 
-//   {
-//     return 
-//       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
-//       ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
-//       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;
-//   }
-//   // 2D-integral: x,z
-//   else if ( 3 == m_dim && 2 == code ) 
-//   {
-//     return 
-//       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
-//       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
-//   }
-//   // 2D-integral: y,z
-//   else if ( 3 == m_dim && 3 == code ) 
-//   {
-//     return 
-//       ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
-//       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
-//   }
-//   // 2D-itegral: x,y
-//   else if ( 2 <= m_dim && 4 == code ) 
-//   {
-//     return 
-//       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
-//       ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
-//   }
-//   // 1D-itegral: z 
-//   else if ( 3 == m_dim && 5 == code ) 
-//   {
-//     return 
-//       ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
-//   }
-//   // 1D-itegral: y 
-//   else if ( 2 <= m_dim && 6 == code ) 
-//   {
-//     return 
-//       ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
-//   }
-//   // 1D-itegral: x 
-//   else if ( 1 <= m_dim && 7 == code ) 
-//   {
-//     return 
-//       ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) ;    
-//   }
-//   //
-//   return 0 ;
-// }
-// // ============================================================================
+Int_t Ostap::Models::Uniform::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  //
+  if      ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_y , m_z ) ) { return 1 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_x , m_z       ) ) { return 2 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_y , m_z       ) ) { return 3 ; }
+  else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_x , m_y       ) ) { return 4 ; }
+  else if ( 3 == m_dim && matchArgs ( allVars , analVars , m_z             ) ) { return 5 ; }
+  else if ( 2 <= m_dim && matchArgs ( allVars , analVars , m_y             ) ) { return 6 ; }
+  else if ( 1 <= m_dim && matchArgs ( allVars , analVars , m_x             ) ) { return 7 ; }
+  //
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Uniform::analyticalIntegral 
+( Int_t       code      , 
+  const char* rangeName ) const 
+{
+  // 3D-integral 
+  if      ( 3 == m_dim && 1 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;
+  }
+  // 2D-integral: x,z
+  else if ( 3 == m_dim && 2 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 2D-integral: y,z
+  else if ( 3 == m_dim && 3 == code ) 
+  {
+    return 
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) *
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 2D-itegral: x,y
+  else if ( 2 <= m_dim && 4 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) *
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: z 
+  else if ( 3 == m_dim && 5 == code ) 
+  {
+    return 
+      ( m_z.max ( rangeName ) - m_z.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: y 
+  else if ( 2 <= m_dim && 6 == code ) 
+  {
+    return 
+      ( m_y.max ( rangeName ) - m_y.min ( rangeName ) ) ;    
+  }
+  // 1D-itegral: x 
+  else if ( 1 <= m_dim && 7 == code ) 
+  {
+    return 
+      ( m_x.max ( rangeName ) - m_x.min ( rangeName ) ) ;    
+  }
+  //
+  return 0 ;
+}
+// ============================================================================
 
 
 
