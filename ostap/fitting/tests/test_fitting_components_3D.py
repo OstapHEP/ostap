@@ -127,9 +127,9 @@ signal_x1 = Models.Gauss_pdf ( 'G1x'  , xvar = m_x  , mean = m1.value() , sigma 
 signal_y1 = signal_x1.clone ( name='G1y'  , xvar = m_y   ) 
 signal_z1 = signal_x1.clone ( name='G1z'  , xvar = m_z   )
 
-signal_x2 = Models.Gauss_pdf ( name='G2x'  , xvar = m_x  , mean = m2.value() , sigma = m2.error() )  
-signal_y2 = signal_x2.clone ( name='G2y'  , xvar = m_y   ) 
-signal_z2 = signal_x2.clone ( name='G2z'  , xvar = m_z   )
+## signal_x2 = Models.Gauss_pdf ( name='G2x'  , xvar = m_x  , mean = m2.value() , sigma = m2.error() )  
+## signal_y2 = signal_x2.clone ( name='G2y'  , xvar = m_y   ) 
+## signal_z2 = signal_x2.clone ( name='G2z'  , xvar = m_z   )
 
 bkg_x     = make_bkg ( -1      , 'Bx' , m_x        )
 bkg_y     = bkg_x.clone ( name = 'By' , xvar = m_y )
