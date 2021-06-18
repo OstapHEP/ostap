@@ -2884,7 +2884,7 @@ class Sum1D(PDF) :
         else :
             raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf2, type(pdf2) , xvar , type(xvar) ) )
 
-        name = name if name else self.generate_name ( prefix = 'sum1D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
+        name = name if name else self.generate_name ( prefix = 'sum1D_' ) 
 
         ## initialize the base class
         PDF.__init__ ( self , name , xvar )
@@ -2893,7 +2893,8 @@ class Sum1D(PDF) :
         self.__pdf2     = pdf2
         
         self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
+                                          self.roo_name ( 'f_' ) , 
+                                          ## 'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 )
         

@@ -24,6 +24,7 @@ __all__     = ()
 # =============================================================================
 import ROOT
 import ostap.fitting.basic
+from   ostap.fitting.utils import MakeVar 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pdf_ops' )
@@ -32,9 +33,9 @@ else                       : logger = getLogger ( __name__                )
 
 # =============================================================================
 def _prod_ ( pdf1 , pdf2 ) :
-    return ROOT.RooProdPdf (
-        'Product_%s_%s'    % ( pdf1.name ,  pdf2.name ) ,
-        'Product:(%s)x(%s)'% ( pdf1.name ,  pdf2.name ) , pdf1.pdf , pdf2.pdf )
+    return ROOT.RooProdPdf ( MakeVar.roo_name ( 'product_' )         ,
+                             '(%s)x(%s)'% ( pdf1.name ,  pdf2.name ) ,
+                             pdf1.pdf , pdf2.pdf )
 
 # =============================================================================
 ## Product of two PDFs :

@@ -1130,14 +1130,15 @@ class Sum3D(PDF3) :
             raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
         
 
-        name = name if name else self.generate_name ( prefix = 'sum3D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
+        name = name if name else self.generate_name ( prefix = 'sum3D_' ) 
         PDF3.__init__ ( self , name , xvar , yvar , zvar )
 
         self.__pdf1     = pdf1
         self.__pdf2     = pdf2
 
         self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
+                                          self.roo_name ( 'f_' ) , 
+                                          ## 'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 ) 
         self.alist1 = ROOT.RooArgList (

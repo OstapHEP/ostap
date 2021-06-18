@@ -1060,14 +1060,15 @@ class Sum2D (PDF2) :
             raise TypeError ( "Invalid type: pdf1/xvar/yvar: %s/%s/%s" % ( pdf1 , xvar , yvar ) )
         
 
-        name = name if name else self.generate_name ( prefix = 'sum2D_%s_%s_' % ( pdf1.name , pdf2.name ) )         
+        name = name if name else self.generate_name ( prefix = 'sum2D_' )         
         PDF2.__init__ ( self, name , xvar , yvar )
 
         self.__pdf1     = pdf1
         self.__pdf2     = pdf2
         
         self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
+                                          self.roo_name ( 'f_' ) , 
+                                          ## 'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
                                           'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
                                           fraction , 0 , 1 ) 
         self.alist1 = ROOT.RooArgList (

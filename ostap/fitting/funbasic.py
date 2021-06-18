@@ -2156,7 +2156,8 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = xvar ,
                              yvar = yvar ,
                              zvar = zvar ,
-                             name = fname % ( fun1.name , fun2.name ) )
+                             ## name = fname % ( fun1.name , fun2.name )
+                             name = FUNC.generate_name ( fname ) ) 
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2171,7 +2172,8 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = xvar ,
                              yvar = yvar ,
                              zvar = zvar ,
-                             name = fname % ( fun1.name , fun2.name ) )
+                             ## name = fname % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) ) 
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2186,7 +2188,8 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = xvar ,
                              yvar = yvar ,
                              zvar = zvar ,
-                             name = fname % ( fun1.name , fun2.name ) )
+                             ## name = fname % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) ) 
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2200,7 +2203,8 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
                          xvar = xvar ,
                          yvar = yvar ,
                          zvar = zvar ,
-                         name = fname % ( fun1.name , fun2.name  ) )
+                         ## name = fname % ( fun1.name , fun2.name  ) )
+                         name = FUNC.generate_name ( fname ) ) 
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2213,7 +2217,8 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
                          xvar = xvar  ,
                          yvar = yvar  ,
                          zvar = zvar  ,
-                         name = fname % ( fun1.name , fun2.name ) )
+                         ## name = fname % ( fun1.name , fun2.name ) )
+                         name = FUNC.generate_name ( fname ) ) 
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2225,31 +2230,31 @@ def _f3_op_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "3D-function + other"
 def _f3_add_ ( self , other ) :
     """Operator for ``3D-function + other''"""
-    return _f3_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+    return _f3_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"     )
 
 # =============================================================================
 ## operator for "3D-function - other"
 def _f3_sub_ ( self , other ) :
     """Operator for ``3D-function - other''"""
-    return _f3_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f3_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_" )
 
 # =============================================================================
 ## operator for "3D-function * other"
 def _f3_mul_ ( self , other ) :
     """Operator for ``3D-function * other''"""
-    return _f3_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f3_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "3D-function / other"
 def _f3_div_ ( self , other ) :
     """Operator for ``3D-function / other''"""
-    return _f3_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f3_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"   )
 
 # =============================================================================
 ## operator for "3D-function ** other"
 def _f3_pow_ ( self , other ) :
     """Operator for ``3D-function **  other''"""
-    return _f3_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
+    return _f3_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"      )
         
 
 FUNC3.__add__     = _f3_add_
@@ -2258,7 +2263,6 @@ FUNC3.__sub__     = _f3_sub_
 FUNC3.__div__     = _f3_div_
 FUNC3.__truediv__ = _f3_div_
 FUNC3.__pow__     = _f3_pow_
-
 
 # =============================================================================
 ## Operator for `3D-function (op) other`:
@@ -2276,7 +2280,7 @@ def _f3_rop_ ( fun1 , fun2 , ftype , fname ) :
                          xvar = xvar ,
                          yvar = yvar ,
                          zvar = zvar ,
-                         name = fname % ( fun2.name , fun1.name  ) )
+                         name = FUNC.generate_name ( fname ) ) 
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2289,7 +2293,7 @@ def _f3_rop_ ( fun1 , fun2 , ftype , fname ) :
                          xvar = xvar  ,
                          yvar = yvar  ,
                          zvar = zvar  ,
-                         name = fname % ( fun2.name , fun1.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2302,31 +2306,31 @@ def _f3_rop_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "3D-function + other"
 def _f3_radd_ ( self , other ) :
     """Operator for ``3D-function + other''"""
-    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"     )
 
 # =============================================================================
 ## operator for "3D-function - other"
 def _f3_rsub_ ( self , other ) :
     """Operator for ``3D-function - other''"""
-    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_" )
 
 # =============================================================================
 ## operator for "3D-function * other"
 def _f3_rmul_ ( self , other ) :
     """Operator for ``3D-function * other''"""
-    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "3D-function / other"
 def _f3_rdiv_ ( self , other ) :
     """Operator for ``3D-function / other''"""
-    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"  )
 
 # =============================================================================
 ## operator for "3D-function ** other"
 def _f3_rpow_ ( self , other ) :
     """Operator for ``3D-function **  other''"""
-    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
+    return _f3_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"  )
         
 
 FUNC3.__radd__     = _f3_radd_
@@ -2355,7 +2359,8 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = fun2.xvar ,
                              yvar = fun2.yvar ,
                              zvar = fun2.zvar ,
-                             name = fname     % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) )
+
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2370,7 +2375,7 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
             retsult = Fun2D ( s ,
                               xvar = xvar  ,
                               yvar = yvar  ,
-                              name = fname % ( fun1.name , fun2.name ) )
+                              name = FUNC.generate_name ( fname ) )
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2387,8 +2392,8 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = xvar  ,
                              yvar = yvar  ,
                              zvar = zvar  ,
-                             name = fname % ( fun1.name , fun2.name ) )
-        
+                             name = FUNC.generate_name ( fname ) )
+            
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
             return result
@@ -2402,7 +2407,7 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
             result = Fun2D ( s ,
                              xvar = xvar ,
                              yvar = yvar ,
-                             name = fname % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) )
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2416,7 +2421,7 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar =      xvar ,
                              yvar =      yvar ,
                              zvar = fun2.xvar , 
-                             name = fname     % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) )
 
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2429,8 +2434,8 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
         result = Fun2D ( s ,
                          xvar = xvar  ,
                          yvar = yvar  ,
-                         name = fname % ( fun1.name , fun2.name ) )
-        
+                         name = FUNC.generate_name ( fname ) )
+                                 
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
         return result
@@ -2441,7 +2446,7 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
         result = Fun2D ( s ,
                        xvar = xvar  ,
                        yvar = yvar  ,
-                       name = fname % ( fun1.name , fun2.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2454,31 +2459,31 @@ def _f2_op_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "2D-function + other"
 def _f2_add_ ( self , other ) :
     """Operator for ``2D-function + other''"""
-    return _f2_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"      )
+    return _f2_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"      )
 
 # =============================================================================
 ## operator for "2D-function - other"
 def _f2_sub_ ( self , other ) :
     """Operator for ``2D-function - other''"""
-    return _f2_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f2_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_" )
 
 # =============================================================================
 ## operator for "3D-function * other"
 def _f2_mul_ ( self , other ) :
     """Operator for ``2D-function * other''"""
-    return _f2_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f2_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "2D-function / other"
 def _f2_div_ ( self , other ) :
     """Operator for ``2D-function / other''"""
-    return _f2_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f2_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"  )
         
 # =============================================================================
 ## operator for "2D-function ** other"
 def _f2_pow_ ( self , other ) :
     """Operator for ``2D-function **  other''"""
-    return _f2_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"     )
+    return _f2_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"     )
         
 
 FUNC2.__add__     = _f2_add_
@@ -2504,7 +2509,7 @@ def _f2_rop_ ( fun1 , fun2 , ftype , fname ) :
         result = Fun2D ( s ,
                          xvar = xvar  ,
                          yvar = yvar  ,
-                         name = fname % ( fun2.name , fun1.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2514,9 +2519,9 @@ def _f2_rop_ ( fun1 , fun2 , ftype , fname ) :
         
         s      = ftype ( fun2 , fun1.fun )
         result = Fun2D ( s ,
-                       xvar = xvar  ,
-                       yvar = yvar  ,
-                       name = fname % ( fun2.name , fun1.name ) )
+                         xvar = xvar  ,
+                         yvar = yvar  ,
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2528,31 +2533,31 @@ def _f2_rop_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "2D-function + other"
 def _f2_radd_ ( self , other ) :
     """Operator for ``2D-function + other''"""
-    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"      )
+    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"      )
 
 # =============================================================================
 ## operator for "2D-function - other"
 def _f2_rsub_ ( self , other ) :
     """Operator for ``2D-function - other''"""
-    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_" )
 
 # =============================================================================
 ## operator for "3D-function * other"
 def _f2_rmul_ ( self , other ) :
     """Operator for ``2D-function * other''"""
-    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "2D-function / other"
 def _f2_rdiv_ ( self , other ) :
     """Operator for ``2D-function / other''"""
-    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"  )
         
 # =============================================================================
 ## operator for "2D-function ** other"
 def _f2_rpow_ ( self , other ) :
     """Operator for ``2D-function **  other''"""
-    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"     )
+    return _f2_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"     )
         
 
 FUNC2.__radd__     = _f2_radd_
@@ -2579,7 +2584,7 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = fun2.xvar ,
                              yvar = fun2.yvar ,
                              zvar = fun2.zvar ,
-                             name = fname     % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) )
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2592,9 +2597,9 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
             ## operation  
             s      = ftype ( self.fun , other.fun )
             result = Fun2D ( s ,
-                           xvar = fun2.xvar ,
-                           yvar = fun2.yvar ,
-                           name = fname     % ( fun1.name , fun2.name ) )
+                             xvar = fun2.xvar ,
+                             yvar = fun2.yvar ,
+                             name = FUNC.generate_name ( fname ) )
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2608,7 +2613,7 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
                              xvar = fun2.xvar ,
                              yvar = fun2.yvar ,
                              zvar =      xvar ,
-                             name = fname     % ( fun1.name , fun2.name ) )
+                             name = FUNC.generate_name ( fname ) )
             
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
@@ -2622,8 +2627,8 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
             s      = ftype ( fun1.fun , fun2.fun )
             result = Fun1D ( s ,
                              xvar = xvar      ,
-                             name = fname     % ( fun1.name , fun2.name ) )
-            
+                             name = FUNC.generate_name ( fname ) )
+
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
             return result
@@ -2635,8 +2640,8 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
             result = Fun2D ( s ,
                              xvar =      xvar ,
                              yvar = fun2.xvar ,
-                             name = fname     % ( fun1.name , fun2.name ) )
-            
+                             name = FUNC.generate_name ( fname ) )
+
             result.aux_keep.append ( fun1 )
             result.aux_keep.append ( fun2 )
             return result
@@ -2647,7 +2652,7 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
         s      = ftype ( fun1.fun , fun2 )
         result = Fun1D ( s ,
                          xvar = xvar  ,
-                         name = fname % ( fun1.name , fun2.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2659,7 +2664,7 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
         s      = ftype ( fun1.fun , fun2 )
         result = Fun1D ( s ,
                          xvar = xvar  ,
-                         name = fname % ( fun1.name , fun2.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2671,31 +2676,31 @@ def _f1_op_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "1D-function + other"
 def _f1_add_ ( self , other ) :
     """Operator for ``1D-function + other''"""
-    return _f1_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+    return _f1_op_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"          )
 
 # =============================================================================
 ## operator for "1D-function - other"
 def _f1_sub_ ( self , other ) :
     """Operator for ``2D-function - other''"""
-    return _f1_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f1_op_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_"     )
 
 # =============================================================================
 ## operator for "1D-function * other"
 def _f1_mul_ ( self , other ) :
     """Operator for ``2D-function * other''"""
-    return _f1_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f1_op_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "1D-function / other"
 def _f1_div_ ( self , other ) :
     """Operator for ``1D-function / other''"""
-    return _f1_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f1_op_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"  )
         
 # =============================================================================
 ## operator for "1D-function ** other"
 def _f1_pow_ ( self , other ) :
     """Operator for ``1D-function **  other''"""
-    return _f1_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
+    return _f1_op_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"  )
         
 
 FUNC.__add__     = _f1_add_
@@ -2718,7 +2723,7 @@ def _f1_rop_ ( fun1 , fun2 , ftype , fname ) :
         s      = ftype ( fun2 ,  fun1.fun )
         result = Fun1D ( s            ,
                          xvar = xvar  ,
-                         name = fname % ( fun2.name , fun1.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2729,7 +2734,7 @@ def _f1_rop_ ( fun1 , fun2 , ftype , fname ) :
         s      = ftype ( fun2 , fun1.fun )
         result = Fun1D ( s            ,
                          xvar = xvar  ,
-                         name = fname % ( fun2.name , fun1.name ) )
+                         name = FUNC.generate_name ( fname ) )
         
         result.aux_keep.append ( fun1 )
         result.aux_keep.append ( fun2 )
@@ -2742,31 +2747,31 @@ def _f1_rop_ ( fun1 , fun2 , ftype , fname ) :
 ## operator for "other + 1D-function"
 def _f1_radd_ ( self , other ) :
     """Operator for ``other + 1D-function''"""
-    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_%s_%s"     )
+    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Addition    , "Add_"     )
 
 # =============================================================================
 ## operator for "other - 1D-function"
 def _f1_rsub_ ( self , other ) :
     """Operator for ``other - 1D-function''"""
-    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_%s_%s" )
+    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Subtraction , "Subtract_" )
 
 # =============================================================================
 ## operator for "other * 1D-function"
 def _f1_rmul_ ( self , other ) :
     """Operator for ``other * 1D-function''"""
-    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_%s_%s"  )
+    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Product     , "Product_"  )
 
 # =============================================================================
 ## operator for "other/1D-function"
 def _f1_rdiv_ ( self , other ) :
     """Operator for ``other / 1D-function ''"""
-    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_%s_%s"  )
+    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Division    , "Divide_"  )
         
 # =============================================================================
 ## operator for "other ** 1D-function"
 def _f1_rpow_ ( self , other ) :
     """Operator for ``other ** 1D-function''"""
-    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_%s_%s"  )
+    return _f1_rop_ ( self , other , Ostap.MoreRooFit.Power       , "Pow_"  )
         
 
 FUNC.__radd__     = _f1_radd_
