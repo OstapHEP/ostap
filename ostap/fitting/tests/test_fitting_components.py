@@ -244,7 +244,7 @@ def test_nonextended3 () :
         r, f = model.fitTo ( dataset , draw = True , silent = True )
         
     logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
-    
+
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -259,8 +259,8 @@ if '__main__' == __name__ :
         
     with timing ( "non-Extended2" , logger ) : 
         test_nonextended2 () 
-
-    with timing ( "non-Extendend3" , logger ) : 
+        
+    with timing ( "non-Extended3" , logger ) : 
         test_nonextended3 () 
     
 # =============================================================================
