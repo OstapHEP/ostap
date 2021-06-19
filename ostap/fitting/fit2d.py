@@ -1717,26 +1717,10 @@ class Fit2D (PDF2) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
-    
+        return self.component_getter ( self.__nums_components  )     
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_components , value )
 
     @property
     def yields    ( self ) :
@@ -2193,25 +2177,10 @@ class Fit2DSym (PDF2) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components )
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_componenents , value )
 
     @property
     def yields    ( self ) :

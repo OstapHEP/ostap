@@ -69,7 +69,7 @@ for i in range(1000) :
             mass.value =  v 
             dataset.add(varset)            
 
-logger.info ('Dataset: %s' % dataset )  
+logger.info ('Dataset:\n%s' % dataset.table ( prefix = '# ' ) )   
 
 
 
@@ -105,35 +105,19 @@ def test_extended1 () :
     with rooSilent() :
         
         ## signals
-        model.S[0].fix ( 5000 )
-        model.S[1].fix ( 5000 )
-        model.S[2].fix ( 5000 )
+        model.S = 5000 , 5000 , 5000
     
         ## backgrounds 
-        model.B[0].value = 5000 
-        model.B[1].value = 1000 
-        model.B[2].value = 1000 
+        model.B = 5000 , 1000 , 1000
         
         ## "components"
-        model.C[0].value = 1000
-        model.C[1].value =  500
-        
-        r, f = model.fitTo ( dataset , draw = False )
-
-        model.S[0].release() 
-        model.S[1].release()
-        model.S[2].release()
-        
-        model.B[0].release()
+        model.C = 1000 , 500
 
         r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-        model.B[1].release()
-        model.C[0].release() 
-        
-    r, f = model.fitTo ( dataset , draw = True, silent = True )
+        r, f = model.fitTo ( dataset , draw = False , silent = True )        
+        r, f = model.fitTo ( dataset , draw = True  , silent = True )
 
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ') ) ) 
 
 
 # =============================================================================
@@ -157,9 +141,9 @@ def test_extended2 () :
     
 
     with rooSilent() :
-        model.S.fix ( 15000 )
-        model.B.fix (  7000 )
-        model.C.fix (  2000 )
+        model.S = 15000 
+        model.B = 7000 
+        model.C = 2000 
         r, f = model.fitTo ( dataset , draw = False , silent = True )
         
     model.S.release() 
@@ -167,7 +151,7 @@ def test_extended2 () :
     model.C.release() 
     r, f = model.fitTo ( dataset , draw = True , silent = True )
     
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended multi-component fit'
@@ -186,17 +170,12 @@ def test_nonextended1 () :
         suffix              = '_c'
         )
 
-    model.F[0].setVal ( 0.20 )
-    model.F[1].setVal ( 0.25 )
-    model.F[2].setVal ( 0.36 )
+    model.F = 0.2 , 0.25 , 0.36 , 0.65 , 0.05 , 0.25 , 0.50 
 
-    model.F[3].setVal ( 0.65 )
-    model.F[4].setVal ( 0.05 )
-    model.F[5].setVal ( 0.25 )
-    model.F[6].setVal ( 0.50 )
+    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True  , silent = True )
     
-    r, f = model.fitTo ( dataset , draw = True , silent = True )
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended combined multi-component fit
@@ -226,26 +205,17 @@ def test_nonextended2 () :
                   ##  f_2    3.3333e-01    7.3854e-01 +/-  1.71e-02  <none>
 
     with rooSilent() :
-        model.F[0] .fix( 0.63 ) 
-        model.F[1] .fix( 0.74 )
+        model.F = 0.63 , 0.74 
         
-        model.fB[0].setVal( 0.95 )
-        model.fB[1].setVal( 0.01 )
-        model.fC[0].fix   ( 0.50 )
-        model.fS[0].fix   ( 0.33 )
-        model.fS[1].fix   ( 0.50 )
-        r, f = model.fitTo ( dataset , draw = False , silent = True )
+        model.fB = 0.95 , 0.01
+
+        model.fC =  0.50 
+        model.fS =   0.33 , 0.50
+
+        r, f = model.fitTo ( dataset , draw = False , silent = True )        
+        r, f = model.fitTo ( dataset , draw = True  , silent = True )        
         
-        model.F[0]. release() 
-        model.F[1] .release() 
-        
-        model.fC[0].release() 
-        model.fS[0].release() 
-        model.fS[1].release()
-        
-        r, f = model.fitTo ( dataset , draw = True , silent = True )        
-        
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended multi-component non-recursive fit'
@@ -268,42 +238,29 @@ def test_nonextended3 () :
 
     with rooSilent() :
         
-        model.F[0].fix    ( 0.20 )
-        model.F[1].fix    ( 0.20 )
-        model.F[2].fix    ( 0.20 )
-        model.F[3].fix    ( 0.25 )
-        
-        model.F[4].setVal ( 0.01  )
-        model.F[5].setVal ( 0.02  )
-        model.F[6].setVal ( 0.02  )
+        model.F = 0.20 , 0.20 , 0.20 , 0.25 , 0.01 , 0.02 , 0.02 
         
         r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-        model.F[0].release() 
-        model.F[1].release() 
-        model.F[2].release()
-        model.F[3].release()  
-        
         r, f = model.fitTo ( dataset , draw = True , silent = True )
         
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
     
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ( "Extedende1"     , logger ) : 
+    with timing ( "Extended1"     , logger ) : 
         test_extended1    ()
         
-    with timing ( "Extedende2"     , logger ) : 
+    with timing ( "Extended2"     , logger ) : 
         test_extended2    ()
         
-    with timing ( "non-Extedende1" , logger ) : 
+    with timing ( "non-Extendd1" , logger ) : 
         test_nonextended1 ()
         
-    with timing ( "non-Extedende2" , logger ) : 
+    with timing ( "non-Extended2" , logger ) : 
         test_nonextended2 () 
 
-    with timing ( "non-Extedende3" , logger ) : 
+    with timing ( "non-Extendend3" , logger ) : 
         test_nonextended3 () 
     
 # =============================================================================

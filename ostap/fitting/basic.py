@@ -46,7 +46,7 @@ from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu   , Phase
                                         fit_status , cov_qual , H1D_dset , get_i )
 from   ostap.fitting.funbasic  import FUNC,  SETPARS 
 from   ostap.utils.cidict      import select_keys
-from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args 
+from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args , command  
 import ostap.histos.histos 
 from   ostap.core.meta_info    import root_info  
 # =============================================================================
@@ -54,9 +54,6 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
 # =============================================================================
-## if (6,25) <= root_info :
-##    ROOT.RooAbsPdf .plotOn = ROOT.RooAbsPdf._plotOn
-##    ROOT.RooAbsData.plotOn = ROOT.RooAbsData._plotOn
     
 # =============================================================================
 ## @var arg_types
@@ -371,7 +368,7 @@ class PDF (FUNC) :
         ## define silent context
         with roo_silent ( silent ) :
             self.fit_result = None            
-            result          = self.pdf.fitTo ( dataset , *self.merge_args ( 8 , *opts ) ) 
+            result          = self.fit_to ( self.pdf , dataset , *opts ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -504,8 +501,8 @@ class PDF (FUNC) :
             component  = ROOT.RooFit.Components ( cmp.name )
 
             atup = args + tuple ( options ) + tuple ( st ) 
-            self.debug  ( 'drawing component %s with options %s' % ( cmp.name , ( component, ) + atup ) )             
-            self.plotOn ( self.pdf , frame , component , *atup  )
+            self.debug   ( 'drawing component %s with options %s' % ( cmp.name , ( component, ) + atup ) )             
+            self.plot_on ( self.pdf , frame , component , *atup  )
             
     # ================================================================================
     ## draw fit results
@@ -632,7 +629,7 @@ class PDF (FUNC) :
 
                 commands = data_options 
                 commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
-                self.plotOn ( dataset , frame , *commands ) 
+                self.plot_on ( dataset , frame , *commands ) 
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
@@ -708,7 +705,7 @@ class PDF (FUNC) :
             ## the total fit curve
             #
             totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            self.plotOn ( self.pdf , frame , *totoptions ) 
+            self.plot_on ( self.pdf , frame , *totoptions ) 
             kwargs.pop ( 'total_fit_options' , () )
             
             #
@@ -716,7 +713,7 @@ class PDF (FUNC) :
             #
             if dataset :
                 commands = data_options + args
-                self.plotOn ( dataset , frame , *commands )
+                self.plot_on ( dataset , frame , *commands )
 
             #
             ## suppress ugly axis labels
@@ -1010,7 +1007,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            self.plotOn ( result , frame , *largs )
+            self.plot_on ( result , frame , *largs )
             
             import ostap.histos.graphs
             
@@ -1096,8 +1093,12 @@ class PDF (FUNC) :
         ## get s-Factor 
         sf   = dataset.sFactor() 
 
-        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
-        return self.pdf.createNLL ( dataset , *self.merge_args ( 7 , *opts ) ) , sf 
+        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )
+        if len ( opts ) < 8 : 
+            return self.pdf.createNLL ( dataset , *opts             ) , sf
+        else :
+            return self.pdf.createNLL ( dataset , command ( *opts ) ) , sf
+            
 
     # =========================================================================
     ## get NLL/profile-graph for the variable, using the specified abscissas
@@ -3521,62 +3522,26 @@ class Fit1D (PDF) :
     @property
     def fS ( self  ) :
         """(Recursive) fractions for the compound signal components (empty for simple signal) """
-        lst = [ i for i in self.__signal_fractions ]
-        return tuple ( lst )
+        return self.component_getter ( self.__signal_fractions )
     @fS.setter
     def fS ( self , value ) :
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for f , v in zip ( self.__signal_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
-            f.setVal   ( vv ) 
+        self.component_setter ( self.__signal_fractions , value )
             
     @property
     def fB ( self  ) :
-        """(Recursive) fractions for the compound background components (empty for simple background)"""
-        lst = [ i for i in self.__background_fractions ]
-        return tuple ( lst )
+        """(Recursive) fractions for the compound background components (empty for simple background)"""        
+        return self.component_getter ( self.__background_fractions ) 
     @fB.setter
     def fB ( self , value ) :
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for f , v in zip ( self.__background_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s for f "  % ( vv , f.minmax() , f.name ) ) 
-            f.setVal   ( vv ) 
+        self.component_setter ( self.__background_fractions , value )
                 
     @property
     def fC ( self  ) :
         """(Recursive) fractions for the compound ``other'' components (empty for no additional commponents case)"""
-        lst = [ i for i in self.__components_fractions ]
-        return tuple ( lst )
+        return self.component_getter ( self.__components_fractions )
     @fC.setter
     def fC ( self , value ) :
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for f , v in zip ( self.__components_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , f.minmax() , f.name ) ) 
-            f.setVal   ( vv ) 
+        self.component_setter ( self.__components_fractions , value )
             
     @property
     def S ( self ) :
@@ -3591,32 +3556,11 @@ class Fit1D (PDF) :
         >>> print pdf.S[4]       ## read the 4th signal component 
         >>> pdf.S[4].value = 100 ## assign to it         
         """
-        lst = [ i for i in self.__nums_signals ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple signal?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_signals )    
     @S.setter
     def S (  self , value ) :
-        
-        ns = len ( self.__nums_signals )
-        assert 1 <= ns , "No signals are defined, assignement is impossible"
-        
-        ##
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
+        self.component_setter ( self.__nums_signals , value )
 
-        ss = [ self.S ] if 1 == ns else self.S
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
-            s.setVal   ( vv ) 
-    
     @property
     def B ( self ) :
         """Get the  yields of background  component(s) (empty for non-extended fits)
@@ -3630,30 +3574,11 @@ class Fit1D (PDF) :
         >>> print pdf.B[4]       ## read the 4th background component 
         >>> pdf.B[4].value = 100 ## assign to it 
         """
-        lst = [ i for i in self.__nums_backgrounds ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple background?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_backgrounds ) 
+
     @B.setter
     def B (  self , value ) :
-        
-        nb = len ( self.__nums_backgrounds )
-        assert 1 <= nb , "No backgrounds are defined, assignement is impossible"
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        ss = [ self.B ] if 1 == nb else self.B
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv  , s.minmax() , s.name ) ) 
-            s.setVal   ( vv ) 
+        self.component_setter ( self.__nums_backgrounds , value )
 
     @property
     def C ( self ) :
@@ -3668,30 +3593,10 @@ class Fit1D (PDF) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components )     
     @C.setter
     def C (  self , value ) :
-        
-        nc = len ( self.__nums_components )
-        assert 1 <= nc , "No ``other'' components are defined, assignement is impossible"
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        ss = [ self.C ] if 1 == nc else self.C
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
-            s.setVal   ( vv ) 
+        self.component_setter ( self.__nums_components , value )
 
     @property 
     def F ( self ) :
@@ -3706,32 +3611,14 @@ class Fit1D (PDF) :
         >>> print pdf.F[4]        ## read the 4th fraction
         >>> pdf.F[4].value = 0.1  ## assign to it         
         """
-        lst = [ i for i in self.__nums_fractions ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple two component fit ?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_fractions )     
     @F.setter
     def F (  self , value ) :
-        nf = len ( self.__nums_fractions )
-        assert 1 <= nf , "No fractions are defined, assignement is impossible"
-
-        ss = [ self.F ] if 1 == nf else self.F
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) ) 
-            s.setVal   ( vv ) 
+        self.component_setter ( self.__nums_fractions , value )
 
     @property
     def  yields    ( self ) :
-        """The list/tuple of the yields of all numeric components (empty for non-extended fit)"""
+        """The list/tuple of the ``yields'' of all numeric components (empty for non-extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if     self.extended else ()
 
     @property
@@ -3757,7 +3644,6 @@ class Fit1D (PDF) :
     def  fractions ( self ) :
         """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
         return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
-
 
 
 # =============================================================================

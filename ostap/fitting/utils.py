@@ -47,9 +47,9 @@ import ostap.fitting.variables
 import ostap.fitting.roocollections
 from   builtins                import range 
 from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
-from   ostap.core.ostap_types  import ( num_types     , list_types   ,
-                                        integer_types , string_types ,
-                                        is_good_number               )
+from   ostap.core.ostap_types  import ( num_types      , list_types     ,
+                                        integer_types  , string_types   ,
+                                        is_good_number , sequence_types )
 from   ostap.logger.utils      import roo_silent
 from   sys                     import version_info as python_version 
 from   ostap.math.random_ext   import ve_gauss, poisson
@@ -741,48 +741,8 @@ class MakeVar ( object ) :
         ## store them 
         self.aux_keep.append ( _args ) 
         
-        return self.merge_args ( 5 , *_args )
+        return tuple ( _args ) 
 
-    # =========================================================================
-    ## Merge <code>RooCmdArgs</code> into chunks
-    #  It is needed to account a limited number of <code>RooCmdArg</code> arguments
-    #  @see RooCmdArg 
-    #  @see RooFit::MultiArg
-    def merge_args ( self , num , *args ) :
-        """Merge `RooCmdArgs` into chunks 
-        - It is needed to account a limited number of `RooCmdArg` arguments
-        - see `ROOT.RooCmdArg`
-        - see `ROOT.RooFit.MultiArg`
-        """
-        assert isinstance ( num , integer_types ) and 1 <= num ,\
-               "merge_args: invalid chunk size ``%s''" % num
-        
-        assert all ( isinstance ( a , ROOT.RooCmdArg ) for a in args ), \
-               "merge_args: invalid types %s | %s" %  ( args , [ type(a) for a in args ] ) 
-
-        ### no action ?
-        if len ( args ) < num : return args
-
-        from   ostap.utils.utils  import chunked                
-        self.aux_keep.append (  args ) 
-
-        ## flat  = flat_args    ( *args )        
-        ## self.aux_keep.append (  flat ) 
-
-        lst   = args 
-        
-        NC = 8 if ( 1 != len ( lst ) % 8 )  else 7
-        
-        while num < len ( lst ) : 
-
-            chunks = chunked ( lst , NC )
-            mlst   = [ ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks ]
-            
-            self.aux_keep.append ( mlst ) 
-            lst = tuple ( mlst )
-            
-        return lst 
-        
     # =========================================================================
     ## set value to a given value with the optional check
     #  @code
@@ -799,7 +759,7 @@ class MakeVar ( object ) :
         """
 
         ## must be roofit variable! 
-        assert isinstance ( var , ROOT.RooAbsReal ) , 'Invalid type of ``var'' %s' % type ( var )
+        assert isinstance ( var , ROOT.RooAbsRealLValue ) , 'Invalid type of ``var'' %s' % type ( var )
         
         if not hasattr ( var ,  'setVal' ) :
             raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
@@ -822,6 +782,35 @@ class MakeVar ( object ) :
         var.setVal ( value )
 
         return isequal ( value , var.getVal () ) 
+
+    # =========================================================================
+    ## gettter for certain fit components from the provided list 
+    def component_getter ( self , components ) :
+        """Gettter for certain fit components from the provided list
+        """
+        nc = len ( components )
+        if   0 == nc : return ()
+        elif 1 == nc : return components [ 0 ] 
+        return tuple ( c for c in components )
+
+    # ======================================================
+    ## setter for certian fit components form provided list 
+    def component_setter ( self , components , value ) :
+        """Setter for certian fit components form provided list
+        """
+        assert 0 < len ( components ) , 'Empty list of components, settins is not possible!'
+        
+        if   isinstance ( value , num_types          ) : values = float ( value ) , 
+        elif isinstance ( value , VE                 ) : values = value.value ()  , 
+        elif isinstance ( value , ROOT.RooAbsReal    ) : values = float ( value ) , 
+        elif isinstance ( value , ROOT.RooArgList    ) : values = tuple ( float ( v ) for v in value ) 
+        elif isinstance ( value , sequence_types     ) : values = tuple ( float ( v ) for v in value ) 
+        else :
+            self.warning ("component setter: unknown type for ``value'':%s/%s" % ( str( value) , type ( value ) ) )
+            values = value 
+
+        for c , v in zip  ( components , values )  :
+            self.set_value (  c , v ) 
 
     # =========================================================================
     ## Create some expressions with variables
@@ -2131,23 +2120,7 @@ class Phases(MakeVar) :
 
     @phis.setter
     def phis ( self , values ) :
-
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__phis , values ) :
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) )                 
-            s.setVal   ( vv )
-        nphi = len ( self.__phis )
+        self.component_setter ( self.__phis , values )
 
     @property
     def phi_list ( self ) :
@@ -2244,22 +2217,8 @@ class ParamsPoly(MakeVar) :
         """``pars'' : the polynomial coefficients/parameters"""
         return self.__pars    
     @pars.setter
-    def pars ( self , values ) :    
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__pars , values ) :
-            vv = float ( v  )
-            if s.minmax () and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s "  % ( vv , s.minmax() , s.name ) )
-            s.setVal   ( vv )
+    def pars ( self , values ) :
+        self.component_setter ( self.__pars , values )
             
     def reset_pars ( self , value = 0 ) :
         """Set all pars to be value 
@@ -2400,40 +2359,6 @@ def get_i ( what , i , default = None ) :
 
     return default
         
-# =============================================================================
-## plot data/pdf
-#  @see RooAbsData::plotOn
-#  @see RooAbsPdf::plotOn
-#  Ostap::Utils::plotOn
-def plotOn ( what , frame, *options ) :
-    """Plot data/pdf
-    - see ROOT.RooAbsData.plotOn
-    - see ROOT.RooAbsReal.plotOn
-    - see Ostap.Utils.plotOn
-    """
-    
-    NARGS = 8
-    
-    assert all ( isinstance ( o , ROOT.RooCmdArg ) for o in options  ), \
-           "plotOn: invalid argument types: %s" % list ( options  ) 
-    
-        ## for ``small'' number of arguments use the standard function 
-    if len ( options ) <= NARGS :
-        return what.plotOn ( frame  , *options )
-
-    ## merge arguments to get shorter list        
-    head = options [            : NARGS - 1 ]
-    tail = options [ NARGS - 1  :           ]
-    
-    from   ostap.utils.utils  import chunked
-    if 1 == len ( tail ) % NARGS  : chunks = chunked ( tail , NARGS - 1  )
-    else                          : chunks = chunked ( tail , NARGS      )
-    
-    new_options = head + tuple ( ROOT.RooFit.MultiArg ( *chunk ) for chunk in chunks )
-    
-    logger.debug ( 'plotOn: merged options: %s' % str ( new_options ) ) 
-    return plotOn ( what , frame , *new_options ) 
-
         
 # =============================================================================
 ## consruct MsgTopic

@@ -80,7 +80,6 @@
 #include "Ostap/PhaseSpace.h"
 #include "Ostap/Piecewise.h"
 #include "Ostap/Plane3DTypes.h"
-#include "Ostap/PlotOn.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
