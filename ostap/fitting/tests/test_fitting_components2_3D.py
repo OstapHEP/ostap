@@ -194,28 +194,28 @@ def test_fitting_components2_3D () :
         components  = [ sss_cmp , ssb_cmp , bbs_cmp  ]
         )
 
-    with rooSilent() : 
-        ## components
-        
-        model.SSS = N_sss 
-        model.SSB = N_ssb * 3 
-        model.SBB = N_sbb * 3 
-        model.BBB = N_bbb 
 
-        model.C  = N_sss, N_ssb * 3 , N_sbb * 3
-
-        r = model.fitTo ( dataset , silent = True  )
-        r = model.fitTo ( dataset , silent = True  )
-        
-        if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
-            
-            logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
-            
-        else : 
+    ## components
     
-            model.draw1 ( dataset )
-            model.draw2 ( dataset )
-            model.draw3 ( dataset )
+    model.SSS = N_sss 
+    model.SSB = N_ssb * 3 
+    model.SBB = N_sbb * 3 
+    model.BBB = N_bbb 
+    
+    model.C  = N_sss, N_ssb * 3 , N_sbb * 3
+    
+    r = model.fitTo ( dataset , silent = True  )
+    r = model.fitTo ( dataset , silent = True  )
+    
+    if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
+        
+        logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
+        
+    else : 
+        
+        model.draw1 ( dataset )
+        model.draw2 ( dataset )
+        model.draw3 ( dataset )
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 

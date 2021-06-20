@@ -14,14 +14,15 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
+import ROOT, random, datetime 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID
 from   ostap.logger.utils       import rooSilent
 from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
-from   ostap.utils.timing       import timing 
+from   ostap.utils.timing       import timing
+from   ostap.core.meta_info     import root_info 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -196,30 +197,28 @@ def test_comp_3dMixfit () :
         components  = [ sss_cmp , ssb_cmp , bbs_cmp  ]
         )
     
-    with rooSilent() : 
-        ## components
-        
-        model.SSS = N_sss 
-        model.SSB = N_ssb * 3 
-        model.SBB = N_sbb * 3 
-        model.BBB = N_bbb 
-
-        model.C  = N_sss, N_ssb * 3 , N_sbb * 3
-
-        r = model.fitTo ( dataset , silent = True  )
-        r = model.fitTo ( dataset , silent = True  )
-        r = model.fitTo ( dataset , silent = True  )
-
-        if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
-            
-            logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
-            
-        else : 
+    ## components        
+    model.SSS = N_sss 
+    model.SSB = N_ssb * 3 
+    model.SBB = N_sbb * 3 
+    model.BBB = N_bbb 
     
-            model.draw1 ( dataset )
-            model.draw2 ( dataset )
-            model.draw3 ( dataset )
-
+    model.C  = N_sss, N_ssb * 3 , N_sbb * 3
+    
+    r = model.fitTo ( dataset , silent = True  )
+    r = model.fitTo ( dataset , silent = True  )
+    r = model.fitTo ( dataset , silent = True  )
+    
+    if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
+        
+        logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
+        
+    else : 
+        
+        model.draw1 ( dataset )
+        model.draw2 ( dataset )
+        model.draw3 ( dataset )
+        
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
     
