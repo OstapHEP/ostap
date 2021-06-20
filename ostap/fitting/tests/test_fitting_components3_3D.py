@@ -180,9 +180,6 @@ def test_fitting_components3_3D () :
 
     bbs_cmp = sbb_ + bsb_ + bsb_ 
 
-
-def test_comp_3dMixfit () :
-    
     logger.info ('Test  multi-component  3d Sym fit')
     
     model = Models.Fit3DMix (
@@ -219,7 +216,7 @@ def test_comp_3dMixfit () :
         model.draw2 ( dataset )
         model.draw3 ( dataset )
         
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table (prefix = '# ') ) ) 
 
     
 # =============================================================================
