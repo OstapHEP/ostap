@@ -621,7 +621,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation') ] + rows
+    rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
@@ -639,7 +639,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         row = p , n , '  ' + s + ' (fix)' , ''  
         crows.append ( row ) 
 
-    ## floating parameters 
+    ## floating parameters
+    max_corr = False
     frows    = []
     for p in pars_float :
         v , a = pars_float [ p ]
@@ -653,12 +654,13 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         else : n = '' 
 
         cc = 'Not available' if root_info < ( 6 , 24 ) else ''
-        if 0 <= cq and root_info < ( 6 , 24 ) : 
+        if 0 <= cq and not  ( 6 , 24 ) <= root_info < ( 6 , 25 ) : 
             mxr , mxv = r.max_cor    ( p )
             gc    = r.globalCorr ( p )
 
-            cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
+            cc        = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100 , mxv )
             if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+            max_corr = True
             
         row = p , n , s , cc
         frows.append ( row ) 
@@ -684,24 +686,21 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     frows.sort()
 
     all = rows + crows + frows + mrows  
-    
+
+    if not max_corr :
+        all = [ row[:-1] for row in all ] 
+
+        
     import ostap.logger.table as T
 
-    all = T.align_column ( all , 0 , 'left' )
-    all = T.align_column ( all , 1 , 'left' )
-    all = T.align_column ( all , 2 , 'left' )
-    all = T.align_column ( all , 3 , 'left' )
+    ## for l in range ( len ( rows ) , len ( all ) ) :
+    ##     line = all [ l ]
+    ##     line = list ( line ) 
+    ##     line [ 0 ] = allright ( line [ 0 ] )
+    ##     all  [ l ] = tuple    ( line       ) 
 
-    for l in range ( len ( rows ) , len ( all ) ) :
-        line = all [ l ]
-        line = list ( line ) 
-        line [ 0 ] = allright ( line [ 0 ] )
-        all  [ l ] = tuple    ( line       ) 
-
-    if title : 
-        return T.table ( all , title = title         , prefix = prefix )
-    else     :
-        return T.table ( all , title = r.GetTitle()  , prefix = prefix )
+    if not title : title = r.GetTitle() 
+    return T.table ( all , title = title , prefix = prefix , alignment = 'llll' )
 
 
 

@@ -171,14 +171,14 @@ def test_fitting_components3_3D () :
     sbs_    = sb_cmp * signal_z2
     bss_    = bs_cmp * signal_z2
 
-    ssb_cmp = ssb_ + sbs_ + bss_ 
+    ssb_cmp = ssb_ + ( sbs_ , bss_ ) 
 
     # S(x)*B(y)*B(z) + B(x)*S(y)*B(z) + B(x)*B(y)*S(z) component
     sbb_ = sb_cmp * bkg_z
     bsb_ = bs_cmp * bkg_z
-    bbs_ = bs_cmp * signal_z2 
+    bbs_ = bb_cmp * signal_z2 
 
-    bbs_cmp = sbb_ + bsb_ + bsb_ 
+    bbs_cmp = sbb_ + (  bsb_ ,  bbs_ ) 
 
     logger.info ('Test  multi-component  3d Sym fit')
     

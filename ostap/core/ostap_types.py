@@ -23,7 +23,8 @@ __all__     = (
     'dict_types'      , ## dict types 
     'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
-    'sequence_types'  , ## sequence types 
+    'sequence_types'  , ## sequence types
+    'iterable_types'  , ## iterable 
     'sized_types'     , ## sized types 
     ##
     'is_integer'      , ## is a value of int-like type?
@@ -72,7 +73,8 @@ else :
     from collections     import Container     as Collection
     from types           import GeneratorType as Generator 
 
-num_types = integer_types + ( float , ) 
+iterable_types = Iterable,
+num_types      = integer_types + ( float , ) 
 str_types = str,
 
 list_types     = list , tuple

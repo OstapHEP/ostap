@@ -39,6 +39,7 @@ from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, va
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
                                         integer_types  , num_types      ,
+                                        iterable_types , 
                                         list_types     , all_numerics   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
@@ -2306,7 +2307,71 @@ class PDF (FUNC) :
             ufracs.append ( f )
             
         return ufracs
+    
+    # =============================================================================
+    ## Create list of variables that can be used as ``fractions'' for N-component fit
+    #  @code
+    #  MV = ...
+    #  fractions = MV.make_fractions ( 5 )
+    #  fractions = MV.make_fractions ( 5 , prefix = 'F' , suffix = 'D' )
+    #  fractions = MV.make_fractions ( 5 , prefix = 'F' , recursive = False )    
+    #  fractions = MV.make_fractions ( 5 , prefix = 'F' , fractions = (0.4, 0.1 , 0.3 , 0.1 ) )   
+    #  @endcode 
+    def make_fractions ( self             ,
+                         N                ,
+                         prefix    = 'f'  ,
+                         suffix    = ''   ,
+                         title     = ''   , 
+                         recursive = True ,
+                         fractions = ()   ) :
+        
+        assert is_integer ( N ) and 2 <= N ,\
+               "make_fractions: there must be at least two components!"
 
+        from itertools import repeat, chain 
+        if not isinstance ( fractions , iterable_types ) :
+            fractions = chain ( ( fractions, ) , repeat ( None ) )
+        else : 
+            fractions = chain (   fractions    , repeat ( None ) )
+            
+        
+        fracs = []
+
+        value = 1.0
+        prod  = 1.0
+        
+        for i , ff in zip ( range ( N - 1  ) , fractions ) :
+            
+            value = 1.0 / N
+            
+            if recursive : 
+                value /= prod
+                prod  *= ( 1.0 - value ) 
+                
+            if   isinstance  ( ff , num_types       ) and not 0 <= ff <= 1 :
+                self.error   ("make_fracs: fraction %s is outside [0,1] interval, ignore it!" %  ff )
+                ff = value
+                
+            elif isinstance  ( ff , ROOT.RooAbsReal ) and not 0 <= float ( ff ) <= 1 :
+                self.warning ("make_fracs: fraction %s is outside [0,1] interval" %  ff )
+                
+
+            if ff is None : ff = value
+
+            if 2 < N :
+                name = self.roo_name ( '%s%d_%s' % ( prefix , i , self.name ) , suffix )
+                tit =  'Fraction: %s%d%s%s' % ( prefix , i , self.name , suffix )                
+            else     :
+                name = self.roo_name ( '%s_%s'   % ( prefix     , self.name ) , suffix )
+                tit  =  'Fraction: %s%s%s'  % ( prefix     , self.name , suffix )
+
+            fvar = self.make_var ( ff   , name , title if title else tit ,
+                                   None , value , 0 , 1 )
+            
+            fracs.append ( fvar  )
+            
+        return tuple ( fracs )
+    
     # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
     def add_pdf ( self             ,
@@ -2844,6 +2909,134 @@ class Generic1D_pdf(PDF) :
         
     
 # =============================================================================
+## @class Combine1D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Combine1D (PDF) :
+    """Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Combine1D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+    
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = 'f'  , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Combine1D: at least two PDFs are needed!'
+
+        pdf_list = []        
+        for i , p in enumerate ( pdfs ) :
+
+            if isinstance ( p , PDF ) :
+                
+                assert ( not xvar ) or xvar is p.xvar, "Invalid xvar/pdf%d.xvar: %s/%s" % ( i , xvar , p.xvar ) 
+                xvar = p.xvar
+                pdf_list.append ( p )
+                
+            elif isinstance ( p  , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+                
+                pdf_list.append ( Generic1D_pdf ( p , xvar ) )
+                
+            else :
+                raise TypeError ( "Invalid type: pdf%d xvar %s/%s xvar=%s" % ( i , p , type(p) , xvar ) )
+
+
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum1' )
+        
+        ## ininialize the base class
+        PDF.__init__ ( self , name , xvar ) 
+
+        for i , p in enumerate ( pdf_list )  :
+            if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
+                
+
+        self.__prefix    = prefix
+        self.__suffix    = suffix
+        self.__recursive = True if recursive else False 
+        
+        ## make list of fractions 
+        fraction_list = self.make_fractions  ( len ( pdf_list )           ,
+                                               prefix    = self.prefix    ,
+                                               suffix    = self.suffix    ,
+                                               recursive = self.recursive ,
+                                               fractions = fractions      )
+
+        ## keep them
+        self.__pdfs      = tuple ( pdf_list )
+        self.__fractions = tuple ( fraction_list ) 
+        
+        for p in self.__pdfs      : self.alist1.add ( p.pdf )
+        for f in self.__fractions : self.alist2.add ( f     )
+        
+        ## finally build PDF 
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'combine1' ) ,
+                                    ' + '.join ( '(%s)' % p.name for p in self.pdfs  ) ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+        
+    @property
+    def prefix ( self ) :
+        """``prefix'' : prefix for fraction names"""
+        return self.__prefix
+
+    @property
+    def suffix ( self ) :
+        """``suffix'' : suffix for fraction names"""
+        return self.__suffix
+
+    @property
+    def recursive ( self ) :
+        """``recursive'' : recursive fractions?"""
+        return self.__recursive
+    
+    @property
+    def pdfs ( self ) :
+        """``pdfs'' : get list/tuple of involved PDFs (same as ``components'')"""
+        return self.__pdfs
+    @property
+    def components ( self ) :
+        """``components'' : get list/tuple of involved PDFs (same as ``pdfs'')"""
+        return self.pdfs
+        
+    @property
+    def fractions ( self ) :
+        """``fractions'' : get involved fractions (same as ``F'')"""
+        return self.component_getter ( self.__fractions )
+    @fractions.setter
+    def fractions ( self , values ) :
+        self.component_setter ( self.__fractions , values )
+
+    @property
+    def F         ( self ) :
+        """``F'' : get involved fractions (same as ``fractions'')"""
+        return self.component_getter ( self.__fractions )
+    @F.setter
+    def F         ( self , values ) :
+        self.fractions = values 
+
+        
+# =============================================================================
 ## @class Sum1D
 #  Non-extended sum of two PDFs
 #  @code
@@ -2853,16 +3046,13 @@ class Generic1D_pdf(PDF) :
 #  @endcode
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
-class Sum1D(PDF) :
-    """Non-extended sum of two PDFs:
-    
-    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
-    - see RooAddPdf 
-    
-    pdf1 = ...
-    pdf2 = ...
-    sum  = Sum1D ( pdf1 , pdf2 ) 
-
+class Sum1D(Combine1D) :
+    """Non-extended sum of two PDFs:    
+    It is just a small wrapper for `ROOT.RooAddPdf`    
+    >>> pdf1 = ...
+    >>> pdf2 = ...
+    >>> sum  = Sum1D ( pdf1 , pdf2 ) 
+    - see `ROOT.RooAddPdf` 
     """
     def __init__ ( self            ,
                    pdf1            ,
@@ -2870,84 +3060,48 @@ class Sum1D(PDF) :
                    xvar     = None , 
                    name     = ''   , 
                    fraction = None ) :
-
-        if   isinstance ( pdf1 , PDF ) :
-            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" %( xvar , pdf1.xvar )             
-            xvar = pdf1.xvar        
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
-            pdf1 = Generic1D_pdf ( pdf1 , xvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf1, type(pdf1) , xvar , type(xvar) ) )
-
-        if   isinstance ( pdf2 , PDF ) and xvar in pdf2.vars : pass 
-        elif isinstance ( pdf2 , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
-            pdf2 = Generic1D_pdf ( pdf2 , xvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf2, type(pdf2) , xvar , type(xvar) ) )
-
-        name = name if name else self.generate_name ( prefix = 'sum1D_' ) 
-
-        ## initialize the base class
-        PDF.__init__ ( self , name , xvar )
-
-        self.__pdf1     = pdf1
-        self.__pdf2     = pdf2
         
-        self.__fraction = self.make_var ( fraction ,
-                                          self.roo_name ( 'f_' ) , 
-                                          ## 'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
-                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 )
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum1' )
         
-        self.alist1     = ROOT.RooArgList ( self.pdf1.pdf ,
-                                            self.pdf2.pdf )
-        self.alist2     = ROOT.RooArgList ( self.fraction )
-        
-        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'sum1_' ) ,
-                                    '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
-                                    self.pdf1.pdf ,
-                                    self.pdf2.pdf ,
-                                    self.fraction )
-        
-        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
+        pdfs = [] 
+        if isinstance ( pdf1 , iterable_types ) : pdfs = pdfs + [ p for p in pdf1 ]
+        else                                    : pdfs.append ( pdf1 )
+        if isinstance ( pdf2 , iterable_types ) : pdfs = pdfs + [ p for p in pdf2 ]
+        else                                    : pdfs.append ( pdf2 ) 
+
+        ## initialize the base class 
+        Combine1D.__init__ ( self                 ,
+                             name      = name     , 
+                             pdfs      = pdfs     ,
+                             xvar      = xvar     ,
+                             fractions = fraction )
 
         self.config = {
-            'pdf1'     : self.pdf1 ,
-            'pdf2'     : self.pdf2 ,
-            'xvar'     : self.xvar ,
-            'name'     : self.name , 
+            'pdf1'     : self.pdf1      ,
+            'pdf2'     : self.pdf2      ,
+            'xvar'     : self.xvar      ,
+            'name'     : self.name      , 
             'fraction' : self.fraction 
             }
-
+        
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        return self.__pdf1
+        return self.pdfs[0]
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
-        return self.__pdf2
+        return self.pdfs[1]
 
     @property
     def fraction ( self ) :
         """``fraction'' : the fraction of the first PDF in the sum"""
-        return self.__fraction
+        return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
-        val = float ( value )
-        self.__fraction.setVal ( val )
-
-    @property
-    def F  ( self ) :
-        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
-        return self.__fraction
-    @F.setter
-    def F ( self , value ) :
-        self.fraction = value 
-
-
+        self.fractions = value 
 
 # =============================================================================
     

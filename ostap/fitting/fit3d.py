@@ -21,6 +21,7 @@ __all__     = (
     'Generic3D_pdf' , ## wrapper over imported RooFit (2D)-pdf  
     'Flat3D'        , ## the most trivial 3D-pdf - constant
     'Model3D'       , ## trivial class to build 3D model from 1D-components 
+    'Combine3D'     , ## non-extended sum of several PDFs 
     'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Shape3D_pdf'   , ## simple PDF from C++ shape     
@@ -28,7 +29,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core        import dsID , hID ,  VE , Ostap , valid_pointer
-from   ostap.core.ostap_types import integer_types
+from   ostap.core.ostap_types import integer_types, iterable_types
 from   ostap.logger.utils     import roo_silent , rooSilent
 from   ostap.fitting.utils    import H3D_dset , component_similar , component_clone
 from   ostap.fitting.funbasic import FUNC3
@@ -1078,6 +1079,148 @@ class Generic3D_pdf(PDF3) :
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
+
+# =============================================================================
+## @class Combine3D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Combine3D (PDF3) :
+    """Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Combine3D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+    
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   yvar      = None , 
+                   zvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Combine3D: at least two PDFs are needed!'
+
+        pdf_list = []        
+        for i , p in enumerate ( pdfs ) :
+
+            if isinstance ( p , PDF3 ) :
+                
+                assert ( not xvar ) or xvar is p.xvar, "Invalid xvar/pdf%d.xvar: %s/%s" % ( i , xvar , p.xvar ) 
+                assert ( not yvar ) or yvar is p.yvar, "Invalid yvar/pdf%d.yvar: %s/%s" % ( i , yvar , p.zvar ) 
+                assert ( not zvar ) or zvar is p.zvar, "Invalid zvar/pdf%d.zvar: %s/%s" % ( i , yvar , p.zvar )
+                
+                xvar = p.xvar
+                yvar = p.yvar
+                zvar = p.zvar
+                
+                pdf_list.append ( p )
+                
+            elif isinstance ( pdf1 , ROOT.RooAbsPdf )                   \
+                     and xvar and isinstance ( xvar , ROOT.RooAbsReal ) \
+                     and yvar and isinstance ( xvar , ROOT.RooAbsReal ) \
+                     and zvar and isinstance ( zvar , ROOT.RooAbsReal ) :
+                
+                pdf_list.append ( Generic3D_pdf ( p , xvar , yvar , zvar ) )
+                
+            else :
+                raise TypeError ( "Invalid type: pdf%d xvar %s/%s xvar=%s, yvar=%s, zvar=%s" % ( i , p , type(p) , xvar , yvar , zvar ) )
+
+
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum3' )
+        
+        ## ininialize the base class
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+
+        for i , p in enumerate ( pdf_list )  :
+            if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
+                
+
+        self.__prefix    = prefix
+        self.__suffix    = suffix
+        self.__recursive = True if recursive else False 
+        
+        ## make list of fractions 
+        fraction_list = self.make_fractions  ( len ( pdf_list )           ,
+                                               prefix    = self.prefix    ,
+                                               suffix    = self.suffix    ,
+                                               recursive = self.recursive ,
+                                               fractions = fractions      )
+
+        ## keep them
+        self.__pdfs      = tuple ( pdf_list )
+        self.__fractions = tuple ( fraction_list ) 
+        
+        for p in self.__pdfs      : self.alist1.add ( p.pdf )
+        for f in self.__fractions : self.alist2.add ( f     )
+        
+        ## finally build PDF 
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'combine3' ) ,
+                                    ' + '.join ( '(%s)' % p.name for p in self.pdfs  ) ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'zvar'      : self.zvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+        
+    @property
+    def prefix ( self ) :
+        """``prefix'' : prefix for fraction names"""
+        return self.__prefix
+
+    @property
+    def suffix ( self ) :
+        """``suffix'' : suffix for fraction names"""
+        return self.__suffix
+
+    @property
+    def recursive ( self ) :
+        """``recursive'' : recursive fractions?"""
+        return self.__recursive
+    
+    @property
+    def pdfs ( self ) :
+        """``pdfs'' : get list/tuple of involved PDFs (same as ``components'')"""
+        return self.__pdfs
+    @property
+    def components ( self ) :
+        """``components'' : get list/tuple of involved PDFs (same as ``pdfs'')"""
+        return self.pdfs
+        
+    @property
+    def fractions ( self ) :
+        """``fractions'' : get involved fractions (same as ``F'')"""
+        return self.component_getter ( self.__fractions )
+    @fractions.setter
+    def fractions ( self , values ) :
+        self.component_setter ( self.__fractions , values )
+
+    @property
+    def F         ( self ) :
+        """``F'' : get involved fractions (same as ``fractions'')"""
+        return self.component_getter ( self.__fractions )
+    @F.setter
+    def F         ( self , values ) :
+        self.fractions = values 
+
+
     
 # =============================================================================
 ## @class Sum3D
@@ -1089,16 +1232,13 @@ class Generic3D_pdf(PDF3) :
 #  @endcode
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
-class Sum3D(PDF3) :
-    """Non-extended sum of two PDFs:
-    
-    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
-    - see RooAddPdf 
-    
-    pdf1 = ...
-    pdf2 = ...
-    sum  = Sum3D ( pdf1 , pdf2 ) 
-
+class Sum3D(Combine3D) :
+    """Non-extended sum of two PDFs:    
+    It is just a small wrapper for `ROOT.RooAddPdf`
+    >>> pdf1 = ...
+    >>> pdf2 = ...
+    >>> sum  = Sum3D ( pdf1 , pdf2 ) 
+    - see `ROOT.RooAddPdf`
     """
     def __init__ ( self            ,
                    pdf1            ,
@@ -1108,90 +1248,53 @@ class Sum3D(PDF3) :
                    zvar     = None , 
                    name     = ''   , 
                    fraction = None ) :
+ 
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum3' )
+       
+        pdfs = [] 
+        if isinstance ( pdf1 , iterable_types ) : pdfs = pdfs + [ p for p in pdf1 ]
+        else                                    : pdfs.append ( pdf1 )
+        if isinstance ( pdf2 , iterable_types ) : pdfs = pdfs + [ p for p in pdf2 ]
+        else                                    : pdfs.append ( pdf2 ) 
 
-        if   isinstance ( pdf1 , PDF3 ) :
-            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" % ( xvar , pdf1.xvar )             
-            assert ( not yvar ) or yvar is pdf1.yvar, "Invalid yvar/pdf1.yvar: %s/%s" % ( yvar , pdf1.yvar )             
-            assert ( not zvar ) or zvar is pdf1.zvar, "Invalid zvar/pdf1.zvar: %s/%s" % ( zvar , pdf1.zvar )             
-            xvar = pdf1.xvar        
-            yvar = pdf1.yvar        
-            zvar = pdf1.yvar        
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf )           and \
-             xvar and isinstance ( xvar , ROOT.RooAbsReal ) and \
-             yvar and isinstance ( yvar , ROOT.RooAbsReal ) and \
-             zvar and isinstance ( zvar , ROOT.RooAbsReal ):
-            pdf1 = Generic3D_pdf ( pdf1 , xvar , yvar , zvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
+        ## initialize the base class 
+        Combine3D.__init__ ( self                 ,
+                             name      = name     , 
+                             pdfs      = pdfs     ,
+                             xvar      = xvar     ,
+                             yvar      = yvar     ,
+                             zvar      = zvar     ,
+                             fractions = fraction )
 
-        if   isinstance ( pdf2 , PDF3 ) and xvar in pdf2.vars and yvar in pdf2.vars and zvar in pdf2.vars : pass 
-        elif isinstance ( pdf2 , ROOT.RooAbsPdf ) : pdf2 = Generic3D_pdf ( pdf2 , xvar , yvar , zvar )
-        else :
-            raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
-        
-
-        name = name if name else self.generate_name ( prefix = 'sum3D_' ) 
-        PDF3.__init__ ( self , name , xvar , yvar , zvar )
-
-        self.__pdf1     = pdf1
-        self.__pdf2     = pdf2
-
-        self.__fraction = self.make_var ( fraction ,
-                                          self.roo_name ( 'f_' ) , 
-                                          ## 'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
-                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 ) 
-        self.alist1 = ROOT.RooArgList (
-            self.__pdf1.pdf ,
-            self.__pdf2.pdf )
-        self.alist2 = ROOT.RooArgList (
-            self.__fraction  )
-        
-        self.pdf = ROOT.RooAddPdf (
-            self.roo_name ( 'sum3_' ) , 
-            '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1,self.alist2 )
-        
-        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
 
         self.config = {
             'pdf1'     : self.pdf1     ,
             'pdf2'     : self.pdf2     ,
             'xvar'     : self.xvar     ,
             'yvar'     : self.yvar     ,
-            'zvar'     : self.zvar     ,
+            'zvar'     : self.xvar     ,
             'name'     : self.name     , 
             'fraction' : self.fraction 
             }
-
+        
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        return self.__pdf1
+        return self.pdfs[0]
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
-        return self.__pdf2
+        return self.pdfs[1]
 
     @property
     def fraction ( self ) :
         """``fraction'' : the fraction of the first PDF in the sum"""
-        return self.__fraction
+        return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
-        val = float ( value )
-        self.__fraction.setVal ( val )
-
-    @property
-    def F  ( self ) :
-        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
-        return self.__fraction
-    @F.setter
-    def F ( self , value ) :
-        self.fraction = value 
-        
-
+        self.fractions = value 
 
 # =============================================================================
 ## @class Flat3D

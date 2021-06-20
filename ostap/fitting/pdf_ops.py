@@ -24,7 +24,8 @@ __all__     = ()
 # =============================================================================
 import ROOT
 import ostap.fitting.basic
-from   ostap.fitting.utils import MakeVar 
+from   ostap.fitting.utils    import MakeVar
+from   ostap.core.ostap_types import sequence_types 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pdf_ops' )
@@ -203,16 +204,39 @@ def pdf_sum ( pdf1 , pdf2 ) :
         if not pdf1.zvar in pdf2.vars : return NotImplemented
         
         return _3D.Sum3D ( pdf1 , pdf2 )
+
+    elif isinstance ( pdf1 , _3D.PDF3 ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
+
+        lst = [ pdf1 ] 
+        for p in pdf2 :
+            if not isinstance ( p , _3D.PDF3 ) : return NotImplemented
+            if not pdf1.xvar in p.vars         : return NotImplemented  
+            if not pdf1.yvar in p.vars         : return NotImplemented  
+            if not pdf1.zvar in p.vars         : return NotImplemented  
+            lst.append ( p ) 
+
+        return _3D.Combine3D ( lst )
     
     elif isinstance ( pdf1 , _3D.PDF3 ) or  isinstance ( pdf2 , _3D.PDF3 ) : return NotImplemented
-    
+
     elif isinstance ( pdf1 , _2D.PDF2 ) and isinstance ( pdf2 , _2D.PDF2 ) :
 
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         if not pdf1.yvar in pdf2.vars : return NotImplemented
         
         return _2D.Sum2D ( pdf1 , pdf2 )
-            
+
+    elif isinstance ( pdf1 , _2D.PDF2 ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
+
+        lst = [ pdf1 ] 
+        for p in pdf2 :
+            if not isinstance ( p , _2D.PDF2 ) : return NotImplemented
+            if not pdf1.xvar in p.vars         : return NotImplemented  
+            if not pdf1.yvar in p.vars         : return NotImplemented  
+            lst.append ( p ) 
+
+        return _2D.Combine2D ( lst )
+
     elif isinstance ( pdf1 , _2D.PDF2 ) or  isinstance ( pdf2 , _2D.PDF2 ) : return NotImplemented
     
     elif isinstance ( pdf1 , _1D.PDF  ) and isinstance ( pdf2 , _1D.PDF  ) :
@@ -220,6 +244,16 @@ def pdf_sum ( pdf1 , pdf2 ) :
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         
         return _1D.Sum1D ( pdf1 , pdf2 )
+
+    elif isinstance ( pdf1 , _1D.PDF ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
+
+        lst = [ pdf1 ] 
+        for p in pdf2 :
+            if not isinstance ( p , _1D.PDF ) : return NotImplemented
+            if not pdf1.xvar in p.vars         : return NotImplemented  
+            lst.append ( p ) 
+
+        return _1D.Combine1D ( lst )
 
     return NotImplemented 
 

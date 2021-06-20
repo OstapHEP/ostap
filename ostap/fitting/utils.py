@@ -229,7 +229,7 @@ class MakeVar ( object ) :
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
         ##
-        obj.__aux_keep     = []                      ## ATTENTION!        
+        obj.__aux_keep     = []                     ## ATTENTION!        
         obj.__name        = None                    ## ATTENTION!
         obj.__local_names = set()
         return obj
@@ -297,14 +297,32 @@ class MakeVar ( object ) :
     ##     return name
 
     # =============================================================================
-    ## generate some unique name
+    ## generate some unique name for PDF/FUN and objects
     @staticmethod 
     def generate_name ( prefix = '' , suffix = '' ) :
-        name = prefix + suffix 
+                
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = ''
+        if prefix and suffix : name = '%s_%s' %  ( prefix , suffix )
+        elif prefix          : name = prefix
+        elif suffix          : name = suffix 
+                                                   
         MakeVar.__numnames += 1            
         while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) :
-            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
-            MakeVar.__numnames += 1            
+            
+            name = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            
+            if   prefix and suffix : name = '%s_%s_%s' %  ( prefix , name   , suffix )
+            elif prefix            : name = '%s_%s'    %  ( prefix , name   )
+            elif suffix            : name = '%s_%s'    %  ( name   , suffix )
+            
+            MakeVar.__numnames += 1
+
         return name
     
     # =============================================================================
@@ -313,18 +331,37 @@ class MakeVar ( object ) :
     #  @see RooNameReg 
     #  @see RooAbsArg 
     @staticmethod
-    def roo_name ( prefix = 'roo_' , suffix = '' ) :
+    def roo_name ( prefix = 'roo' , suffix = '' ) :
         """Generate some unique name for <code>RooFit</code>
         - see `ROOT.RooNameReg` 
         - see `ROOT.TNamed`
         - see `ROOT.RooAbsArg`
         """
+
         regname = ROOT.RooNameReg.instance()
-        name    = prefix + suffix
+
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = ''
+        if prefix and suffix : name = '%s_%s' %  ( prefix , suffix )
+        elif prefix          : name = prefix
+        elif suffix          : name = suffix 
+                                                   
         MakeVar.__numnames += 1            
-        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( regname.known ( name ) ) or ( not name ) :
-            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
-            MakeVar.__numnames += 1            
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) or regname.known ( name ) : 
+            
+            name = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            
+            if   prefix and suffix : name = '%s_%s_%s' %  ( prefix , name   , suffix )
+            elif prefix            : name = '%s_%s'    %  ( prefix , name   )
+            elif suffix            : name = '%s_%s'    %  ( name   , suffix )
+            
+            MakeVar.__numnames += 1
+
         return name
             
     # =============================================================================
@@ -340,7 +377,11 @@ class MakeVar ( object ) :
     #  @endcode
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2013-12-01
-    def make_var ( self , var , name , comment = '' , fix = None , *args ) :
+    def make_var ( self           ,
+                   var            ,
+                   name           ,
+                   comment = ''   ,
+                   fix     = None , *args ) :
         """Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -357,26 +398,33 @@ class MakeVar ( object ) :
         if   isinstance   ( var , tuple ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
 
         ## if only name is specified :
         if   isinstance  ( var , string_types ) and 2 <= len ( args ):
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
             
         # var = value 
         if isinstance   ( var , num_types ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            if   not    args       : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
-            elif 2 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
-            elif 3 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+            if   not    args       :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable                           
+            elif 2 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+            elif 3 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
                 
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
             
-        self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
         elif isinstance ( fix , num_types  ) :
