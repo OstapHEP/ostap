@@ -693,16 +693,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         
     import ostap.logger.table as T
 
-    ## for l in range ( len ( rows ) , len ( all ) ) :
-    ##     line = all [ l ]
-    ##     line = list ( line ) 
-    ##     line [ 0 ] = allright ( line [ 0 ] )
-    ##     all  [ l ] = tuple    ( line       ) 
-
-    if not title : title = r.GetTitle() 
-    return T.table ( all , title = title , prefix = prefix , alignment = 'llll' )
-
-
+    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llll' )
 
 # =============================================================================
 ## ``easy'' print of RooFitResult
