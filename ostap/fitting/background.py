@@ -53,7 +53,7 @@ import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.core.ostap_types    import integer_types , num_types 
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import PDF , Sum1D
+from   ostap.fitting.basic import PDF , Sum1D, Combine1D
 from   ostap.fitting.utils import Phases, ParamsPoly 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
@@ -1966,16 +1966,25 @@ class PSSmear_pdf ( PDF ) :
             f = ROOT.RooConstVar ( 'fF%spm%dfix' % ( name , i + 1 ) , '' , w )
             self.__ff.append ( f )
         self.__ff = tuple ( self.__ff )
-
-        ## create the final PDF 
-        self.pdf , self.__fractions , _ = self.add_pdf (
-            [ i.pdf for i in self.__pdfs ] ,
-            self.name                 ,          
-            'Smeared phasel space %s' % self.name , 
-            'some_pattern%d'          , 
-            'some_pattern%d'          ,
-            recursive = False         ,
-            fractions = self.__ff     )
+                
+        ## ## create the final PDF 
+        ## self.pdf , self.__fractions , _ = self.add_pdf (
+        ##     [ i.pdf for i in self.__pdfs ] ,
+        ##     self.name                 ,          
+        ##     'Smeared phasel space %s' % self.name , 
+        ##     'some_pattern%d'          , 
+        ##     'some_pattern%d'          ,
+        ##     recursive = False         ,
+        ##     fractions = self.__ff     )
+        
+        ## combine all components into single PDF 
+        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
+                                          xvar      = self.xvar      ,
+                                          name      = 'Smeared phase space %s' % self.name , 
+                                          recursive = False          ,
+                                          fractions = self.__ff      )
+        
+        self.pdf = self.combined_pdf.pdf
         
         self.config = {
             'name'   : self.name   ,            
@@ -2007,7 +2016,7 @@ class PSSmear_pdf ( PDF ) :
         return self.__pdfs
     @property
     def ws     ( self ) :
-        """``ws'' : calcualted fractions"""
+        """``ws'' : calculates fractions"""
         return self.__ws
     @property
     def ffs    ( self ) :
@@ -2016,9 +2025,12 @@ class PSSmear_pdf ( PDF ) :
     @property
     def fractions ( self ) :
         """``fractions'' : calcualted fractions"""
-        return tuple ( self.__fractions ) 
-
-
+        return self.combined_pdf.fractions 
+    @property
+    def combined_pdf ( self ) :
+        """``combinedpdf'' : the final combined PDF (e.g. for drawing)"""
+        return self.__combinedpdf
+    
 # ==============================================================================
 ## @class PSSmear2_pdf
 #  Usefull class to represent "smear" phase space function
@@ -2188,15 +2200,24 @@ class PSSmear2_pdf ( PDF ) :
             self.__ff.append ( f )
         self.__ff = tuple ( self.__ff )
 
-        ## create the final PDF 
-        self.pdf , self.__fractions , _ = self.add_pdf (
-            [ i.pdf for i in self.__pdfs ] ,
-            self.name                 ,          
-            'Smeared phase-space %s' % self.name , 
-            'some_pattern%d'          , 
-            'some_pattern%d'          ,
-            recursive = False         ,
-            fractions = self.__ff     )
+        ## ## create the final PDF 
+        ## self.pdf , self.__fractions , _ = self.add_pdf (
+        ##     [ i.pdf for i in self.__pdfs ] ,
+        ##     self.name                 ,          
+        ##     'Smeared phase-space %s' % self.name , 
+        ##     'some_pattern%d'          , 
+        ##     'some_pattern%d'          ,
+        ##     recursive = False         ,
+        ##     fractions = self.__ff     )
+        
+        ## combine all components into single PDF 
+        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
+                                          xvar      = self.xvar      ,
+                                          name      = 'Smeared phase space %s' % self.name , 
+                                          recursive = False          ,
+                                          fractions = self.__ff      )
+        
+        self.pdf = self.combined_pdf.pdf
         
         self.config = {
             'name'    : self.name    ,            
@@ -2226,14 +2247,19 @@ class PSSmear2_pdf ( PDF ) :
         """``ffs'' : calculated fractions"""
         return self.__ff 
     @property
-    def fractions ( self ) :
-        """``fractions'' : calcualted fractions"""
-        return tuple ( self.__fractions ) 
-    @property
     def values ( self ) :
         """``values'' : list of abscissas where profile is evaluated"""
         return self.__values 
+    @property
+    def fractions ( self ) :
+        """``fractions'' : calcualted fractions"""
+        return self.combined_pdf.fractions 
+    @property
+    def combined_pdf ( self ) :
+        """``combined_pdf'' : the final combined PDF (e.g. for drawing)"""
+        return self.__combined_pdf
 
+    
 # ==============================================================================
 ##  @class RooPoly
 #   helper base class to implement various polynomial-like shapes

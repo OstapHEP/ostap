@@ -11,7 +11,7 @@
 - It tests various multicomponents models 
 """
 # ============================================================================= 
-import ROOT, sys, random, time, datetime 
+import ROOT, sys, random, time
 from   ostap.core.pyrouts       import *
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
@@ -149,45 +149,39 @@ def test_fitting_in_range_3d () :
 	r = model.fitTo ( dataset , silent = True )
 	r = model.fitTo ( dataset , silent = True )
 
-	if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
-		
-		logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
-
-	else : 
-
-		dataset.m_y.setRange ( 'fit' , 6,8. )
-		model.yvar.setRange ( 'fit' , 6,8. )
-		model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2=(8,10))
-		time.sleep (1)
-		model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2='fit')
-		time.sleep (1)  
-		model.draw1(dataset,nbins=200, in_range3=(11,12))
-		time.sleep (1)
-		model.draw1(dataset,nbins=200, in_range2='fit')
-		time.sleep (1)
-		
-		dataset.m_x.setRange ( 'fit2' , 2.5,3. )
-		model.xvar.setRange ( 'fit2' , 2.5,3. )
-		model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1=(0,3))
-		time.sleep (1)
-		model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1='fit2')
-		time.sleep (1)
-		model.draw2(dataset,nbins=200, in_range3=(11,12))
-		time.sleep (1)
-		model.draw2(dataset,nbins=200, in_range1='fit2')
-		time.sleep (1)
-
-		dataset.m_x.setRange ( 'fit3' , 2.5,3. )
-		model.xvar.setRange ( 'fit3' , 2.5,3. )
-		model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1=(0,3))
-		time.sleep (1)
-		model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1='fit3')
-		time.sleep (1)
-		model.draw3(dataset,nbins=200, in_range2=(6,8))
-		time.sleep (1)
-		model.draw3(dataset,nbins=200, in_range1='fit3')
-		time.sleep (1)
-
+	dataset.m_y.setRange ( 'fit' , 6,8. )
+	model.yvar.setRange ( 'fit' , 6,8. )
+	model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2=(8,10))
+	time.sleep (1)
+	model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2='fit')
+	time.sleep (1)  
+	model.draw1(dataset,nbins=200, in_range3=(11,12))
+	time.sleep (1)
+	model.draw1(dataset,nbins=200, in_range2='fit')
+	time.sleep (1)
+	
+	dataset.m_x.setRange ( 'fit2' , 2.5,3. )
+	model.xvar.setRange ( 'fit2' , 2.5,3. )
+	model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1=(0,3))
+	time.sleep (1)
+	model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1='fit2')
+	time.sleep (1)
+	model.draw2(dataset,nbins=200, in_range3=(11,12))
+	time.sleep (1)
+	model.draw2(dataset,nbins=200, in_range1='fit2')
+	time.sleep (1)
+	
+	dataset.m_x.setRange ( 'fit3' , 2.5,3. )
+	model.xvar.setRange ( 'fit3' , 2.5,3. )
+	model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1=(0,3))
+	time.sleep (1)
+	model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1='fit3')
+	time.sleep (1)
+	model.draw3(dataset,nbins=200, in_range2=(6,8))
+	time.sleep (1)
+	model.draw3(dataset,nbins=200, in_range1='fit3')
+	time.sleep (1)
+	
 
 # =============================================================================
 if '__main__' == __name__ :

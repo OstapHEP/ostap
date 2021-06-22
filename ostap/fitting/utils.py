@@ -65,6 +65,25 @@ try :
     from string import ascii_letters
 except ImportError :
     from string import letters as ascii_letters
+# =============================================================================
+## make a name from prefix, name and suffix 
+def make_name ( prefix , name , suffix ) :
+    """Make a name from prefix, name and suffix
+    """
+    
+    prefix = prefix.replace ( ' ' , '' ) 
+    suffix = suffix.replace ( ' ' , '' )
+    name   = name  .replace ( ' ' , '' )
+
+    while prefix.endswith   ( '_' ) : prefix = prefix[:-1]
+    while suffix.startswith ( '_' ) : suffix = suffix[1:] 
+
+    if   prefix and name and suffix : return "%s_%s_%s" % ( prefix , name , suffix ) 
+    elif prefix and suffix          : return "%s_%s"    % ( prefix ,        suffix ) 
+    elif prefix and name            : return "%s_%s"    % ( prefix , name          ) 
+    elif suffix and name            : return "%s_%s"    % (          name , suffix )
+
+    return "%s" % ( name or prefix or suffix ) 
     
 # =============================================================================
 ## MINUIT covariance matrix status:
@@ -300,6 +319,8 @@ class MakeVar ( object ) :
     ## generate some unique name for PDF/FUN and objects
     @staticmethod 
     def generate_name ( prefix = '' , suffix = '' ) :
+        """Generate some unique name for PDF/FUN and objects
+        """
                 
         prefix = prefix.replace ( ' ' , '' )
         if prefix.endswith('_') : prefix = prefix[:-1]
@@ -307,19 +328,14 @@ class MakeVar ( object ) :
         suffix = suffix.replace ( ' ' , '' )
         if suffix.startswith('_') : suffix = suffix[1:] 
 
-        name = ''
-        if prefix and suffix : name = '%s_%s' %  ( prefix , suffix )
-        elif prefix          : name = prefix
-        elif suffix          : name = suffix 
+        name = make_name ( prefix , '' , suffix ) 
                                                    
         MakeVar.__numnames += 1            
         while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) :
             
-            name = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
-            
-            if   prefix and suffix : name = '%s_%s_%s' %  ( prefix , name   , suffix )
-            elif prefix            : name = '%s_%s'    %  ( prefix , name   )
-            elif suffix            : name = '%s_%s'    %  ( name   , suffix )
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+
+            name = make_name ( prefix , part , suffix )
             
             MakeVar.__numnames += 1
 
@@ -346,19 +362,14 @@ class MakeVar ( object ) :
         suffix = suffix.replace ( ' ' , '' )
         if suffix.startswith('_') : suffix = suffix[1:] 
 
-        name = ''
-        if prefix and suffix : name = '%s_%s' %  ( prefix , suffix )
-        elif prefix          : name = prefix
-        elif suffix          : name = suffix 
+        name = make_name ( prefix , '' , suffix ) 
                                                    
         MakeVar.__numnames += 1            
         while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) or regname.known ( name ) : 
             
-            name = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
             
-            if   prefix and suffix : name = '%s_%s_%s' %  ( prefix , name   , suffix )
-            elif prefix            : name = '%s_%s'    %  ( prefix , name   )
-            elif suffix            : name = '%s_%s'    %  ( name   , suffix )
+            name = make_name ( prefix , part , suffix )
             
             MakeVar.__numnames += 1
 
@@ -398,12 +409,14 @@ class MakeVar ( object ) :
         if   isinstance   ( var , tuple ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
+            self.debug ( 'Create variable/1:  %s' % var ) 
             self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
 
         ## if only name is specified :
         if   isinstance  ( var , string_types ) and 2 <= len ( args ):
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
+            self.debug ( 'Created variable/2: %s' % var ) 
             self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
             
         # var = value 
@@ -412,18 +425,22 @@ class MakeVar ( object ) :
             if   not    args       :
                 var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
                 self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable                           
+                self.debug ( 'Create variable/3: %s' % var ) 
             elif 2 == len ( args ) :
                 var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
                 self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/4: %s' % var ) 
             elif 3 == len ( args ) :
                 var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
-                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-                
+                self.aux_keep.append  ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/5: %s' % var ) 
+
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
             self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+            self.debug ( 'Create variable/6: %s' % var ) 
             
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
@@ -846,7 +863,7 @@ class MakeVar ( object ) :
     def component_setter ( self , components , value ) :
         """Setter for certian fit components form provided list
         """
-        assert 0 < len ( components ) , 'Empty list of components, settins is not possible!'
+        assert 0 < len ( components ) , 'Empty list of components, setting is not possible!'
         
         if   isinstance ( value , num_types          ) : values = float ( value ) , 
         elif isinstance ( value , VE                 ) : values = value.value ()  , 

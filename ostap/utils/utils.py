@@ -78,19 +78,20 @@ __all__     = (
     'divide'             , ## divide the elements from *iterable* into *n* parts
     'grouper'            , ## collect data into fixed-length chunks or blocks"
     ##
+    'make_iterable'      , ## create infinite or finite iterable 
+    ##
     'checksum_files'     , ## get SHA512 sum for sequence of files
     ##
     'balanced'           , ## Simple utility to check balanced parenthesis/brackets, etc...
+    ##
+    'random_name'        , ## get some random name
+    'short_hash_name'    , ## get some short hash name 
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math ## attention here!!
-from   builtins            import range
-# =============================================================================
-from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
-else                       : logger = getLogger( __name__            )
-del getLogger
+import ROOT, time, os , sys, math, random ## attention here!!
+from   builtins             import range
+from   itertools            import repeat, chain, islice 
 # =============================================================================
 from sys                    import version_info  as python_version 
 ## timing stuff
@@ -100,6 +101,20 @@ from ostap.utils.basic      import isatty, with_ipython
 from ostap.core.ostap_types import integer_types 
 ## ... and more useful stuff 
 from ostap.utils.memory     import memory, virtualMemory, Memory 
+# =============================================================================
+try :
+    from string import ascii_letters, digits 
+except ImportError :
+    from string import letters as ascii_letters
+    from string import digits
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
+else                       : logger = getLogger( __name__            )
+del getLogger
+# =============================================================================
+## symbols for name generation 
+all_symbols = ascii_letters + digits 
 # =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
@@ -895,23 +910,58 @@ def split_range ( low , high , num ) :
             
         yield low , high
 
+# ========================================================================================
+## Generate some random name of given name
+#  @code
+#  name = random_name ( 5 ) 
+#  @endcode 
+def random_name ( size ) :
+    """Generate some random name of given name 
+    >>> name = random_name ( 5 )
+    """
+    assert 1 <= size , 'random_name: invalid size!'
+
+    first = random.choice  ( ascii_letters ) 
+    if 1 == size : return first
+    
+    return first  + ''.join ( random.choices ( sll_symbols , k = size - 1 ) ) 
+
+# ========================================================================================
+## generate some pseudo-random 6-symbol name from provided hash sources 
+def short_hash_name ( size , name , *names ) :
+    """generate some pseudo-random 6-symbol name from provided hash sources
+    """
+
+    size = max ( min ( size , 8 ) , 4 ) 
+
+    h = size , hash ( tuple ( ord ( i ) for i in name ) )
+    h = hash ( h ) 
+                   
+    for n in names :
+
+        h = h , hash ( tuple ( ord ( i ) for i in n ) )
+        h = hash ( h ) 
+        
+    h = abs ( h ) % ( 2 ** ( 4 * size ) )
+    
+    return ( '%%0%dx' % size ) % h 
+    
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word
 #  @code
 #  password = gen_password () 
 #  @endcode 
-def gen_password ( len = 12 ) :
+def gen_password ( size = 12 ) :
     """Generate the random string, that can be used as password or secret word
     >>> password = gen_password () 
     """
-    import random , string
-    symbols = string.ascii_letters + string.digits
+    import random
     ## save random state 
     state = random.getstate ()
     ## reset the random seed
     random.seed ()
     ## generate the password 
-    result = ''.join ( random.choice ( symbols ) for i in range ( len ) )
+    result = ''.join ( random.choices ( all_symbols , k = size ) ) 
     ## restore the random state 
     random.setstate ( state )
     ## 
@@ -1066,7 +1116,8 @@ except ImportError :
             ret.append(iter(seq[start:stop]))
             
         return ret
-        
+
+# =============================================================================
 if ( 3 , 0 ) <= python_version :
     from itertools import zip_longest
 else :
@@ -1080,8 +1131,30 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
+# =============================================================================
+## Create iterable from other iterable or non-iterable
+#  @code
+#  for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+#  @endcode 
+def make_iterable ( what , default = None , size = -1 ) :
+    """Create infinite iterable from other iterable or no-iterable
+    >>> for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+    """
+    from   ostap.core.ostap_types import iterable_types
 
-# ========================================================================================
+    if not isinstance ( what , iterable_types ) : what = what, 
+
+    ## make infinite iterable 
+    result = chain ( what , repeat ( default ) )
+
+    ## cut it, if needed 
+    return result if size < 0 else islice ( result , size )
+
+# =============================================================================
 ## calculate SHA512-checksum for the files
 #  @see hashlib
 #  @see hashlib.sha512

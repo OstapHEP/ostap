@@ -48,9 +48,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF2 (PDF,FUNC2) :
     """ Useful helper base class for implementation of PDFs for 2D-fit
     """
-    def __init__ ( self , name , xvar , yvar , special = False ) : 
+    def __init__ ( self , name , xvar , yvar , special = False , **kwargs ) : 
         
-        PDF  .__init__ ( self ,      name ,      xvar , special = special )
+        PDF  .__init__ ( self ,      name ,      xvar , special = special , **kwargs )
         FUNC2.__init__ ( self , self.name , self.xvar , yvar  )
                     
         ## save the configuration
@@ -1070,14 +1070,19 @@ class Combine2D (PDF2) :
             if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
                 
 
-        self.__prefix    = prefix
+        while prefix.endswith  ('_') : prefix = prefix[:-1]
+        while suffix.startswith('_') : suffix = suffix[1:]
+        
+        self.__prefix    = prefix if prefix else 'f'
         self.__suffix    = suffix
         self.__recursive = True if recursive else False 
-        
+
+        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+        else                           : fr_name = '%s_%%d'    %   self.prefix
+  
         ## make list of fractions 
         fraction_list = self.make_fractions  ( len ( pdf_list )           ,
-                                               prefix    = self.prefix    ,
-                                               suffix    = self.suffix    ,
+                                               name      = fr_name        , 
                                                recursive = self.recursive ,
                                                fractions = fractions      )
 
@@ -1168,39 +1173,44 @@ class Sum2D (Combine2D) :
     >>> sum  = Sum2D ( pdf1 , pdf2 ) 
     - see `ROOT.RooAddPdf` 
     """
-    def __init__ ( self            ,
-                   pdf1            ,
-                   pdf2            ,  
-                   xvar     = None , 
-                   yvar     = None , 
-                   name     = ''   , 
-                   fraction = None ) :
+    def __init__ ( self             ,
+                   pdf1             ,
+                   pdf2             ,  
+                   xvar      = None , 
+                   yvar      = None ,
+                   name      = ''   , 
+                   prefix    = 'f'  ,
+                   suffix    = ''   ,
+                   fraction  = None ,
+                   others    = []   ,
+                   recursive = True ) :                    
         
         ## check the name 
         name = name if name else self.generate_name ( prefix = 'sum2' )
 
-        pdfs = [] 
-        if isinstance ( pdf1 , iterable_types ) : pdfs = pdfs + [ p for p in pdf1 ]
-        else                                    : pdfs.append ( pdf1 ) 
-        if isinstance ( pdf2 , iterable_types ) : pdfs = pdfs + [ p for p in pdf2 ]
-        else                                    : pdfs.append ( pdf2 ) 
-
         ## initialize the base class 
-        Combine2D.__init__ ( self                 ,
-                             name      = name     , 
-                             pdfs      = pdfs     ,
-                             xvar      = xvar     ,
-                             yvar      = yvar     ,
-                             fractions = fraction )
+        Combine2D.__init__ ( self                  ,
+                             name      = name      , 
+                             pdfs      =  [ pdf1 , pdf2] + others ,
+                             xvar      = xvar      ,
+                             yvar      = yvar      ,
+                             recursive = recursive ,         
+                             prefix    = prefix    ,                             
+                             suffix    = suffix    ,
+                             fractions = fraction  )
 
 
         self.config = {
-            'pdf1'     : self.pdf1     ,
-            'pdf2'     : self.pdf2     ,
-            'xvar'     : self.xvar     ,
-            'yvar'     : self.yvar     ,
-            'name'     : self.name     , 
-            'fraction' : self.fraction 
+            'pdf1'      : self.pdf1      ,
+            'pdf2'      : self.pdf2      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'name'      : self.name      ,
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    , 
+            'fraction'  : self.fraction  ,
+            'others'    : self.others    ,            
+            'recursive' : self.recursive ,
             }
         
     @property
@@ -1213,9 +1223,14 @@ class Sum2D (Combine2D) :
         """``pdf2'' : the second PDF"""
         return self.pdfs[1]
 
+    @property 
+    def others ( self ) :
+        """``others'' : other PDFs (if any)"""
+        return self.pdfs[2:]
+    
     @property
     def fraction ( self ) :
-        """``fraction'' : the fraction of the first PDF in the sum"""
+        """``fraction'' : the fraction of the first PDF in the sum (same as ``fractions'')"""
         return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :

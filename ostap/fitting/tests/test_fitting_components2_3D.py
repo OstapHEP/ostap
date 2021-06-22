@@ -14,7 +14,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random, datetime 
+import ROOT, random 
 import ostap.fitting.roofit 
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID
@@ -207,17 +207,11 @@ def test_fitting_components2_3D () :
     r = model.fitTo ( dataset , silent = True  )
     r = model.fitTo ( dataset , silent = True  )
     
-    if (6,25) <= root_info < ( 6,26 ) and  datetime.datetime.now() < datetime.datetime( 2021 , 7 , 1 ) :
-        
-        logger.warning ( "Drawing is disabled before https://github.com/root-project/root/pull/8486 is applied" )
-        
-    else : 
-        
-        model.draw1 ( dataset )
-        model.draw2 ( dataset )
-        model.draw3 ( dataset )
-        
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    model.draw1 ( dataset )
+    model.draw2 ( dataset )
+    model.draw3 ( dataset )
+    
+    logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
     
 # =============================================================================

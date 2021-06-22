@@ -25,7 +25,8 @@ __all__     = ()
 import ROOT
 import ostap.fitting.basic
 from   ostap.fitting.utils    import MakeVar
-from   ostap.core.ostap_types import sequence_types 
+from   ostap.core.ostap_types import sequence_types
+from   ostap.utils.utils      import short_hash_name 
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pdf_ops' )
@@ -202,8 +203,9 @@ def pdf_sum ( pdf1 , pdf2 ) :
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         if not pdf1.yvar in pdf2.vars : return NotImplemented
         if not pdf1.zvar in pdf2.vars : return NotImplemented
-        
-        return _3D.Sum3D ( pdf1 , pdf2 )
+
+        suffix = short_hash_name ( 4 , pdf1.name , pdf2.name )
+        return _3D.Sum3D ( pdf1 , pdf2 , suffix = suffix )
 
     elif isinstance ( pdf1 , _3D.PDF3 ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
 
@@ -215,7 +217,8 @@ def pdf_sum ( pdf1 , pdf2 ) :
             if not pdf1.zvar in p.vars         : return NotImplemented  
             lst.append ( p ) 
 
-        return _3D.Combine3D ( lst )
+        suffix = short_hash_name ( 4 , * (p.name for p in lst ) ) 
+        return _3D.Combine3D ( lst , suffix = suffix )
     
     elif isinstance ( pdf1 , _3D.PDF3 ) or  isinstance ( pdf2 , _3D.PDF3 ) : return NotImplemented
 
@@ -224,7 +227,8 @@ def pdf_sum ( pdf1 , pdf2 ) :
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         if not pdf1.yvar in pdf2.vars : return NotImplemented
         
-        return _2D.Sum2D ( pdf1 , pdf2 )
+        suffix = short_hash_name ( 4 , pdf1.name , pdf2.name ) 
+        return _2D.Sum2D ( pdf1 , pdf2 , suffix = suffix )
 
     elif isinstance ( pdf1 , _2D.PDF2 ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
 
@@ -235,7 +239,8 @@ def pdf_sum ( pdf1 , pdf2 ) :
             if not pdf1.yvar in p.vars         : return NotImplemented  
             lst.append ( p ) 
 
-        return _2D.Combine2D ( lst )
+        suffix = short_hash_name ( 4 , *( p.name for p in lst ) )  
+        return _2D.Combine2D ( lst , suffix = suffix )
 
     elif isinstance ( pdf1 , _2D.PDF2 ) or  isinstance ( pdf2 , _2D.PDF2 ) : return NotImplemented
     
@@ -243,7 +248,8 @@ def pdf_sum ( pdf1 , pdf2 ) :
         
         if not pdf1.xvar in pdf2.vars : return NotImplemented
         
-        return _1D.Sum1D ( pdf1 , pdf2 )
+        suffix = short_hash_name ( 4 , pdf1.name , pdf2.name ) 
+        return _1D.Sum1D ( pdf1 , pdf2 , suffix = sufix )
 
     elif isinstance ( pdf1 , _1D.PDF ) and isinstance ( pdf2 , sequence_types ) and pdf2 : 
 
@@ -253,7 +259,8 @@ def pdf_sum ( pdf1 , pdf2 ) :
             if not pdf1.xvar in p.vars         : return NotImplemented  
             lst.append ( p ) 
 
-        return _1D.Combine1D ( lst )
+        suffix = short_hash_name ( 4 , *( p.name for p in lst ) )  
+        return _1D.Combine1D ( lst , suffix = suffix )
 
     return NotImplemented 
 

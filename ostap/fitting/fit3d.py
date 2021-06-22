@@ -49,9 +49,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF3 (PDF2,FUNC3) :
     """ Useful helper base class for implementation of PDFs for 3D-fit
     """
-    def __init__ ( self , name , xvar , yvar , zvar, special = False ) : 
+    def __init__ ( self , name , xvar , yvar , zvar, special = False , **kwargs ) : 
         
-        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special ) 
+        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special , **kwargs ) 
         FUNC3.__init__ ( self , self.name , self.xvar , self.yvar , zvar )
 
         self.vars.add ( self.zvar )
@@ -1142,15 +1142,19 @@ class Combine3D (PDF3) :
         for i , p in enumerate ( pdf_list )  :
             if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
                 
-
-        self.__prefix    = prefix
+        while prefix.endswith  ('_') : prefix = prefix[:-1]
+        while suffix.startswith('_') : suffix = suffix[1:]
+        
+        self.__prefix    = prefix if prefix else 'f' 
         self.__suffix    = suffix
         self.__recursive = True if recursive else False 
         
+        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+        else                           : fr_name = '%s_%%d'    %   self.prefix
+    
         ## make list of fractions 
         fraction_list = self.make_fractions  ( len ( pdf_list )           ,
-                                               prefix    = self.prefix    ,
-                                               suffix    = self.suffix    ,
+                                               name      = fr_name        , 
                                                recursive = self.recursive ,
                                                fractions = fractions      )
 
@@ -1240,42 +1244,47 @@ class Sum3D(Combine3D) :
     >>> sum  = Sum3D ( pdf1 , pdf2 ) 
     - see `ROOT.RooAddPdf`
     """
-    def __init__ ( self            ,
-                   pdf1            ,
-                   pdf2            ,  
-                   xvar     = None , 
-                   yvar     = None , 
-                   zvar     = None , 
-                   name     = ''   , 
-                   fraction = None ) :
+    def __init__ ( self             ,
+                   pdf1             ,
+                   pdf2             ,  
+                   xvar     = None  , 
+                   yvar     = None  , 
+                   zvar     = None  ,
+                   name      = ''   , 
+                   prefix    = 'f'  ,
+                   suffix    = ''   ,
+                   fraction  = None ,
+                   others    = []   ,
+                   recursive = True ) :                    
  
         ## check the name 
         name = name if name else self.generate_name ( prefix = 'sum3' )
        
-        pdfs = [] 
-        if isinstance ( pdf1 , iterable_types ) : pdfs = pdfs + [ p for p in pdf1 ]
-        else                                    : pdfs.append ( pdf1 )
-        if isinstance ( pdf2 , iterable_types ) : pdfs = pdfs + [ p for p in pdf2 ]
-        else                                    : pdfs.append ( pdf2 ) 
 
         ## initialize the base class 
         Combine3D.__init__ ( self                 ,
-                             name      = name     , 
-                             pdfs      = pdfs     ,
-                             xvar      = xvar     ,
-                             yvar      = yvar     ,
-                             zvar      = zvar     ,
-                             fractions = fraction )
-
-
+                             name      = name      , 
+                             pdfs      =  [ pdf1 , pdf2] + others ,
+                             xvar      = xvar      ,
+                             yvar      = yvar      ,
+                             zvar      = zvar      ,
+                             recursive = recursive ,         
+                             prefix    = prefix    ,                             
+                             suffix    = suffix    ,
+                             fractions = fraction  )
+        
         self.config = {
-            'pdf1'     : self.pdf1     ,
-            'pdf2'     : self.pdf2     ,
-            'xvar'     : self.xvar     ,
-            'yvar'     : self.yvar     ,
-            'zvar'     : self.xvar     ,
-            'name'     : self.name     , 
-            'fraction' : self.fraction 
+            'pdf1'      : self.pdf1      ,
+            'pdf2'      : self.pdf2      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'zvar'      : self.zvar      ,
+            'name'      : self.name      ,
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    , 
+            'fraction'  : self.fraction  ,
+            'others'    : self.others    ,            
+            'recursive' : self.recursive ,
             }
         
     @property
@@ -1288,15 +1297,20 @@ class Sum3D(Combine3D) :
         """``pdf2'' : the second PDF"""
         return self.pdfs[1]
 
+    @property 
+    def others ( self ) :
+        """``others'' : other PDFs (if any)"""
+        return self.pdfs[2:]
+    
     @property
     def fraction ( self ) :
-        """``fraction'' : the fraction of the first PDF in the sum"""
+        """``fraction'' : the fraction of the first PDF in the sum (same as ``fractions'')"""
         return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
         self.fractions = value 
 
-# =============================================================================
+# ===========================================================================
 ## @class Flat3D
 #  The most trivial 3D-model - constant
 #  @code 

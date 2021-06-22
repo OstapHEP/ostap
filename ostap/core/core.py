@@ -468,7 +468,8 @@ def is_sorted ( lst ) :
     """Check that list is sorted
     """
     l = len ( lst )  
-    return all ( lst[i] <= lst[i+1] for i in range ( l - 1 ) ) if lst else True 
+    return all ( lst [ i ] <= lst [ i + 1 ] for i in range ( l - 1 ) ) if lst else True 
+
 
 # =============================================================================
 ## define the build directory for ROOT 

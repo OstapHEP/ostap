@@ -26,12 +26,14 @@ import ROOT, math, sys
 from   sys                           import version_info as python_version 
 from   ostap.core.ostap_types        import ( integer_types  , num_types   ,
                                               dictlike_types , list_types  ,
-                                              is_good_number )     
+                                              is_good_number )
 from   ostap.core.core               import Ostap , valid_pointer
 from   ostap.fitting.variables       import SETVAR
 from   ostap.logger.utils            import roo_silent , rootWarning
 from   ostap.fitting.roofit          import PDF_fun 
-from   ostap.fitting.utils           import MakeVar, XVar, YVar, ZVar, NameDuplicates  
+from   ostap.fitting.utils           import MakeVar, XVar, YVar, ZVar, NameDuplicates
+from   ostap.utils.cidict            import cidict
+from   ostap.plotting.fit_draw       import key_transform, draw_options  
 import ostap.fitting.variables
 import ostap.fitting.roocollections
 # =============================================================================
@@ -59,7 +61,7 @@ class FUNC(XVar) :
         obj.__func_init = False  
         return obj
         
-    def __init__ ( self , name , xvar ) :
+    def __init__ ( self , name , xvar , **kwargs ) :
 
         if self.__func_init : return 
         else                : self.__func_init = True  
@@ -80,8 +82,9 @@ class FUNC(XVar) :
         self.__fit_result   = None
         
         self.__draw_var     = None
-        self.__draw_options = {} ## predefined drawing options for this FUNC/PDF
-
+        ## predefined drawing options for this FUNC/PDF
+        self.__draw_options = cidict ( transform = key_transform )
+        
         self.__checked_keys = set()
         
         self.__dfdx = None
@@ -95,7 +98,17 @@ class FUNC(XVar) :
 
         ## derived functions/objects
         self.__derived = {}
-        
+
+        ## decode the keyword arguments 
+        dropts = draw_options ( **kwargs )
+        self.__draw_options.update ( dropts )
+
+        ## check for extra arguments 
+        extra  = {}
+        for k , v in kwargs :
+            if not k in dropts : extra [ k ] = v
+        if extra : self.error ("Unknown arguments %s" % extra )
+
     ## pickling via reduce 
     def __reduce__ ( self ) :
         if py2 : return func_factory , ( type ( self ) , self.config, )
@@ -501,19 +514,18 @@ class FUNC(XVar) :
         """
         import ostap.plotting.fit_draw as FD
 
-        key_transform = lambda s : s.lower().replace('_','')
+        key_transform = self.draw_options.transform
 
         the_key = key_transform ( key ) 
 
         ## 1. check the explicitely provided arguments
         for k in kwargs :
             if key_transform ( k ) == the_key :
-                return kwargs[ k ]
+                return kwargs [ k ]
             
-        ## check the predefined drawing options for this PDF 
-        for k in self.draw_options :
-            if key_transform ( k ) == the_key :
-                return self.draw_options.get ( k)
+        ## check the predefined drawing options for this PDF
+        if key in self.draw_options :
+            return self.draw_options.get ( k )
             
         ## check the default options
         for k in dir ( FD ) :
@@ -1099,7 +1111,7 @@ class Fun1D ( FUNC ) :
             
         if not name : name = 'Fun1D_%s' % fun.GetName() 
 
-        FUNC.__init__ ( self , name , xvar = xvar )
+        FUNC.__init__ ( self , name , xvar = xvar  )
 
         if not self.xvar in fun.getParameters ( 0 ) and not self.xvar is fun : 
             self.warning ("Function does not depends on xvar=%s" % self.xvar.name )
@@ -1129,12 +1141,12 @@ class FUNC2(FUNC,YVar) :
         obj.__func2_init = False  
         return obj
     
-    def __init__ ( self , name , xvar , yvar ) :
+    def __init__ ( self , name , xvar , yvar , **kwargs ) :
 
         if self.__func2_init : return 
         else                 : self.__func2_init = True  
         
-        FUNC .__init__ ( self , name , xvar )
+        FUNC .__init__ ( self , name , xvar , **kwargs )
         YVar .__init__ ( self , yvar )
         
         self.__dfdy = None 
@@ -1358,7 +1370,7 @@ class Fun2D ( FUNC2 ) :
     >>> yvar = ...
     >>> f2d  = Fun2D ( func , xvar = xvar , yvar = yvar ) 
     """
-    def __init__ ( self ,  fun , xvar , yvar , name = '' ) :
+    def __init__ ( self ,  fun , xvar , yvar , name = '') :
 
         if isinstance ( fun , FUNC ) :
             self.__argfun = fun 
@@ -1395,7 +1407,6 @@ class Fun2D ( FUNC2 ) :
         self.checked_keys.add  ( 'xvar' ) 
         self.checked_keys.add  ( 'yvar' ) 
 
-    
 # =============================================================================
 ## @class FUNC3
 #  The base class for 3D-function
@@ -1409,13 +1420,13 @@ class FUNC3(FUNC2,ZVar) :
         obj.__func3_init = False  
         return obj
 
-    def __init__ ( self , name , xvar , yvar , zvar ) :
+    def __init__ ( self , name , xvar , yvar , zvar , **kwargs ) :
 
         
         if self.__func3_init : return 
         else                 : self.__func3_init = True  
 
-        FUNC2.__init__ ( self , name , xvar , yvar )
+        FUNC2.__init__ ( self , name , xvar , yvar , **kwargs )
         ZVar .__init__ ( self , zvar )
         
         self.__dfdz = None 
