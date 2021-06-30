@@ -88,7 +88,9 @@ try :
 
 except ImportError :
 
-    import random 
+    import random
+    from   ostap.utils.utils import choices
+    
     # ============================================================================
     ## Generate bootstrap samples 
     #  @code
@@ -116,7 +118,7 @@ except ImportError :
         """
         N = len ( data )
         for i in range ( size ) :
-            yield tuple ( random.choices ( data , k = N ) ) 
+            yield tuple ( choices ( data , k = N ) ) 
 
     from ostap.math.random_ext import poisson
 
@@ -145,7 +147,7 @@ except ImportError :
         """        
         N = len ( data )
         for i in range ( size ) :
-            yield tuple ( random.choices ( data , k = poisson ( N ) ) ) 
+            yield tuple ( choices ( data , k = poisson ( N ) ) ) 
             
 # =============================================================================
 ## Generate indices for bootstrap samples:

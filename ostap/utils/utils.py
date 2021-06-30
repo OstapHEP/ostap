@@ -85,7 +85,9 @@ __all__     = (
     'balanced'           , ## Simple utility to check balanced parenthesis/brackets, etc...
     ##
     'random_name'        , ## get some random name
-    'short_hash_name'    , ## get some short hash name 
+    'short_hash_name'    , ## get some short hash name
+    ##
+    'choices'            , ## `random.choiices` function 
     )
 
 # =============================================================================
@@ -910,6 +912,18 @@ def split_range ( low , high , num ) :
             
         yield low , high
 
+# =============================================================================
+if (3,6) <= sys.version_info :
+    
+    choices = random.choices
+    
+else :
+    
+    def choices ( population , k = 1 ) :
+        """ Simple variant of `random.choice`
+        """
+        return [ random.choice ( population ) for i in range ( k ) ] 
+    
 # ========================================================================================
 ## Generate some random name of given name
 #  @code
@@ -924,7 +938,7 @@ def random_name ( size ) :
     first = random.choice  ( ascii_letters ) 
     if 1 == size : return first
     
-    return first  + ''.join ( random.choices ( sll_symbols , k = size - 1 ) ) 
+    return first  + ''.join ( choices ( sll_symbols , k = size - 1 ) ) 
 
 # ========================================================================================
 ## generate some pseudo-random 6-symbol name from provided hash sources 
@@ -961,7 +975,7 @@ def gen_password ( size = 12 ) :
     ## reset the random seed
     random.seed ()
     ## generate the password 
-    result = ''.join ( random.choices ( all_symbols , k = size ) ) 
+    result = ''.join ( choices ( all_symbols , k = size ) ) 
     ## restore the random state 
     random.setstate ( state )
     ## 
@@ -1207,6 +1221,7 @@ def  balanced ( expression , left = '([' , right = ')]' ) :
                 return False
 
     return True if not stack else False 
+
 
 
 # =============================================================================

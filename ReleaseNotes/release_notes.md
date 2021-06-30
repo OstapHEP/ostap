@@ -18,8 +18,8 @@
 
 ## Bug fixes:
 
-  1. buf fix in `canvas >> '...'`
-
+  1. bug fix in `canvas >> '...'`
+  1. make proper replacement for `random.choices` for python < 3.6
 
 # v1.6.2.0
 
