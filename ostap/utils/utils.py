@@ -919,9 +919,12 @@ if (3,6) <= sys.version_info :
     
 else :
     
-    def choices ( population , k = 1 ) :
+    def choices ( population , weights = None , cum_weights = None , k = 1 ) :
         """ Simple variant of `random.choice`
         """
+        assert weights is None and cum_weights is None,\
+               "choices: Neither ``weigths'' nor ``cum_weights'' are supported!"
+        
         return [ random.choice ( population ) for i in range ( k ) ] 
     
 # ========================================================================================
