@@ -12,7 +12,7 @@
   1. add `frame_table`, 'frame_project', `frame_statVar` and other functions
   1. simplify `trees/data_utils.py` make it more robust and reduce number of alive `TChain` instances 
   1. Extend a bit sumamry plot with simple `Point` and `Interval` objects
-
+  1. add `pip install` for `CMAKE`
 
 ## Backward incompatible changes: 
 
