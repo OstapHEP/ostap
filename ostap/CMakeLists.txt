@@ -41,46 +41,75 @@ if ( NOT ${PY_scipy_FOUND} )
 message ( "----> warning (optional)          scipy is NOT found!" ) 
 endif()
 
-if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+##if  ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
 ## Check for PATHOS & friends
 
-find_python_module ( pathos        QUIET )
-find_python_module ( ppft          QUIET )
-find_python_module ( multiprocess  QUIET )
+
 find_python_module ( dill          QUIET )
+if ( NOT ${PY_dill_FOUND} )
+message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill --user)
+endif()
+find_python_module ( dill          QUIET )
+if ( NOT ${PY_dill_FOUND} )
+message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
+endif()
+
+find_python_module ( ppft          QUIET )
+if ( NOT ${PY_ppft_FOUND} )
+message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft --user)
+endif()
+if ( NOT ${PY_ppft_FOUND} )
+message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
+endif()
+
+find_python_module ( multiprocess  QUIET )
+if ( NOT ${PY_multiprocess_FOUND} )
+message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess --user)
+endif()
+if ( NOT ${PY_multiprocess_FOUND} )
+message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
+endif()
+
+
+find_python_module ( pathos        QUIET )
+if ( NOT ${PY_pathos_FOUND} )
+message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathos --user)
+endif()
+if ( NOT ${PY_pathos_FOUND} )
+message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
+endif()
 
 
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
 
 message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
 
-else()
-
-if ( NOT ${PY_pathos_FOUND} )
-message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
 endif()
 
-if ( NOT ${PY_dill_FOUND} )
-message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
-endif()
-
-if ( NOT ${PY_multiprocess_FOUND} )
-message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
-endif()
-
-if ( NOT ${PY_ppft_FOUND} )
-message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
-endif()
-
-endif()
-
-endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
+## endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
 
 find_python_module ( pp  QUIET )
 
 find_python_module ( terminaltables QUIET )
 if ( NOT ${PY_terminaltables_FOUND} )
+message ( "----> (warning) (optional) terminaltables is NOT found!" )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables --user)
+endif()
+
+find_python_module ( terminaltables QUIET )
+if ( NOT ${PY_terminaltables_FOUND} )
 message ( "----> (warning) (optional) terminaltables is NOT found!" ) 
+endif()
+
+
+find_python_module ( more_itertools QUIET )
+if ( NOT ${PY_more_itertools_FOUND} )
+message ( "----> (warning) (optional) more_itertools is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install more_itertools --user)
 endif()
 
 find_python_module ( more_itertools QUIET )
@@ -91,17 +120,35 @@ endif()
 find_python_module ( psutil QUIET )
 if ( NOT ${PY_more_psutil_FOUND} )
 message ( "----> (warning) (optional) psutils        is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install psutil --user)
 endif()
 
+find_python_module ( psutil QUIET )
+if ( NOT ${PY_more_psutil_FOUND} )
+message ( "----> (warning) (optional) psutils        is NOT found!" ) 
+endif()
+
+
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
+find_python_module ( berkeleydb QUIET )
+if ( NOT ${PY_berkeleydb_FOUND} )
+message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb --user)
+endif()
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
 message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
 endif()
 endif()
 
+
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
 if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
+find_python_module ( bsddb3 QUIET )
+if ( NOT ${PY_bsddb3_FOUND} )
+message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 --user)
+endif()
 find_python_module ( bsddb3 QUIET )
 if ( NOT ${PY_bsddb3_FOUND} )
 message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
