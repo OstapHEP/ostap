@@ -58,6 +58,8 @@ __all__     = (
     ##
     'loop_items'       , ## loop over dictionary items 
     'items_loop'       , ## ditto
+    ##
+    'is_sorted'        , ## check that list is sorted 
     )
 # =============================================================================
 import math, sys, os 
@@ -182,21 +184,21 @@ def rootID ( prefix = 'o_' ) :
 
 # =============================================================================
 ## global ROOT identified for function objects 
-def funcID  () : return rootID  ( 'f_' )
+def funcID  ( prefix = 'f_'  ) : return rootID  ( prefix )
 ## global ROOT identified for function objects 
-def funID   () : return funcID  ( )
+def funID   ( prefix = 'f_'  ) : return funcID  ( prefix )
 ## global ROOT identified for function objects 
-def fID     () : return funcID  ( )
+def fID     ( prefix = 'f_'  ) : return funcID  ( prefix )
 ## global ROOT identified for histogram objects 
-def histoID () : return rootID  ( 'h_' )
+def histoID ( prefix = 'h_'  ) : return rootID  ( prefix )
 ## global ROOT identified for histogram objects 
-def histID  () : return histoID ( )
+def histID  ( prefix = 'h_'  ) : return histoID ( prefix )
 ## global ROOT identified for histogram objects 
-def hID     () : return histoID ( )
+def hID     ( prefix = 'h_'  ) : return histoID ( prefix )
 ## global ROOT identified for dataset objects 
-def dsID    () : return rootID  ( 'ds_' )
+def dsID    ( prefix = 'ds_' ) : return rootID  ( prefix )
 ## global ROOT identified for graphs objects 
-def grID    () : return rootID  ( 'gr_' )
+def grID    ( prefix = 'gr_' ) : return rootID  ( prefix )
 
 # ==================================================================================
 ## get current directory in ROOT
@@ -394,7 +396,7 @@ def _tn_path_ ( obj ) :
 ROOT.TNamed.path = property ( _tn_path_ , None , None , None  ) 
 
 # =============================================================================
-## split string using separators: blanks,
+## split string using separators:
 #  @code
 #  split_string ( ' a b cde,fg;jq', ',;:' )
 #  @endcode
@@ -402,11 +404,14 @@ def split_string ( line , separators = ',;:' ) :
     """Split the string using separators
     >>> split_string ( ' a b cde,fg;jq', ',;:' )
     """
-    items = line.split()
+    
+    if ' ' in separators : items = line.split()
+    else                 : items = [ line ]
+    
     for s in separators :
         result = []
         for item in items :
-            if s in item : result += item.split(s)
+            if s in item : result += item.split ( s )
             else         : result.append ( item ) 
         items = result
 
@@ -455,6 +460,16 @@ def _rd_valid_ ( rdir ) :
         
 ROOT.TDirectory.__bool__     = _rd_valid_
 ROOT.TDirectory.__nonzero__  = _rd_valid_
+
+
+# =============================================================================
+## check that list is sorted 
+def is_sorted ( lst ) :
+    """Check that list is sorted
+    """
+    l = len ( lst )  
+    return all ( lst [ i ] <= lst [ i + 1 ] for i in range ( l - 1 ) ) if lst else True 
+
 
 # =============================================================================
 ## define the build directory for ROOT 

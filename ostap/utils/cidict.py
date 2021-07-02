@@ -83,6 +83,11 @@ class cidict(MutableMapping) :
     def __repr__ ( self ) : return repr ( self.__store ) 
     def __str__  ( self ) : return str  ( self.__store ) 
 
+    @property
+    def transform ( self ) :
+        """``transform'' : get the key tranformation function"""
+        return self.__transform
+
     
 # =============================================================================
 ## select from mapping object <code>origin</code> the "interesting" keys.

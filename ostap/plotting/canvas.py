@@ -105,8 +105,12 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     cnv.Update () 
     from ostap.logger.utils import rootWarning
     n , e  = os.path.splitext ( fname )
-    el = e.lower() 
-    if n and el in all_extensions : 
+
+    
+    el = e.lower()
+    if el.startswith('.') : el = el[1:]
+    
+    if n and el and ( el in all_extensions ) : 
         with rootWarning () :
             cnv.Update   () 
             cnv.Print    ( fname )
@@ -116,8 +120,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     if n and el in ( 'tgz' , 'gztar' , 'targz' , 'tar' ,
                      'zip' ,
                      'tbz' , 'tbz2'  , 'tarbz' , 'tarbz2' , 'bztar' , 'bz2tar' ,                     
-                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar') :
-        
+                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar'  ) :            
         files = [] 
         for ext in exts :
             with rootWarning () :

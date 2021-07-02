@@ -21,6 +21,7 @@ __all__     = (
     'Generic3D_pdf' , ## wrapper over imported RooFit (2D)-pdf  
     'Flat3D'        , ## the most trivial 3D-pdf - constant
     'Model3D'       , ## trivial class to build 3D model from 1D-components 
+    'Combine3D'     , ## non-extended sum of several PDFs 
     'Sum3D'         , ## non-extended sum two PDFs 
     'H3D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Shape3D_pdf'   , ## simple PDF from C++ shape     
@@ -28,7 +29,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random
 from   ostap.core.core        import dsID , hID ,  VE , Ostap , valid_pointer
-from   ostap.core.ostap_types import integer_types
+from   ostap.core.ostap_types import integer_types, iterable_types
 from   ostap.logger.utils     import roo_silent , rooSilent
 from   ostap.fitting.utils    import H3D_dset , component_similar , component_clone
 from   ostap.fitting.funbasic import FUNC3
@@ -48,9 +49,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF3 (PDF2,FUNC3) :
     """ Useful helper base class for implementation of PDFs for 3D-fit
     """
-    def __init__ ( self , name , xvar , yvar , zvar, special = False ) : 
+    def __init__ ( self , name , xvar , yvar , zvar, special = False , **kwargs ) : 
         
-        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special ) 
+        PDF2 .__init__ ( self ,      name ,      xvar ,      yvar , special = special , **kwargs ) 
         FUNC3.__init__ ( self , self.name , self.xvar , self.yvar , zvar )
 
         self.vars.add ( self.zvar )
@@ -1078,6 +1079,152 @@ class Generic3D_pdf(PDF3) :
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
+
+# =============================================================================
+## @class Combine3D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Combine3D (PDF3) :
+    """Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Combine3D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+    
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   yvar      = None , 
+                   zvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Combine3D: at least two PDFs are needed!'
+
+        pdf_list = []        
+        for i , p in enumerate ( pdfs ) :
+
+            if isinstance ( p , PDF3 ) :
+                
+                assert ( not xvar ) or xvar is p.xvar, "Invalid xvar/pdf%d.xvar: %s/%s" % ( i , xvar , p.xvar ) 
+                assert ( not yvar ) or yvar is p.yvar, "Invalid yvar/pdf%d.yvar: %s/%s" % ( i , yvar , p.zvar ) 
+                assert ( not zvar ) or zvar is p.zvar, "Invalid zvar/pdf%d.zvar: %s/%s" % ( i , yvar , p.zvar )
+                
+                xvar = p.xvar
+                yvar = p.yvar
+                zvar = p.zvar
+                
+                pdf_list.append ( p )
+                
+            elif isinstance ( pdf1 , ROOT.RooAbsPdf )                   \
+                     and xvar and isinstance ( xvar , ROOT.RooAbsReal ) \
+                     and yvar and isinstance ( xvar , ROOT.RooAbsReal ) \
+                     and zvar and isinstance ( zvar , ROOT.RooAbsReal ) :
+                
+                pdf_list.append ( Generic3D_pdf ( p , xvar , yvar , zvar ) )
+                
+            else :
+                raise TypeError ( "Invalid type: pdf%d xvar %s/%s xvar=%s, yvar=%s, zvar=%s" % ( i , p , type(p) , xvar , yvar , zvar ) )
+
+
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum3' )
+        
+        ## ininialize the base class
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+
+        for i , p in enumerate ( pdf_list )  :
+            if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
+                
+        while prefix.endswith  ('_') : prefix = prefix[:-1]
+        while suffix.startswith('_') : suffix = suffix[1:]
+        
+        self.__prefix    = prefix if prefix else 'f' 
+        self.__suffix    = suffix
+        self.__recursive = True if recursive else False 
+        
+        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+        else                           : fr_name = '%s_%%d'    %   self.prefix
+    
+        ## make list of fractions 
+        fraction_list = self.make_fractions  ( len ( pdf_list )           ,
+                                               name      = fr_name        , 
+                                               recursive = self.recursive ,
+                                               fractions = fractions      )
+
+        ## keep them
+        self.__pdfs      = tuple ( pdf_list )
+        self.__fractions = tuple ( fraction_list ) 
+        
+        for p in self.__pdfs      : self.alist1.add ( p.pdf )
+        for f in self.__fractions : self.alist2.add ( f     )
+        
+        ## finally build PDF 
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'combine3' ) ,
+                                    ' + '.join ( '(%s)' % p.name for p in self.pdfs  ) ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'zvar'      : self.zvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+        
+    @property
+    def prefix ( self ) :
+        """``prefix'' : prefix for fraction names"""
+        return self.__prefix
+
+    @property
+    def suffix ( self ) :
+        """``suffix'' : suffix for fraction names"""
+        return self.__suffix
+
+    @property
+    def recursive ( self ) :
+        """``recursive'' : recursive fractions?"""
+        return self.__recursive
+    
+    @property
+    def pdfs ( self ) :
+        """``pdfs'' : get list/tuple of involved PDFs (same as ``components'')"""
+        return self.__pdfs
+    @property
+    def components ( self ) :
+        """``components'' : get list/tuple of involved PDFs (same as ``pdfs'')"""
+        return self.pdfs
+        
+    @property
+    def fractions ( self ) :
+        """``fractions'' : get involved fractions (same as ``F'')"""
+        return self.component_getter ( self.__fractions )
+    @fractions.setter
+    def fractions ( self , values ) :
+        self.component_setter ( self.__fractions , values )
+
+    @property
+    def F         ( self ) :
+        """``F'' : get involved fractions (same as ``fractions'')"""
+        return self.component_getter ( self.__fractions )
+    @F.setter
+    def F         ( self , values ) :
+        self.fractions = values 
+
+
     
 # =============================================================================
 ## @class Sum3D
@@ -1089,110 +1236,81 @@ class Generic3D_pdf(PDF3) :
 #  @endcode
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
-class Sum3D(PDF3) :
-    """Non-extended sum of two PDFs:
-    
-    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
-    - see RooAddPdf 
-    
-    pdf1 = ...
-    pdf2 = ...
-    sum  = Sum3D ( pdf1 , pdf2 ) 
-
+class Sum3D(Combine3D) :
+    """Non-extended sum of two PDFs:    
+    It is just a small wrapper for `ROOT.RooAddPdf`
+    >>> pdf1 = ...
+    >>> pdf2 = ...
+    >>> sum  = Sum3D ( pdf1 , pdf2 ) 
+    - see `ROOT.RooAddPdf`
     """
-    def __init__ ( self            ,
-                   pdf1            ,
-                   pdf2            ,  
-                   xvar     = None , 
-                   yvar     = None , 
-                   zvar     = None , 
-                   name     = ''   , 
-                   fraction = None ) :
+    def __init__ ( self             ,
+                   pdf1             ,
+                   pdf2             ,  
+                   xvar     = None  , 
+                   yvar     = None  , 
+                   zvar     = None  ,
+                   name      = ''   , 
+                   prefix    = 'f'  ,
+                   suffix    = ''   ,
+                   fraction  = None ,
+                   others    = []   ,
+                   recursive = True ) :                    
+ 
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum3' )
+       
 
-        if   isinstance ( pdf1 , PDF3 ) :
-            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" % ( xvar , pdf1.xvar )             
-            assert ( not yvar ) or yvar is pdf1.yvar, "Invalid yvar/pdf1.yvar: %s/%s" % ( yvar , pdf1.yvar )             
-            assert ( not zvar ) or zvar is pdf1.zvar, "Invalid zvar/pdf1.zvar: %s/%s" % ( zvar , pdf1.zvar )             
-            xvar = pdf1.xvar        
-            yvar = pdf1.yvar        
-            zvar = pdf1.yvar        
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf )           and \
-             xvar and isinstance ( xvar , ROOT.RooAbsReal ) and \
-             yvar and isinstance ( yvar , ROOT.RooAbsReal ) and \
-             zvar and isinstance ( zvar , ROOT.RooAbsReal ):
-            pdf1 = Generic3D_pdf ( pdf1 , xvar , yvar , zvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
-
-        if   isinstance ( pdf2 , PDF3 ) and xvar in pdf2.vars and yvar in pdf2.vars and zvar in pdf2.vars : pass 
-        elif isinstance ( pdf2 , ROOT.RooAbsPdf ) : pdf2 = Generic3D_pdf ( pdf2 , xvar , yvar , zvar )
-        else :
-            raise TypeError ( "Invalid type: pdf2/xvar/yvar/zvar: %s/%s/%s/%s" % ( pdf1 , xvar , yvar , zvar ) )
+        ## initialize the base class 
+        Combine3D.__init__ ( self                 ,
+                             name      = name      , 
+                             pdfs      =  [ pdf1 , pdf2] + others ,
+                             xvar      = xvar      ,
+                             yvar      = yvar      ,
+                             zvar      = zvar      ,
+                             recursive = recursive ,         
+                             prefix    = prefix    ,                             
+                             suffix    = suffix    ,
+                             fractions = fraction  )
         
-
-        name = name if name else self.generate_name ( prefix = 'sum3D_%s_%s_' % ( pdf1.name , pdf2.name ) ) 
-        PDF3.__init__ ( self , name , xvar , yvar , zvar )
-
-        self.__pdf1     = pdf1
-        self.__pdf2     = pdf2
-
-        self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
-                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 ) 
-        self.alist1 = ROOT.RooArgList (
-            self.__pdf1.pdf ,
-            self.__pdf2.pdf )
-        self.alist2 = ROOT.RooArgList (
-            self.__fraction  )
-        
-        self.pdf = ROOT.RooAddPdf (
-            self.roo_name ( 'sum3_' ) , 
-            '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1,self.alist2 )
-        
-        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
-
         self.config = {
-            'pdf1'     : self.pdf1     ,
-            'pdf2'     : self.pdf2     ,
-            'xvar'     : self.xvar     ,
-            'yvar'     : self.yvar     ,
-            'zvar'     : self.zvar     ,
-            'name'     : self.name     , 
-            'fraction' : self.fraction 
+            'pdf1'      : self.pdf1      ,
+            'pdf2'      : self.pdf2      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'zvar'      : self.zvar      ,
+            'name'      : self.name      ,
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    , 
+            'fraction'  : self.fraction  ,
+            'others'    : self.others    ,            
+            'recursive' : self.recursive ,
             }
-
+        
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        return self.__pdf1
+        return self.pdfs[0]
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
-        return self.__pdf2
+        return self.pdfs[1]
 
+    @property 
+    def others ( self ) :
+        """``others'' : other PDFs (if any)"""
+        return self.pdfs[2:]
+    
     @property
     def fraction ( self ) :
-        """``fraction'' : the fraction of the first PDF in the sum"""
-        return self.__fraction
+        """``fraction'' : the fraction of the first PDF in the sum (same as ``fractions'')"""
+        return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
-        val = float ( value )
-        self.__fraction.setVal ( val )
+        self.fractions = value 
 
-    @property
-    def F  ( self ) :
-        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
-        return self.__fraction
-    @F.setter
-    def F ( self , value ) :
-        self.fraction = value 
-        
-
-
-# =============================================================================
+# ===========================================================================
 ## @class Flat3D
 #  The most trivial 3D-model - constant
 #  @code 
@@ -1264,8 +1382,12 @@ class Model3D(PDF3) :
             self.__zmodel = Generic1D_pdf  ( zmodel , zvar )
         else : raise AttributeError ( "Invalid ``z-model'' attribute" )
         
-        ## initialize the base 
-        PDF3.__init__ (  self , name ,
+        name  = name if name  else self.generate_name ( 'Model3D_%s_%s_%s'  % ( self.xmodel.name ,
+                                                                                self.ymodel.name ,
+                                                                                self.zmodel.name ) )
+         ## initialize the base 
+        PDF3.__init__ (  self               ,
+                         name               ,
                          self.__xmodel.xvar ,
                          self.__ymodel.xvar ,
                          self.__zmodel.xvar ) 
@@ -1284,17 +1406,18 @@ class Model3D(PDF3) :
         def _triv_ ( m ) :
             
             _U = Ostap.Models.Uniform 
-            if     isinstance ( m , Flat1D ) : return True 
-            return isinstance ( m.pdf , _U ) and 1 == m.pdf.dim()
-        
+            if     isinstance ( m     , Flat1D ) : return True 
+            return isinstance ( m.pdf , _U     ) and 1 == m.pdf.dim()
+
         ## trivial case: 
         if _triv_ ( self.xmodel ) and _triv_ ( self.ymodel ) and _triv_ ( self.zmodel ) :
             
             self.debug ('use Flat3D-model for the trivial product')
-            self.__flat = Flat3D ( self.xvar , self.yvar , self.zvar , name = name , title = title )
+            self.__flat = Flat3D ( self.xvar , self.yvar , self.zvar , name = self.generate_name ( name ) , title = title )
             self.pdf    = self.__flat.pdf
             
         else :
+
             
             ## build pdf         
             self.__plst = ROOT.RooArgList (
@@ -1302,8 +1425,8 @@ class Model3D(PDF3) :
                 self.__ymodel.pdf ,
                 self.__zmodel.pdf ,
                 )
-            self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'flat3_' )  , title , self.__plst )
-            
+            self.pdf = ROOT.RooProdPdf ( self.roo_name ( 'model3_' ) , title , self.__plst )
+                                           
         ## save configuration 
         self.config = {
             'name'   : self.name   ,
@@ -1456,7 +1579,7 @@ class H3D_pdf(H3D_dset,PDF3) :
 #
 #  r = model.fitTo ( dataset ) ## fit dataset 
 #
-#  print r                       ## get results  
+#  print ( r )                   ## get results  
 #
 #  fx  = model.draw1 ()          ## visualize X-projection
 #  fy  = model.draw2 ()          ## visualize Y-projection
@@ -1476,7 +1599,7 @@ class Fit3D (PDF3) :
     ...      bkg_1y   = 0 ,
     ...      bkg_1z   = 0 )
     >>> r,f = model.fitTo ( dataset ) ## fit dataset 
-    >>> print r                       ## get results  
+    >>> print ( r  )                  ## get results  
     >>> fx  = model.draw1 ()          ## visualize X-projection
     >>> fy  = model.draw2 ()          ## visualize Y-projection
     >>> fz  = model.draw3 ()          ## visualize Z-projection
@@ -1680,9 +1803,10 @@ class Fit3D (PDF3) :
         ## 1) First component: all   signals
         # =====================================================================
         
-        self.__sss_cmp  = Model3D (
-            self.generate_name ( 'SSS_' + self.name  ) ,
-            self.__signal_x , self.__signal_y , self.__signal_z )
+        self.__sss_cmp  = Model3D ( name   = self.generate_name ( 'SSS_' + self.name  ) ,
+                                    xmodel = self.__signal_x ,
+                                    ymodel = self.__signal_y ,
+                                    zmodel = self.__signal_z )
         
         # =====================================================================
         ## 2-4) Three terms:  ( 2 signals )  x ( 1 background ) 
@@ -1782,15 +1906,19 @@ class Fit3D (PDF3) :
                                        self.__bkg_2z     ,
                                        title =  'Background2(y) x Background2(z)' )
 
-        self.__sbb_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "SBB_" + self.name ) , "Signal(x) x Background(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
-        self.__bsb_cmp = Generic3D_pdf (
-            ROOT.RooProdPdf ( self.roo_name ( "BSB_" + self.name ) , "Signal(y) x Background(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "BBS_" + self.name ) , "Signal(z) x Background(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
+        ## create components 
+        self.__sbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( 'SBB_' + self.name )     ,
+                                                           "Signal(x) x Background(y,z)"            ,
+                                                           self.__signal_x.pdf , self.__bkg_2yz.pdf ) , 
+                                         self.xvar , self.yvar , self.zvar )
+        self.__bsb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_" + self.name )     ,
+                                                           "Signal(y) x Background(x,z)"            ,
+                                                           self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+                                         self.xvar , self.yvar , self.zvar )
+        self.__bbs_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_" + self.name )     ,
+                                                           "Signal(z) x Background(x,y)"            ,
+                                                           self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+                                         self.xvar , self.yvar , self.zvar )
         
         # =====================================================================
         ## (intermezzo-2) Assumptions about BBB-background sub-components 
@@ -1920,7 +2048,7 @@ class Fit3D (PDF3) :
         pdftitle = "Fit3D %s" % self.name
         pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
         self.pdf = ROOT.RooAddPdf  ( *pdfargs )
-        
+
         self.signals     .add ( self.__sss_cmp.pdf )
         self.backgrounds .add ( self.__bbb_cmp.pdf )
         self.crossterms1 .add ( self.__ssb_cmp.pdf ) ## cross-terms
@@ -2069,25 +2197,10 @@ class Fit3D (PDF3) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components  )     
     @C.setter
-    def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+    def C (  self , value ) :        
+        self.component_setter ( self.__nums_components , value )
    
     @property
     def yields    ( self ) :
@@ -2183,7 +2296,7 @@ class Fit3D (PDF3) :
         return self.__sss_cmp
 
     @property
-    def cpm_SSB ( self ) :
+    def cmp_SSB ( self ) :
         """```signal-signal-background'' component/PDF"""
         return self.__ssb_cmp
     
@@ -2540,25 +2653,28 @@ class Fit3DSym (PDF3) :
             self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
-            
-        self.__sbb_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
-        self.__bsb_cmp_raw = Generic3D_pdf (
-            ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
 
-        self.__sbb_cmp     = Generic3D_pdf (
-            self.make_sum( self.generate_name ( "SBB_" + self.name ) ,
-                           "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
-                           self.__sbb_cmp_raw.pdf ,
-                           self.__bsb_cmp_raw.pdf ,
-                           self.__bbs_cmp_raw.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
+        ## make components 
+        self.__sbb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name )  ,
+                                                               "Signal(x) x Background2(y,z)"            ,
+                                                               self.__signal_x.pdf , self.__bkg_2yz.pdf  ) ,
+                                             self.xvar , self.yvar , self.zvar )
+        self.__bsb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name )  ,
+                                                               "Signal(y) x Background2(x,z)"            ,
+                                                               self.__signal_y.pdf , self.__bkg_2xz.pdf  ) ,
+                                             self.xvar , self.yvar , self.zvar )
+        self.__bbs_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name )  ,
+                                                               "Signal(z) x Background2(x,y)"            ,
+                                                               self.__signal_z.pdf , self.__bkg_2xy.pdf  ) ,
+                                             self.xvar , self.yvar , self.zvar )
 
+        self.__sbb_cmp     = Generic3D_pdf ( self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
+                                                             "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
+                                                             self.__sbb_cmp_raw.pdf ,
+                                                             self.__bsb_cmp_raw.pdf ,
+                                                             self.__bbs_cmp_raw.pdf ) ,
+                                             self.xvar , self.yvar , self.zvar )
+        
         self.__bsb_cmp = self.__sbb_cmp
         self.__bbs_cmp = self.__sbb_cmp
         
@@ -2593,11 +2709,12 @@ class Fit3DSym (PDF3) :
             self.__bkg_3x  = self.make_bkg (        bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )        
             self.__bkg_3y  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Y_BBB' + self.name ) , self.yvar )        
             self.__bkg_3z  = self.make_bkg ( self.__bkg_3x , self.generate_name ( 'Bkg3Z_BBB' + self.name ) , self.zvar )
-            
+
             self.__bbb_cmp = Model3D ( self.generate_name ( "BBB_" + self.name ) ,
                                        self.__bkg_3x      ,
                                        self.__bkg_3y      ,
                                        self.__bkg_3z      , title = "Background(x,y,z)" )
+        
         #
         ## coefficients
         #
@@ -2792,25 +2909,10 @@ class Fit3DSym (PDF3) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components  )     
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_components , value )
    
     @property
     def yields    ( self ) :
@@ -2906,7 +3008,7 @@ class Fit3DSym (PDF3) :
         return self.__sss_cmp
 
     @property
-    def cpm_SSB ( self ) :
+    def cmp_SSB ( self ) :
         """```signal-signal-background'' symmetrized component/PDF"""
         return self.__ssb_cmp
     
@@ -3302,16 +3404,18 @@ class Fit3DMix (PDF3) :
             from ostap.fitting.models_2d import make_B2Dsym
             self.__bkg_2yz = make_B2Dsym ( self.generate_name ( 'Bkg2YZ_' + self.name ) , self.yvar , self.zvar , *bkg_2yz  )            
         else :
-            self.__bkg_2y = self.make_bkg (        bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )        
-            self.__bkg_2z = self.make_bkg ( self.__bkg_2y , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )            
+            self.__bkg_2y  = self.make_bkg (        bkg_2y , self.generate_name ( 'Bkg2Y_S2B' + self.name ) , self.yvar )        
+            self.__bkg_2z  = self.make_bkg ( self.__bkg_2y , self.generate_name ( 'Bkg2Z_S2B' + self.name ) , self.zvar )            
             self.__bkg_2yz = Model2D ( self.generate_name ( 'Bkg2YZ_' + self.name ) ,
                                        self.__bkg_2y     ,
                                        self.__bkg_2z     , title =  'Background2(y,z)' )
-            
-        self.__sbb_cmp = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) , "Signal(x) x Background2(y,z)" , self.__signal_x.pdf , self.__bkg_2yz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
 
+        ## make component 
+        self.__sbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "SBB_raw_" + self.name ) ,
+                                                           "Signal(x) x Background2(y,z)"           ,
+                                                           self.__signal_x.pdf , self.__bkg_2yz.pdf  ) ,
+                                         self.xvar , self.yvar , self.zvar )
+        
         # =====================================================================
         ## 5) background x ( signal x background + background x  signal ) 
         # =====================================================================
@@ -3344,20 +3448,22 @@ class Fit3DMix (PDF3) :
             self.__bkg_2xz = Model2D ( self.generate_name ( 'Bkg2XZ_' + self.name ) ,
                                        self.__bkg_2x         ,
                                        self.__bkg_2z         , title = 'Background2(x,z)' )
-            
-        self.__bsb_cmp_raw = Generic3D_pdf (
-            ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) , "Signal(y) x Background2(x,z)" , self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
-        self.__bbs_cmp_raw = Generic3D_pdf ( 
-            ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) , "Signal(z) x Background2(x,y)" , self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
 
-        self.__bbs_sym_cmp     = Generic3D_pdf (
-            self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
-                            "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
-                            self.__bsb_cmp_raw.pdf ,
-                            self.__bbs_cmp_raw.pdf ) ,
-            self.xvar , self.yvar , self.zvar )
+        ## make components 
+        self.__bsb_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BSB_raw_" + self.name ) ,
+                                                               "Signal(y) x Background2(x,z)"           ,
+                                                               self.__signal_y.pdf , self.__bkg_2xz.pdf ) ,
+                                             self.xvar , self.yvar , self.zvar )
+        self.__bbs_cmp_raw = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBS_raw_" + self.name ) ,
+                                                               "Signal(z) x Background2(x,y)"           ,
+                                                               self.__signal_z.pdf , self.__bkg_2xy.pdf ) ,
+                                             self.xvar , self.yvar , self.zvar )
+
+        self.__bbs_sym_cmp     = Generic3D_pdf ( self.make_sum ( self.generate_name ( "SBB_" + self.name ) ,
+                                                                 "S(x)*B(y,z)+S(y)*B(x,z)+S(Z)*B(x,y)" ,
+                                                                 self.__bsb_cmp_raw.pdf ,
+                                                                 self.__bbs_cmp_raw.pdf ) ,
+                                                 self.xvar , self.yvar , self.zvar )
 
         self.__bbs_cmp = self.__bbs_sym_cmp ## ditto
         self.__bsb_cmp = self.__bbs_sym_cmp
@@ -3403,7 +3509,8 @@ class Fit3DMix (PDF3) :
             self.__bbb_cmp = Generic3D_pdf ( bkg_3D , self.xvar , self.yvar , self.zvar , self.generate_name ( 'BBB_' + self.name ) )
         elif bkg_3D and isinstance ( bkg_2D ,  ( tuple , list )  ) :
             from ostap.fitting.models_2d import make_B2DmixYZ 
-            self.__bkg_3D = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            ##self.__bkg_3D = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
+            self.__bbb_cmp = make_B2DmixYZ ( self.generate_name ( 'BBB_' + self.name ) , self.xvar , self.yvar , self.zvar , *bkg_3D )
         else :
 
             if   bkg_3yz and isinstance ( bkg_3yz , PDF2 ) :
@@ -3416,11 +3523,12 @@ class Fit3DMix (PDF3) :
                 self.__bkg_3yz = Model2D ( self.generate_name ( 'Bkg3YZ_' + self.name ) , self.__bkg_3y , self.__bkg_3z )
                 
             self.__bkg_3x  = self.make_bkg ( bkg_3x , self.generate_name ( 'Bkg3X_BBB' + self.name ) , self.xvar )
-            self.__bbb_cmp = Generic3D_pdf (
-                ROOT.RooProdPdf ( self.roo_name ( "BBB_" + self.name ) ,
-                                  "Background3(x) x Background3(y,z)" ,
-                                  self.__bkg_3x.pdf , self.__bkg_3yz.pdf ) ,
-                self.xvar , self.yvar , self.zvar ) 
+
+            ## make component 
+            self.__bbb_cmp = Generic3D_pdf ( ROOT.RooProdPdf ( self.roo_name ( "BBB_" + self.name )  ,
+                                                               "Background3(x) x Background3(y,z)"   ,
+                                                           self.__bkg_3x.pdf , self.__bkg_3yz.pdf ) ,
+                                         self.xvar , self.yvar , self.zvar ) 
             
         # =====================================================================
         ## coefficients
@@ -3456,7 +3564,6 @@ class Fit3DMix (PDF3) :
             self.__sbb     ,
             self.__bbs     ,
             self.__bbb     )
-        
         
         ## treat additional components (if specified)
         self.__nums_components = [] 
@@ -3633,25 +3740,10 @@ class Fit3DMix (PDF3) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components  )     
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_components , value )
    
     @property
     def yields    ( self ) :
@@ -3750,7 +3842,7 @@ class Fit3DMix (PDF3) :
         return self.__sss_cmp
 
     @property
-    def cpm_SSB ( self ) :
+    def cmp_SSB ( self ) :
         """```signal-signal-background'' symmetrized component/PDF"""
         return self.__ssb_cmp
     

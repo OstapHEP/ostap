@@ -1671,7 +1671,8 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     ## otherwise dump only needed variables 
                     bvars = self.the_variables( [ v.formula for v in tvars ] )
                     avars = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
-                    from ostap.core.core import strings as _strings 
+                    from ostap.core.core import strings as _strings
+                    avars = set ( avars )
                     logger.debug ('PROCESS: dump only %s' % list ( avars ) )
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
 

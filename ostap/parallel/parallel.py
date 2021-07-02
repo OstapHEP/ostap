@@ -52,9 +52,13 @@ except ImportError :
     dill = None    
 
 if ( 3 , 6 ) <= sys.version_info and dill :
-    dill_version =  getattr ( dill , '__version__' , '' )
+    dill_version   =  getattr ( dill , '__version__' , '' )
     if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
     DILL_PY3_issue = dill_version < '0.3'
+    if not DILL_PY3_issue :
+        from ostap.core.meta_info import root_info
+        DILL_PY3_issue = root_info < ( 6 , 23 )
+        
     if DILL_PY3_issue : worker = 'GAUDIMP'
 
 # ===============================================================================

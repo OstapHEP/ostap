@@ -47,8 +47,9 @@ else                       : logger = getLogger ( __name__        )
 # ==============================================================================
 import ostap.trees.trees 
 import ostap.io.root_file
-from   ostap.logger.utils  import rootError 
-from   ostap.core.core     import VE, hID
+from   ostap.logger.utils   import rootError 
+from   ostap.core.core      import VE, hID
+from   ostap.core.meta_info import root_info 
 # ==============================================================================
 lumi_tree = 'GetIntegratedLuminosity/LumiTuple'
 lumi      = 'IntegratedLuminosity'
@@ -117,14 +118,21 @@ def getLumi ( data , *args ) :
         ## try :
         with rootError() : ## suppress errors from ROOT
             
-            ## if hasattr ( data , 'pstatVar' ) :
-            ##    stat = data.pstatVar ( [ lumi , lumi_err ] , lumi_cuts , chunk_size = -1 , max_files = 10 )
-            ## else  :
+            ## if ( 6 , 25 ) < root_info :
+
+            ##     ## use DataFrames. It is faster here?  not sure....
+                
+            ##     from ostap.frame.frames import DataFrame , frame_statVars
+            ##     frame = DataFrame ( data )
+            ##     stat  = frame_statVars ( frame , [ lumi , lumi_err ] , lumi_cuts )
+                
+            ## else :
+            
             stat = data. statVar ( [ lumi , lumi_err ] , lumi_cuts )
 
             ##
-            s1 = stat[ lumi     ]
-            s2 = stat[ lumi_err ]
+            s1 = stat [ lumi     ]
+            s2 = stat [ lumi_err ]
             ##
             return VE ( s1.sum() , s2.sum() **2 )
         
@@ -156,5 +164,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*' ) 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

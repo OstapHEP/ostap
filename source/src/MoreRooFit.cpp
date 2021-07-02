@@ -115,6 +115,22 @@ Ostap::MoreRooFit::Addition::Addition
                   RooArgList  ( a , b ) )
 {}
 // ============================================================================
+// construct c1*a + c2*b 
+// ============================================================================
+Ostap::MoreRooFit::Addition::Addition
+( const std::string& name  , 
+  const std::string& title ,
+  RooAbsReal&        a     ,
+  RooAbsReal&        b     ,
+  RooAbsReal&        c1    ,
+  RooAbsReal&        c2    ) 
+  : RooAddition ( name .c_str() , title.c_str() ,
+                  RooArgList ( a  ,  b  ) , 
+                  RooArgList ( c1 ,  c2 ) )
+{}
+  
+
+// ============================================================================
 //  copy constructor 
 // ============================================================================
 Ostap::MoreRooFit::Addition::Addition
@@ -176,7 +192,7 @@ Ostap::MoreRooFit::Subtraction::Subtraction
   RooAbsReal&        b     )
   : Addition 
     ( name_  ( name  , "subtract" , a , b )  ,
-      title_ ( title , "-"        , a , b )  , a , b )
+      title_ ( title , "-"        , a , b )  , a , b , 1 , -1 )    
 {}
 // ============================================================================
 Ostap::MoreRooFit::Subtraction::Subtraction
@@ -192,91 +208,6 @@ Ostap::MoreRooFit::Subtraction::~Subtraction(){}
 Ostap::MoreRooFit::Subtraction* 
 Ostap::MoreRooFit::Subtraction::clone ( const char* newname ) const 
 { return new Subtraction ( *this , newname ) ; }
-// ============================================================================
-Double_t Ostap::MoreRooFit::Subtraction::analyticalIntegral 
-( Int_t code            , 
-  const char* rangeName ) const 
-{
-  // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
-    // cache got sterilized, trigger repopulation of this slot, then try again...
-    std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );  
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    RooArgSet dummy;
-    Int_t code2 = getAnalyticalIntegral(*iset,dummy,rangeName);
-    assert(code==code2); // must have revived the right (sterilized) slot...
-    return analyticalIntegral(code2,rangeName);
-  }
-  assert(cache!=0);
-  
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
-  {
-    // loop over cache, and sum...
-    std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
-    RooAbsReal *I;
-    double result(0);
-    bool   first = true  ;
-    while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) 
-    { 
-      if ( first )  { result += I->getVal() ; first = false ; }
-      else          { result -= I->getVal() ; }
-      
-    }
-    return result;
-  }
-#else
-  {
-    // loop over cache, and sum...
-    double result = 0   ;
-    bool   first  = true ;
-    for (auto I : cache->_I) 
-    {
-      //
-      const double tmp =  static_cast<const RooAbsReal*>(I)->getVal();
-      if ( first ) { result += tmp ; first = false ; }
-      else         { result -= tmp ;                 }
-      //
-    }
-    return result;
-  }
-#endif 
-}
-// ============================================================================
-Double_t Ostap::MoreRooFit::Subtraction::evaluate() const
-{
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
-  {
-    Double_t sum(0);
-    bool first = true ;
-    const RooArgSet* nset = _set.nset() ;
-    RooFIter setIter = _set.fwdIterator() ;
-    RooAbsReal* comp ;
-    while((comp=(RooAbsReal*)setIter.next())) 
-    {
-      Double_t tmp = comp->getVal(nset) ;
-      if ( first ) { sum += tmp ; first = false ; }
-      else         { sum -= tmp ; }
-    }
-    return sum ;
-  }
-#else 
-  {
-    Double_t result = 0 ;
-    const RooArgSet* nset = _set.nset() ;
-    //
-    bool first = true ;
-    for ( const auto arg : _set) 
-    {
-      const auto comp = static_cast<RooAbsReal*>(arg);
-      const Double_t tmp = comp->getVal(nset);
-      if ( first ) { result += tmp ;  first = false ; }
-      else         { result -= tmp ;                  }
-    }
-  return result ;
-  }
-#endif 
-}
 // ============================================================================
 
 

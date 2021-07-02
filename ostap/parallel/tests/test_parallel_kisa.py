@@ -200,12 +200,12 @@ def test_kisa3 () :
     
     ## from  ostap.trees.funcs import H1DFunc
     ## xh1 = H1DFunc ( histo = h1 , xvar = 'pt' ) 
-    from  ostap.trees.funcs import FuncTH1 
-    xh1 = FuncTH1 ( histo = h1 , xvar = 'pt' ) 
+    ## from  ostap.trees.funcs import FuncTH1 
+    ## xh1 = FuncTH1 ( histo = h1 , xvar = 'pt' ) 
     
     from ostap.fitting.pyselectors import SelectorWithVars, Variable  
     variables = [
-        Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
+        ## Variable ( 'mass1' , 'mass(mu+mu-)' , 2 , 4 , lambda s : s.mass ) , 
         Variable ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
         Variable ( 'c2dtf' , 'chi2(dtf)'    , -1    , 10   ) , 
         ## Variable ( 'xpt'   , 'xpt'          , -1    , 30   , xh1 ) , 

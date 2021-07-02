@@ -78,10 +78,10 @@ class StatVarTask(Task) :
 
         chain   = item.chain 
         first   = item.first
-        ## last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
-        last    = n_large
+        last    = min ( n_large , first + item.nevents if 0 < item.nevents else n_large )
         
         from ostap.trees.trees  import _stat_vars_
+
         self.__output = _stat_vars_ ( chain , self.what , self.cuts , first , last )
 
         return self.__output 
@@ -90,24 +90,25 @@ class StatVarTask(Task) :
     def merge_results ( self , result , jobid = -1 ) :
         
         from ostap.stats.counters import WSE
-
+        
         if not self.__output : self.__output = result
         else               :
             assert type( self.__output ) == type ( result ) , 'Invalid types for merging!'
-            if isinstance ( self.__output , dict ) : 
+            if isinstance ( self.__output , dict ) :
                 for key in result : 
-                    if self.output.has_key ( key ) : self.__output[key] += result[key]
-                    else                           : self.__output[key]  = result[key] 
+                    if    key in self.output : self.__output [ key ] += result [ key ]
+                    else                     : self.__output [ key ]  = result [ key ] 
             else :
                 self.__output += result
 
     ## get the results 
     def results ( self ) : return self.__output 
 
+
 # ===================================================================================
 ## parallel processing of loooong chain/tree 
 #  @code
-#  chain    = ...
+#  chain          = ...
 #  chain.pStatVar ( .... ) 
 #  @endcode 
 def pStatVar ( chain               ,
@@ -115,25 +116,28 @@ def pStatVar ( chain               ,
                cuts       = ''     ,
                nevents    = -1     ,
                first      =  0     ,
-               chunk_size = 100000 ,
-               max_files  = 10     ,
+               chunk_size = 250000 ,
+               max_files  =  1     ,
                silent     = True   , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>> chain    = ...
     >>> chain.pstatVar( 'mass' , 'pt>1') 
     """
-
     ## few special/trivial cases
 
+    print ( 'I am pStatVar' )
+    
     last = min ( n_large , first + nevents if 0 < nevents else n_large )
     
-
     if 0 <= first and 0 < nevents < chunk_size :
+        print ( 'I am pStatVar/0' )
         return chain.statVar ( what , cuts , first , last )
-    elif isinstance ( chain , ROOT.TChain ) : 
-        if chain.nFiles() < 5 and len ( chain ) < chunk_size :
+    elif isinstance ( chain , ROOT.TChain ) :
+        if 1 == chain.nFiles() and len ( chain ) < chunk_size :
+            print ( 'I am pStatVar/1' )
             return chain.statVar ( what , cuts , first , last )                         
     elif isinstance ( chain , ROOT.TTree  ) and len ( chain ) < chunk_size :
+        print ( 'I am pStatVar/2' )
         return chain.statVar ( what , cuts , first , last ) 
     
     from ostap.trees.trees import Chain
@@ -144,6 +148,7 @@ def pStatVar ( chain               ,
 
     trees  = ch.split ( chunk_size = chunk_size , max_files = max_files )
 
+    print ( 'statvar-pprocess', chain.GetName() , len(trees) ) 
     wmgr.process ( task , trees )
 
     del trees
@@ -153,8 +158,10 @@ def pStatVar ( chain               ,
     
     return results 
 
-ROOT.TChain.pstatVar = pStatVar 
-ROOT.TTree .pstatVar = pStatVar
+ROOT.TChain.pstatVar  = pStatVar 
+ROOT.TTree .pstatVar  = pStatVar
+ROOT.TChain.pstatVars = pStatVar 
+ROOT.TTree .pstatVars = pStatVar
 
 # =============================================================================
 _decorated_classes_ = (
@@ -163,8 +170,10 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
-    ROOT.TTree .pstatVar,
-    ROOT.TChain.pstatVar,
+    ROOT.TTree .pstatVar  ,
+    ROOT.TChain.pstatVar  ,
+    ROOT.TTree .pstatVars ,
+    ROOT.TChain.pstatVars ,
     )
 
 # =============================================================================
@@ -175,7 +184,7 @@ if '__main__' == __name__ :
     
     if not ( 2**32 - 1 ) <= n_large <= ROOT.TVirtualTreePlayer.kMaxEntries :
         logger.error ( "Invalid setting of ``n_large''(%d) parameter (>%d)" % ( n_large , ROOT.TVirtualTreePlayer.kMaxEntries ) )
-        
+
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

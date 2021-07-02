@@ -5907,12 +5907,12 @@ namespace Ostap
     public:  // integrals
       // ======================================================================
       Int_t    getAnalyticalIntegral
-        ( RooArgSet&     allVars      ,
-          RooArgSet&     analVars     ,
-          const char* /* rangename */ ) const override;
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
       Double_t analyticalIntegral
-        ( Int_t          code         ,
-          const char*    rangeName    ) const override;
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
       // ======================================================================
     public:
       // ======================================================================
@@ -6132,7 +6132,7 @@ namespace Ostap
     // ========================================================================
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
-} //                                                  end of namespace Analysis
+} //                                                     end of namespace Ostap
 // ============================================================================
 //                                                                      The END
 // ============================================================================

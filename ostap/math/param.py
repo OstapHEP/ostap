@@ -273,10 +273,10 @@ def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
     ## prepare sampling 
     f_sample = 2 * N
     t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
-    
+
     ## make Fast Fourier Transform 
-    y = numpy.fft.rfft ( vfunc ( t ) ) / t.size
-    y *= 2
+    y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
+    y *= 2.0 / t.size
     
     #
     ## decode the results:
