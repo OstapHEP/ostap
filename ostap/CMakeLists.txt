@@ -33,7 +33,18 @@ endmacro(find_python_module)
 
 find_python_module ( numpy QUIET )
 if ( NOT ${PY_numpy_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install numpy --user)
+endif()
+
+find_python_module ( numpy QUIET )
+if ( NOT ${PY_numpy_FOUND} )
 message ( "----> warning (optional)          numpy is NOT found!" ) 
+endif()
+
+
+find_python_module ( scipy QUIET )
+if ( NOT ${PY_scipy_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install scipy --user)
 endif()
 
 find_python_module ( scipy QUIET )
@@ -47,36 +58,35 @@ endif()
 
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
-message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install dill --user)
 endif()
+
 find_python_module ( dill          QUIET )
 if ( NOT ${PY_dill_FOUND} )
 message ( "----> (warning) (optional)           dill (part of pathos) is NOT found!" ) 
 endif()
 
+
 find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
-message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install ppft --user)
 endif()
+
+find_python_module ( ppft          QUIET )
 if ( NOT ${PY_ppft_FOUND} )
 message ( "----> (warning) (optional)           ppft (part of pathos) is NOT found!" ) 
 endif()
 
 find_python_module ( multiprocess  QUIET )
 if ( NOT ${PY_multiprocess_FOUND} )
-message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install multiprocess --user)
 endif()
 if ( NOT ${PY_multiprocess_FOUND} )
 message ( "----> (warning) (optional)   multiprocess (part of pathos) is NOT found!" ) 
 endif()
 
-
 find_python_module ( pathos        QUIET )
 if ( NOT ${PY_pathos_FOUND} )
-message ( "----> (warning) (optional)         pathos (part of pathos) is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install pathos --user)
 endif()
 if ( NOT ${PY_pathos_FOUND} )
@@ -85,30 +95,23 @@ endif()
 
 
 if ( ${PY_pathos_FOUND} AND ${PY_dill_FOUND} AND ${PY_multiprocess_FOUND} AND ${PY_ppft_FOUND} ) 
-
 message ( "----> Full pathos (pathos,dill,multiprocess,ppft) is found" )
-
 endif()
 
 ## endif ( ${PYTHON_VERSION} VERSION_LESS "3.6" )
 
-find_python_module ( pp  QUIET )
-
 find_python_module ( terminaltables QUIET )
 if ( NOT ${PY_terminaltables_FOUND} )
-message ( "----> (warning) (optional) terminaltables is NOT found!" )
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install terminaltables --user)
 endif()
 
 find_python_module ( terminaltables QUIET )
 if ( NOT ${PY_terminaltables_FOUND} )
-message ( "----> (warning) (optional) terminaltables is NOT found!" ) 
+message ( "----> (warning) (optional) terminaltables is NOT found!" )
 endif()
-
 
 find_python_module ( more_itertools QUIET )
 if ( NOT ${PY_more_itertools_FOUND} )
-message ( "----> (warning) (optional) more_itertools is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install more_itertools --user)
 endif()
 
@@ -119,7 +122,6 @@ endif()
 
 find_python_module ( psutil QUIET )
 if ( NOT ${PY_more_psutil_FOUND} )
-message ( "----> (warning) (optional) psutils        is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install psutil --user)
 endif()
 
@@ -128,11 +130,9 @@ if ( NOT ${PY_more_psutil_FOUND} )
 message ( "----> (warning) (optional) psutils        is NOT found!" ) 
 endif()
 
-
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
-message ( "----> (warning) (optional)     berkeleydb is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install berkeleydb --user)
 endif()
 find_python_module ( berkeleydb QUIET )
@@ -141,12 +141,10 @@ message ( "----> (warning) (optional)     berkeleydb is NOT found!" )
 endif()
 endif()
 
-
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
 if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
 find_python_module ( bsddb3 QUIET )
 if ( NOT ${PY_bsddb3_FOUND} )
-message ( "----> (warning) (optional)         bsddb3 is NOT found!" ) 
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install bsddb3 --user)
 endif()
 find_python_module ( bsddb3 QUIET )
@@ -155,7 +153,6 @@ message ( "----> (warning) (optional)         bsddb3 is NOT found!" )
 endif()
 endif()
 endif()
-
 
 execute_process(
   COMMAND "${PYTHON_EXECUTABLE}" -c "if True:

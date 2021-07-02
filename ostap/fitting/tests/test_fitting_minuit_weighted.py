@@ -21,7 +21,7 @@ from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
 from   ostap.utils.timing   import timing
-from   ostap.core.meta_info import root_version_int 
+from   ostap.core.meta_info import root_info
 # =============================================================================
 # logging 
 # =============================================================================
@@ -90,7 +90,7 @@ def test_minuit_weighted () :
 
     # ==============================================================================
     ## ROOT/RooFit "feature" @see https://sft.its.cern.ch/jira/browse/ROOT-10668
-    if 61900 <= root_version_int < 62006 :
+    if (6,19) <= root_info  < (6,20,6)  :
         expf.tau.SetTitle ( expf.tau.GetName() ) 
         
     rw , fw = expf.fitTo ( dsw , silent = True , draw = False )
@@ -98,17 +98,18 @@ def test_minuit_weighted () :
     
     logger.info ('Weighted fit result (incorrect)\n%s' % rw.table ( title = 'incorrect')  )
     
-    
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = False )
     r2 , f2 = expf.fitTo ( dsw , silent = True , sumw2 = True , draw = True  , nbins = 50 )
-
+    
+    r2.Print('vvv')
+    
     logger.info ('Weighted fit result (SumW2=True)\n%s' % r2.table ( 'SumW2=True')  )
     
-    if 61900 <= root_version_int : 
+    if (6,19) <= root_info :
         ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
         ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
         logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )
-    
+        
     m = expf.minuit ( dataset = dsw , scale = False , silent = True )
     m.migrad ( 5 )
     rm = m.save() 
