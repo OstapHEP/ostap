@@ -1,0 +1,9 @@
+build:
+  stage: build
+  image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+  variables:
+    CMTCONFIG: x86_64-centos7-gcc8-opt
+    LCG: LCG_97
+  script:
+    #!/usr/bin/env bash
+    ./scripts/bootstrap ${LCG}  ${CMTCONFIG} 
