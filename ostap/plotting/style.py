@@ -35,7 +35,8 @@ else                       : logger = getLogger( __name__ )
 from ostap.plotting.makestyles import ( ostap_font       ,
                                         ostap_label      ,
                                         ostap_line_width ,
-                                        ostap_latex      )
+                                        ostap_latex      ,
+                                        set_style        )
 # =============================================================================
 ## the dictionary of known  styles 
 styles = {}
@@ -157,7 +158,7 @@ class UseStyle(object):
     ...     h1 = ...
     ...     h1.Draw() 
     """
-    def __init__ ( self, style = None ) :
+    def __init__ ( self, style = None , **config ) :
         
         if   isinstance ( style , int ):
             
@@ -185,7 +186,7 @@ class UseStyle(object):
                     style = s
                     break
                 
-        if   style is None : pass  
+        if   style is None : style = ROOT.gStyle 
         elif not isinstance  ( style , ROOT.TStyle ) :
             logger.warning ( 'No valid style "%s" is found, use default style' % style )
             style = ostapStyle
@@ -193,19 +194,30 @@ class UseStyle(object):
         self.__new_style = style
         self.__old_style = None 
 
+        self.__config    = config 
+        self.__changed   = {}
+        
     ## context  manager: enter 
     def __enter__ ( self )      :
+        
         groot  = ROOT.ROOT.GetROOT()        
         self.__force_style = groot.GetForceStyle()
         if self.__new_style : 
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
+
+            if self.__config :
+                self.__changed = set_style ( self.__new_style , self.__config ) 
+            
             groot.ForceStyle ( True )
             if ROOT.gPad : ROOT.gPad.UseCurrentStyle()
             
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
 
+        if self.__changed :
+            self.__changed = set_style ( self.__new_style , self.__changed ) 
+            
         if self.__old_style: 
             self.__old_style.cd()
             groot = ROOT.ROOT.GetROOT()        
@@ -224,7 +236,16 @@ class UseStyle(object):
         "``old_style'' : old style"
         return self.__old_style
 
+    @property
+    def config   ( self ) :
+        """``config'' : addtional configuration parameters """
+        return self.__config
 
+    @property
+    def changed   ( self ) :
+        """``changed'' : changed configuration parameters """
+        return self.__changed
+    
 # =============================================================================
 ## Use some (temporary) style   as context manager 
 #  @code
@@ -232,13 +253,13 @@ class UseStyle(object):
 #  ...     h1 = ...
 #  ...     h1.Draw() 
 #  @endcode
-def useStyle ( style = Style ) :
+def useStyle ( style = None , **config  ) :
     """ Use some (temporary) style   as context manager 
     >>> with useStyle ( Style2 ) :
     ...     h1 = ...
     ...     h1.Draw() 
     """
-    return UseStyle (  style )
+    return UseStyle ( style , **config )
 
     
 # =============================================================================
@@ -248,5 +269,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

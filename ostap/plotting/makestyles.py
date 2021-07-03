@@ -7,8 +7,11 @@
 """Helper utilities to deal with ROOT styles 
 """
 # =============================================================================
-import ROOT
-import ostap.plotting.color 
+import ROOT, ctypes 
+import ostap.plotting.color
+from   ostap.utils.cidict import cidict
+from   ostap.core.core    import cidict_fun
+# =============================================================================
 __all__ = (
     'StyleStore'       , ## the storage/dictionary of created/known styles
     'dump_style'       , ## dump a style into dicitonary
@@ -184,7 +187,7 @@ def style_methods () :
     return _getters , ( _setters_float , _setters_int , _setters_str ) , _special
 
 # =============================================================================
-##  th especial methods 
+##  the special methods 
 style_getters , style_setters, style_special = style_methods () 
 # =============================================================================
 ## dump the style to the dictionary
@@ -224,12 +227,11 @@ def dump_style ( style ) :
             config [ '%s_%s'  %  ( attr , axis ) ] = fun ( axis )
 
     ## very special attribute
-    import array
-    x = array.array('f',[0] )
-    y = array.array('f',[0] )
+    x = ctypes.c_float()
+    y = ctypes.c_float()
     style.GetPaperSize ( x , y )
-    config ['PaperSize_X' ] = x[0]
-    config ['PaperSize_Y' ] = y[0]
+    config ['PaperSize_X' ] = x.value 
+    config ['PaperSize_Y' ] = y.value 
 
     ## very special attribute
     for i in range(31) :
@@ -255,15 +257,34 @@ def set_style ( style , config ) :
     >>> set_style ( style , config )
     >>> style.set ( config ) ## ditto 
     """
+
+    conf = cidict ( transform = cidict_fun )
+    conf.update ( config ) 
+          
+    changed = {}
     
     for attr in style_setters [0] :
         
         if not attr in config : continue
 
-        try : 
-            value  = float ( config [ attr ] )
-            setter = getattr ( style , 'Set' + attr )
+        try :
+            
+            value     = float   ( conf.pop ( attr ) )
+            setter    = getattr ( style , 'Set' + attr )
+
+            old_value = None 
+            try : 
+                if attr in style_getters :
+                    getter    = getattr ( style , 'Get' + attr )
+                    old_value = getter () 
+            except :
+                pass
+            
             setter ( value )
+            
+            if not old_value is None :
+                changed [ attr ] = old_value 
+                    
             logger.debug  ("Set (float) attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
         except :
             logger.warning("Can't set (float) attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
@@ -274,9 +295,22 @@ def set_style ( style , config ) :
         if not attr in config : continue
 
         try  :
-            value  = int ( config [ attr ] )
+            value  = int ( conf.pop ( attr )  )
             setter = getattr ( style , 'Set' + attr )
+            
+            old_value = None 
+            try : 
+                if attr in style_getters :
+                    getter    = getattr ( style , 'Get' + attr )
+                    old_value = getter () 
+            except :
+                pass
+
             setter ( value )
+
+            if not old_value is None :
+                changed [ attr ] = old_value 
+            
             logger.debug  ("Set (int)   attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
         except:
             logger.warning("Can't set (int)   attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
@@ -286,107 +320,184 @@ def set_style ( style , config ) :
         
         if not attr in config : continue
 
-        try : 
-            value  = config [ attr ] 
+        try :
+            
+            value  = conf.pop  ( attr ) 
             setter = getattr ( style , 'Set' + attr )
+
+            old_value = None 
+            try : 
+                if attr in style_getters :
+                    getter    = getattr ( style , 'Get' + attr )
+                    old_value = getter () 
+            except :
+                pass
+
             setter ( value )
+
+            if not old_value is None :
+                changed [ attr ] = old_value 
+                        
             logger.debug  ("Set (str)   attribute %s/%s/%s " %  ( attr , config[attr] , value ) ) 
         except :
             logger.warning("Can't set (str)   attribute %s/%s, skip " %  ( attr , config[attr] ) ) 
             pass 
+
+    ## half-special attributes 
+    for attr in ( 'AxisColor'   ,
+                  'TickLength'  ,
+                  'Ndivisions'  ,                    
+                  'LabelColor'  , 'LabelFont'   , 'LabelOffset' , 'LabelSize' ,
+                  'TitleColor'  , 'TitleFont'   , 'TitleOffset' , 'TitleSize' ) :
+
+        if attr in conf :
+            
+            x_attr = '%s_X' % attr
+            y_attr = '%s_Y' % attr
+            z_attr = '%s_Z' % attr
+
+            if ( not x_attr in conf ) and \
+               ( not y_attr in cong ) and \
+               ( not z_attr in conf ) :
+                
+                value = conf.pop ( attr )
+                conf [ x_attr ] = value
+                conf [ y_attr ] = value
+                conf [ z_attr ] = value
+                
 
     ## special attributes  
     for axis in ( 'X' , 'Y' , 'Z' ) :
 
         key = 'AxisColor_%s'     % axis
         try :
-            if key in config : style.SetAxisColor     ( int   ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetAxisColor( axis )
+                style.SetAxisColor     ( int   ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
 
         key = 'TickLength_%s'    % axis
         try : 
-            if key in config : style.SetTickLength    ( float ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetTickLength ( axis )                
+                style.SetTickLength    ( float ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
-            
 
         key = 'Ndivisions_%s'    % axis
         try : 
-            if key in config : style.SetNdivisions    ( int   ( config [ key ] ) , axis )
+            if key in conf  :
+                changed [ key ] = style.GetNdivisions ( axis )                                
+                style.SetNdivisions    ( int   ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelColor_%s'    % axis 
         try : 
-            if key in config : style.SetLabelColor    ( int   ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetLabelColor ( axis )                                                
+                style.SetLabelColor    ( int   ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
+
         
         key = 'LabelFont_%s'     % axis 
         try : 
-            if key in config : style.SetLabelFont     ( int   ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetLabelFont ( axis )                                                
+                style.SetLabelFont     ( int   ( conf.pop ( key )  ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelOffset_%s'   % axis 
         try : 
-            if key in config : style.SetLabelOffset   ( float ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetLabelOffset ( axis )                                                
+                style.SetLabelOffset   ( float ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'LabelSize_%s'     % axis 
         try : 
-            if key in config : style.SetLabelSize     ( float ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetLabelSize ( axis )                                                
+                style.SetLabelSize     ( float ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleColor_%s'    % axis 
         try : 
-            if key in config : style.SetTitleColor    ( int   ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetTitleColor ( axis )                                                
+                style.SetTitleColor    ( int   ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleFont_%s'     % axis 
         try : 
-            if key in config : style.SetTitleFont     ( int   ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetTitleFont ( axis )                                                
+                style.SetTitleFont     ( int   ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleOffset_%s'   % axis 
         try : 
-            if key in config : style.SetTitleOffset   ( float ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetTitleOffset ( axis )                                                
+                style.SetTitleOffset   ( float ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
         
         key = 'TitleSize_%s'     % axis 
         try : 
-            if key in config : style.SetTitleSize     ( float ( config [ key ] ) , axis )
+            if key in conf :
+                changed [ key ] = style.GetTitleSize ( axis )                                                
+                style.SetTitleSize     ( float ( conf.pop ( key ) ) , axis )
         except :
             logger.warning ( "Can't set attribute %s" % key ) 
-        
+
     ## very special attribute 
-    if 'PaperSize_X' in config and 'PaperSize_Y' in config :
+    if 'PaperSize_X' in conf and 'PaperSize_Y' in conf :
         key = 'PaperSize/1'
         try :
-            style.SetPaperSize ( float ( config ['PaperSize_X']  ) ,
-                                 float ( config ['PaperSize_Y']  ) )
+            x = ctypes.c_float()
+            y = ctypes.c_float()
+            style.GetPaperSize ( x , y )
+            changed [ 'PaperSize_X' ] = x.value 
+            changed [ 'PaperSize_Y' ] = y.value 
+            style.SetPaperSize ( float ( conf.pop ( 'PaperSize_X' ) ) ,
+                                 float ( conf.pop ( 'PaperSize_Y' ) ) )
         except :
-            logger.warning ( "Can't set attribute %s" % key )         
-    elif 'PaperSize' in config :        
+            logger.warning ( "Can't set attribute %s" % key )
+            
+    elif 'PaperSize' in conf :        
         key = 'PaperSize/2'
-        try :
-            style.SetPaperSize ( int   ( config ['PaperSize'] ) )            
+        try :            
+            x = ctypes.c_float()
+            y = ctypes.c_float()
+            style.GetPaperSize ( x , y )
+            changed [ 'PaperSize_X' ] = x.value 
+            changed [ 'PaperSize_Y' ] = y.value 
+            style.SetPaperSize ( int   ( conf.pop ( 'PaperSize' ) ) )            
         except :
             logger.warning ( "Can't set attribute %s" % key )         
 
     ## one more very special attribute
     for i in range ( 31 ) :
         k = 'LineStyleString_%s' % i
-        if k in config :
-            style.SetLineStyleString ( i , config[k].strip() ) 
-            
-    return style
+        if k in conf :
+            changed [ key ] = style.GetLineStyleString ( i )                         
+            style.SetLineStyleString ( i , conf.pop ( k ) .strip() ) 
+
+    if 'palette' in conf :
+        style.SetPalette ( conf.pop ( 'palette' ) )
+
+    if conf :
+        logger.warning ( "set_style: unprocessed parameters: %s" % conf.keys() )
+        
+    return changed 
 
 # ============================================================================
 ROOT.TStyle.dump = dump_style 
@@ -492,9 +603,9 @@ def make_ostap_style ( name                           ,
         
         a = str (  config.get ( 'PaperSize' ) ).upper()         
         if   'A4'     in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kA4      
-        elif 'US'     in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kUSletter
-        elif 'LETTER' in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kUSletter 
-        else :  conf ['PaperSize'   ] = get_int ( config , 'PaperSize' , ROOT.TStyle.kA4 )
+        elif ''       in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kUSLetter
+        elif 'LETTER' in a :  conf [ 'PaperSize' ] = ROOT.TStyle.kUSLetter 
+        else               :  conf [ 'PaperSize' ] = get_int ( config , 'PaperSize' , ROOT.TStyle.kA4 )
             
     conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'    ,                   margin_top    ) 
     conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'  , 0.14 if colz else margin_right  ) 
@@ -521,7 +632,9 @@ def make_ostap_style ( name                           ,
     conf [ 'TitleSize_Z'       ] = get_float ( config , 'TitleSize_Z' , 0.05 * scale  ) 
     
     conf [ 'LineWidth'         ] = get_int   ( config , 'LineWidth'     , line_width  )
-    conf [ 'FrameWidth'        ] = get_int   ( config , 'FrameWidth'    , line_width  ) 
+    ## conf [ 'FrameWidth'        ] = get_int   ( config , 'FrameWidth'    , line_width  )
+    
+    
     conf [ 'HistLineWidth'     ] = get_int   ( config , 'HistLineWidth' , line_width  ) 
     conf [ 'FuncWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
     conf [ 'GridWidth'         ] = get_int   ( config , 'FuncWidth'     , line_width  ) 
@@ -542,7 +655,7 @@ def make_ostap_style ( name                           ,
 
     
     ## size of small lines at the end of error bars
-    conf [ 'EndErrorsSize'     ] = get_float ( config , 'EndErrorsSize'  , 3 ) 
+    ## conf [ 'EndErrorsSize'     ] = get_float ( config , 'EndErrorsSize'  , 3 ) 
 
     ## statistics box
     conf [ 'StatBorderSize'    ] = get_int   ( config , 'StatBorderSize' , 0            )
@@ -562,7 +675,7 @@ def make_ostap_style ( name                           ,
     conf [ 'Ndivisions_Z'      ] = get_int   ( config , 'Ndivisions_Z'   , 510 )
     
     ##  dark-body radiator pallete
-    conf [ 'Palette'           ] = get_int   ( config , 'Paletter' , ROOT.kDarkBodyRadiator )
+    conf [ 'Palette'           ] = get_int   ( config , 'Palette'        , ROOT.kDarkBodyRadiator )
     conf [ 'NumberContours'    ] = get_int   ( config , 'NumberContours' , 255 )
 
 
@@ -611,5 +724,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

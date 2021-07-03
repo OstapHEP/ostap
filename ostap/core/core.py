@@ -342,6 +342,45 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         elif 'Max'         in kw and hasattr ( obj , 'SetMaximum' ) :
             obj.SetMaximum     ( kw.pop ( 'Max'     ) )
 
+
+        if 'LabelSize' in kw or 'LabelFont' in kw or 'LabelScale' in kw  :
+
+            axis = [] 
+            if hasattr ( obj , 'GetXaxis'     ) :
+                xa = obj.GetXaxis()
+                if xa : axis.append ( xa )
+            if hasattr ( obj , 'GetYaxis'     ) :
+                ya = obj.GetYaxis()
+                if ya : axis.append ( ya ) 
+            if hasattr ( obj , 'GetZaxis'     ) :
+                za = obj.GetZaxis()
+                if za : axis.append ( za ) 
+
+            if axis and 'LabelSize' in kw :
+                ls = kw.pop ( 'LabelSize' ) 
+                for a in axis : a.SetLabelSize ( ls ) 
+
+            if axis and 'LabelFont' in kw :
+                lf = kw.pop ( 'LabelFont' ) 
+                for a in axis : a.SetLabelFont ( lf )                
+
+            if axis and 'LabelScale' in kw :
+                ls = kw.pop ( 'LabelScale' ) 
+                for a in axis : a.SetLabelSize  ( ls * a.GetLabelSize () ) 
+
+        if 'XaxisLabelOffset' in kw and hasattr ( obj , 'GetXaxis' ) :
+            xa = obj.GetXaxis() 
+            if xa : xa.SetLabelOffset ( kw.pop  ( 'XaxisLabelOffset' ) ) 
+
+        if 'YaxisLabelOffset' in kw and hasattr ( obj , 'GetYaxis' ) :
+            ya = obj.GetYaxis() 
+            if ya : ya.SetLabelOffset ( kw.pop  ( 'YaxisLabelOffset' ) ) 
+                                        
+        if 'ZaxisLabelOffset' in kw and hasattr ( obj , 'GetZaxis' ) :
+            za = obj.GetZaxis() 
+            if za : za.SetLabelOffset ( kw.pop  ( 'ZaxisLabelOffset' ) ) 
+                                        
+                
         if kw : logger.warning('draw: unknown attributes: %s' % kw.keys() )
             
         from ostap.logger.utils import  rootWarning,   rooSilent 
