@@ -313,7 +313,10 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
 
         if ROOT.gPad :
             plot = AutoPlots.plot()
-            if plot : ROOT.gPad >> plot
+            if plot :
+                cnv = ROOT.gPad.GetCanvas ()
+                if cnv : 
+                    cnv >> plot
             
         return result
     
@@ -360,7 +363,7 @@ def canvas_partition ( canvas                        ,
                        left_margin   = margin_left   , 
                        right_margin  = margin_right  , 
                        bottom_margin = margin_bottom , 
-                       top_margin    = margin_right  ,
+                       top_margin    = margin_top    ,
                        hSpacing      = 0.0           ,
                        vSpacing      = 0.0           ) :
     """Perform partition of Canvas into pads with no inter-margins
@@ -757,6 +760,59 @@ def set_pad ( pad , **config ) :
     conf.update ( config )
 
     changed = {}
+
+    if 'frame_border_mode' in conf :
+        changed[ 'frame_border_mode' ] = pad.GetFrameBorderMode()
+        pad.SetFrameBorderMode ( conf.pop ('frame_border_mode') )
+
+    if 'frame_border_size' in conf :
+        changed[ 'frame_border_size' ] = pad.GetFrameBorderSize ()
+        pad.SetFrameBorderSize ( conf.pop ('frame_border_size') )
+        
+    if 'frame_fill_color' in conf :
+        changed[ 'frame_fill_color' ] = pad.GetFrameFillColor ()
+        pad.SetFrameFillColor ( conf.pop ('frame_fill_color') )
+
+    if 'frame_fill_style' in conf :
+        changed[ 'frame_fill_style' ] = pad.GetFrameFillStyle ()
+        pad.SetFrameFillStyle ( conf.pop ('frame_fill_style') )
+
+    if 'frame_line_color' in conf :
+        changed[ 'frame_line_color' ] = pad.GetFrameLineColor ()
+        pad.SetFrameLineColor ( conf.pop ('frame_line_color') )
+
+    if 'frame_line_style' in conf :
+        changed[ 'frame_line_style' ] = pad.GetFrameLineStyle ()
+        pad.SetFrameLineStyle ( conf.pop ('frame_line_style') )
+
+    if 'frame_line_width' in conf :
+        changed[ 'frame_line_width' ] = pad.GetFrameLineWidth ()
+        pad.SetFrameLineWidth ( conf.pop ('frame_line_width') )
+
+    if 'a_file' in conf :
+        changed[ 'a_file' ] = pad.GetAfile ()
+        pad.SetAfile ( conf.pop ('a_file') )
+
+    if 'a_stat' in conf :
+        changed[ 'a_stat' ] = pad.GetAstat ()
+        pad.SetAstat ( conf.pop ('a_stat') )
+
+    if 'x_file' in conf :
+        changed[ 'x_file' ] = pad.GetXfile ()
+        pad.SetXfile ( conf.pop ('x_file') )
+
+    if 'x_stat' in conf :
+        changed[ 'x_stat' ] = pad.GetXstat ()
+        pad.SetXstat ( conf.pop ('x_stat') )
+
+    if 'y_file' in conf :
+        changed[ 'y_file' ] = pad.GetYfile ()
+        pad.SetYfile ( conf.pop ('y_file') )
+
+    if 'y_stat' in conf :
+        changed[ 'y_stat' ] = pad.GetYstat ()
+        pad.SetYstat ( conf.pop ('y_stat') )
+
     
     if 'top_margin' in conf or 'margin_top' in conf :                
         changed ['margin_top']  = pad.GetTopMargin()

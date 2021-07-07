@@ -460,7 +460,7 @@ class KeepCanvas(object) :
     """
     def __enter__ ( self ) :
         import ROOT 
-        self.canvas = ROOT.gPad
+        self.canvas = ROOT.gPad.GetCanvas()
     def __exit__  ( self , *_ ) :
         if self.canvas:
             self.canvas.cd()
