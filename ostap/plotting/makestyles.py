@@ -737,16 +737,15 @@ def make_ostap_style ( name                           ,
 
     conf [ 'PadBorderMode'     ] = get_int   ( config , 'PadBorderMode'      , 0     ) 
     conf [ 'PadBorderSize'     ] = get_int   ( config , 'PadBorderSize'      , 2     ) 
-    conf [ 'PadBottomMargin'   ] = get_int   ( config , 'PadBottomMargin'    , margin_bottom )    
+    conf [ 'PadBottomMargin'   ] = get_float ( config , 'PadBottomMargin'    , margin_bottom )    
     conf [ 'PadColor'          ] = get_int   ( config , 'PadColor'           , 0     )
     conf [ 'PadGridX'          ] = get_bool  ( config , 'PadGridX'           , False )
     conf [ 'PadGridY'          ] = get_bool  ( config , 'PadGridY'           , False )
-    conf [ 'PadLeftMargin'     ] = get_int   ( config , 'PadLeftMargin'      , margin_left   )    
-    conf [ 'PadRightMargin'    ] = get_int   ( config , 'PadRightMargin'     , margin_left if colz else margin_right  )    
+    conf [ 'PadLeftMargin'     ] = get_float ( config , 'PadLeftMargin'      , margin_left   )    
+    conf [ 'PadRightMargin'    ] = get_float ( config , 'PadRightMargin'     , margin_left if colz else margin_right  )    
     conf [ 'PadTickX'          ] = get_int   ( config , 'PadTickX'           , 1     )
     conf [ 'PadTickY'          ] = get_int   ( config , 'PadTickY'           , 1     )
-    conf [ 'PadTopMargin'      ] = get_int   ( config , 'PadTopMargin'       , margin_top    )    
-
+    conf [ 'PadTopMargin'      ] = get_float ( config , 'PadTopMargin'       , margin_top    )    
 
     conf [ 'PaintTextFormat'   ] = get_str   ( config , 'PaintTextFormat'    , 'g' )    
 
