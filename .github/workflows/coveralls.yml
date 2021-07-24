@@ -32,7 +32,7 @@ jobs:
         hash -r
         conda config --set always_yes yes --set changeps1 no
         conda config --add channels conda-forge
-        conda create -q -n testenv python coverage coveralls cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3 berkeleydb psutil more-itertools
+        conda create -q -n testenv python coverage coveralls cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb bsddb3 psutil more-itertools
     - name: Build
       run: |
         export PATH="$HOME/miniconda/bin:$PATH"
