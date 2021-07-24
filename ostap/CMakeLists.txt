@@ -136,6 +136,9 @@ if ( NOT ${PY_more_psutil_FOUND} )
 message ( "----> (warning) (optional) psutils        is NOT found!" ) 
 endif()
 
+
+if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
+
 if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.6" )
 find_python_module ( berkeleydb QUIET )
 if ( NOT ${PY_berkeleydb_FOUND} )
@@ -147,7 +150,6 @@ message ( "----> (warning) (optional)     berkeleydb is NOT found!" )
 endif()
 endif()
 
-if  ( ${PYTHON_VERSION} VERSION_GREATER_EQUAL "3.3"  )
 if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
 find_python_module ( bsddb3 QUIET )
 if ( NOT ${PY_bsddb3_FOUND} )
