@@ -16,8 +16,9 @@ __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
 import ROOT
-from   ostap.core.core  import cpp, VE, hID, dsID
-from   ostap.core.ostap_types import num_types, string_types 
+from   ostap.core.core        import cpp, VE, hID, dsID
+from   ostap.core.ostap_types import num_types, string_types
+from   ostap.utils.utils      import balanced 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -34,6 +35,28 @@ ROOT.TCut.__repr__     = lambda s :       s.GetTitle().strip()
 ROOT.TCut.__nonzero__  = lambda s : bool( s.GetTitle().strip() )
 ROOT.TCut.__bool__     = lambda s : bool( s.GetTitle().strip() )
 
+# =============================================================================
+## modified constructor:
+#  - strip
+#  - check parentheses 
+def _tc_new_init_ ( self , *args ) :
+    """Modified constructor:
+    - strip
+    - check parentheses 
+    """
+    self._old_init_ ( *args ) 
+    ## strip it 
+    cut = self.GetTitle().strip()
+    self.SetTitle ( cut  )
+    ##
+    assert balanced ( cut , left = '[(' , right = '])' ) , \
+           'TCut: unbalanced parentheses/square brackets:"%s"' % cut
+    
+if not hasattr ( ROOT.TCut , '_old_init_' ) :
+    ROOT.TCut._old_init_ =  ROOT.TCut.__init__
+    ROOT.TCut._new_init_ =  _tc_new_init_ 
+    ROOT.TCut.__init__   =  _tc_new_init_ 
+    
 # =============================================================================
 ## Remove leading/traling and excessive blanks from TCut
 #  @code 

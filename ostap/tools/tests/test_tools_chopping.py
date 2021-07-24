@@ -216,7 +216,7 @@ methods = reader.methods[:]
 
 ## # =============================================================================
 ## ## A: Use TMVA/Chopping  reader
-## #  - It can be slow, but it allows on-flight varibales transformation
+## #  - It can be slow, but it allows on-flight variables transformation
 ## #  - much more efficient alternativeis <code>addChoppingResponse</code> function
 ## # =============================================================================
 
@@ -278,8 +278,9 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     # =========================================================================
     from ostap.tools.chopping import addChoppingResponse
 
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
+    logger.info ('dataset SIG (no TMVA decisions yet):\n%s' % ds1.table ( prefix = '# ') ) 
+    logger.info ('dataset BKG (no TMVA decisions yet):\n%s' % ds2.table ( prefix = '# ') ) 
+
     addChoppingResponse ( ds1  ,
                           chopper       = "137*evt+813*run"  ,
                           N             =  N                 , 
@@ -287,6 +288,7 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
                           weights_files = tar_file ,
                           prefix        = 'tmva_'     ,
                           suffix        = '_response' )
+    
     addChoppingResponse ( ds2    ,
                           chopper       = "137*evt+813*run"  ,
                           N             =  N                 , 
@@ -299,18 +301,29 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ## The END of addChoppingResponse  fragment
     # =========================================================================
     
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
+    logger.info ('dataset SIG (with TMVA decisions):\n%s' % ds1.table ( prefix = '# ') ) 
+    logger.info ('dataset BKG (with TMVA decisions):\n%s' % ds2.table ( prefix = '# ') ) 
+
+
+decisions = [ 'tmva_%s_response' % m for m in methods ]
+s_stats   = ds1.statVars ( decisions )
+b_stats   = ds2.statVars ( decisions )
+
+table = [ ( 'Method ' , 'Signal' , 'Background ' ) ] 
+for d in decisions :
     
-
-for m in methods :
-
-    ms = ds1.statVar('tmva_%s_response' % m )
-    mb = ds2.statVar('tmva_%s_response' % m )
+    ms = s_stats [ d ]
+    mb = b_stats [ d ]
     
-    logger.info('TMVA:%-11s for signal&background: %+.2f+-%.2f(S) vs %+.2f+-%.2f(B)' % ( m, ms.mean().value() , ms.rms() , mb.mean().value() , mb.rms() ) )
-
+    row = d , \
+          '%+7.3f +/- %-7.3f' % ( float ( ms.mean() ) , ms.rms() ) ,\
+          '%+7.3f +/- %-7.3f' % ( float ( mb.mean() ) , mb.rms() )
+    table.append ( row )
+    
+import ostap.logger.table as T
+table  = T.table (  table , title = 'TMVA performance', prefix = '# ' , alignment = 'lcc' )
+logger.info ( 'TMVA performance for Signal and Background\n%s' % table )
 
 # =============================================================================
-# The END
+##                                                                      The END
 # =============================================================================    

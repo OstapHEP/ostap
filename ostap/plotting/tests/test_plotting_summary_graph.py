@@ -15,7 +15,8 @@ __all__    = () ## nothing to import
 # =============================================================================
 import ROOT, time
 from   ostap.core.pyrouts           import VE 
-from   ostap.plotting.graph_summary import Average, Record, Limit, draw_summary
+from   ostap.plotting.graph_summary import  ( Average , Record   , draw_summary ,
+                                              Point   , Interval , Limit  ) 
 # =============================================================================
 # logging
 # =============================================================================
@@ -85,11 +86,66 @@ def test_summary2 ( ) :
         
     time.sleep (3)
 
+
+def test_summary3 ( ) :
+
+    conf = { 'label_position' : 5.6 , 'markersize' : 1.2 , 'text_size' : 0.07 , } ##  'line_width' : 2 }
+
+    
+    data = [
+        Point    (    0          , **conf ) ,
+        Point    (  +19          , **conf ) ,
+        Interval (   -1  , +19   , **conf ) ,                
+        Limit    (    0  , -40   , arrow_size = 0.01 , arrow_style = '|-|>', **conf ) ,                
+        Point    (  +35          , **conf ) ,
+        Point    (  +52          , **conf ) ,
+        Interval (   -3  ,  -1   , **conf ) ,                
+        Point    (  -15          , **conf ) ,
+        Point    (  +91          , **conf ) ,
+        Point    (  +60          , **conf ) ,
+        Point    (  -79          , **conf ) ,
+        Point    (  +88          , **conf ) ,
+        Point    ( -215          , **conf ) ,
+        Interval (  -70  , +124  , **conf ) ,
+        Point    ( +102          , **conf ) ,
+        Record   ( VE(7,12**2)   , **conf ) ,
+        Limit    (    0  , -40   , arrow_size = 0.01 , arrow_style = '|-|>', **conf ) ,
+        Point    ( +100          , **conf ) ,        
+        Record   ( VE(25,90**2)  , **conf ) ,
+        Point    ( -150          , **conf ) ,        
+        Point    (    0          , **conf ) ,
+        Point    (  -23          , **conf ) ,
+        Point    (  +98          , **conf ) ,        
+        Point    ( -149          , **conf ) ,
+        Record   ( -3 , (+4,-15) , **conf ) ,
+        Point    (  +53          , **conf ) ,
+        Point    ( +166          , **conf ) ,
+        Point    ( +260          , **conf ) ,
+        Point    ( -182          , **conf ) ,
+        Interval ( -250  , +2    , **conf ) ,
+        Point    ( +13           , **conf ) ,
+        Point    ( +164          , **conf ) ,
+        ]
+    
+    
+    if ROOT.gStyle :
+        ROOT.gStyle.SetEndErrorSize (5    )
+        ROOT.gStyle.SetTickLength   (0.008)
+        
+    result  = draw_summary ( data , vmin = -300 , vmax = 300 )
+        
+    if ROOT.gPad :
+        ROOT.gPad.RedrawAxis()
+        
+    time.sleep (3)
+
+
 # =============================================================================
 if '__main__' == __name__ :
 
     test_summary1 ()
     test_summary2 ()
+    test_summary3 ()
     
 # =============================================================================
 ##                                                                      The END  

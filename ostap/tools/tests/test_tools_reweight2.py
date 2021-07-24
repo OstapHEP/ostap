@@ -44,16 +44,23 @@ if os.path.exists ( dbname   ) : os.remove ( dbname   )
 
 import ostap.parallel.kisa
 
+N1 = 1000000
+N2 = 100000
 
-if not os.path.exists( testdata ) :
+N1 = 100000
+N2 = 10000
+
+xmax     = 20.0
+ymax     = 15.0 
+
+def prepare_data ( ) : 
     #
+        
     seed =  1234567890 
     random.seed ( seed ) 
     logger.info ( 'Test *RANDOM* data will be generated/seed=%s' % seed  )   
     ## prepare "data" histograms:
     # 1) 2D histograms
-    xmax     = 20.0
-    ymax     = 15.0 
     ix , iy  = 30 , 30
     hdata    = h2_axes ( [ xmax/ix*i for i in range ( ix + 1 ) ] ,
                          [ ymax/iy*i for i in range ( iy + 1 ) ] )
@@ -81,8 +88,6 @@ if not os.path.exists( testdata ) :
         datatree.Branch ( 'x' , xvar , 'x/F' )
         datatree.Branch ( 'y' , yvar , 'y/F' )
     
-        N1 = 1000000
-
         for i in  range ( N1 ) :
 
             x , y = -1, -1
@@ -179,7 +184,6 @@ if not os.path.exists( testdata ) :
         mctree.Branch ( 'x' , xvar , 'x/F' )
         mctree.Branch ( 'y' , yvar , 'y/F' )
 
-        N2 = 100000
         for i in  range ( 2 * N2 ) :
 
             xv = random.uniform ( 0 , xmax ) 
@@ -213,6 +217,11 @@ if not os.path.exists( testdata ) :
         mctree.Write()
         mc_file.ls()
 
+
+if not os.path.exists( testdata ) :
+    with timing ( "Prepare input data" , logger = logger ) :
+        prepare_data ()
+        
 # =============================================================================
 ## Read data from DB
 # =============================================================================
@@ -279,9 +288,13 @@ variables  = [
     Variable ( 'x'      , 'x-var'  , 0  , 20 ) , 
     Variable ( 'y'      , 'y-var'  , 0  , 15 ) ,
     ]
-selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
-mctree.process ( selector , silent = True )
-mcds_ = selector.data             ## dataset 
+
+with timing ( 'Prepare initial MC-dataset:' , logger = logger ) :
+    
+    selector = SelectorWithVars ( variables , '0<x && x<20 && 0<y && y<20' , silence = True )
+    mctree.process ( selector , silent = True )
+    mcds_ = selector.data             ## dataset
+
 # =============================================================================
 ## start reweighting iterations:
 for iter in range ( 1 , maxIter + 1 ) :
@@ -297,7 +310,7 @@ for iter in range ( 1 , maxIter + 1 ) :
         
         # =========================================================================
         ## 1a) create new "weighted" mcdataset
-        mcds=mcds_.Clone()
+        mcds = mcds_.Clone()
 
     with timing ( tag + ': add weight to MC-dataset' , logger = logger ) :
         ## 1b) add  "weight" variable to dataset 

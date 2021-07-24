@@ -177,7 +177,16 @@ else                       : logger = getLogger ( __name__         )
 def lineWidth ( w ) : return ROOT.RooFit.LineWidth ( w )
 def lineStyle ( s ) : return ROOT.RooFit.LineStyle ( s )
 def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
-#
+# ==============================================================================
+## compare the keys
+# ==============================================================================
+## transformation for the keys 
+def key_transform ( key ) : return key.lower().replace('_','')
+## compare two keys 
+def key_compare   ( key1 , key2 ) :
+    """Comparison of keys"""
+    return key1 == key2 or key_transform ( key1 ) == key_transform ( key2 )
+# ==============================================================================  
 ## the list of predefined "draw"-keys 
 keys = (
     'data_options'                ,
@@ -233,12 +242,11 @@ def draw_options ( **kwargs ) :
     ...      draw_opts = draw_options ( kwargs )
     """
     options = {}
-    for k,v in items_loop ( kwargs ) :
-        if k.lower() in keys : options[ k.lower() ] = v
-        if k.lower() in ( 'draw' , 'draw_option' , 'draw_options' ) :
-            if isinstance ( v , dict ) : options.update ( v ) 
+    for k , v  in items_loop ( kwargs ) :
+        for key in keys :
+            if key_compare ( k , key ) :
+                options [ k ] = v
     return options
-
 
 # =============================================================================
 ## @class Style

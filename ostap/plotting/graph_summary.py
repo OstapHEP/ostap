@@ -56,6 +56,8 @@ __date__    = "2020-04-11"
 __all__     = (
     'Limit'         , ## graphical representation of the upper/lower limit (arrow) 
     'Record'        , ## graphical representation of data poins with several unceratities
+    'Point'         , ## graphical representation of a single data point
+    'Interval'      , ## graphical representation of an interval     
     'Average'       , ## graphical representation of average  (box)
     'Summary'       , ## the  final summary graph 
     'make_summary'  , ## prepare summary graph 
@@ -426,6 +428,40 @@ class Record(Label) :
         if name : graph.SetName ( name ) 
 
         return graph
+
+# ==============================================================================
+## @class Point
+#  Graphical representation of a single data point/measurement
+#  @code
+#  p1 = Point ( 15 , marker_style = 20 , marker_size = 4 )
+#  @endcode
+class Point(Record) :
+    """Graphical representation of a single data point/measurement
+    >>> p1 = Point ( 15 , marker_style = 20 , marker_size = 4 )
+    """
+    def __init__ ( self , value , **kwargs ) :
+
+        ## initialize the base class 
+        Record.__init__ ( self, float ( value ) , **kwargs ) 
+
+# ==============================================================================
+## @class Interval
+#  Graphical representation of an interval point/measurement
+#  @code
+#  p1 = Interval ( 10 , 20 , line_color = 20 )
+#  @endcode
+class Interval(Record) :
+    """Graphical representation of an interval point/measurement
+    >>> p1 = Interval ( 10 , 20 , line_color = 20 )
+    """
+    def __init__ ( self , low , high , **kwargs ) :
+        value = 0.5 *     ( high + low )
+        error = 0.5 * abs ( high - low )
+         
+        Record.__init__ ( self, value , error , **kwargs ) 
+
+        ## no marker 
+        self.config [ 'marker_style' ] = 1
 
 # ==============================================================================
 ##  @class Average 

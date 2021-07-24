@@ -853,7 +853,7 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
             raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
         return rinit
     
-# =============================================================================
+# ============================================================================
 ## create ROOT.TFile without making it a current working directory 
 #  @code
 #  print ROOT.gROOT.CurrentDirectory()
@@ -870,7 +870,14 @@ def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
     """
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
-        fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
+        try : 
+            fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
+        except ( OSError, IOError ) :
+            if exception : raise
+            else : 
+                logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+                return None 
+            
         if not fopen or not fopen.IsOpen() :
             if  exception : 
                 raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )

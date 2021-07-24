@@ -93,14 +93,15 @@ class WorkManager (TaskManager) :
     def __init__( self                     ,
                   ncpus     = 'autodetect' ,
                   ppservers = ()           ,
-                  silent    = False        , **kwargs ) :
+                  silent    = False        ,
+                  progress  = True         , **kwargs ) :
 
         if not ( isinstance ( ncpus , int ) and 0 <= ncpus ) :
             from pathos.helpers import cpu_count
             ncpus = cpu_count ()
             
         ## initialize the base class 
-        TaskManager.__init__ ( self, ncpus =  ncpus , silent = silent )
+        TaskManager.__init__ ( self, ncpus =  ncpus , silent = silent , progress = progress )
         
         from ostap.utils.cidict import cidict
         kwa = cidict ( **kwargs ) 

@@ -78,17 +78,22 @@ __all__     = (
     'divide'             , ## divide the elements from *iterable* into *n* parts
     'grouper'            , ## collect data into fixed-length chunks or blocks"
     ##
-    'checksum_files'     , ## get SHA512 sum for sequence of files 
+    'make_iterable'      , ## create infinite or finite iterable 
+    ##
+    'checksum_files'     , ## get SHA512 sum for sequence of files
+    ##
+    'balanced'           , ## Simple utility to check balanced parenthesis/brackets, etc...
+    ##
+    'random_name'        , ## get some random name
+    'short_hash_name'    , ## get some short hash name
+    ##
+    'choices'            , ## `random.choiices` function 
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math ## attention here!!
-from   builtins            import range
-# =============================================================================
-from   ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
-else                       : logger = getLogger( __name__            )
-del getLogger
+import ROOT, time, os , sys, math, random ## attention here!!
+from   builtins             import range
+from   itertools            import repeat, chain, islice 
 # =============================================================================
 from sys                    import version_info  as python_version 
 ## timing stuff
@@ -98,6 +103,20 @@ from ostap.utils.basic      import isatty, with_ipython
 from ostap.core.ostap_types import integer_types 
 ## ... and more useful stuff 
 from ostap.utils.memory     import memory, virtualMemory, Memory 
+# =============================================================================
+try :
+    from string import ascii_letters, digits 
+except ImportError :
+    from string import letters as ascii_letters
+    from string import digits
+# =============================================================================
+from   ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
+else                       : logger = getLogger( __name__            )
+del getLogger
+# =============================================================================
+## symbols for name generation 
+all_symbols = ascii_letters + digits 
 # =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
@@ -441,7 +460,7 @@ class KeepCanvas(object) :
     """
     def __enter__ ( self ) :
         import ROOT 
-        self.canvas = ROOT.gPad
+        self.canvas = ROOT.gPad.GetCanvas()
     def __exit__  ( self , *_ ) :
         if self.canvas:
             self.canvas.cd()
@@ -894,22 +913,72 @@ def split_range ( low , high , num ) :
         yield low , high
 
 # =============================================================================
+if (3,6) <= sys.version_info :
+    
+    choices = random.choices
+    
+else :
+    
+    def choices ( population , weights = None , cum_weights = None , k = 1 ) :
+        """ Simple variant of `random.choice`
+        """
+        assert weights is None and cum_weights is None,\
+               "choices: Neither ``weigths'' nor ``cum_weights'' are supported!"
+        
+        return [ random.choice ( population ) for i in range ( k ) ] 
+    
+# ========================================================================================
+## Generate some random name of given name
+#  @code
+#  name = random_name ( 5 ) 
+#  @endcode 
+def random_name ( size ) :
+    """Generate some random name of given name 
+    >>> name = random_name ( 5 )
+    """
+    assert 1 <= size , 'random_name: invalid size!'
+
+    first = random.choice  ( ascii_letters ) 
+    if 1 == size : return first
+    
+    return first  + ''.join ( choices ( sll_symbols , k = size - 1 ) ) 
+
+# ========================================================================================
+## generate some pseudo-random 6-symbol name from provided hash sources 
+def short_hash_name ( size , name , *names ) :
+    """generate some pseudo-random 6-symbol name from provided hash sources
+    """
+
+    size = max ( min ( size , 8 ) , 4 ) 
+
+    h = size , hash ( tuple ( ord ( i ) for i in name ) )
+    h = hash ( h ) 
+                   
+    for n in names :
+
+        h = h , hash ( tuple ( ord ( i ) for i in n ) )
+        h = hash ( h ) 
+        
+    h = abs ( h ) % ( 2 ** ( 4 * size ) )
+    
+    return ( '%%0%dx' % size ) % h 
+    
+# =============================================================================
 ## Generate the random string, that can be used as password or secret word
 #  @code
 #  password = gen_password () 
 #  @endcode 
-def gen_password ( len = 12 ) :
+def gen_password ( size = 12 ) :
     """Generate the random string, that can be used as password or secret word
     >>> password = gen_password () 
     """
-    import random , string
-    symbols = string.ascii_letters + string.digits
+    import random
     ## save random state 
     state = random.getstate ()
     ## reset the random seed
     random.seed ()
     ## generate the password 
-    result = ''.join ( random.choice ( symbols ) for i in range ( len ) )
+    result = ''.join ( choices ( all_symbols , k = size ) ) 
     ## restore the random state 
     random.setstate ( state )
     ## 
@@ -1064,7 +1133,8 @@ except ImportError :
             ret.append(iter(seq[start:stop]))
             
         return ret
-        
+
+# =============================================================================
 if ( 3 , 0 ) <= python_version :
     from itertools import zip_longest
 else :
@@ -1078,8 +1148,30 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
 
+# =============================================================================
+## Create iterable from other iterable or non-iterable
+#  @code
+#  for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+#  @endcode 
+def make_iterable ( what , default = None , size = -1 ) :
+    """Create infinite iterable from other iterable or no-iterable
+    >>> for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+    """
+    from   ostap.core.ostap_types import iterable_types
 
-# ========================================================================================
+    if not isinstance ( what , iterable_types ) : what = what, 
+
+    ## make infinite iterable 
+    result = chain ( what , repeat ( default ) )
+
+    ## cut it, if needed 
+    return result if size < 0 else islice ( result , size )
+
+# =============================================================================
 ## calculate SHA512-checksum for the files
 #  @see hashlib
 #  @see hashlib.sha512
@@ -1105,6 +1197,33 @@ def checksum_files ( *files ) :
                     hash_obj.update(chunk)
                     
     return hash_obj.hexdigest()
+
+# =============================================================================
+## Simple utility to check balanced parenthesis/brackets, etc...
+#  @code
+#  expression = ' .... '
+#  ok = balanced ( expression ) 
+#  @encode 
+def  balanced ( expression , left = '([' , right = ')]' ) :
+    """Simple utility to check balanced parenthesis/brackets, etc...
+    >>> expression = ' .... '
+    >>> ok = balanced ( expression ) 
+    """
+    
+    assert left and len(left) == len ( right ) ,\
+           'balanced: invalid left/right arguments!'
+    
+    stack = []
+    for i in expression :
+        if   i in left  : stack.append ( i )
+        elif i in right :
+            pos = right.index ( i )
+            if stack  and  left[ pos ] == stack [ -1 ] :
+                stack.pop()
+            else :
+                return False
+
+    return True if not stack else False 
 
 
 

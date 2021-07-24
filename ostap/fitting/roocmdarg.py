@@ -15,7 +15,8 @@ __date__    = "2011-06-07"
 __all__     = (
     'match_arg'      , ## check the argument name mathhing 
     'check_arg'      , ## check the presense of argument in the list
-    'nontrivial_arg' , ## check the presense of nontrivial arguments 
+    'nontrivial_arg' , ## check the presense of nontrivial arguments
+    'command'        , ## merge arguments into single command 
     ) 
 # =============================================================================
 import ROOT
@@ -73,6 +74,7 @@ def _rca_print_ ( self ) :
     
     ## RooAbsPdf::plotOn arguments
     if   'SelectCompSet'        == name : return 'Components({.})'
+    elif 'SelectCompSpec'       == name : return 'Components(%s)'        %    self.getString ( 0 )
     elif 'Normalization'        == name : return 'Normalization(%s,%d)'  % (  self.getDouble ( 0 ) ,
                                                                               self.getInt    ( 0 ) )  
 
@@ -310,10 +312,9 @@ def flat_args ( *args ) :
     flat = []
     for arg in args :
 
-        if arg.name != "MultiArg" : flat.append ( arg )
-        else :
-            lst = [ i for i in arg.subArgs() if i.name ]
-            flat = flat + list ( flat_args ( *lst ) ) 
+        lst = [ i for i in arg.subArgs () ]
+        if lst : flat += list ( flat_args ( *lst )  )
+        else   : flat.append ( arg )
 
     return tuple ( flat ) 
 
@@ -383,7 +384,7 @@ def check_arg  ( pattern , *args ) :
 # =============================================================================
 ## check at least one command  different form the trivial commands  
 def nontrivial_arg ( trivia , *args ) :
-    """Check at least one command  different form the trivial commands
+    """Check at least one command  different from the trivial commands
     """
 
     if not args : return False
@@ -405,39 +406,32 @@ def nontrivial_arg ( trivia , *args ) :
 
     return False 
 
-# ==============================================================================
-## merge arguments into smaller chunks
-#  @code
-#  args = ...
-#  margs = merge_args ( 3 , *args ) 
-#  @endcode 
-def merge_args ( num , *args ) : 
-    """merge arguments into smaller chunks
-    args = ...
-    margs = merge_args ( 3 , *args ) 
-    """
-    assert isinstance ( num , integer_types ) and 1 <= num ,\
-           "merge_args: invalid chunk size ``%s''" % num
-    
-    if len ( args ) < num : return tuple ( args ) 
-
-    lst   = flat_args ( *args ) 
-    keep  = [ l for l in lst ]
-    
-    while num < len ( lst ) : 
-        
-        nlst = chunked ( lst , 4 )
-        ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ] 
-        for l in ll : keep.append ( l )  
-        
-        lst = tuple ( ll )
-
-    return lst 
-
 # =============================================================================
 def _rca_bool_ ( self ) :
     """Get boolean value"""
     return True if self.getInt ( 0 ) else False
+
+
+# =============================================================================
+## convert a list of <code>RooCmgArg</code> options to <code>RooLinkedList</code>
+#  @code
+#  options = .... 
+#  cmd     = command ( *options )
+#  @endcode 
+def command ( *options ) :
+    """Convert a list of <code>RooCmgArg</code> options to <code>RooLinkedList</code>
+    >>> options = .... 
+    >>> cmd     = command ( *options )
+    - see ROOT.RooArgCmd
+    - see ROOT.RooLinkedList     
+    """
+    
+    lst = ROOT.RooLinkedList()
+    for o in flat_args ( *options ) : lst.Add ( o )
+    lst._keep_args = options
+
+    return lst 
+                              
 
 
 ROOT.RooCmdArg .__str__  = _rca_print_

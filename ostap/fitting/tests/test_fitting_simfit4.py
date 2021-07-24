@@ -116,18 +116,22 @@ def test_simfit4() :
     
     
     # =========================================================================
+    ## 3rd order positive polynomial 
+    bkg_N = Models.make_bkg ( -3 , 'Bkg_N' , mass1  )
     ## model for fitting of normalization channel 
     model_N = Models.Fit1D ( suffix     = 'N'       ,
                              signal     =  signal_N ,
-                             background =        -2 ) ## 2nd order positive polynomial 
+                             background =  bkg_N    )
     model_N.S = NS1 
     model_N.B = NB1 
     
     
+    ## 3rd order positive polynomial 
+    bkg_S = Models.make_bkg ( -3 , 'Bkg_S' , mass2  )
     ## model for fitting of low-statistic signal channel 
     model_S = Models.Fit1D ( suffix     = 'S'       ,
                              signal     =  signal_S ,
-                             background =        -2 ) ## 2nd order positive polynomial 
+                             background =  bkg_S    )
     
     model_S.S = NS2 
     model_S.B = NB2 
@@ -139,7 +143,9 @@ def test_simfit4() :
     rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
     rN , fN = model_N.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
     
-    logger.info ( 'Fit results for normalization sample only: %s' % rN )
+    title = 'Fit to high-statistic normalisation sample'
+    logger.info ( 'Fit results for normalization sample only: %s' % rN.table ( title = title ,
+                                                                               prefix = '# ' ) )
     
     # =========================================================================
     ## make fit for the low-statistic signal channel only 
@@ -147,8 +153,10 @@ def test_simfit4() :
     rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
     rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
     rS , fS = model_S.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-    
-    logger.info ( 'Fit results for low-statistic signal only: %s' % rS )
+
+    title = 'Fit to low-statistics sample'
+    logger.info ( 'Fit results for low-statistic signal only:\n%s' % rS.table ( title  = title ,
+                                                                                prefix = '# '  )  )
     
     # =========================================================================
     ## combine data for simultaneous  fit
@@ -174,18 +182,14 @@ def test_simfit4() :
     fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
     fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
     
-    logger.info ( 'Combined fit  results are: %s ' % rC )
+    title = 'Simultaneous fit'
+    logger.info ( 'Combined fit  results are:\n%s ' % rC.table ( title  = title ,
+                                                                 prefix = '#'   )  )
     
-    logger.info ( ' Value |        Simple fit         |    Combined fit ' )
-    logger.info ( ' #N    | %25s | %-25s '  % ( rS.SS       * 1 , rC.SS      * 1 ) )
-    logger.info ( ' mean  | %25s | %-25s '  % ( rS.mean_GN  * 1 , rC.mean_GN * 1 ) )
-    logger.info ( ' Rs    | %25s | %-25s '  % ( rS.Rs       * 1 , rC.Rs      * 1 ) )
-
-
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ( "simfit-5" , logger ) : 
+    with timing ( "simfit-4" , logger ) : 
         test_simfit4() 
     
 # =============================================================================

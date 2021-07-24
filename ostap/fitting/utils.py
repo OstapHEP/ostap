@@ -39,7 +39,7 @@ __all__     = (
     'ParamsPoly'        , ##  helper class for RooFit polynomials
     'ShiftScalePoly'    , ##  helper class for RooFit polynomials
     #
-    "NameDuplicates"    , ## allow/disallow name duplicates 
+    "NameDuplicates"    , ## allow/disallow name duplicates
     )
 # =============================================================================
 import ROOT, math, random 
@@ -47,9 +47,9 @@ import ostap.fitting.variables
 import ostap.fitting.roocollections
 from   builtins                import range 
 from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
-from   ostap.core.ostap_types  import ( num_types     , list_types   ,
-                                        integer_types , string_types ,
-                                        is_good_number               )
+from   ostap.core.ostap_types  import ( num_types      , list_types     ,
+                                        integer_types  , string_types   ,
+                                        is_good_number , sequence_types )
 from   ostap.logger.utils      import roo_silent
 from   sys                     import version_info as python_version 
 from   ostap.math.random_ext   import ve_gauss, poisson
@@ -65,6 +65,26 @@ try :
     from string import ascii_letters
 except ImportError :
     from string import letters as ascii_letters
+# =============================================================================
+## make a name from prefix, name and suffix 
+def make_name ( prefix , name , suffix ) :
+    """Make a name from prefix, name and suffix
+    """
+    
+    prefix = prefix.replace ( ' ' , '' ) 
+    suffix = suffix.replace ( ' ' , '' )
+    name   = name  .replace ( ' ' , '' )
+
+    while prefix.endswith   ( '_' ) : prefix = prefix[:-1]
+    while suffix.startswith ( '_' ) : suffix = suffix[1:] 
+
+    if   prefix and name and suffix : return "%s_%s_%s" % ( prefix , name , suffix ) 
+    elif prefix and suffix          : return "%s_%s"    % ( prefix ,        suffix ) 
+    elif prefix and name            : return "%s_%s"    % ( prefix , name          ) 
+    elif suffix and name            : return "%s_%s"    % (          name , suffix )
+
+    return "%s" % ( name or prefix or suffix ) 
+
     
 # =============================================================================
 ## MINUIT covariance matrix status:
@@ -229,7 +249,7 @@ class MakeVar ( object ) :
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
         ##
-        obj.__aux_keep     = []                      ## ATTENTION!        
+        obj.__aux_keep     = []                     ## ATTENTION!        
         obj.__name        = None                    ## ATTENTION!
         obj.__local_names = set()
         return obj
@@ -297,14 +317,29 @@ class MakeVar ( object ) :
     ##     return name
 
     # =============================================================================
-    ## generate some unique name
+    ## generate some unique name for PDF/FUN and objects
     @staticmethod 
     def generate_name ( prefix = '' , suffix = '' ) :
-        name = prefix + suffix 
+        """Generate some unique name for PDF/FUN and objects
+        """
+                
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = make_name ( prefix , '' , suffix ) 
+                                                   
         MakeVar.__numnames += 1            
-        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or not name :
-            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
-            MakeVar.__numnames += 1            
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) :
+            
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+
+            name = make_name ( prefix , part , suffix )
+            
+            MakeVar.__numnames += 1
+
         return name
     
     # =============================================================================
@@ -313,18 +348,32 @@ class MakeVar ( object ) :
     #  @see RooNameReg 
     #  @see RooAbsArg 
     @staticmethod
-    def roo_name ( prefix = 'roo_' , suffix = '' ) :
+    def roo_name ( prefix = 'roo' , suffix = '' ) :
         """Generate some unique name for <code>RooFit</code>
         - see `ROOT.RooNameReg` 
         - see `ROOT.TNamed`
         - see `ROOT.RooAbsArg`
         """
+
         regname = ROOT.RooNameReg.instance()
-        name    = prefix + suffix
+
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = make_name ( prefix , '' , suffix ) 
+                                                   
         MakeVar.__numnames += 1            
-        while name in MakeVar.__pdf_names or name in MakeVar.__var_names or regname.known ( name ) or not name :
-            name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
-            MakeVar.__numnames += 1            
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) or regname.known ( name ) : 
+            
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            
+            name = make_name ( prefix , part , suffix )
+            
+            MakeVar.__numnames += 1
+
         return name
             
     # =============================================================================
@@ -340,7 +389,11 @@ class MakeVar ( object ) :
     #  @endcode
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2013-12-01
-    def make_var ( self , var , name , comment = '' , fix = None , *args ) :
+    def make_var ( self           ,
+                   var            ,
+                   name           ,
+                   comment = ''   ,
+                   fix     = None , *args ) :
         """Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -357,26 +410,39 @@ class MakeVar ( object ) :
         if   isinstance   ( var , tuple ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
+            self.debug ( 'Create variable/1:  %s' % var ) 
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
 
         ## if only name is specified :
         if   isinstance  ( var , string_types ) and 2 <= len ( args ):
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
+            self.debug ( 'Created variable/2: %s' % var ) 
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
             
         # var = value 
         if isinstance   ( var , num_types ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            if   not    args       : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
-            elif 2 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
-            elif 3 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
-                
+            if   not    args       :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable                           
+                self.debug ( 'Create variable/3: %s' % var ) 
+            elif 2 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/4: %s' % var ) 
+            elif 3 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+                self.aux_keep.append  ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/5: %s' % var ) 
+
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+            self.debug ( 'Create variable/6: %s' % var ) 
             
-        self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
         elif isinstance ( fix , num_types  ) :
@@ -741,41 +807,8 @@ class MakeVar ( object ) :
         ## store them 
         self.aux_keep.append ( _args ) 
         
-        return self.merge_args ( 5 , *_args )
+        return tuple ( _args ) 
 
-    # =========================================================================
-    ## Merge <code>RooCmdArgs</code> into chunks
-    #  It is needed to account a limited number of <code>RooCmdArg</code> arguments
-    #  @see RooCmdArg 
-    #  @see RooFit::MultiArg
-    def merge_args ( self , num , *args ) :
-        """Merge `RooCmdArgs` into chunks 
-        - It is needed to account a limited number of `RooCmdArg` arguments
-        - see `ROOT.RooCmdArg`
-        - see `ROOT.RooFit.MultiArg`
-        """
-        assert isinstance ( num , integer_types ) and 1 <= num ,\
-               "merge_args: invalid chunk size ``%s''" % num
-
-        ## no action 
-        if len ( args ) < num : return args
-
-        from   ostap.utils.utils  import chunked
-
-        lst   = flat_args ( *args )
-        
-        self.aux_keep.append ( lst )
-                
-        while num < len ( lst ) : 
-            
-            nlst = chunked ( lst , 4 )
-            ll   = [ ROOT.RooFit.MultiArg ( *l ) if 1 < len ( l ) else l [ 0 ] for l in nlst ]
-            
-            self.aux_keep.append ( ll ) 
-            lst = tuple ( ll )
-            
-        return lst 
-        
     # =========================================================================
     ## set value to a given value with the optional check
     #  @code
@@ -792,7 +825,7 @@ class MakeVar ( object ) :
         """
 
         ## must be roofit variable! 
-        assert isinstance ( var , ROOT.RooAbsReal ) , 'Invalid type of ``var'' %s' % type ( var )
+        assert isinstance ( var , ROOT.RooAbsRealLValue ) , 'Invalid type of ``var'' %s' % type ( var )
         
         if not hasattr ( var ,  'setVal' ) :
             raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
@@ -815,6 +848,35 @@ class MakeVar ( object ) :
         var.setVal ( value )
 
         return isequal ( value , var.getVal () ) 
+
+    # =========================================================================
+    ## gettter for certain fit components from the provided list 
+    def component_getter ( self , components ) :
+        """Gettter for certain fit components from the provided list
+        """
+        nc = len ( components )
+        if   0 == nc : return ()
+        elif 1 == nc : return components [ 0 ] 
+        return tuple ( c for c in components )
+
+    # ======================================================
+    ## setter for certian fit components form provided list 
+    def component_setter ( self , components , value ) :
+        """Setter for certian fit components form provided list
+        """
+        assert 0 < len ( components ) , 'Empty list of components, setting is not possible!'
+        
+        if   isinstance ( value , num_types          ) : values = float ( value ) , 
+        elif isinstance ( value , VE                 ) : values = value.value ()  , 
+        elif isinstance ( value , ROOT.RooAbsReal    ) : values = float ( value ) , 
+        elif isinstance ( value , ROOT.RooArgList    ) : values = tuple ( float ( v ) for v in value ) 
+        elif isinstance ( value , sequence_types     ) : values = tuple ( float ( v ) for v in value ) 
+        else :
+            self.warning ("component setter: unknown type for ``value'':%s/%s" % ( str( value) , type ( value ) ) )
+            values = value 
+
+        for c , v in zip  ( components , values )  :
+            self.set_value (  c , v ) 
 
     # =========================================================================
     ## Create some expressions with variables
@@ -2124,23 +2186,7 @@ class Phases(MakeVar) :
 
     @phis.setter
     def phis ( self , values ) :
-
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__phis , values ) :
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , s.minmax() , s.name ) )                 
-            s.setVal   ( vv )
-        nphi = len ( self.__phis )
+        self.component_setter ( self.__phis , values )
 
     @property
     def phi_list ( self ) :
@@ -2237,22 +2283,8 @@ class ParamsPoly(MakeVar) :
         """``pars'' : the polynomial coefficients/parameters"""
         return self.__pars    
     @pars.setter
-    def pars ( self , values ) :    
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__pars , values ) :
-            vv = float ( v  )
-            if s.minmax () and not vv in s :
-                self.error ("Value %s is outside the allowed region %s for %s "  % ( vv , s.minmax() , s.name ) )
-            s.setVal   ( vv )
+    def pars ( self , values ) :
+        self.component_setter ( self.__pars , values )
             
     def reset_pars ( self , value = 0 ) :
         """Set all pars to be value 
@@ -2393,6 +2425,7 @@ def get_i ( what , i , default = None ) :
 
     return default
         
+        
 # =============================================================================
 ## consruct MsgTopic
 #  @see RooFit::MsgTopic
@@ -2503,6 +2536,7 @@ if not hasattr (  Ostap.Utils.AddTopic , '_old_init_' ) :
     Ostap.Utils.AddTopic.__enter__  = lambda s : s
     Ostap.Utils.AddTopic.__exit__   = lambda s,*_ : s.exit() 
     
+
 
 # ================================================================================
 ## remove topic from Roofit message streams

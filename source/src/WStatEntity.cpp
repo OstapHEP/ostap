@@ -55,7 +55,7 @@ Ostap::WStatEntity::add
     return *this ;
   }
   //
-  const long double wA    =       sumw ()     ;
+  const long double wA    = sumw ()           ;
   const long double wB    = weight            ;
   const long double W     = wA + wB           ;
   const long double fA    = wA / W            ;

@@ -20,6 +20,7 @@ __all__     = (
     'Generic2D_pdf' , ## wrapper over imported RooFit (2D)-pdf
     'Flat2D'        , ## simplest 2D-model: constant function
     'Model2D'       , ## helper class to construct 2D-models. 
+    'Combine2D'     , ## non-extended sum of several PDFs
     'Sum2D'         , ## non-extended sum of two PDFs
     'H2D_pdf'       , ## convertor of 1D-histo to RooDataPdf
     'Shape2D_pdf'   , ## simple PDF from C++ shape     
@@ -29,7 +30,7 @@ __all__     = (
 import ROOT, random 
 from   builtins               import range
 from   ostap.core.core        import dsID , VE , Ostap, hID , iszero, valid_pointer
-from   ostap.core.ostap_types import integer_types, num_types, list_types  
+from   ostap.core.ostap_types import integer_types, num_types, list_types, iterable_types   
 from   ostap.fitting.roofit   import SETVAR
 from   ostap.logger.utils     import roo_silent, rooSilent, rootWarning 
 from   ostap.fitting.basic    import PDF , Flat1D
@@ -47,9 +48,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF2 (PDF,FUNC2) :
     """ Useful helper base class for implementation of PDFs for 2D-fit
     """
-    def __init__ ( self , name , xvar , yvar , special = False ) : 
+    def __init__ ( self , name , xvar , yvar , special = False , **kwargs ) : 
         
-        PDF  .__init__ ( self ,      name ,      xvar , special = special )
+        PDF  .__init__ ( self ,      name ,      xvar , special = special , **kwargs )
         FUNC2.__init__ ( self , self.name , self.xvar , yvar  )
                     
         ## save the configuration
@@ -1014,6 +1015,147 @@ class Generic2D_pdf(PDF2) :
 
 
 # =============================================================================
+## @class Combine2D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Combine2D (PDF2) :
+    """Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Combine2D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   yvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = 'f'  , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Combine1D: at least two PDFs are needed!'
+
+        pdf_list = []        
+        for i , p in enumerate ( pdfs ) :
+
+            if isinstance ( p , PDF2 ) :
+                
+                assert ( not xvar ) or xvar is p.xvar, "Invalid xvar/pdf%d.xvar: %s/%s" % ( i , xvar , p.xvar ) 
+                assert ( not yvar ) or yvar is p.yvar, "Invalid yvar/pdf%d.yvar: %s/%s" % ( i , yvar , p.yvar ) 
+                xvar = p.xvar
+                yvar = p.yvar
+                pdf_list.append ( p )
+                
+            elif isinstance ( pdf1 , ROOT.RooAbsPdf )                   \
+                     and xvar and isinstance ( xvar , ROOT.RooAbsReal ) \
+                     and yvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+                
+                pdf_list.append ( Generic2D_pdf ( p , xvar , yvar ) )
+                
+            else :
+                raise TypeError ( "Invalid type: pdf%d xvar %s/%s xvar=%s, yvar=%s" % ( i , p , type(p) , xvar , yvar ) )
+        
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum2' )
+        
+        ## ininialize the base class
+        PDF2.__init__ ( self , name , xvar , yvar ) 
+
+        for i , p in enumerate ( pdf_list )  :
+            if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
+                
+
+        while prefix.endswith  ('_') : prefix = prefix[:-1]
+        while suffix.startswith('_') : suffix = suffix[1:]
+        
+        self.__prefix    = prefix if prefix else 'f'
+        self.__suffix    = suffix
+        self.__recursive = True if recursive else False 
+
+        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+        else                           : fr_name = '%s_%%d'    %   self.prefix
+  
+        ## make list of fractions 
+        fraction_list = self.make_fractions  ( len ( pdf_list )           ,
+                                               name      = fr_name        , 
+                                               recursive = self.recursive ,
+                                               fractions = fractions      )
+
+        ## keep them
+        self.__pdfs      = tuple ( pdf_list )
+        self.__fractions = tuple ( fraction_list ) 
+        
+        for p in self.__pdfs      : self.alist1.add ( p.pdf )
+        for f in self.__fractions : self.alist2.add ( f     )
+        
+        ## finally build PDF 
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'combine2' ) ,
+                                    ' + '.join ( '(%s)' % p.name for p in self.pdfs  ) ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+  
+        
+    @property
+    def prefix ( self ) :
+        """``prefix'' : prefix for fraction names"""
+        return self.__prefix
+
+    @property
+    def suffix ( self ) :
+        """``suffix'' : suffix for fraction names"""
+        return self.__suffix
+
+    @property
+    def recursive ( self ) :
+        """``recursive'' : recursive fractions?"""
+        return self.__recursive
+    
+    @property
+    def pdfs ( self ) :
+        """``pdfs'' : get list/tuple of involved PDFs (same as ``components'')"""
+        return self.__pdfs
+    @property
+    def components ( self ) :
+        """``components'' : get list/tuple of involved PDFs (same as ``pdfs'')"""
+        return self.pdfs
+        
+    @property
+    def fractions ( self ) :
+        """``fractions'' : get involved fractions (same as ``F'')"""
+        return self.component_getter ( self.__fractions )
+    @fractions.setter
+    def fractions ( self , values ) :
+        self.component_setter ( self.__fractions , values )
+
+    @property
+    def F         ( self ) :
+        """``F'' : get involved fractions (same as ``fractions'')"""
+        return self.component_getter ( self.__fractions )
+    @F.setter
+    def F         ( self , values ) :
+        self.fractions = values 
+
+
+
+
+# =============================================================================
 ## @class Sum2D
 #  Non-extended sum of two PDFs
 #  @code
@@ -1023,104 +1165,76 @@ class Generic2D_pdf(PDF2) :
 #  @endcode
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
-class Sum2D (PDF2) :
-    """Non-extended sum of two PDFs:
-    
-    It is just a small wrapper for `ROOT.RooAddPdf`
-    - see RooAddPdf 
-    
+class Sum2D (Combine2D) :
+    """Non-extended sum of two PDFs:    
+    It is just a small wrapper for `ROOT.RooAddPdf`    
     >>> pdf1 = ...
     >>> pdf2 = ...
     >>> sum  = Sum2D ( pdf1 , pdf2 ) 
-
+    - see `ROOT.RooAddPdf` 
     """
-    def __init__ ( self            ,
-                   pdf1            ,
-                   pdf2            ,  
-                   xvar     = None , 
-                   yvar     = None , 
-                   name     = ''   , 
-                   fraction = None ) :
-
-        if   isinstance ( pdf1 , PDF2 ) :
-            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" % ( xvar , pdf1.xvar )             
-            assert ( not yvar ) or yvar is pdf1.yvar, "Invalid yvar/pdf1.yvar: %s/%s" % ( yvar , pdf1.yvar )             
-            xvar = pdf1.xvar        
-            yvar = pdf1.yvar        
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf )           and \
-             xvar and isinstance ( xvar , ROOT.RooAbsReal ) and \
-             yvar and isinstance ( yvar , ROOT.RooAbsReal ):
-            pdf2 = Generic2D_pdf ( pdf1 , xvar , yvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1/xvar/yvar: %s/%s/%s" % ( pdf1 , xvar , yvar ) )
-
-        if   isinstance ( pdf2 , PDF2 ) and xvar in pdf2.vars and yvar in  pdf2.vars : pass 
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf ) : pdf2 = Generic2D_pdf ( pdf1 , xvar , yvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1/xvar/yvar: %s/%s/%s" % ( pdf1 , xvar , yvar ) )
+    def __init__ ( self             ,
+                   pdf1             ,
+                   pdf2             ,  
+                   xvar      = None , 
+                   yvar      = None ,
+                   name      = ''   , 
+                   prefix    = 'f'  ,
+                   suffix    = ''   ,
+                   fraction  = None ,
+                   others    = []   ,
+                   recursive = True ) :                    
         
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum2' )
 
-        name = name if name else self.generate_name ( prefix = 'sum2D_%s_%s_' % ( pdf1.name , pdf2.name ) )         
-        PDF2.__init__ ( self, name , xvar , yvar )
+        ## initialize the base class 
+        Combine2D.__init__ ( self                  ,
+                             name      = name      , 
+                             pdfs      =  [ pdf1 , pdf2] + others ,
+                             xvar      = xvar      ,
+                             yvar      = yvar      ,
+                             recursive = recursive ,         
+                             prefix    = prefix    ,                             
+                             suffix    = suffix    ,
+                             fractions = fraction  )
 
-        self.__pdf1     = pdf1
-        self.__pdf2     = pdf2
-        
-        self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
-                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 ) 
-        self.alist1 = ROOT.RooArgList (
-            self.__pdf1.pdf ,
-            self.__pdf2.pdf )
-        self.alist2 = ROOT.RooArgList (
-            self.__fraction  )
-
-        
-        self.pdf = ROOT.RooAddPdf (
-            self.roo_name ( 'sum2_' ) ,             
-            '(%s)+(%s)' % (  pdf1.name , pdf2.name ) , self.alist1, self.alist2 )
-        
-        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
 
         self.config = {
-            'pdf1'     : self.pdf1     ,
-            'pdf2'     : self.pdf2     ,
-            'xvar'     : self.xvar     ,
-            'yvar'     : self.yvar     ,
-            'name'     : self.name     , 
-            'fraction' : self.fraction 
+            'pdf1'      : self.pdf1      ,
+            'pdf2'      : self.pdf2      ,
+            'xvar'      : self.xvar      ,
+            'yvar'      : self.yvar      ,
+            'name'      : self.name      ,
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    , 
+            'fraction'  : self.fraction  ,
+            'others'    : self.others    ,            
+            'recursive' : self.recursive ,
             }
-
+        
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        return self.__pdf1
+        return self.pdfs[0]
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
-        return self.__pdf2
+        return self.pdfs[1]
 
+    @property 
+    def others ( self ) :
+        """``others'' : other PDFs (if any)"""
+        return self.pdfs[2:]
+    
     @property
     def fraction ( self ) :
-        """``fraction'' : the fraction of the first PDF in the sum"""
-        return self.__fraction
+        """``fraction'' : the fraction of the first PDF in the sum (same as ``fractions'')"""
+        return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
-        val = float ( value )
-        self.__fraction.setVal ( val )
-
-    @property
-    def F  ( self ) :
-        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
-        return self.__fraction
-    @F.setter
-    def F ( self , value ) :
-        self.fraction = value 
-        
-
+        self.fractions = value 
 
 # =============================================================================
 ## @class Flat2D
@@ -1186,8 +1300,6 @@ class Model2D(PDF2) :
 
         name  = name  if name  else self.generate_name ( 'Model2D_%s_%s'  % ( self.xmodel.name , self.ymodel.name ) )
         
-        title = title if title else 'Model2D %s|%s' % ( self.xmodel.name , self.ymodel.name )
-        
         ## initialize the base 
         PDF2.__init__ (  self , name , self.__xmodel.xvar , self.__ymodel.xvar ) 
 
@@ -1203,15 +1315,15 @@ class Model2D(PDF2) :
         if _triv_ ( self.xmodel ) and _triv_ ( self.ymodel ) :
             
             self.debug ('use Flat2D-model for the trivial product')
-            self.__flat = Flat2D ( self.xvar , self.yvar , name = name , title = title )
+            self.__flat = Flat2D ( self.xvar , self.yvar , name = self.generate_name ( name ) , title = title )
             self.pdf    = self.__flat.pdf  
             
         else :
             
             ## build the final PDF 
             self.pdf = ROOT.RooProdPdf (
-                self.roo_name ( 'prod2_' ) , 
-                title ,
+                self.roo_name ( 'model2_' ) , 
+                title             ,
                 self.__xmodel.pdf ,
                 self.__ymodel.pdf )
 
@@ -1718,26 +1830,10 @@ class Fit2D (PDF2) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
-    
+        return self.component_getter ( self.__nums_components  )     
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_components , value )
 
     @property
     def yields    ( self ) :
@@ -2194,25 +2290,10 @@ class Fit2DSym (PDF2) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return self.component_getter ( self.__nums_components )
     @C.setter
     def C (  self , value ) :
-        _n = len ( self.__nums_components )
-        assert 1 <= _n , "No ``other'' components are defined, assignement is impossible"
-        if 1 ==  _n :
-            _c    = self.C 
-            value = float ( value )
-        else : 
-            index = value [0]
-            assert isinstance ( index , int ) and 0 <= index < _n, "Invalid ``other'' index %s/%d" % ( index , _n ) 
-            value = float ( value[1] )
-            _c    = self.C[index]
-        ## assign 
-        assert value in _c , "Value %s is outside the allowed region %s"  % ( value , _c.minmax() )
-        _c.setVal ( value )
+        self.component_setter ( self.__nums_componenents , value )
 
     @property
     def yields    ( self ) :

@@ -23,6 +23,9 @@ __all__     = (
     'dict_types'      , ## dict types 
     'dictlike_types'  , ## dict-like types 
     'long_type'       , ## long-type
+    'sequence_types'  , ## sequence types
+    'iterable_types'  , ## iterable 
+    'sized_types'     , ## sized types 
     ##
     'is_integer'      , ## is a value of int-like type?
     'is_number'       , ## is a value of numeric  type?
@@ -48,7 +51,7 @@ logger.debug ( 'Core objects/classes/functions for Ostap')
 # =============================================================================
 import math
 from   sys import version_info as python_version 
-if python_version.major > 2:
+if ( 3 , 0 ) <= python_version :
     long           = int
     string_types   = bytes , str 
     integer_types  = int   ,
@@ -60,15 +63,26 @@ else :
     long_type      = long 
     python_version = 2 
     import collections     as C
+# =============================================================================
+if   ( 3 , 5 ) <= python_version : from collections.abc import Generator, Collection, Sequence, Iterable, Sized   
+elif ( 3 , 3 ) <= python_version :
+    from collections.abc import Collection, Sequence, Iterable, Sized   
+    from types           import GeneratorType as Generator 
+else :
+    from collections     import Sequence , Iterable , Sized            
+    from collections     import Container     as Collection
+    from types           import GeneratorType as Generator 
 
-num_types = integer_types + ( float , ) 
+iterable_types = Iterable,
+num_types      = integer_types + ( float , ) 
 str_types = str,
 
 list_types     = list , tuple
 listlike_types = list_types + ( set , C.Sequence )
 dict_types     = dict ,
 dictlike_types = dict ,               C.Mapping  
-
+sequence_types = list_types + ( Sequence , Collection , Iterable , Generator )
+sized_types    = Sized , 
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :
