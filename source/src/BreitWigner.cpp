@@ -2979,6 +2979,29 @@ std::size_t Ostap::Math::BW3L::tag () const
 
 
 // ============================================================================
+// constructor from breit-wigner
+// ============================================================================
+Ostap::Math::A2::A2
+( const Ostap::Math::BW& bw    , 
+  const double           scale ) 
+  : m_bw    ( bw.clone() ) 
+  , m_scale ( scale      )  
+{}
+// ============================================================================
+Ostap::Math::A2::A2
+( const Ostap::Math::A2& bw ) 
+  : m_bw   ( bw.m_bw ? bw.m_bw->clone() : nullptr ) 
+  , m_scale ( bw.m_scale      )  
+{}
+// ============================================================================
+double Ostap::Math::A2::operator() ( const double s ) const 
+{
+  if ( !m_bw ) { return 0 ; }
+  if ( s < m_bw -> s_threshold () ) { return 0 ; }
+  const double m = std::sqrt ( s ) ;
+  return m_scale * std::norm ( m_bw->amplitude ( m ) ) ;
+}
+// ============================================================================
 //                                                                      The END 
 // ============================================================================
 
