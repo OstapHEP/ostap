@@ -49,6 +49,9 @@ from   builtins import range
 try :
     
     import numpy
+    npvers   = tuple ( numpy.version.version.split('.') )
+    npb_type = bool if ( '1', '20') <= npvers else numpy.bool 
+                     
     atype = numpy.uint64
     # =========================================================================
     ## get the array of prime numbers that do not exceed <code>n</code>
@@ -69,7 +72,7 @@ try :
         elif n <= 3 : numpy.array ([2]       , dtype = atype ) 
         elif n <= 5 : numpy.array ([2,3]     , dtype = atype ) 
 
-        sieve = numpy.ones(n//3 + (n%6==2), dtype=numpy.bool)
+        sieve = numpy.ones(n//3 + (n%6==2), dtype = npb_type )
         for i in range(1,int(n**0.5)//3+1):
             if sieve[i]:
                 k=3*i+1|1

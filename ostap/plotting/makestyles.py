@@ -844,7 +844,7 @@ def make_ostap_style ( name                           ,
     ## Marker attributes
     ##
     
-    conf [ 'MarkerColor'       ] = get_int   ( config , 'MarkerColor'         , 2   ) 
+    conf [ 'MarkerColor'       ] = get_int   ( config , 'MarkerColor'         , 1   ) 
     conf [ 'MarkerStyle'       ] = get_int   ( config , 'MarkerStyle'         , 20  ) 
     conf [ 'MarkerSize'        ] = get_float ( config , 'MarkerSize'          , 1.0 )
 

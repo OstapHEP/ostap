@@ -2289,7 +2289,9 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
 {
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
-  return Ostap::Math::DalitzIntegrator::integrate_s1s2 
+  static const double s_CONST = 0.25 * M_PI * M_PI / std::pow ( 2 * M_PI , 5 ) ;
+  //
+  return s_CONST * Ostap::Math::DalitzIntegrator::integrate_s1s2 
     ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / s  ;
 }
 // ============================================================================
