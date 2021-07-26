@@ -30,4 +30,4 @@ jobs:
        image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
        volumes:
           - /cvmfs:/cvmfs:shared
-       options: --security-opt seccomp=unconfined -u:0 -v /cvmfs:/cvmfs:shared
+       options: --security-opt seccomp=unconfined -u:0 
