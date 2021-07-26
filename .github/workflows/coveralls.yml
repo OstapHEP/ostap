@@ -16,6 +16,7 @@ jobs:
     - name: Build
       run: |
         docker  create -v  /osya --name ostap-build gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+        ls
         docker cp  .  ostap-build:/osya
         docker run    -v /cvmfs:/cvmfs:shared -u:0 --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ && ./scripts/bootstrap dev3python2/latest x86_64-centos7-gcc9-opt"
 
