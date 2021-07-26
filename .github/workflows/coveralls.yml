@@ -9,16 +9,20 @@ on:
   pull_request:
     branches: [ test ]
 jobs:
-  test_docker:
+  test_sevice:
    runs-on: ubuntu-latest 
    steps:
      - uses: cvmfs-contrib/github-action-cvmfs@v2
      - name: Build
        run: |
          ls /cvmfs/sft.cern.ch/
+  test_docker:
+     needs: test_service
+     steps:
      - name: Build2
        run: |
-         ls /cvmfs/sft.cern.ch/
+         cd ..
+         ls
          cd /ostap/
          ls 
    container: 
