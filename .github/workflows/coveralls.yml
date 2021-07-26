@@ -9,14 +9,14 @@ on:
   pull_request:
     branches: [ test ]
 jobs:
-  container: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-  volumes:
-        - /cvmfs:/cvmfs:shared
-  options: --security-opt seccomp=unconfined
   test_docker:
+    container: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+    volumes:
+        - /cvmfs:/cvmfs:shared
+    options: --security-opt seccomp=unconfined
     steps:
     - uses: cvmfs-contrib/github-action-cvmfs@v2
     - name: Build
-      run: |
+    - run: |
         ls -al
         
