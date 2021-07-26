@@ -22,15 +22,13 @@ jobs:
      steps:
       - uses: cvmfs-contrib/github-action-cvmfs@v2
       - name: Build
-       run: |
+        run: |
          ls /cvmfs/sft.cern.ch
-      - uses: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-          with:
-            volumes:
-               - /cvmfs:/cvmfs:shared
-            options: --security-opt seccomp=unconfined -u:0 
-       - name: Build2
-         run: |
+      - uses:  docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+        with: 
+          args: -v /cvmfs:/cvmfs:shared --security-opt seccomp=unconfined -u:0 
+      - name: Build2
+        run: |
           cd ..
           ls
           cd ..
