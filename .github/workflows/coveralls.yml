@@ -15,5 +15,8 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v2
       - name: Build
         run: |
-         ls /cvmfs/sft.cern.ch
-         docker run      -v /cvmfs:/cvmfs:shared -u:0  -v "/home/runner/work/ostap/ostap":"/github/workspace" --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /github/workspace  && ls -al "
+         ls /cvmfs/sft.cern.ch 
+         ls /ostap
+         docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
+         docker cp  .  ostap-build:/osya
+         docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build -v "/home/runner/work/ostap/ostap":"/github/workspace" --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd ..  && ls -al "
