@@ -10,15 +10,14 @@ on:
     branches: [ test ]
 jobs:
   test_docker:
-    container: 
+   runs-on: ubuntu-latest
+   steps:
+     - uses: cvmfs-contrib/github-action-cvmfs@v2
+     - name: Build
+       run: |
+         ls -al 
+   container: 
        image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
        volumes:
         - /cvmfs:/cvmfs:shared
        options: --security-opt seccomp=unconfined
-   runs-on: ubuntu-latest
-   steps:
-    - uses: cvmfs-contrib/github-action-cvmfs@v2
-    - name: Build
-      run: |
-        ls -al
-        
