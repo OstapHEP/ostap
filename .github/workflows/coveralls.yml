@@ -12,7 +12,11 @@ jobs:
   test_docker:
      runs-on: ubuntu-latest 
      steps:
-      - uses: cvmfs-contrib/github-action-cvmfs@v2
+       - uses: actions/checkout@v2
+       - name: Install dependencies
+        run: |
+        ls 
+     - uses: cvmfs-contrib/github-action-cvmfs@v2
       - name: Build
         run: |
          ls /cvmfs/sft.cern.ch 
