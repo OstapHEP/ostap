@@ -10,10 +10,11 @@ on:
     branches: [ test ]
 jobs:
   test_docker:
-    container: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-    volumes:
+    container: 
+       image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+       volumes:
         - /cvmfs:/cvmfs:shared
-    options: --security-opt seccomp=unconfined
+       options: --security-opt seccomp=unconfined
     steps:
     - uses: cvmfs-contrib/github-action-cvmfs@v2
     - name: Build
