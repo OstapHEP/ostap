@@ -22,7 +22,9 @@ jobs:
    steps:
      - name: Build2
        run: |
-         ls -al 
+         ls /cvmfs/sft.cern.ch/
+         cd /ostap/
+         ls 
    container: 
        image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
        volumes:
