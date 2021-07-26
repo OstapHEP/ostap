@@ -2301,7 +2301,7 @@ namespace Ostap
     /** @class GammaBW3 
      *  Running width/phase-space function 
      *  for 3-body decays 
-     *  \f[ \Gamma(s) =  \frac{pi^2}{4s}
+     *  \f[ \Gamma(s) =  \frac{pi^2}{4s} \frac{1}{(2\pi)^5}
      *  \int\int ds_1 ds_2 \frac{1}{2J_i+1}\sum_i\sum_f
      *   \left|\mathcal{A}\left(s,s_1, s_2\right)\right|^2\f] 
      *  @attention note the power of \f$s\f$ in denumerator! 
@@ -2941,6 +2941,37 @@ namespace Ostap
       // ======================================================================
     }; 
     // ========================================================================
+    /** @class A1 
+     * Squared Breit-Wigner amplitude 
+     * @see Ostap::Math::BW 
+     */
+    class A2 
+    {
+    public :
+      // ======================================================================
+      /// constructor from breit-wigner
+      A2 ( const BW&    bw           ,
+           const double scale = 1.0  ) ;
+      // ======================================================================
+      /// copy constructor 
+      A2 ( const A2&  bw ) ;
+      /// Move constructor 
+      A2 (       A2&& bw ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double operator() ( const double s ) const ;
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// Breit-Wigner itself 
+      std::unique_ptr<BW>  m_bw { nullptr } ; // Breit-Wigner 
+      // scale factor 
+      double               m_scale { 1.0 }  ; // scale-factor 
+      // ======================================================================
+    } ;  
+    // ========================================================================
+
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap

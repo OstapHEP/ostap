@@ -13,13 +13,18 @@
   1. simplify `trees/data_utils.py` make it more robust and reduce number of alive `TChain` instances 
   1. Extend a bit sumamry plot with simple `Point` and `Interval` objects
   1. add `pip install` for `CMAKE`
+  1. fix `numpy.bool` warning for newer versions of `numpy`
+  1. add `Ostap::Math::A2` 
+  1. add `(pi^2)/4*(2pi)^-5` factor for `Ostap.Math.GammaBW3` 
 
+ 
 ## Backward incompatible changes: 
 
 ## Bug fixes:
 
   1. bug fix in `canvas >> '...'`
   1. make proper replacement for `random.choices` for python < 3.6
+  1. fix marker color for default style 
 
 # v1.6.2.0
 

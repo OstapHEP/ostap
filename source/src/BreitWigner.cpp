@@ -2289,7 +2289,9 @@ double Ostap::Math::GammaBW3::GammaBW3::operator() ( const double s ) const
 {
   if ( s <= m_dalitz.s_min () ) { return 0 ; }
   //
-  return Ostap::Math::DalitzIntegrator::integrate_s1s2 
+  static const double s_CONST = 0.25 * M_PI * M_PI / std::pow ( 2 * M_PI , 5 ) ;
+  //
+  return s_CONST * Ostap::Math::DalitzIntegrator::integrate_s1s2 
     ( std::cref ( m_me2 ) , s , m_dalitz , m_tag , m_n1 , m_n2 ) / s  ;
 }
 // ============================================================================
@@ -2978,6 +2980,29 @@ std::size_t Ostap::Math::BW3L::tag () const
 // ============================================================================
 
 
+// ============================================================================
+// constructor from breit-wigner
+// ============================================================================
+Ostap::Math::A2::A2
+( const Ostap::Math::BW& bw    , 
+  const double           scale ) 
+  : m_bw    ( bw.clone() ) 
+  , m_scale ( scale      )  
+{}
+// ============================================================================
+Ostap::Math::A2::A2
+( const Ostap::Math::A2& bw ) 
+  : m_bw   ( bw.m_bw ? bw.m_bw->clone() : nullptr ) 
+  , m_scale ( bw.m_scale      )  
+{}
+// ============================================================================
+double Ostap::Math::A2::operator() ( const double s ) const 
+{
+  if ( !m_bw ) { return 0 ; }
+  if ( s < m_bw -> s_threshold () ) { return 0 ; }
+  const double m = std::sqrt ( s ) ;
+  return m_scale * std::norm ( m_bw->amplitude ( m ) ) ;
+}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
