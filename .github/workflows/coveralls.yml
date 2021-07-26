@@ -16,12 +16,4 @@ jobs:
       - name: Build
         run: |
          ls /cvmfs/sft.cern.ch
-      - uses:  docker://gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-        with: 
-          options: -u:0 --volumes-from ostap-build -v /cvmfs:/cvmfs:shared
-      - name: Build2
-        run: |
-          cd ..
-          ls
-          cd ..
-          ls
+         docker run      -v /cvmfs:/cvmfs:shared -u:0  -v "/home/runner/work/ostap/ostap":"/github/workspace" --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "ls "
