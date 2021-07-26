@@ -20,14 +20,18 @@ jobs:
      runs-on: ubuntu-latest 
      needs: test_sevice
      steps:
+      uses: cvmfs-contrib/github-action-cvmfs@v2
+      - name: Build
+       run: |
+         ls /cvmfs/sft.cern.ch
      - name: Build2
+      uses: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
+      with:
+       volumes:
+          - /cvmfs:/cvmfs:shared
+       options: --security-opt seccomp=unconfined -u:0 
        run: |
          cd ..
          ls
          cd ..
          ls
-     container: 
-       image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
-       volumes:
-          - /cvmfs:/cvmfs:shared
-       options: --security-opt seccomp=unconfined -u:0 
