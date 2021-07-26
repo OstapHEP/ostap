@@ -16,7 +16,7 @@ jobs:
       - name: Build
         run: |
          ls /cvmfs/sft.cern.ch 
-         ls 
+         ls /home/runner/work/ostap
          docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
          docker cp  .  ostap-build:/osya
          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build -v "/home/runner/work/ostap/ostap":"/github/workspace" --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd ..  && ls -al "
