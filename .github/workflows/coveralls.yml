@@ -15,9 +15,10 @@ jobs:
      - uses: cvmfs-contrib/github-action-cvmfs@v2
      - name: Build
        run: |
-         ls /cvmfs/sft.cern.ch/
+         ls /cvmfs/sft.cern.ch
   test_docker:
-     needs: test_service
+     runs-on: ubuntu-latest 
+     needs: test_sevice
      steps:
      - name: Build2
        run: |
@@ -25,7 +26,7 @@ jobs:
          ls
          cd /ostap/
          ls 
-   container: 
+     container: 
        image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
        volumes:
         - /cvmfs:/cvmfs:shared
