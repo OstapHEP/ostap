@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: cvmfs-contrib/github-action-cvmfs@v2
-    - name: Test CernVM-FS
     - name: Build
       run: |
         docker  create -v  /osya --name ostap-build gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest
