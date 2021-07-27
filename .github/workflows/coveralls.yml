@@ -14,6 +14,7 @@ jobs:
       matrix:
         lcg: [dev3/latest, dev4python2/latest ]
         platform: [x86_64-centos7-gcc8-opt, x86_64-centos7-gcc9-opt ]
+      fail-fast: false
      runs-on: ubuntu-latest 
      steps:
        - uses: actions/checkout@v2
