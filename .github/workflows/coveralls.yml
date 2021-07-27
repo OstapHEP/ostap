@@ -5,58 +5,40 @@ name: ostap
 
 on:
   push:
-    branches: [ master ]
+    branches: [ test ]
   pull_request:
-    branches: [ master ]
-
+    branches: [ test ]
 jobs:
-  build:
-    env:
-      COVERALLS_REPO_TOKEN: "${{ secrets.COVERALLS_REPO_TOKEN }}"
-      COVERALLS_GIT_BRANCH: "${{ github.ref }}"
-    runs-on: ubuntu-latest
-    strategy:
+  test_docker:
+     strategy:
       matrix:
-        python-version: [3.8]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh 
-        bash miniconda.sh -b -p $HOME/miniconda
-        export PATH="$HOME/miniconda/bin:$PATH"
-        hash -r
-        conda config --set always_yes yes --set changeps1 no
-        conda config --add channels conda-forge
-        conda create -q -n testenv python=${{ matrix.python-version }} coverage coveralls cmake nose ninja ipython root_base=6.20 root-binaries root-dependencies gsl future configparser numpy scipy pathos dill multiprocess ppft terminaltables gdbm libdb psutil more-itertools
-    - name: Build
-      run: |
-        export PATH="$HOME/miniconda/bin:$PATH"
-        export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
-        source activate testenv
-        mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install && cd ../
-    - name: Test 
-      run: |
-        pip install coverage coveralls
-        export PATH="$HOME/miniconda/bin:$PATH"
-        export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
-        source activate testenv
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/core
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/fitting
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/histos
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/io
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/logger
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/math
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/plotting
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/stats
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/trees
-        source build/INSTALL/thisostap.sh && nosetests -x --exe -v --with-coverage --cover-package=ostap --no-byte-compile -w ./ostap/utils
-    - name: Coveralls
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        parallel: true
-        flag-name: Test
+        lcg: [dev3/latest, dev4python2/latest ]
+        platform: [x86_64-centos7-gcc8-opt, x86_64-centos7-gcc9-opt ]
+      fail-fast: false
+     runs-on: ubuntu-latest 
+     steps:
+       - uses: actions/checkout@v2
+       - name: Install dependencies
+         run: |
+          ls 
+       - uses: cvmfs-contrib/github-action-cvmfs@v2
+       - name: Build
+         run: |
+          ls /cvmfs/sft.cern.ch 
+          docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
+          docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap ${{ matrix.lcg }} ${{ matrix.platform }}"
+       - name: Test
+         run: |
+          ls /cvmfs/sft.cern.ch 
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test ${{ matrix.lcg }}  ${{ matrix.platform }}"
+       - name: copy artifacts
+         if: always()
+         run: |
+            docker cp  ostap-build:/osya/ostap/build .
+       - name: Archive production artifacts
+         if: always()
+         uses: actions/upload-artifact@v2
+         with:
+          name: test
+          path: build/Testing
