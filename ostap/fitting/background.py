@@ -2562,7 +2562,7 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \
              or   isinstance ( bkg , float )  \
-             or ( isinstance ( bkg , tuple ) and 1 < len ( tuple ) <=3 ) :
+             or ( isinstance ( bkg , tuple ) and 1 < len ( bkg ) <=3 ) :
         
         model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )

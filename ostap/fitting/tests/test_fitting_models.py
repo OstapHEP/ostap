@@ -63,10 +63,11 @@ signal_gauss = Models.Gauss_pdf ( name  = 'Gauss'    , ## the name
                                   mean  = m.value () , ## mean value (fixed)
                                   sigma = m.error () ) ## sigma      (fixed)
 
-    ## construct composite model: signal + background 
+background = Models.Bkg_pdf ( 'Bkg' , xvar = mass , power = 0 ) 
+## construct composite model: signal + background 
 model_gauss = Models.Fit1D(
     signal     = signal_gauss ,
-    background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) ,
+    background = background   ,
     )
 
 S = model_gauss.S
@@ -116,7 +117,7 @@ def test_crystalball () :
                                               n     = (3,1,9)  , ## tail parameter 
                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
                                               mean  = signal_gauss.mean  ) , ## reuse mean  from gauss 
-        background = Models.Bkg_pdf ('BkgCB', xvar = mass , power = 0 ) ,
+        background = background   ,
         S = S , B = B 
         )
     
@@ -149,7 +150,7 @@ def test_crystalball_RS () :
                                             alpha = (1.5, 0.5 , 3.0)   ,
                                             n     = (5,1,10)           , 
                                             mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBRS', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -186,7 +187,7 @@ def test_crystalball_DS () :
                                   alphaR = (1.4,0.5,3)        , 
                                   sigma  = signal_gauss.sigma ,  
                                   mean   = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
 
@@ -222,7 +223,7 @@ def test_needham() :
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
                                       mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgMATT', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -255,7 +256,7 @@ def test_apollonios () :
                                         b     =  1 ,
                                         n     = 10 ,
                                         alpha =  3 ) ,
-        background = Models.Bkg_pdf ('BkgAPO', xvar = mass , power = 0 ),
+        background = background   ,
         S = S , B = B 
         )
     
@@ -287,7 +288,7 @@ def test_apollonios2() :
                                          sigma     = signal_gauss.sigma ,
                                          beta      =  ( 0.5 , 2 )       ,
                                          asymmetry = 0 ) ,
-        background = Models.Bkg_pdf ('BkgAPO2', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -325,7 +326,7 @@ def test_bifurcated () :
     
     model_bifurcated = Models.Fit1D(
         signal     = signal_bifurcated       ,
-        background = Models.Bkg_pdf ('BkgBFG', xvar  = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -360,7 +361,7 @@ def test_2gauss () :
     
     model_2gauss = Models.Fit1D(
         signal     = signal_2gauss      ,
-        background = Models.Bkg_pdf ('Bkg22G', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -389,7 +390,7 @@ def test_gengauss_v1 () :
         signal = Models.GenGaussV1_pdf ( name = 'Gv1' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV1', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -422,7 +423,7 @@ def test_gengauss_v2 () :
         signal = Models.GenGaussV2_pdf ( name = 'Gv2' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV2', xvar = mass , power = 0 ) ,
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -461,7 +462,7 @@ def test_skewgauss() :
     model_gauss_skew = Models.Fit1D (
         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
                                         xvar = mass  , mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSkG', xvar = mass , power = 0 ) ,
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -492,7 +493,7 @@ def test_qgauss () :
                                         q    = (1,0.7,1.2), 
                                         mean = signal_gauss.mean   ,
                                         scale = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgQG', xvar = mass , power = 0 )  ,
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -528,7 +529,7 @@ def test_bukin() :
                                     rhoR  = 0    , 
                                     mean  = signal_gauss.mean  , 
                                     sigma = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgBK', xvar = mass , power = 0 ), 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -568,7 +569,7 @@ def test_studentT () :
         signal = Models.StudentT_pdf ( name = 'ST' , 
                                        xvar = mass ,
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgST', xvar = mass , power = 0 ), 
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -601,7 +602,7 @@ def test_bifstudentT():
                                                  nR    = 25     ,                                                 
                                                  mean  = signal_gauss.mean   , 
                                                  sigma = signal_gauss.sigma  ) ,
-        background = Models.Bkg_pdf ('BkgST2', xvar = mass , power = 0 ) ,
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -635,7 +636,7 @@ def test_sinhasinh() :
         signal = Models.SinhAsinh_pdf( 'SASH'                   ,
                                        xvar = mass              , 
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSAS', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -677,7 +678,7 @@ def test_johnsonSU () :
         signal = Models.JohnsonSU_pdf( 'JSU'                    ,
                                        xvar = mass              , 
                                        xi   = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgJSU', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -712,7 +713,7 @@ def test_atlas () :
         signal = Models.Atlas_pdf( 'ATLAS'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgATLAS', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -746,7 +747,7 @@ def test_sech() :
         signal = Models.Sech_pdf( 'SECH'                    ,
                                   xvar = mass              , 
                                   mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSECH', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -780,7 +781,7 @@ def test_losev() :
         signal = Models.Losev_pdf( 'LOSEV'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOSEV', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         ) 
     
@@ -816,7 +817,7 @@ def test_logistic () :
         signal = Models.Logistic_pdf( 'LOGI'                    ,
                                       xvar = mass              , 
                                       mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOGI', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -851,7 +852,7 @@ def test_voigt () :
                                     xvar  = mass                ,
                                     m0    = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -889,7 +890,7 @@ def test_pvoigt () :
                                           xvar  = mass                ,
                                           m0    = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgPV', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -939,7 +940,7 @@ def test_bw () :
           breitwigner = bw                ,     
           xvar        = mass              ,
           m0          = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 ) , 
+        background = background   ,
         S = S , B = B 
         )
 
@@ -975,7 +976,7 @@ def test_slash():
                                     xvar  = mass   ,
                                     mean  = signal_gauss.mean   , 
                                     scale = signal_gauss.sigma  ) ,
-        background = None , 
+        background = background   ,
         S = S , B = B 
         )
     
@@ -1009,7 +1010,7 @@ def test_laplace():
                                                 xvar  = mass   ,
                                                 mean  = signal_gauss.mean   , 
                                                 slope = signal_gauss.sigma  ) ,
-        background = None ,
+        background = background   ,
         S = S , B = B 
         )
     
@@ -1042,7 +1043,7 @@ def test_rasingcosine () :
         signal = Models.RaisingCosine_pdf( 'RC'                     ,
                                            xvar = mass              , 
                                            mean = signal_gauss.mean ) ,
-        background = 1 ,
+        background = background   ,
         S = S , B = B 
         )
     
@@ -1079,8 +1080,8 @@ def test_hyperbolic() :
                                          sigma     = signal_gauss.sigma ,
                                          zeta      = ( 1   , -1 , 1e+6  ) ,
                                          kappa     = ( 0   , -1 ,   1 ) ) ,
-        background = Models.Bkg_pdf ('BkgHB', xvar = mass , power = 0 ) , 
-        S = S , B = B 
+        background = background   ,
+        S = S , B = B ,
         )
 
     model_hyperbolic.S.value  = 5000

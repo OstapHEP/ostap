@@ -3569,21 +3569,27 @@ class Fit1D (PDF) :
             for y in self.yields : self.alist2.add ( y )   
 
             assert len ( self.alist2 ) == len ( self.alist1 ) ,\
-                   'Fit1D: inconsistent parameters for ROOT.RooaddPdf' 
+                   'Fit1D: inconsistent parameters for ROOT.RooAddPdf' 
 
         else :
+            
+            assert 1 < len ( self.fit_components ) ,\
+                   'Fot1D: At least two components are required to build proper non-extended PDF!'
 
-            nt       = len ( self.fit_components )             
-            fname    = make_name ( 'F' , '%d' if 1 != nt else '' , suffix )
+            nt       = len ( self.fit_components )
+            nf       = nt - 1 
+            fname    = make_name ( 'F' , '%d' if 1 != nf else '' , suffix )
             title    = "Fraction(s) for various component(s)/%s" % self.name
-            title    = title if 1 != nt else title.replace ( '(s)', '' )                         
+            title    = title if 1 != nf else title.replace ( '(s)', '' )                         
             self.__F = self.make_fractions ( nt , fname ,  title , fractions = F ) ## read F from arguments
                         
             for f in self.__F : self.alist2.add ( f )
 
-            assert len( self.alist2 ) + 1 == len ( self.alist1 ) ,\
-                   'Fit1D: inconsistent parameters for ROOT.RooaddPdf' 
-                        
+            assert len ( self.alist2 ) + 1 == len ( self.alist1 ) ,\
+                   'Fit1D: inconsistent parameters for ROOT.RooAddPdf' 
+
+        
+            
         ## now we finally can create PDF
             
         pdf_name  = self.roo_name ( 'fit1d_' ) 

@@ -25,6 +25,8 @@
   1. bug fix in `canvas >> '...'`
   1. make proper replacement for `random.choices` for python < 3.6
   1. fix marker color for default style 
+  1. fix a bug in fraction naming for non-extedned fits (thanks to Dima Pereima) 
+
 
 # v1.6.2.0
 
