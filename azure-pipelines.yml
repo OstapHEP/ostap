@@ -1,10 +1,8 @@
 # File: azure-pipelines.yml
 trigger:
  branches:
-   include:
-     - test
    exclude:
-     - master
+     - test
 jobs:
 
  - template: template-pipelines.yml  # Template reference
