@@ -12,7 +12,7 @@ jobs:
   test_docker:
      strategy:
       matrix:
-        lcg: [dev3/latest, dev4paython2/latest ]
+        lcg: [dev3/latest, dev4python2/latest ]
         platform: [x86_64-centos7-gcc8-opt, x86_64-centos7-gcc9-opt ]
      runs-on: ubuntu-latest 
      steps:
