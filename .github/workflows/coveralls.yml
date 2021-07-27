@@ -36,4 +36,4 @@ jobs:
          uses: actions/upload-artifact@v2
          with:
           name: test
-          path: ostap/build/Testing
+          path: build/Testing
