@@ -22,11 +22,11 @@ jobs:
           ls /cvmfs/sft.cern.ch 
           docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
           docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap dev3python2/latest x86_64-centos7-gcc10-opt"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap dev4python2/latest x86_64-centos7-gcc8-opt"
        - name: Test
          run: |
           ls /cvmfs/sft.cern.ch 
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test dev3python2/latest x86_64-centos7-gcc10-opt"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test dev4python2/latest x86_64-centos7-gcc8-opt"
        - name: copy artifacts
          if: always()
          run: |
