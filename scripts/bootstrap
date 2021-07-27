@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
-if [[ "$LCG" == *"dev"* ]]; then 
-source scripts/lcg_dev.sh /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/ ${LCG}
-else
+#if [[ "$LCG" == *"dev"* ]]; then 
+#source scripts/lcg_dev.sh /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/ ${LCG}
+#else
 source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
-fi
+#fi
 mkdir build
 cd build
 ## cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
