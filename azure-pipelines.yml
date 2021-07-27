@@ -53,5 +53,3 @@ jobs:
      LCG: 'LCG_100'
      CMTCONFIG: 'x86_64-centos7-gcc9-opt'
      artifact: 'test_cs7_lcg100_gcc9_python3'
-
-
