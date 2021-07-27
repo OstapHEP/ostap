@@ -10,6 +10,10 @@ on:
     branches: [ test ]
 jobs:
   test_docker:
+     strategy:
+      matrix:
+        lcg: [dev3/latest, dev4paython2 ]
+        platform: [86_64-centos7-gcc8-opt, 86_64-centos7-gcc9-opt ]
      runs-on: ubuntu-latest 
      steps:
        - uses: actions/checkout@v2
@@ -22,11 +26,11 @@ jobs:
           ls /cvmfs/sft.cern.ch 
           docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
           docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap dev4python2/latest x86_64-centos7-gcc8-opt"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap ${{ matrix.lcg }} ${{ matrix.platform }}"
        - name: Test
          run: |
           ls /cvmfs/sft.cern.ch 
-          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test dev4python2/latest x86_64-centos7-gcc8-opt"
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test ${{ matrix.lcg }}  ${{ matrix.platform }}"
        - name: copy artifacts
          if: always()
          run: |
