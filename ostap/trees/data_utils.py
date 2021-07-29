@@ -596,7 +596,7 @@ class Data2(Data):
             description = "%s&%s" % ( description , self.chain2.GetName() )
 
         Data.__init__( self                      ,
-                       chan        = chain1      ,
+                       chain        = chain1      ,
                        files       = files       ,
                        description = description ,
                        maxfiles    = maxfiles    ,
