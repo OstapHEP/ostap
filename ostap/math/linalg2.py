@@ -20,7 +20,7 @@ __all__     = (
     'correlation' , ## get i,j-correlation coeffiecient from matrix-like object
     )
 # =============================================================================
-import ROOT, re
+import ROOT, re, ctypes 
 from   sys       import version_info as python_version
 from   builtins  import range 
 # =============================================================================
@@ -548,7 +548,7 @@ class LinAlg(object) :
         return NotImplemented 
                 
     # =========================================================================
-    ## Right-addtion of matrix/vector objects
+    ## Right-additon of matrix/vector objects
     #  @code
     #  C = B + A  
     #  @endcode 
@@ -939,7 +939,12 @@ class LinAlg(object) :
         >>>  C = A ** 6 
         """
 
-        if isinstance ( n , integer_types ) and 0 <= n : pass
+        if    isinstance ( n , integer_types ) and 0 <= n : pass
+        
+        elif  a.kRows == a.kCols and isinstance ( n , integer_types ) and -1 == n :
+            
+            return LinAlg.M_INVERSE ( a )
+        
         else  :
             return NotImplemented
 
@@ -1292,6 +1297,30 @@ class LinAlg(object) :
 
 
     # =========================================================================
+    ## Get the inverse matrix
+    #  @code
+    #  m     = ...
+    #  m_inv = m.inverse () 
+    #  @encode
+    @staticmethod 
+    def M_INVERSE ( mtrx ) :
+        """ Get the inverse matrix
+        >>> m     = ...
+        >>> m_inv = m.inverse () 
+        """
+
+        if mtrx.kRows != mtrx.kCols :
+            raise NotImplementedError ('Inversion is defined only for square matrices!') 
+        
+        flag   = ctypes.c_int(0)
+        result = mtrx.Inverse ( flag )
+        
+        if 0 != flag.value :
+            raise ValueError('Matrix cannot be inverted!')
+        
+        return  result
+        
+    # =========================================================================
     ## get row from the matrix
     #  @code
     #  mtrx = ...
@@ -1577,6 +1606,9 @@ class LinAlg(object) :
         m.columns       = LinAlg.M_COLUMNS
 
         m.tmatrix       = LinAlg.M_TM 
+
+        if m.kRows == m.kCols :
+            m.inverse   = LinAlg.M_INVERSE            
 
         ## should be class property!! 
         m.shape         = property ( LinAlg.M_SHAPE , None , None )
