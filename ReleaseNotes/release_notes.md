@@ -16,6 +16,7 @@
   1. fix `numpy.bool` warning for newer versions of `numpy`
   1. add `Ostap::Math::A2` 
   1. add `(pi^2)/4*(2pi)^-5` factor for `Ostap.Math.GammaBW3` 
+  1. add `Ostap::usedVariables`
 
  
 ## Backward incompatible changes: 

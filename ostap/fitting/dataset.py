@@ -672,7 +672,14 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         cuts0 = cuts 
         if ''   == cuts : cuts0 = 0
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
+            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , dataset.varlist() , False )
+            
+            assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
+            del cuts0
+            
+            used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
+            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , used , True )
+
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
     if isinstance ( histo , str ) :
@@ -701,7 +708,14 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         
         if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar( cuts , cuts , dataset.varlist() , False )
+            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , dataset.varlist() , False )
+
+            assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
+            del cuts0
+            
+            used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
+            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , used , True )
+            
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
     if   isinstance ( histo , ROOT.TH3 ) and 3 == len ( what )  :
@@ -1105,7 +1119,17 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     vset     = dataset.get()
     for   v     in vset : vlst.add ( v )
     #
-    vcol     = ROOT.RooFormulaVar ( vname , formula , formula , vlst , False )
+
+
+    tmp_name = 'var_%d' % hash ( ( vname , formula ) )
+    vcom     = ROOT.RooFormulaVar ( vname , formula , formula , used , False )
+    
+    assert vtmp.ok() , 'addVar: invalid formula %s' % formula 
+    del vcol
+    
+    used = Ostap.usedVariables ( vname , vlst )
+    vcol = ROOT.RooFormulaVar ( vname , formula , formula , used , True  )
+
     dataset.addColumn ( vcol )
     del vcol 
     #

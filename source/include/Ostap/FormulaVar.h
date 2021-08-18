@@ -15,6 +15,48 @@
 namespace Ostap 
 {
   // ==========================================================================
+  /** get the list of used variables for the given formula
+   *  @code
+   *  @endcode 
+   *  @param formula the actual formula 
+   *  @param variables list of variables 
+   *  @return list of actually used variables (subset of <code>variables</code>
+   *  @see RooFormula 
+   *  @see RooFormula::actualDependents 
+   */
+  RooArgList 
+  usedVariables
+  ( const std::string& formula    , 
+    const RooArgList&  variables  ) ;     
+  // ============================================================================
+  /** get the list of used variables for the given formula
+   *  @code
+   *  @endcode 
+   *  @param formula the actual formula 
+   *  @param variables list of variables 
+   *  @return list of actually used variables (subset of <code>variables</code>
+   *  @see RooFormula 
+   *  @see RooFormula::actualDependents 
+   */
+  RooArgList 
+  usedVariables
+  ( const RooFormula&  formula    , 
+    const RooArgList&  variables  ) ;     
+  // ============================================================================
+  /** get the list of used variables for the given formula
+   *  @code
+   *  @endcode 
+   *  @param formula the actual formula 
+   *  @param variables list of variables 
+   *  @return list of actually used variables (subset of <code>variables</code>
+   *  @see RooFormulaVar
+   *  @see RooFormulaVar::formula  
+   */
+  RooArgList 
+  usedVariables
+  ( const RooFormulaVar& formula    , 
+    const RooArgList&    variables  ) ;     
+  // ============================================================================
   /** @class FormulaVar Ostap/FormulaVar.h
    *  Tiny extension of class FormulaVar 
    *  @author Vanya Belyaev

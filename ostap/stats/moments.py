@@ -625,9 +625,12 @@ class Mode(Median) :
         _mode = 3.0 * _median - 2.0 * _mean
         _fnm  = func ( _mode ,  *args )
 
-        ## make the interval small enough 
-        for i in range ( 10 ) :
+        ## make the interval small enough
+        for i in range ( 10 ) : 
 
+            if abs ( mx - mn ) < 6 * _sigma : break
+            
+            
             if abs ( mx - mn ) * 20 < abs ( self.xmax -  self.xmin ) : break
             
             if mn < _mode < mx and func ( mn , *args ) < _fnm and func ( mx , *args ) < _fnm :
@@ -659,6 +662,7 @@ class Mode(Median) :
             else :
                 
                 break
+
             
         ifun = lambda x,*a : -1.0 * float( func ( x , *a ) )
         

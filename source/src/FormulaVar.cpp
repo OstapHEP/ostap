@@ -3,7 +3,11 @@
 // ============================================================================
 // STD&STL
 // ============================================================================
+#include <set>
 #include <string>
+#include <memory>
+#include <regex>
+#include <sstream>
 // ============================================================================
 // ROOT/RooFit 
 // ============================================================================
@@ -13,6 +17,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/FormulaVar.h"
+#include "Ostap/Iterator.h"
 // ============================================================================
 // local
 // ============================================================================
@@ -25,6 +30,85 @@
  */
 // ============================================================================
 ClassImp(Ostap::FormulaVar) ;
+// ============================================================================
+/* get the list of used variables for the given formula
+ *  @code
+ *  @endcode 
+ *  @param formula the actual formula 
+ *  @param variables list of variables 
+ *  @return list of actually used variables (subset of <code>varibales</code>
+ *  @see RooFormula 
+ */
+// ============================================================================
+RooArgList 
+Ostap::usedVariables
+( const std::string& formula    , 
+  const RooArgList&  variables  ) 
+{
+  //
+  const std::string vname { Ostap::tmp_name ( "formula_" , formula ) } ;
+  std::unique_ptr<RooFormula> ptr { new RooFormula ( vname  .c_str () ,
+                                                     formula.c_str () , 
+                                                     variables        , 
+                                                     false            ) } ;
+  
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  //
+  return usedVariables ( *ptr , variables ) ;
+}
+// ============================================================================
+/*  get the list of used variables for the given formula
+ *  @code
+ *  @endcode 
+ *  @param formula the actual formula 
+ *  @param variables list of variables 
+ *  @return list of actually used variables (subset of <code>varibales</code>
+ *  @see RooFormula 
+ */
+// ============================================================================
+RooArgList 
+Ostap::usedVariables
+( const RooFormula&  formula    , 
+  const RooArgList&  variables  ) 
+{
+  RooArgList used {};
+  //
+  if ( !formula.ok() ) { return used; }   // RETURN 
+  //
+  const RooArgSet actual { formula.actualDependents() } ;
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
+  //   
+  Ostap::Utils::Iterator tmp ( from ) ;
+  RooAbsArg* c = 0 ;
+  while ( c = (RooAbsArg*) tmp.next() )
+  { if ( c && actual.contains ( *c ) ) { used.add ( *c ) ; } }
+  //
+#else
+  //
+  for ( const auto* arg : variables ) 
+  { if ( arg && actual.contains ( *arg ) ) { used.add ( *arg ) ; } }
+  //
+#endif 
+  //
+  return used ;
+}
+// ============================================================================
+/*  get the list of used variables for the given formula
+ *  @code
+ *  @endcode 
+ *  @param formula the actual formula 
+ *  @param variables list of variables 
+ *  @return list of actually used variables (subset of <code>varibales</code>
+ *  @see RooFormulaVar
+ *  @see RooFormulaVar::formula  
+ */
+// ============================================================================
+RooArgList 
+Ostap::usedVariables
+( const RooFormulaVar& formula    , 
+  const RooArgList&    variables  )
+{ return usedVariables ( formula.formula() , variables ) ; }
 // ============================================================================
 /*  full constructor 
  *  @param name       formula name 
