@@ -79,7 +79,7 @@ Ostap::usedVariables
   //
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,18,0)
   //   
-  Ostap::Utils::Iterator tmp ( from ) ;
+  Ostap::Utils::Iterator tmp ( variables ) ;
   RooAbsArg* c = 0 ;
   while ( c = (RooAbsArg*) tmp.next() )
   { if ( c && actual.contains ( *c ) ) { used.add ( *c ) ; } }
