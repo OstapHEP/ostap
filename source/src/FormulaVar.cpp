@@ -115,7 +115,31 @@ Ostap::usedVariables
   const RooArgList&    variables  )
 {
   //
-#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
+  //
+  std::ostringstream os {} ;
+  formula.printMetaArgs( os ) ;
+  std::string expression {os.str() } ;
+  //
+  std::size_t pos = expression.find ( "formula=\"" ) ;
+  Ostap::Assert ( 0 == pos ,
+                  "Invalid formula expression/1: " + expression ,
+                  "Ostap::usedVariables" );
+  //
+  expression = expression.substr ( 9 ) ;
+  pos = expression.find('"');
+  Ostap::Assert ( 0 <= pos && pos != std::string::npos , 
+                  "Invalid formula expression/2: " + expression ,
+                  "Ostap::usedVariables" );
+  expression = expression.substr ( 0 , pos ) ;
+  // 
+  std::unique_ptr<RooFormula> ptr { new RooFormula ( formula.GetName  () ,
+                                                     expression.c_str () , 
+                                                     variables           ) } ;  
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  return usedVariables ( *ptr , variables ) ;
+  //
+#elif ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
   //
   std::ostringstream os {} ;
   formula.printMetaArgs( os ) ;
@@ -138,7 +162,7 @@ Ostap::usedVariables
                                                      variables           , 
                                                      false               ) } ;  
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
-  return usedVariables ( *ptr , variables ) ; 
+  return usedVariables ( *ptr , variables ) ;
   //
 #else 
   //
