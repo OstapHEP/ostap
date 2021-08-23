@@ -1126,7 +1126,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     
     assert vcom.ok() , 'addVar: invalid formula %s' % formula 
     del vcom
-    used = Ostap.usedVariables ( vname , vlst )
+    used = Ostap.usedVariables ( formula , vlst )
     vcol = ROOT.RooFormulaVar ( vname , formula , formula , used , True  )
 
     dataset.addColumn ( vcol )
