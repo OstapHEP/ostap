@@ -48,11 +48,22 @@ Ostap::usedVariables
 {
   //
   const std::string vname { Ostap::tmp_name ( "formula_" , formula ) } ;
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,20,0)
+  //
+  std::unique_ptr<RooFormula> ptr { new RooFormula ( vname  .c_str () ,
+                                                     formula.c_str () , 
+                                                     variables        ) };
+  //
+#else 
+  //
   std::unique_ptr<RooFormula> ptr { new RooFormula ( vname  .c_str () ,
                                                      formula.c_str () , 
                                                      variables        , 
-                                                     false            ) } ;
-  
+                                                     false            ) };
+  //
+#endif
+  //
   if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
   //
   return usedVariables ( *ptr , variables ) ;
