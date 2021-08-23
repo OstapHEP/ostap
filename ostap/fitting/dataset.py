@@ -1122,11 +1122,11 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
 
     tmp_name = 'var_%d' % hash ( ( vname , formula ) )    
-    used = Ostap.usedVariables ( vname , vlst )
-    vcom     = ROOT.RooFormulaVar ( vname , formula , formula , used , False )
+    vcom     = ROOT.RooFormulaVar ( tmp_name , formula , formula , vlst , False )
     
     assert vcom.ok() , 'addVar: invalid formula %s' % formula 
     del vcom
+    used = Ostap.usedVariables ( vname , vlst )
     vcol = ROOT.RooFormulaVar ( vname , formula , formula , used , True  )
 
     dataset.addColumn ( vcol )
