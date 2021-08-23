@@ -21,6 +21,7 @@
 // ============================================================================
 // local
 // ============================================================================
+#include "Exception.h"
 #include "local_utils.h"
 // ============================================================================
 /** @file 
@@ -73,7 +74,11 @@ Ostap::usedVariables
 {
   RooArgList used {};
   //
-  if ( !formula.ok() ) { return used; }   // RETURN 
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+  if ( !const_cast<RooFormula&>(formula).ok() ) { return used; }   // RETURN 
+#else 
+  if ( !formula.ok()                          ) { return used; }   // RETURN 
+#endif
   //
   const RooArgSet actual { formula.actualDependents() } ;
   //
@@ -108,7 +113,39 @@ RooArgList
 Ostap::usedVariables
 ( const RooFormulaVar& formula    , 
   const RooArgList&    variables  )
-{ return usedVariables ( formula.formula() , variables ) ; }
+{
+  //
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+  //
+  std::ostringstream os {} ;
+  formula.printMetaArgs( os ) ;
+  std::string expression {os.str() } ;
+  //
+  std::size_t pos = expression.find ( "formula=\"" ) ;
+  Ostap::Assert ( 0 == pos ,
+                  "Invalid formula expression/1: " + expression ,
+                  "Ostap::usedVariables" );
+  //
+  expression = expression.substr ( 9 ) ;
+  pos = expression.find('"');
+  Ostap::Assert ( 0 <= pos && pos != std::string::npos , 
+                  "Invalid formula expression/2: " + expression ,
+                  "Ostap::usedVariables" );
+  expression = expression.substr ( 0 , pos ) ;
+  // 
+  std::unique_ptr<RooFormula> ptr { new RooFormula ( formula.GetName  () ,
+                                                     expression.c_str () , 
+                                                     variables           , 
+                                                     false               ) } ;  
+  if ( !ptr || !ptr->ok() ) { return RooArgList() ; }
+  return usedVariables ( *ptr , variables ) ; 
+  //
+#else 
+  //
+  return usedVariables ( formula.formula() , variables ) ; 
+  //
+#endif
+}
 // ============================================================================
 /*  full constructor 
  *  @param name       formula name 

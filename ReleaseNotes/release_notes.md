@@ -17,7 +17,7 @@
   1. add `Ostap::Math::A2` 
   1. add `(pi^2)/4*(2pi)^-5` factor for `Ostap.Math.GammaBW3` 
   1. add `Ostap::usedVariables`
-
+  1. fix `Ostap::usedVariabled` for old versions of ROOT 
  
 ## Backward incompatible changes: 
 
