@@ -71,7 +71,9 @@ __all__     = (
     'isint'          , ## Is equal  to int ? 
     'islong'         , ## Is equal  to long?
     'signum'         , ## sign of the number 
-    'samesign'       , ## two number of the same sign 
+    'samesign'       , ## two number of the same sign
+    'isfinite'       , ## `isfinite` for float values 
+    'isclose'        , ## `isclose`  for float values 
     ##
     'inrange'        , ## is double number in certain range?
     ## 
@@ -100,7 +102,7 @@ __all__     = (
     'axis_range'     , ## suitable axis range 
     ) 
 # =============================================================================
-import ROOT, cppyy, sys
+import ROOT, cppyy, sys, math 
 from   ostap.core.meta_info import root_version_int 
 # =============================================================================
 # logging 
@@ -136,6 +138,29 @@ vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
 
+# =============================================================================
+if (3,2) <= sys.version_info :
+    ## local version of <code>isfinite</code>
+    isfinite = math.isfinite 
+else :
+    # =========================================================================
+    ## local version of <code>isfinite</code>
+    def isfinite ( x ) :
+        """Local version of `isfinite`"""        
+        y = float ( x ) 
+        return ( not math.isinf ( y ) ) and ( not math.ifnan ( y ) )
+    
+# =============================================================================
+if (3,5) <= sys.version_info :
+    ## local version of <code>isfinite</code>
+    isclose = math.isclose 
+else :
+    # =========================================================================
+    ## local version of <code>isfinite</code>
+    def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
+        """Local version of `isclose`"""
+        return abs ( a - b ) <= max ( rel_tol * max ( abs ( a ) , abs ( b ) ) , abs_tol )
+            
 # =============================================================================
 ##  get the sign of the number 
 def signum ( x ) :
@@ -681,9 +706,25 @@ def frexp10 ( value ) :
     
     >>> a,b = frexp10 ( value ) 
     """
-    #
-    p = cpp_frexp10 ( value )
-    return p.first, p.second
+    
+    ## p = cpp_frexp10 ( value )
+    ## return p.first, p.second
+
+
+    xv = abs ( value )
+    if iszero ( xv )  : return  ( 0 , 0 ) 
+
+    q  = math.floor ( math.log10 ( float ( xv ) ) )
+
+    if    0 < q : xv /= 10**q 
+    elif  0 > q : xv *= 10**abs(q) 
+    
+    if 1 <= xv :
+        xv /= 10
+        q  += 1
+        
+    return ( xv , q ) if ( 0 <= value ) else ( -xv , q ) 
+
 
 # =============================================================================
 ## Find suitable range for histogram axis 
