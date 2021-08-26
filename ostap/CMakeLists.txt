@@ -198,8 +198,7 @@ execute_process(
 if ( OSTAP_PYTHON_CHECK_WARNINGS_RESULT ) 
  set( OSTAP_TEST_PYTHON_WARNINGS "" ) 
 else  () 
- ## set( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
- set( OSTAP_TEST_PYTHON_WARNINGS "" ) 
+ set( OSTAP_TEST_PYTHON_WARNINGS "-Werror" ) 
 endif () 
 
 if ( OSTAP_TEST_PYTHON_WARNINGS ) 
