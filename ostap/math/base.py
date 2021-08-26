@@ -115,6 +115,12 @@ if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
 else                              : from collections     import Iterable
 # =============================================================================
 
+if ( 3 , 5 ) > sys.version_info  :
+    import math
+    math.inf = float('inf' )
+    math.nan = float('nan' )
+    
+    
 ## get global C++ namespace
 cpp = cppyy.gbl
 ## C++ namespace Gaudi
@@ -148,7 +154,7 @@ else :
     def isfinite ( x ) :
         """Local version of `isfinite`"""        
         y = float ( x ) 
-        return ( not math.isinf ( y ) ) and ( not math.ifnan ( y ) )
+        return ( not math.isinf ( y ) ) and ( not math.isnan ( y ) )
     
 # =============================================================================
 if (3,5) <= sys.version_info :
