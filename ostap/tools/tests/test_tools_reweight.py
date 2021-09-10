@@ -191,10 +191,14 @@ for iter in range ( 1 , maxIter + 1  ) :
     if not more and iter > 3 : 
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         break
-    
+
+    cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
+    mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
+
     mcds.clear () 
     del mcds , selector
 
+    
 else :
 
     logger.error ( "No convergency!" )

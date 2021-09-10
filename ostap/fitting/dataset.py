@@ -25,11 +25,12 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, random, math, sys, ctypes  
-from   builtins               import range
-from   ostap.core.core        import  ( Ostap, VE, hID, dsID ,
-                                        valid_pointer , split_string )
-from   ostap.core.ostap_types import integer_types, string_types  
-from   ostap.math.base        import islong
+from   builtins                 import range
+from   ostap.core.core          import ( Ostap, VE, hID, dsID ,
+                                         valid_pointer , split_string )
+from   ostap.core.ostap_types   import integer_types, string_types  
+from   ostap.math.base          import islong
+from   ostap.utils.progress_bar import progress_bar 
 import ostap.trees.cuts     
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
@@ -196,6 +197,9 @@ def _rad_contains_ ( self , aname ) :
     """Check the presence of variable in dataset    
     >>> if 'mass' in dataset : print 'ok!'
     """
+    if isinstance ( aname , integer_types ) :
+        return 0<= aname < len ( self )
+    
     vset = self.get()
     return aname in vset 
 
@@ -1126,6 +1130,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     
     assert vcom.ok() , 'addVar: invalid formula %s' % formula 
     del vcom
+    
     used = Ostap.usedVariables ( formula , vlst )
     vcol = ROOT.RooFormulaVar ( vname , formula , formula , used , True  )
 
@@ -1920,7 +1925,7 @@ def _ds_store_error_ ( dataset ) :
     
     if not dataset.isWeighted() : return False ## UNWEIGHTED!
     
-    attr = '_store_weeight_error'
+    attr = '_store_weight_error'
     if not hasattr ( dataset , attr ) :
         
         wn = Ostap.Utils.storeError  (  dataset )
@@ -1972,8 +1977,101 @@ _new_methods_ += [
     ]
 
 # =============================================================================
+## Convert dataset to CSV format
+#  @code
+#  data = ...
+#  data.cvs ( 'data.csv' )
+#  data.cvs ( 'data.csv' , dialect = 'unix'      )
+#  data.cvs ( 'data.csv' , dialect = 'excel'     )
+#  data.cvs ( 'data.csv' , dialect = 'excel-tab' )
+#  data.cvs ( 'data.csv' , vars= ( 'a' , 'b' ) )    ## only subset of variables 
+#  data.cvs ( 'data.csv' , more_vars = ( 'a+b/c' , 'sin(a)/b' ) ) ## more variables 
+#  @endcode 
+def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' , progress = False , **kwargs ) :
+    """Convert dataset to CSV format
+    >>> data = ...
+    >>> data.cvs ( 'data.csv' )
+    >>> data.cvs ( 'data.csv' , dialect = 'unix'      )
+    >>> data.cvs ( 'data.csv' , dialect = 'excel'     )
+    >>> data.cvs ( 'data.csv' , dialect = 'excel-tab' )
+    >>> data.cvs ( 'data.csv' , vars= ( 'a' , 'b' ) )    ## only subset of variables 
+    >>> data.cvs ( 'data.csv' , more_vars = ( 'a+b/c' , 'sin(a)/b' ) ) ## add more derived variables 
+    """
 
+    vvars = vars if vars else [ v for v in dataset.varlist() ]
+    
+    for v in vvars :
+        assert v in dataset, 'ds_to_csv: variable %s is not in dataset' % v
 
+    # more variables 
+    mvars = []
+    for v in more_vars :
+        if   isinstance ( v , ROOT.RooAbsReal ) : mvars.append ( v )
+        elif isinstance ( v , string_types    ) :
+            
+            vv = v.strip()
+            
+            vvar = ROOT.RooFormulaVar ( vv , vv , dataset.varlist() , False )
+            
+            assert vvar.ok() , 'ds_to_csv: invalid formula %s' % v 
+            del vvar 
+            
+            used = Ostap.usedVariables ( vv , dataset.varlist() )            
+            vvar = ROOT.RooFormulaVar  ( vv , vv , used , True )
+            mvars.append ( vvar )
+        else :
+            raise TypeError('ds_to_csv: invalid variable %s/%s' % ( v , type(v) ) ) 
+
+    vnames1 = []
+    for v in vvars :
+        if isinstance ( v , ROOT.RooAbsReal ) : vnames1.append ( v.name )
+        else                                  : vnames1.append ( v      )
+
+    vnames = vnames1 + [ v.name for v in mvars ]
+
+    weighted = dataset.isWeighted  ()
+    se       = weighted and dataset.store_error      ()
+    sae      = weighted and dataset.store_asym_error ()
+
+    if weighted and not weight_var :
+        weight_var = dataset.wname()
+                
+    if   weighted and sae : vnames += [ weight_var , '%sErrorLow' % weight_var , '%sErrorHigh' % weigth_var  ]
+    elif weighted and se  : vnames += [ weight_var , '%sError'    % weight_var ]
+    elif weighted         : vnames += [ weight_var ]
+
+    import csv 
+    with open ( fname , 'w' , newline = '' ) as csv_file :
+        writer = csv.writer ( csv_file , **kwargs )
+        ## write header row 
+        writer.writerow ( vnames  )
+
+        ## loop over entries in the dataset
+        for entry in progress_bar ( dataset , max_value = len ( dataset ) , silent = not progress ) :
+            
+            values =  [ entry [ a ].getVal() for a in vnames1 ]
+            values += [ v.getVal()           for v in mvars   ]
+
+            if   weighted and sae :
+                e1 , e2 = dataset.weight_errors () 
+                values += [ dataset.weight() , e1 , e2 ]
+            elif weighted and se  :
+                e1 , e2 = dataset.weight_errors () 
+                values += [ dataset.weight() , 0.5*(e1+e2) ]
+            elif weighted :
+                values += [ dataset.weight() ]
+                                
+            writer.writerow ( values )
+
+# =============================================================================
+ROOT.RooDataSet.to_csv            = ds_to_csv
+ROOT.RooDataSet.toCsv             = ds_to_csv
+
+_new_methods_ += [
+    ROOT.RooDataSet.to_csv ,
+    ROOT.RooDataSet.toCsv
+    ]
+    
 # =============================================================================
 ## Combine two datasets with some weights
 #  @code

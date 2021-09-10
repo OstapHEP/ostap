@@ -24,7 +24,8 @@ from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
                                        ROOTCWD , strings  , split_string ) 
 from   ostap.core.ostap_types import ( integer_types , long_type      ,
                                        string_types  , sequence_types ,
-                                       sized_types   )                                        
+                                       sized_types   )
+from   ostap.utils.utils      import chunked 
 import ostap.histos.histos
 import ostap.trees.param
 # =============================================================================
@@ -1350,42 +1351,34 @@ def _rt_slice_ ( tree , varname , cut = '' ) :
     >>> varr = tree.slice('Pt','eta>3')
     >>> print varr 
     """
-    #
-    ## decode the name (if needed)
-    if isinstance ( varname , str ) :
-        varname = varname.strip()
-        varname = varname.replace ( ':' , ',' )
-        varname = varname.replace ( ';' , ',' )
-        varname = varname.replace ( ' ' , ',' )
-        varname = varname.split   (       ',' )
-        if 1 == len ( varname ) : varname = varname[0].strip()
-        else :
-            for i in range( 0 , len(varname) ) : 
-                varname[i] = varname[i].strip()  
-    #
-    if       isinstance ( varname ,  ( list , tuple ) ) :
-        ## forward to appropriate method 
-        return tree.slices ( varname , cut )
-    elif not isinstance ( varname , str ) :
-        raise AttibuteError ( 'Invalid type %s' % varname )
+
+    if isinstance ( varname , string_types ) : varname = split_string ( varname , ' ,;:' )
+    names = []
+    for v in varname :
+        names += split_string ( v , ' ,;:' )
+
+    if not names : return (,) 
     
-    ##
-    p1 = varname.find( '[')
-    if 0 < p1 :
-        p2 = varname.find( ']' , p1 + 1 )
-        if p1 < p2 :
-            raise AttributeError("TTree:slice: can't slice array-like variable '%s'" % varname )
+    result = []
+    
+    import numpy    
+    for chunk in chunked ( names , 10 ) : ## blocks up to 10 variables 
+        
+        l    = len ( chunk )
+        vars = ':'.join ( chunk )
+
+        ge   = tree.GetEstimate() 
+        n    = tree.Draw ( vars , cut , "goff" )
+        if 0 <= ge <= n + 1 :
+            tree.SetEstimate ( max ( n + 1 , ge ) )
+            n = tree.Draw ( vars , cut , "goff" )
+        
+        for k in range ( l ) :
+            result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = n ) , copy = True ) )
             
-    ge   = long_type( tree.GetEstimate() ) 
-    tree.SetEstimate ( max ( len ( tree ) , ge ) )
-    ##
-    n    = tree.Draw ( varname , cut , "goff" )
-    ##
-    import numpy
-    sl =   numpy.array ( numpy.frombuffer ( tree.GetV1() , count = n ) , copy = True )
-    ##
-    tree.SetEstimate ( ge ) 
-    return sl 
+        tree.SetEstimate ( ge ) 
+
+    return numpy.stack ( result ) if result  else result
 
 
 # =============================================================================
@@ -1407,37 +1400,17 @@ def _rt_slices_ ( tree , varnames , cut = '' ) :
     
     >>> tree = ...
     
-    >>> varrs1 = tree.slices( ['Pt' , 'eta'] ,'eta>3')
-    >>> print varrs1
+    >>> vars1 = tree.slices( ['Pt' , 'eta'] ,'eta>3')
+    >>> print vars1
     
-    >>> varrs2 = tree.slices( 'Pt,eta'  ,'eta>3')
-    >>> print varrs2
+    >>> vars2 = tree.slices( 'Pt,eta'  ,'eta>3')
+    >>> print vars2
     
-    >>> varrs3 = tree.slices( 'Pt : eta' ,'eta>3')
-    >>> print varrs3
+    >>> vars3 = tree.slices( 'Pt : eta' ,'eta>3')
+    >>> print vars3
     """
     #
-    varname = varnames 
-    ## decode the name (if needed)
-    for sep in ( ',' , ':' , ';' ) :
-        if isinstance ( varname , str ) :
-            varname = varname.strip() 
-            varname = varname.split( sep )
-            if 1 == len ( varname ) : varname = varname[0].strip()
-            else :
-                for i in range( 0 , len(varname) ) : 
-                    varname[i] = varname[i].strip()  
-    #
-    if       isinstance ( varname , str ) :
-        ## forward to appropriate method 
-        return tree.slice ( varname , cut )
-    elif not isinstance ( varname ,  ( list , tuple ) ) :
-        raise AttibuteError ( 'Invalid type %s' % varname )
-    ##
-    import numpy
-    a = numpy.array ( [tree.slice(name, cut) for name in varname ] )
-    a.sort()
-    return a
+    return tree.slice ( varnames , cut )
 
 
 ROOT.TTree .slice  = _rt_slice_

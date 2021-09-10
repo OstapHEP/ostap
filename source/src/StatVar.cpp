@@ -27,6 +27,7 @@
 #include "Ostap/FormulaVar.h"
 #include "Ostap/P2Quantile.h"
 #include "Ostap/Moments.h"
+#include "Ostap/GetWeight.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -4062,5 +4063,190 @@ Ostap::StatVar::p2interval
   return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
 }
 // ============================================================================
-// The END
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data     , 
+  const std::vector<std::string>&    vars     , 
+  const std::string&                 cuts     ,
+  std::vector<std::vector<double> >& table    ,  
+  const unsigned long                first    ,
+  const unsigned long                last     )
+{ return get_table ( data , vars , cuts , table , "" , first , last )  ; }
+// ============================================================================
+/*  get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param cuts selection criteria 
+ *  @param table output table
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data  , 
+  const std::vector<std::string>&    vars  , 
+  const TCut&                        cuts  , 
+  std::vector<std::vector<double> >& table ,
+  const unsigned long                first ,
+  const unsigned long                last  )
+{ 
+  const std::string _cuts = cuts.GetTitle() ;
+  return get_table ( data , vars , _cuts , table , ""  , first , last  ) ; 
+}
+// ============================================================================
+/*  get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data  , 
+  const std::vector<std::string>&    vars  , 
+  std::vector<std::vector<double> >& table ,  
+  const unsigned long                first ,
+  const unsigned long                last  )
+{ return get_table ( data , vars , std::string("")  , table , "" , first , last ) ; }
+// ============================================================================
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param cut_range cut range 
+ *  @param table output table
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data      , 
+  const std::vector<std::string>&    vars      , 
+  const TCut&                        cuts      ,
+  std::vector<std::vector<double> >& table     ,  
+  const std::string&                 cut_range ,
+  const unsigned long                first     ,
+  const unsigned long                last      )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return get_table ( data , vars , _cuts , table , cut_range  , first , last  ) ; 
+}
+// =============================================================================
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ *  @param cut_range cut range 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data      , 
+  const std::vector<std::string>&    vars      , 
+  const std::string&                 cuts      ,
+  std::vector<std::vector<double> >& table     ,  
+  const std::string&                 cut_range ,
+  const unsigned long                first     ,
+  const unsigned long                last      )
+{
+  //
+  const unsigned int N = vars.size() ;
+  //
+  if ( vars.empty()                     ) { table.clear() ; return 0 ; }
+  if ( nullptr == data || last <= first ) { table.clear() ; return 0 ; }
+  if ( data->numEntries() <= first      ) { table.clear() ; return 0 ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
+  //
+  typedef std::unique_ptr<Ostap::FormulaVar> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  //
+  for ( const auto& e : vars ) 
+  {
+    auto p = make_formula ( e , *data , false ) ;
+    if ( !p ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;  
+  }
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  table.resize ( 100 ) ;
+  //
+  unsigned long NN = 0 ;
+  //
+  // start the first loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    ++NN ;
+  }
+  //
+  if  ( 0 == NN ) { table.clear() ; return NN ; } // RETURN 
+  //
+  table.clear() ; table.resize ( N ) ;
+  for ( unsigned short i = 0 ; i < N ; ++i ) 
+  {
+    table.push_back ( std::vector<double>() ) ;
+    table.back().resize ( NN ) ;
+  }
+  //
+  unsigned long ii = 0 ;
+  // start the second loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    for ( unsigned int i = 0 ; i  < N ; ++i ) 
+    {
+      const double v = formulas[i]->getVal()  ;
+      table[i][ii] = v ;
+    }
+    //
+    ++ii  ; 
+    //
+  }
+  return NN ;
+}
+
+
+
+// ============================================================================
+//                                                                      The END
 // ============================================================================

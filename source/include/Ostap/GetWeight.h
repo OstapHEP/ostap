@@ -53,7 +53,7 @@ namespace Ostap
     std::pair<RooDataSet*,std::string> 
     unweight ( const RooAbsData*  weighted_data      ,
                const std::string& weight_var    = "" ) ;
-    // ========================================================================
+  // ========================================================================
   } //                                        The end of namespace Ostap::Utils
   // ==========================================================================
 } //                                                 The end of namespace Ostap

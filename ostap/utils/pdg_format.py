@@ -15,10 +15,6 @@
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date 2015-07-20
 #
-# Version           $Revision$
-# Last modification $Date$
-#                by $Author$
-# 
 # =============================================================================
 """ Set of utilities for rounding according to PDG prescription
 see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
@@ -41,11 +37,11 @@ __all__ = (
     'round_N'     , ## round floating value to N-significant digits
     'pdg_round'   , ## round value,error-pair according to PDG prescription
     'pdg_format'  , ## format value&error according to PDF prescription
-    'pdg_format2' , ## format value+2errorr according to PDF
-    'pdg_format3' , ## format value+3errors according to PDF
+    'pdg_format2' , ## format value+2errors according to PDG
+    'pdg_format3' , ## format value+3errors according to PDG
     )
 # ===============================================================================
-import ROOT,           math
+import ROOT,  math, sys, enum  
 from   ostap.math.ve          import VE
 from   ostap.math.base        import frexp10, isfinite, isclose  
 from   ostap.core.ostap_types import integer_types 
@@ -56,6 +52,88 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.utils.pdg_format' )
 else                       : logger = getLogger ( __name__                 )
 # =============================================================================
+class ErrMode(enum.IntEnum):
+    TOTAL      = 0  ## Use total uncertainty 
+    MIN        = 1  ## Use minimal uncertainty 
+    MAX        = 2  ## Use maximal uncertainty 
+    MEAN       = 3  ## Use mean
+    AVERAGE    = 3  ## Use mean 
+    GEOMETRIC  = 4  ## Use geometric mean
+
+# =============================================================================
+## get the reference error from the list of uncertainties
+#  @code
+#  error = ref_error ( 'total'  , 0.1 , 0.2 , 0.3 ) 
+#  error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
+#  @endcode 
+def ref_error ( mode , error , *errors ) :
+    """Get the reference error from the list of uncertainties
+    >>> error = ref_error ( 'total'  , 0.1 , 0.2 , 0.3 ) 
+    >>> error = ref_error ( Mode.MIN , 0.1 , 0.2 , 0.3 ) 
+    """
+
+    if not errors  : return abs ( error ) 
+        
+    umode = mode
+
+    if isinstance ( mode , string_types ) :
+        
+        umode = model.upper()
+        if   umode                                     : umode = ErrMode.TOTAL  .name 
+        elif umode in ( 'MIMIMAL' , 'MINIMUM' , 'MN' ) : umode = ErrMode.MIN    .name 
+        elif umode in ( 'MAXIMAL' , 'MAXIMUM' , 'MX' ) : umode = ErrMode.MAX    .name 
+        elif umode in ( 'A' , 'AV', 'AVE'            ) : umode = ErrMode.AVERAGE.name 
+        
+        assert umode in ErrMode.__members__ ,\
+               'ref_error: Unknown string mode: %s' % mode 
+        
+        umode = ErrMode[umode]
+        
+    elif isinstance ( mode , integer_types ) :
+
+        for k,v in ErrMode.__members__.items() :
+            if v == mode :
+                umode = v
+                break
+        else :
+            raise ValueError("ref_error: Unknown integer mode %s" % mode )
+
+    assert isinstance ( umode , Mode ),\
+           'ref_error: Unknown mode %s' % umode
+
+    if umode == ErrMode.TOTAL :        
+        result = error * error 
+        for e in errors : result += e*e 
+        return math.sqrt ( result )
+    
+    elif umode == ErrMode.MIN :        
+        result = abs ( erorr )  
+        for e in errors : result = min ( result , abs ( e ) )            
+        return result
+    
+    elif umode == ErrMode.MAX :        
+        result = abs ( erorr )  
+        for e in errors : result = max ( result , abs ( e ) )            
+        return result
+    
+    elif umode == ErrMode.GEOMETRIC :        
+        result = abs ( erorr )
+        ne     = 1 
+        for e in errors :
+            ae = abs ( e )
+            if 0 < ae :
+                result *= ae
+                ne     += 1                 
+        return result if 0 == result else pow ( result , 1.0 / ne )
+    
+    else :
+        result = abs ( erorr )
+        ne     = 1 
+        for e in errors :
+            result += ae
+            ne     += 1                 
+        return result  / float ( ne ) 
+
 
 # =============================================================================
 ## round to nearest integer, rounds half integers to nearest even integer 
@@ -447,7 +525,7 @@ def pdg_format ( value , error , latex = False ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2015-07-20 
-def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
+def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL ) :
     """Round value/error accoridng to PDG prescription and format it for print
     @see http://pdg.lbl.gov/2010/reviews/rpp2010-rev-rpp-intro.pdf
     @see section 5.3 of doi:10.1088/0954-3899/33/1/001
@@ -464,18 +542,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = 'total' ) :
     >>> print ' Rounded value/error is %s ' % pdg_format2 ( value , error1 , error2 , True ) 
     """
 
-    if isinstance ( mode , str ) : mode = mode.lower()
-    ## 
-    if   mode in ( 'min'   , 'mn'  ) : 
-        error = min ( abs ( error1 ) , abs ( error2 ) )
-    elif mode in ( 'max'   , 'mx'  ) : 
-        error = max ( abs ( error1 ) , abs ( error2 ) )
-    elif mode in ( 'total' , 'tot' ) : 
-        error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 )
-    else :
-        ## use the default policy 
-        error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 )
-
+    error = ref_error ( mode , error1 , error2 ) 
 
     val , err , q , ecase = pdg_round__ ( value , error )  
 
@@ -605,17 +672,7 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
     >>> print ' Rounded value/error is %s ' % pdg_format2 ( value , error1 , error2 , True ) 
     """
 
-    if isinstance ( mode , str ) : mode = mode.lower()
-    ## 
-    if   mode in ( 'min'   , 'mn'  ) : 
-        error = min ( abs ( error1 ) , abs ( error2 ) , abs ( error3 ) )
-    elif mode in ( 'max'   , 'mx'  ) : 
-        error = max ( abs ( error1 ) , abs ( error2 ) , abs ( error3 ) )
-    elif mode in ( 'total' , 'tot' ) : 
-        error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 + error3 * error3 )
-    else :
-        ## use the default policy 
-        error = math.sqrt ( 1.0 * error1 * error1 + error2 * error2 + error3 * error3 )
+    error = ref_error ( mode , error1 , error2 , error3 ) 
 
     val , err , q , ecase = pdg_round__ ( value , error )  
    

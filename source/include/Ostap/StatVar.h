@@ -1387,7 +1387,93 @@ namespace Ostap
       const std::string&  expr         , 
       const std::string&  cuts  = ""   ) ;
     // ========================================================================    
-  } ;
+  public:
+    // ========================================================================    
+    /** get variables from dataset in form of the table 
+     *  @param data input dataset
+     *  @param vars list of variables
+     *  @param cuts selection criteria 
+     *  @param table output table
+     *  @param first first entry 
+     *  @param last  last entry 
+     */
+    static unsigned long 
+    get_table ( const RooAbsData*                  data         , 
+                const std::vector<std::string>&    vars         , 
+                const std::string&                 cuts         , 
+                std::vector<std::vector<double> >& table        ,
+                const unsigned long                first = 0    ,
+                const unsigned long                last  = LAST ) ;
+    // ========================================================================
+    /** get variables from dataset in form of the table 
+     *  @param data input dataset
+     *  @param vars list of variables
+     *  @param cuts selection criteria 
+     *  @param table output table
+     *  @param first first entry 
+     *  @param last  last entry 
+     */
+    static unsigned long 
+    get_table ( const RooAbsData*                  data         ,  
+                const std::vector<std::string>&    vars         , 
+                const TCut&                        cuts         , 
+                std::vector<std::vector<double> >& table        ,
+                const unsigned long                first = 0    ,
+                const unsigned long                last  = LAST ) ;
+    // ========================================================================
+    /** get variables from dataset in form of the table 
+     *  @param data input dataset
+     *  @param vars list of variables
+     *  @param table output table
+     *  @param first first entry 
+     *  @param last  last entry 
+     */
+    static unsigned long 
+    get_table ( const RooAbsData*                  data         , 
+                const std::vector<std::string>&    vars         , 
+                std::vector<std::vector<double> >& table        , 
+                const unsigned long                first = 0    ,
+                const unsigned long                last  = LAST ) ;    
+    // ========================================================================
+  public:
+    // ========================================================================    
+    /** get variables from dataset in form of the table 
+     *  @param data input dataset
+     *  @param vars list of variables
+     *  @param cuts selection criteria 
+     *  @param cutrange cut range 
+     *  @param table output table
+     *  @param first first entry 
+     *  @param last  last entry 
+     */
+    static unsigned long 
+    get_table ( const RooAbsData*                  data         , 
+                const std::vector<std::string>&    vars         , 
+                const std::string&                 cuts         , 
+                std::vector<std::vector<double> >& table        ,
+                const std::string&                 cutrange     ,
+                const unsigned long                first = 0    ,
+                const unsigned long                last  = LAST ) ;
+    // ========================================================================
+    /** get variables from dataset in form of the table 
+     *  @param data input dataset
+     *  @param vars list of variables
+     *  @param cuts selection criteria 
+     *  @param table output table
+     *  @param cutrange cut range 
+     *  @param first first entry 
+     *  @param last  last entry 
+     */
+    static unsigned long 
+    get_table ( const RooAbsData*                  data         ,  
+                const std::vector<std::string>&    vars         , 
+                const TCut&                        cuts         , 
+                std::vector<std::vector<double> >& table        ,
+                const std::string&                 cutrange     ,
+                const unsigned long                first = 0    ,
+                const unsigned long                last  = LAST ) ;
+    // ========================================================================
+  } ;  
   // ==========================================================================
 } //                                                     end of namespace Ostap
 // ============================================================================
