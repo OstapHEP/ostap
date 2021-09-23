@@ -91,6 +91,7 @@ add_library(ostap SHARED src/format.cpp
                          src/Tensors.cpp
                          src/Topics.cpp
                          src/Tmva.cpp
+                         src/TreeGetter.cpp
                          src/UStat.cpp
                          src/Valid.cpp
                          src/ValueWithError.cpp

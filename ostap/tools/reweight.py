@@ -630,7 +630,7 @@ ComparisonPlot. draw = _cmp_draw_
 #  @code
 #  active        = makeWeights ( ... , make_plots = False , ... ) \
 #  @endcode
-#  othwewise it also returns the tuple of comparison plots 
+#  otherwise it also returns the tuple of comparison plots 
 #  @code 
 #  active, cmp_plots = makeWeights ( ... , make_plots = True  , ... )
 #  for item in  cmp_plots :

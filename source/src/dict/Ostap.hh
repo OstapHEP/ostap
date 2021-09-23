@@ -106,6 +106,7 @@
 #include "Ostap/Tee.h"
 #include "Ostap/ToStream.h"
 #include "Ostap/Topics.h"
+#include "Ostap/TreeGetter.h"
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/Tmva.h"
 #include "Ostap/Valid.h"

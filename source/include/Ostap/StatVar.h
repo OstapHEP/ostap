@@ -37,9 +37,13 @@ namespace Ostap
   public:
     // ========================================================================
     /// the actual type for statistic 
-    typedef Ostap::WStatEntity     Statistic  ;
+    typedef Ostap::WStatEntity       Statistic  ;
     /// the actual type for vector of statistic 
-    typedef std::vector<Statistic> Statistics ;
+    typedef std::vector<Statistic>   Statistics ;
+    /// variable names 
+    typedef std::vector<std::string> Names      ;
+    // ========================================================================
+  public:
     // ========================================================================
     /** @struct Interval 
      *  the actual type for interval
@@ -282,7 +286,7 @@ namespace Ostap
     static unsigned long statVars
     ( TTree*                          tree              , 
       std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
+      const Names&                    expressions       ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) ;
     // ========================================================================
@@ -300,7 +304,7 @@ namespace Ostap
     static unsigned long statVars
     ( TTree*                          tree               ,       
       std::vector<Statistic>&         result             , 
-      const std::vector<std::string>& expressions        ,
+      const Names&                    expressions        ,
       const std::string&              cuts               ,
       const unsigned long             first       = 0    ,
       const unsigned long             last        = LAST ) ;
@@ -319,7 +323,7 @@ namespace Ostap
     static unsigned long statVars
     ( TTree*                          tree               ,       
       std::vector<Statistic>&         result             , 
-      const std::vector<std::string>& expressions        ,
+      const Names&                    expressions        ,
       const TCut&                     cuts               ,
       const unsigned long             first       = 0    ,
       const unsigned long             last        = LAST ) ;
@@ -457,7 +461,7 @@ namespace Ostap
     static unsigned long statVars
     ( const RooAbsData*               data              , 
       std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
+      const Names&                    expressions       ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) 
     { return statVars ( data , result , expressions , std::string() , std::string () , first , last ) ; }
@@ -476,7 +480,7 @@ namespace Ostap
     static unsigned long statVars
     ( const RooAbsData*               data              , 
       std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
+      const Names&                    expressions       ,
       const std::string&              cuts              ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) 
@@ -496,7 +500,7 @@ namespace Ostap
     static unsigned long statVars
     ( const RooAbsData*               data              , 
       std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
+      const Names&                    expressions       ,
       const TCut&                     cuts              ,
       const unsigned long             first      = 0    ,
       const unsigned long             last       = LAST ) ;
@@ -536,7 +540,7 @@ namespace Ostap
     static unsigned long statVars
     ( const RooAbsData*               data              , 
       std::vector<Statistic>&         result            , 
-      const std::vector<std::string>& expressions       ,
+      const Names&                    expressions       ,
       const TCut&                     cuts              ,
       const std::string&              cut_range         ,
       const unsigned long             first      = 0    ,
@@ -1388,20 +1392,29 @@ namespace Ostap
       const std::string&  cuts  = ""   ) ;
     // ========================================================================    
   public:
+    // ========================================================================
+    /// data column 
+    typedef std::vector<double> Column ;    
+    /// data table 
+    typedef std::vector<Column> Table  ;
+    // ========================================================================    
+  public:
     // ========================================================================    
     /** get variables from dataset in form of the table 
      *  @param data input dataset
      *  @param vars list of variables
      *  @param cuts selection criteria 
      *  @param table output table
+     *  @param weights column of weigths (empty for non-weighted data) 
      *  @param first first entry 
      *  @param last  last entry 
      */
     static unsigned long 
     get_table ( const RooAbsData*                  data         , 
-                const std::vector<std::string>&    vars         , 
+                const Names&                       vars         , 
                 const std::string&                 cuts         , 
-                std::vector<std::vector<double> >& table        ,
+                Table&                             table        ,
+                Column&                            weights      , 
                 const unsigned long                first = 0    ,
                 const unsigned long                last  = LAST ) ;
     // ========================================================================
@@ -1410,14 +1423,16 @@ namespace Ostap
      *  @param vars list of variables
      *  @param cuts selection criteria 
      *  @param table output table
+     *  @param weights column of weigths (empty for non-weighted data) 
      *  @param first first entry 
      *  @param last  last entry 
      */
     static unsigned long 
     get_table ( const RooAbsData*                  data         ,  
-                const std::vector<std::string>&    vars         , 
+                const Names&                       vars         , 
                 const TCut&                        cuts         , 
-                std::vector<std::vector<double> >& table        ,
+                Table&                             table        ,
+                Column&                            weights      , 
                 const unsigned long                first = 0    ,
                 const unsigned long                last  = LAST ) ;
     // ========================================================================
@@ -1425,13 +1440,15 @@ namespace Ostap
      *  @param data input dataset
      *  @param vars list of variables
      *  @param table output table
+     *  @param weights column of weigths (empty for non-weighted data) 
      *  @param first first entry 
      *  @param last  last entry 
      */
     static unsigned long 
     get_table ( const RooAbsData*                  data         , 
-                const std::vector<std::string>&    vars         , 
-                std::vector<std::vector<double> >& table        , 
+                const Names&                       vars         , 
+                Table&                             table        ,
+                Column&                            weights      , 
                 const unsigned long                first = 0    ,
                 const unsigned long                last  = LAST ) ;    
     // ========================================================================
@@ -1443,14 +1460,16 @@ namespace Ostap
      *  @param cuts selection criteria 
      *  @param cutrange cut range 
      *  @param table output table
+     *  @param weights column of weigths (empty for non-weighted data) 
      *  @param first first entry 
      *  @param last  last entry 
      */
     static unsigned long 
     get_table ( const RooAbsData*                  data         , 
-                const std::vector<std::string>&    vars         , 
+                const Names&                       vars         , 
                 const std::string&                 cuts         , 
-                std::vector<std::vector<double> >& table        ,
+                Table&                             table        ,
+                Column&                            weights      , 
                 const std::string&                 cutrange     ,
                 const unsigned long                first = 0    ,
                 const unsigned long                last  = LAST ) ;
@@ -1460,15 +1479,17 @@ namespace Ostap
      *  @param vars list of variables
      *  @param cuts selection criteria 
      *  @param table output table
+     *  @param weights column of weigths (empty for non-weighted data) 
      *  @param cutrange cut range 
      *  @param first first entry 
      *  @param last  last entry 
      */
     static unsigned long 
     get_table ( const RooAbsData*                  data         ,  
-                const std::vector<std::string>&    vars         , 
+                const Names&                       vars         , 
                 const TCut&                        cuts         , 
-                std::vector<std::vector<double> >& table        ,
+                Table&                             table        ,
+                Column&                            weights      , 
                 const std::string&                 cutrange     ,
                 const unsigned long                first = 0    ,
                 const unsigned long                last  = LAST ) ;

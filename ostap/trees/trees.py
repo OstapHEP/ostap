@@ -51,6 +51,7 @@ def _tt_nonzero_ ( tree ) :
     - require non-zero poniter and non-empty Tree/Chain
     """
     return valid_pointer ( tree ) and 0 < len ( tree )
+
 ROOT.TTree .__nonzero__ = _tt_nonzero_
 ROOT.TChain.__nonzero__ = _tt_nonzero_
 ROOT.TTree .__bool__    = _tt_nonzero_
@@ -77,7 +78,7 @@ ROOT.TChain.__bool__    = _tt_nonzero_
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-06
-def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False , active = () ) :
+def _iter_cuts_ ( self , cuts = '' , first = 0 , last = _large , progress = False , active = () ) :
     """Iterator over ``good events'' in TTree/TChain:
     
     >>> tree = ... # get the tree
@@ -96,8 +97,11 @@ def _iter_cuts_ ( self , cuts , first = 0 , last = _large , progress = False , a
     >>> for i in tree.withCuts ( 'pt>10' , active = ( 'pt' , 'y') ) : sum_y += i.y 
     """
     #
-    last = min ( last , len ( self )  )
-    
+    last  = min ( last , len ( self ) )
+    first = max ( 0    , first        ) 
+    #
+    if not cuts : cuts = '1'
+    # 
     pit = Ostap.PyIterator ( self , cuts , first , last )
     if not pit.ok() : raise TypeError ( "Invalid Formula: %s" % cuts )
     #
@@ -150,6 +154,7 @@ ROOT.TChain.withCuts  = _iter_cuts_
 
 ROOT.TTree. __len__   = lambda s : s.GetEntries()
 
+
 # =============================================================================
 ## Iterator over ``good events'' in TTree/TChain:
 #  @code 
@@ -168,9 +173,10 @@ def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False )
     
     """
     #
-    if last < 0 : last = ROOT.Tree.kMaxEntries
+    if last < 0 : last = _large
     
-    last = min ( last , len ( self )  )
+    last  = min ( last , len ( self ) )
+    first = max ( 0    , first        ) 
 
     from ostap.utils.progress_bar import ProgressBar 
     with ProgressBar ( min_value = first        ,
@@ -231,6 +237,101 @@ def _tc_call_ ( self , first = 0 , last = -1  , cuts = None , progress = False )
 ROOT.TTree .__call__  = _tc_call_ 
 ROOT.TChain.__call__  = _tc_call_
 
+try : 
+    from numpy import frombuffer as _frombuffer 
+    def get_result ( vct ) :
+        return _frombuffer ( vct.data() , count = len ( vct ) , dtype = float )
+        ## return _array ( data , dtype = float )
+except ImportError :
+    from array import array as _array 
+    def get_result ( vct ) :
+        return _array ( 'd' , vct )
+
+# =============================================================================
+##  Iterate over tree entries and get a row/array of values for each good entry
+#   @code
+#   tree = ...
+#   for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
+#      print ( row ) 
+#   @code 
+def _tt_rows_ ( tree , variables , cuts = '' , first = 0 , last = -1 ) :
+    """Iterate over tree entries and get a row/array of values for each good entry
+    >>> tree = ...
+    >>> for row in tree.rows ( 'a a+b/c sin(d)' , 'd>0' ) :
+    >>>    print ( row ) 
+    """
+    
+    if last < 0 : last = _large
+    last  = min ( last , len ( tree ) )
+    first = max ( 0    , first        ) 
+    
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    vars = []
+    for v in variables :
+        vars += split_string ( v , ' ,;:' )
+    vars = strings ( vars ) 
+
+    getter = Ostap.Trees.Getter ( tree , vars ) 
+    result = std.vector('double')()
+
+    pit = None 
+    if cuts :
+        
+        pit = Ostap.PyIterator ( self , cuts , first , last )
+        assert pit and pit.ok() , 'Invalid formula %s' % cuts  
+
+        _t = pit.tree() 
+        while valid_pointer ( _t ) :
+
+            current = pit.current() - 1
+            tt      = getter.tree()
+            ievent  = tt.GetEntryNumber ( current )
+            if ievent < 0 :
+                logger.error('Cannot read entry %s' % current ) 
+                break
+            ientry  = tt.LoadTree ( ievent )
+            if ientry < 0 :
+                logger.error('Cannot load tree  %s' % ievent ) 
+                break 
+            
+            sc = getter.eval ( result )
+            if sc.isFailure () :
+                logger.error('Error status %s' % sc  ) 
+                break
+
+            yield get_result ( result )                 
+            _t = pit.next()
+
+        
+    else :
+
+        for current in range  ( first , last  ) :
+            tt      = getter.tree()
+            ievent  = tt.GetEntryNumber ( current )
+            if ievent < 0 :
+                logger.error('Cannot read entry %s' % current ) 
+                break
+            ientry  = tt.LoadTree ( ievent )
+            if ientry < 0 :
+                logger.error('Cannot load tree  %s' % ievent ) 
+                break 
+            
+            sc = getter.eval ( result )
+            if sc.isFailure () :
+                logger.error('Error status %s' % sc  ) 
+                break
+            
+            yield get_result ( result )                 
+
+
+    del pit
+    del getter 
+    tree.GetEntry(0)
+            
+ROOT.TTree .rows  = _tt_rows_ 
+
+
+
 # =============================================================================
 ## help project method for ROOT-trees and chains 
 #
@@ -288,10 +389,10 @@ def _tt_project_ ( tree               ,
     """
     #
 
-    if nentries < 0 : nentries = ROOT.TTree.kMaxEntries
+    if nentries < 0 : nentries = _large
 
     args = () 
-    if options or 0 < firstentry or 0 < nentries < ROOT.TTree.kMaxEntries :
+    if options or 0 < firstentry or 0 < nentries < _large :
         args = options , nentries , firstentry
 
 
@@ -816,7 +917,6 @@ def _rt_leaf_ ( tree , leaf ) :
 
 ROOT.TTree.leaf   = _rt_leaf_
 
-
 # =============================================================================
 ## get the branches for the given tree/chain
 #  @see TTree
@@ -858,7 +958,6 @@ def _rt_branches_ ( t , pattern = '' , *args ) :
 
 
 ROOT.TTree.branches = _rt_branches_
-
 
 # =============================================================================
 ## simplified printout for TTree/TChain
@@ -1339,17 +1438,17 @@ ROOT.TChain.__getitem__ = _rc_getitem_
 #  @code
 #  tree = ...
 #  varr = tree.slice('Pt','eta>3')
-#  print varr 
+#  print ( varr )  
 #  @endcode 
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08
-def _rt_slice_ ( tree , varname , cut = '' ) :
+def _rt_slice_ ( tree , varname , cut = '' , weight = '' , transpose = False , first = 0 , last = _large ) :
     """ Get ``slice'' from TTree in a form of numpy.array
     ##
     >>> tree = ...
-    >>> varr = tree.slice('Pt','eta>3')
-    >>> print varr 
+    >>> varr , _  = tree.slice('Pt','eta>3')
+    >>> print ( varr )  
     """
 
     if isinstance ( varname , string_types ) : varname = split_string ( varname , ' ,;:' )
@@ -1357,7 +1456,9 @@ def _rt_slice_ ( tree , varname , cut = '' ) :
     for v in varname :
         names += split_string ( v , ' ,;:' )
 
-    if not names : return (,) 
+    if weight : names.append ( weight )
+        
+    if not names : return () 
     
     result = []
     
@@ -1368,18 +1469,36 @@ def _rt_slice_ ( tree , varname , cut = '' ) :
         vars = ':'.join ( chunk )
 
         ge   = tree.GetEstimate() 
-        n    = tree.Draw ( vars , cut , "goff" )
+        n    = tree.Draw ( vars , cut , "goff" , last , first )
+        n    = tree.GetSelectedRows () 
         if 0 <= ge <= n + 1 :
             tree.SetEstimate ( max ( n + 1 , ge ) )
             n = tree.Draw ( vars , cut , "goff" )
+            n = tree.GetSelectedRows () 
         
         for k in range ( l ) :
             result.append ( numpy.array ( numpy.frombuffer ( tree.GetVal ( k ) , count = n ) , copy = True ) )
             
         tree.SetEstimate ( ge ) 
 
-    return numpy.stack ( result ) if result  else result
+    if not result :
+        return None , None 
+        
+    if weight :
+        weights = result[ -1]
+        result  = result[:-1]
+    else :
+        weights = None 
 
+    if not result :
+        return result, weights 
+
+    result = numpy.stack ( result )
+
+    if transpose :
+        result = result.transpose()
+        
+    return result, weights
 
 # =============================================================================
 ## get "slices" from TTree in a form of numpy.array
@@ -1395,7 +1514,7 @@ def _rt_slice_ ( tree , varname , cut = '' ) :
 #  @see numpy.array 
 #  @author Albert BURSCHE
 #  @date 2015-07-08  
-def _rt_slices_ ( tree , varnames , cut = '' ) :
+def _rt_slices_ ( tree , varnames , cut = '' , weight = '' , transpose = False  , first = 0 , last = _large ) :
     """ Get ``slices'' from TTree in a form of numpy.array
     
     >>> tree = ...
@@ -1410,17 +1529,64 @@ def _rt_slices_ ( tree , varnames , cut = '' ) :
     >>> print vars3
     """
     #
-    return tree.slice ( varnames , cut )
+    return tree.slice ( varnames , cut , weight , transpose , first , last )
 
 
 ROOT.TTree .slice  = _rt_slice_
 ROOT.TTree .slices = _rt_slices_
 
-def _not_implemented_ ( self , method , *args , **kwargs ) :
-    raise NotImplementedError('%s: the method "%s" is not implemented' % ( self.__class__ , method ) ) 
 
-ROOT.TChain.slice  = lambda s,*x : _not_implemented_( s , 'slice'  , *x ) 
-ROOT.TChain.slices = lambda s,*x : _not_implemented_( s , 'slices' , *x ) 
+# =============================================================================
+## get "slices" from TChain in a form of numpy.array
+#  @code
+#  chain = ...
+#  varrs1 = chain.slices ( ['Pt','eta'] , 'eta>3' )
+#  print varrs1 
+#  varrs2 = chain.slices (  'Pt , eta'  , 'eta>3' )
+#  print varrs2
+#  varrs3 = chain.slices (  'Pt : eta'  , 'eta>3' )
+#  print varrs3
+#  @endcode 
+#  @see numpy.array 
+def _rc_slice_ ( chain , varname , cut = '' , weight = '', transpose = False ) :
+    """Get ``slices'' from TChain in a form of numpy.array
+    >>> chain = ...
+    >>> varrs1 = chain.slices ( ['Pt','eta'] , 'eta>3' )
+    >>> print varrs1 
+    >>> varrs2 = chain.slices (  'Pt , eta'  , 'eta>3' )
+    >>> print varrs2
+    >>> varrs3 = chain.slices (  'Pt : eta'  , 'eta>3' )
+    >>> print varrs3
+    - see numpy.array 
+    """
+
+    files = chain.files()
+    
+    import numpy    
+
+    result , weights = () , () 
+    
+    for  i , f in enumerate ( files ) :
+        
+        t = ROOT.TChain( chain.GetName() )
+        t.Add ( f )
+        
+        r , w = _rt_slice_ ( t , varname , cut , weight , transpose )
+        if 0 == i :
+            result  = r
+            weights = w
+        else :
+            result  = numpy.concatenate ( ( result  , r ) , axis = 0 if Transpose else 1 ) 
+            weights = numpy.concatenate ( ( weigths , w ) )
+            
+        del t
+        
+    return result , weights
+
+
+ROOT.TChain .slice  = _rc_slice_
+ROOT.TChain .slices = _rc_slice_
+
 
 # =============================================================================
 ## extending the existing chain 
@@ -1515,6 +1681,12 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
     
     return newc 
 
+# =============================================================================
+try : 
+    import numpy, ctypes  
+except ImportErorr :
+    numpy = None
+    
 # ==============================================================================
 ## Add new branch to the tree
 # 
@@ -1623,10 +1795,10 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     
     """
     if isinstance ( tree  , ROOT.TChain ) :
-        return _chain_add_new_branch ( tree , name , function , verbose , skip )
+        return _chain_add_new_branch ( tree , name , function , verbose = verbose , skip = skip )
 
     if not tree :
-        logger.error (  "Invalid Tree!" )
+        logger.error (  "add_branch: Invalid Tree!" )
         return
     
     if isinstance ( function , dict ) :
@@ -1665,10 +1837,37 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
             
         args = mmap ,
 
+    elif isinstance ( name , string_types ) and isinstance ( function , float ) :
+
+        args = name , function
+
+    elif isinstance ( name , string_types ) and isinstance ( function , integer_types ) :
+
+        args = name , function
+
+    elif numpy and \
+             isinstance ( name     , string_types  ) and \
+             isinstance ( function , numpy.ndarray ) :
+
+        data = function 
+        dt   = data.dtype 
+        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
+        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data ) 
+
+    elif numpy and \
+             isinstance ( name     , string_types ) and \
+             isinstance ( function , sized_types  ) and \
+             2 == len ( function )                  and \
+             isinstance ( function[0] , numpy.ndarray ) :
+
+        data , value = function 
+        dt   = data.dtype 
+        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
+        val  = numpy.array ( [ value ] , dtype = dt )
+        val  = val[0] 
+        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data ) , val 
+
     else : 
-
-        
-
         
         for n in names : 
             assert not n in tree.branches() ,'Branch %s already exists!' % n
@@ -2048,7 +2247,7 @@ class Chain(CleanUp) :
                "Invalid ``first'' %s/%s"                      % ( first , type ( first ) ) 
         
         self.__first   = int ( first )  
-        self.__nevents = nevents if 0 <= nevents < ROOT.TChain.kMaxEntries else -1 
+        self.__nevents = nevents if 0 <= nevents < _large else -1 
         self.__chain   = None
         self.__name    = 'Unknown!'
         
@@ -2168,7 +2367,7 @@ class Chain(CleanUp) :
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
 
-        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntrie
+        if chunk_size <= 0 : chunk_size = _large 
         
         trees = []
 
@@ -2212,7 +2411,7 @@ class Chain(CleanUp) :
         >>> tree = ....
         >>> trees = tree.split ( chunk_size = 1000000 ) 
         """
-        if chunk_size <= 0 : chunk_size = ROOT.TChain.kMaxEntries
+        if chunk_size <= 0 : chunk_size = _large
         if max_files  <= 0 : max_files  = 1 
         
         if 0 != self.first or 0 < self.__nevents :
@@ -2396,7 +2595,7 @@ class Tree(Chain) :
         if 0 >= chunk_size : return  self,
         
         ll   = len ( self )
-        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else ROOT.TChain.kMaxEntries ) 
+        last = min ( ll , self.first + self.nevents if 0 <= self.nevents else _large ) 
 
         result = [] 
         for s in self.get_slices ( self.first , last , chunk_size ) :
@@ -2464,6 +2663,8 @@ _new_methods_       = (
     ROOT.TTree .withCuts  ,
     ROOT.TChain.withCuts  ,
     ROOT.TTree. __len__   ,
+    #
+    ROOT.TTree. rows      ,
     #
     ROOT.TTree .__call__  ,
     ROOT.TChain.__call__  ,

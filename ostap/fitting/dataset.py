@@ -26,7 +26,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random, math, sys, ctypes  
 from   builtins                 import range
-from   ostap.core.core          import ( Ostap, VE, hID, dsID ,
+from   ostap.core.core          import ( Ostap, VE, hID, dsID , strings , 
                                          valid_pointer , split_string )
 from   ostap.core.ostap_types   import integer_types, string_types  
 from   ostap.math.base          import islong
@@ -682,7 +682,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             del cuts0
             
             used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
-            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , used , True )
+            cuts0 = Ostap.FormulaVar    ( cuts , cuts , used , True )
 
         return ds_project ( dataset , histo , vars , cuts0 , *args ) 
             
@@ -718,7 +718,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
             del cuts0
             
             used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
-            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , used , True )
+            cuts0 = Ostap.FormulaVar   ( cuts , cuts , used , True )
             
         return ds_project ( dataset , histo , what , cuts0 , *args )
 
@@ -1132,7 +1132,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
     del vcom
     
     used = Ostap.usedVariables ( formula , vlst )
-    vcol = ROOT.RooFormulaVar ( vname , formula , formula , used , True  )
+    vcol = Ostap.FormulaVar ( vname , formula , formula , used , True  )
 
     dataset.addColumn ( vcol )
     del vcol 
@@ -1166,7 +1166,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 #  dataset.add_new_var ( 'Pt' , 'eta' , 'A' , h3 ) ## sample from 3D histogram
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-def add_new_var ( dataset , *args ) : 
+def add_new_var ( dataset , varname , what , *args ) : 
     """Add/calculate/sample variable to RooDataSet
 
     >>> dataset.add_new_var ( 'ratio' , 'pt/pz' )  ## use RooFormulaVar
@@ -1185,7 +1185,28 @@ def add_new_var ( dataset , *args ) :
     
     """
     
-    vv = Ostap.Functions.add_var ( dataset , *args )
+    if isinstance ( varname , string_types ) :
+        if    isinstance ( what , string_types ) : pass
+        elif  isinstance ( what ,   ( Generator, Collection, Sequence, Iterable  ) ) :
+            vvar  = ROOT.RooRealVar ( varname , 'variable %s' % varname , -999.999 )
+            vset  = ROOT.RooArgSet  ( vvar )
+            dset  = ROOT.RooDataSet ( dsID() , 'dataset with %s' % varname , vset )
+            for v in what :
+                vvar.setVal ( float ( v ) )
+                dset.add ( vset )
+                
+            if len ( dataset ) == len ( dset ) :
+                dataset *= dset
+                return dataset
+            
+            dset.clear() 
+            del dset
+            del vset
+            del vvar 
+            raise TypeError("Invalid type/length of ``what'' argument")
+        
+        
+    vv = Ostap.Functions.add_var ( dataset , varname , what , *args )
     if not  vv : logger.error('add_new_var: NULLPTR from Ostap.Functions.add_var')
     #
     return dataset 
@@ -2017,7 +2038,7 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
             del vvar 
             
             used = Ostap.usedVariables ( vv , dataset.varlist() )            
-            vvar = ROOT.RooFormulaVar  ( vv , vv , used , True )
+            vvar = Ostap.FormulaVar    ( vv , vv , used , True )
             mvars.append ( vvar )
         else :
             raise TypeError('ds_to_csv: invalid variable %s/%s' % ( v , type(v) ) ) 
@@ -2072,6 +2093,94 @@ _new_methods_ += [
     ROOT.RooDataSet.toCsv
     ]
     
+# =============================================================================d
+## Get "slice" from <code>RooAbsData</code> in form of numpy array
+#  @code
+#  data = ...
+#  varr , weights = data.slice ( 'a b c'     , 'd>0' )
+#  varr , weights = data.slice ( 'a : b : c' , 'd>0' )
+#  varr , weights = data.slice ( 'a , b , c' , 'd>0' )
+#  varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
+#  @endcode
+def _rda_slice_ ( dataset , variables , cuts = '' , transpose = False , cut_range = '' , *args ) :
+    """Get "slice" from <code>RooAbsData</code> in form of numpy array
+    >>> data = ...
+    >>> varr , weights = data.slice ( 'a b c'     , 'd>0' )
+    >>> varr , weights = data.slice ( 'a : b : c' , 'd>0' )
+    >>> varr , weights = data.slice ( 'a , b , c' , 'd>0' )
+    >>> varr , weights = data.slice ( 'a ; b ; c' , 'd>0' )
+    """
+    
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    
+    names = []
+    for v in variables :
+        names += split_string ( v , ' ,;:' )
+
+    names = strings ( names )
+    
+    
+    tab = Ostap.StatVar.Table  ()
+    col = Ostap.StatVar.Column ()
+
+    ## get data 
+    n   = Ostap.StatVar.get_table ( dataset   ,
+                                    names     ,
+                                    cuts      ,
+                                    tab       ,
+                                    col       , 
+                                    cut_range ,
+                                    *args     )
+    nc = len ( col )    
+    assert ( dataset.isWeighted() and nc == n ) or ( 0 == nc and not dataset.isWeighted() ), \
+           'slide: invalid size of ``weights'' column! %s/%s/%s' % ( n , nc , dataset.isWeighted() ) 
+    
+    if 0 == n :
+        return () , () 
+
+    import numpy
+
+    result = []
+    for column in tab :
+        
+        nc = len ( column )
+        assert 0 <= nc and nc == n, 'slice: invalid column size! %s/%s' % ( nc , n ) 
+
+        l = column.begin().__follow__()
+        
+        result.append ( numpy.array ( numpy.frombuffer ( l , count = n ) , copy = True ) )
+        
+        column.clear()
+        
+    del tab 
+
+    
+    if not result :
+        return None, None 
+    
+    result = numpy.stack ( result )
+
+    if transpose : result = result.transpose()
+
+    if not dataset.isWeighted() :
+        return result, None 
+        
+    nn = len ( col ) 
+    l  = col.begin().__follow__()        
+    weights = numpy.array ( numpy.frombuffer ( l , count = nn ) , copy = True )
+    col.clear()
+    
+    del col
+    
+    return result , weights 
+
+
+ROOT.RooAbsData.slice = _rda_slice_
+
+_new_methods_ += [
+    ROOT.RooAbsData.slice 
+    ]
+
 # =============================================================================
 ## Combine two datasets with some weights
 #  @code
@@ -2233,7 +2342,93 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
     
     return dsw
 
+# ============================================================================
+try : 
+    from numpy import array as _array 
+    def get_result ( data ) :
+        return _array (  data , dtype = float ) 
+except ImportError :
+    from array import array as _array 
+    def get_result ( data ) : return _array ( 'd' , data )
 
+
+# ===========================================================================
+## Iterator for rows in dataset
+#  @code
+#  dataset = ...
+#  for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
+#     print (row, weight) 
+#  @endcode 
+def _rad_rows_ ( dataset , variables , cuts = '' , cutrange = '' , first = 0 , last = -1 ) :
+    """Iterator for rows in dataset
+    >>> dataset = ...
+    >>> for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
+    >>>    print (row, weight) 
+    """
+    
+    if last < 0 : last = ROOT.TTree.kMaxEntries    
+    last  = min ( last , len ( dataset ) )
+    first = max ( 0    , first           ) 
+    
+    if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
+    vars = []
+    for v in variables :
+        vars += split_string ( v , ' ,;:' )
+    vars = strings ( vars ) 
+
+    formulas = []
+    varlist  = dataset.varlist () 
+    for v in vars :
+        f0 =  ROOT.RooFormulaVar ( v , v , varlist , False )
+        assert f0.ok () , 'rows: invalid formula %s' % v
+        del f0
+        used  = Ostap.usedVariables ( v , varlist )            
+        f0    = Ostap.FormulaVar    ( v , v , used , True )
+        formulas.append ( f0 ) 
+
+    fcuts = None 
+    if cuts :
+        f0 =  ROOT.RooFormulaVar ( cuts , cuts , varlist , False )
+        assert f0.ok () , 'rows: invalid formula %s' % cuts
+        del f0
+        used  = Ostap.usedVariables ( cuts , varlist )            
+        fcuts = Ostap.FormulaVar ( cuts , cuts , used , True )
+
+    weighted = dataset.isWeighted()
+    
+    ## loop over dataset 
+    for event in range ( first , last ) :
+        
+        vars = dataset.get ( event ) 
+        if not vars : break
+
+        if cutrange and not vars.allInRange ( cutrange ) : continue
+
+        wc = fcuts.getVal() if fcuts else 1.0 
+
+        if not wc   : continue
+
+        wd = dataset.weight() if weighted else 1.0 
+        
+        w  = wc * wd 
+        if not w    : continue
+
+        weight = w if weighted else None 
+
+        result = tuple ( tuple ( float(f) for f in formulas ) ) 
+        yield  get_result ( result ) , weight 
+        
+
+    del fcuts
+    del formulas
+
+    
+ROOT.RooAbsData.rows = _rad_rows_         
+    
+_new_methods_ += [
+    ROOT.RooAbsData.rows 
+    ]
+    
 # ============================================================================
 
 from  ostap.stats.statvars import data_decorate as _dd

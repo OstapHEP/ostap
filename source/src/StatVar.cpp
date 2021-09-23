@@ -1206,7 +1206,7 @@ Ostap::StatVar::statVar
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
 {
@@ -1273,7 +1273,7 @@ unsigned long Ostap::StatVar::statVars
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const std::string&                      cuts        ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
@@ -1348,7 +1348,7 @@ unsigned long Ostap::StatVar::statVars
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const TCut&                             cuts        ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
@@ -1657,7 +1657,7 @@ unsigned long
 Ostap::StatVar::statVars
 ( const RooAbsData*               data        , 
   std::vector<Statistic>&         result      , 
-  const std::vector<std::string>& expressions ,
+  const Ostap::StatVar::Names&    expressions ,
   const TCut&                     cuts        ,
   const unsigned long             first       ,
   const unsigned long             last        ) 
@@ -1683,7 +1683,7 @@ unsigned long
 Ostap::StatVar::statVars
 ( const RooAbsData*               data        , 
   std::vector<Statistic>&         result      , 
-  const std::vector<std::string>& expressions ,
+  const Ostap::StatVar::Names&    expressions ,
   const TCut&                     cuts        ,
   const std::string&              cut_range   ,
   const unsigned long             first       ,
@@ -1710,7 +1710,7 @@ unsigned long
 Ostap::StatVar::statVars
 ( const RooAbsData*               data        , 
   std::vector<Statistic>&         result      , 
-  const std::vector<std::string>& expressions ,
+  const Ostap::StatVar::Names&    expressions ,
   const std::string&              cuts        ,
   const std::string&              cut_range   ,
   const unsigned long             first       ,
@@ -4067,6 +4067,7 @@ Ostap::StatVar::p2interval
  *  @param data input dataset
  *  @param vars list of variables
  *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
  *  @param first first entry 
  *  @param last  last entry 
  */
@@ -4074,53 +4075,63 @@ Ostap::StatVar::p2interval
 unsigned long 
 Ostap::StatVar::get_table 
 ( const RooAbsData*                  data     , 
-  const std::vector<std::string>&    vars     , 
+  const Ostap::StatVar::Names&       vars     , 
   const std::string&                 cuts     ,
-  std::vector<std::vector<double> >& table    ,  
+  Ostap::StatVar::Table&             table    ,
+  Ostap::StatVar::Column&            weights  ,
   const unsigned long                first    ,
   const unsigned long                last     )
-{ return get_table ( data , vars , cuts , table , "" , first , last )  ; }
+{ return get_table ( data , vars , cuts , table , weights , "" , first , last )  ; }
 // ============================================================================
 /*  get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
  *  @param cuts selection criteria 
  *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
  */
 // ============================================================================
 unsigned long 
 Ostap::StatVar::get_table 
-( const RooAbsData*                  data  , 
-  const std::vector<std::string>&    vars  , 
-  const TCut&                        cuts  , 
-  std::vector<std::vector<double> >& table ,
-  const unsigned long                first ,
-  const unsigned long                last  )
+( const RooAbsData*                  data    , 
+  const Ostap::StatVar::Names&       vars    , 
+  const TCut&                        cuts    , 
+  Ostap::StatVar::Table&             table   ,
+  Ostap::StatVar::Column&            weights ,
+  const unsigned long                first   ,
+  const unsigned long                last    )
 { 
   const std::string _cuts = cuts.GetTitle() ;
-  return get_table ( data , vars , _cuts , table , ""  , first , last  ) ; 
+  return get_table ( data , vars , _cuts , table , weights , ""  , first , last  ) ; 
 }
 // ============================================================================
 /*  get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
  *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
  */
 // ============================================================================
 unsigned long 
 Ostap::StatVar::get_table 
-( const RooAbsData*                  data  , 
-  const std::vector<std::string>&    vars  , 
-  std::vector<std::vector<double> >& table ,  
-  const unsigned long                first ,
-  const unsigned long                last  )
-{ return get_table ( data , vars , std::string("")  , table , "" , first , last ) ; }
+( const RooAbsData*                  data    , 
+  const Ostap::StatVar::Names&       vars    , 
+  Ostap::StatVar::Table&             table   ,
+  Ostap::StatVar::Column&            weights ,
+  const unsigned long                first   ,
+  const unsigned long                last    )
+{ return get_table ( data , vars , std::string("")  , table , weights , "" , first , last ) ; }
 // ============================================================================
 /** get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
  *  @param cut_range cut range 
  *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
  *  @param first first entry 
  *  @param last  last entry 
  */
@@ -4128,21 +4139,23 @@ Ostap::StatVar::get_table
 unsigned long 
 Ostap::StatVar::get_table 
 ( const RooAbsData*                  data      , 
-  const std::vector<std::string>&    vars      , 
+  const Ostap::StatVar::Names&       vars      , 
   const TCut&                        cuts      ,
-  std::vector<std::vector<double> >& table     ,  
+  Ostap::StatVar::Table&             table     ,
+  Ostap::StatVar::Column&            weights   ,
   const std::string&                 cut_range ,
   const unsigned long                first     ,
   const unsigned long                last      )
 {
   const std::string _cuts = cuts.GetTitle() ;
-  return get_table ( data , vars , _cuts , table , cut_range  , first , last  ) ; 
+  return get_table ( data , vars , _cuts , table , weights , cut_range  , first , last  ) ; 
 }
 // =============================================================================
 /** get variables from dataset in form of the table 
  *  @param data input dataset
  *  @param vars list of variables
  *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
  *  @param cut_range cut range 
  *  @param first first entry 
  *  @param last  last entry 
@@ -4151,9 +4164,10 @@ Ostap::StatVar::get_table
 unsigned long 
 Ostap::StatVar::get_table 
 ( const RooAbsData*                  data      , 
-  const std::vector<std::string>&    vars      , 
+  const Ostap::StatVar::Names&       vars      , 
   const std::string&                 cuts      ,
-  std::vector<std::vector<double> >& table     ,  
+  Ostap::StatVar::Table&             table     ,
+  Ostap::StatVar::Column&            weights   ,
   const std::string&                 cut_range ,
   const unsigned long                first     ,
   const unsigned long                last      )
@@ -4161,9 +4175,9 @@ Ostap::StatVar::get_table
   //
   const unsigned int N = vars.size() ;
   //
-  if ( vars.empty()                     ) { table.clear() ; return 0 ; }
-  if ( nullptr == data || last <= first ) { table.clear() ; return 0 ; }
-  if ( data->numEntries() <= first      ) { table.clear() ; return 0 ; }
+  if ( vars.empty()                     ) { table.clear() ; weights.clear() ; return 0 ; }
+  if ( nullptr == data || last <= first ) { table.clear() ; weights.clear() ; return 0 ; }
+  if ( data->numEntries() <= first      ) { table.clear() ; weights.clear() ; return 0 ; }
   //
   const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
   //
@@ -4181,8 +4195,6 @@ Ostap::StatVar::get_table
   const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
-  //
-  table.resize ( 100 ) ;
   //
   unsigned long NN = 0 ;
   //
@@ -4206,14 +4218,13 @@ Ostap::StatVar::get_table
     ++NN ;
   }
   //
-  if  ( 0 == NN ) { table.clear() ; return NN ; } // RETURN 
+  if  ( 0 == NN ) { table.clear()  ; weights.clear() ; return NN ; } // RETURN 
   //
-  table.clear() ; table.resize ( N ) ;
-  for ( unsigned short i = 0 ; i < N ; ++i ) 
-  {
-    table.push_back ( std::vector<double>() ) ;
-    table.back().resize ( NN ) ;
-  }
+  table.resize ( N ) ;
+  for ( unsigned short i = 0 ; i < N ; ++i ) { table[i].resize ( NN ) ; }
+  //
+  if ( weighted ) { weights.resize ( NN ) ; }
+  else            { weights.clear  ()     ; }
   //
   unsigned long ii = 0 ;
   // start the second loop
@@ -4230,8 +4241,10 @@ Ostap::StatVar::get_table
     const long double wd = weighted  ? data->weight()        : 1.0L ;
     if ( !wd ) { continue ; }                                   // CONTINUE    
     // cuts & weight:
-    const long double w  = wd *  wc ;
+    const long double w  = wd * wc ;
     if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    if  ( weighted ) { weights [ ii ] = w ; }
     //
     for ( unsigned int i = 0 ; i  < N ; ++i ) 
     {

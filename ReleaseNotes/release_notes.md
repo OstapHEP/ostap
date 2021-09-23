@@ -1,6 +1,11 @@
 
 ## New features 
 
+ 1. Add `slice` and `rows` mehtods for `TTree` and `RooAbsData` 
+ 1. Extendd fnuctinality to adding data columns to `TTree` and `RooAbsData` 
+ 1. Add reweighting with `GBReweighter`
+
+ 
 ## Backward incompatible changes: 
 
 ## Bug fixes:

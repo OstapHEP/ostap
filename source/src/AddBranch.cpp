@@ -36,6 +36,7 @@ namespace
     INVALID_TREEFUNCTION  = 753 , 
     INVALID_TH2           = 754 , 
     INVALID_TH1           = 755 , 
+    INVALID_BUFFER        = 756 , 
   };
   // ==========================================================================
 }
@@ -357,6 +358,144 @@ Ostap::Trees::add_branch
   //
   return Ostap::StatusCode::SUCCESS ;  
 }
+// ============================================================================
+namespace 
+{
+  // ==========================================================================
+  template <class DATA>
+  inline Ostap::StatusCode 
+  _add_branch_ ( TTree*               tree  , 
+                 const std::string&   vname ,                
+                 const std::string&   vtype , 
+                 const DATA*          data  ,
+                 const unsigned long  size  , 
+                 const DATA           value ) 
+  {
+    //
+    if ( !tree ) { return Ostap::StatusCode ( INVALID_TREE   ) ; }
+    if ( !data ) { return Ostap::StatusCode ( INVALID_BUFFER ) ; }
+    //    
+    DATA  bvalue  { value } ;
+    TBranch* branch = tree->Branch( vname.c_str() , &bvalue , ( vname + vtype ).c_str() );
+    //
+    const Long64_t total    = tree->GetEntries() ;
+    const Long64_t nentries = total < size ? total : size ;
+    //
+    for ( Long64_t i = 0 ; i < nentries ; ++i ) 
+    {
+      bvalue =  data [ i ] ;
+      branch->Fill() ;
+    }
+    //
+    for ( Long64_t i = nentries ; i < total  ; ++i ) 
+    {
+      bvalue = value ;
+      branch->Fill() ;
+    }
+    //
+    return Ostap::StatusCode::SUCCESS ;  
+  }
+  // ==========================================================================
+}
+// ============================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   vname ,  
+  const double*        data  , 
+  const unsigned long  size  , 
+  const double         value ) 
+{ return _add_branch_ ( tree , vname , "/D" , data , size , value ) ; }
+// ========================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   vname ,  
+  const float*         data  , 
+  const unsigned long  size  , 
+  const float          value ) 
+{ return _add_branch_ ( tree , vname , "/F" , data , size , value ) ; }
+// ========================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   vname ,  
+  const int*           data  , 
+  const unsigned long  size  , 
+  const int            value ) 
+{ return _add_branch_ ( tree , vname , "/I" , data , size , value ) ; }
+// ============================================================================
+/*  copy data from buffer into new branch 
+ *  @param tree   The tree 
+ *  @param data   input data fuffer 
+ *  @param size   length of the buffer
+ *  @param value  default value (used for short buffers) 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree  , 
+  const std::string&   vname ,  
+  const long*          data  , 
+  const unsigned long  size  , 
+  const long           value ) 
+{ return _add_branch_ ( tree , vname , "/L" , data , size , value ) ; }
+// ============================================================================
+/** copy data from buffer into new branch 
+ *  @param tree    The tree 
+ *  @param namex   name of the new branch 
+ *  @param value   the value 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree        , 
+  const std::string&   vname       ,  
+  const double         value       ) 
+{ return _add_branch_ ( tree , vname , "/D" , &value , 1 , value ) ; }
+// ============================================================================
+/** copy data from buffer into new branch 
+ *  @param tree    The tree 
+ *  @param namex   name of the new branch 
+ *  @param value   the value 
+ *  @return status code 
+ */
+// ============================================================================
+Ostap::StatusCode
+Ostap::Trees::add_branch 
+( TTree*               tree        , 
+  const std::string&   vname       ,  
+  const int            value       ) 
+{ return _add_branch_ ( tree , vname , "/I" , &value , 1 , value ) ; }
+
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
