@@ -14,6 +14,10 @@
 #include "Ostap/IFuncs.h"
 #include "Ostap/StatusCode.h"
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 // Forward declarations 
 // ============================================================================
 class TTree   ; // from ROOT 
@@ -136,6 +140,8 @@ namespace Ostap
       const std::string&   namez , 
       const TH3&           histo ) ;
     // ========================================================================
+#if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
+    // ========================================================================
     /** copy data from buffer into new branch 
      *  @param tree   The tree 
      *  @param data   input data fuffer 
@@ -195,6 +201,8 @@ namespace Ostap
       const long*          data      , 
       const unsigned long  size      , 
       const long           value = 0 ) ;
+    // ========================================================================
+#endif
     // ========================================================================
     /** copy data from buffer into new branch 
      *  @param tree    The tree 

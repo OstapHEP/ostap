@@ -383,7 +383,7 @@ namespace
     //
     for ( Long64_t i = 0 ; i < nentries ; ++i ) 
     {
-      bvalue =  data [ i ] ;
+      bvalue =  *(data + i) ;
       branch->Fill() ;
     }
     //
@@ -397,6 +397,8 @@ namespace
   }
   // ==========================================================================
 }
+// ============================================================================
+#if ROOT_VERSION(6,24,0)<=ROOT_VERSION_CODE
 // ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
@@ -414,7 +416,7 @@ Ostap::Trees::add_branch
   const unsigned long  size  , 
   const double         value ) 
 { return _add_branch_ ( tree , vname , "/D" , data , size , value ) ; }
-// ========================================================================
+// ============================================================================
 /*  copy data from buffer into new branch 
  *  @param tree   The tree 
  *  @param data   input data fuffer 
@@ -465,6 +467,8 @@ Ostap::Trees::add_branch
   const unsigned long  size  , 
   const long           value ) 
 { return _add_branch_ ( tree , vname , "/L" , data , size , value ) ; }
+// ============================================================================
+#endif
 // ============================================================================
 /** copy data from buffer into new branch 
  *  @param tree    The tree 

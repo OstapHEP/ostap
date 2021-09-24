@@ -15,6 +15,7 @@ __all__     = (
     'FuncTree'          , ## helper base class for 'TTree-function'
     'FuncData'          , ## helper base class for 'RooAbsData-function'
     'PyTreeFunction'    , ## 'TTree-function' that uses python function/callable 
+    'PyTreeArray'       , ## 'TTree-function' that uses python function/callable 
     "pyfun_tree"        , ## ditto, but as fnuction 
     'PyDataFunction'    , ## 'Data-function' that uses python function/callable
     "pyfun_data"        , ## ditto, but as fnuction 
@@ -114,7 +115,56 @@ class PyTreeFunction(FuncTree) :
     def evaluate  ( self ) :
         tree = self.the_tree   
         return self.__function ( tree )
+
+# =============================================================================
+## @class PyTreeArray
+#  The concrete implementation on of <code>PyFunTree</code>, <code>FuncTree</code>
+#  @see ostap.trees.funcs.FunTree
+#  @see Ostap.Functions.PyFuncTree
+#  @see Ostap.IFuncTree 
+class PyTreeArray(FuncTree) :
+    """The concrete implementation on of PyFunTree, FuncTree,
+    - see ostap.trees.funcs.FunTree
+    - see Ostap.Functions.PyFuncTree
+    - see Ostap.IFuncTree 
+    """
+    def __init__ ( self , array , tree = None , length = None , value = 0.0 ) :
+        """Constructor from the function/callable and (optional) tree"""
+        if tree is None : tree = ROOT.nullptr 
+        super(PyTreeArray,self).__init__ ( tree  )
+        self.__array  = array
+        self.__length = len ( array ) if ( length is None ) else int ( length )
+        self.__value  = float(value)
+        assert 0 <= self.__length, "Invalid ``length'' %s" % length 
+                
+    @property
+    def array ( self ) :
+        """``array'' : the actual array"""
+        return self.__array
     
+    @property
+    def length ( self ) :
+        """``length'': lenth of array """
+        return self.__length 
+
+    @property
+    def value ( self ) :
+        """``value'' : defalt value for invaild entries """
+        return self.__array
+
+    ## the only one method, delegate to the function  
+    def evaluate  ( self ) :
+        tree = self.the_tree
+        if tree.GetReadEvent() < 0 :
+            assert 0 <= tree.GetEntry ( 0 ) , "PyTreeArray: Cannot get entry 0!"
+        index = tree.GetReadEvent()
+        assert 0<= index , "PyTreeArray: invalid event index %s" % index
+        ##
+        result = self.__array[ index ] if index < self.__length else self.__value
+        ##
+        return float ( result )
+    
+
 # =============================================================================
 ## @class PyDataFunction
 #  The concrete implementation on of <code>PyFuncData</code>, <code>FuncData</code>

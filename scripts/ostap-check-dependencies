@@ -9,6 +9,8 @@
 """Check dependencies for ostap 
 """
 # =============================================================================
+import sys 
+# =============================================================================
 from ostap.logger.logger import getLogger
 logger = getLogger('ostap-check-dependencies')    
 # =============================================================================
@@ -40,6 +42,27 @@ except ImportError :
     - histogram/function parameterization
     - see http://www.scipy.org"""
     logger.warning ( message ) 
+# =============================================================================
+if (3,3) <= sys.version_info < (3,10) :
+    try :
+        import bsddb
+        logger.info  ( "bdsdb          is imported from %s" % bsddb.__file__  )     
+    except ImportError :
+        message = """bdsbd cannot be imported
+        It is (optionally) used for persistency 
+        """
+        logger.warning ( message )
+        
+if (3,6) <= sys.version_info : 
+    try :
+        import berkeleydb 
+        logger.info  ( "berkeleydb     is imported from %s" % berkeleydb.__file__  )     
+    except ImportError :
+        message = """berkeleydb cannot be imported
+        It is (optionally) used for persistency 
+        """
+        logger.warning ( message )
+        
 # =============================================================================            
 try :
     import pathos
@@ -114,6 +137,13 @@ except ImportError :
     more_itertools is recommended for more efficient job splitting
     - There is a local replacement for ``chunked/divide/grouper''
     https://github.com/more-itertools/more-itertools"""
+    logger.error ( message ) 
+try :
+    import hep_ml
+    logger.info  ( "hep_ml         is imported from %s" % hep_ml.__file__ )     
+except ImportError :
+    message = """hep_ml cannot be imported! 
+    hep_ml is recommended for very efficitnt multidimensional reweighting"""
     logger.error ( message ) 
 # =============================================================================        
     

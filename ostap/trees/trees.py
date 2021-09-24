@@ -20,6 +20,7 @@ __all__     = (
   ) 
 # =============================================================================
 import ROOT, os, math
+from   ostap.core.meta_info   import root_info
 from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
                                        ROOTCWD , strings  , split_string ) 
 from   ostap.core.ostap_types import ( integer_types , long_type      ,
@@ -1649,6 +1650,54 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
     if isinstance ( names , string_types )  : names =  [ names ]    
     for n in names : 
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
+        
+    if   numpy and (6,24) <= root_info and \
+           isinstance ( name     , string_types  ) and \
+           isinstance ( function , numpy.ndarray ) :
+
+        return _chain_add_new_branch_array ( chain     ,
+                                             name      = name     ,
+                                             the_array = function ,
+                                             verbose   = verbose  ,
+                                             skip      = skip     )
+    
+    elif numpy and (6,24)<= root_info and \
+             isinstance ( name     , string_types )     and \
+             isinstance ( function , sized_types  )     and \
+             2 == len ( function )                      and \
+             isinstance ( function[0] , numpy.ndarray ) :
+        
+        return _chain_add_new_branch_array ( chain                   ,
+                                             name      = name        , 
+                                             the_array = function[0] ,
+                                             value     = function[1] , 
+                                             verbose   = verbose     ,
+                                             skip      = skip        )
+
+    elif isinstance ( name     , string_types   ) and \
+             isinstance ( function , sequence_types ) and \
+             isinstance ( function , sized_types    ) and \
+             hasattr    ( function , '__getitem__'  ) :
+        
+        return _chain_add_new_branch_array ( chain                 ,
+                                             name       = name     ,
+                                             the_array  = function ,
+                                             verbose    = verbose  ,
+                                             skip       = skip     )
+
+    elif isinstance ( name     , string_types          ) and \
+             isinstance ( function , sized_types       ) and \
+             2 == len ( function )                       and \
+             isinstance ( function[0] , sequence_types ) and \
+             hasattr    ( function[0] , '__getitem__'  ) :
+        
+        return _chain_add_new_branch_array ( chain                   ,
+                                             name      = name        ,
+                                             the_array = function[0] ,
+                                             value     = function[1] ,
+                                             verbose   = verbose     ,
+                                             skip      = skip        )
+
     
     files = chain.files   ()
     cname = chain.GetName () 
@@ -1680,6 +1729,68 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
     for f in files : newc.Add ( f  )
     
     return newc 
+
+# ==============================================================================
+## add new branch to the chain
+#  @see Ostap::Trees::add_branch
+#  @see Ostap::IFuncTree   
+def _chain_add_new_branch_array ( chain           ,
+                                  name            ,
+                                  the_array       ,
+                                  value   = 0.0   ,
+                                  verbose = True  ,
+                                  skip    = False ) :
+    """ Add new branch to the tree
+    - see Ostap::Trees::add_branch
+    - see Ostap::IFuncTree 
+    """
+    assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
+
+    names = name
+    if isinstance ( names , string_types )  : names =  [ names ]    
+    for n in names : 
+        assert not n in chain.branches() ,'Branch %s already exists!' % n 
+
+    
+    assert isinstance ( the_array , sized_types      ) and \
+           isinstance ( the_array , sequence_types   ) and \
+           hasattr    ( the_array[0] , '__getitem__' ) ,   \
+           "Invalid type of ``the+_array'' %s/%s" % ( the_array , type ( the_array ) ) 
+    
+    files = chain.files   ()
+    cname = chain.GetName () 
+    
+    from ostap.utils.progress_bar import progress_bar
+
+    verbose = verbose and 1 < len ( files )
+    
+    import ostap.io.root_file
+
+    start = 0
+    
+    for i , fname in enumerate ( progress_bar ( files , len ( files ) , silent = not verbose ) ) :
+        
+        logger.debug ('Add_new_branch: processing file %s' % fname )
+        with ROOT.TFile.Open  ( fname , 'UPDATE' , exception = True ) as rfile :
+            ## get the tree 
+            ttree = rfile.Get ( cname )
+            ## treat the tree
+            size  = len ( ttree )
+            end   = min ( start + size , len ( the_array ) ) 
+                          
+            if   0 == i       : what = the_array
+            elif end <= start : what = ()
+            else              : what = the_array[start:end]
+            
+            add_new_branch    ( ttree , name ,  ( what , value)  , verbose , skip ) 
+            start += size
+
+    ## recollect the chain 
+    newc = ROOT.TChain ( cname )
+    for f in files : newc.Add ( f  )
+    
+    return newc 
+
 
 # =============================================================================
 try : 
@@ -1845,27 +1956,46 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
 
         args = name , function
 
-    elif numpy and \
-             isinstance ( name     , string_types  ) and \
-             isinstance ( function , numpy.ndarray ) :
-
-        data = function 
-        dt   = data.dtype 
-        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
-        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data ) 
-
-    elif numpy and \
-             isinstance ( name     , string_types ) and \
-             isinstance ( function , sized_types  ) and \
-             2 == len ( function )                  and \
-             isinstance ( function[0] , numpy.ndarray ) :
-
+    elif numpy and (6,24)<= root_info and \
+             isinstance ( name     , string_types )     and \
+             isinstance ( function , sized_types  )     and \
+             2 == len ( function )                      and \
+             isinstance ( function[0] , numpy.ndarray ) : 
+        
         data , value = function 
         dt   = data.dtype 
         ct   = numpy.ctypeslib._ctype_from_dtype( dt )
         val  = numpy.array ( [ value ] , dtype = dt )
         val  = val[0] 
         args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data ) , val 
+
+    elif numpy and (6,24) <= root_info and \
+             isinstance ( name     , string_types  ) and \
+             isinstance ( function , numpy.ndarray ) :
+        
+        data = function 
+        dt   = data.dtype 
+        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
+        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data )
+        
+    elif isinstance ( name     , string_types          ) and \
+             isinstance ( function , sized_types       ) and \
+             2 == len ( function )                       and \
+             isinstance ( function[0] , sequence_types ) and \
+             hasattr    ( function[0] , '__getitem__'  ) :
+
+        data , value = function 
+        from ostap.trees.funcs import PyTreeArray as PTA
+        args = name , PTA ( data , value = value ) 
+        
+    elif isinstance ( name     , string_types   ) and \
+             isinstance ( function , sequence_types ) and \
+             isinstance ( function , sized_types    ) and \
+             hasattr    ( function , '__getitem__'  ) :
+        
+        from ostap.trees.funcs import PyTreeArray as PTA
+        args = name , PTA ( function ) 
+        
 
     else : 
         

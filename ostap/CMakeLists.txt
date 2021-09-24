@@ -127,12 +127,12 @@ message ( "----> (warning) (optional) more_itertools is NOT found!" )
 endif()
 
 find_python_module ( psutil QUIET )
-if ( NOT ${PY_more_psutil_FOUND} )
+if ( NOT ${PY_psutil_FOUND} )
 execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install psutil ${PIP_ARGS})
 endif()
 
 find_python_module ( psutil QUIET )
-if ( NOT ${PY_more_psutil_FOUND} )
+if ( NOT ${PY_psutil_FOUND} )
 message ( "----> (warning) (optional) psutils        is NOT found!" ) 
 endif()
 
@@ -161,6 +161,18 @@ if  ( ${PYTHON_VERSION} VERSION_LESS          "3.10" )
   endif()
 endif()
 endif()
+
+
+find_python_module ( hep_ml QUIET )
+if ( NOT ${PY_hep_ml_FOUND} )
+execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install hep_ml ${PIP_ARGS})
+endif()
+
+find_python_module ( hep_ml QUIET )
+if ( NOT ${PY_hep_ml_FOUND} )
+message ( "----> (warning) (optional) hep_ml         is NOT found!" ) 
+endif()
+
 
 execute_process(
   COMMAND "${PYTHON_EXECUTABLE}" -c "if True:
@@ -245,6 +257,11 @@ foreach(filename ${allfiles})
     set_tests_properties(${testname} PROPERTIES TIMEOUT 5000 ) 
 
 endforeach() 
+
+
+add_test (NAME ostap.ostap        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap -b )
+add_test (NAME ostap.dependencies WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/Testing/Temporary  COMMAND ostap-check-dependencies )
+
 
 install ( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}  
           DESTINATION            .

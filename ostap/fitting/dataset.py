@@ -1997,6 +1997,12 @@ _new_methods_ += [
     ROOT.RooDataSet.store_asym_error ,
     ]
 
+if sys.version_info < (3,0) :
+    def f_open ( name , mode , **kwargs ) :
+        return open ( name , mode )
+else :
+    def f_open ( name , mode , **kwargs ) :
+        return open ( name , mode , **kwargs )
 # =============================================================================
 ## Convert dataset to CSV format
 #  @code
@@ -2008,7 +2014,7 @@ _new_methods_ += [
 #  data.cvs ( 'data.csv' , vars= ( 'a' , 'b' ) )    ## only subset of variables 
 #  data.cvs ( 'data.csv' , more_vars = ( 'a+b/c' , 'sin(a)/b' ) ) ## more variables 
 #  @endcode 
-def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' , progress = False , **kwargs ) :
+def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' , progress = False , mode = 'w' , **kwargs ) :
     """Convert dataset to CSV format
     >>> data = ...
     >>> data.cvs ( 'data.csv' )
@@ -2061,8 +2067,9 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
     elif weighted and se  : vnames += [ weight_var , '%sError'    % weight_var ]
     elif weighted         : vnames += [ weight_var ]
 
-    import csv 
-    with open ( fname , 'w' , newline = '' ) as csv_file :
+    import csv
+
+    with f_open ( fname , mode , newline = '' ) as csv_file :
         writer = csv.writer ( csv_file , **kwargs )
         ## write header row 
         writer.writerow ( vnames  )
