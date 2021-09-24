@@ -814,7 +814,7 @@ class Eval2VE(EvalNVE) :
         val = self.func ( xv , yv )
 
         xc2 = x.cov2()
-        yc2 = x.cov2()
+        yc2 = y.cov2()
         
         x_plain = xc2 <= 0 or iszero ( xc2 )
         y_plain = yc2 <= 0 or iszero ( yc2 )
@@ -863,7 +863,7 @@ class EvalNVEcov(EvalNVE) :
         
         EvalNVE.__init__ ( self , func = func , N = N , partial = partial , name = name  )
         if cov2getter is None :
-            from ostap.math.linalg import  mgettter as  get_cov2
+            from ostap.math.linalg import  mgetter as  get_cov2
             cov2getter = get_cov2 
         self.__cov2 = cov2getter 
 
