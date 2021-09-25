@@ -19,13 +19,14 @@ __all__     = (
     'active_branches' , ## context manager to activate certain branches 
   ) 
 # =============================================================================
-import ROOT, os, math
+import ROOT, os, math, array 
 from   ostap.core.meta_info   import root_info
 from   ostap.core.core        import ( std , Ostap , VE  , WSE , hID ,
                                        ROOTCWD , strings  , split_string ) 
-from   ostap.core.ostap_types import ( integer_types , long_type      ,
-                                       string_types  , sequence_types ,
-                                       sized_types   )
+from   ostap.core.ostap_types import ( integer_types  , long_type      ,
+                                       string_types   , sequence_types ,
+                                       sized_types    , num_types      ,
+                                       dictlike_types                  )
 from   ostap.utils.utils      import chunked 
 import ostap.histos.histos
 import ostap.trees.param
@@ -1635,80 +1636,111 @@ ROOT.TChain.__radd__ = _tc_add_
 from ostap.io.root_file import top_dir
 ROOT.TTree.topdir = property ( top_dir , None , None ) 
 
+
+# ==============================================================================
+addbranch_types = string_types + num_types + ( ROOT.TH1 , Ostap.IFuncTree )
+# ==============================================================================
+## basic types of objects that can be used for <code>add_new_branch</code> methods
+#  - string formula
+#  - constant number
+#  - <code>ROOT.TH1</code> 
+#  - <code>ROOT.TH2</code> 
+#  - <code>ROOT.TH3</code> 
+#  - <code>Ostap.IFuncTree</code>
+#  - array-like objects
+#  - python callable
+#  @see Ostap.IFuncTree
+#  @see TH1 
+def btypes ( obj ) :
+    """Basic types of objects that can be used for `add_new_branch`methods
+    - string formula
+    - constant number
+    - `ROOT.TH1`
+    - `ROOT.TH2`
+    - `ROOT.TH3`
+    - `Ostap.IFuncTree`
+    - array-like objects
+    - python callable
+    """
+
+    if   isinstance ( obj , addbranch_types ) : return True
+    elif btypes_array ( obj )                 : return True
+    
+    return callable ( obj ) 
+
+# =============================================================================
+## basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
+def btypes_array ( obj ) :
+    """Basic types of array-line objects that can be used for <code>add_new_branch</code> methods 
+    """
+    
+    if   isinstance ( obj, string_types )          : return False
+
+    ## efficient treatment for ROOT versions from  6/24 
+    elif isinstance ( obj , array.array ) and  (6,24)<=root_info and \
+         obj.typecode in ( 'f' , 'd' ,'i' , 'l' )  : return True 
+
+    ## efficient treatment for ROOT verisons from 6/24 
+    elif numpy and (6,24)<= root_info       and \
+         isinstance ( obj , numpy.ndarray ) and \
+         obj.dtype  in ( numpy.float32 ,
+                         numpy.float64 ,
+                         numpy.int32   ,
+                         numpy.int64   )           : return True
+    
+    ## generic case with array-like structure
+    elif isinstance ( obj , sized_types    ) and \
+         isinstance ( obj , sequence_types ) and \
+         hasattr    ( obj , '__getitem__'  ) : return True
+
+    return False
+
+    
 # ==============================================================================
 ## add new branch to the chain
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree   
-def _chain_add_new_branch ( chain , name , function , verbose = True , skip = False ) :
+def _chain_add_new_branch ( chain , name , function , verbose = True , value = 0 ) :
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
     """
     assert isinstance ( chain , ROOT.TChain ), 'Invalid chain!'
 
+    if len ( chain.files() ) <= 1 :
+        return add_new_branch ( chain               ,
+                                name     = name     ,
+                                function = fnuction , 
+                                verbose  = verbose  ,
+                                value    = value    ) 
+    
+    if isinstance ( function , dictlike_types ) :
+        assert name     is None , 'add_branch: when function is dict, name must be None!'
+        name , function = function , None 
+        
     names = name
     if isinstance ( names , string_types )  : names =  [ names ]    
     for n in names : 
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
         
-    if   numpy and (6,24) <= root_info and \
-           isinstance ( name     , string_types  ) and \
-           isinstance ( function , numpy.ndarray ) :
+    assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
+           "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
 
-        return _chain_add_new_branch_array ( chain     ,
+    if   isinstance ( name  ,  dictlike_types ) and function is None : pass    
+    elif isinstance ( function , addbranch_types )                   : pass 
+    elif btypes_array  ( function ) :    
+        return _chain_add_new_branch_array ( chain                ,
                                              name      = name     ,
                                              the_array = function ,
                                              verbose   = verbose  ,
-                                             skip      = skip     )
-    
-    elif numpy and (6,24)<= root_info and \
-             isinstance ( name     , string_types )     and \
-             isinstance ( function , sized_types  )     and \
-             2 == len ( function )                      and \
-             isinstance ( function[0] , numpy.ndarray ) :
-        
-        return _chain_add_new_branch_array ( chain                   ,
-                                             name      = name        , 
-                                             the_array = function[0] ,
-                                             value     = function[1] , 
-                                             verbose   = verbose     ,
-                                             skip      = skip        )
+                                             value     = value    ) 
 
-    elif isinstance ( name     , string_types   ) and \
-             isinstance ( function , sequence_types ) and \
-             isinstance ( function , sized_types    ) and \
-             hasattr    ( function , '__getitem__'  ) :
-        
-        return _chain_add_new_branch_array ( chain                 ,
-                                             name       = name     ,
-                                             the_array  = function ,
-                                             verbose    = verbose  ,
-                                             skip       = skip     )
 
-    elif isinstance ( name     , string_types          ) and \
-             isinstance ( function , sized_types       ) and \
-             2 == len ( function )                       and \
-             isinstance ( function[0] , sequence_types ) and \
-             hasattr    ( function[0] , '__getitem__'  ) :
-        
-        return _chain_add_new_branch_array ( chain                   ,
-                                             name      = name        ,
-                                             the_array = function[0] ,
-                                             value     = function[1] ,
-                                             verbose   = verbose     ,
-                                             skip      = skip        )
 
     
     files = chain.files   ()
     cname = chain.GetName () 
     
-    the_function = function
-    if   isinstance ( function , string_types    ) : pass 
-    elif isinstance ( function , Ostap.IFuncTree ) : pass
-    elif isinstance ( function , ROOT.TH1        ) : pass 
-    elif callable   ( function ) :
-        from ostap.trees.funcs import PyTreeFunction as PTF
-        the_function = PTF ( function )
 
     from ostap.utils.progress_bar import progress_bar
 
@@ -1722,7 +1754,11 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
             ## get the tree 
             ttree = rfile.Get ( cname )
             ## treat the tree 
-            add_new_branch    ( ttree , name , the_function , verbose , skip ) 
+            add_new_branch    ( ttree               ,
+                                name     = name     ,
+                                function = function ,
+                                verbose  = verbose  ,
+                                value    = value    )
             
     ## recollect the chain 
     newc = ROOT.TChain ( cname )
@@ -1737,9 +1773,8 @@ def _chain_add_new_branch ( chain , name , function , verbose = True , skip = Fa
 def _chain_add_new_branch_array ( chain           ,
                                   name            ,
                                   the_array       ,
-                                  value   = 0.0   ,
                                   verbose = True  ,
-                                  skip    = False ) :
+                                  value   = 0     ) : 
     """ Add new branch to the tree
     - see Ostap::Trees::add_branch
     - see Ostap::IFuncTree 
@@ -1751,11 +1786,10 @@ def _chain_add_new_branch_array ( chain           ,
     for n in names : 
         assert not n in chain.branches() ,'Branch %s already exists!' % n 
 
-    
-    assert isinstance ( the_array , sized_types      ) and \
-           isinstance ( the_array , sequence_types   ) and \
-           hasattr    ( the_array[0] , '__getitem__' ) ,   \
-           "Invalid type of ``the+_array'' %s/%s" % ( the_array , type ( the_array ) ) 
+    assert isinstance ( the_array , sized_types    ) and \
+           isinstance ( the_array , sequence_types ) and \
+           hasattr    ( the_array , '__getitem__'  ) ,   \
+           "Invalid type of ``the_array'' %s/%s" % ( the_array , type ( the_array ) ) 
     
     files = chain.files   ()
     cname = chain.GetName () 
@@ -1780,9 +1814,13 @@ def _chain_add_new_branch_array ( chain           ,
                           
             if   0 == i       : what = the_array
             elif end <= start : what = ()
-            else              : what = the_array[start:end]
+            else              : what = the_array [ start : end ]
             
-            add_new_branch    ( ttree , name ,  ( what , value)  , verbose , skip ) 
+            add_new_branch    ( ttree              ,
+                                name     = name    ,
+                                function = what    ,
+                                verbose  = verbose ,
+                                value    = value   ) 
             start += size
 
     ## recollect the chain 
@@ -1854,7 +1892,7 @@ except ImportErorr :
 #
 #  @see Ostap::Trees::add_branch
 #  @see Ostap::IFuncTree 
-def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
+def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     """ Add new branch to the tree
 
     - Using formula:
@@ -1905,26 +1943,32 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
     - see Ostap::IFuncTree
     
     """
-    if isinstance ( tree  , ROOT.TChain ) :
-        return _chain_add_new_branch ( tree , name , function , verbose = verbose , skip = skip )
-
     if not tree :
         logger.error (  "add_branch: Invalid Tree!" )
         return
+    elif isinstance ( tree  , ROOT.TChain ) and 1 < len ( tree.files() ) :
+        return _chain_add_new_branch ( tree                ,
+                                       name                ,
+                                       function = function ,
+                                       verbose  = verbose  ,
+                                       value    = value    )
     
-    if isinstance ( function , dict ) :
+    if isinstance ( function , dictlike_types ) :
         assert name     is None , 'add_branch: when function is dict, name must be None!'
         name , function = function , None 
-        
+
     names = name 
     if isinstance ( names , string_types ) : names = [ names ]
+    names = [ n.strip() for n in names ] 
+    for n in names : 
+        assert not n in tree.branches() ,"``Branch'' %s already exists!" % n
 
-    funcs = []
 
-    if isinstance ( name  ,  dict ) :
+    assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
+           "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
+
+    if isinstance ( name  ,  dictlike_types ) and function is None :
         
-        assert function is None, 'add_branch: when name     is dict, function must be None!'
-
         typeformula = False 
         for k in  name.keys() :
             
@@ -1947,73 +1991,54 @@ def add_new_branch ( tree , name , function , verbose = True , skip = False ) :
             mmap[ k ] = v 
             
         args = mmap ,
-
-    elif isinstance ( name , string_types ) and isinstance ( function , float ) :
-
-        args = name , function
-
-    elif isinstance ( name , string_types ) and isinstance ( function , integer_types ) :
-
-        args = name , function
-
-    elif numpy and (6,24)<= root_info and \
-             isinstance ( name     , string_types )     and \
-             isinstance ( function , sized_types  )     and \
-             2 == len ( function )                      and \
-             isinstance ( function[0] , numpy.ndarray ) : 
         
-        data , value = function 
-        dt   = data.dtype 
-        ct   = numpy.ctypeslib._ctype_from_dtype( dt )
-        val  = numpy.array ( [ value ] , dtype = dt )
-        val  = val[0] 
-        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data ) , val 
+    elif isinstance ( function , addbranch_types ) :
 
-    elif numpy and (6,24) <= root_info and \
-             isinstance ( name     , string_types  ) and \
-             isinstance ( function , numpy.ndarray ) :
+        args = tuple ( [n  for n in names ] + [ function ] )
+
+    ## efficient case with array 
+    elif (6,24) <= root_info                       and \
+             isinstance ( function , array.array ) and \
+             function.typecode in ( 'f' , 'd' ,'i' , 'l' ) :
         
+        data = function 
+        args = tuple ( [n  for n in names ] + [ data , len ( data ) , value ] )
+        
+    ## efficient case with array 
+    elif numpy and (6,24) <= root_info            and \
+         isinstance ( function , numpy.ndarray )  and \
+         function.dtype  in ( numpy.float32 ,
+                              numpy.float64 ,
+                              numpy.int32   ,
+                              numpy.int64   ) :        
         data = function 
         dt   = data.dtype 
         ct   = numpy.ctypeslib._ctype_from_dtype( dt )
-        args = name , data.ctypes.data_as ( ctypes.POINTER( ct ) ) , len ( data )
+        buff = data.ctypes.data_as ( ctypes.POINTER( ct ) )  
+        args = tuple ( [n  for n in names ] + [ buff , len ( data ) , value ] )
         
-    elif isinstance ( name     , string_types          ) and \
-             isinstance ( function , sized_types       ) and \
-             2 == len ( function )                       and \
-             isinstance ( function[0] , sequence_types ) and \
-             hasattr    ( function[0] , '__getitem__'  ) :
+    ## generic case with array-like structure 
+    elif isinstance ( function , sized_types    ) and \
+         isinstance ( function , sequence_types ) and \
+         hasattr    ( function , '__getitem__'  ) :
 
-        data , value = function 
+        data = function 
         from ostap.trees.funcs import PyTreeArray as PTA
-        args = name , PTA ( data , value = value ) 
-        
-    elif isinstance ( name     , string_types   ) and \
-             isinstance ( function , sequence_types ) and \
-             isinstance ( function , sized_types    ) and \
-             hasattr    ( function , '__getitem__'  ) :
-        
-        from ostap.trees.funcs import PyTreeArray as PTA
-        args = name , PTA ( function ) 
-        
+        args = tuple ( [n  for n in names ] + [ PTA ( data , value = value ) ] )
 
-    else : 
+    elif callable ( function )  :
         
-        for n in names : 
-            assert not n in tree.branches() ,'Branch %s already exists!' % n
-            
-        the_function = function
-        if   isinstance ( function , string_types    ) : pass 
-        elif isinstance ( function , Ostap.IFuncTree ) : pass
-        elif isinstance ( function , ROOT.TH1        ) : pass 
-        elif callable   ( function ) :
-            from ostap.trees.funcs import PyTreeFunction as PTF
-            the_function = PTF ( function )
-            
-        args  = [ n for n in names ] + [ the_function ]
-        args  = tuple ( args )
+        from ostap.trees.funcs import PyTreeFunction as PTF
+        args = tuple ( [n  for n in names ] + [ PTF ( function  ) ] )
 
+    else :
 
+        logger.warning ('addbranch: suspicion case name/function:  %s/%s %s/%s' % (
+            name , type(name) , function, type(function) ) ) 
+                        
+        args = tuple ( [n  for n in names ] + [ function ] )
+        
+        
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()
     tpath = tree.path

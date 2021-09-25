@@ -23,10 +23,11 @@ Four ways to add branch into TTree/Tchain
 """
 # ============================================================================= 
 from   __future__               import print_function
-import ROOT, math, random 
+import ROOT, math, random, array  
 import ostap.trees.trees
 import ostap.histos.histos
-from   ostap.trees.data         import Data 
+from   ostap.trees.data         import Data
+from   ostap.utils.timing       import timing 
 from   ostap.utils.progress_bar import progress_bar
 # ============================================================================= 
 # logging 
@@ -99,9 +100,9 @@ def test_addbranch() :
     - using histogram sampling
     """
     
-    files = prepare_data ( 100 , 1000 )
+    files = prepare_data ( 10 , 1000 )
     ## files = prepare_data ( 2 , 10 )
-        
+    
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
     logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
@@ -163,7 +164,7 @@ def test_addbranch() :
     # =========================================================================
     ## 4) add the variable sampled from the histogram
     # =========================================================================
-    h2 = ROOT.TH1D('2', 'Gauss' , 120 , -6 , 6 )
+    h2 = ROOT.TH1D('h2', 'Gauss' , 120 , -6 , 6 )
     for i in range ( 100000 ) :
         h2.Fill ( random.gauss ( 0 , 1 ) ) 
 
@@ -172,8 +173,103 @@ def test_addbranch() :
     
     ## reload the chain and check: 
     logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
-    assert 'hg' in data.chain , "Branch ``g'' is  not here!"
+    assert 'hg' in data.chain , "Branch ``hg'' is  not here!"
+
+    # =========================================================================
+    ## 5) python function again 
+    # =========================================================================
+    def gauss ( *_ ) : return random.gauss(0,1)
     
+    chain = data.chain 
+    chain.add_new_branch ( 'gauss', gauss ) 
+    
+    ## reload the chain and check: 
+    logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
+    assert 'gauss' in data.chain , "Branch ``gauss'' is  not here!"
+
+    # =========================================================================
+    ## 6) add numpy array 
+    # =========================================================================
+    try : 
+        import numpy
+    except ImportError :
+        numpy  = None
+
+        
+    if numpy :
+
+        with timing ('numpy float64' , logger = logger ) :
+            adata  = numpy.ones ( 1000 , dtype = numpy.float64 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_f64' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.float64:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_f64' in data.chain , "Branch ``np_f64'' is  not here!"
+
+        with timing ('numpy float32' , logger = logger ) :
+            adata = numpy.ones ( 1000 , dtype = numpy.float32 )
+            chain = data.chain
+            chain.add_new_branch ( 'np_f32' , adata )            
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.float32:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_f32' in data.chain , "Branch ``np_f32'' is  not here!"
+        
+        with timing ('numpy float16' , logger = logger ) :
+            adata  = numpy.ones ( 1000 , dtype = numpy.float16 )
+            chain  = data.chain
+            chain.add_new_branch ( 'np_f16' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.float16:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_f16' in data.chain , "Branch ``np_f16'' is  not here!"
+
+        with timing ('numpy int62 ' , logger = logger ) :
+            adata  = numpy.ones ( 10000 , dtype = numpy.int32)
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_i32' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int32:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i32' in data.chain , "Branch ``np_i32'' is  not here!"
+
+        with timing ('numpy int64 ' , logger = logger ) :  
+            adata  = numpy.ones ( 10000 , dtype = numpy.int64 )
+            chain  = data.chain
+            chain.add_new_branch ( 'np_i64' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int64:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i64' in data.chain , "Branch ``np_i64'' is  not here!"
+
+        with timing ('numpy int16 ' , logger = logger ) :  
+            adata  = numpy.ones ( 10000 , dtype = numpy.int16 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_i16' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int16:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i16' in data.chain , "Branch ``np_i16'' is  not here!"
+
+        with timing ('numpy int8 ' , logger = logger ) :  
+            adata  = numpy.ones ( 10000 , dtype = numpy.int8 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_i8' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int8:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i8' in data.chain , "Branch ``np_i8'' is  not here!"
+
+
+    for l in ( 'f' , 'd' , 'i' , 'l' , 'I' , 'L' ) :
+
+        with timing ('array %s'% l , logger = logger ) :  
+            adata  = array.array ( l ,  10000*[0] ) 
+            chain  = data.chain
+            vname  = 'arr_%s' % l 
+            chain.add_new_branch ( vname , adata )
+            ## reload the chain and check: 
+        logger.info ( "With array '%s':\n%s" % ( l ,  data.chain.table ( prefix = '# ' ) ) ) 
+        assert vname in data.chain , "Branch ``%s'' is  not here!" % vname 
+            
+
+
+    
+        
 # =============================================================================
 if '__main__' ==  __name__  :
 
