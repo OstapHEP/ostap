@@ -1967,6 +1967,7 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
     assert ( isinstance ( name , dictlike_types ) and function is None ) or btypes ( function ) ,\
            "add_branch: invalid type of ``function'': %s/%s" % ( function , type ( function ) )  
 
+
     if isinstance ( name  ,  dictlike_types ) and function is None :
         
         typeformula = False 
@@ -1996,21 +1997,27 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
 
         args = tuple ( [n  for n in names ] + [ function ] )
 
+
     ## efficient case with array 
     elif (6,24) <= root_info                       and \
              isinstance ( function , array.array ) and \
-             function.typecode in ( 'f' , 'd' ,'i' , 'l' ) :
+             function.typecode in ( 'f' , 'd' , 'h' , 'i' , 'l' , 'H' , 'I' , 'L' ) :
         
         data = function 
         args = tuple ( [n  for n in names ] + [ data , len ( data ) , value ] )
         
+
     ## efficient case with array 
     elif numpy and (6,24) <= root_info            and \
          isinstance ( function , numpy.ndarray )  and \
          function.dtype  in ( numpy.float32 ,
                               numpy.float64 ,
+                              numpy.int16   ,
                               numpy.int32   ,
-                              numpy.int64   ) :        
+                              numpy.int64   ,
+                              numpy.uint16  ,
+                              numpy.uint32  , 
+                              numpy.uint64  ) :        
         data = function 
         dt   = data.dtype 
         ct   = numpy.ctypeslib._ctype_from_dtype( dt )
@@ -2037,7 +2044,6 @@ def add_new_branch ( tree , name , function , verbose = True , value = 0 ) :
             name , type(name) , function, type(function) ) ) 
                         
         args = tuple ( [n  for n in names ] + [ function ] )
-        
         
     tname = tree.GetName      ()
     tdir  = tree.GetDirectory ()

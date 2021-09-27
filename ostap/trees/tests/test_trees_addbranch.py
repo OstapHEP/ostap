@@ -100,8 +100,8 @@ def test_addbranch() :
     - using histogram sampling
     """
     
-    files = prepare_data ( 10 , 1000 )
-    ## files = prepare_data ( 2 , 10 )
+    ## files = prepare_data ( 100 , 1000 )
+    files = prepare_data ( 2 , 100 )
     
     logger.info ( '#files:    %s'  % len ( files ) )  
     data = Data ( 'S' , files )
@@ -110,23 +110,21 @@ def test_addbranch() :
     # =========================================================================
     ## 1) add new branch as TTree-formula:
     # =========================================================================
-    chain = data.chain 
-    chain.add_new_branch ( 'et','sqrt(pt*pt+mass*mass)' )
-
+    with timing ('expression' , logger = logger ) :          
+        chain = data.chain 
+        chain.add_new_branch ( 'et','sqrt(pt*pt+mass*mass)' )        
     ## reload the chain and check: 
     logger.info ( 'With formula:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'et' in data.chain , "Branch ``et'' is  not here!"
 
-
     # =========================================================================
     ## 2) add several new branches as TTree-formula:
     # =========================================================================
-    chain = data.chain  
-    chain.add_new_branch ( { 'Et1' : 'sqrt(pt*pt+mass*mass)'   ,
-                             'Et2' : 'sqrt(pt*pt+mass*mass)*2' ,
-                             'Et3' : 'sqrt(pt*pt+mass*mass)*3' } , None )
-    
-
+    with timing ('simultaneous' , logger = logger ) :          
+        chain = data.chain  
+        chain.add_new_branch ( { 'Et1' : 'sqrt(pt*pt+mass*mass)'   ,
+                                 'Et2' : 'sqrt(pt*pt+mass*mass)*2' ,
+                                 'Et3' : 'sqrt(pt*pt+mass*mass)*3' } , None )        
     ## reload the chain and check: 
     logger.info ( 'With formula:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'Et1' in data.chain , "Branch ``Et1'' is  not here!"
@@ -136,11 +134,10 @@ def test_addbranch() :
     # =========================================================================
     ## 2) add new branch as pure python function 
     # =========================================================================
-    et2 = lambda tree : tree.pt**2 + tree.mass**2
-
-    chain = data.chain
-    chain.add_new_branch ( 'et2', et2 )
-
+    with timing ('pyfunc' , logger = logger ) :          
+        et2 = lambda tree : tree.pt**2 + tree.mass**2        
+        chain = data.chain
+        chain.add_new_branch ( 'et2', et2 )
     ## reload the chain and check: 
     logger.info ( 'With python:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'et2' in data.chain , "Branch ``et2'' is  not here!"
@@ -148,15 +145,13 @@ def test_addbranch() :
     # =========================================================================
     ## 3) add new branch as histogram-function 
     # =========================================================================
-    h1  = ROOT.TH1D ( 'h1' , 'some pt-correction' , 100 , 0 , 10 )
-    h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) ) 
-    
-    from   ostap.trees.funcs  import FuncTH1
-    ptw = FuncTH1 ( h1 , 'pt' )
-    
-    chain = data.chain 
-    chain.add_new_branch ( 'ptw', ptw ) 
-    
+    with timing ('histo-1' , logger = logger ) :          
+        h1  = ROOT.TH1D ( 'h1' , 'some pt-correction' , 100 , 0 , 10 )
+        h1 += lambda x :  1.0 + math.tanh( 0.2* ( x - 5 ) )         
+        from   ostap.trees.funcs  import FuncTH1
+        ptw = FuncTH1 ( h1 , 'pt' )
+        chain = data.chain 
+        chain.add_new_branch ( 'ptw', ptw )     
     ## reload the chain and check: 
     logger.info ( 'With histogram:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'ptw' in data.chain , "Branch ``ptw'' is  not here!"
@@ -164,13 +159,11 @@ def test_addbranch() :
     # =========================================================================
     ## 4) add the variable sampled from the histogram
     # =========================================================================
-    h2 = ROOT.TH1D('h2', 'Gauss' , 120 , -6 , 6 )
-    for i in range ( 100000 ) :
-        h2.Fill ( random.gauss ( 0 , 1 ) ) 
-
-    chain = data.chain 
-    chain.add_new_branch ( 'hg', h2 ) 
-    
+    with timing ('histo-2' , logger = logger ) :          
+        h2 = ROOT.TH1D('h2', 'Gauss' , 120 , -6 , 6 )
+        for i in range ( 100000 ) : h2.Fill ( random.gauss ( 0 , 1 ) )             
+        chain = data.chain 
+        chain.add_new_branch ( 'hg', h2 ) 
     ## reload the chain and check: 
     logger.info ( 'With sampled:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'hg' in data.chain , "Branch ``hg'' is  not here!"
@@ -178,11 +171,10 @@ def test_addbranch() :
     # =========================================================================
     ## 5) python function again 
     # =========================================================================
-    def gauss ( *_ ) : return random.gauss(0,1)
-    
-    chain = data.chain 
-    chain.add_new_branch ( 'gauss', gauss ) 
-    
+    with timing ('gauss' , logger = logger ) :          
+        def gauss ( *_ ) : return random.gauss(0,1)    
+        chain = data.chain 
+        chain.add_new_branch ( 'gauss', gauss )         
     ## reload the chain and check: 
     logger.info ( 'With gauss:\n%s' % data.chain.table ( prefix = '# ' ) )
     assert 'gauss' in data.chain , "Branch ``gauss'' is  not here!"
@@ -198,67 +190,103 @@ def test_addbranch() :
         
     if numpy :
 
-        with timing ('numpy float64' , logger = logger ) :
-            adata  = numpy.ones ( 1000 , dtype = numpy.float64 )
-            chain  = data.chain            
-            chain.add_new_branch ( 'np_f64' , adata )
-        ## reload the chain and check: 
-        logger.info ( 'With numpy.float64:\n%s' % data.chain.table ( prefix = '# ' ) )
-        assert 'np_f64' in data.chain , "Branch ``np_f64'' is  not here!"
-
-        with timing ('numpy float32' , logger = logger ) :
-            adata = numpy.ones ( 1000 , dtype = numpy.float32 )
-            chain = data.chain
-            chain.add_new_branch ( 'np_f32' , adata )            
-        ## reload the chain and check: 
-        logger.info ( 'With numpy.float32:\n%s' % data.chain.table ( prefix = '# ' ) )
-        assert 'np_f32' in data.chain , "Branch ``np_f32'' is  not here!"
-        
         with timing ('numpy float16' , logger = logger ) :
-            adata  = numpy.ones ( 1000 , dtype = numpy.float16 )
+            adata  = numpy.full ( 10000 , +0.1 , dtype = numpy.float16 )
             chain  = data.chain
             chain.add_new_branch ( 'np_f16' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.float16:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_f16' in data.chain , "Branch ``np_f16'' is  not here!"
 
-        with timing ('numpy int62 ' , logger = logger ) :
-            adata  = numpy.ones ( 10000 , dtype = numpy.int32)
+        with timing ('numpy float32' , logger = logger ) :
+            adata = numpy.full ( 10000 , -0.2 , dtype = numpy.float32 )
+            chain = data.chain
+            chain.add_new_branch ( 'np_f32' , adata )            
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.float32:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_f32' in data.chain , "Branch ``np_f32'' is  not here!"
+        
+        with timing ('numpy float64' , logger = logger ) :
+            adata  = numpy.full ( 10000 , +0.3 , dtype = numpy.float64 )
             chain  = data.chain            
-            chain.add_new_branch ( 'np_i32' , adata )
+            chain.add_new_branch ( 'np_f64' , adata )
         ## reload the chain and check: 
-        logger.info ( 'With numpy.int32:\n%s' % data.chain.table ( prefix = '# ' ) )
-        assert 'np_i32' in data.chain , "Branch ``np_i32'' is  not here!"
-
-        with timing ('numpy int64 ' , logger = logger ) :  
-            adata  = numpy.ones ( 10000 , dtype = numpy.int64 )
-            chain  = data.chain
-            chain.add_new_branch ( 'np_i64' , adata )
-        ## reload the chain and check: 
-        logger.info ( 'With numpy.int64:\n%s' % data.chain.table ( prefix = '# ' ) )
-        assert 'np_i64' in data.chain , "Branch ``np_i64'' is  not here!"
-
-        with timing ('numpy int16 ' , logger = logger ) :  
-            adata  = numpy.ones ( 10000 , dtype = numpy.int16 )
-            chain  = data.chain            
-            chain.add_new_branch ( 'np_i16' , adata )
-        ## reload the chain and check: 
-        logger.info ( 'With numpy.int16:\n%s' % data.chain.table ( prefix = '# ' ) )
-        assert 'np_i16' in data.chain , "Branch ``np_i16'' is  not here!"
+        logger.info ( 'With numpy.float64:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_f64' in data.chain , "Branch ``np_f64'' is  not here!"
 
         with timing ('numpy int8 ' , logger = logger ) :  
-            adata  = numpy.ones ( 10000 , dtype = numpy.int8 )
+            adata  = numpy.full ( 10000 , -1 , dtype = numpy.int8 )
             chain  = data.chain            
             chain.add_new_branch ( 'np_i8' , adata )
         ## reload the chain and check: 
         logger.info ( 'With numpy.int8:\n%s' % data.chain.table ( prefix = '# ' ) )
         assert 'np_i8' in data.chain , "Branch ``np_i8'' is  not here!"
 
+        with timing ('numpy uint8 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , +2 , dtype = numpy.uint8 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_ui8' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.uint8:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_ui8' in data.chain , "Branch ``np_ui8'' is  not here!"
 
-    for l in ( 'f' , 'd' , 'i' , 'l' , 'I' , 'L' ) :
+        with timing ('numpy int16 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , -3 , dtype = numpy.int16 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_i16' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int16:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i16' in data.chain , "Branch ``np_i16'' is  not here!"
+
+        with timing ('numpy uint16 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , +4 , dtype = numpy.uint16 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_ui16' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.uint16:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_ui16' in data.chain , "Branch ``np_ui16'' is  not here!"
+
+        with timing ('numpy int32 ' , logger = logger ) :  
+            adata  = numpy.full( 10000 , -5 , dtype = numpy.int32 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_i32' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int32:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i32' in data.chain , "Branch ``np_i32'' is  not here!"
+
+        with timing ('numpy uint32 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , +6 , dtype = numpy.uint32 )
+            chain  = data.chain            
+            chain.add_new_branch ( 'np_ui32' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.uint32:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_ui32' in data.chain , "Branch ``np_ui32'' is  not here!"
+        
+        with timing ('numpy int64 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , -7 , dtype = numpy.int64 )
+            chain  = data.chain
+            chain.add_new_branch ( 'np_i64' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.int64:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_i64' in data.chain , "Branch ``np_i64'' is  not here!"
+
+        with timing ('numpy uint64 ' , logger = logger ) :  
+            adata  = numpy.full ( 10000 , +8 , dtype = numpy.uint64 )
+            chain  = data.chain
+            chain.add_new_branch ( 'np_ui64' , adata )
+        ## reload the chain and check: 
+        logger.info ( 'With numpy.uint64:\n%s' % data.chain.table ( prefix = '# ' ) )
+        assert 'np_ui64' in data.chain , "Branch ``np_ui64'' is  not here!"
+
+
+    for l,v in ( ('f', +100.1 )  ,
+                 ('d', -200.2 ) ,
+                 ('i',-3) , ('l',-4) ,
+                 ('I',5)  ,  ('L',6) ,
+                 ('h',7)  ,  ('H',8) ) :
 
         with timing ('array %s'% l , logger = logger ) :  
-            adata  = array.array ( l ,  10000*[0] ) 
+            adata  = array.array ( l ,  10000*[ v ] ) 
             chain  = data.chain
             vname  = 'arr_%s' % l 
             chain.add_new_branch ( vname , adata )
