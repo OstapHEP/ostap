@@ -15,18 +15,19 @@
 Simultaneous fit of two 1D distributions  
 """
 # ============================================================================= 
-from builtins    import range 
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models
-from   ostap.fitting.utils  import MakeVar 
-from   ostap.core.core      import dsID
-from   ostap.utils.timing   import timing 
-from   ostap.logger.utils   import rooSilent
+import ostap.fitting.models     as     Models
+from   builtins                 import range 
+from   ostap.fitting.utils      import MakeVar 
+from   ostap.core.core          import dsID
+from   ostap.utils.timing       import timing 
+from   ostap.logger.utils       import rooSilent
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -86,7 +87,8 @@ for i in range (NB2 ) :
 
 # =============================================================================
 def test_simfit4() :
-    
+
+    logger = getLogger( 'test_simfit4' ) 
     # =========================================================================
     VARS = MakeVar ()
     
@@ -139,9 +141,10 @@ def test_simfit4() :
     # =========================================================================
     ## make fit for thew normalization channel only 
     # =========================================================================
-    rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
-    rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
-    rN , fN = model_N.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+    with use_canvas ( 'test_simfit4' ) : 
+        rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
+        rN , fN = model_N.fitTo ( dataset1 , draw = None ,              silent = True )
+        rN , fN = model_N.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
     
     title = 'Fit to high-statistic normalisation sample'
     logger.info ( 'Fit results for normalization sample only: %s' % rN.table ( title = title ,
@@ -150,10 +153,11 @@ def test_simfit4() :
     # =========================================================================
     ## make fit for the low-statistic signal channel only 
     # =========================================================================
-    rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
-    rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
-    rS , fS = model_S.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-
+    with use_canvas ( 'test_simfit4' ) : 
+        rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
+        rS , fS = model_S.fitTo ( dataset2 , draw = None ,              silent = True )
+        rS , fS = model_S.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        
     title = 'Fit to low-statistics sample'
     logger.info ( 'Fit results for low-statistic signal only:\n%s' % rS.table ( title  = title ,
                                                                                 prefix = '# '  )  )
@@ -179,9 +183,10 @@ def test_simfit4() :
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     
-    fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-    fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
-    
+    with use_canvas ( 'test_simfit4' ) : 
+        with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+        with wait ( 1 ) : fS  = model_sim.draw ( 'S'   , dataset , nbins = 50 )
+        
     title = 'Simultaneous fit'
     logger.info ( 'Combined fit  results are:\n%s ' % rC.table ( title  = title ,
                                                                  prefix = '#'   )  )

@@ -16,6 +16,15 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 # =============================================================================
+import ostap.fitting.roofit 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import dsID
+from   ostap.logger.utils       import rooSilent
+import ostap.fitting.toys       as     Toys
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -23,17 +32,12 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_simfit1' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import dsID
-from   ostap.logger.utils   import rooSilent
-import ostap.fitting.toys   as     Toys
-from   ostap.utils.timing   import timing 
 
         
 # =============================================================================
 def test_toys_simfit_1 () :
+
+    logger = getLogger ( 'test_toys_simfit_1' )
     
     ## make simple test mass 
     mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 5 )
@@ -102,14 +106,17 @@ def test_toys_simfit_1 () :
     model2  = Models.Fit1D ( suffix = 'M2' , signal = signal2 ,  background = model1.background )
     model2.S = NS2
     model2.B = NB2 
-    
-    # =========================================================================
-    ## fit 1 
-    r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
-    
-    ## fit 2
-    r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-    # =========================================================================
+
+    with use_canvas ( 'test_toys_simfit_1' ) : 
+        # =========================================================================
+        ## fit 1 
+        with wait ( 1 ) :
+            r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+        
+        ## fit 2
+        with wait ( 1 ) :
+            r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        # =========================================================================
     
     ## combine data    
     sample  = ROOT.RooCategory ('sample','sample'  , 'A' , 'B' )
@@ -127,10 +134,12 @@ def test_toys_simfit_1 () :
     # =========================================================================
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
+
     
-    fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-    fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
-    
+    with use_canvas ( 'test_toys_simfit_1' ) : 
+        with wait ( 1 ) : fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
+        with wait ( 1 ) : fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
+        
     logger.info ( 'Fit  results are: %s ' % r.table ( prefix = "# " ) ) 
 
     ## Make toys

@@ -11,16 +11,18 @@
 - It tests various resoltuion models
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__               import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-from   ostap.core.core       import VE, dsID
-from   builtins              import range
-from   ostap.utils.timing    import timing 
+from   ostap.core.core          import VE, dsID
+from   builtins                 import range
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -60,6 +62,9 @@ models = set()
 ## Single gauss
 # =============================================================================
 def test_gauss () :
+
+    logger = getLogger ( 'test_gauss' )
+    
     logger.info ('Test ResoGauss:  single Gaussian resolution model' )
     from   ostap.fitting.resolution import ResoGauss 
     reso_gauss = ResoGauss( 'G1' , mass ,  0.1 )
@@ -68,7 +73,8 @@ def test_gauss () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_gauss. fitTo ( dataset0 )
-        result, frame = reso_gauss. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_gauss' ) : 
+            result, frame = reso_gauss. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -84,6 +90,9 @@ def test_gauss () :
 ## Double gauss
 # =============================================================================
 def test_2gauss () :
+    
+    logger = getLogger ( 'test_2gauss' )
+
     logger.info ('Test ResoGauss2:  double Gaussian resolution model' )
     from   ostap.fitting.resolution import ResoGauss2
     reso_2gauss = ResoGauss2( 'G2' , mass ,  0.1 )
@@ -94,7 +103,8 @@ def test_2gauss () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_2gauss. fitTo ( dataset0 )
-        result, frame = reso_2gauss. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_2gauss' ) : 
+            result, frame = reso_2gauss. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -112,6 +122,8 @@ def test_2gauss () :
 # =============================================================================
 def test_apo2 () :
     
+    logger = getLogger ( 'test_apo2' )
+
     logger.info ('Test ResoApo2:  symmetric Apollonios resolution model' )
     from   ostap.fitting.resolution import ResoApo2
     reso_apo2 = ResoApo2( 'A2' , mass ,  0.1 )
@@ -121,7 +133,8 @@ def test_apo2 () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_apo2. fitTo ( dataset0 )
-        result, frame = reso_apo2. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_apo2' ) : 
+            result, frame = reso_apo2. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -139,6 +152,8 @@ def test_apo2 () :
 # =============================================================================
 def test_cb2 () :
     
+    logger = getLogger ( 'test_cb2' )
+
     logger.info ('Test ResoCB2: symmetric double-sided Crystal Ball resolution model' )
     from   ostap.fitting.resolution import ResoCB2
     reso_cb2 = ResoCB2( 'CB' , mass ,  0.1 )
@@ -149,7 +164,8 @@ def test_cb2 () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_cb2. fitTo ( dataset0 )
-        result, frame = reso_cb2. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_cb2' ) : 
+            result, frame = reso_cb2. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -167,6 +183,8 @@ def test_cb2 () :
 # =============================================================================
 def test_sech () :
     
+    logger = getLogger ( 'test_sech' )
+
     logger.info ('Test ResoSech: hyperbolic secant resolution model' )
     from   ostap.fitting.resolution import ResoSech
     reso_sech = ResoSech ( 'Sech' , mass ,  0.1 )
@@ -175,7 +193,8 @@ def test_sech () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso_sech. fitTo ( dataset0 )
-        result, frame = reso_sech. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_sech' ) : 
+            result, frame = reso_sech. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -192,6 +211,8 @@ def test_sech () :
 # =============================================================================
 def test_logistic () :
     
+    logger = getLogger ( 'test_logistic' )
+
     logger.info ('Test ResoLogistic: logistic (sech-squared) resolution model' )
     from   ostap.fitting.resolution import ResoLogistic
     reso_log = ResoLogistic ( 'Logistic' , mass ,  0.1 )
@@ -218,6 +239,8 @@ def test_logistic () :
 # =============================================================================
 def test_bukin () :
     
+    logger = getLogger ( 'test_bukin' )
+
     logger.info ('Test ResoBukin: symmetric Bukin resolution model' )
     from   ostap.fitting.resolution import ResoBukin
     reso = ResoBukin ( 'Bukin' , mass ,  0.1 ,rho = (0, 0 , 10 ) )
@@ -227,7 +250,8 @@ def test_bukin () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso. fitTo ( dataset0 )
-        result, frame = reso. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_bukin' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -253,7 +277,8 @@ def test_johnsonSU () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso. fitTo ( dataset0 )
-        result, frame = reso. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_johnsonSU' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -272,6 +297,8 @@ def test_johnsonSU () :
 # =============================================================================
 def test_sinhasinh () :
     
+    logger = getLogger ( 'test_sinhasinh' )
+
     logger.info ('Test SinhAsinh: symmetric SinhAsinh resolution model' )
     from   ostap.fitting.resolution import ResoSinhAsinh
     reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,  delta = ( 0.7 , 1.e-5 , 1000 ) )
@@ -279,7 +306,8 @@ def test_sinhasinh () :
     from   ostap.logger.utils   import rooSilent
     with rooSilent() : 
         result, frame = reso. fitTo ( dataset0 )
-        result, frame = reso. fitTo ( dataset0 , draw = True )
+        with wait ( 1 ) , use_canvas ( 'test_sinhasinh' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
@@ -296,6 +324,8 @@ def test_sinhasinh () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
+    logger = getLogger ( 'test_db' )
 
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE

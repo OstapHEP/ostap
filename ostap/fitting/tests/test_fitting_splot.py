@@ -16,11 +16,13 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
-from   ostap.utils.timing   import timing 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent
+from   builtins                 import range
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -33,6 +35,8 @@ else :
 
 
 def test_splot () :
+
+    logger = getLogger ( 'test_splot' )
     
     ## make simple test mass 
     mass    = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 10 )
@@ -87,7 +91,8 @@ def test_splot () :
 
     
     model.fitTo ( dataset , silent = True )
-    r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 )
+    with use_canvas ( 'test_splot' ) : 
+        r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 )
     logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
 
     ## make splot analysis
@@ -110,14 +115,16 @@ def test_splot () :
 
     TS.fitTo ( ds_signal , silent = True )
     TS.fitTo ( ds_signal , silent = True )
-    rS, f = TS.fitTo ( ds_signal , silent = True , draw  = True , nbins = 100 )
+    with use_canvas ( 'test_splot' ) : 
+        rS, f = TS.fitTo ( ds_signal , silent = True , draw  = True , nbins = 100 )
     logger.info ( "Tau/signal fit : fit results\n%s" % rS.table ( title = 'Tau signal fit' , prefix = '# ' ) )
 
 
 
     TB.fitTo ( ds_bkg , silent = True )
     TB.fitTo ( ds_bkg , silent = True )
-    rB, f = TB.fitTo ( ds_bkg , silent = True , draw  = True , nbins = 100 )
+    with use_canvas ( 'test_splot' ) : 
+        rB, f = TB.fitTo ( ds_bkg , silent = True , draw  = True , nbins = 100 )
     logger.info ( "Tau/bkg fit : fit results\n%s" % rB.table ( title = 'Tau bkg fit' , prefix = '# ' ) )
 
     

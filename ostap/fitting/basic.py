@@ -2351,9 +2351,10 @@ class PDF (FUNC) :
         fracs = []
         value = 1.0
         prod  = 1.0
-        
+
+
         for i , ff in zip ( range ( N - 1  ) , my_fractions ) :
-            
+
             value = 1.0 / N
             
             if recursive :
@@ -2362,16 +2363,16 @@ class PDF (FUNC) :
                 prod  *= ( 1.0 - value ) 
                 
             if   isinstance  ( ff , num_types       ) and not 0 <= ff <= 1 :
-                self.error   ("make_fracs: fraction %s is outside [0,1] interval, ignore it!" %  ff )
+                self.error   ("make_fractions: fraction %s is outside [0,1] interval, ignore it!" %  ff )
                 ff = value
                 
             elif isinstance  ( ff , ROOT.RooAbsReal ) and not 0 <= float ( ff ) <= 1 :
-                self.warning ("make_fracs: fraction %s is outside [0,1] interval" %  ff )
+                self.warning ("make_fractions: fraction %s is outside [0,1] interval" %  ff )
                 
-
             if ff is None : ff = value
 
-            fname =  ( name  % i ) if 2 != N else name ## ATTENTION!!
+            fname = name if ( 2 == N and  '%s' not in name and '%d' not in name ) else name % i  
+            
             tit   =  title if title else 'Fraction #%d: %s %s' % ( i , fname , self.name )                 
             fvar  = self.make_var ( ff   , fname  , tit , None , value , 0 , 1 )
             
@@ -3006,9 +3007,14 @@ class Combine1D (PDF) :
         self.__recursive = True if recursive else False 
 
         N = len ( pdf_list )
-        fr_name     = make_name ( self.prefix , '%d' if 2 != N else '' , self.suffix )
 
-        
+        if 2 < len ( pdf_list ) : 
+            if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+            else                           : fr_name = '%s_%%d'    %   self.prefix
+        else :
+            if self.prefix and self.suffix : fr_name = '%s_%s'     % ( self.prefix , self.suffix )
+            else                           : fr_name =                 self.prefix
+    
         ## make list of fractions
         fraction_list = self.make_fractions  ( N                          ,
                                                name      = fr_name        , 

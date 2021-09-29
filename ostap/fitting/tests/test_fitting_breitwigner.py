@@ -13,12 +13,13 @@ from   __future__        import print_function
 # ============================================================================= 
 import ROOT, time 
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import Ostap, std, VE, dsID
-from   ostap.logger.utils   import rooSilent 
-import ostap.io.zipshelve   as     DBASE
-from   ostap.utils.timing   import timing 
-from   builtins             import range
+import ostap.fitting.models  as     Models 
+from   ostap.core.core       import Ostap, std, VE, dsID
+from   ostap.logger.utils    import rooSilent 
+import ostap.io.zipshelve    as     DBASE
+from   ostap.utils.timing    import timing
+from   ostap.plotting.canvas import use_canvas 
+from   builtins              import range
 # =============================================================================
 # logging 
 # =============================================================================
@@ -76,10 +77,12 @@ def test_breitwigner_rho () :
     ## 3) P-wave Breit-Wigner with no formfactors 
     bw4 = Ostap.Math.BreitWigner ( m_rho , g_rho , m_pi , m_pi , 1 )
 
-    bw1.draw (          xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 2 )
-    bw2.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 4 )
-    bw3.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 8 )
-    bw4.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 5 )
+
+    with use_canvas ( 'test_breitwigner_rho' ) : 
+        bw2.draw (          xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 4 )
+        bw1.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 2 )
+        bw3.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 8 )
+        bw4.draw ( 'same' , xmin =  200 * MeV , xmax = 1.6 * GeV , linecolor = 5 )
     
     mass    = ROOT.RooRealVar  ('mass' , 'm(pipi)' , 200 * MeV , 1.6 * GeV ) 
 
@@ -93,14 +96,15 @@ def test_breitwigner_rho () :
                                       m0    = model1.mean  ,
                                       gamma = model1.gamma )     
     
-    f1 = model1.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 2 ) , ) )
-    f2 = model2.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
-    f3 = model3.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
-    
-    f1.draw ()
-    f2.draw ( 'same' )
-    f3.draw ( 'same' )
-
+    with use_canvas ( 'test_breitwigner_rho' ) : 
+        f1 = model1.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 2 ) , ) )
+        f2 = model2.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
+        f3 = model3.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
+        
+        f2.draw ()
+        f1.draw ( 'same' )
+        f3.draw ( 'same' )
+        
     models.add ( bw1    )
     models.add ( bw2    )
     models.add ( bw3    )
@@ -130,10 +134,11 @@ def test_breitwigner_phi () :
     ## 3) P-wave Breit-Wigner with no formfactors 
     bw3 = Ostap.Math.BreitWigner ( m_phi , g_phi , m_K , m_K , 1 )
 
-    bw1.draw (          xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 2 )
-    bw2.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 4 )
-    bw3.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 5 )
-
+    with use_canvas ( 'test_breitwigner_phi' ) : 
+        bw1.draw (          xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 2 )
+        bw2.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 4 )
+        bw3.draw ( 'same' , xmin = 0.95 * GeV , xmax = 1.5 * GeV , linecolor = 5 )
+        
     logger.info ("bw1 fraction %.4f" % ( bw1.integral ( 1.1 * GeV , 1.5 * GeV ) / bw1.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
     logger.info ("bw2 fraction %.4f" % ( bw2.integral ( 1.1 * GeV , 1.5 * GeV ) / bw2.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
     logger.info ("bw3 fraction %.4f" % ( bw3.integral ( 1.1 * GeV , 1.5 * GeV ) / bw3.integral ( 0.9 * GeV , 1.1 * GeV ) ) )
@@ -188,14 +193,16 @@ def test_breitwigner_phi_ps () :
     p2 = Models.BWPS_pdf ( 'P2' , f2 , xvar = mass , m0 = p1.m0  , gamma = p1.gamma )
     p3 = Models.BWPS_pdf ( 'P3' , f3 , xvar = mass , m0 = p1.m0  , gamma = p1.gamma )
     
-    fr1 = p1.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 2 ) , ) ) 
-    fr2 = p2.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) ) 
-    fr3 = p3.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) ) 
-    
-    fr1.draw ()
-    fr2.draw ('same')
-    fr3.draw ('same')
-
+    with use_canvas ( 'test_breitwigner_phi_ps' ) : 
+        fr1 = p1.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 2 ) , ) ) 
+        fr2 = p2.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) ) 
+        fr3 = p3.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) ) 
+        
+    with use_canvas ( 'test_breitwigner_phi_ps' ) : 
+        fr1.draw ()
+        fr2.draw ('same')
+        fr3.draw ('same')
+        
     ## flatte
     flatte = Ostap.Math.Flatte ( m0_f0 , m0g1_f0 , g2og1_f0 , m_K , m_K , m_pi , m_pi , 0.0 )
     flatte.draw ( xmin = 960 * MeV , xmax = 1.07 * GeV ) 
@@ -220,19 +227,21 @@ def test_breitwigner_phi_ps () :
                                       g2og1  = f0_980.g2og1   ,
                                       gamma0 = f0_980.gamma0  )
     
-    fr4 = f0_980.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 6 ) , ) ) 
-    fr5 = f0_ps .draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 7 ) , ) ) 
+    with use_canvas ( 'test_breitwigner_phi_ps' ) : 
+        fr4 = f0_980.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 6 ) , ) ) 
+        fr5 = f0_ps .draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 7 ) , ) ) 
 
-    fr5.draw (     )
-    fr4.draw ('same')
-
-
-    fr1.draw()
-    fr2.draw('same')
-    fr3.draw('same')
-    fr4.draw('same')
-    fr5.draw('same')
-    
+    with use_canvas ( 'test_breitwigner_phi_ps' ) : 
+        fr5.draw (     )
+        fr4.draw ('same')
+        
+    with use_canvas ( 'test_breitwigner_phi_ps' ) : 
+        fr1.draw()
+        fr2.draw('same')
+        fr3.draw('same')
+        fr4.draw('same')
+        fr5.draw('same')
+        
     models.add ( bw1    )
     models.add ( bw2    )
     models.add ( bw3    )
@@ -273,11 +282,11 @@ def test_breitwigner_rho_more () :
     model4 = Models.BreitWigner_pdf ( 'BW4' , bw4 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
     model5 = Models.BW3L_pdf        ( 'BW5' , bw5 , xvar = mass ,  m0 = m_rho , gamma = g_rho ) 
 
-    f4 = model4.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
-    f5 = model5.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
-    
-    f5.draw ()
-    f4.draw ( 'same' )
+    with use_canvas ( 'test_breitwigner_rho_more' ) : 
+        f4 = model4.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 4 ) , ) )
+        f5 = model5.draw ( total_fit_options = ( ROOT.RooFit.LineColor ( 8 ) , ) )
+        f5.draw ()
+        f4.draw ( 'same' )
 
     models.add ( bw4    )
     models.add ( bw5    )

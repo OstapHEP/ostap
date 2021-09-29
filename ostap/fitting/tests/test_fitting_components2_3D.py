@@ -23,6 +23,7 @@ from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
 from   ostap.utils.timing       import timing 
 from   ostap.core.meta_info     import root_info 
+from   ostap.plotting.canvas    import use_canvas 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -36,6 +37,8 @@ else :
 # =============================================================================
 def test_fitting_components2_3D () :
 
+    logger = getLogger( 'test_fitting_components2_3D' )
+    
     ## make simple test mass 
     m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 0 , 10 )
     m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 0 , 10 )
@@ -144,13 +147,13 @@ def test_fitting_components2_3D () :
     signal_y1 = signal_x1.clone  ( name='G1y'  , xvar = m_y   ) 
     signal_z1 = signal_x1.clone  ( name='G1z'  , xvar = m_z   )
     
-    bkg_x     = make_bkg ( -1      , 'Bx' , m_x )
-    bkg_y     =  bkg_x.clone ( name= 'By' , xvar =m_y )
-    bkg_z     = bkg_x.clone ( name='Bz' , xvar =m_z )
+    bkg_x     = make_bkg    ( -1   , 'Bx' , m_x )
+    bkg_y     = bkg_x.clone ( name = 'By' , xvar = m_y )
+    bkg_z     = bkg_x.clone ( name = 'Bz' , xvar = m_z )
     
     signal_x2 = Models.Gauss_pdf ( name='G2x'  , xvar = m_x  , mean = m2.value() , sigma = m2.error() )  
-    signal_y2 = signal_x2.clone ( name='G2y'  , xvar = m_y   ) 
-    signal_z2 = signal_x2.clone ( name='G2z'  , xvar = m_z   )
+    signal_y2 = signal_x2.clone  ( name='G2y'  , xvar = m_y   ) 
+    signal_z2 = signal_x2.clone  ( name='G2z'  , xvar = m_z   )
 
 
 
@@ -206,10 +209,11 @@ def test_fitting_components2_3D () :
     
     r = model.fitTo ( dataset , silent = True  )
     r = model.fitTo ( dataset , silent = True  )
-    
-    model.draw1 ( dataset )
-    model.draw2 ( dataset )
-    model.draw3 ( dataset )
+
+    with use_canvas ( 'test_fitting_components2_3D' ) : 
+        model.draw1 ( dataset )
+        model.draw2 ( dataset )
+        model.draw3 ( dataset )
     
     logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 

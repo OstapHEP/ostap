@@ -22,6 +22,8 @@ from   ostap.core.core          import cpp, VE, dsID
 from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.background import make_bkg 
 from   ostap.core.meta_info     import root_info 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,6 +37,7 @@ else :
 # =============================================================================
 def test_fitting_components_3D () :
 
+    logger = getLogger ( 'test_fitting_components_3D' ) 
     ## make simple test mass 
     m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 0 , 10 )
     m_y     = ROOT.RooRealVar ( 'mass_y' , 'Some test mass(Y)' , 0 , 10 )
@@ -227,10 +230,11 @@ def test_fitting_components_3D () :
     r = model.fitTo ( dataset , silent = True )
     r = model.fitTo ( dataset , silent = True )
     
-        
-    model.draw1 (  dataset )
-    model.draw2 (  dataset )
-    model.draw3 (  dataset )
+
+    with use_canvas ( 'test_fitting_components_3D' ) : 
+        with wait ( 2 ) : model.draw1 (  dataset )
+        with wait ( 2 ) : model.draw2 (  dataset )
+        with wait ( 2 ) : model.draw3 (  dataset )
         
     logger.info ( 'Model %s Fit result\n%s ' % ( model.name , r.table (prefix = '# ') ) ) 
 

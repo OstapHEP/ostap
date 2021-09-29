@@ -11,17 +11,19 @@
 - It tests various ``background-like'' smooth polynomial shapes
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__               import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent 
-from   ostap.utils.timing   import timing 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent 
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -57,12 +59,14 @@ models = set()
 ## Test  Poly(4)-Distribution
 # =============================================================================
 def test_poly4 () :
-    
+
+    logger = getLogger ( 'test_poly4' ) 
     logger.info("Test  Poly(4)-Distribution")
     model = Models.PolyPos_pdf('P4'  , x , power = 4 )
     
-    result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True )
+    with wait ( 1 ) , use_canvas ( 'test_poly4' ) : 
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -74,16 +78,19 @@ def test_poly4 () :
     models.add ( model ) 
 
 # =============================================================================
-## Test  monotonic Poly(4)-Distribution
+## Test  monotonic Poly(5)-Distribution
 # =============================================================================
-def test_monotonic4 () :
-    
-    logger.info("Test  monotonic Poly(4)-Distribution")
-    model = Models.Monotonic_pdf('M4'  , x , power = 4 , increasing = False  )
+def test_monotonic5 () :
+
+    logger = getLogger ( 'test_monotonic5' )
+    logger.info("Test  monotonic Poly(5)-Distribution") 
+    model = Models.Monotonic_pdf( 'M4'  , x , power = 5, increasing = False  )
     
     with rooSilent() : 
         result,f  = model.fitTo ( dataset )  
         result,f  = model.fitTo ( dataset )  
+        result,f  = model.fitTo ( dataset )  
+    with wait ( 1 ) , use_canvas ( 'test_monotonic5' ) : 
         model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -91,7 +98,7 @@ def test_monotonic4 () :
         print(result)
     else :
         for phi in model.phis : 
-            logger.info ( "\tMonotonic4:  phi= %-17s " % phi.ve() ) 
+            logger.info ( "\tMonotonic5:  phi= %-17s " % phi.ve() ) 
             
     models.add ( model ) 
 
@@ -100,11 +107,14 @@ def test_monotonic4 () :
 # =============================================================================
 def test_convex4() :
     
+    logger = getLogger ( 'test_convex4' )
+
     logger.info("Test  convex Poly(4)-Distribution")
     model = Models.Convex_pdf('C4'  , x , power = 4 , increasing = False , convex = True  )
     
     result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    with wait ( 1 ) , use_canvas ( 'test_convex4' ) : 
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -118,15 +128,20 @@ def test_convex4() :
 # =============================================================================
 ## Test  Poly(2)*Expo -Distribution
 # =============================================================================
-def test_expopoly2() : 
+def test_expopoly2() :
+
+    logger = getLogger ( 'test_expopoly2' )
+
     logger.info("Test  Poly(2)*Expo -Distribution")
     model = Models.Bkg_pdf('P2e'  , x , power = 2 )
     model.tau.fix(-1.25)
 
     result,f  = model.fitTo ( dataset , silent = True )
     model.tau.release() 
-    result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True )
+    
+    with wait ( 1 ) , use_canvas ( 'test_expopoly2' ) : 
+        model.draw ( dataset )        
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -143,6 +158,8 @@ def test_expopoly2() :
 # =============================================================================
 def test_pspline () : 
     
+    logger = getLogger ( 'test_pspline' )
+
     logger.info ("Test positive spline of order 3 with 2 inner knots ")
     ## define spline 
     spline = cpp.Ostap.Math.PositiveSpline( x.xmin() , x.xmax() , 2 , 3 )
@@ -151,7 +168,8 @@ def test_pspline () :
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
+    with wait ( 1 ) , use_canvas ( 'test_pspline' ) : 
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -167,13 +185,16 @@ def test_pspline () :
 # =============================================================================
 def test_mspline () :
     
+    logger = getLogger ( 'test_mspline' )
+
     logger.info ("Test positive decreasing spline of order 3 with 2 inner knots ")
     spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
     model  = Models.MSpline_pdf ( 'M3' , x , spline )
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
+    with wait ( 1 ) , use_canvas ( 'test_mspline' ) : 
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -189,13 +210,15 @@ def test_mspline () :
 # =============================================================================
 def test_cspline () :
     
+    logger = getLogger ( 'test_cspline' )
     logger.info ("Test positive decreasing convex spline of order 3 with 2 inner knots")
     spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 2 , 3 , False , True )
     model  = Models.CSpline_pdf ( 'C3' , x , spline )
 
     ## fit it! 
     result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
+    with wait ( 1 ) , use_canvas ( 'test_cspline' ) : 
+        model.draw ( dataset )        
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
@@ -212,6 +235,7 @@ def test_cspline () :
 # =============================================================================
 def test_db() :
 
+    logger = getLogger ( 'test_db' )
     logger.info('Saving all objects into DBASE')    
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
@@ -226,8 +250,8 @@ if '__main__' == __name__ :
 
     with timing ( "Poly4" , logger ) : 
         test_poly4       () ## Polynomial (4)
-    with timing ( "Monotonic4" , logger ) : 
-        test_monotonic4 () ## Monotonic polynomial (4)
+    with timing ( "Monotonic5" , logger ) : 
+        test_monotonic5 () ## Monotonic polynomial (5)
     with timing ( "Convex4"   , logger ) : 
         test_convex4     () ## Convex polynomial (4)
     with timing ( "ExpoP2"    , logger ) : 

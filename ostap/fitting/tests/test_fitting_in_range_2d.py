@@ -20,6 +20,8 @@ from   ostap.logger.utils       import rooSilent
 from   builtins                 import range
 from   ostap.fitting.background import make_bkg
 from   ostap.core.meta_info     import root_info 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # ============================================================================= 
 from   ostap.logger.logger      import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'test_fitting_in_range_2d' )
@@ -28,7 +30,8 @@ else                       : logger = getLogger ( __name__  )
 	
 # ============================================================================= 
 def test_fitting_in_range_2d () :
-	
+
+	logger = getLogger ( 'test_fitting_in_range_2d' ) 
         ## make simple test mass 
 	m_x     = ROOT.RooRealVar ( 'm_x' , 'Some test mass(X)' , 0 , 5 )
 	m_y     = ROOT.RooRealVar ( 'm_y' , 'Some test mass(Y)' , 6 , 10 )
@@ -96,20 +99,19 @@ def test_fitting_in_range_2d () :
 	r = model.fitTo ( dataset , silent = True )
 	r = model.fitTo ( dataset , silent = True )
 	
-	
 	dataset.m_y.setRange ( 'fit' , 8,10. )
 	model.yvar.setRange  ( 'fit' , 8,10. )
-	model.draw1(dataset,nbins=200,in_range=(6,8))
-	time.sleep (2)
-	model.draw1(dataset,nbins=200, in_range='fit')
-	time.sleep (2)
-	
+
+	with use_canvas ( 'test_fitting_in_range_2d' ) : 		
+		with wait ( 2 ) : model.draw1(dataset,nbins=200,in_range=(6,8))
+		with wait ( 2 ) : model.draw1(dataset,nbins=200, in_range='fit')
+		
 	dataset.m_x.setRange ( 'fit2' , 0,2.5 )
 	model.xvar.setRange ( 'fit2' , 0,2.5 )
-	model.draw2(dataset,nbins=200, in_range=(2.5,5))
-	time.sleep (2)
-	model.draw2(dataset,nbins=200, in_range='fit2')
-	time.sleep (2)
+	
+	with use_canvas ( 'test_fitting_in_range_2d' ) : 
+		with wait ( 2 ) : model.draw2(dataset,nbins=200, in_range=(2.5,5))
+		with wait ( 2 ) : model.draw2(dataset,nbins=200, in_range='fit2')
 	
 
 # =============================================================================

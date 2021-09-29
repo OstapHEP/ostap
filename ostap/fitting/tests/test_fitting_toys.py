@@ -18,6 +18,14 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, time, random
 # =============================================================================
+from   ostap.core.pyrouts   import hID
+import ostap.fitting.models as     Models
+import ostap.fitting.toys   as     Toys
+import ostap.histos.histos
+from   ostap.utils.timing   import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -25,12 +33,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_toys' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-from   ostap.core.pyrouts   import hID
-import ostap.fitting.models as     Models
-import ostap.fitting.toys   as     Toys
-import ostap.histos.histos
-from   ostap.utils.timing   import timing 
 # =============================================================================
 mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
@@ -79,11 +81,11 @@ def test_toys ( ) :
     for r in results [ 'mean_GG'  ] : h_mean  .Fill ( r ) 
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
-    for h in ( h_mean , h_sigma ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep ( 1 )
+    with use_canvas ( 'test_toys' ) : 
+        for h in ( h_mean , h_sigma ) :            
+            with wait ( 1 ) :
+                h.draw()
+                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
 # =============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -124,11 +126,11 @@ def test_toys2 ( ) :
     for r in results ['mean_FG'  ] : h_mean .Fill ( r ) 
     for r in results ['sigma_FG' ] : h_sigma.Fill ( r )
 
-    for h in ( h_mean , h_sigma ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep ( 1 )
+    with use_canvas ( 'test_toys2' ) : 
+        for h in ( h_mean , h_sigma ) :
+            with wait ( 1 ) : 
+                h.draw()
+                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
 
 # =============================================================================
@@ -181,12 +183,11 @@ def test_significance_toys ( ) :
     
     for r in results ['S'  ] : h_S .Fill ( r )
     
-    for h in ( h_S ,  ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep  ( 1 )
-
+    with use_canvas ( 'test_toys2' ) : 
+        for h in ( h_S ,  ) :
+            with wait ( 1 ) : 
+                h.draw()
+                logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
                 
 # =============================================================================
 if '__main__' == __name__ :

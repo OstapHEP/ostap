@@ -13,6 +13,7 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random, math, time  
+from   builtins                 import range 
 import ostap.fitting.roofit
 import ostap.fitting.models     as     Models 
 from   ostap.core.core          import cpp, VE, dsID,    Ostap 
@@ -20,7 +21,8 @@ from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.utils        import timing
 from   ostap.core.meta_info     import old_PyROOT
-from   builtins                 import range 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -144,6 +146,9 @@ def test_formula () :
         logger.info ( "Compare with true efficiency (using  RooFormulaVar)\n%s" % make_table (
             eff1 , title = 'using RooFormulaVer') )
 
+        with use_canvas ("test_formula") : 
+            eff1.draw ( ds )
+
     time.sleep(2)
     
 # =============================================================================
@@ -212,6 +217,9 @@ def test_pyVAR () :
         logger.info ( "Compare with true efficiency (using PyVAR)\n%s" % make_table (
             eff2 , title = 'using PyVAR') )
 
+        with use_canvas ("test_pyVAR") : 
+            eff2.draw ( ds )
+
     time.sleep(2)
     
 # =============================================================================
@@ -254,6 +262,9 @@ def test_pyVAR2 () :
         logger.info ( "Fit result using-PyVAR2 \n%s"     % r3.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using PyVAR2)\n%s" % make_table (
             eff3 , title = 'using PyVAR2') )
+
+        with use_canvas ("test_pyVAR2") : 
+            eff3.draw ( ds )
 
     time.sleep(2)
 
@@ -332,7 +343,10 @@ def test_pyVar () :
         logger.info ( "Fit result using-PyVar \n%s"      % r4.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using  PyVar)\n%s" % make_table (
             eff4 , title = 'using PyVar') )
-    
+
+        with use_canvas ("test_pyVar") : 
+            eff4.draw ( ds )
+            
     time.sleep(2)
 
 # =============================================================================

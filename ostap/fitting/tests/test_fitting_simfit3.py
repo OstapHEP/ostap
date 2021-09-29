@@ -15,17 +15,18 @@
 Simultaneous fit of 1D and 2D-distributions 
 """
 # ============================================================================= 
-from builtins    import range 
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import dsID
-from   ostap.utils.timing   import timing 
-from   ostap.logger.utils   import rooSilent
+import ostap.fitting.models     as     Models 
+from   builtins    import range 
+from   ostap.core.core          import dsID
+from   ostap.utils.timing       import timing 
+from   ostap.logger.utils       import rooSilent
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -107,6 +108,7 @@ for i in range (NC2) :
 # =============================================================================
 def test_simfit3() : 
 
+    logger = getLogger ( 'test_simfit3' ) 
     ## low statistic, high-background "signal channel"
     signal2  = Models.Gauss_pdf ( 'G2'                  ,
                                   xvar  = mass2         ,
@@ -132,8 +134,10 @@ def test_simfit3() :
     ## fit 2
     rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
     rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
-    rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
-    rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
+
+    with use_canvas ( 'test_simfit3' ) : 
+        with wait ( 1 ) : rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
+        with wait ( 1 ) : rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
     
     
     logger.info ( 'Fit results for signal sample only: %s' % rS )
@@ -154,9 +158,9 @@ def test_simfit3() :
     
     ## fit 1 
     rN , fN = model_N.fitTo ( dataset1 , draw = False , nbins = 50 , silent = True )
-    rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
-    
-    logger.info ( 'Fit results for normalization sample only: %s' % rN )
+    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
+            rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
+            logger.info ( 'Fit results for normalization sample only: %s' % rN )
     
     # =========================================================================
     ## combine data
@@ -177,10 +181,11 @@ def test_simfit3() :
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     
-    fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-    fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
-    fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
-    
+    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
+        with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+        with wait ( 1 ) : fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
+        with wait ( 1 ) : fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
+        
     logger.info ( 'Combined fit  results are: %s ' % rC )
     
     logger.info ( ' Value |        Simple fit         |    Combined fit ' )

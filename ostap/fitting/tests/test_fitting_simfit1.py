@@ -14,17 +14,18 @@ Simultannepous fit of two 1D-distributions
 
 """
 # ============================================================================= 
-from builtins    import range 
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import dsID
-from   ostap.logger.utils   import rooSilent
-from   ostap.utils.timing   import timing 
+import ostap.fitting.models     as     Models 
+from   builtins                 import range 
+from   ostap.core.core          import dsID
+from   ostap.logger.utils       import rooSilent
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -83,6 +84,8 @@ for i in range (NB2 ) :
         
 # =============================================================================
 def test_simfit1 () :
+
+    logger = getLogger( 'test_simfit1' )
     
     signal1  = Models.Gauss_pdf ( 'G1'                 ,
                                   xvar  = mass         ,
@@ -106,14 +109,17 @@ def test_simfit1 () :
     model2.S = NS2
     model2.B = NB2 
     
-    
-    # =========================================================================
-    ## fit 1 
-    r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
-    
-    ## fit 2
-    r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
-    # =========================================================================
+
+    with use_canvas ( 'test_simfit1' ) : 
+        # =========================================================================
+        ## fit 1
+        with wait ( 1 ) : 
+            r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )
+        
+        ## fit 2
+        with wait ( 1 ) : 
+            r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+        # =========================================================================
     
     ## combine data
     
@@ -134,10 +140,12 @@ def test_simfit1 () :
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
     
-    fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
-    fB = model_sim.draw ( 'B' , dataset , nbins = 50 )
-    
-    logger.info ( 'Fit  results are: %s ' % r )
+    with use_canvas ( 'test_simfit1' ) :
+        with wait ( 1 ) : 
+            fA = model_sim.draw ( 'A' , dataset , nbins = 50 )
+        with wait ( 1 ) : 
+            fB = model_sim.draw ( 'B' , dataset , nbins = 50 )            
+            logger.info ( 'Fit  results are: %s ' % r )
 
 
 # =============================================================================

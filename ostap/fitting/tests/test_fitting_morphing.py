@@ -21,6 +21,8 @@ from   ostap.fitting.morphing_pdf  import Morphing1D_pdf, Morphing2D_pdf
 from   ostap.utils.utils           import vrange
 from   builtins                    import range
 from   ostap.utils.timing          import timing 
+from   ostap.plotting.canvas       import use_canvas
+from   ostap.utils.utils           import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -58,10 +60,12 @@ def test_morphing1 () :
     for mu in vrange ( 1 , 3 , 6 ) :
         pdf.mu = mu
         logger.info ( 'Mu= %s' % mu ) 
-        pdf.draw()
+        with wait ( 1 ) , use_canvas ( 'test_morphing1' ) :
+            pdf.draw()
 
-    r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
-    logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
+    with wait ( 1 ) , use_canvas ( 'test_morphing1' ) :
+        r , f = pdf.fitHisto ( h1 , draw = True , nbins = 100 , silent = True )
+        logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
 
 # ============================================================================
 def test_morphing2 () :
@@ -100,7 +104,8 @@ def test_morphing2 () :
                             setting = ROOT.RooMomentMorphND.Linear ) 
     
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
-    r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
+    with wait ( 1 ) , use_canvas ( 'test_morphing2' ) :
+        r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
     logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
 # =============================================================================

@@ -54,7 +54,11 @@ __all__     = (
     'KeepCanvas'         , ## context manager to keep the current ROOT canvas
     'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
-    'KeepArgs'           , ## context manager to keep sys.argv 
+    'KeepArgs'           , ## context manager to keep sys.argv
+    ##
+    'Wait'               , ## conitext manager to wait soem tiem bvefore and/or after action
+    ## 
+    'wait'               , ## conitext manager to wait soem tiem bvefore and/or after action 
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
@@ -91,7 +95,7 @@ __all__     = (
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math, random ## attention here!!
+import ROOT, time, os , sys, math, time , random ## attention here!!
 from   builtins             import range
 from   itertools            import repeat, chain, islice 
 # =============================================================================
@@ -458,13 +462,20 @@ class KeepCanvas(object) :
     >>> with KeepCanvas() :
     ... do something here 
     """
+    def __init__ ( self ) :
+        self.__old_canvas  = None 
     def __enter__ ( self ) :
-        import ROOT 
-        self.canvas = ROOT.gPad.GetCanvas()
+        import ROOT
+        cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None 
+        self.__old_canvas = cnv if cnv else None 
     def __exit__  ( self , *_ ) :
-        if self.canvas:
-            self.canvas.cd()
-
+        if self.__old_canvas:
+            self.__old_canvas.cd()
+    @property
+    def old_canvas ( self ) :
+        """``old_canvas'': canvas to be preserved"""
+        return self.__old_canvas
+    
 # =============================================================================
 #  Keep the current canvas
 #  @code
@@ -560,6 +571,50 @@ def keepArgs() :
     """
     return KeepArgs()
 
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with Wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+class Wait(object):
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with Wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """
+    def __init__ ( self , after = 0 , before = 0 ) :
+        self.__after  = after
+        self.__before = before 
+
+    def __enter__ ( self ) :
+        if 0 < self.__before :
+            time.sleep  ( self.__before ) 
+    def __exit__ ( self , *_ ) :
+        if 0 < self.__after :
+            time.sleep  ( self.__after  ) 
+    @property
+    def before ( self ) :
+        """``before'': wait some time before the action"""
+        return self.__before
+    
+    @property
+    def after  ( self ) :
+        """``after'': wait some time after the action"""
+        return self.__after
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+def wait ( after = 0 , before = 0 ) :
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """    
+    return Wait  (after = after , before = before )
 
 # =============================================================================
 ## EnableImplicitMT

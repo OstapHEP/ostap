@@ -208,9 +208,11 @@ ROOT.RooArgSet . __getitem__       = _ras_getitem_
 ROOT.RooArgSet . __contains__      = _ras_contains_ 
 ROOT.RooArgSet . __nonzero__       = lambda s   : 0 != len ( s ) 
         
-ROOT.RooArgSet     . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
-ROOT.RooArgSet     . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) )  
-ROOT.RooLinkedList . __repr__      = lambda s : str (  _rs_list_ ( s ) )
+ROOT.RooArgSet     . __str__       = lambda s : str ( set   ( _rs_list_ ( s ) ) )  
+ROOT.RooArgSet     . __repr__      = lambda s : str ( set   ( _rs_list_ ( s ) ) )
+
+ROOT.RooLinkedList . __str__       = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
+ROOT.RooLinkedList . __repr__      = lambda s : str ( tuple ( _rs_list_ ( s ) ) ) 
 
 ROOT.RooAbsCollection.__iter__     = _ras_iter_
 ROOT.RooAbsCollection.__len__      = lambda s   : s.getSize()

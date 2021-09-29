@@ -20,7 +20,11 @@ __all__     = (
     'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
     'AutoPlots'        , ## context manager to activate the auto-plotting machinery
     'auto_plots'       , ## ditto, but as function
-    'use_pad'          , ## context manager to modifty TPad 
+    'use_pad'          , ## context manager to modifty TPad
+    'KeepCanvas'       , ## context manager to keep/preserve currect canvas 
+    'keepCanvas'       , ## context manager to keep/preserve currect canvas 
+    'Canvas'           , ## context manager to create currect canvas
+    'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
 import ROOT, os, tempfile  
@@ -28,6 +32,7 @@ import ostap.core.core
 import ostap.plotting.style
 from   sys import version_info as python_version
 from   ostap.utils.cidict import cidict
+from   ostap.utils.utils  import KeepCanvas, keepCanvas 
 from   ostap.core.core    import cidict_fun
 # =============================================================================
 # logging 
@@ -54,11 +59,12 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
+    if not name : name = 'glCanvas'
     cnv   = _canvases.get ( name , None )
     if not cnv :
         ## create new canvas 
         ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
-        cnv  = ROOT.TCanvas ( name , 'Ostap' , width , height )
+        cnv  = ROOT.TCanvas ( name , title , width , height )
         ## adjust newly created canvas
         ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
         groot = ROOT.ROOT.GetROOT() 
@@ -71,6 +77,7 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
         _canvases [ name ] = cnv
         
     return cnv
+
 
 # =============================================================================
 all_extensions = (
@@ -879,11 +886,11 @@ class UsePad(object) :
 
     @property
     def changed ( self ) :
-        """``changed'' : changed papameters"""
+        """``changed'' : changed parameters"""
         return self.__changed
     
 # =============================================================================
-## helpoer context manager to modify <code>TAttPad</code>
+## helper context manager to modify <code>TAttPad</code>
 #  @see TAttPad 
 def use_pad ( pad , **config ) :
     """Helper context manager for `TAttPad` objects
@@ -893,6 +900,97 @@ def use_pad ( pad , **config ) :
 
 usePad = use_pad
 
+
+
+
+# =============================================================================
+## @class Canvas
+#  helper context manager to create and configure a canvas (and pad)
+#  @code
+#  with Canvas ( title = 'Canvas #2' , width = 1000 ) :
+#  ... 
+#  @endcode
+class Canvas(KeepCanvas) :
+    """Helper context manager to create and configure a canvas (and pad)
+    >>> with Canvas ( title = 'Canvas #2' , width = 1000 ) :
+    >>> ... 
+    """
+    def __init__ ( self                   ,
+                   name   = ''            ,
+                   title  = ''            ,
+                   width  = canvas_width  ,   ## canvas width
+                   height = canvas_height ,   ## canvas height 
+                   **kwargs               ) : ## Pad configuration
+        
+        self.__name   = name
+        self.__title  = title 
+        self.__width  = width
+        self.__height = height
+        self.__kwargs = kwargs 
+        ## 
+        KeepCanvas.__init__ ( self ) 
+        
+    ## context manager: exit 
+    def __enter__ ( self ) :
+
+        ## 1) use context manager 
+        KeepCanvas.__enter__ ( self )
+
+        if not self.__name :
+            self.__name = 'gl_canvas#%d' % len ( _canvases )
+            while self.__name in _canvases : 
+                h = self.__name , title , width , height , len ( _canvases ) 
+                self.__name = 'gl_canvas#%d' % hash ( h ) 
+
+        if not self.__title :
+            self.__title = self.__name
+
+        ## 2) create/use new canvas 
+        self.__cnv = getCanvas ( name   = self.__name   ,
+                                 title  = self.__title  ,
+                                 width  = self.__width  ,
+                                 height = self.__height )
+        
+        self.__name  = self.__cnv.GetName  () 
+        self.__title = self.__cnv.GetTitle () 
+
+        ## 3) make it active 
+        self.__cnv.cd() 
+
+        ## 4) apply pad settings
+        if self.__kwargs :
+            set_pad ( ROOT.gPad , **self.__kwargs ) 
+            
+        return self.__cnv  ## return current canvas 
+    
+    ## context manager: exit 
+    def __exit__ ( self , *_ ) :
+        KeepCanvas.__exit__ ( self , *_ ) 
+
+    
+# =============================================================================
+## helper context manager to create and configure a canvas (and pad)
+#  @code
+#  with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
+#  ... 
+#  @endcode
+def use_canvas ( name   = ''            ,
+                 title  = ''            ,
+                 width  = canvas_width  ,   ## canvas width
+                 height = canvas_height ,   ## canvas height 
+                 **kwargs               ) : ## Pad configuration
+    """Helper context manager to create and configure a canvas (and pad)
+    >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
+    >>> ... 
+    """
+    return Canvas ( name   = name   ,
+                    title  = title  ,
+                    width  = width  ,   ## canvas width
+                    height = height ,   ## canvas height 
+                    **kwargs        )   ## Pad configuration
+
+
+    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.TVirtualPad , 

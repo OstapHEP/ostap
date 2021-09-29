@@ -22,6 +22,8 @@ from   ostap.logger.utils   import rooSilent
 from   builtins             import range
 from   ostap.utils.timing   import timing
 from   ostap.core.meta_info import root_info
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -73,9 +75,10 @@ def test_minuit_weighted () :
     model   = Models.Fit1D ( signal = signal , background = 0 )
     model.S = NS 
     model.B = NB 
-    
-    r0 , _  = model.fitTo ( dataset , silent = True , draw = False )
-    r0 , f0 = model.fitTo ( dataset , silent = True , draw = True  , nbins = 100 )
+
+    with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
+        r0 , _  = model.fitTo ( dataset , silent = True , draw = False )
+        r0 , f0 = model.fitTo ( dataset , silent = True , draw = True  , nbins = 100 )
     
     logger.info ('Fit result\n%s' % r0.table ()  )
     
@@ -106,9 +109,10 @@ def test_minuit_weighted () :
     logger.info ('Weighted fit result (SumW2=True)\n%s' % r2.table ( 'SumW2=True')  )
     
     if (6,19) <= root_info :
-        ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
-        ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
-        logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )
+        with use_canvas ( "test_minuit_weighted" ) , wait ( 2 ) : 
+            ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = False , silent = True )
+            ra , fa = expf.fitTo ( dsw , asymptotic = True , draw = True  , silent = True , nbins = 50 )
+            logger.info ('Weighted fit result (asymptotic=True)\n%s' % ra.table ( 'Asymptotic=True')  )
         
     m = expf.minuit ( dataset = dsw , scale = False , silent = True )
     m.migrad ( 5 )

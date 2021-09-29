@@ -11,15 +11,17 @@
 - It tests various 2D-non-factrorizeable models 
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__              import print_function
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import Ostap, VE, dsID
-from   ostap.logger.utils   import rooSilent 
-from   builtins             import range
-from   ostap.utils.timing   import timing 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import Ostap, VE, dsID
+from   ostap.logger.utils       import rooSilent 
+from   builtins                 import range
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -40,7 +42,7 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set-1' , varset )
 ## fill it with uniform (x,y) 
 m = VE(3.100,0.015**2)
 w = VE(3.100,0.100**2) 
-for i in range(0,2500) :
+for i in range(0,10000) :
     
     m_x.value = random.uniform ( *m_x.minmax() )  
     m_y.value = random.uniform ( *m_y.minmax() )
@@ -56,7 +58,8 @@ models = set()
 ## Positive polynomial in X and Y 
 # =============================================================================
 def test_polypos2D() :
-    
+
+    logger = getLogger ( 'test_polypos2D' ) 
     logger.info ('Test PolyPos2D_pdf: positive polynomial in 2D' )
     model = Models.PolyPos2D_pdf ( 'P2D'  ,
                                    m_x    ,
@@ -67,9 +70,10 @@ def test_polypos2D() :
     with rooSilent() : 
         result, f = model.fitTo ( dataset )
         
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
-
+    with use_canvas ( 'test_polypos2D' )  :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
+        
     result, f = model.fitTo ( dataset , silent = True )
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -85,6 +89,8 @@ def test_polypos2D() :
 ## Positive *SYMMETRIC* polynomial in X and Y 
 # =============================================================================
 def test_polypossym2D() :
+
+    logger = getLogger ( 'test_polypossym2D' )
     
     logger.info ('Test PolyPos2Dsym_pdf: Symmetric positive polynomial' )
     model = Models.PolyPos2Dsym_pdf ( 'P2Ds ',
@@ -93,9 +99,10 @@ def test_polypossym2D() :
                                       n = 2  )
 
     with rooSilent() : 
-        result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+        result, f = model.fitTo ( dataset )
+    with use_canvas ( 'test_polypossym2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
 
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -112,6 +119,8 @@ def test_polypossym2D() :
 ## product of phase space factors, modulated by positive polynomial in X and Y 
 # =============================================================================
 def test_pspol2D() : 
+
+    logger = getLogger ( 'test_pspol2D' )
     
     logger.info ('Test PSPol2D_pdf: product of phase space factors, modulated by positive polynomial in X and Y' )
     
@@ -124,9 +133,10 @@ def test_pspol2D() :
                                  nx = 2 , ny = 2 )
     
     with rooSilent() : 
-        result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+        result, f = model.fitTo ( dataset )
+    with use_canvas ( 'test_pspol2D' ) : 
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -142,7 +152,10 @@ def test_pspol2D() :
 # =============================================================================
 ## *SYMMETRIC* product of phase space factors, modulated by positive polynomial in X and Y 
 # =============================================================================
-def test_pspolsym2D() : 
+def test_pspolsym2D() :
+
+    logger = getLogger ( 'test_pspolsym2D')
+    
     logger.info ('Test PSPol2Dsym_pdf: *SYMMETRIC* product of phase space factors, modulated by positive polynomial in X and Y ')
     
     ## "fictive phase space"
@@ -153,8 +166,9 @@ def test_pspolsym2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_pspolsym2D') : 
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -171,6 +185,8 @@ def test_pspolsym2D() :
 ## exponential times phase space factor, modulated by positive polynomial in X and Y 
 # =============================================================================
 def test_expopspol2D() :
+
+    logger = getLogger ( 'test_expopspol2D' )
     
     logger.info ('Test ExpoPSPol2D_pdf: Exponential times phase space factor, modulated by positive polynomial in X and Y ')
     
@@ -183,8 +199,9 @@ def test_expopspol2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_expopspol2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -201,9 +218,12 @@ def test_expopspol2D() :
 ## exponential times exponential modulated by positive polynomial in X and Y 
 # =============================================================================
 def test_expopol2D() :
+
+    logger = getLogger ( 'test_expopol2D' )
     
     logger.info ('Test ExpoPol2D_pdf: Exponential times exponential modulated by positive polynomial in X and Y ')
-## "fictive phase space"
+    
+    ## "fictive phase space"
     model = Models.ExpoPol2D_pdf ( 'EP',
                                    m_x    , m_y  ,
                                    nx = 2 , ny = 2 )
@@ -211,8 +231,9 @@ def test_expopol2D() :
 
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_expopol2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -228,7 +249,10 @@ def test_expopol2D() :
 # =============================================================================
 ## symmetric exponential times exponential modulated by positive polynomial in X and Y 
 # =============================================================================
-def test_expopolsym2D() : 
+def test_expopolsym2D() :
+
+    logger = getLogger ( 'test_expopolsym2D' )
+    
     logger.info ('Test ExpoPol2Dsym_pdf: symmetric exponential times exponential modulated by positive polynomial in X and Y')
 
     model = Models.ExpoPol2Dsym_pdf ( 'EPs',
@@ -238,8 +262,9 @@ def test_expopolsym2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_expopolsym2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -256,6 +281,8 @@ def test_expopolsym2D() :
 ## 2D-spline 
 # =============================================================================
 def test_spline2D() :
+
+    logger = getLogger (  'test_spline2D' )
     
     logger.info ('Test Spline2D_pdf : 2D-spline')
     
@@ -272,8 +299,9 @@ def test_spline2D() :
     
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_spline2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -288,6 +316,8 @@ def test_spline2D() :
 # =============================================================================
 def test_splinesym2D() :
 
+    logger = getLogger ( 'test_splinesym2D' )
+    
     logger.info ('Test Spline2Dsym_pdf: Symetric 2D-spline')
     
     ss    = Ostap.Math.BSpline             ( m_x.xmin(), m_x.xmax() , 1 , 2 ) 
@@ -297,8 +327,9 @@ def test_splinesym2D() :
 
     with rooSilent() : 
         result, f = model.fitTo ( dataset ) 
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+    with use_canvas ( 'test_splinesym2D' ) :
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     result, f = model.fitTo ( dataset , silent = True )
         
@@ -314,6 +345,8 @@ def test_splinesym2D() :
 # =============================================================================
 def test_db() :
 
+    logger = getLogger ( 'test_db' )
+    
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 

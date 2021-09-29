@@ -26,11 +26,13 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from   ostap.core.pyrouts   import hID, VE 
-import ostap.fitting.models as     Models
-import ostap.fitting.toys   as     Toys
+from   ostap.core.pyrouts       import hID, VE 
+import ostap.fitting.models     as     Models
+import ostap.fitting.toys       as     Toys
 import ostap.histos.histos
-from   ostap.utils.timing   import timing 
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 mass        = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
 gauss       = Models.Gauss_pdf ( 'G'    , xvar = mass )
@@ -63,7 +65,8 @@ def test_jackknife ( ) :
                     'vr' : lambda  r, *_ :   r.sigma_G * 1    / r.mean_G  } 
     
      ## prefit the whole dataset
-    res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
+    with use_canvas ( 'test_jackknife' ) : 
+        res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
     ## start Jackknife process 
     results , stats = Toys.make_jackknife  (
@@ -76,7 +79,8 @@ def test_jackknife ( ) :
         progress    = True )
 
     ## fit the whole sample 
-    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+    with use_canvas ( 'test_jackknife' ) : 
+        res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
     
     logger.info  ('Fit results:\n%s' % res.table ( title     = 'Fit results' ,
                                                    prefix    = '# '          ,

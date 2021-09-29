@@ -11,16 +11,18 @@
 - It tests various 2D-non-factrorizeable models 
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__               import print_function
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import Ostap, std, VE, dsID
-from   ostap.logger.utils   import rooSilent 
-import ostap.io.zipshelve   as     DBASE
-from   ostap.utils.timing   import timing 
-from   builtins             import range
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import Ostap, std, VE, dsID
+from   ostap.logger.utils       import rooSilent 
+import ostap.io.zipshelve       as     DBASE
+from   ostap.utils.timing       import timing 
+from   builtins                 import range
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -94,6 +96,8 @@ signal2.sigma = m.error ()
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_model_13 () :
+
+    logger = getLogger ( 'test_model_13' )
     
     logger.info ('Non-factorizeable fit component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (Expo*PS)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
@@ -114,9 +118,10 @@ def test_model_13 () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        
-        model.draw1 ( dataset )        
-        model.draw2 ( dataset )
+        result, frame = model. fitTo ( dataset )
+    with use_canvas ( 'test_model_13' ): 
+        with wait ( 1 ) : model.draw1 ( dataset )        
+        with wait ( 1 ) : model.draw2 ( dataset )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -136,6 +141,8 @@ def test_model_13 () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
+    logger = getLogger ( 'test_db' )
 
     logger.info('Saving all objects into DBASE')
     with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 

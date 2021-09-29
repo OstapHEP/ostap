@@ -11,18 +11,18 @@
 - It tests ``pure-python'' PDF 
 """
 # ============================================================================= 
-from   __future__        import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random, math, time 
 import ostap.fitting.roofit 
-from   builtins             import range
-from   ostap.core.core      import VE, dsID, Ostap
-from   ostap.fitting.basic  import MASS,     Fit1D , Generic1D_pdf 
-from   ostap.utils.utils    import timing
-from   ostap.core.meta_info import old_PyROOT 
+from   builtins                 import range
+from   ostap.core.core          import VE, dsID, Ostap
+from   ostap.fitting.basic      import MASS,     Fit1D , Generic1D_pdf 
+from   ostap.utils.utils        import timing
+from   ostap.core.meta_info     import old_PyROOT 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -135,12 +135,10 @@ def test_PyPDF() :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
+        with wait ( 1 ) , use_canvas ( "test_PyPDF" ) : 
+            r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
+            logger.info  ("Fit result for``pure python'' PDF: PyPDF \n%s" % r.table ( prefix = "# " ) )
         
-        logger.info  ("Fit result for``pure python'' PDF: PyPDF \n%s" % r.table ( prefix = "# " ) )
-        
-    time.sleep ( 2 )
-    
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF</code> with analytical integral
@@ -245,11 +243,10 @@ def test_PyPDF_AI() :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
-        
-        logger.info  ("Fit result for``pure python'' PDF: PyPDF with analytical integral \n%s" % r.table ( prefix = "# " ) ) 
+        with wait ( 1 ) , use_canvas ( "test_PyPDF_AI" ) : 
+            r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
+            logger.info  ("Fit result for``pure python'' PDF: PyPDF with analytical integral \n%s" % r.table ( prefix = "# " ) ) 
 
-        time.sleep ( 2 )
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPDF2</code> 
@@ -312,11 +309,9 @@ def test_PyPDF2 () :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
-
-        logger.info  ("Fit result for``pure python'' PDF: PyPDF2 with python function \n%s" % r.table ( prefix = "# " ) )
-        
-        time.sleep ( 2 )
+        with wait ( 1 ) , use_canvas ( "test_PyPDF2" ) : 
+            r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
+            logger.info  ("Fit result for``pure python'' PDF: PyPDF2 with python function \n%s" % r.table ( prefix = "# " ) )
     
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code>
@@ -392,12 +387,9 @@ def test_PyPdf() :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
-        
-        logger.info  ("Fit result for``pure python'' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
-        
-    time.sleep ( 2 )
-
+        with wait ( 1 ) , use_canvas ( "test_PyPdf" ) : 
+            r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )        
+            logger.info  ("Fit result for``pure python'' PDF: PyPdf \n%s" % r.table ( prefix = "# " ) )
 
 # =============================================================================
 ## Test pure python PDF: <code>PyPdf</code> + analytical integrals 
@@ -499,11 +491,9 @@ def test_PyPdf_AI() :
         
         ##  fit!
         r, _ = model  .fitTo ( dataset , draw = False , silent = True , ncpu=1 )
-        r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )
-        
-        logger.info  ("Fit result for``pure python'' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
-        
-    time.sleep ( 2 )
+        with wait ( 1 ) , use_canvas ( "test_PyPdf_AI" ) : 
+            r, f = model  .fitTo ( dataset , draw = True  , silent = True , ncpu=1 )            
+            logger.info  ("Fit result for``pure python'' PDF: PyPdf with analytical integral\n%s" % r.table ( prefix = "# " ) )
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -18,6 +18,13 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, time, random, math
 # =============================================================================
+from   ostap.core.pyrouts    import hID, VE 
+import ostap.fitting.models  as     Models
+import ostap.fitting.toys    as     Toys
+import ostap.histos.histos
+from   ostap.utils.timing    import timing
+from   ostap.plotting.canvas import use_canvas 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -25,12 +32,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_jackknife' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-from   ostap.core.pyrouts   import hID, VE 
-import ostap.fitting.models as     Models
-import ostap.fitting.toys   as     Toys
-import ostap.histos.histos
-from   ostap.utils.timing   import timing 
 # =============================================================================
 mass        = ROOT.RooRealVar  ( 'mass' , '', 0 , 1 )  
 gauss       = Models.Gauss_pdf ( 'G'    , xvar = mass )
@@ -59,7 +60,8 @@ def test_bootstrap  ( ) :
     dataset = model.generate ( N , sample = False )
 
     ## prefit the whole dataset
-    res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
+    with use_canvas ( title = 'test_booststrap' ) : 
+        res , f = model.fitTo ( dataset , draw = True , nbins = 100 , silent = True , refit = 5 )
 
     more_vars   = { 'vm' : lambda  r, *_ : ( r.mean_G - 0.4 ) / 0.1      ,
                     'vs' : lambda  r, *_ :   r.sigma_G        / 0.1 - 1  ,
@@ -79,7 +81,8 @@ def test_bootstrap  ( ) :
         frequency   = 100  )
 
     ## fit the whole sample 
-    res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
+    with use_canvas ( title = 'test_booststrap' ) : 
+        res , f = model.fitTo ( dataset , draw = True  , nbins = 100 , silent = True , refit = 5 )
     ## print fit results 
     logger.info  ('Fit results:\n%s' % res.table ( title     = 'Fit results' ,
                                                    prefix    = '# '          ,

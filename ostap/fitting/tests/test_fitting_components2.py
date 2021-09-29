@@ -15,11 +15,12 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
-from   ostap.utils.timing   import timing 
+import ostap.fitting.models  as     Models 
+from   ostap.core.core       import cpp, VE, dsID
+from   ostap.logger.utils    import rooSilent
+from   builtins              import range
+from   ostap.utils.timing    import timing 
+from   ostap.plotting.canvas import use_canvas 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,6 +33,8 @@ else :
 
 
 def test_components_2 () :
+
+    logger = getLogger ( 'test_components_2' )
     
     ## make simple test mass 
     mass    = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 10 )
@@ -97,13 +100,15 @@ def test_components_2 () :
     signal2.mean .release() 
     signal2.sigma.release() 
 
-    model.fitTo ( dataset , silent = True )
-    r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 )
-    logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
+    with use_canvas ( 'test_components_2' ) :
+        
+        model.fitTo ( dataset , silent = True )
+        r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 )
+        logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
+        
+        r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 , minos = ('R','S1') )
+        logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
 
-    r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 , minos = ('R','S1') )
-    logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
-    
 # =============================================================================
 
 if '__main__' == __name__ :

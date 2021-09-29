@@ -1075,11 +1075,15 @@ class Combine2D (PDF2) :
         
         self.__prefix    = prefix if prefix else 'f'
         self.__suffix    = suffix
-        self.__recursive = True if recursive else False 
+        self.__recursive = True if recursive else False
+        
+        if 2 < len ( pdf_list ) : 
+            if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+            else                           : fr_name = '%s_%%d'    %   self.prefix
+        else :
+            if self.prefix and self.suffix : fr_name = '%s_%s'     % ( self.prefix , self.suffix )
+            else                           : fr_name =                 self.prefix
 
-        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
-        else                           : fr_name = '%s_%%d'    %   self.prefix
-  
         ## make list of fractions 
         fraction_list = self.make_fractions  ( len ( pdf_list )           ,
                                                name      = fr_name        , 

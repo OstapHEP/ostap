@@ -20,6 +20,8 @@ from   ostap.logger.utils       import rooSilent
 from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
 from   ostap.core.meta_info     import root_info 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # ============================================================================= 
 from   ostap.logger.logger import getLogger 
 if '__main__' ==  __name__ : logger = getLogger ( 'test_fitting_in_range_3d' )
@@ -28,7 +30,8 @@ else                       : logger = getLogger ( __name__  )
 
 # ============================================================================= 
 def test_fitting_in_range_3d () :
-	
+
+	logger = getLogger ( 'test_fitting_in_range_3d' )
 	
         ## make simple test mass 
 	m_x     = ROOT.RooRealVar ( 'm_x' , 'Some test mass(X)' , 0 , 5 )
@@ -151,38 +154,33 @@ def test_fitting_in_range_3d () :
 
 	dataset.m_y.setRange ( 'fit' , 6,8. )
 	model.yvar.setRange ( 'fit' , 6,8. )
-	model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2=(8,10))
-	time.sleep (1)
-	model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2='fit')
-	time.sleep (1)  
-	model.draw1(dataset,nbins=200, in_range3=(11,12))
-	time.sleep (1)
-	model.draw1(dataset,nbins=200, in_range2='fit')
-	time.sleep (1)
+
+	t = 1.0
+	
+	with use_canvas ( 'test_fitting_in_range_3d' ) :
+		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2=(8,10))
+		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12),in_range2='fit')
+		with wait ( t ) : model.draw1(dataset,nbins=200, in_range3=(11,12))
+		with wait ( t ) : model.draw1(dataset,nbins=200, in_range2='fit')
 	
 	dataset.m_x.setRange ( 'fit2' , 2.5,3. )
 	model.xvar.setRange ( 'fit2' , 2.5,3. )
-	model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1=(0,3))
-	time.sleep (1)
-	model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1='fit2')
-	time.sleep (1)
-	model.draw2(dataset,nbins=200, in_range3=(11,12))
-	time.sleep (1)
-	model.draw2(dataset,nbins=200, in_range1='fit2')
-	time.sleep (1)
 	
+	with use_canvas ( 'test_fitting_in_range_3d' ) :		
+		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1=(0,3))
+		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12),in_range1='fit2')
+		with wait ( t ) : model.draw2(dataset,nbins=200, in_range3=(11,12))
+		with wait ( t ) : model.draw2(dataset,nbins=200, in_range1='fit2')
+		
 	dataset.m_x.setRange ( 'fit3' , 2.5,3. )
 	model.xvar.setRange ( 'fit3' , 2.5,3. )
-	model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1=(0,3))
-	time.sleep (1)
-	model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1='fit3')
-	time.sleep (1)
-	model.draw3(dataset,nbins=200, in_range2=(6,8))
-	time.sleep (1)
-	model.draw3(dataset,nbins=200, in_range1='fit3')
-	time.sleep (1)
 	
-
+	with use_canvas ( 'test_fitting_in_range_3d' ) :		
+		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1=(0,3))
+		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8),in_range1='fit3')
+		with wait ( t ) : model.draw3(dataset,nbins=200, in_range2=(6,8))
+		with wait ( t ) : model.draw3(dataset,nbins=200, in_range1='fit3')
+				
 # =============================================================================
 if '__main__' == __name__ :
 

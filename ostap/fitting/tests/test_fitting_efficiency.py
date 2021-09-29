@@ -19,6 +19,7 @@ from   ostap.core.core          import cpp, VE, dsID, Ostap
 from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
 # =============================================================================
 # logging 
 # =============================================================================
@@ -64,6 +65,8 @@ points = [ dx * i for i in range ( np + 1 ) ]
 # use some PDF to parameterize efficiciency
 def test_pdf () :
 
+    logger = getLogger ( 'test_pdf' )
+
     effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 3 , increasing = True )
 
     maxe   = margin * effPdf ( xmax )
@@ -74,15 +77,15 @@ def test_pdf () :
     eff2   = Efficiency1D ( 'E2' , effPdf , cut = acc  , scale = scale )
     
     r2     = eff2.fitTo ( ds )
-    f2     = eff2.draw  ( ds )
-    
-    print (r2)
-    
+
+    with use_canvas ( 'test_pdf' ) : 
+        f2     = eff2.draw  ( ds )
+        
     for p in points :
         e  = eff2 ( p , error = True )
         ev = e.value()
         e0 = eff0 ( p ) / emax  
-        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+        logger.info ( ' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
 
 # =============================================================================
@@ -91,27 +94,31 @@ def test_vars1 () :
 
     from ostap.fitting.roofuncs import BernsteinPoly as BP 
     
+    logger = getLogger ( 'test_vars1' )
+
     f      = BP ( 'G' , xvar = x , power = 4 )
     f.pars = 0.2 , 0.2 , 0.2 , 0.2 
         
     eff2   = Efficiency1D ( 'E3' , f.fun , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
-    f2     = eff2.draw  ( ds )
     
-    print (r2)
+    with use_canvas ( 'test_vars' ) : 
+        f2     = eff2.draw  ( ds )
     
     for p in points :
         e  = eff2 ( p , error = True )
         ev = e.value()
         e0 = eff0 ( p ) / emax  
-        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars2 () :
     
+    logger = getLogger ( 'test_vars2' )
+
     from ostap.fitting.roofuncs import MonotonicPoly as MP 
 
     f      = MP ( 'G' , xvar = x , increasing = True , power = 4 )
@@ -124,21 +131,23 @@ def test_vars2 () :
     eff2   = Efficiency1D ( 'E4' , f , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
-    f2     = eff2.draw  ( ds )
     
-    print (r2)
+    with use_canvas ( 'test_vars2' ) : 
+        f2     = eff2.draw  ( ds )
     
     for p in points :
         e  = eff2 ( p , error = True )
         ev = e.value()
         e0 = eff0 ( p ) / emax  
-        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
 
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars3 () :
+
+    logger = getLogger ( 'test_vars3' )
 
     a  = ROOT.RooRealVar  ( 'A', 'a' , 0.05  ,   0   , 1   )
     b  = ROOT.RooRealVar  ( 'B', 'b' , 0.02  , -0.05 , 0.1 )
@@ -154,15 +163,16 @@ def test_vars3 () :
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
-    f2     = eff2.draw  ( ds )
     
-    print (r2)
+    with use_canvas ( 'test_vars3' ) : 
+        f2     = eff2.draw  ( ds )
+    
     
     for p in points :
         e  = eff2 ( p , error = True )
         ev = e.value()
         e0 = eff0 ( p ) / emax  
-        print (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
+        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
 
 

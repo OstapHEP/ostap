@@ -22,6 +22,8 @@ from   ostap.fitting.transform_pdf import TrPDF
 from   ostap.fitting.funbasic      import Fun1D
 from   builtins                    import range
 from   ostap.utils.timing          import timing 
+from   ostap.plotting.canvas       import use_canvas
+from   ostap.utils.utils           import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,6 +37,8 @@ else :
 
 # =============================================================================
 def  test_transform () :
+
+    logger = getLogger ( 'test_transform' )
     
     if not 62000 <= ROOT.gROOT.GetVersionInt() :
         logger.info ("Not for this version of ROOT")
@@ -62,9 +66,9 @@ def  test_transform () :
                            mean  = ( mean  , mean  / 2 , mean  * 2 ) , 
                            sigma = ( sigma , sigma / 2 , sigma * 2 ) )
     
-    
-    r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
-    logger.info ( 'Fit x:\n%s' % r1.table() ) 
+    with use_canvas ( 'test_transform' ) , wait ( 1 ) : 
+        r1 , f1  = gauss.fitTo  ( dataset , draw = True  , silent = True )
+        logger.info ( 'Fit x:\n%s' % r1.table() ) 
     
     lx = dataset.lx
     LX = Fun1D (  lx , lx )
@@ -73,8 +77,9 @@ def  test_transform () :
     ## transformed PDF 
     tgauss  = TrPDF ( pdf = gauss , new_var = NX )
     
-    r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
-    logger.info ( 'Fit log10(x):\n%s' % r2.table() ) 
+    with use_canvas ( 'test_transform' ) , wait ( 1 ): 
+        r2 , f2 = tgauss.fitTo  ( dataset , draw = True  , silent = True )
+        logger.info ( 'Fit log10(x):\n%s' % r2.table() ) 
 
     
 # =============================================================================

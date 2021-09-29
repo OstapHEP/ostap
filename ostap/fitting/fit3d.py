@@ -1145,13 +1145,18 @@ class Combine3D (PDF3) :
         while prefix.endswith  ('_') : prefix = prefix[:-1]
         while suffix.startswith('_') : suffix = suffix[1:]
         
-        self.__prefix    = prefix if prefix else 'f' 
+        self.__prefix    = prefix if prefix    else 'f' 
         self.__suffix    = suffix
-        self.__recursive = True if recursive else False 
-        
-        if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
-        else                           : fr_name = '%s_%%d'    %   self.prefix
-    
+        self.__recursive = True   if recursive else False 
+
+        if 2 < len ( pdf_list ) : 
+            if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+            else                           : fr_name = '%s_%%d'    %   self.prefix
+        else :
+            if self.prefix and self.suffix : fr_name = '%s_%s'     % ( self.prefix , self.suffix )
+            else                           : fr_name =                 self.prefix
+            
+            
         ## make list of fractions 
         fraction_list = self.make_fractions  ( len ( pdf_list )           ,
                                                name      = fr_name        , 

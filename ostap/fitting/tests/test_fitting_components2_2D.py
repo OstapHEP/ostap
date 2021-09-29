@@ -21,13 +21,14 @@ from   ostap.core.core          import cpp, VE, dsID
 from   ostap.logger.utils       import rooSilent
 from   builtins                 import range
 from   ostap.fitting.background import make_bkg 
+from   ostap.plotting.canvas    import use_canvas 
 from   ostap.utils.timing       import timing 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_components' )
+    logger = getLogger ( 'test_fitting_components2_2d' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -116,8 +117,9 @@ bb_cmp=bkg_x*bkg_y
 
 # =============================================================================
 ## Test  multi-component  3d fit'
-def test_comp_2dSymfit () :
-    
+def test_components_2dSymfit () :
+
+    logger = getLogger ( 'test_components_2dSymfit' ) 
     logger.info ('Test  multi-component  2d Sym fit')
     
     model = Models.Fit2DSym (
@@ -151,9 +153,10 @@ def test_comp_2dSymfit () :
         model.C[2].release (  )
         
         r = model.fitTo ( dataset , ncpu=8 )
-        
-        model.draw1 (   dataset )
-        model.draw2 (   dataset )
+
+        with use_canvas ( 'test_components_2dSymfit' ) :
+            model.draw1 (   dataset )
+            model.draw2 (   dataset )
         
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
@@ -162,7 +165,7 @@ def test_comp_2dSymfit () :
 if '__main__' == __name__ :
 
     with  timing( "2dSym-fit" ,   logger ) : 
-        test_comp_2dSymfit    () 
+        test_components_2dSymfit    () 
     
 # =============================================================================
 ##                                                                      The END 
