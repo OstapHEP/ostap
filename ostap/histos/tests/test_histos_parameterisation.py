@@ -15,7 +15,13 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 import ROOT, random, time
-from   builtins import range
+from   builtins                 import range
+# =============================================================================
+import ostap.histos.param
+import ostap.histos.histos
+import ostap.fitting.funcs
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -25,9 +31,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import ostap.histos.param
-import ostap.histos.histos
-import ostap.fitting.funcs
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 use_scipy = False 
@@ -56,7 +59,7 @@ f4 = ROOT.TF1  ( fID ()  , '1-x**2'         , 0 , 1 )
 f5 = ROOT.TF1  ( fID ()  , '4*(x-0.5)**2'   , 0 , 1 )
 f6 = ROOT.TF1  ( fID ()  , '1-4*(x-0.5)**2' , 0 , 1 )
 
-entries = 100000
+entries = 1000000
 
 ## random.seed(10) 
 for i in range ( 0 , entries ) :
@@ -135,26 +138,28 @@ def test_bernstein_sum() :
 
     with timing ( 'Bernstein-sum[6]' , logger ) :
         params  = [ h.bernstein_sum ( 6 ) for h in histos ]
-    
-    for h , f in zip ( histos , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
 
+    for h , f in zip ( histos , params ) :
+        with wait ( 1 ) ,  use_canvas ( 'test_bernstein_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+            
 # =============================================================================
 def test_bernsteineven_sum() :
             
     logger = getLogger("test_bernsteineven_sum")
 
+    logger.warning ('FIX ME!!!')
+
     with timing ( 'Bernstein-(even)-sum[6]' , logger ) :
         params  = [ h.bernsteineven_sum ( 6 ) for h in histos[4:] ]
     
     for h , f in zip ( histos[4:] , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_bernsteineven_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_legendre_sum() :
@@ -165,10 +170,10 @@ def test_legendre_sum() :
         params  = [ h.legendre_sum ( 6 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_legendre_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
         
 # =============================================================================
 def test_chebyshev_sum() :
@@ -176,27 +181,27 @@ def test_chebyshev_sum() :
     logger = getLogger("test_chebyshev_sum")
     
     with timing ( 'Chebyshev-sum[6]' , logger ) :
-        params  = [ h.chebyshev_sum ( 6 ) for h in histos ]
+        params  = [ h.chebyshev_sum ( 8 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_chebyshev_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_fourier_sum() :
             
     logger = getLogger("test_fourier_sum")
 
-    with timing ( 'Fourier-sum[16]' , logger ) :
-        params  = [ h.fourier_sum ( 16 ) for h in histos ]
+    with timing ( 'Fourier-sum[10]' , logger ) :
+        params  = [ h.fourier_sum ( 10 ) for h in histos ]
 
     for h , f in zip ( histos , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_fourier_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_cosine_sum() :
@@ -206,14 +211,14 @@ def test_cosine_sum() :
         logger.warning("No scipy is avilable, skip the test test")
         return
 
-    with timing ( 'Cosine-sum[16]' , logger ) :
-        params  = [ h.cosine_sum ( 16 ) for h in histos ]
+    with timing ( 'Cosine-sum[10]' , logger ) :
+        params  = [ h.cosine_sum ( 10 ) for h in histos ]
         
     for h , f in zip ( histos , params ) :
-        h.draw()
-        f.draw('same')
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_cosine_sum: ' + h.GetTitle() )  :
+            h.draw()
+            f.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
         
 # =============================================================================
 if '__main__' == __name__ :

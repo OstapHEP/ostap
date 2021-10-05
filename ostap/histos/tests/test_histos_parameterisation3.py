@@ -17,6 +17,12 @@ __all__    = () ## nothing to import
 import ROOT, random, time
 from   builtins import range
 # =============================================================================
+import ostap.histos.param
+import ostap.histos.histos
+import ostap.fitting.funcs
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
@@ -25,9 +31,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import ostap.histos.param
-import ostap.histos.histos
-import ostap.fitting.funcs
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 try :
@@ -63,7 +66,7 @@ h_3  = ROOT.TH3F ( hID () , '' , 20 , -1 , 1 , 20 , 0 , 2 , 20 , -1 , 2 )
 h_2 += f_2
 h_3 += f_3
 
-entries = 100000
+entries = 1000000
 
 ## random.seed(10) 
 for i in range ( 0 , entries ) :
@@ -120,43 +123,43 @@ def diff1 ( result, histo ) :
 def test_positive_pdf () :
 
     logger = getLogger("test_positive_pdf")
-    with timing ( 'Positive [4]' , logger ) :
-        params = [ h.pdf_positive ( 4 , silent = True , draw = True ) for h in histos ]
+    with timing ( 'Positive [6]' , logger ) :
+        params = [ h.pdf_positive ( 6 , silent = True , draw = True ) for h in histos ]
             
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_positive_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_monotonic_pdf () :
     
     logger = getLogger("test_monotonic_pdf")
-    with timing ( 'Monotonic[4]' , logger ) :
-        params = [ h1.pdf_decreasing ( 4 , silent = True , draw = True ) , 
-                   h2.pdf_increasing ( 4 , silent = True , draw = True ) ,
-                   h3.pdf_increasing ( 4 , silent = True , draw = True ) , 
-                   h4.pdf_decreasing ( 4 , silent = True , draw = True ) ]
+    with timing ( 'Monotonic[6]' , logger ) :
+        params = [ h1.pdf_decreasing ( 6 , silent = True , draw = True ) , 
+                   h2.pdf_increasing ( 6 , silent = True , draw = True ) ,
+                   h3.pdf_increasing ( 6 , silent = True , draw = True ) , 
+                   h4.pdf_decreasing ( 6 , silent = True , draw = True ) ]
 
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_monotonic_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_convex_pdf () :
     
     logger = getLogger("test_convex_pdf")
-    with timing ( 'Convex   [4]' , logger ) :
-        params = [ h1.pdf_convex_decreasing  ( 4 , silent = True , draw = True ) , 
-                   h2.pdf_convex_increasing  ( 4 , silent = True , draw = True ) , 
-                   h3.pdf_concave_increasing ( 4 , silent = True , draw = True ) , 
-                   h4.pdf_concave_decreasing ( 4 , silent = True , draw = True ) ]
+    with timing ( 'Convex   [6]' , logger ) :
+        params = [ h1.pdf_convex_decreasing  ( 6 , silent = True , draw = True ) , 
+                   h2.pdf_convex_increasing  ( 6 , silent = True , draw = True ) , 
+                   h3.pdf_concave_increasing ( 6 , silent = True , draw = True ) , 
+                   h4.pdf_concave_decreasing ( 6 , silent = True , draw = True ) ]
         
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_convex_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 
 # =============================================================================
@@ -172,70 +175,69 @@ def test_convexonly_pdf () :
                    h6.pdf_concavepoly ( 4 , silent = True , draw = True ) ]
         
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_convexonly_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
         
 # =============================================================================
 def test_positive_spline_pdf () :
     
-
     logger = getLogger("test_positive_spline_pdf")
     with timing ('P-spline [3,2]' , logger ) :
-        params = [ h.pdf_pSpline ( (3,2) , silent = True , draw = True ) for h in histos ] 
+        params = [ h.pdf_pSpline ( (5,2) , silent = True , draw = True ) for h in histos ] 
 
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
-        
+        with wait ( 1 ) ,  use_canvas ( 'test_positive_spline_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+            
 # =============================================================================
 def test_monotonic_spline_pdf () :
     
     logger = getLogger("test_monotonic_spline_pdf")
     with timing ('M-spline [2,2]' , logger ) :
-        params = [ h1.pdf_mSpline ( ( 2 , 2 , False ) , silent = True , draw = True ) , 
-                   h2.pdf_mSpline ( ( 2 , 2 , True  ) , silent = True , draw = True ) , 
-                   h3.pdf_mSpline ( ( 2 , 2 , True  ) , silent = True , draw = True ) , 
-                   h4.pdf_mSpline ( ( 2 , 2 , False ) , silent = True , draw = True ) ]
+        params = [ h1.pdf_mSpline ( ( 5 , 2 , False ) , silent = True , draw = True ) , 
+                   h2.pdf_mSpline ( ( 5 , 2 , True  ) , silent = True , draw = True ) , 
+                   h3.pdf_mSpline ( ( 5 , 2 , True  ) , silent = True , draw = True ) , 
+                   h4.pdf_mSpline ( ( 5 , 2 , False ) , silent = True , draw = True ) ]
         
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
-
+        with wait ( 1 ) ,  use_canvas ( 'test_monotonic_spline_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
+            
 # =============================================================================
 def test_convex_spline_pdf () :
     
     logger = getLogger("test_convex_spline_pdf")
     with timing ('C-spline [2,2]' , logger ) :
 
-        params = [ h1.pdf_cSpline ( ( 2 , 2 , False , True  ) , silent = True , draw = True ) , 
-                   h2.pdf_cSpline ( ( 2 , 2 , True  , True  ) , silent = True , draw = True ) , 
-                   h3.pdf_cSpline ( ( 2 , 2 , True  , False ) , silent = True , draw = True ) , 
-                   h4.pdf_cSpline ( ( 2 , 2 , False , False ) , silent = True , draw = True ) ] 
+        params = [ h1.pdf_cSpline ( ( 5 , 2 , False , True  ) , silent = True , draw = True ) , 
+                   h2.pdf_cSpline ( ( 5 , 2 , True  , True  ) , silent = True , draw = True ) , 
+                   h3.pdf_cSpline ( ( 5 , 2 , True  , False ) , silent = True , draw = True ) , 
+                   h4.pdf_cSpline ( ( 5 , 2 , False , False ) , silent = True , draw = True ) ] 
         
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_convex_spline_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 def test_convexonly_spline_pdf () :
     
     logger = getLogger("test_convex_spline_pdf")
     with timing ('C-spline [2,2]' , logger ) :
-        params = [ h1.pdf_convexSpline  ( ( 2 , 2 ) , silent = True , draw = True ) ,
-                   h2.pdf_convexSpline  ( ( 2 , 2 ) , silent = True , draw = True ) ,
-                   h3.pdf_concaveSpline ( ( 2 , 2 ) , silent = True , draw = True ) ,
-                   h4.pdf_concaveSpline ( ( 2 , 2 ) , silent = True , draw = True ) ,
-                   h5.pdf_convexSpline  ( ( 2 , 2 ) , silent = True , draw = True ) ,
-                   h6.pdf_concaveSpline ( ( 2 , 2 ) , silent = True , draw = True ) ]
+        params = [ h1.pdf_convexSpline  ( ( 5 , 2 ) , silent = True , draw = True ) ,
+                   h2.pdf_convexSpline  ( ( 5 , 2 ) , silent = True , draw = True ) ,
+                   h3.pdf_concaveSpline ( ( 5 , 2 ) , silent = True , draw = True ) ,
+                   h4.pdf_concaveSpline ( ( 5 , 2 ) , silent = True , draw = True ) ,
+                   h5.pdf_convexSpline  ( ( 5 , 2 ) , silent = True , draw = True ) ,
+                   h6.pdf_concaveSpline ( ( 5 , 2 ) , silent = True , draw = True ) ]
         
     for h , f in zip ( histos , params ) :
-        f.plot.draw () 
-        logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
-        time.sleep  (1) 
+        with wait ( 1 ) ,  use_canvas ( 'test_convexonly_spline_pdf: ' + h.GetTitle() )  :
+            f.plot.draw () 
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff1 ( f , h ) ) )
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -769,17 +769,20 @@ class MakeVar ( object ) :
             sw2      = check_arg ( 'SumW2Error'      , *_args )
             aer      = check_arg ( 'AsymptoticError' , *_args )
 
-            if sw2 and aer :
+            if 62500 <= root_version_int                 and \
+               isinstance ( dataset , ROOT.RooDataHist ) and ( not sw2 ) and ( not aer ) :
+                _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
+            elif sw2 and aer :
                 logger.warning ( "parse_args: Both ``SumW2Error'' and ``AsymptoticError'' are specified" )                
-            if weighted   and sw2 :
+            elif weighted   and sw2 :
                 value = bool ( sw2.getInt( 0 ) )
                 if not value : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
             elif weighted and aer : 
                 value = bool ( aer.getInt( 0 ) )
                 if not value : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
-            ## elif weighted :                
-            ##     logger.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
-            ##     _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
+            elif weighted :                
+                logger.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
+                _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif not weighted and sw2 :
                 logger.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
             elif not weighted and aer :
