@@ -143,7 +143,7 @@ execute_process( COMMAND "${ROOT_CONFIG_EXECUTABLE}" --has-cxx11
 
 if     ( ${CXX17_ROOT} STREQUAL "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_17 )
-elseif ( ${CXX17_ROOT} STREQUALS "yes" ) 
+elseif ( ${CXX14_ROOT} STREQUALS "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_14 )
 elseif ( ${CXX11_ROOT} STREQUALS "yes" ) 
 target_compile_features (ostap PUBLIC cxx_std_11 )

@@ -12,6 +12,8 @@
 #  - symmetric Student-T                 (power-law  tails)
 #  - symmetric Sinh-Asinh model          (tails can be heavy or light)
 #  - symmetric JohnsonSU  model          (tails can be heavy or light)
+#  - symmetrci Hyperbolic                (tails are exponential)
+#  - symmetric generalized Hyperbolic    (tails are exponential or heavier)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
@@ -26,6 +28,8 @@
 - Student-T                           (power-law  tails)
 - symmetric Sinh-Asinh model          (tails can be heavy or light)
 - symmetric JohnsonSU  model          (tails can be heavy or light)
+- symmetrci Hyperbolic                (tails are exponential)
+- symmetric generalized Hyperbolic    (tails are exponential or heavier)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -33,16 +37,18 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-07-25"
 __all__     = (
     ##
-    'ResoGauss'     , ## simple single-Gaussian resolution model,
-    'ResoGauss2'    , ## double-Gaussian resolutin model,
-    'ResoApo2'      , ## symmetric Apollonios resolution model,
-    'ResoCB2'       , ## symmetric double-sided Crystal Ball resolution model,
-    'ResoStudentT'  , ## Student-T resolution model,
-    'ResoSech'      , ## Sech/hyperbolic secant  resolution model
-    'ResoLogistic'  , ## Logistic ("sech-squared") resoltuion model
-    'ResoBukin'     , ## symmetric Bukin resolution model
-    'ResoJohnsonSU' , ## symmetric Jonnson's SU resolution model 
-    'ResoSinhAsinh' , ## symmetric Sinh-Asinh resolution model 
+    'ResoGauss'         , ## simple single-Gaussian resolution model,
+    'ResoGauss2'        , ## double-Gaussian resolutin model,
+    'ResoApo2'          , ## symmetric Apollonios resolution model,
+    'ResoCB2'           , ## symmetric double-sided Crystal Ball resolution model,
+    'ResoStudentT'      , ## Student-T resolution model,
+    'ResoSech'          , ## Sech/hyperbolic secant  resolution model
+    'ResoLogistic'      , ## Logistic ("sech-squared") resoltuion model
+    'ResoBukin'         , ## symmetric Bukin resolution model
+    'ResoJohnsonSU'     , ## symmetric Jonnson's SU resolution model 
+    'ResoSinhAsinh'     , ## symmetric Sinh-Asinh resolution model
+    'ResoHyperbolic'    , ## symmetric Hyperbolic resolution model
+    'ResoGenHyperbolic' , ## symmetric Generalsed Hyperbolic resolution model    
     )
 # =============================================================================
 import ROOT
@@ -806,7 +812,265 @@ class ResoLogistic(RESOLUTION) :
             'fudge'     : self.fudge ,
             }
 
+# =============================================================================
+## @class ResoHyperbolic
+#  @see Ostap::Math::Hyperbolic
+#  @see Ostap::Models::Hyperbolic
+class ResoHyperbolic(RESOLUTION) :
+    """Symmetric Hyperbolic distribution
+    - see Ostap::Math::Hyperbolic
+    - see Ostap::Models::Hyperbolic
+    - see Hyperbolic_pdf 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   fudge     = 1    ,
+                   zeta      = 1    , 
+                   mean      = None ) : ## related to mean 
         
+        ## initialize the base 
+        super(ResoHyperbolic,self).__init__ ( name  = name  ,
+                                              xvar  = xvar  ,
+                                              sigma = sigma ,
+                                              mean  = mean  ,
+                                              fudge = fudge )
+        
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
+        ## parameter kappa is zero! 
+        self.__kappa = ROOT.RooRealConstant.value ( 0 ) 
+
+        ## mu 
+        self.__mu    = self.mean 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Hyperbolic (
+            self.roo_name ( 'rhyp_' ) , 
+            "Resolution Hyperbolic %s" % self.name ,
+            self.xvar       ,
+            self.mu         ,
+            self.sigma_corr ,
+            self.zeta       ,
+            self.kappa      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'fudge'     : self.fudge }
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to kurtosis"""
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mode ( self ) :
+        """``nominal_mode'' : actual mode of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().mode ()
+    
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+
+
+# =============================================================================
+## @class ResoGenHyperbolic
+#  @see Ostap::Math::GenHyperbolic
+#  @see Ostap::Models::GenHyperbolic
+class ResoGenHyperbolic(RESOLUTION) :
+    """Symmetric generalised Hyperbolic distribution
+    - see Ostap::Math::GenHyperbolic
+    - see Ostap::Models::GenHyperbolic
+    - see GenHyperbolic_pdf 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,   ## related to sigma
+                   fudge     = 1    ,   ## fudge-parameter 
+                   zeta      = 1    ,   ## related to shape 
+                   lambd     = 1    ,   ## related to shape 
+                   mean      = None ) : ## related to mean 
+        
+        ## initialize the base 
+        super(ResoGenHyperbolic,self).__init__ ( name  = name  ,
+                                                 xvar  = xvar  ,
+                                                 sigma = sigma ,
+                                                 mean  = mean  ,
+                                                 fudge = fudge )
+        
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
+        ## parameter kappa is zero! 
+        self.__kappa = ROOT.RooRealConstant.value ( 0 ) 
+
+        ## lambda 
+        self.__lambda = self.make_var ( lambd               ,
+                                       'lambda_%s'   % name ,
+                                       '#lambda(%s)' % name , None , lambd ,  -100 , 100 )
+
+        ## mu 
+        self.__mu    = self.mean 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.GenHyperbolic (
+            self.roo_name ( 'rghyp_' ) , 
+            "Resolution GenHyperbolic %s" % self.name ,
+            self.xvar       ,
+            self.mu         ,
+            self.sigma_corr ,
+            self.zeta       ,
+            self.kappa      ,
+            self.lambd      )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'lambd'     : self.lambd ,
+            'fudge'     : self.fudge }
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape"""
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    
+    @property
+    def lambd ( self ) :
+        """``lambd'' : dimensionless parameter, related to shape """
+        return self.__lambda
+    @lambd.setter
+    def lambd ( self , value ) :    
+        self.set_value ( self.__lambd , value )
+        
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mode ( self ) :
+        """``nominal_mode'' : actual mode of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().mode ()
+    
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+     
 # =============================================================================
 if '__main__' == __name__ :
     

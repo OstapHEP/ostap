@@ -1185,6 +1185,45 @@ def test_hyperbolic() :
         
     models.add ( model_hyperbolic )
 
+# ==========================================================================
+## Generalised Hyperbolic
+# ==========================================================================
+def test_genhyperbolic() :
+
+    logger = getLogger ( 'test_genhyperbolic' )
+       
+    
+    logger.info ('Test GenHyperbolic_pdf: generalised hyperbolic distribution (exponential tails)' ) 
+    model_genhyperbolic = Models.Fit1D (
+        signal = Models.GenHyperbolic_pdf ( name = 'GHB' , 
+                                            xvar      = mass               ,
+                                            mu        = signal_gauss.mean  ,
+                                            sigma     = signal_gauss.sigma ,
+                                            zeta      = ( 1   , -1 , 1e+6  ) ,
+                                            lambd     = ( -100 , 100       ) , 
+                                            kappa     = ( 0   , -1 ,   1 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    model_genhyperbolic.S.value  = 5000
+    model_genhyperbolic.B.value  =  500
+    
+    with rooSilent() :
+        model_genhyperbolic.signal.kappa.fix ( 0 )    
+        result, frame = model_genhyperbolic. fitTo ( dataset0 )
+        model_genhyperbolic.signal.kappa.release ()
+        result, frame = model_genhyperbolic. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_hyperbolic' ) : 
+        model_genhyperbolic.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Generalised Hyperbolic  function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_genhyperbolic )
+
 
 
 ## # =============================================================================
@@ -1369,6 +1408,10 @@ if '__main__' == __name__ :
     ## Hyperbolic                                 + background 
     with timing ('test_hyperbolic'     , logger ) :
         test_hyperbolic        () 
+
+    ## Generalised Hyperbolic                                 + background 
+    with timing ('test_genhyperbolic'     , logger ) :
+        test_genhyperbolic     () 
         
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

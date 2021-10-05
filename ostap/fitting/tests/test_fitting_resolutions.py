@@ -321,6 +321,64 @@ def test_sinhasinh () :
 
 
 # =============================================================================
+## Hyperbolic 
+# =============================================================================
+def test_hyperbolic () :
+    
+    logger = getLogger ( 'test_hyperbolic' )
+
+    logger.info ('Test Hyperbolic: symmetric Hyperbolic resolution model' )
+    from   ostap.fitting.resolution import ResoHyperbolic
+    reso = ResoHyperbolic ( 'Hyperbolic' , mass ,  zeta = ( 1.0 , 1.e-5 , 1.e+5 ) )
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        with wait ( 1 ) , use_canvas ( 'test_hyperbolic' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoHyperbolic:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoHyperbolic:  FWHM       %s ' % reso.fwhm         () )
+        logger.info ( "ResoHyperbolic: fit results\n%s" % result.table ( title = 'symmetric Hyperbolic resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso )
+
+
+# =============================================================================
+## Generalized Hyperbolic 
+# =============================================================================
+def test_genhyperbolic () :
+    
+    logger = getLogger ( 'test_genhyperbolic' )
+
+    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
+    from   ostap.fitting.resolution import ResoGenHyperbolic
+    reso = ResoGenHyperbolic ( 'GenHyperbolic' , mass ,  zeta = ( 1.0 , 1.e-5 , 1.e+5 ) , lambd =  (-100,100) )
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoGenHyperbolic:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoGenHyperbolic:  FWHM       %s ' % reso.fwhm         () )
+        logger.info ( "ResoGenHyperbolic: fit results\n%s" % result.table (
+            title = 'symmetric generalised Hyperbolic resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso )
+
+
+
+# =============================================================================
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
@@ -366,10 +424,17 @@ if '__main__' == __name__ :
 
     with timing ("JohnsonSU" , logger ) :  
         test_johnsonSU  () ## JohnsonSU resolution model
+
+    with timing ("Hyperbolic" , logger ) :  
+        test_hyperbolic  () ## Hyperbolic resolution model
+    
+    with timing ("GenHyperbolic" , logger ) :  
+        test_genhyperbolic  () ## generalised Hyperbolic resolution model
     
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
+
 
 # =============================================================================
 ##                                                                      The END 

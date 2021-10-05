@@ -4,12 +4,13 @@
  1. Add `slice` and `rows` mehtods for `TTree` and `RooAbsData` 
  1. Extendd fnuctinality to adding data columns to `TTree` and `RooAbsData` 
  1. Add reweighting with `GBReweighter`
-
+ 1. Add generalized Hyperboilic function, PDF and resolution model: `Ostap::Math::GenHyperbolic`, `Ostap::Models::GenHyperbolic`, `GenHyperbolic_pdf`, `ResoGenHyperbolic`
+ 1. add tests for generalised hyperbolic functions 
  
 ## Backward incompatible changes: 
 
 ## Bug fixes:
-
+ 1. fix typo in CMakeROOT_6_23.txt (thanks to Pavel Krokovny)
 
 # v1.6.3.0
 

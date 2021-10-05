@@ -5300,17 +5300,18 @@ namespace Ostap
        *  @param title name of PDF
        *  @param x     observable 
        *  @param mu    related to location 
-       *  @param beta  related to asymmetry
-       *  @param gamma related to width 
-       *  @param delta related to width 
+       *  @param sigma related to width
+       *  @param zeta  related to shape 
+       *  @param kappa related to asymmetry 
        */
-      Hyperbolic( const char*          name  , 
-                  const char*          title ,
-                  RooAbsReal&          x     ,   // observable 
-                  RooAbsReal&          mu    ,   // location
-                  RooAbsReal&          sigma ,   // wodth 
-                  RooAbsReal&          zeta  ,   // zeta 
-                  RooAbsReal&          kappa ) ; // kappa 
+      Hyperbolic 
+      ( const char*          name  , 
+        const char*          title ,
+        RooAbsReal&          x     ,   // observable 
+        RooAbsReal&          mu    ,   // location
+        RooAbsReal&          sigma ,   // wodth 
+        RooAbsReal&          zeta  ,   // zeta 
+        RooAbsReal&          kappa ) ; // kappa 
       /// "copy" constructor 
       Hyperbolic ( const Hyperbolic& , const char* name = 0 ) ;
       /// clone 
@@ -5357,6 +5358,134 @@ namespace Ostap
     protected : // the function itself 
       // =====================================================================
       mutable Ostap::Math::Hyperbolic m_hyperbolic ;
+      // =====================================================================
+    } ;
+    // ========================================================================
+
+    // ========================================================================
+    /** @class GenHyperbolic 
+     *  Generalized Hyperboilic distribution
+     *  @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+     *  
+     *  \f[ f(x;\lambda, \alpha,\beta,\gamma,\delta,\mu)= 
+     *  \frac{  (\gamma/\delta)^{\lambda} }{ \sqrt{2\pi} K_{\lambda}(\delta\gamma) }
+     *   \mathrm{e}^{\beta (x-\mu)}
+     *   \frac{  K_{\lambda -1/2} ( \alpha \sqrt{ \delta^2 + (x-\mu)^2} ) }
+     *   { (  \sqrt{ \delta^2 + (x-\mu)^{2} }  /\alpha)^{1/2-\lambda} } \f]
+     * where 
+     *  - $\alpha=\sqrt{\beta^2+\gamma^2}$
+     *
+     * In the code we adopt parameterisation in terms of
+     *  - location parameter      \f$\mu\f$
+     *  - shape parameter         \f$\lambda\f$
+     *  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+     *  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+     *  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the shape 
+     *  
+     * The parameters are defined as:
+     * \f[\begin{array}{lcl}
+     *     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_{\lambda+1}(\zeta)}{\zetaK_{\lambda}(zeta)} \\
+     *     \kappa   & \equiv & \frac{\beta}{\sigma} \\
+     *     \zeta    & \equiv & \delta \gamma \end{array} \f]
+     * - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+     * - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+     * - For small \f$\zeta\f$ distribution shows kurtosis of 3 
+     *
+     * The inverse transformation is:
+     * \f[ \begin{array}{lcl}
+     *     \beta    & = & \frac{\kappa}{\sigma}                      \\
+     *     \delta   & = & \frac{\zeta}{\gamma}                       \\
+     *     \gamma   & = & \frac{\sqrt{A_{\lambda}^*(\zeta)}}{\sigma} \\
+     *     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+     *
+     * In general it has exponential tails for \f$ \lambda >0 \f$ and Gaussian core.
+     * For negative \f$ \lambda \f$ tails are more heavy..
+     *
+     * @see Ostap::Math::Hyperbolic
+     *  Usefun subclasses 
+     *  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
+     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+     *  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
+     *  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+     * 
+     *  @see Ostap::Math::Hyperbolic
+     *  @see Ostap::Math::GenHyperbolic
+     *  @see Ostap::Models::Hyperbolic
+     */
+    class GenHyperbolic: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::GenHyperbolic, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param name  name of PDF
+       *  @param title name of PDF
+       *  @param x      observable 
+       *  @param mu     related to location 
+       *  @param sigma  related to width
+       *  @param zeta   related to shape 
+       *  @param kappa  related to asymmetry 
+       *  @param lambda related to shape 
+       */
+      GenHyperbolic 
+      ( const char*          name   , 
+        const char*          title  ,
+        RooAbsReal&          x      ,   // observable 
+        RooAbsReal&          mu     ,   // location
+        RooAbsReal&          sigma  ,   // width 
+        RooAbsReal&          zeta   ,   // zeta 
+        RooAbsReal&          kappa  ,   // kappa 
+        RooAbsReal&          lambda ) ; // lambda 
+      /// "copy" constructor 
+      GenHyperbolic ( const GenHyperbolic& , const char* name = 0 ) ;
+      /// clone 
+      GenHyperbolic* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      GenHyperbolic () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+      ( RooArgSet&  allVars       , 
+        RooArgSet&  analVars      , 
+        const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+      ( Int_t       code          , 
+        const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::GenHyperbolic& function () const { return m_hyperbolic ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_mu     ;
+      RooRealProxy m_sigma  ;
+      RooRealProxy m_zeta   ;
+      RooRealProxy m_kappa  ;
+      RooRealProxy m_lambda ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::GenHyperbolic m_hyperbolic ;
       // =====================================================================
     } ;
     // ========================================================================

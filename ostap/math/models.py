@@ -21,8 +21,9 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT 
-from    ostap.core.core       import cpp, Ostap, funID
-import  ostap.math.derivative as     D  
+from    ostap.core.core        import cpp, Ostap, funID
+from    ostap.core.ostap_types import num_types, integer_types 
+import  ostap.math.derivative  as     D  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -71,6 +72,7 @@ def tf1  ( self                 ,
     npars    = kwargs.pop ( 'npars'    , 0    )
     args     = kwargs.pop ( 'args'     , ()   )
     npx      = kwargs.pop ( 'npx'      , 250  )
+    npoints  = kwargs.pop ( 'npoints'  , 250  )
     callme   = kwargs.pop ( 'callable' , self ) 
     title    = kwargs.pop ( 'title'    , None )
     
@@ -97,6 +99,9 @@ def tf1  ( self                 ,
     
     _wo = self._wo1 
     fun = ROOT.TF1 ( funID()  , _wo , xmin , xmax , npars, *args )
+
+    if   isinstance ( npx     , integer_types ) and 1 < npx     : fun.SetNpx ( npx     ) 
+    elif isinstance ( npoints , integer_types ) and 1 < npoints : fun.SetNpx ( npoints ) 
 
     if title is None : title = str ( self )            
     fun.SetTitle ( title ) 
@@ -256,20 +261,22 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     
     if hasattr ( self , '_tf1' ) :
         
-        xmin  = kwargs.get ( 'xmin' , None )
-        xmax  = kwargs.get ( 'xmax' , None )
-        npx   = kwargs.get ( 'npx'  , None )
+        xmin    = kwargs.get ( 'xmin'    , None )
+        xmax    = kwargs.get ( 'xmax'    , None )
+        npx     = kwargs.get ( 'npx'     , None )
+        npoints = kwargs.get ( 'npoints' , None )
         
-        if 'callable' in kwargs                                : del self._tf1
-        elif not xmin is None and xmin != self._tf1.GetXmin () : del self._tf1 
-        elif not xmax is None and xmax != self._tf1.GetXmax () : del self._tf1 
-        elif not npx  is None and npx  != self._tf1.GetXmax () : del self._tf1 
+        if 'callable' in kwargs                                                                         : del self._tf1
+        elif isinstance ( xmin    , num_types     )                 and xmin    != self._tf1.GetXmin () : del self._tf1 
+        elif isinstance ( xmax    , num_types     )                 and xmax    != self._tf1.GetXmax () : del self._tf1 
+        elif isinstance ( npx     , integer_types ) and 1 < npx     and npx     != self._tf1.GetNpx  () : del self._tf1 
+        elif isinstance ( npoints , integer_types ) and 1 < npoints and npoints != self._tf1.GetNpx  () : del self._tf1 
         
     if not hasattr ( self , '_tf1'  ) :
         
         self._tf1        =  tf1 ( self , **kwargs )
         
-        if type ( self ) in positives :
+        if type ( self ) in positives and not 'xmin' in kwargs :
             self._tf1.SetMinimum(0)
             
     kwargs.pop ( 'xmin'     , None )
@@ -277,6 +284,7 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     kwargs.pop ( 'npars'    , None ) 
     kwargs.pop ( 'args'     , None )
     kwargs.pop ( 'npx'      , None )
+    kwargs.pop ( 'npoints'  , None )
     kwargs.pop ( 'callable' , None ) 
 
     return self._tf1.draw ( opts , **kwargs )
@@ -1002,6 +1010,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.RaisingCosine          ,
                Ostap.Math.Sigmoid                ,
                Ostap.Math.Hyperbolic             ,
+               Ostap.Math.GenHyperbolic          ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,

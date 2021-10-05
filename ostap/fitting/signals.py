@@ -47,6 +47,7 @@ Empricial PDFs to describe narrow peaks
   - RaisingCosine_pdf
   - QGaussian_pdf
   - Hyperbolic_pdf
+  - GenHyperbolic_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -95,6 +96,8 @@ __all__ = (
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
+    'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
+    'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
@@ -2521,7 +2524,6 @@ models.append ( QGaussian_pdf )
 
 
 
-
 # =============================================================================
 ## @class Hyperbolic_pdf 
 #  Hyperbolic disribtion
@@ -2587,7 +2589,7 @@ models.append ( QGaussian_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-02-27
 class Hyperbolic_pdf(MASS) :
-    """Hyperbolic distribution
+    r"""Hyperbolic distribution
     - see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
     - see  Barndorff-Nielsen, Ole, 
     #    `Exponentially decreasing distributions for the logarithm of particle size'. 
@@ -2666,7 +2668,7 @@ class Hyperbolic_pdf(MASS) :
 
     @property 
     def zeta  ( self ) :
-        """``zeta'' : dimensioneless parameter, related to kurtosis"""
+        """``zeta'' : dimensioneless parameter, related to shape"""
         return self.__zeta
     @zeta.setter  
     def zeta ( self , value ) :
@@ -2730,6 +2732,209 @@ class Hyperbolic_pdf(MASS) :
 
         
 models.append ( Hyperbolic_pdf )      
+
+
+
+# =============================================================================
+## @class GenHyperbolic_pdf 
+#  Generalized Hyperbolic distribution
+#  @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+#  
+#  \f[ f(x;\lambda, \alpha,\beta,\gamma,\delta,\mu)= 
+#  \frac{  (\gamma/\delta)^{\lambda} }{ \sqrt{2\pi} K_{\lambda}(\delta\gamma) }
+#   \mathrm{e}^{\beta (x-\mu)}
+#   \frac{  K_{\lambda -1/2} ( \alpha \sqrt{ \delta^2 + (x-\mu)^2} ) }
+#   { (  \sqrt{ \delta^2 + (x-\mu)^{2} }  /\alpha)^{1/2-\lambda} } \f]
+# where 
+#  - $\alpha=\sqrt{\beta^2+\gamma^2}$
+#
+#  In the code we adopt parameterisation in terms of
+#  - location parameter      \f$\mu\f$
+#  - shape parameter         \f$\lambda\f$
+#  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+#  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+#  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the shape 
+#  
+# The parameters are defined as:
+# \f[\begin{array}{lcl}
+#     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_{\lambda+1}(\zeta)}{\zetaK_{\lambda}(zeta)} \\
+#     \kappa   & \equiv & \frac{\beta}{\sigma} \\
+#     \zeta    & \equiv & \delta \gamma \end{array} \f]
+# - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+# - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+# - For small \f$\zeta\f$ distribution shows kurtosis of 3 
+#
+# The inverse transformation is:
+# \f[ \begin{array}{lcl}
+#     \beta    & = & \frac{\kappa}{\sigma}                      \\
+#     \delta   & = & \frac{\zeta}{\gamma}                       \\
+#     \gamma   & = & \frac{\sqrt{A_{\lambda}^*(\zeta)}}{\sigma} \\
+#     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+#
+# In general it has exponential tails for \f$ \lambda >0 \f$ and Gaussian core.
+# For negative \f$ \lambda \f$ tails are more heavy..
+#
+# @see Ostap::Math::Hyperbolic
+#  Usefun subclasses 
+#  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
+#  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+#  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
+#  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+# 
+#  @see Ostap::Models::Hyperbolic
+#  @see Ostap::Math::Hyperbolic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class GenHyperbolic_pdf(MASS) :
+    R"""Generalised Hyperbolic distribution
+    @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+    
+    - see Ostap::Math::GenHyperbolic
+    - see Ostap::Models::GenHyperbolic
+    
+    Parameters are different from ``canonical''
+    - mu     : related to location   (equal to mean/mode for kappa=0) 
+    - sigma  : relates to width      (equal to RMS           for kappa=0)
+    - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
+    - kappa  : related  to asymmetry 
+    - lambda : related to shape
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,    ## related to mean
+                   sigma     = 1    ,    ## relatd  to width  
+                   zeta      = 1    ,    ## related to shape 
+                   kappa     = 0    ,    ## related to asymmetry
+                   lambd     = 1    ) :  ## related to shape 
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+                 
+        self.__mu    = self.mean 
+        
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , None , zeta  , 1.e-10 , 1.e+5 ) 
+        ## kappa  
+        self.__kappa = self.make_var ( kappa               ,
+                                       'kappa_%s'   % name ,
+                                       '#kappa(%s)' % name , None , kappa ,  -10 ,   10    ) 
+
+        ## lambda 
+        self.__lambda = self.make_var ( lambd               ,
+                                       'lambda_%s'   % name ,
+                                       '#lambda(%s)' % name , None , kappa ,  -100 , 100 ) 
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.GenHyperbolic (
+            self.roo_name ( 'genhyperbolic_' ) , 
+            "GenHyperbolic %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.sigma     ,
+            self.zeta      ,
+            self.kappa     ,
+            self.lambd     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mu'        : self.mu    ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'kappa'     : self.kappa ,
+            'lambd'     : self.lambd }
+        
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape """
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def lambd ( self ) :
+        """``lambd'' : dimensionless parameter, related to shape """
+        return self.__lambda
+    @lambd.setter
+    def lambd ( self , value ) :    
+        self.set_value ( self.__lambd , value )
+
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+
+        
+models.append ( GenHyperbolic_pdf )      
 
 
 # =============================================================================

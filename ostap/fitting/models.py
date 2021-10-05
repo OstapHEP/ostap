@@ -43,6 +43,7 @@ Empricial PDFs to describe narrow peaks :
   - RasingCosine shape
   - Q-Gaussian shape
   - Hyperbolic distribution
+  - Generalised Hyperbolic distribution
   - Asymmetric Laplace shape
   - Sech  shape
   - Losev  shape
@@ -100,6 +101,7 @@ __all__ = (
     'RaisingCosine_pdf'      , ## Raising cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
+    'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Losev_pdf'              , ## asymmetric hyperbolic secant distribution

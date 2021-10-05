@@ -36,8 +36,6 @@
 // ============================================================================
 namespace 
 {
-
-
   // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
   *  it allows to calculate Novosibirsk's function in efficient and regular way
@@ -3683,6 +3681,121 @@ std::size_t Ostap::Math::QGaussian::tag () const
 }
 // ============================================================================
 
+
+
+namespace 
+{
+  // ==========================================================================
+  const double z_SMALL = 1.e-6 ;
+  // ==========================================================================
+  inline double _knu_ ( const double z , const double nu ) 
+  {
+    const double zh  = 0.5 * z ;
+    const double zh2 = zh  * zh ;
+    const double gn  = std::tgamma ( nu ) ;
+    return gn * std::pow ( zh , -nu ) * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+  }
+  // ==========================================================================
+  ///  evaluate \f$ K_{\nu}(z) \f$ for small values of z 
+  inline double knu  ( const double z , const double nu ) 
+  { 
+    return 
+      z < z_SMALL && !s_zero ( nu ) ?
+          0.5 * ( _knu_( z , nu ) + _knu_  ( z , -nu ) ) 
+          : Ostap::Math::bessel_Knu ( nu , z ) ;
+  }
+  // ===========================================================================
+  /** evaluate \f$ z^{\nu} K^{*}_{\nu}(z)}\f$ for small values of z,
+   *  where \f$ K^*_{\nu}(z)\f$ is a scaled modified Bessel function 
+   */
+  inline double z_knu_scaled ( const double z , 
+                               const double nu ) 
+  {
+    //
+    if ( s_zero ( z ) ) 
+    { return ( nu <= 0 ) ? 0.0 : std::pow ( 2 , nu - 1 ) * std::tgamma ( nu  ) ; }
+    //
+    if      ( z > z_SMALL ) { return std::pow ( z , nu ) * Ostap::Math::bessel_Knu_scaled ( nu , z ) ; }
+    //
+    if      ( nu >  0.2 ) { return 0.5 * std::pow ( 2       ,  nu ) * std::tgamma (  nu ) ; }
+    else if ( nu < -0.2 ) { return 0.5 * std::pow ( 2/(z*z) , -nu ) * std::tgamma ( -nu ) ; }
+    //
+    if ( s_zero ( nu ) ) { return z * ( -M_EULER - std::log ( 0.5 * z ) ) ; }
+    //
+    const double zh  = 0.5 * z ;
+    const double zh2 = zh  * zh ;
+    const double gn1 = std::tgamma (  nu ) ;
+    const double gn2 = std::tgamma ( -nu ) ;
+    //
+    // const double g1  = gn1 * std::pow ( zh , -nu ) * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+    // const double g2  = gn2 * std::pow ( zh ,  nu ) * ( 1 + zh2 /(1+nu) + 0.5 * zh2 * zh2 / ( ( 1 + nu ) * ( 2 + nu ) ) ) ;
+    //
+    const double g1  = gn1 * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+    const double g2  = gn2 * ( 1 + zh2 /(1+nu) + 0.5 * zh2 * zh2 / ( ( 1 + nu ) * ( 2 + nu ) ) ) ;
+    ///
+    return 0 <= nu ? 
+      0.5 * ( g1 + std::pow ( zh,  2 * nu ) * g2 ) :
+      0.5 * ( g2 + std::pow ( zh, -2 * nu ) * g1 ) ;
+  }
+  // ==========================================================================
+  /// calculate \f$ z K_{nu+1}(z)/K_{nu}(z) \f$ 
+  inline double _AL2_ ( const  double nu , const double z ) 
+  {
+    // 
+    // return z * 
+    //   Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+    //   Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    //
+    if ( z_SMALL  <=  z ) 
+    {
+      return z * 
+        Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+        Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    }
+    //
+    if ( s_equal ( nu , -1 ) )
+    {
+      const double zh = 0.5 * z ;
+      const double zlog = std::log ( zh ) ;
+      return z * z * ( -M_EULER - zlog ) / ( 1 + z * zh * zlog ) ;
+    }
+    //
+    else if ( s_equal ( nu , 0 ) )
+    {
+      const double zh = 0.5 * z ;
+      const double zlog = std::log ( zh ) ;
+      return ( 1 + zh * zh * ( 1 + 2 * zlog ) ) / ( -M_EULER + ( 1 - M_EULER ) * zh * zh - zlog ) ;
+    }
+    //
+    else if ( nu < -1.15 ) 
+    { 
+      return 0.5 * z * z / abs ( nu ) ;   
+    }
+    else if ( nu < -1 ) 
+    {
+      return z * 
+        Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+        Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    }
+    else if ( nu < -0.2 ) 
+    {
+      const double d  = std::abs  ( nu ) ;
+      const double xh = 0.5 * z ;
+      return 2 * std::tgamma ( 1 - d ) / std::tgamma ( d ) * std::pow ( xh , 2*d ) ;
+    }
+    else if ( std::abs ( nu ) <= 0.2 ) 
+    {
+      return z * knu ( z , nu + 1 ) / knu ( z , nu ) ;
+    }
+    //
+    return 2 * nu ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+
+
+
 // ============================================================================
 /* constructor from mu, sigma, zeta and kappa 
  *  @param mu    related to location 
@@ -3700,8 +3813,8 @@ Ostap::Math::Hyperbolic::Hyperbolic
   , m_sigma ( -1    )
   , m_zeta  ( -1    )
   , m_kappa ( kappa )
-  , m_A     (  0    )  
-  , m_K1    (  0    )
+  , m_AL    ( -1    )  
+  , m_N     ( -1    )
 {
   setSigma ( sigma ) ;
   setZeta  ( zeta  ) ;
@@ -3724,20 +3837,13 @@ bool Ostap::Math::Hyperbolic::setSigma ( const double value )
 // ============================================================================
 bool Ostap::Math::Hyperbolic::setZeta ( const double value ) 
 {
+  //
   const double avalue = std::abs ( value ) ;
-  if ( s_equal ( avalue , m_zeta ) ) { return false ; }
+  if ( s_equal ( avalue , m_zeta ) &&  ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
   m_zeta = avalue ;
   //
-  if ( m_zeta > 1.e-7 )
-  {
-    m_K1 = m_zeta                  * Ostap::Math::bessel_Kn_scaled ( 1 , m_zeta )          ;
-    m_A  = std::pow ( m_zeta , 2 ) * Ostap::Math::bessel_Kn_scaled ( 2 , m_zeta ) / m_K1   ;
-  }
-  else 
-  {
-    m_K1 = 1 ;
-    m_A  = 2 ;
-  }
+  m_AL = std::sqrt ( _AL2_ ( 1 , m_zeta ) ) ;
+  m_N  = 1 / ( z_knu_scaled ( m_zeta , 1 ) ) ; 
   //
   return true ;
 }
@@ -3749,6 +3855,44 @@ bool Ostap::Math::Hyperbolic::setKappa ( const double value )
   return true ;
 }
 // ============================================================================
+/*  set "standard" parameters 
+ *  @param mu     mu-parameter, location 
+ *  @param beta   beta-parameter, asymmetry 
+ *  @param gamma  alpha-parameter, shape 
+ *  @param delta  delta-parameter, scale 
+ *
+ *  \f$ \alpha = \sqrt{\beta^2+\gamma^2} \f$ 
+ */ 
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setStandard
+( const double mu     ,
+  const double beta   , 
+  const double gamma  , 
+  const double delta  )
+{
+  bool modified = !s_equal ( m_mu , mu )  ;
+  //
+  m_mu     = mu    ;
+  //
+  const double _zeta   = std::abs ( delta ) * std::abs ( gamma ) ;
+  if ( !s_equal ( m_zeta , _zeta ) ) { modified = true ; }
+  m_zeta = _zeta ;
+  //
+  if ( modified ) { m_AL = std::sqrt ( _AL2_ ( 1  , m_zeta ) ) ; }
+  //
+  const double _sigma = m_AL / std::abs ( gamma ) ;
+  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  m_sigma = _sigma ;
+  //
+  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , 1 ) ) ; }
+  //
+  const double _kappa = beta / m_sigma ;
+  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  m_kappa = _kappa ;
+  //
+  return modified ;
+}
+// ============================================================================
 // calculate the mean of the distribution  
 // ============================================================================
 double Ostap::Math::Hyperbolic::mean () const 
@@ -3757,29 +3901,18 @@ double Ostap::Math::Hyperbolic::mean () const
 // get the actual mode of the distribution
 // ============================================================================
 double Ostap::Math::Hyperbolic::mode () const 
-{ return m_mu + m_kappa * m_sigma * m_zeta / m_A ; }
+{ return m_mu + m_kappa * m_sigma * m_zeta / ( m_AL * m_AL ) ; }
 // ============================================================================
 // get the variance/dispersion 
 // ============================================================================
 double Ostap::Math::Hyperbolic::variance () const 
 {
-  double var = m_sigma * m_sigma ;
   //
-  if ( s_zero ( m_kappa ) ) { return var ; }  // RETURN 
+  const double s2 = sigma2 () ;
+  const double k2 = kappa2 () ;
+  const double z2 = zeta2  () ;
   //
-  const double beta2  = std::pow ( beta () , 2 ) ;
-  if ( s_zero ( beta2   ) ) { return var ; }  // RETURN 
-  //
-  const double gamma4 = std::pow ( gamma2() , 2 ) ;
-  //
-  const double t1 = ( 1.e-7 > m_zeta ) ? 8.0 : 
-    std::pow ( m_zeta , 3 ) * Ostap::Math::bessel_Kn_scaled ( 3 , m_zeta ) / m_K1 ;
-  //
-  const double t2 = m_A * m_A ;
-  //
-  var += beta2 / gamma4 * ( t1 - t2 ) ;
-  //
-  return var;
+  return s2 + k2 * s2 * ( _AL2_ ( 1 + 1 , m_zeta ) /  ( m_AL * m_AL ) - 1.0 ) ;
 }
 // ============================================================================
 // evaluate  pdf  for the Hyperbolic distribution
@@ -3789,12 +3922,17 @@ double Ostap::Math::Hyperbolic::pdf ( const double x ) const
   //
   const double dx =  ( x - m_mu ) / m_sigma ;
   //
-  const double cc = m_kappa * m_kappa + m_A ;
+  const double a2 = m_AL * m_AL            ;
+  const double ka = m_kappa * m_kappa + a2 ;
   //
   const double q  = 
-    m_zeta - std::sqrt ( cc * m_zeta * m_zeta / m_A + cc * dx * dx ) + m_kappa * dx  ;
+    - std::sqrt ( ka * ( m_zeta * m_zeta / a2 + dx * dx ) )  
+    + m_kappa * dx    
+    + m_zeta          ;  // from normalization 
   //
-  return std::exp ( q ) * m_A / ( 2 * m_sigma * std::sqrt ( cc ) * m_K1 ) ;
+  const double aa = 0.5 * a2 / ( m_sigma * std::sqrt ( ka ) ) ;
+  //
+  return m_N * std::exp ( q ) * aa ;
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -3856,6 +3994,238 @@ std::size_t Ostap::Math::Hyperbolic::tag () const
   return std::hash_combine ( s_name , m_mu , m_sigma , m_zeta , m_kappa  ) ; 
 }
 // ============================================================================
+
+
+
+
+// ============================================================================
+/*  constructor from mu, sigma, zeta and kappa 
+ *  @param mu     related to location 
+ *  @param sigma  related to width 
+ *  @param zeta   related to kurtosis 
+ *  @param kappa  related to asymmetry
+ *  @param lambda shape-related    
+ */
+// ============================================================================
+Ostap::Math::GenHyperbolic::GenHyperbolic
+( const double mu     ,  // related to location 
+  const double sigma  ,  // related to width 
+  const double zeta   ,  // related to kurtosis
+  const double kappa  ,  // related to asymmetry 
+  const double lambda ) 
+  : m_mu     ( mu    ) 
+  , m_sigma  ( std::abs ( sigma ) )
+  , m_zeta   ( zeta  ) 
+  , m_kappa  ( kappa ) 
+  , m_lambda ( lambda ) 
+  , m_AL     ( -1 ) 
+  , m_N      ( -1 ) 
+{
+  setSigma ( sigma  ) ;  
+  setZeta  ( lambda ) ;  
+  setZeta  ( zeta   ) ;  
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setKappa ( const double value ) 
+{
+  if ( s_equal ( value , m_kappa ) ) { return false ; }
+  m_kappa = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setZeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_zeta ) &&  ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
+  m_zeta = avalue ;
+  //
+  m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
+  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setLambda ( const double value ) 
+{
+  if ( s_equal ( value , m_lambda ) && ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
+  m_lambda = value ;
+  //
+  m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
+  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  //
+  return true ;
+}
+// ============================================================================
+/*  set "standard" parameters 
+ *  @param mu     mu-parameter, location 
+ *  @param beta   beta-parameter, asymmetry 
+ *  @param gamma  alpha-parameter, shape 
+ *  @param delta  delta-parameter, scale 
+ *  @param lambda lambda-parameter, shape   
+ *
+ *  \f$ \alpha = \sqrt{\beta^2+\gamma^2} \f$ 
+ *  \f[ \begin{array}{ll} 
+ *    \delta \ge 0, left| \beta \right|<  \alpha &  if~\lambda > 0 \\ 
+ *    \delta >   0, left| \beta \right|<  \alpha &  if~\lambda = 0 \\ 
+ *    \delta >   0, left| \beta \right|\le\alpha &  if~\lambda < 0 
+ *  \end{array}\f] 
+ */ 
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setStandard
+( const double mu     ,
+  const double beta   , 
+  const double gamma  , 
+  const double delta  ,
+  const double lambda ) 
+{
+  bool modified = !s_equal ( m_mu , mu ) || !s_equal ( m_lambda , lambda ) ;
+  //
+  m_mu     = mu     ;
+  m_lambda = lambda ;
+  //
+  const double _zeta   = std::abs ( delta ) * std::abs ( gamma ) ;
+  if ( !s_equal ( m_zeta , _zeta ) ) { modified = true ; }
+  m_zeta = _zeta ;
+  //
+  if ( modified ) { m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ; }
+  //
+  const double _sigma = m_AL / std::abs ( gamma ) ;
+  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  m_sigma = _sigma ;
+  //
+  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ; }
+  //
+  const double _kappa = beta / m_sigma ;
+  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  m_kappa = _kappa ;
+  //
+  return modified ;
+}
+// ============================================================================
+// evaluate  pdf  for Generalised Hyperbolic distribution
+// ============================================================================
+double Ostap::Math::GenHyperbolic::pdf ( const  double x ) const 
+{  
+  const double dx   =  ( x - m_mu ) / m_sigma ;
+  //
+  const double k2   = m_kappa * m_kappa ;
+  const double k2pA = k2 + m_AL * m_AL  ;
+  const double z_A  = m_zeta    / m_AL  ;
+  //
+  const double arg2 =  k2pA * ( dx * dx + z_A * z_A ) ;
+  const double arg  =  std::sqrt ( arg2 ) ;
+  //
+  // NB: we use scaled bessel function here!
+  const double kfun = Ostap::Math::bessel_Knu_scaled ( m_lambda - 0.5 , arg ) ;
+  //
+  const double f   = 
+    + std::log ( kfun )             // scaled bessel function 
+    - arg                           // "unscale" it 
+    + m_zeta                        // from normalzation 
+    + m_kappa * dx                  // asymmetry factor  
+    + ( m_lambda - 0.5 ) * std::log ( arg * m_sigma * m_sigma / k2pA ) ;
+  //
+  return m_N * std::exp ( f ) * std::pow ( gamma2() , m_lambda ) ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// =========================================================================
+double Ostap::Math::GenHyperbolic::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  const double m1    = mean () ;
+  const double mlow  = m1 - 5 * m_sigma ;
+  const double mhigh = m1 + 5 * m_sigma ;
+  //
+  const double mc [] = { m1 - 3.0 * m_sigma , 
+                         m1 + 3.0 * m_sigma , 
+                         mlow , mhigh       } ;
+  //
+  for ( const double c : mc ) 
+  { if ( low < c  && c < high ) { return integral ( low , c ) + integral ( c , high ) ; } }
+  //
+  // in tails 
+  const bool in_tail = ( high <= mlow ) || ( low >= mhigh ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenHyperbolic> s_integrator {} ;
+  static char s_message[] = "Integral(GenHyperbolic)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size () ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ==============================================================================
+// get mean value 
+// ==============================================================================
+double Ostap::Math::GenHyperbolic::mean        () const 
+{ return m_mu + m_kappa * m_sigma ; }
+// ==============================================================================
+// get variance 
+// ==============================================================================
+double Ostap::Math::GenHyperbolic::variance    () const 
+{
+  //
+  const double s2 = sigma2 () ;
+  const double k2 = kappa2 () ;
+  const double z2 = zeta2  () ;
+  //
+  return s2 + k2 * s2 * ( _AL2_ ( m_lambda + 1 , m_zeta ) /  ( m_AL * m_AL ) - 1.0 ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::GenHyperbolic::tag () const 
+{ 
+  static const std::string s_name = "GHD" ;
+  return std::hash_combine ( s_name   , 
+                             m_mu     , 
+                             m_sigma  , 
+                             m_kappa  , 
+                             m_zeta   , 
+                             m_lambda ) ; 
+}
+// ============================================================================
+
+
+
+
+
 
 
 // ============================================================================
