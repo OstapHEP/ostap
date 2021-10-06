@@ -48,6 +48,7 @@ Empricial PDFs to describe narrow peaks
   - QGaussian_pdf
   - Hyperbolic_pdf
   - GenHyperbolic_pdf
+  - Hypatia_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -98,6 +99,7 @@ __all__ = (
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
+    'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
@@ -2935,6 +2937,195 @@ class GenHyperbolic_pdf(MASS) :
 
         
 models.append ( GenHyperbolic_pdf )      
+
+# =============================================================================
+## @class Hypatia_pdf
+# Variant of Hypatia pdf
+# @see D. Martinez Santos, F. Duipertois,
+#      "Mass distributions marginalized over per-event errors",
+#       Nucl.Instrum.Meth.A 764 (2014) 150,
+#       arXiv:1312.5000 [hep-ex]
+# @see https://doi.org/10.1016/j.nima.2014.06.081
+# @see https://arxiv.org/abs/1312.5000
+# Actually this function corresponds to Hypatia function with
+# \f$ a\rigaharrow +\infty, n=1\f$ 
+#
+# Convolution of Generalized Hyperbolic distrobution with "offset"
+# Gaussian distribution
+# @see GenHyperbolic_pdf
+# @see Ostap::Math::GenHyperbolic
+# @see Ostap::Models::GenHyperbolic
+class Hypatia_pdf(MASS) :
+    r""" Variant of Hypatia pdf
+    Convolution of Generalized Hyperbolic distrobution with ``offset''
+    Gaussian distribution
+    
+    - see D. Martinez Santos, F. Duipertois,
+    ``Mass distributions marginalized over per-event errors'',
+    Nucl.Instrum.Meth.A 764 (2014) 150,
+    arXiv:1312.5000 [hep-ex]
+    - see https://doi.org/10.1016/j.nima.2014.06.081
+    - see https://arxiv.org/abs/1312.5000
+
+    Actually this function corresponds to Hypatia function with
+    a -> +infinity, n=0
+    
+    - see GenHyperbolic_pdf
+    - see Ostap.Math.GenHyperbolic
+    - see Ostap.Models.GenHyperbolic
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   sigma     =  1   ,   ## relatd  to width  
+                   zeta      =  1   ,   ## related to shape 
+                   kappa     =  0   ,   ## related to asymmetry
+                   lambd     = -2   ,   ## related to shape 
+                   sigma0    = None ,   ## width of the ``offset'' Gaussian 
+                   cnvpars   = {}   ) : ## convolution parameters 
+        # 
+        ## initialize the base
+        #        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+        
+        self.__mu    = self.mean 
+
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , None , zeta  , 1.e-10 , 1.e+5 ) 
+        ## kappa  
+        self.__kappa = self.make_var ( kappa               ,
+                                       'kappa_%s'   % name ,
+                                       '#kappa(%s)' % name , None , kappa ,  -5 ,   5      ) 
+
+        ## lambda 
+        self.__lambda = self.make_var ( lambd               ,
+                                        'lambda_%s'   % name ,
+                                        '#lambda(%s)' % name , None , kappa ,  -100 , 100   ) 
+            
+        ## create a generalized hyperbolic PDF 
+        hname  = self.generate_name ( prefix = self.name , suffix = 'GHD' ) 
+        self.__genhyp = GenHyperbolic_pdf ( name  = hname      , 
+                                            xvar  = self.xvar  ,
+                                            mu    = self.mu    , 
+                                            sigma = self.sigma ,
+                                            zeta  = self.zeta  ,
+                                            kappa = self.kappa ,
+                                            lambd = self.lambd )
+        
+        ## prepare FFT convolution
+        from ostap.fitting.resolution import ResoGauss 
+        gname = self.generate_name ( prefix = self.name , suffix = 'offset' ) 
+        self.__resolution = ResoGauss     ( name  = gname     , 
+                                            xvar  = self.xvar ,
+                                            sigma = sigma0    )
+        
+        self.__cnvpars = {}
+        self.__cnvpars.update ( cnvpars ) 
+        
+        cname = self.generate_name ( prefix = self.name , suffix = 'cnv' )  
+        from ostap.fitting.convolution import Convolution_pdf 
+        self.__convolved = Convolution_pdf ( name       = cname             , 
+                                             pdf        = self.genhyp       ,
+                                             xvar       = self.xvar         ,
+                                             resolution = self.__resolution ,
+                                             **self.cnvpars                 ) 
+        
+        ## final 
+        self.pdf = self.convolved.pdf
+
+        self.config = {
+            'name'    : self.name    ,
+            'xvar'    : self.xvar    ,
+            'mu'      : self.mu      ,
+            'sigma'   : self.sigma   ,
+            'zeta'    : self.zeta    ,
+            'kappa'   : self.kappa   ,
+            'lambd'   : self.lambd   ,
+            'sigma0'  : self.sigma0  ,
+            'cnvpars' : self.cnvpars }
+        
+    @property
+    def genhyp ( self ) :
+        """``genhyp'': get underlying generalized hyperbilis PDF"""
+        return self.__genhyp
+    
+    @property
+    def convolved ( self ) :
+        """``convolved'' : get PDF as convolution"""
+        return self.__convolved
+    
+    @property
+    def sigma0    ( self ) :
+        """``sigma0'' : width for the ``offset'' Gaussian"""
+        return self.__resolution.sigma
+    @sigma0.setter
+    def sigma0    ( self , value ) :
+        self.__resolution.sigma = value
+        
+    @property
+    def cnvpars ( self ) :
+        """``cnvpars'' : parametters for convolution"""
+        return self.__cnvpars 
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter (same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape """
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def lambd ( self ) :
+        """``lambd'' : dimensionless parameter, related to shape """
+        return self.__lambda
+    @lambd.setter
+    def lambd ( self , value ) :    
+        self.set_value ( self.__lambd , value )
+
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        return self.genhyp.alpha 
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        return self.genhyp.beta
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        return self.genhyp.gamma
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        return self.genhyp.delta 
 
 
 # =============================================================================

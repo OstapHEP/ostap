@@ -44,6 +44,7 @@ Empricial PDFs to describe narrow peaks :
   - Q-Gaussian shape
   - Hyperbolic distribution
   - Generalised Hyperbolic distribution
+  - Hypatia shape 
   - Asymmetric Laplace shape
   - Sech  shape
   - Losev  shape
@@ -102,6 +103,7 @@ __all__ = (
     'QGaussian_pdf'          , ## Q-gaussian distribution
     'Hyperbolic_pdf'         , ## Hyperbolic distribution
     'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
+    'Hypatia_pdf'            , ## Hypatia shape 
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant (inverse-cosh) distribution
     'Losev_pdf'              , ## asymmetric hyperbolic secant distribution
@@ -160,7 +162,7 @@ __all__ = (
     'Bkg_pdf'              , ## Background: exponential modified by positive polynom
     'PolyPos_pdf'          , ## Background: positive polynom
     'PolyEven_pdf'         , ## Background: positive even polynom
-    'Monotonic_pdf'       , ## Background: positive monotonic polynom
+    'Monotonic_pdf'        , ## Background: positive monotonic polynom
     'Convex_pdf'           , ## Background: positive monotonic polynom with fixed sign second derivative
     'ConvexOnly_pdf'       , ## Background: positive monotonic polynom with fixed sign second derivative
     'Sigmoid_pdf'          , ## Background: sigmoid modulated by positive polynom

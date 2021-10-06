@@ -1,3 +1,4 @@
+# v1.6.4.0
 
 ## New features 
 
@@ -6,7 +7,8 @@
  1. Add reweighting with `GBReweighter`
  1. Add generalized Hyperboilic function, PDF and resolution model: `Ostap::Math::GenHyperbolic`, `Ostap::Models::GenHyperbolic`, `GenHyperbolic_pdf`, `ResoGenHyperbolic`
  1. add tests for generalised hyperbolic functions 
- 1  update "parallel" tests
+ 1. update "parallel" tests
+ 1. add `Hypatia_pdf`
 
 ## Backward incompatible changes: 
 

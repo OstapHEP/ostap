@@ -1161,11 +1161,14 @@ def test_hyperbolic() :
                                          xvar      = mass               ,
                                          mu        = signal_gauss.mean  ,
                                          sigma     = signal_gauss.sigma ,
-                                         zeta      = ( 1   , -1 , 1e+6  ) ,
-                                         kappa     = ( 0   , -1 ,   1 ) ) ,
+                                         zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
+                                         kappa     = ( 0   , -1    ,   1 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
 
     model_hyperbolic.S.value  = 5000
     model_hyperbolic.B.value  =  500
@@ -1174,6 +1177,9 @@ def test_hyperbolic() :
         model_hyperbolic.signal.kappa.fix ( 0 )    
         result, frame = model_hyperbolic. fitTo ( dataset0 )
         model_hyperbolic.signal.kappa.release ()
+        model_hyperbolic.signal.zeta .release ()
+        model_hyperbolic.signal.mean .release ()
+        model_hyperbolic.signal.sigma.release ()
         result, frame = model_hyperbolic. fitTo ( dataset0 )
     with wait ( 1 ), use_canvas ( 'test_hyperbolic' ) : 
         model_hyperbolic.draw (  dataset0 )
@@ -1199,12 +1205,15 @@ def test_genhyperbolic() :
                                             xvar      = mass               ,
                                             mu        = signal_gauss.mean  ,
                                             sigma     = signal_gauss.sigma ,
-                                            zeta      = ( 1   , -1 , 1e+6  ) ,
+                                            zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
                                             lambd     = ( -100 , 100       ) , 
                                             kappa     = ( 0   , -1 ,   1 ) ) ,
         background = background   ,
         S = S , B = B ,
         )
+    
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
 
     model_genhyperbolic.S.value  = 5000
     model_genhyperbolic.B.value  =  500
@@ -1213,6 +1222,9 @@ def test_genhyperbolic() :
         model_genhyperbolic.signal.kappa.fix ( 0 )    
         result, frame = model_genhyperbolic. fitTo ( dataset0 )
         model_genhyperbolic.signal.kappa.release ()
+        model_genhyperbolic.signal.zeta .release ()
+        model_genhyperbolic.signal.sigma.release ()
+        model_genhyperbolic.signal.mean .release ()
         result, frame = model_genhyperbolic. fitTo ( dataset0 )
     with wait ( 1 ), use_canvas ( 'test_hyperbolic' ) : 
         model_genhyperbolic.draw (  dataset0 )
@@ -1223,6 +1235,52 @@ def test_genhyperbolic() :
     logger.info ( 'Generalised Hyperbolic  function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_genhyperbolic )
+
+# ==========================================================================
+## Hypatia 
+# ==========================================================================
+def test_hypatia () :
+
+    logger = getLogger ( 'test_hypatia' )
+       
+    
+    logger.info ('Test Hypatia_pdf: Hypatia pdf' ) 
+    model_hypatia = Models.Fit1D (
+        signal = Models.Hypatia_pdf ( name = 'Hypatia' , 
+                                      xvar      = mass               ,
+                                      mu        = signal_gauss.mean  ,
+                                      sigma     = signal_gauss.sigma ,
+                                      zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
+                                      lambd     = ( -2 , -100 , 100     ) , 
+                                      kappa     = ( 0   , -1 ,   1 ) ,
+                                      sigma0    = 0.005     ) , 
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_hypatia.S.value  = 5000
+    model_hypatia.B.value  =  500
+    
+    with rooSilent() :
+        model_hypatia.signal.kappa.fix ( 0 )    
+        result, frame = model_hypatia. fitTo ( dataset0 )
+        model_hypatia.signal.kappa.release ()
+        model_hypatia.signal.zeta .release ()
+        model_hypatia.signal.mean .release ()
+        model_hypatia.signal.sigma.release ()
+        result, frame = model_hypatia. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_hypatia' ) : 
+        model_hypatia.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Hypatia function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_hypatia )
 
 
 
@@ -1408,10 +1466,15 @@ if '__main__' == __name__ :
     ## Hyperbolic                                 + background 
     with timing ('test_hyperbolic'     , logger ) :
         test_hyperbolic        () 
-
-    ## Generalised Hyperbolic                                 + background 
+        
+    ## Generalised Hyperbolic                      + background 
     with timing ('test_genhyperbolic'     , logger ) :
         test_genhyperbolic     () 
+        
+    ## Hypatia                                     + background 
+    with timing ('test_hypatia'           , logger ) :
+        test_hypatia           () 
+            
         
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :
