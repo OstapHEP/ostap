@@ -7,6 +7,13 @@
 """
 from   __future__        import print_function
 import ROOT, time, sys 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
+from   itertools            import count 
+from   ostap.parallel.task  import Task, GenericTask
+from   ostap.parallel.utils import pool_context 
+import ostap.histos.histos
+from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -15,12 +22,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_parallel_parallel_pathos' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-from   itertools            import count 
-from   ostap.parallel.task  import Task, GenericTask
-from   ostap.parallel.utils import pool_context 
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
 try :
     from ostap.parallel.parallel_pathos import WorkManager 
@@ -41,7 +42,8 @@ if ( 3 , 6 ) <= sys.version_info and dill :
     DILL_PY3_issue = dill_version < '0.3'
     if not DILL_PY3_issue :
         from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 23 )
+        ## DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
         
 if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
 
@@ -99,7 +101,7 @@ class HTask(Task) :
 def test_parallel_pathos_mp_bare ( ) :
     """Test parallel processnig with parallel_pathos (bare interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_mp_bare")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -124,8 +126,8 @@ def test_parallel_pathos_mp_bare ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_bare' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -134,7 +136,7 @@ def test_parallel_pathos_mp_bare ( ) :
 def test_parallel_pathos_pp_bare ( ) :
     """Test parallel processnig with parallel_pathos (bare interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_mp_bare")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return 
@@ -157,11 +159,10 @@ def test_parallel_pathos_pp_bare ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_bare' ) : 
+        result.draw (   ) 
 
     return result 
-
 
 
 # =============================================================================
@@ -169,7 +170,7 @@ def test_parallel_pathos_pp_bare ( ) :
 def test_parallel_pathos_mp_task ( ) :
     """Test parallel processnig with parallel_pathos (task interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_mp_task")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -193,9 +194,9 @@ def test_parallel_pathos_mp_task ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
-
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_task' ) : 
+        result.draw (   ) 
+        
     return result
 
 
@@ -204,7 +205,7 @@ def test_parallel_pathos_mp_task ( ) :
 def test_parallel_pathos_pp_task ( ) :
     """Test parallel processnig with parallel_pathos (task interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_pp_task")
+    logger  = getLogger ("ostap.test_parallel_pathos_pp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -227,9 +228,9 @@ def test_parallel_pathos_pp_task ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
-
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_task' ) : 
+        result.draw (   ) 
+        
     return result
 
     
@@ -238,7 +239,7 @@ def test_parallel_pathos_pp_task ( ) :
 def test_parallel_pathos_mp_func ( ) :
     """Test parallel processnig with parallel_pathos (func interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_mp_task")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -258,8 +259,8 @@ def test_parallel_pathos_mp_func ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_func' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -269,7 +270,7 @@ def test_parallel_pathos_mp_func ( ) :
 def test_parallel_pathos_pp_func ( ) :
     """Test parallel processnig with parallel_pathos (func interface) 
     """
-    logger  = getLogger ("test_parallel_pathos_pp_task")
+    logger  = getLogger ("ostap.test_parallel_pathos_pp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -289,8 +290,8 @@ def test_parallel_pathos_pp_func ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_func' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -300,7 +301,7 @@ def test_parallel_pathos_pp_func ( ) :
 def test_parallel_pathos_mp_generic ( ) :
     """Test parallel processnig with parallel_pathos (use generic task)
     """
-    logger  = getLogger ("test_parallel_pathos_mp_generic")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -324,8 +325,8 @@ def test_parallel_pathos_mp_generic ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_mp_generic' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -334,7 +335,7 @@ def test_parallel_pathos_mp_generic ( ) :
 def test_parallel_pathos_pp_generic ( ) :
     """Test parallel processnig with parallel_pathos (use generic task)
     """
-    logger  = getLogger ("test_parallel_pathos_mp_generic")
+    logger  = getLogger ("ostap.test_parallel_pathos_mp_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -358,8 +359,8 @@ def test_parallel_pathos_pp_generic ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_pathos_pp_generic' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -384,8 +385,7 @@ if '__main__' == __name__ :
     ## use generic task 
     test_parallel_pathos_mp_generic ()
     test_parallel_pathos_pp_generic ()
-    
-        
+            
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

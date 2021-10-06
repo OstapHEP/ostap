@@ -7,8 +7,14 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using Pathos
 """
-from   __future__        import print_function
+# ============================================================================
 import ROOT, time, sys 
+from   itertools                import count   
+import ostap.histos.histos
+from   ostap.utils.progress_bar import progress_bar 
+from   ostap.parallel.utils     import pool_context
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -18,10 +24,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-from   itertools                import count   
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
-from   ostap.parallel.utils     import pool_context
 
 # =============================================================================
 try : 
@@ -44,7 +46,8 @@ if ( 3 , 6 ) <= sys.version_info and dill :
     DILL_PY3_issue = dill_version < '0.3'
     if not DILL_PY3_issue :
         from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 23 )
+        ## DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6  )
 
 if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
     
@@ -69,8 +72,8 @@ class MakeHisto(object)  :
     def __call__ ( self , *args ) :
         return self.process ( *args ) 
     
-## start 10 jobs, and for each job create the histogram with 1000 entries 
-inputs = 5 * [ 100 ]
+## start 10 jobs, and for each job create the histogram with 100 entries 
+inputs = 10 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos: ProcessPool
@@ -108,8 +111,8 @@ def test_pathos_mp_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pathos_mp_function' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -153,8 +156,8 @@ def test_pathos_mp_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pathos_mp_callable' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -164,7 +167,7 @@ def test_pathos_mp_callable  () :
 def test_pathos_pp_function () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("test_pathos_pp_function") 
+    logger = getLogger("ostap.test_pathos_pp_function") 
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -203,65 +206,18 @@ def test_pathos_pp_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_function' ) : 
+        result.draw (   ) 
 
     return result 
 
-
-# =============================================================================
-## test parallel processing with pathos : ParallelPool 
-def test_pathos_pp_callable () :
-    """Test parallel processnig with pathos: ParallelPool  
-    """
-    logger = getLogger("test_pathos_pp_callable") 
-    logger.info ('Test job submission with %s' %  pathos ) 
-
-    if not pathos :
-        logger.error ( "pathos is not available" )
-        return 
-        
-    if DILL_PY3_issue : 
-        logger.warning ("test is disabled (DILL/ROOT/PY3 issue)" )
-        return
-
-    from pathos.helpers import cpu_count
-    ncpus = cpu_count  ()
-    
-    from pathos.pools import ParallelPool as Pool 
-
-    pool = Pool ( ncpus )   
-    logger.info ( "Pool is %s" %  ( type ( pool ).__name__ ) )
-
-    pool.restart ( True ) 
-
-
-    mh   = MakeHisto() 
-    jobs = pool.uimap ( mh.process ,  [  ( i , n )  for  ( i , n ) in enumerate ( inputs ) ] )
-    
-    result = None 
-    for h in progress_bar ( jobs , max_value = len ( inputs ) ) :
-        if not result  : result = h
-        else           : result.Add ( h )
-
-    pool.close ()
-    pool.join  ()
-    pool.clear ()
-    
-    logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
-    logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
-    
-    result.Draw (   ) 
-    time.sleep  ( 2 )
-
-    return result 
 
 # =============================================================================
 ## test parallel processing with pathos : ParallelPool 
 def test_pathos_pp_method () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("test_pathos_pp_method ")
+    logger = getLogger("ostap.test_pathos_pp_method ")
     if not pathos :
         logger.error ( "pathos is not available" )
         return 
@@ -297,8 +253,8 @@ def test_pathos_pp_method () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_method' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -307,7 +263,7 @@ def test_pathos_pp_method () :
 def test_pathos_pp_callable () :
     """Test parallel processnig with pathos: ParallelPool  
     """
-    logger = getLogger("test_pathos_pp_callable")         
+    logger = getLogger("ostap.test_pathos_pp_callable")         
     if not pathos :
         logger.error ( "pathos is not available" )
         return
@@ -347,8 +303,8 @@ def test_pathos_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pathos_pp_callable' ) : 
+        result.draw (   ) 
 
     return result 
 

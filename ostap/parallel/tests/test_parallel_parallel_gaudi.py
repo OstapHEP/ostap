@@ -5,8 +5,16 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using parallel_gaudi
 """
-from   __future__        import print_function
+# ============================================================================
 import ROOT, time, sys 
+# =============================================================================
+from   itertools                import count 
+import ostap.histos.histos
+from   ostap.parallel.task      import Task, GenericTask
+from   ostap.parallel.utils     import pool_context 
+from   ostap.utils.progress_bar import progress_bar 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -15,12 +23,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_parallel_parallel_gaudi' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-from   itertools            import count 
-from   ostap.parallel.task  import Task, GenericTask
-from   ostap.parallel.utils import pool_context 
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
 # =============================================================================
 try :
     from ostap.parallel.parallel_gaudi import WorkManager 
@@ -84,7 +86,7 @@ class HTask(Task) :
 def test_parallel_gaudi_mp_bare ( ) :
     """Test parallel processnig with parallel_gaudi (bare interface) 
     """
-    logger  = getLogger ("test_parallel_gaudi_mp_bare")
+    logger  = getLogger ("ostap.test_parallel_gaudi_mp_bare")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -123,7 +125,7 @@ def test_parallel_gaudi_mp_bare ( ) :
 def test_parallel_gaudi_mp_task ( ) :
     """Test parallel processnig with parallel_gaudi (task interface) 
     """
-    logger  = getLogger ("test_parallel_gaudi_mp_task")
+    logger  = getLogger ("ostap.test_parallel_gaudi_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -149,9 +151,9 @@ def test_parallel_gaudi_mp_task ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
-
+    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_task' ) : 
+        result.draw (   ) 
+    
     return result
 
     
@@ -160,7 +162,7 @@ def test_parallel_gaudi_mp_task ( ) :
 def test_parallel_gaudi_mp_func ( ) :
     """Test parallel processnig with parallel_gaudi (func interface) 
     """
-    logger  = getLogger ("test_parallel_gaudi_mp_task")
+    logger  = getLogger ("ostap.test_parallel_gaudi_mp_task")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -183,8 +185,8 @@ def test_parallel_gaudi_mp_func ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_func' ) : 
+        result.draw (   ) 
 
     return result
 
@@ -194,7 +196,7 @@ def test_parallel_gaudi_mp_func ( ) :
 def test_parallel_gaudi_mp_generic ( ) :
     """Test parallel processnig with parallel_gaudi (use generic task)
     """
-    logger  = getLogger ("test_parallel_gaudi_mp_generic")
+    logger  = getLogger ("ostap.test_parallel_gaudi_mp_generic")
     if not WorkManager :
         logger.error ("Failure to import WorkManager")
         return
@@ -220,9 +222,9 @@ def test_parallel_gaudi_mp_generic ( ) :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
-
+    with wait ( 1 ) , use_canvas ( 'test_parallel_gaudi_mp_generic' ) : 
+        result.draw (   ) 
+        
     return result
 
 

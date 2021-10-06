@@ -7,8 +7,13 @@
 """ Oversimplified script for parallel execution using Parallel Python
 - see https://www.parallelpython.com/examples.php#CALLBACK
 """
-from   __future__        import print_function
+# =============================================================================
 import ROOT, time, sys 
+import pp
+import ostap.histos.histos
+from   ostap.utils.progress_bar import progress_bar 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -18,12 +23,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import pp
-    
-# =============================================================================
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
-# =============================================================================
+
+
+
 ## simple    function that created and  fill a histogram 
 def make_histo  ( i , n ) :
     """Simple    function that creates and  fills a histogram
@@ -95,8 +97,8 @@ def test_pp_function () :
     
     job_server.print_stats()
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pp_function' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -129,8 +131,8 @@ def test_pp_method() :
     
     job_server.print_stats()
 
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pp_method' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -161,8 +163,8 @@ def test_pp_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 10 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_pp_callable' ) : 
+        result.draw (   ) 
 
     return result 
 

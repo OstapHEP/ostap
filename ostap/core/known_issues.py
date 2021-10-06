@@ -20,18 +20,17 @@ __all__     = (
 # =============================================================================
 import ROOT, sys 
 
-
+groot = ROOT.ROOT.GetROOT()
 
 # =============================================================================
 ## dill has problems with serialization of ROOT objects for python3
 #  @see https://github.com/root-project/root/issues/6370
 #  @see https://github.com/uqfoundation/dill/issues/356
-ROOT_issue_6370 = 3 <= sys.version_info.major and 6 <= sys.version_info.minor
-DILL_issue_356  = 3 <= sys.version_info.major and 6 <= sys.version_info.minor
+ROOT_issue_6370 = (3,6) <= sys.version_info and groot.GetVersionInt() < 62406 
+DILL_issue_356  = (3,6) <= sys.version_info and groot.GetVersionInt() < 62406 
 DILL_ROOT_issue = ROOT_issue_6370 or DILL_issue_356
 
 
-groot = ROOT.ROOT.GetROOT()
 
 # =============================================================================
 ## Virtual C++ methods overriden in python are ignored for subclasses 

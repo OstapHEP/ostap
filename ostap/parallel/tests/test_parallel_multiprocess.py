@@ -7,8 +7,11 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using multiprocessing
 """
-from   __future__        import print_function
+# ============================================================================
 import ROOT, time, sys 
+from   itertools                import count   
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -17,8 +20,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_parallel_multiprocess' )
 else : 
     logger = getLogger ( __name__ )
-# =============================================================================
-from   itertools                import count   
 # =============================================================================
 try : 
     import dill 
@@ -39,10 +40,11 @@ if ( 3 , 6 ) <= sys.version_info and dill :
     DILL_PY3_issue = dill_version < '0.3'
     if not DILL_PY3_issue :
         from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 23 )
+        ## DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
 
 if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
-        
+
 # =============================================================================
 import ostap.histos.histos
 from   ostap.utils.progress_bar import progress_bar 
@@ -117,8 +119,8 @@ def test_multiprocess_function () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_multiprocess_function' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -162,8 +164,8 @@ def test_multiprocess_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_multiprocess_callable' ) : 
+        result.draw (   ) 
 
     return result 
 

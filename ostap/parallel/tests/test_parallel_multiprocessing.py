@@ -5,8 +5,16 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using multiprocessing
 """
-from   __future__        import print_function
+# =============================================================================
 import ROOT, time, sys 
+# =============================================================================
+import multiprocessing
+from   itertools                import count    
+# =============================================================================
+import ostap.histos.histos
+from   ostap.utils.progress_bar import progress_bar 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -16,11 +24,9 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
-import multiprocessing
-from   itertools                import count    
-# =============================================================================
-import ostap.histos.histos
-from   ostap.utils.progress_bar import progress_bar 
+
+
+
 # =============================================================================
 ## simple    function that created and  fill a histogram
 def make_histos ( item ) :
@@ -49,8 +55,8 @@ class MakeHisto(object) :
 
 mh  = MakeHisto  ()
 
-## start 5 jobs, and for each job create the histogram with 100 entries 
-inputs = 5 * [ 100 ]
+## start 10 jobs, and for each job create the histogram with 100 entries 
+inputs = 10 * [ 100 ]
 
 # =============================================================================
 ## test parallel processing with pathos
@@ -80,9 +86,10 @@ def test_multiprocessing_function () :
     
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
+
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 5 ) , use_canvas ( 'test_multiprocessing_function' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -93,7 +100,8 @@ def test_multiprocessing_callable  () :
     """Test parallel processnig with multiprocessing
     """
 
-    logger = getLogger ("ostap.test_multiprocessing_callable")    
+    logger = getLogger ("ostap.test_multiprocessing_callable")
+    
     logger.info ('Test job submission with module %s' %  multiprocessing )
     
     ncpus = multiprocessing.cpu_count() 
@@ -101,7 +109,6 @@ def test_multiprocessing_callable  () :
     from multiprocessing import Pool
     
     pool = Pool  ( ncpus ) 
-    
     
     jobs = pool.imap_unordered ( mh , zip  ( count () , inputs ) )
     
@@ -116,8 +123,8 @@ def test_multiprocessing_callable  () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 ) )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 5 ) , use_canvas ( 'test_multiprocessing_callable' ) : 
+        result.draw (   ) 
 
     return result 
 

@@ -7,8 +7,10 @@
 # ============================================================================
 """ Oversimplified script for parallel execution using Parallel Python
 """
-from   __future__        import print_function
+# =============================================================================
 import ROOT, time, sys 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,7 +40,7 @@ if ( 3 , 6 ) <= sys.version_info and dill :
     DILL_PY3_issue = dill_version < '0.3'
     if not DILL_PY3_issue :
         from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6  )
 
 if DILL_PY3_issue : logger.warning ( "There is an issue with DILL/ROOT/PYTHON")
         
@@ -120,8 +122,8 @@ def test_ppft_function () :
     
     job_server.print_stats()
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_ppft_function' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -158,8 +160,8 @@ def test_ppft_method() :
     
     job_server.print_stats()
 
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_ppft_method' ) : 
+        result.draw (   ) 
 
     return result 
 
@@ -195,8 +197,8 @@ def test_ppft_callable () :
     logger.info ( "Histogram is %s" % result.dump ( 80 , 20 )  )
     logger.info ( "Entries  %s/%s" % ( result.GetEntries() , sum ( inputs ) ) ) 
     
-    result.Draw (   ) 
-    time.sleep  ( 2 )
+    with wait ( 1 ) , use_canvas ( 'test_ppft_callable' ) : 
+        result.draw (   ) 
 
     return result 
 

@@ -57,7 +57,8 @@ if ( 3 , 6 ) <= sys.version_info and dill :
     DILL_PY3_issue = dill_version < '0.3'
     if not DILL_PY3_issue :
         from ostap.core.meta_info import root_info
-        DILL_PY3_issue = root_info < ( 6 , 23 )
+        ## DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
         
     if DILL_PY3_issue : worker = 'GAUDIMP'
 

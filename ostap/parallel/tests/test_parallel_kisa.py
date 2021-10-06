@@ -119,6 +119,12 @@ with timing('Prepare data') :
 
 # =============================================================================
 def test_kisa () : 
+
+
+    logger = getLogger ( 'ostap.test_kisa' )
+    
+    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
+        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
     
     h1 = ROOT.TH1D( 'h1' , '' , 200 , 3 , 3.2 )
     h2 = h1.clone()
@@ -145,6 +151,11 @@ def MASS1  ( s ) : return s.mass
 # =============================================================================
 def test_kisa2 () :
        
+    logger = getLogger ( 'ostap.test_kisa2' )
+
+    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
+        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
+
     from ostap.fitting.pyselectors import SelectorWithVars, Variable  
     variables = [
         Variable   ( 'mass'  , 'mass(mu+mu-)' ,  3.09 , 3.11 ) , 
@@ -195,6 +206,11 @@ def test_kisa2 () :
 # =============================================================================
 def test_kisa3 () :
 
+    logger = getLogger ( 'ostap.test_kisa3' )
+
+    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
+        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
+
     h1  = ROOT.TH1D('h1','',100,0,20)
     h1 += lambda x : x
     
@@ -231,12 +247,9 @@ if '__main__' == __name__ :
 
     
     test_kisa  ()
-    test_kisa2 ()
-    
+    test_kisa2 ()    
     test_kisa3 ()
     
-    ## pass
-
 
       
 # =============================================================================
