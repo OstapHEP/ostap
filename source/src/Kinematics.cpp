@@ -51,7 +51,16 @@ double Ostap::Kinematics::triangle
 ( const double a ,
   const double b ,
   const double c )
-{ return a * a + b * b + c * c - 2 * a * b - 2 * b * c - 2 * a * c ; }
+{ return 
+    s_zero  ( a ) ? std::pow ( b - c , 2 ) :
+    s_zero  ( b ) ? std::pow ( a - c , 2 ) :
+    s_zero  ( c ) ? std::pow ( a - b , 2 ) :
+    //
+    s_equal ( b , c ) ?  a * ( a - 4 * b ) :
+    s_equal ( a , c ) ?  b * ( b - 4 * c ) :
+    s_equal ( a , b ) ?  c * ( c - 4 * a ) :
+    //
+    a * a + b * b + c * c - 2 * a * b - 2 * b * c - 2 * a * c ; }
 // ============================================================================
 /*  universal four-particle kinematical function 
  *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
@@ -152,7 +161,8 @@ double Ostap::Kinematics::Gram::Delta
   const Ostap::LorentzVector& p3 ,
   const Ostap::LorentzVector& p4 ) 
 {
-  ROOT::Math::SMatrix<long double,4,4,ROOT::Math::MatRepSym<long double,4> >  mtrx ;
+  ROOT::Math::SMatrix<long double,4,4,ROOT::Math::MatRepSym<long double,4> >  
+    mtrx ;
   //
   mtrx ( 0 , 0 ) = p1 * p1 ;
   mtrx ( 0 , 1 ) = p1 * p2 ;
@@ -472,7 +482,8 @@ double Ostap::Kinematics::decayAngle
  *
  *  where
  *  \f[
- *  E_1 E_2 = \frac{ \left ( v_1 \cdot M\right) \left (v_2 \cdot M \right ) }{M^2}
+ *  E_1 E_2 = \frac{ \left ( v_1 \cdot M\right) 
+ *  \left (v_2 \cdot M \right ) }{M^2}
  *  \f]
  *  and
  *  \f[
@@ -510,7 +521,8 @@ double Ostap::Kinematics::cosThetaRest
   const double e1e2 = v1M * v2M / M2; // calculate e1*e2
   
   // calculate (|p1|*|p2|)^2
-  const double p1p2_ = ( ( v1M * v1M ) / M2 - m1_2 ) * ( ( v2M * v2M ) / M2 - m2_2 ); // calculate (|p1|*|p2|)^2
+  const double p1p2_ = 
+    ( ( v1M * v1M ) / M2 - m1_2 ) * ( ( v2M * v2M ) / M2 - m2_2 ); 
   //
   if ( 0 >= p1p2_ ) { return s_INVALID ; }   // RETURN
   //
@@ -869,7 +881,8 @@ double Ostap::Kinematics::q_s
 }
 // ============================================================================
 /*  two-body phase space 
- *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f] 
+ *  \f[ \Phi_2( m ) = \dfrac{1}{8\pi} 
+ *  \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f] 
  * Note that there exist also an alternative normalization:
  *  \f[ \Phi_2^{\prime}( m ) = \dfrac{\pi}{2} 
  *   \dfrac{ \sqrt{\lambda \left( m^2 , m_1^2, m_2^2 \right) }}{m^2} \f],
@@ -891,7 +904,8 @@ double Ostap::Kinematics::phasespace2
   if ( x <= xm1 + xm2 ) { return 0 ; } //  RETURN 
   //
   const double msq = x * x ;
-  const double lam = Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
+  const double lam = 
+    Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
   //
   static const double s_inv8pi = 1.0 / ( 8 * M_PI ) ;
   //
@@ -921,17 +935,121 @@ double Ostap::Kinematics::phasespace2_bk
   if ( x <= xm1 + xm2 ) { return 0 ; } //  RETURN 
   //
   const double msq = x * x ;
-  const double lam = Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
+  const double lam = 
+    Ostap::Kinematics::triangle ( msq , xm1 * xm1 , xm2 * xm2 ) ;
   //
   static const double s_norm = 0.5 * M_PI ;  
   //
   return 0 < lam ? s_norm * std::sqrt ( lam ) / msq : 0.0 ;
 }
 // ============================================================================
+/*  three-body phase space, with all particles being massless 
+ *  @param x the mass of the system 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace3 
+( const double x  ) 
+{
+  static const double s_norm = 0.125 * M_PI * M_PI ;
+  return x <= 0.0 ? 0.0 : s_norm * x * x ;
+}
+// ========================================================================
+/* three-body phase space, with 2nd and 3rd particles being massless 
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ */
+// ========================================================================
+double Ostap::Kinematics::phasespace3 
+( const double x  , 
+  const double m1 ) 
+{
+  //
+  if ( x <=  m1       ) { return 0 ; }
+  const double am1 = std::max ( m1 , 0.0 ) ;
+  if ( x <= am1       ) { return 0 ; }
+  if ( s_zero ( am1 ) ) { return phasespace3 ( x ) ; }
+  //
+  { // Treat tiny masses 
+    const double xmax = x * 1.e-12 ;
+    //
+    if ( am1 < xmax   ) { return phasespace3 ( x ) ; }
+  }
+  //
+  const double p2   = x   * x   ;
+  const double m1sq = am1 * am1 ;
+  //
+  const double sqQ  = p2 - m1sq ;
+  //
+  const double a    = p2 + m1sq ;
+  const double c    = p2 + m1sq ;
+  //
+  const double lc   = std::log ( ( c + sqQ ) / ( c - sqQ ) ) ;
+  //
+  static const double s_norm = 0.125 * M_PI * M_PI ;
+  return ( sqQ * a - 0.5 * c * c * lc ) * s_norm / p2 ;
+}
+// ========================================================================
+/** three-body phase space, with 3rd particle being massless 
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ *  @param m2 the mass of the 2nd particle 
+ */
+// ========================================================================
+double Ostap::Kinematics::phasespace3 
+( const double x  , 
+  const double m1 , 
+  const double m2 ) 
+{
+  //
+  if ( x < m1 + m2     ) { return 0 ; }
+  const double am1 = std::max ( m1 , 0.0 ) ;
+  if ( s_zero ( am1 )  ) { return phasespace3 ( x ,  m2 ) ; }
+  const double am2 = std::max ( m2 , 0.0 ) ;
+  if ( s_zero ( am2 )  ) { return phasespace3 ( x , am1 ) ; }
+  if ( x <= am1 + am2  ) { return 0 ; }
+  //
+  { // Treat tiny masses 
+    const double xmax = x * 1.e-12 ;
+    //
+    if ( am1 < xmax ) { return phasespace3 ( x , am2 ) ; }
+    if ( am2 < xmax ) { return phasespace3 ( x , am1 ) ; }
+    //
+    const double mmax = std::max ( am1 , am2 )  * 1.e-12 ;
+    //
+    if ( am1 < mmax ) { return phasespace3 ( x , am2 ) ; }
+    if ( am2 < mmax ) { return phasespace3 ( x , am1 ) ; }
+    //
+  }
+  //
+  const double p2   = x   * x   ;
+  const double m1sq = am1 * am1 ;
+  const double m2sq = am2 * am2 ;
+  //
+  const double Qp = Ostap::Kinematics::triangle ( p2 , m1sq , m2sq ) ;
+  if ( Qp <= 0         ) { return 0 ; }
+  //
+  const double sqQ = std::sqrt ( Qp ) ;
+  //
+  const double a   = p2 + m1sq + m2sq ;
+  const double b   = p2 - m1sq - m2sq ;
+  const double c   = p2 + m1sq - m2sq ;
+  const double d   = p2 - m1sq + m2sq ;
+  //
+  const double lb  = std::log ( ( b + sqQ ) / ( b - sqQ ) ) ;
+  const double lc  = std::log ( ( c + sqQ ) / ( c - sqQ ) ) ;
+  const double ld  = std::log ( ( d + sqQ ) / ( d - sqQ ) ) ;
+  //
+  static const double s_norm = 0.125 * M_PI * M_PI ;
+  //
+  return ( sqQ * a 
+           + 0.5 * b * b * lb 
+           - 0.5 * c * c * lc 
+           - 0.5 * d * d * ld ) * s_norm / p2 ;
+}
+// ============================================================================
 /** three-body phase space 
  */
 // ============================================================================
-#include <iostream> 
 double Ostap::Kinematics::phasespace3 
 ( const double x  , 
   const double m1 , 
@@ -941,108 +1059,72 @@ double Ostap::Kinematics::phasespace3
   //
   static const double s_norm = 0.125 * M_PI * M_PI ;
   //
-  double xm1 = std::max ( 0.0 , m1 ) ;
-  double xm2 = std::max ( 0.0 , m2 ) ;
-  double xm3 = std::max ( 0.0 , m3 ) ;
+  const double xm1 = std::max ( 0.0 , m1 ) ;
+  const double xm2 = std::max ( 0.0 , m2 ) ;
+  const double xm3 = std::max ( 0.0 , m3 ) ;
   //
-  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; } //   RETURN
+  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; }
   //
-  const bool zero1 = s_zero ( xm1 ) ; xm1 = zero1 ? 0.0 : xm1 ;
-  const bool zero2 = s_zero ( xm2 ) ; xm2 = zero2 ? 0.0 : xm2 ;   
-  const bool zero3 = s_zero ( xm3 ) ; xm3 = zero3 ? 0.0 : xm3 ;   
+  if ( s_zero ( xm1 ) ) { return phasespace3 ( x ,  m2 ,  m3 ) ; }
+  if ( s_zero ( xm2 ) ) { return phasespace3 ( x , xm1 ,  m3 ) ; }
+  if ( s_zero ( xm3 ) ) { return phasespace3 ( x , xm1 , xm2 ) ; }
   //
-  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; } //   RETURN
-  //
-  // make the proper ordering  
-  if ( xm1 < xm2 || xm2 < xm3 )
-  {
-    if ( xm1 < xm2 ) { std::swap ( xm1 , xm2 ) ; }
-    if ( xm2 < xm3 ) { std::swap ( xm2 , xm3 ) ; if ( xm1 < xm2 ) { std::swap ( xm1 , xm2 ) ; } } 
-    return phasespace3 ( x , xm1 , xm2 , xm3 ) ;  
-  }  
-  //
-  // 1) all masses are zero 
-  if      (  zero1 &&  zero2 && zero3 ) { return s_norm * x * x ; } // all masses are zero 
-  // 2) one mass is zero 
-  else if ( !zero1 && !zero2 && zero3 )  
-  {    
-    // E.Byckling, K.Kajantie V.5 
-    const double m1_2 = xm1 * xm1 ;
-    const double m2_2 = xm2 * xm2 ;
-    // 
-    const double summ2 =            m1_2 + m2_2   ;
-    const double difm2 = std::abs ( m1_2 - m2_2 ) ;
+  { // Treat tiny masses 
+    const double xmax = x * 1.e-12 ;
     //
-    const double s     = x * x ;
-    const double sqlam = std::sqrt ( Ostap::Kinematics::triangle ( s , m1_2 , m2_2 ) ) ;
+    if ( xm1 < xmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+    if ( xm2 < xmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+    if ( xm3 < xmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
     //
-    double res   = sqlam * ( s + summ2 ) / ( s * s ) ;
-    res += 2 * difm2 * std::log ( ( s * summ2 - difm2 * difm2  + difm2 * sqlam )    / ( 2 * xm1  * xm2 * s ) ) / s ;
-    res -= 2 * ( s * summ2 - 2  * m1_2 * m2_2 ) * std::log ( ( s - summ2  + sqlam ) / ( 2 * xm1 * xm2      ) ) / ( s * s ) ;
+    const double mmax = std::max ( xm1 , std::max ( xm2 , xm3 ) ) * 1.e-12 ;
     //
-    return s_norm * s * res ;  
-  }
-  // 3) two masses are zero 
-  else if ( !zero1 && zero2 && zero3 ) 
-  {
-    // E.Byckling, K.Kajantie V.5 
-    const double m1_2 = xm1 * xm1 ;
-    // 
-    const double summ2 = m1_2 ;
-    const double difm2 = m1_2 ;
+    if ( xm1 < mmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+    if ( xm2 < mmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+    if ( xm3 < mmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
     //
-    const double s     = x * x ;
-    const double sqlam = std::sqrt ( Ostap::Kinematics::triangle ( s , m1_2 , 0 ) ) ;
-    //
-    double res   = sqlam * ( s + summ2 ) / ( s * s ) ;
-    res += 2 * m1_2 * std::log ( m1_2 / s ) / s ;
-    //
-    return s_norm * s * res ;
   }
   //
+  const long double M     = x     ;
+  const long double p2    = M * M ;
   //
-  const double p2    = x * x ;
-  const double M     = x     ;
-  //
-  const double Qp = 
+  const long double Qp = 
     ( M + xm1 + xm2 + xm3 ) *
     ( M + xm1 - xm2 - xm3 ) *
     ( M - xm1 + xm2 - xm3 ) *
     ( M - xm1 - xm2 + xm3 ) ;
   //
-  const double Qm = 
+  const long double Qm = 
     ( M - xm1 - xm2 - xm3 ) *
     ( M - xm1 + xm2 + xm3 ) *
     ( M + xm1 - xm2 + xm3 ) *
     ( M + xm1 + xm2 - xm3 ) ;
   //
-  const double k = std::sqrt ( Qm / Qp ) ;
+  const long double k = std::sqrt ( Qm / Qp ) ;
   //
-  std::cout 
-    << " Qp= " << Qp
-    << " Qm= " << Qm
-    << " k = " << k 
-    << std::endl ;
- 
-  //  if  ( 1 - k < 1.e-10 ) { return s_norm * p2 ; }  // RETURN 
+  const long double sqrt_Qp  = std::sqrt ( Qp ) ;
   //
-  const double sqrt_Qp  = std::sqrt ( Qp ) ;
+  const long double m1sq = xm1 * xm1 ;
+  const long double m2sq = xm2 * xm2 ;
+  const long double m3sq = xm3 * xm3 ;
   //
-  const double sin_phi1 = sqrt_Qp / ( p2 + xm1 * xm1 - xm2 * xm2 - xm3 * xm3 ) ;
-  const double sin_phi2 = sqrt_Qp / ( p2 - xm1 * xm1 + xm2 * xm2 - xm3 * xm3 ) ;
-  const double sin_phi3 = sqrt_Qp / ( p2 - xm1 * xm1 - xm2 * xm2 + xm3 * xm3 ) ;
+  const long double sin_phi1 = sqrt_Qp / ( p2 + m1sq - m2sq - m3sq ) ;
+  const long double sin_phi2 = sqrt_Qp / ( p2 - m1sq + m2sq - m3sq ) ;
+  const long double sin_phi3 = sqrt_Qp / ( p2 - m1sq - m2sq + m3sq ) ;
   //
-  const double KZ1 = 
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi1 ) , k ) / ( sin_phi1 * sin_phi1 ) ;
-  const double KZ2 = 
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi2 ) , k ) / ( sin_phi2 * sin_phi2 ) ;
-  const double KZ3 = 
-    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi3 ) , k ) / ( sin_phi3 * sin_phi3 ) ;
+  const long double KZ1 = 
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi1 ) , k ) /
+    ( sin_phi1 * sin_phi1 ) ;
+  const long double KZ2 = 
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi2 ) , k ) /
+    ( sin_phi2 * sin_phi2 ) ;
+  const long double KZ3 =
+    Ostap::Math::elliptic_KZ ( std::asin ( sin_phi3 ) , k ) / 
+    ( sin_phi3 * sin_phi3 ) ;
   //
   const double E_minus_K = - Ostap::Math::elliptic_KmE ( k ) ;
   //
-  return ( sqrt_Qp * ( p2 + xm1 * xm1 + xm2 * xm2 + xm3 * xm3 ) * E_minus_K
-           + Qp * ( KZ1 + KZ2 + KZ3 ) ) / p2  * s_norm ;
+  return ( sqrt_Qp * ( p2 + m1sq + m2sq + m3sq ) * E_minus_K
+           +    Qp * (      KZ1  + KZ2  + KZ3  ) ) * s_norm / p2;
 }
 // ============================================================================
 //                                                                      The END 

@@ -440,6 +440,258 @@ namespace Ostap
      *  @see https://arxiv.org/abs/math/9409227
      */
     double elliptic_KZ ( const double beta  , const double k   ) ;
+    // ========================================================================
+
+    // ========================================================================
+    // Symmetric Carlson forms 
+    // ========================================================================
+    
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF_gsl  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF_int 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ_gsl
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ_int
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC_gsl 
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC_int
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD_gsl  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD_int  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG_gsl 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG_int 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    // specific cases of symmetric forms 
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y) = R_F(x,y,0)\f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G(x,y) = R_G(x,y,0)\f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG 
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
 
     // ========================================================================
     /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile

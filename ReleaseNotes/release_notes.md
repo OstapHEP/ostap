@@ -1,16 +1,18 @@
 ## New features:
+ 1. Add local functions for calculation of  symmetric Carlson forms 
+ 1. Add test for symmetric Carlson forms 
+ 
 
 ## Backward incompatible changes: 
 
 ## Bug fixes:
-
 
 # v1.6.4.0
 
 ## New features 
 
  1. Add `slice` and `rows` mehtods for `TTree` and `RooAbsData` 
- 1. Extendd functinality to adding data columns to `TTree` and `RooAbsData` 
+ 1. Extend functinality to adding data columns to `TTree` and `RooAbsData` 
  1. Add reweighting with `GBReweighter`
  1. Add generalized Hyperboilic function, PDF and resolution model: `Ostap::Math::GenHyperbolic`, `Ostap::Models::GenHyperbolic`, `GenHyperbolic_pdf`, `ResoGenHyperbolic`
  1. add tests for generalised hyperbolic functions 

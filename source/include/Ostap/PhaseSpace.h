@@ -274,8 +274,8 @@ namespace Ostap
        *  @param m3 the mass of the third  particle
        */
       PhaseSpace3s ( const double         m1 = 0 ,
-                     const double         m2 = 1 ,
-                     const double         m3 = 2 ) ;
+                     const double         m2 = 0 ,
+                     const double         m3 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -290,7 +290,10 @@ namespace Ostap
       double m2 () const { return m_m2 ; }
       double m3 () const { return m_m3 ; }
       // ======================================================================
-      double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
+      /// low edge 
+      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
+      /// threshold == lowEdge 
+      double threshold () const { return lowEdge() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -329,11 +332,11 @@ namespace Ostap
     private:
       // ======================================================================
       /// the mass of the first particle
-      double         m_m1 ; // the mass of the first particle
+      double         m_m1 { 0 } ; // the mass of the first particle
       /// the mass of the second particle
-      double         m_m2 ; // the mass of the second particle
+      double         m_m2 { 0 } ; // the mass of the second particle
       /// the mass of the third particle
-      double         m_m3 ; // the mass of the third  particle
+      double         m_m3 { 0 } ; // the mass of the third  particle
       // ======================================================================
     private:
       // ======================================================================
@@ -360,10 +363,11 @@ namespace Ostap
        *  @param l2 the angular momentum between the pair and 3rd particle
        */
       PhaseSpace3 ( const double         m1 = 0 ,
-                    const double         m2 = 1 ,
-                    const double         m3 = 2 ,
+                    const double         m2 = 0 ,
+                    const double         m3 = 0 ,
                     const unsigned short l1 = 0 ,
                     const unsigned short l2 = 0 ) ;
+      // ======================================================================
       /** constructor from three masses
        *  @param l1 the angular momentum between 1st and 2nd particle
        *  @param l2 the angular momentum between the pair and 3rd particle
@@ -400,7 +404,15 @@ namespace Ostap
       double m2 () const { return m_m2 ; }
       double m3 () const { return m_m3 ; }
       // ======================================================================
-      double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
+      /// low edge 
+      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
+      /// threshold == lowEdge 
+      double threshold () const { return lowEdge() ; }
+      // ======================================================================
+      /// get l1 
+      unsigned short l1 () const { return m_l1 ; } // get l1 
+      /// get l2
+      unsigned short l2 () const { return m_l2 ; } // get l2
       // ======================================================================
     public:
       // ======================================================================
@@ -427,15 +439,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// the mass of the first particle
-      double         m_m1 ; // the mass of the first particle
+      double         m_m1 { 0 } ; // the mass of the first particle
       /// the mass of the second particle
-      double         m_m2 ; // the mass of the second particle
+      double         m_m2 { 0 } ; // the mass of the second particle
       /// the mass of the third particle
-      double         m_m3 ; // the mass of the third  particle
+      double         m_m3 { 0 } ; // the mass of the third  particle
       /// the orbital momentum of the first pair
-      unsigned short m_l1 ; // the orbital momentum of the first pair
+      unsigned short m_l1 { 0 } ; // the orbital momentum of the first pair
       /// the orbital momentum between the pair and the third particle
-      unsigned short m_l2 ; // the orbital momentum between the pair and the third particle
+      unsigned short m_l2 { 0 } ; // the orbital momentum between the pair and the third particle
       // ======================================================================      
     private:
       // ======================================================================

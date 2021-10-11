@@ -1138,11 +1138,40 @@ namespace Ostap
      *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     *  @param m3 the mass of the 3rd particle 
      */
-    double phasespace3 ( const double x  , 
-                         const double m1 , 
-                         const double m2 , 
-                         const double m3 ) ; 
+    double phasespace3 
+    ( const double x  , 
+      const double m1 , 
+      const double m2 , 
+      const double m3 ) ; 
+    // ========================================================================
+    /** three-body phase space, with 3rd particle being massless 
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     */
+    double phasespace3 
+    ( const double x  , 
+      const double m1 , 
+      const double m2 ) ;
+    // ========================================================================
+    /** three-body phase space, with 2nd and 3rd particles being massless 
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     */
+    double phasespace3 
+    ( const double x  , 
+      const double m1 ) ;
+    // ========================================================================
+    /** three-body phase space, with all particles being massless 
+     *  @param x the mass of the system 
+     */
+    double phasespace3 
+    ( const double x  ) ;
     // ========================================================================
   } //                                      end of namespace Ostap::Kinenmatics 
   // ==========================================================================

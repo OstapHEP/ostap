@@ -106,7 +106,7 @@ def test_morphing2 () :
     r , f = pdf.fitHisto ( h1 , draw = False , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_morphing2' ) :
         r , f = pdf.fitHisto ( h1 , draw = True  , nbins = 100 , silent = True )
-    logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
+    ## logger.info ( 'Morphing: \n%s' % r.table ( prefix = "# " ) ) 
     
 # =============================================================================
 if '__main__' == __name__ :

@@ -355,18 +355,19 @@ namespace
  *  @see E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
  *              London, New York, Sydney, Toronto, 1973, Eq. (V.2.17)
  */
+// ============================================================================
 double Ostap::Math::PhaseSpace3::evaluate  ( const double x ) const
 {
   //
   if ( x <= lowEdge() ) { return 0 ; }
   //
-  static const double s_norm = 0.25 *  M_PI * M_PI ;
-  //
-  const double norm = s_norm / ( x * x ) ;
+  static const double s_norm = 0.25 * M_PI * M_PI ;
   //
   // all masses are zero 
   if ( 0 == m_l1 && 0 == m_l2 && 
        s_zero ( m_m1 ) && s_zero ( m_m2 ) && s_zero ( m_m3 ) && m_l1 == 0 && m_l2 == 0 ) { return 0.5 * s_norm * x * x  ; }
+  //
+  const double norm = s_norm / ( x * x ) ;
   //
   /// set the temporary mass
   m_tmp = x ;
@@ -411,9 +412,9 @@ double Ostap::Math::PhaseSpace3::ps2_aux
 ( const double m12 ) const
 {
   //
-  if ( m_tmp <= lowEdge()    ) { return 0 ; }
-  if ( m12   <= m_m1  + m_m2 ) { return 0 ; }
-  if ( m12   >= m_tmp - m_m3 ) { return 0 ; }
+  if ( m_tmp <= lowEdge()    || 
+       m12   <= m_m1  + m_m2 || 
+       m12   >= m_tmp - m_m3 ) { return 0 ; }
   //
   // represent 3-body phase space as extention of 2-body phase space
   //
