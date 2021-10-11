@@ -4,8 +4,10 @@
  
 
 ## Backward incompatible changes: 
-
+ 
 ## Bug fixes:
+ 1. fit two small typos in `ostap/math/derivative.py` (Thanks to Dmitry Golubkov) 
+
 
 # v1.6.4.0
 
