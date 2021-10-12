@@ -104,7 +104,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
         dd = _integral ( _fund_ , xmin , xmax )
         
     import math
-    return "%.4e" % math.sqrt(dd/(d1*d2))
+    return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2))
 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :

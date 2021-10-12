@@ -104,7 +104,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
         dd = _integral ( _fund_ , xmin , xmax )
         
     import math
-    return "%.4e" % math.sqrt(dd/(d1*d2))
+    return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2)) 
 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
@@ -316,21 +316,7 @@ def test_cosine() :
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
-# =============================================================================
-def test_generic_spline () :
-    
-    logger =   getLogger("test_generic_spline")
-    with timing ('B-spline [1,4]' , logger ) :
-        params = [ h.bSpline ( degree = 1 , knots = 4 ) for h in  histos ]
 
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_generic_spline %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-        
-# =============================================================================
-def test_positive_spline () :
     
     logger =   getLogger("test_positive_spline")
     with timing ('P-spline [2,2]' , logger ) :
