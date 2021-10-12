@@ -39,7 +39,7 @@ namespace Ostap
     class ConvexOnly ;
     // ========================================================================
     /** @class BernsteinEven
-     *  A special case of BErnstein polynomial with symmetry:
+     *  A special case of Bernstein polynomial with symmetry:
      *  \f$ f( \frac{x_{max}+x_{min}}{2} - x ) \equiv  \frac{x_{max}+x_{min}}{2} + x ) \f$
      *  @see Ostap::Math::Bernstein
      *  @author Vanya Belyaev Ivan.Belyaev@iep.ru
@@ -50,22 +50,24 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor
-       *  the actual degree of polynomial will be 2*N
-       *  @param N  parameter that defiend the order of polynomial (2*N)
+       *  @param N    degree of even Bernstein polynomial 
        *  @param xmin low edge
        *  @param xmax high edge
        */
-      BernsteinEven ( const unsigned short N     = 0 ,
-                      const double         xmin  = 0 ,
-                      const double         xmax  = 1 ) ;
+      BernsteinEven
+      ( const unsigned short N     = 0 ,
+        const double         xmin  = 0 ,
+        const double         xmax  = 1 ) ;
+      // ======================================================================
       /** constructor from list of coefficients
        *  @param pars vector of parameters 
        *  @param xmin low edge
        *  @param xmax high edge
        */
-      BernsteinEven ( const std::vector<double>& pars      ,
-                      const double               xmin  = 0 ,
-                      const double               xmax  = 1 ) ;
+      BernsteinEven 
+      ( const std::vector<double>& pars      ,
+        const double               xmin  = 0 ,
+        const double               xmax  = 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -77,12 +79,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// the effective degree of polynomial
-      unsigned short degree() const { return 2*m_N   ; }
+      /// the degree of polynomial
+      unsigned short degree () const { return m_bernstein.degree () ; }
       /// number of parameters
-      unsigned short npars () const { return m_N + 1 ; }
+      unsigned short npars  () const { return m_bernstein.npars  () / 2 + 1 ; }
       /// all zero ?
-      bool           zero  () const { return m_bernstein.zero() ; }
+      bool           zero   () const { return m_bernstein.zero() ; }
       // ======================================================================
       /** set k-parameter
        *  @param k index
@@ -94,13 +96,16 @@ namespace Ostap
       /** set k-parameter
        *  @param k index
        *  @param value new value
-       *  @return true iof parameter is actually changed
+       *  @return true if parameter is actually changed
        */
       bool setParameter    ( const unsigned short k , const double value )
       { return setPar      ( k , value ) ; }
       /// get the parameter value
       double  par          ( const unsigned short k ) const
-      { return  k < m_N  ? m_bernstein.par ( k )  : 0.0 ; }
+      {
+        const unsigned short npb = m_bernstein.npars() ;
+        return 2 * k + 1 <= npb ? m_bernstein.par ( k ) : 0.0 ;
+      }
       /// get the parameter value
       double  parameter    ( const unsigned short k ) const { return par ( k ) ; }
       /// get all parameters (by value!!! COPY!!)
@@ -108,7 +113,9 @@ namespace Ostap
       // ======================================================================
     public: // convert from local to global variables
       // ======================================================================
+      /// local to global
       double x ( const double t ) const { return m_bernstein.x ( t ) ; }
+      /// gloal to local 
       double t ( const double x ) const { return m_bernstein.t ( x ) ; }
       // ======================================================================
     public:
@@ -183,10 +190,7 @@ namespace Ostap
       // ======================================================================
       /// swap two objects 
       void swap ( BernsteinEven& right ) 
-      {
-        std::swap         ( m_N         , right.m_N         ) ;
-        Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ;
-      } 
+      { Ostap::Math::swap ( m_bernstein , right.m_bernstein ) ; } 
       // ======================================================================
     public:
       // ======================================================================
@@ -197,8 +201,6 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the half-order
-      unsigned short m_N         ;
       /// the actual Bernstein polynomial
       Bernstein      m_bernstein ; // the actual Bernstein polynomial
       // ======================================================================
@@ -555,18 +557,21 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PositiveEven ( const unsigned short        N     =  1 ,
-                     const double                xmin  =  0 ,
-                     const double                xmax  =  1 ) ;
+      PositiveEven
+      ( const unsigned short        N     =  1 ,
+        const double                xmin  =  0 ,
+        const double                xmax  =  1 ) ;
       // ======================================================================
       /// constructor from N phases
-      PositiveEven ( const std::vector<double>&  phases     ,
-                     const double                xmin  =  0 ,
-                     const double                xmax  =  1 ) ;
+      PositiveEven 
+      ( const std::vector<double>&  phases     ,
+        const double                xmin  =  0 ,
+        const double                xmax  =  1 ) ;
       /// constructor from the sphere with coefficients
-      PositiveEven ( const Ostap::Math::NSphere& sphere    ,
-                     const double                xmin = 0  ,
-                     const double                xmax = 0  ) ;
+      PositiveEven
+      ( const Ostap::Math::NSphere& sphere    ,
+        const double                xmin = 0  ,
+        const double                xmax = 0  ) ;
       // ======================================================================
     public:
       // ======================================================================

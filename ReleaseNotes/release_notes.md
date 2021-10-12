@@ -1,12 +1,14 @@
 ## New features:
  1. Add local functions for calculation of  symmetric Carlson forms 
  1. Add test for symmetric Carlson forms 
+ 1. split histo parameterization tests 
+ 1. add function parameterization test 
  
-
 ## Backward incompatible changes: 
  
 ## Bug fixes:
  1. fit two small typos in `ostap/math/derivative.py` (Thanks to Dmitry Golubkov) 
+ 1. fix the issue with `BernsteinEven`
 
 
 # v1.6.4.0

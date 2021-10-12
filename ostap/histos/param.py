@@ -351,7 +351,7 @@ def _h1_bernstein_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_po
 #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
 #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
 #  @endcode 
-def _h1_bernsteineven_ ( h1 , halfdegree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos , fixes = () ) :
+def _h1_bernsteineven_ ( h1 , degree , opts = 'SQ0' , xmin = inf_neg , xmax = inf_pos , fixes = () ) :
     """Represent histo as even Bernstein polynomial
     
     >>> h = ...                    ## the historgam
@@ -370,7 +370,7 @@ def _h1_bernsteineven_ ( h1 , halfdegree , opts = 'SQ0' , xmin = inf_neg , xmax 
     xmin = max ( xmin , h1.xmin() ) 
     xmax = min ( xmax , h1.xmax() )  
     # make reasonable approximation
-    func  = beziereven_sum ( h1   , halfdegree , xmin , xmax )
+    func  = beziereven_sum ( h1   , degree , xmin , xmax )
     # make a fit
     from ostap.fitting.param import H_fit
     return _h1_param_sum_ ( h1 , func , H_fit , opts , xmin , xmax , fixes )  
@@ -1973,7 +1973,7 @@ def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
 #  @code 
 #  histo  = ...
 #  fsum   = histo.bezier_sum    ( 4 )
-#  fsum   = histo.bernstein_sum ( 4 ) ## distto
+#  fsum   = histo.bernstein_sum ( 4 ) ## ditto
 #  print fsum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
@@ -2005,14 +2005,14 @@ def _h1_bezier_sum_ ( h1 , N , **kwargs ) :
 #  @code 
 #  histo  = ...
 #  fsum   = histo.beziereven_sum    ( 2 )
-#  fsum   = histo.bernsteineven_sum ( 2 ) ## distto
+#  fsum   = histo.bernsteineven_sum ( 2 ) ## ditto
 #  print fsum
 #  x = ...
 #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
 #  @endcode 
 #  @see Ostap::Math::BernsteinEven
 #  @param h1 the historgram
-#  @param N  the half-degree actual degree of polynomial is 2*N
+#  @param N  the degree of polynomial 
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2015-07-26
 def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
@@ -2026,8 +2026,8 @@ def _h1_beziereven_sum_ ( h1 , N , **kwargs ) :
     >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
     """
     ##
-    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
-    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+    xmin = max ( kwargs.get ( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+    xmax = min ( kwargs.get ( 'xmax' , h1.xmax() ) , h1.xmax () ) 
     ##
     return beziereven_sum ( h1 , N , xmin , xmax )
 

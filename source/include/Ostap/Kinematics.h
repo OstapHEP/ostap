@@ -1138,6 +1138,14 @@ namespace Ostap
      *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     *
+     *  @see A.Davydychev and R.Delbourgo,
+     *       "Explicitly symmetrical treatment of three body phase space",
+     *        J.Phys. A37 (2004) 4871, arXiv:hep-th/0311075",
+     *        doi = 10.1088/0305-4470/37/17/016
+     *  @see https://arxiv.org/abs/hep-th/0311075
+     *  @see https://iopscience.iop.org/article/10.1088/0305-4470/37/17/016
+     *
      *  @param x the mass of the system 
      *  @param m1 the mass of the 1st particle 
      *  @param m2 the mass of the 2nd particle 

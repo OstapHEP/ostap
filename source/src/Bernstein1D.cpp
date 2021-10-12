@@ -99,8 +99,7 @@ namespace
 // Bernstein EVEN 
 // ============================================================================
 /*  constructor
- *  the actual degree of polynomial will be 2*N
- *  @param N  parameter that defiend the order of polynomial (2*N)
+ *  @param N    the order of even polynomial 
  *  @param xmin low edge 
  *  @param xmax high edge 
  */
@@ -109,11 +108,10 @@ Ostap::Math::BernsteinEven::BernsteinEven
 ( const unsigned short N    , 
   const double         xmin ,
   const double         xmax ) 
-  : m_N         (   N                   )   
-  , m_bernstein ( 2*N + 1 , xmin , xmax )
+  : m_bernstein ( 0 == N % 2 ? N : N - 1 , xmin , xmax )
 {}
 // ============================================================================
-/*  constructor from list of coefficients 
+/*  constructor from the list of coefficients 
  *  @param xmin low edge 
  *  @param xmax high edge 
  */
@@ -122,8 +120,7 @@ Ostap::Math::BernsteinEven::BernsteinEven
 ( const std::vector<double>& pars , 
   const double               xmin ,
   const double               xmax ) 
-  : m_N         (   pars.size()                   )   
-  , m_bernstein ( 2*pars.size() + 1 , xmin , xmax )
+  : m_bernstein ( pars.empty() ? 0 : 2 * pars.size() - 2 , xmin , xmax )
 {
   for ( unsigned short i = 0 ; i < pars.size() ; ++i ) { setPar ( i , pars[i] ) ; }
 }
@@ -137,10 +134,18 @@ Ostap::Math::BernsteinEven::BernsteinEven
 bool Ostap::Math::BernsteinEven::setPar
 ( const unsigned short k , const double value ) 
 {
-  if ( npars() <= k ) { return false ; }
-  const bool b1 = m_bernstein.setPar (             k , value ) ;
-  const bool b2 = m_bernstein.setPar ( 2*m_N + 1 - k , value ) ;
+  //
+  const unsigned short npb = m_bernstein.npars() ;
+  if ( npb <= k ) { return false ; }
+  //
+  if ( npb == 2 * k + 1 ) 
+  { return m_bernstein.setPar ( k , value ) ; }
+  //
+  const bool b1 = m_bernstein.setPar (           k , value ) ;
+  const bool b2 = m_bernstein.setPar ( npb - 1 - k , value ) ;
+  //
   return b1 || b2 ;
+  //
 }
 // ============================================================================
 // get all parameters (by value!!! COPY!!)
@@ -148,8 +153,8 @@ bool Ostap::Math::BernsteinEven::setPar
 std::vector<double>
 Ostap::Math::BernsteinEven::pars () const 
 {
-  return std::vector<double>( m_bernstein.pars().begin()           , 
-                              m_bernstein.pars().begin() + m_N + 1 ) ;                            
+  return std::vector<double> ( m_bernstein.pars().begin() , 
+                               m_bernstein.pars().begin() + npars() ) ;
 }
 // ============================================================================
 //  Sum of Bernstein polynomial and a constant 

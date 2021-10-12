@@ -80,17 +80,17 @@ __all__     = (
 # =============================================================================
 import ROOT, ctypes
 # =============================================================================
+from   ostap.core.core         import cpp, Ostap
+from   ostap.core.ostap_types  import is_integer, num_types
+import ostap.math.models
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.logger' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.math.param' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities')
-# =============================================================================
-from   ostap.core.core   import cpp, Ostap
-from   ostap.core.ostap_types  import is_integer, num_types
-import ostap.math.models
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
@@ -393,7 +393,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     args = {} 
     for i in  range ( 0 , N + 1 ) :
 
-        index = N,i
+        index = N , i
         
         if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
@@ -433,7 +433,7 @@ bernstein_sum = bezier_sum
 #  @endcode 
 #  @see Gaudi::Math::BernsteinEven
 #  @param func (INPUT) the function
-#  @param N    (INPUT) the half-degree (actual polynomial degree is 2*N
+#  @param N    (INPUT) the degree of even polynomial 
 #  @param xmin (INPUT) the low  edge of the domain
 #  @param xmax (INPUT) the high edge of the domain
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -461,8 +461,8 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     xmid  = 0.5 * ( xmin + xmax ) 
     ## symmetric function: f(xmid-x)=f(xmid+x) 
     def _sym_func_ ( x ) :
-        x1 =        x
-        x2 = xmid - x
+        x1 =            x
+        x2 = 2 * xmid - x
         y1 = float ( func ( x1 ) )
         y2 = float ( func ( x2 ) )
         return 0.5 * ( y1 + y2 ) 
@@ -472,7 +472,8 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     args = {} 
     for i in  range ( len ( b_i ) )  : 
         
-        index = 2 * N + 1 , i
+        ## index = 2 * N + 1 , i
+        index = bsum.degree () , i
         
         if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
@@ -492,11 +493,11 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
             
         b_i[i] = c_i 
         
-    ## fill result with symmetrized coefficients 
+    ## fill result with symmetrized coefficients
     last = npars - 1 
     for i in bsum :
-        bsum.setPar( i , 0.5 * ( b_i [ i ] + b_i [ last - i ] ) ) 
-        
+        bsum.setPar ( i , 0.5 * ( b_i [ i ] + b_i [ last - i ] ) ) 
+
     return bsum
 
 

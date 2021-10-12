@@ -254,11 +254,19 @@ namespace Ostap
      *         Physics Sydney, Australia, July 8-11, 2002}",
      *  @see http://arxiv.org/abs/hep-th/0209233
      *
-     * three-body phase space, analytic symmetric expression via 
+     *  Three-body phase space, analytic symmetric expression via 
      *  elliptic  integrals 
      *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     *
+     *  @see A.Davydychev and R.Delbourgo,
+     *       "Explicitly symmetrical treatment of three body phase space",
+     *        J.Phys. A37 (2004) 4871, arXiv:hep-th/0311075",
+     *        doi = 10.1088/0305-4470/37/17/016
+     *  @see https://arxiv.org/abs/hep-th/0311075
+     *  @see https://iopscience.iop.org/article/10.1088/0305-4470/37/17/016
+     *
      *  @see Ostap::Kinematics::phasespace3     
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-10-31

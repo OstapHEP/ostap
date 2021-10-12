@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # ============================================================================= 
-# @file ostap/histos/tests/test_histos_parameterisation2.py
+# @file ostap/histos/tests/test_histos_parameterisation4.py
 # Test module for ostap/histos/param.py
 # - It tests parameterisation of histograms 
 # ============================================================================= 
@@ -27,7 +27,7 @@ from   ostap.utils.utils     import wait
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'ostap.test_histos_parameterisation2' )
+    logger = getLogger ( 'ostap.test_histos_parameterisation4' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
@@ -169,153 +169,6 @@ def diff_3 ( fun1 , fun2 , xmin , xmax , ymin , ymax , zmin , zmax , N = 1000000
     
     return d
     
-# =============================================================================
-def test_bernstein() :
-
-    logger =   getLogger("test_bernstein")    
-    with timing ( 'Bernstein [4]' , logger ) :
-        params = [ h.bernstein ( 4 ) for h in  histos ]
-
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_bernstein %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-            
-# =============================================================================
-def test_chebyshev() :
-    
-    logger =   getLogger("test_chebyshev")    
-    with timing ( 'Chebyshev [4]' , logger ) :
-        params = [ h.chebyshev ( 4 ) for h in  histos ]
-
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_chebyshev %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-                
-# =============================================================================
-def test_legendre() :
-
-    logger =   getLogger("test_legendre")    
-    with timing ( 'Legendre [4]' , logger ) :
-        params = [ h.legendre ( 4 ) for h in  histos ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_legendre %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
-# =============================================================================
-def test_monomial() :
-
-    logger =   getLogger("test_monomial")
-    with timing ( 'Monomial [4]' , logger ) :
-        params = [ h.polynomial ( 4 ) for h in  histos ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_monomial %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
-# =============================================================================
-def test_positive() :
-
-    logger =   getLogger("test_positive")
-    with timing ( 'Positive [4]' , logger ) :
-        params = [ h.positive ( 4 ) for h in  histos ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_positive %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
-
-# =============================================================================
-def test_monotonic() :
-    
-    logger =   getLogger("test_monotonic")
-    with timing ( 'Monotonic [4]' , logger ) :
-        params = [ h1.monotonic ( 4 , increasing = False ) , 
-                   h2.monotonic ( 4 , increasing = True  ) , 
-                   h3.monotonic ( 4 , increasing = True  ) , 
-                   h4.monotonic ( 4 , increasing = False ) ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_monotonic %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-            
-# =============================================================================
-def test_convex () :
-    
-    logger =   getLogger("test_convex")
-    with timing ( 'Convex [4]' , logger ) :
-        params = [ h1.convex ( 4 , increasing = False , convex = True  ) , 
-                   h2.convex ( 4 , increasing = True  , convex = True  ) , 
-                   h3.convex ( 4 , increasing = True  , convex = False ) , 
-                   h4.convex ( 4 , increasing = False , convex = False ) ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_convex %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-            
-# =============================================================================
-def test_convex_poly () :
-
-    logger =   getLogger("test_convex_poly")
-    with timing ( 'Convex/ConcavePoly [4]' , logger ) :
-        params = [ h1.convexpoly  ( 4 ) , 
-                   h2.convexpoly  ( 4 ) ,
-                   h3.concavepoly ( 4 ) ,
-                   h4.concavepoly ( 4 ) ,
-                   h5.convexpoly  ( 4 ) , 
-                   h6.concavepoly ( 4 ) ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_convex_poly %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
-# =============================================================================
-def test_fourier () :
-    
-    logger =   getLogger("test_fourier")
-    with timing ( 'Fourier [4]' , logger ) :
-        params = [ h5.fourier ( 4 ) , 
-                   h6.fourier ( 6 ) ] 
-
-    for h , f in zip  ( ( h5 , h6 ) , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_fourier %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
-# =============================================================================
-def test_cosine() :
-    
-    logger =   getLogger("test_cosine")
-    if not scipy :
-        logger.warning("No scipy is avilable, skip 'cosine' test")
-        return
-    
-    with timing ( 'Cosine [4]' , logger ) :
-        params = [ h.cosine ( 4 ) for h in  histos ]
-        
-    for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_cosine %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
-            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
-
 # =============================================================================
 def test_generic_spline () :
     
@@ -462,18 +315,15 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
     
-    test_bernstein           ()
-    test_legendre            ()
-    test_chebyshev           ()
-    test_monomial            ()
-
-    test_positive            ()
-    test_monotonic           () 
-    test_convex              () 
-    test_convex_poly         ()
+    test_generic_spline      () 
+    test_positive_spline     () 
+    test_monotonic_spline    () 
+    test_convex_spline       () 
+    test_convex_only_spline  () 
     
-    test_fourier             ()
-    test_cosine              ()
+    test_legendre_fast       ()
+    test_legendre2_fast      ()
+    test_legendre3_fast      ()
 
 # =============================================================================
 ##                                                                      The END 

@@ -79,36 +79,40 @@ namespace Ostap
     public: // the basic constructors 
       // ======================================================================
       /// constructor from the order
-      Bernstein ( const unsigned short        N     = 0 ,
-                  const double                xmin  = 0 ,
-                  const double                xmax  = 1 ) ;
+      Bernstein 
+      ( const unsigned short        N     = 0 ,
+        const double                xmin  = 0 ,
+        const double                xmax  = 1 ) ;
       // ======================================================================
       /** constructor from N+1 coefficients
        *  @param pars list of coefficients 
        *  @param xmin low-edge 
        *  @param xmax high-edge 
        */
-      Bernstein ( const std::vector<double>&  pars      ,
-                  const double                xmin  = 0 ,
-                  const double                xmax  = 1 ) ;
+      Bernstein
+      ( const std::vector<double>&  pars      ,
+        const double                xmin  = 0 ,
+        const double                xmax  = 1 ) ;
       // ======================================================================
       /** constructor from N+1 coefficients
        *  @param pars list of coefficients 
        *  @param xmin low-edge 
        *  @param xmax high-edge 
        */
-      Bernstein ( std::vector<double>&& pars      ,
-                  const double          xmin  = 0 ,
-                  const double          xmax  = 1 ) ;
+      Bernstein
+      ( std::vector<double>&& pars      ,
+        const double          xmin  = 0 ,
+        const double          xmax  = 1 ) ;
       // ======================================================================
       /** construct the basic bernstein polinomial  B(k,N)
        *  @param basic the basci Bernstein polynomial \f$ B^k_n\f$
        *  @param xmin low-edge 
        *  @param xmax high-edge 
        */
-      Bernstein  ( const Basic&              basic     ,
-                   const double              xmin  = 0 ,
-                   const double              xmax  = 1 ) ;
+      Bernstein
+      ( const Basic&              basic     ,
+        const double              xmin  = 0 ,
+        const double              xmax  = 1 ) ;
       // ======================================================================
       /** templated constructor from the sequence of parameters
        *  @param first begin-iterator for the sequnce of parameters 
@@ -119,10 +123,11 @@ namespace Ostap
       template <class ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
-      Bernstein ( ITERATOR     first     ,
-                  ITERATOR     last      ,
-                  const double xmin  = 0 ,
-                  const double xmax  = 1 ) 
+      Bernstein 
+      ( ITERATOR     first     ,
+        ITERATOR     last      ,
+        const double xmin  = 0 ,
+        const double xmax  = 1 ) 
         : Ostap::Math::PolySum  ( first , last )
         , m_xmin ( std::min ( xmin, xmax ) )
         , m_xmax ( std::max ( xmin, xmax ) )
@@ -134,9 +139,10 @@ namespace Ostap
        *  @param xmin low-edge 
        *  @param xmax high-edge 
        */
-      Bernstein ( const Bernstein& poly ,
-                  const double     xmin ,
-                  const double     xmax ) ;
+      Bernstein
+      ( const Bernstein& poly ,
+        const double     xmin ,
+        const double     xmax ) ;
       // ======================================================================
     public: // Newton-Bernstein interpolation 
       // ======================================================================
@@ -154,10 +160,11 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      Bernstein ( const std::vector<double>& x         ,
-                  const std::vector<double>& y         ,
-                  const double               xmin  = 0 ,
-                  const double               xmax  = 1 ) ;
+      Bernstein 
+      ( const std::vector<double>& x         ,
+        const std::vector<double>& y         ,
+        const double               xmin  = 0 ,
+        const double               xmax  = 1 ) ;
       // ======================================================================
       /** constructor from interpolation points or Neville/Lagrange polynomials 
        *  @param p    interpolation points 
@@ -173,9 +180,10 @@ namespace Ostap
        *  @see Ostap::Math::Neville
        *  @see Ostap::Math::Lagrange
        */
-      Bernstein ( const Interpolation::Table& p    , 
-                  const double                xmin ,
-                  const double                xmax ) ;
+      Bernstein
+      ( const Interpolation::Table& p    , 
+        const double                xmin ,
+        const double                xmax ) ;
       // ======================================================================
       /** constructor from interpolation points or Neville/Lagrange polynomials 
        *  @param p    interpolation points 
@@ -192,7 +200,8 @@ namespace Ostap
        *  @see Ostap::Math::Lagrange
        *  @see Ostap::Math::Newton
        */
-      Bernstein ( const Interpolation::Table& p ) ;
+      Bernstein 
+      ( const Interpolation::Table& p ) ;
       // ======================================================================
       /** constructor from Barycentric Lagrange interpolant 
        *  @param b    barycnetric lagrange interpolant 
@@ -205,9 +214,10 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      Bernstein ( const Barycentric& b    , 
-                  const double       xmin ,
-                  const double       xmax ) ;
+      Bernstein
+      ( const Barycentric& b    , 
+        const double       xmin ,
+        const double       xmax ) ;
       // ======================================================================
       /** constructor from Barycentric Lagrange interpolant 
        *  @param b    barycnetric lagrange interpolant 
@@ -218,7 +228,8 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      Bernstein ( const Barycentric& b ) ;
+      Bernstein 
+      ( const Barycentric& b ) ;
       // ======================================================================
       /** constructor from Newton interpolant 
        *  @param b    Newton interpolant 
@@ -231,9 +242,10 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      Bernstein ( const Newton& b    , 
-                  const double  xmin ,
-                  const double  xmax ) ;
+      Bernstein 
+      ( const Newton& b    , 
+        const double  xmin ,
+        const double  xmax ) ;
       // ======================================================================
       /** constructor from Newton interpolant 
        *  @param b    newton interpolant 
@@ -244,7 +256,8 @@ namespace Ostap
        *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
        *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
        */
-      Bernstein ( const Newton& b ) ;
+      Bernstein 
+      ( const Newton& b ) ;
       // ======================================================================
     protected: // make it protected, since it does not eliminate duplicates  
       // ======================================================================
@@ -266,13 +279,14 @@ namespace Ostap
                 class YITERATOR,
                 class XADAPTER , 
                 class YADAPTER >
-      Bernstein ( XITERATOR    xbegin , 
-                  XITERATOR    xend   ,
-                  YITERATOR    ybegin , 
-                  const double xmin   ,
-                  const double xmax   , 
-                  XADAPTER     xvalue , 
-                  YADAPTER     yvalue ) ;
+      Bernstein 
+      ( XITERATOR    xbegin , 
+        XITERATOR    xend   ,
+        YITERATOR    ybegin , 
+        const double xmin   ,
+        const double xmax   , 
+        XADAPTER     xvalue , 
+        YADAPTER     yvalue ) ;
       // ======================================================================
     public: // constructors from polynomial roots 
       // ======================================================================
