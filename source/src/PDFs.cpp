@@ -6926,6 +6926,103 @@ Double_t Ostap::Models::GenHyperbolic::analyticalIntegral
 // ============================================================================
 
 
+
+// ============================================================================
+/** constructor from all parameters
+ *  @param name  name of PDF
+ *  @param title name of PDF
+ *  @param x      observable 
+ *  @param mu     location 
+ *  @param sigma  width for Gaussian core 
+ *  @param kL     left tail 
+ *  @param kR     right tail 
+ */
+// ============================================================================
+Ostap::Models::Das::Das 
+( const char*          name   , 
+  const char*          title  ,
+  RooAbsReal&          x      ,   // observable 
+  RooAbsReal&          mu     ,   // location
+  RooAbsReal&          sigma  ,   // width 
+  RooAbsReal&          kL     ,   // left tail 
+  RooAbsReal&          kR     )   // right tail 
+  : RooAbsPdf    ( name , title ) 
+  , m_x          ( "x"      , "Observable"            , this , x      ) 
+  , m_mu         ( "mu"     , "Location parameter"    , this , mu     ) 
+  , m_sigma      ( "sigma"  , "Sigma    parameter"    , this , sigma  ) 
+  , m_kL         ( "kL"     , "Left tail"             , this , kL     ) 
+  , m_kR         ( "kR"     , "Right tail"            , this , kR     ) 
+  , m_das ()  
+{
+  setPars () ;  
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Das::Das
+( const Ostap::Models::Das& right ,
+  const char*                      name  ) 
+  : RooAbsPdf    ( right , name ) 
+    //
+  , m_x          ( "x"      , this , right.m_x      ) 
+  , m_mu         ( "mu"     , this , right.m_mu     )  
+  , m_sigma      ( "sigma"  , this , right.m_sigma  ) 
+  , m_kL         ( "kL"     , this , right.m_kL     ) 
+  , m_kR         ( "kR"     , this , right.m_kR     ) 
+  , m_das        ( right.m_das ) 
+{
+  setPars () ;  
+}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Das*
+Ostap::Models::Das::clone ( const char* name ) const 
+{ return new Ostap::Models::Das( *this , name ) ; }
+// ============================================================================
+void Ostap::Models::Das::setPars () const 
+{ 
+  m_das.setMu     ( m_mu     ) ;
+  m_das.setSigma  ( m_sigma  ) ;
+  m_das.setKL     ( m_kL     ) ;
+  m_das.setKR     ( m_kR     ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Das::evaluate() const 
+{
+  setPars() ;
+  return m_das ( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Das::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Das::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_das.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
+
 // ============================================================================
 Ostap::Models::CutOffGauss::CutOffGauss 
 ( const char* name  , 
@@ -7352,6 +7449,7 @@ ClassImp(Ostap::Models::RaisingCosine      )
 ClassImp(Ostap::Models::QGaussian          )
 ClassImp(Ostap::Models::Hyperbolic         )
 ClassImp(Ostap::Models::GenHyperbolic      )
+ClassImp(Ostap::Models::Das                )
 ClassImp(Ostap::Models::PositiveSpline     ) 
 ClassImp(Ostap::Models::MonotonicSpline    ) 
 ClassImp(Ostap::Models::ConvexOnlySpline   )

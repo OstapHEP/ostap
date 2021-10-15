@@ -1282,6 +1282,85 @@ def test_hypatia () :
         
     models.add ( model_hypatia )
 
+# ==========================================================================
+## Das
+# ==========================================================================
+def test_das_1 () :
+    
+    logger = getLogger ( 'test_das_1' )
+       
+    
+    logger.info ('Test Das_pdf: Das pdf with two tails' ) 
+    model_das_1 = Models.Fit1D (
+        signal = Models.Das_pdf ( name = 'Das1' , 
+                                  xvar      = mass               ,
+                                  mu        = signal_gauss.mean  ,
+                                  sigma     = signal_gauss.sigma ,
+                                  kL        = ( 1 , 0.1 , 10.0 ) ,
+                                  kR        = ( 1 , 0.1 , 10.0 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_das_1.S.value  = 5000
+    model_das_1.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model_das_1. fitTo ( dataset0 )
+        result, frame = model_das_1. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_das1' ) : 
+        model_das_1.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Das/1 models \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_das_1 )
+
+
+# ==========================================================================
+## Das
+# ==========================================================================
+def test_das_2 () :
+    
+    logger = getLogger ( 'test_das_2' )
+       
+    logger.info ('Test Das_pdf: Das pdf with tail and asymmetry' ) 
+    model_das_2 = Models.Fit1D (
+        signal = Models.Das_pdf ( name = 'Das1' , 
+                                  xvar      = mass               ,
+                                  mu        = signal_gauss.mean  ,
+                                  sigma     = signal_gauss.sigma ,
+                                  k         = ( 1 , 0.1 , 10.0 ) ,
+                                  kappa     = ( 0  , -1 , 1    ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_das_2.S.value  = 5000
+    model_das_2.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model_das_2. fitTo ( dataset0 )
+        result, frame = model_das_2. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_das_2' ) : 
+        model_das_2.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Das/2 models \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_das_2)
+
+
 
 
 ## # =============================================================================
@@ -1474,7 +1553,15 @@ if '__main__' == __name__ :
     ## Hypatia                                     + background 
     with timing ('test_hypatia'           , logger ) :
         test_hypatia           () 
-            
+
+    ## Das/1                                       + background 
+    with timing ('test_das_1'             , logger ) :
+        test_das_1            () 
+
+    ## Das/2                                       + background 
+    with timing ('test_das_2'             , logger ) :
+        test_das_2            () 
+
         
     ## check finally that everything is serializeable:
     with timing ('test_db'             , logger ) :

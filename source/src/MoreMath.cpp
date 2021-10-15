@@ -863,9 +863,10 @@ double Ostap::Math::gaussian_integral_left
  *  @return the value of gaussian pdf 
  */
 // ============================================================================
-double Ostap::Math::gauss_pdf ( const double x     ,
-                                const double mu    ,
-                                const double sigma )
+double Ostap::Math::gauss_pdf
+( const double x     ,
+  const double mu    ,
+  const double sigma )
 {
   static const double s_norm = 1.0/std::sqrt( 2.0 * M_PI ) ;
   const double dx = ( x  - mu ) / std::abs ( sigma ) ;
@@ -879,14 +880,47 @@ double Ostap::Math::gauss_pdf ( const double x     ,
  *  @return the value of gaussian cdf 
  */
 // ============================================================================
-double Ostap::Math::gauss_cdf ( const double x     ,
-                                const double mu    ,
-                                const double sigma )
+double Ostap::Math::gauss_cdf 
+( const double x     ,
+  const double mu    ,
+  const double sigma )
 {
   //
   static const double s_sqrt2 = std::sqrt( 2.0 ) ;
   const double y = ( x - mu ) / ( s_sqrt2 * std::abs ( sigma ) ) ;
   return 0.5 * ( 1 + std::erf ( y ) ) ;
+}
+// ============================================================================
+/*  get the Gaussian integral 
+ *  @see https://en.wikipedia.org/wiki/Normal_distribution
+ *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+ *  \f[ f(a,b;\mu,\sigma = \int_a^b \frac{1}{\sqrt{2\pi}\sigma}
+ *     \mathrm{e}^{-\frac{1}{2} \left( \frac{x-\mu}{\sigma}\right)^2}dx \f]
+ *  @param a low integration limit
+ *  @param b high integration limit
+ *  @param mu location of Gaussian
+ *  @param sigm awidth of the Gaussian
+ */
+// ============================================================================
+double Ostap::Math::gauss_int
+( const double a     ,
+  const double b     ,
+  const double mu    ,
+  const double sigma )
+{
+  static const double s_sqrt2 = std::sqrt( 2.0 ) ;
+  //
+  const double i_s = 1 / ( s_sqrt2 * std::abs ( sigma ) ) ;
+  //
+  const double ya = ( a - mu ) * i_s ;
+  const double yb = ( b - mu ) * i_s ;
+  //
+  return 
+    ( std::max ( ya , yb ) < -3 ) ? 
+    0.5 * ( std::erfc ( std::abs ( yb ) ) - std::erfc ( std::abs ( ya ) ) ) :
+    ( std::min ( ya , yb ) >  3 ) ? 
+    0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) :
+    0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
 }
 // ============================================================================
 /*  Student's t-CDF 

@@ -3,7 +3,8 @@
  1. Add test for symmetric Carlson forms 
  1. split histo parameterization tests 
  1. add function parameterization test 
- 
+ 1. Add Das fnuction: `Ostap::Math::Das`, `Ostap::Models::Das`, `Das_pdf`, `ResoDas` - gaussian with exponential tails 
+  
 ## Backward incompatible changes: 
  
 ## Bug fixes:

@@ -1011,6 +1011,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Sigmoid                ,
                Ostap.Math.Hyperbolic             ,
                Ostap.Math.GenHyperbolic          ,
+               Ostap.Math.Das                    ,
                #
                Ostap.Math.BSpline                , 
                Ostap.Math.PositiveSpline         ,
@@ -1022,6 +1023,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                ## interpolation polynomials 
                Ostap.Math.Neville     ,
                Ostap.Math.Lagrange    ,
+               Ostap.Math.Newton      ,
                Ostap.Math.Barycentric ,
                ##
                Ostap.Math.GammaBW3    , 

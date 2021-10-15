@@ -29,6 +29,7 @@
 ClassImp(Ostap::MoreRooFit::Addition      )
 ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
+ClassImp(Ostap::MoreRooFit::Combination   )
 ClassImp(Ostap::MoreRooFit::Fraction      )
 ClassImp(Ostap::MoreRooFit::Asymmetry     )
 ClassImp(Ostap::MoreRooFit::Power         )
@@ -353,13 +354,32 @@ Ostap::MoreRooFit::Fraction::Fraction
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
+Ostap::MoreRooFit::Combination::Combination
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     , 
+  const double       alpha , 
+  const double       beta  , 
+  const double       gamma )
+  : TwoVars ( name_  ( name  , "combination" , a , b ) ,
+              title_ ( title , "comb"        , a , b ) , a , b )
+  , m_alpha ( alpha ) 
+  , m_beta  ( beta  ) 
+  , m_gamma ( gamma )
+{}
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
 Ostap::MoreRooFit::Asymmetry::Asymmetry
 ( const std::string& name  , 
   const std::string& title , 
   RooAbsReal&        a     , 
-  RooAbsReal&        b     ) 
+  RooAbsReal&        b     ,
+  const double       scale ) 
   : TwoVars ( name_  ( name  , "asymmetry" , a , b ) ,
               title_ ( title , "asym"      , a , b ) , a , b )
+  , m_scale ( scale ) 
 {}
 // ============================================================================
 // constructor with two variables 
@@ -570,8 +590,12 @@ Double_t Ostap::MoreRooFit::Division::evaluate () const
 Double_t Ostap::MoreRooFit::Fraction::evaluate () const 
 { const double a = m_x ; const double b = m_y ; return a / ( a + b ) ; }
 // ============================================================================
+Double_t Ostap::MoreRooFit::Combination::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; 
+  return m_alpha * a * ( m_beta + m_gamma * b )  ; }
+// ============================================================================
 Double_t Ostap::MoreRooFit::Asymmetry::evaluate () const 
-{ const double a = m_x ; const double b = m_y ; return ( a - b ) / ( a + b ) ; }
+{ const double a = m_x ; const double b = m_y ; return m_scale * ( a - b ) / ( a + b ) ; }
 // ============================================================================
 Double_t Ostap::MoreRooFit::Power::evaluate () const 
 { 

@@ -14,6 +14,7 @@
 #  - symmetric JohnsonSU  model          (tails can be heavy or light)
 #  - symmetrci Hyperbolic                (tails are exponential)
 #  - symmetric generalized Hyperbolic    (tails are exponential or heavier)
+#  - symmetric Das                       (gaussian with exponential tails)
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2017-07-13
 # =============================================================================
@@ -30,6 +31,7 @@
 - symmetric JohnsonSU  model          (tails can be heavy or light)
 - symmetrci Hyperbolic                (tails are exponential)
 - symmetric generalized Hyperbolic    (tails are exponential or heavier)
+- symmetric Das                       (gaussian with exponential tails)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -49,6 +51,7 @@ __all__     = (
     'ResoSinhAsinh'     , ## symmetric Sinh-Asinh resolution model
     'ResoHyperbolic'    , ## symmetric Hyperbolic resolution model
     'ResoGenHyperbolic' , ## symmetric Generalsed Hyperbolic resolution model    
+    'ResoDas'           , ## symmetric Das resoltuion model     
     )
 # =============================================================================
 import ROOT
@@ -825,10 +828,11 @@ class ResoHyperbolic(RESOLUTION) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   sigma     = None ,   ## related to sigma
-                   fudge     = 1    ,
-                   zeta      = 1    , 
-                   mean      = None ) : ## related to mean 
+                   sigma     = None ,                               ## related to sigma
+                   zeta      = 1    ,                               ## shape parameter 
+                   fudge     = 1    ,                               ## fudge parameter 
+                   mean      = None ,                               ## related to mean 
+                   kappa     = ROOT.RooRealConstant.value ( 0 ) ) : ## asymmetrye 
         
         ## initialize the base 
         super(ResoHyperbolic,self).__init__ ( name  = name  ,
@@ -840,9 +844,12 @@ class ResoHyperbolic(RESOLUTION) :
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
-        ## parameter kappa is zero! 
-        self.__kappa = ROOT.RooRealConstant.value ( 0 ) 
+                                       '#zeta(%s)'  % name , None , zeta    , -100 , 100 )
+        
+        ## parameter kappa  
+        self.__kappa = self.make_var ( kappa                ,
+                                       'kappa_%s'    % name ,
+                                       '#kappa(%s)'  % name , None , kappa  , -1 , 1 ) 
 
         ## mu 
         self.__mu    = self.mean 
@@ -947,11 +954,12 @@ class ResoGenHyperbolic(RESOLUTION) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   sigma     = None ,   ## related to sigma
-                   fudge     = 1    ,   ## fudge-parameter 
-                   zeta      = 1    ,   ## related to shape 
-                   lambd     = 1    ,   ## related to shape 
-                   mean      = None ) : ## related to mean 
+                   sigma     = None ,                               ## related to sigma
+                   zeta      = 1    ,                               ## related to shape 
+                   lambd     = 1    ,                               ## related to shape 
+                   fudge     = 1    ,                               ## fudge-parameter 
+                   mean      = None ,                               ## related to mean 
+                   kappa     = ROOT.RooRealConstant.value ( 0 ) ) : ## asymmetry 
         
         ## initialize the base 
         super(ResoGenHyperbolic,self).__init__ ( name  = name  ,
@@ -964,8 +972,12 @@ class ResoGenHyperbolic(RESOLUTION) :
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
                                        '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
-        ## parameter kappa is zero! 
-        self.__kappa = ROOT.RooRealConstant.value ( 0 ) 
+
+        ## parameter kappa  
+        self.__kappa = self.make_var ( kappa                ,
+                                       'kappa_%s'    % name ,
+                                       '#kappa(%s)'  % name , None , kappa  , -1 , 1 ) 
+
 
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
@@ -1071,6 +1083,123 @@ class ResoGenHyperbolic(RESOLUTION) :
         self.pdf.setPars ()
         return self.pdf.function().rms ()
      
+# =============================================================================
+
+
+# =============================================================================
+## @class ResoDas
+#  @see Ostap::Math::Das
+#  @see Ostap::Models::Das
+class ResoDas(RESOLUTION) :
+    """Das resoltuoonmodel: gaussian with exponential tails 
+    - see Ostap::Math::Das
+    - see Ostap::Models::Das
+    - see Das_pdf 
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   sigma     = None ,                               ## related to sigma
+                   k         = None ,                               ## tail parameter  
+                   fudge     = 1    ,                               ## fudge-parameter 
+                   mean      = None ,                               ## related to mean 
+                   kappa     = ROOT.RooRealConstant.value ( 0 ) ) : ## asymmetry 
+        
+        ## initialize the base 
+        super(ResoDas,self).__init__ ( name  = name  ,
+                                       xvar  = xvar  ,
+                                       sigma = sigma ,
+                                       mean  = mean  ,
+                                       fudge = fudge )
+        
+        self.__k     = self.make_var ( k                    ,
+                                       'k_%s'      % name   ,  
+                                       'k(%s)'     % name   ,
+                                       k , 1.e-6 , 1000 )
+        
+        ## parameter kappa  
+        self.__kappa = self.make_var ( kappa                ,
+                                       'kappa_%s'    % name ,
+                                       '#kappa(%s)'  % name , None , kappa  , -1 , 1 ) 
+        
+
+        
+        kl = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kL' , self.name ) ,
+                                            'k*(1+kappa)' , 
+                                            self.k        ,
+                                            self.kappa    ,
+                                            1 , 1 , 1     )
+        kr = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kR' , self.name ) ,
+                                            'k*(1-kappa)' , 
+                                            self.k        ,
+                                            self.kappa    ,
+                                            1 , 1 , -1    )
+        
+        self.__kL     = self.make_var ( kl , kl.name , kl.title , kl , 1.e-6 , 1000 )
+        self.__kR     = self.make_var ( kr , kr.name , kr.title , kr , 1.e-6 , 1000 )
+                
+        ## mu 
+        self.__mu    = self.mean 
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Das (
+            self.roo_name ( 'rdas_' ) , 
+            "Resolution Das %s" % self.name ,
+            self.xvar       ,
+            self.mu         ,
+            self.sigma_corr ,
+            self.kL         ,
+            self.kR         )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'sigma'     : self.sigma ,
+            'k'         : self.k     ,
+            'kappa'     : self.kappa ,
+            'fudge'     : self.fudge }
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :
+        self.mean = value
+
+    @property
+    def k ( self ) :
+        """``k'' : tail parameter (exponential slope)
+        """
+        return self.__k
+    @k.setter
+    def k ( self , value ) :
+        self.set_value ( self.__k , value )
+        
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    
+    @property
+    def kL  ( self ) :
+        """``kL'' : left tail parameter
+        """
+        return self.__kL
+
+    @property
+    def kR  ( self ) :
+        """``kR'' : left tail parameter
+        """
+        return self.__kR
+     
+# =============================================================================
+
+
+
 # =============================================================================
 if '__main__' == __name__ :
     

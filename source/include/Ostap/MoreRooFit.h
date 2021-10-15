@@ -528,6 +528,86 @@ namespace Ostap
       // ======================================================================
     }; //
     // ========================================================================
+    /** @class Combination
+     *  evaluate \f$ f(x,y) = \alpha  x ( \beta + \gamma y )\f$ 
+     */
+    class Combination final : public TwoVars
+    {
+      // ======================================================================
+      ClassDefOverride(Ostap::MoreRooFit::Combination , 1 ) ;  // combination
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor with two variables 
+      Combination  ( const std::string& name        , 
+                     const std::string& title       , 
+                     RooAbsReal&        x           , 
+                     RooAbsReal&        y           ,
+                     const double       alpha = 1   , 
+                     const double       beta  = 1   , 
+                     const double       gamma = 1   ) ;
+      /// constructor with two variables 
+      Combination ( RooAbsReal&         x           , 
+                    RooAbsReal&         y           ,
+                    const std::string&  name  = ""  , 
+                    const std::string&  title = ""  , 
+                    const double        alpha = 1   , 
+                    const double        beta  = 1   , 
+                    const double        gamma = 1   ) 
+        : Combination ( name , title , x , y , alpha , beta , gamma )
+      {}
+      /// constructor with two variables 
+      Combination ( const double        x           , 
+                    RooAbsReal&         y           ,
+                    const std::string&  name  = ""  , 
+                    const std::string&  title = ""  , 
+                    const double        alpha = 1   , 
+                    const double        beta  = 1   , 
+                    const double        gamma = 1   )
+        : Combination ( name , title , RooFit::RooConst ( x ) , y , alpha , beta , gamma )
+      {}
+      /// constructor with two variables 
+      Combination ( RooAbsReal&         x           ,
+                    const double        y           , 
+                    const std::string&  name  = ""  , 
+                    const std::string&  title = ""  ,
+                    const double        alpha = 1   , 
+                    const double        beta  = 1   , 
+                    const double        gamma = 1   )
+        : Combination ( name , title , x , RooFit::RooConst ( y ) , alpha , beta , gamma )
+      {}
+      // ======================================================================
+      /// default constructor 
+      Combination  () =  default ;
+      // ======================================================================
+      // copy 
+      Combination ( const Combination& right , const char* newname = 0 ) 
+        : TwoVars ( right , newname ) 
+        , m_alpha ( right.m_alpha ) 
+        , m_beta  ( right.m_beta  ) 
+        , m_gamma ( right.m_gamma ) 
+      {}
+      // ======================================================================
+      Combination* clone ( const char* newname ) const override 
+      { return new Combination  ( *this , newname) ; }
+      // ======================================================================
+    protected:
+      // ======================================================================
+      // the actual evaluation of the result 
+      Double_t evaluate () const override ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// alpha 
+      double m_alpha  ; // alpha 
+      /// beta 
+      double m_beta   ; // beta 
+      /// gamma 
+      double m_gamma  ; // gamma 
+      // ======================================================================
+    }; //
+
+    // ========================================================================
     /** @class Fraction
      *  Evaluate \f$ \frac{a}{a+b}\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
@@ -586,42 +666,50 @@ namespace Ostap
     }; //
     // ========================================================================
     /** @class Asymmetry
-     *  Evaluate \f$ \frac{a-b}{a+b}\f$
+     *  Evaluate \f$ c*\frac{a-b}{a+b}\f$
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru 
      *  @date 2019-11-21
      */
     class Asymmetry final : public TwoVars 
     {
       // ======================================================================
-      ClassDefOverride(Ostap::MoreRooFit::Asymmetry , 2 ) ;  // Relative difference 
+      ClassDefOverride(Ostap::MoreRooFit::Asymmetry , 3 ) ;  // Relative difference 
       // ======================================================================
     public:
       // ======================================================================
       /// constructor with two variables 
-      Asymmetry  ( const std::string& name  , 
-                   const std::string& title , 
-                   RooAbsReal&        a     , 
-                   RooAbsReal&        b     ) ;
+      Asymmetry
+        ( const std::string& name         , 
+          const std::string& title        , 
+          RooAbsReal&        a            , 
+          RooAbsReal&        b            , 
+          const double       scale  = 1   ) ;
       /// constructor with two variables 
-      Asymmetry ( RooAbsReal&         a           , 
-                  RooAbsReal&         b           ,
-                  const std::string&  name  = ""  , 
-                  const std::string&  title = ""  ) 
-        : Asymmetry ( name , title , a , b )
+      Asymmetry
+        ( RooAbsReal&         a           , 
+          RooAbsReal&         b           ,
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  , 
+          const double        scale = 1   ) 
+      : Asymmetry ( name , title , a , b , scale )
       {}
       /// constructor with two variables 
-      Asymmetry ( RooAbsReal&         a           , 
-                  const double        b           ,
-                  const std::string&  name  = ""  , 
-                  const std::string&  title = ""  ) 
-        : Asymmetry ( name , title , a , RooFit::RooConst ( b ) )
+      Asymmetry
+        ( RooAbsReal&         a           , 
+          const double        b           ,
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  ,
+          const double        scale = 1   ) 
+        : Asymmetry ( name , title , a , RooFit::RooConst ( b ) , scale )
       {}
       /// constructor with two variables 
-      Asymmetry ( const double        a           ,
-                  RooAbsReal&         b           ,
-                  const std::string&  name  = ""  , 
-                  const std::string&  title = ""  ) 
-        : Asymmetry ( name , title , RooFit::RooConst ( a ) , b )
+      Asymmetry
+        ( const double        a           ,
+          RooAbsReal&         b           ,
+          const std::string&  name  = ""  , 
+          const std::string&  title = ""  , 
+          const double        scale = 1   ) 
+        : Asymmetry ( name , title , RooFit::RooConst ( a ) , b , scale )
       {}
       // ======================================================================
       /// default constructor 
@@ -630,6 +718,7 @@ namespace Ostap
       // copy 
       Asymmetry ( const Asymmetry& right , const char* newname = 0 ) 
         : TwoVars ( right , newname ) 
+        , m_scale ( right.m_scale   )
       {}
       // ======================================================================
       Asymmetry* clone ( const char* newname ) const override 
@@ -640,8 +729,13 @@ namespace Ostap
       // ======================================================================
     protected:
       // ======================================================================
-      // the actual evaluation of the result 
-      Double_t evaluate () const override ;
+      /// the actual evaluation of the result 
+      Double_t evaluate () const override ; 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// scaling constant 
+      double    m_scale ; // scaling constant 
       // ======================================================================
     }; //
     // ========================================================================

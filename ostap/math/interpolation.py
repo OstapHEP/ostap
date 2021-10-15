@@ -411,6 +411,8 @@ Ostap.Math.Interpolation.Weights.__delitem__  = _w_delitem_
 # ==================================================================================
 ## Neville & Lagrange interpolants
 # ==================================================================================
+
+# ==================================================================================
 ## printout for Neville interpolant 
 #  @code
 #  print a 
@@ -424,8 +426,7 @@ def _n_str_ ( self , nmax = 7 ) :
         s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
         return 'Neville({%s})' % s 
     ##
-    n2 = nmax/2
-
+    n2 = min ( 2 , _n ) 
     s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
     s2 =               '%s: %s' % self[ self.n() -1 ]
     
@@ -444,7 +445,7 @@ def _l_str_ ( self , nmax = 7 ) :
         s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
         return 'Lagrange({%s})' % s 
     ##
-    n2 = nmax/2
+    n2 = min ( 2 , _n ) 
 
     s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
     s2 =               '%s: %s' % self[ self.n() -1 ]
@@ -476,6 +477,8 @@ def _b_str_ ( self , nmax = 7 ) :
         return 'Barycentric({%s})' % s 
     ##
     n2 = nmax/2
+
+    return 'BARYCENTRIC!'
 
     s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
     s2 =               '%s: %s' % self[ self.n() -1 ]

@@ -12,12 +12,10 @@
 #include <utility>
 #include <iterator>
 #include <algorithm>
-#include "Ostap/Math.h"
-
-
-
 // ============================================================================
 // Ostap
+// ============================================================================
+#include "Ostap/Math.h"
 // ============================================================================
 namespace Ostap
 {
@@ -423,7 +421,9 @@ namespace Ostap
          *  - it is rather slow O(n^2)
          *  @return ( y(x) , dy/dx )
          */
-        std::pair<double,double> neville2  ( const double       x ) const ;
+        std::pair<double,double> 
+        neville2  
+        ( const double       x ) const ;
         // ====================================================================
         /** Simple lagrange interpolation 
          *  - it also evaluate the derivative wity respect to y_i 
@@ -431,10 +431,12 @@ namespace Ostap
          *  @param iy index of y_i
          *  @return ( y(x) , dy/d(y_i))
          */
-        std::pair<double,double> lagrange2 ( const double       x  , 
-                                             const unsigned int iy ) const ;         
+        std::pair<double,double>
+        lagrange2
+        ( const double       x  , 
+          const unsigned int iy ) const ;         
         // ====================================================================
-      public: // make a slice fo the given  ascissas 
+      public: // make a slice for the given ascissas 
         // ====================================================================
         /// make a slice for the given range of points 
         Table slice ( const int i , const int j ) const ;
@@ -487,7 +489,8 @@ namespace Ostap
                 class RESULT   , 
                 class XADAPTER ,
                 class YADAPTER >
-      inline RESULT lagrange
+      inline RESULT
+      lagrange
       ( XITERATOR    xbegin , 
         XITERATOR    xend   , 
         YITERATOR    ybegin , 
@@ -523,7 +526,8 @@ namespace Ostap
                 class YITERATOR, 
                 class XADAPTER ,
                 class YADAPTER >
-      inline double neville
+      inline double
+      neville
       ( XITERATOR    xbegin ,
         XITERATOR    xend   ,
         YITERATOR    ybegin ,
@@ -560,7 +564,8 @@ namespace Ostap
                 class XADAPTER ,
                 class YADAPTER >
       inline 
-      std::pair<double,double> neville2
+      std::pair<double,double> 
+      neville2
       ( XITERATOR    xbegin ,
         XITERATOR    xend   ,
         YITERATOR    ybegin ,
@@ -649,9 +654,11 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2016-07-23
        */
-      double lagrange ( const std::vector<double>& xs , 
-                        const std::vector<double>& ys , 
-                        const double               x  ) ;
+      double
+      lagrange 
+      ( const std::vector<double>& xs , 
+        const std::vector<double>& ys , 
+        const double               x  ) ;
       // ======================================================================      
       /** very simple lagrange interpolation 
        *  @param  data INPUT sequence of (x,y)
@@ -666,7 +673,10 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2016-07-23
        */
-      double lagrange ( const DATA& data , const double x  ) ;
+      double 
+      lagrange
+      ( const DATA&  data , 
+        const double x    ) ;
       // ======================================================================      
       /** Simple lagrange interpolation 
        *  - it also evaluate the derivative wity respect to y_i 
@@ -687,10 +697,11 @@ namespace Ostap
        *  @date 2016-07-23
        */
       std::pair<double,double>
-      lagrange2 ( const std::vector<double>& xs , 
-                  const std::vector<double>& ys , 
-                  const double               x  , 
-                  const unsigned int         iy ) ;
+      lagrange2 
+      ( const std::vector<double>& xs , 
+        const std::vector<double>& ys , 
+        const double               x  , 
+        const unsigned int         iy ) ;
       // ======================================================================      
       /** Simple lagrange interpolation 
        *  - it also evaluate the derivative with respect to y_i 
@@ -708,9 +719,10 @@ namespace Ostap
        *  @date 2016-07-23
        */
       std::pair<double,double>
-      lagrange2 ( const DATA&        data , 
-                  const double       x    , 
-                  const unsigned int iy   ) ;
+      lagrange2
+      ( const DATA&        data , 
+        const double       x    , 
+        const unsigned int iy   ) ;
       // ======================================================================      
       /** very simple Neville's interpolation 
        *  @param  xs INPUT sequence of abscissas 
@@ -728,9 +740,11 @@ namespace Ostap
        *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
        *  @date 2016-07-23
        */
-      double neville  ( const std::vector<double>& xs ,
-                        const std::vector<double>& ys , 
-                        const double               x  ) ;
+      double 
+      neville
+      ( const std::vector<double>& xs ,
+        const std::vector<double>& ys , 
+        const double               x  ) ;
       // ======================================================================      
       /** very simple Neville interpolation 
        *  @param  data INPUT sequence of (x,y)
@@ -746,8 +760,9 @@ namespace Ostap
        *  @date 2016-07-23
        */
       double 
-      neville  ( const DATA&  data , 
-                 const double x    ) ;
+      neville
+      ( const DATA&  data , 
+        const double x    ) ;
       // ======================================================================      
       /** very simple Neville's interpolation 
        *  -  it evalutes the polynomial and the derivative
@@ -767,9 +782,10 @@ namespace Ostap
        *  @date 2016-07-23
        */
       std::pair<double,double> 
-      neville2  ( const std::vector<double>& xs ,
-                  const std::vector<double>& ys , 
-                  const double               x  ) ;
+      neville2
+      ( const std::vector<double>& xs ,
+        const std::vector<double>& ys , 
+        const double               x  ) ;
       // ======================================================================      
       /** very simple Neville interpolation 
        *  -  it evaluates the polynomial and the derivative
@@ -786,8 +802,9 @@ namespace Ostap
        *  @date 2016-07-23
        */
       std::pair<double,double> 
-      neville2  ( const DATA&  data , 
-                  const double x  ) ;
+      neville2 
+      ( const DATA&  data , 
+        const double x  ) ;
       // ======================================================================      
       /** @class Weights
        *  helper class to keep barycentric weigths for Lagrange interpolation
@@ -929,7 +946,7 @@ namespace Ostap
      *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
      *  @attention  it is not CPU efficient!
      */
-    class Neville : Interpolation::Table
+    class Neville : public Interpolation::Table
     {
     public:
       // ====================================================================== 
@@ -1052,7 +1069,7 @@ namespace Ostap
      *  https://en.wikipedia.org/wiki/Lagrange_polynomial
      *  @attention  it is not CPU efficient and numerically not stable 
      */
-    class Lagrange : Interpolation::Table 
+    class Lagrange : public Interpolation::Table 
     {
     public:
       // ====================================================================== 
@@ -1204,8 +1221,9 @@ namespace Ostap
        *  @param abscissas interpolation abscissas 
        */
       template <class FUNCTION>
-      Barycentric ( FUNCTION                      fun , 
-                    const Interpolation::Weights& w   ) 
+      Barycentric 
+      ( FUNCTION                      fun , 
+        const Interpolation::Weights& w   ) 
         : m_w ( w ) 
         , m_y ( w.size() , 0.0 ) 
       { std::transform ( this->x() . begin () , this->x() . end () , m_y.begin () , fun ) ; }
@@ -1215,8 +1233,9 @@ namespace Ostap
        *  @param abscissas interpolation abscissas 
        */
       template <class FUNCTION>
-      Barycentric ( FUNCTION                        fun , 
-                    const Interpolation::Abscissas& a   ) 
+      Barycentric 
+      ( FUNCTION                        fun , 
+        const Interpolation::Abscissas& a   ) 
         : m_w ( a ) 
         , m_y ( a.size() , 0.0 ) 
       { std::transform ( a.begin () , a.end () , m_y.begin () , fun ) ; }
@@ -1226,11 +1245,12 @@ namespace Ostap
        *  @param abscissas interpolation abscissas 
        */
       template <class FUNCTION>
-      Barycentric ( FUNCTION                             fun  , 
-                    const unsigned int                   n    , 
-                    const double                         low  ,   
-                    const double                         high , 
-                    const Interpolation::Abscissas::Type t    ) 
+      Barycentric 
+      ( FUNCTION                             fun  , 
+        const unsigned int                   n    , 
+        const double                         low  ,   
+        const double                         high , 
+        const Interpolation::Abscissas::Type t    ) 
         : Barycentric ( fun , Interpolation::Abscissas  ( n , low , high , t ) ) 
       {}
       // ======================================================================
@@ -1241,9 +1261,10 @@ namespace Ostap
        *  @attention duplicated abscissas will be removed 
        */
       template <class FUNCTION, class ITERATOR>
-      Barycentric ( FUNCTION fun   , 
-                    ITERATOR begin ,
-                    ITERATOR end   )
+      Barycentric 
+      ( FUNCTION fun   , 
+        ITERATOR begin ,
+        ITERATOR end   )
         : m_w ( begin , end ) 
         , m_y () 
       { 
@@ -1258,22 +1279,25 @@ namespace Ostap
        *  @attention duplicated abscissas will be removed 
        */
       template <class FUNCTION>
-      Barycentric ( FUNCTION    fun , 
-                    const Data& x   ) 
+      Barycentric
+      ( FUNCTION    fun , 
+        const Data& x   ) 
         : Barycentric ( fun , x.begin() , x.end() ) 
       {}
       // ======================================================================
       /** simple constructor from the interpolation table 
        *  @param data interpolation table            
        */
-      Barycentric ( const Interpolation::Table& data ) ; 
+      Barycentric 
+      ( const Interpolation::Table& data ) ; 
       // ======================================================================
       /** simple constructor from the interpolation data 
        *  @param data interpolation data 
        *  @param sorted indicate if data already sorted and duplicates are removed 
        */
-      Barycentric ( const Interpolation::TABLE& data           , 
-                    const bool                  sorted = false ) ;
+      Barycentric
+      ( const Interpolation::TABLE& data           , 
+        const bool                  sorted = false ) ;
       // ======================================================================
       /** simple constructor from map/dictionary { x : f(x) }
        *  @param data map/dictionary with data  { x : f(x) }
@@ -1281,7 +1305,8 @@ namespace Ostap
        *  - "numerical" duplicates are removed
        */
       template <class KEY, class VALUE>
-      Barycentric ( const std::map<KEY,VALUE>& data ) 
+      Barycentric 
+      ( const std::map<KEY,VALUE>& data ) 
         : Barycentric ( Interpolation::Table ( data ) ) {}
       // ====================================================================
       /** simple constructor from x&y-lists 
@@ -1290,8 +1315,9 @@ namespace Ostap
        *  - if vector of y is longer  than vector x, extra values are ignored 
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
        */
-      Barycentric ( const Interpolation::Abscissas& x , 
-                    const Data&                     y ) ; 
+      Barycentric 
+      ( const Interpolation::Abscissas& x , 
+        const Data&                     y ) ; 
       // ===================================================================
       /** simple constructor from x&y-lists 
        *  @attention this is the most CPU efficient constructor!
@@ -1300,8 +1326,9 @@ namespace Ostap
        *  - if vector of y is longer  than vector x, extra values are ignored 
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
        */
-      Barycentric ( const Interpolation::Weights&   x , 
-                    const Data&                     y ) ;
+      Barycentric
+      ( const Interpolation::Weights&   x , 
+        const Data&                     y ) ;
       // ===================================================================
       /** simple constructor from x&y-lists 
        *  @param x input vector of x 
@@ -1310,7 +1337,8 @@ namespace Ostap
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
        *  @attention duplicated abscissas will be removed 
        */
-      Barycentric ( const Data& x , const Data& y ) ;
+      Barycentric 
+      ( const Data& x , const Data& y ) ;
       // ======================================================================
       /// default constructor 
       Barycentric () = default ;
@@ -1373,8 +1401,9 @@ namespace Ostap
     public: 
       // ======================================================================
       /// get the slice
-      Barycentric slice ( const unsigned short i , 
-                          const unsigned short j ) const ;
+      Barycentric slice 
+      ( const unsigned short i , 
+        const unsigned short j ) const ;
       // ====================================================================
     private: 
       // ======================================================================
@@ -1403,8 +1432,9 @@ namespace Ostap
        *  @param data   input data 
        *  @param sorted indicate if data already  sorted and duplicated removed  
        */
-      Newton ( const Interpolation::TABLE& data           , 
-               const bool                  sorted = false ) 
+      Newton
+      ( const Interpolation::TABLE& data           , 
+        const bool                  sorted = false ) 
         : m_table ( data        ) 
         , m_diffs ( data.size() ) 
       { this->get_differences() ; }
@@ -1415,8 +1445,9 @@ namespace Ostap
        *  - if vector of y is longer  than vector x, extra values are ignored 
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
        */
-      Newton ( const Interpolation::Abscissas&       x , 
-               const Interpolation::Abscissas::Data& y ) 
+      Newton
+      ( const Interpolation::Abscissas&       x , 
+        const Interpolation::Abscissas::Data& y ) 
         : m_table ( x , y    ) 
         , m_diffs ( x.size() ) 
       { this->get_differences() ; }      
@@ -1428,8 +1459,9 @@ namespace Ostap
        *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
        *  @attention duplicated abscissas will be removed 
        */
-      Newton ( const Interpolation::Abscissas::Data& x , 
-               const Interpolation::Abscissas::Data& y ) 
+      Newton
+      ( const Interpolation::Abscissas::Data& x , 
+        const Interpolation::Abscissas::Data& y ) 
         : m_table ( x , y    ) 
         , m_diffs ( x.size() ) 
       { this->get_differences() ; }
@@ -1456,11 +1488,12 @@ namespace Ostap
        *  @attention duplicated abscissas will be removed 
        */
       template <class XITERATOR, class YITERATOR>
-      Newton ( XITERATOR  xbegin         ,
-               XITERATOR  xend           ,
-               YITERATOR  ybegin         ,
-               YITERATOR  yend           , 
-               const bool sorted = false ) 
+      Newton 
+      ( XITERATOR  xbegin         ,
+        XITERATOR  xend           ,
+        YITERATOR  ybegin         ,
+        YITERATOR  yend           , 
+        const bool sorted = false ) 
         : m_table ( xbegin , xend , ybegin , yend , sorted )
         , m_diffs () 
       { this->get_differences() ; }
@@ -1471,8 +1504,9 @@ namespace Ostap
        *  @param abscissas interpolation abscissas 
        */
       template <class FUNCTION>
-      Newton ( FUNCTION                        fun , 
-               const Interpolation::Abscissas& a   )
+      Newton
+      ( FUNCTION                        fun , 
+        const Interpolation::Abscissas& a   )
         : m_table ( a  , fun )
         , m_diffs ( a.size() )
       { this->get_differences() ; }
@@ -1484,9 +1518,10 @@ namespace Ostap
        *  @attention duplicated abscissas will be removed 
        */
       template <class ITERATOR, class FUNCTION>
-      Newton ( FUNCTION fun   , 
-               ITERATOR begin , 
-               ITERATOR end   ) 
+      Newton
+      ( FUNCTION fun   , 
+        ITERATOR begin , 
+        ITERATOR end   ) 
         : m_table ( fun , begin , end )
         , m_diffs ()
       { this->get_differences() ; }
@@ -1499,11 +1534,12 @@ namespace Ostap
        *  @param t    interpolation type 
        */
       template <class FUNCTION>
-      Newton ( FUNCTION                             fun  , 
-               const unsigned short                 n    , 
-               const double                         low  ,   
-               const double                         high , 
-               const Interpolation::Abscissas::Type t    ) 
+      Newton
+      ( FUNCTION                             fun  , 
+        const unsigned short                 n    , 
+        const double                         low  ,   
+        const double                         high , 
+        const Interpolation::Abscissas::Type t    ) 
         : m_table ( fun , n , low , high , t )
         , m_diffs ()
       { this->get_differences() ; }

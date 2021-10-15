@@ -5491,6 +5491,113 @@ namespace Ostap
     // ========================================================================
     
     // ========================================================================
+    /** @class Das
+     *  Simple gaussian function with exponential tails.
+     *  It corresponds to <code>ExpGaussExp</code> function, 
+     *  \f[ 
+     *    f (x ; \mu, \sigma, k_L, k_R ) = \frac{1}{\sqrt{2\pi}\sigma}
+     *   \left\{ \begin{array}[lcl}
+     *  \mathrm{e}^{  \frac{k_L^2}{2} + k_L\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right) < -k_L \\   
+     *  \mathrm{e}^{ \frac{1}{s} \left( \frac{x-\mu}{\sigma}\right)^2}
+     *   & \mathrm{for}  &  -k_L < \left(\frac{x-\mu}{\sigma}\right) < k_R \\    
+     *  \mathrm{e}^{  \frac{k_R^2}{2} - k_R\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right)> k_R   
+     *  \end{array} \right. \f]
+     *  - \f$ k_L \ge 0\f$
+     *  - \f$ k_R \ge 0\f$
+     *
+     *  @see Souvik Das, "A simple alternative to Crystall Ball fnuction"
+     *                   arXiv:1603.08591  [hep-ex]
+     *  @see https://arxiv.org/abs/1603.08591
+     *  @attention - the function is not normalized! 
+     *  Function was used in 
+     *  @see CMS collaboration, V.Khachatryan, 
+     *       "Search for resonant pair production of Higgs bosons decaying 
+     *        to two bottom quark\textendash{}antiquark pairs 
+     *        in proton-proton collisions at 8 TeV}",
+     *        Phys. Lett. B749 (2015) 560 
+     * @see https://arxiv.org/abs/1503.04114 
+     * @see https://doi.org/10.1016/j.physletb.2015.08.047 
+     * - Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$ 
+     * @see Ostap::Math::Das 
+     */
+    class Das: public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Das, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from all parameters
+       *  @param name  name of PDF
+       *  @param title name of PDF
+       *  @param x      observable 
+       *  @param mu     location 
+       *  @param sigma  width for Gaussian core 
+       *  @param kL     left tail 
+       *  @param kR     right tail 
+       */
+      Das 
+      ( const char*          name   , 
+        const char*          title  ,
+        RooAbsReal&          x      ,   // observable 
+        RooAbsReal&          mu     ,   // location
+        RooAbsReal&          sigma  ,   // width 
+        RooAbsReal&          kL     ,   // left tail 
+        RooAbsReal&          kR     ) ; // right tail 
+      /// "copy" constructor 
+      Das ( const Das& , const char* name = 0 ) ;
+      /// clone 
+      Das* clone ( const char* name ) const override ; 
+      // =====================================================================
+    public: // some fake functionality
+      // =====================================================================
+      // fake default contructor, needed just for proper (de)serialization 
+      Das () {} ;
+      // =====================================================================
+    public:
+      // =====================================================================
+      Int_t    getAnalyticalIntegral 
+      ( RooArgSet&  allVars       , 
+        RooArgSet&  analVars      , 
+        const char* rangeName = 0 ) const override ;
+      Double_t analyticalIntegral
+      ( Int_t       code          , 
+        const char* rangeName = 0 ) const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // =====================================================================
+      // the actual evaluation of function 
+      Double_t evaluate() const override ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Das& function () const { return m_das ; }
+      // ======================================================================
+    protected:
+      // =====================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_mu     ;
+      RooRealProxy m_sigma  ;
+      RooRealProxy m_kL     ;
+      RooRealProxy m_kR     ;
+      // =====================================================================
+    protected : // the function itself 
+      // =====================================================================
+      mutable Ostap::Math::Das m_das ;
+      // =====================================================================
+    };
+
+
+    // ========================================================================
     // 1D-splines
     // ========================================================================
 

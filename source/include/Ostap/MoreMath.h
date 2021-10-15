@@ -299,9 +299,10 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian pdf 
      */
-    double gauss_pdf ( const double x         ,
-                       const double mu    = 0 ,
-                       const double sigma = 1 ) ;
+    double gauss_pdf
+    ( const double x         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
     // ========================================================================
     /** get the standard gaussian cdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
@@ -311,9 +312,26 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian cdf 
      */
-    double gauss_cdf ( const double x         ,
-                       const double mu    = 0 ,
-                       const double sigma = 1 ) ;
+    double gauss_cdf 
+    ( const double x         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
+    // ========================================================================
+    /** get the Gaussian integral 
+     *  @see https://en.wikipedia.org/wiki/Normal_distribution
+     *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+     *  \f[ f(a,b;\mu,\sigma = \int_a^b \frac{1}{\sqrt{2\pi}\sigma}
+     *     \mathrm{e}^{-\frac{1}{2} \left( \frac{x-\mu}{\sigma}\right)^2}dx \f]
+     *  @param a low integration limit
+     *  @param b high integration limit
+     *  @param mu location of Gaussian
+     *  @param sigm awidth of the Gaussian
+     */
+    double gauss_int
+    ( const double a         ,
+      const double b         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
     // ========================================================================
     /** Student's t-CDF 
      *  \f[ f(t;\nu) = \left\{

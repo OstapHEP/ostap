@@ -2654,59 +2654,59 @@ namespace Ostap
       /// evaluate  pdf  for Generalised Hyperbolic distribution
       double pdf ( const  double x ) const ;
       /// evaluate  pdf  for Generalised Hyperbolic distribution
-      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
       // ======================================================================
     public: // accessors
       // ======================================================================
       /// location parameter 
-      double mu       () const { return m_mu     ; } // location parameter
+      inline double mu       () const { return m_mu     ; } // location parameter
       /// location parameter 
-      double location () const { return m_mu     ; } // location parameter 
+      inline double location () const { return m_mu     ; } // location parameter 
       /// sigma parameter 
-      double sigma    () const { return m_sigma  ; } // sigma parameter 
+      inline double sigma    () const { return m_sigma  ; } // sigma parameter 
       /// squared sigma parameter 
-      double sigma2   () const { return m_sigma * m_sigma  ; } 
+      inline double sigma2   () const { return m_sigma * m_sigma  ; } 
       /// asymmetry parameter 
-      double kappa    () const { return m_kappa  ; } // kappa-parameter 
+      inline double kappa    () const { return m_kappa  ; } // kappa-parameter 
       /// squared asymmetry parameter
-      double kappa2   () const { return m_kappa * m_kappa ; }
+      inline double kappa2   () const { return m_kappa * m_kappa ; }
       /// zeta parameters
-      double zeta     () const { return m_zeta   ; } // zeta-parameter 
+      inline double zeta     () const { return m_zeta   ; } // zeta-parameter 
       /// squared zeta parameters
-      double zeta2    () const { return m_zeta  * m_zeta   ; }
+      inline double zeta2    () const { return m_zeta  * m_zeta   ; }
       /// shape parameter 
-      double lambda   () const { return m_lambda ; } // lambda-parameter 
+      inline double lambda   () const { return m_lambda ; } // lambda-parameter 
       /// shape parameter 
-      double lambd    () const { return m_lambda ; } // lambda-parameter  
+      inline double lambd    () const { return m_lambda ; } // lambda-parameter  
       // ======================================================================
     public : // original parameters 
       // ======================================================================
       /// alpha parameter 
-      double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
+      inline double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
       /// squared alpha 
-      double alpha2   () const { return beta2 () + gamma2 ()       ; }      
+      inline  double alpha2   () const { return beta2 () + gamma2 ()       ; }      
       /// beta parameter 
-      double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
+      inline double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
       /// squared beta parameter 
-      double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
+      inline double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
       /// gamma parameter 
-      double gamma    () const { return m_AL    / m_sigma          ; }
+      inline double gamma    () const { return m_AL    / m_sigma          ; }
       /// squared gamma parameter  
-      double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
+      inline double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
       /// delta parameter  
-      double delta    () const { return m_zeta * m_sigma / m_AL    ; }
+      inline double delta    () const { return m_zeta * m_sigma / m_AL    ; }
       /// squared delta parameter  
-      double delta2   () const { return std::pow  ( delta () , 2 ) ; }
+      inline double delta2   () const { return std::pow  ( delta () , 2 ) ; }
       // ======================================================================
     public: // setters 
       // ======================================================================
-      bool setMu       ( const double value ) ;
-      bool setLocation ( const double value ) { return setMu     ( value ) ; }
-      bool setSigma    ( const double value ) ;
-      bool setKappa    ( const double value ) ;
-      bool setZeta     ( const double value ) ;
-      bool setLambda   ( const double value ) ;
-      bool setLambd    ( const double value ) { return setLambda ( value ) ; }
+      bool        setMu       ( const double value ) ;
+      bool        setSigma    ( const double value ) ;
+      bool        setKappa    ( const double value ) ;
+      bool        setZeta     ( const double value ) ;
+      bool        setLambda   ( const double value ) ;
+      inline bool setLocation ( const double value ) { return setMu     ( value ) ; }
+      inline bool setLambd    ( const double value ) { return setLambda ( value ) ; }
       // ======================================================================
     public: // extended setter 
       // ======================================================================
@@ -2739,19 +2739,20 @@ namespace Ostap
       /// get variance 
       double variance    () const ;
       /// get dispersion 
-      double dispersion  () const { return variance () ; }
+      inline double dispersion  () const { return variance () ; }
       /// get RMS 
-      double rms         () const { return std::sqrt ( variance () ) ; }
+      inline double rms         () const { return std::sqrt ( variance () ) ; }
       /// get RMS 
-      double  RMS        () const { return rms ()      ; }
+      inline double  RMS        () const { return rms ()      ; }
       // ======================================================================
     public:
       // ======================================================================
       /// get the integral 
-      double integral () const { return 1 ; }
+      inline double integral () const { return 1 ; }
       /// get the integral 
-      double integral ( const double low  , 
-                        const double high ) const ;      
+      double        integral
+      ( const double low  , 
+        const double high ) const ;      
       // ======================================================================
     public:
       // ======================================================================
@@ -2794,6 +2795,118 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ; // integration workspace
       // ======================================================================      
     } ;
+    // ========================================================================
+    /** @class Das
+     *  Simple gaussian function with exponential tails.
+     *  It corresponds to <code>ExpGaussExp</code> function, 
+     *  \f[ 
+     *    f (x ; \mu, \sigma, k_L, k_R ) = \frac{1}{\sqrt{2\pi}\sigma}
+     *   \left\{ \begin{array}[lcl}
+     *  \mathrm{e}^{  \frac{k_L^2}{2} + k_L\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right) < -k_L \\   
+     *  \mathrm{e}^{ \frac{1}{s} \left( \frac{x-\mu}{\sigma}\right)^2}
+     *   & \mathrm{for}  &  -k_L < \left(\frac{x-\mu}{\sigma}\right) < k_R \\    
+     *  \mathrm{e}^{  \frac{k_R^2}{2} - k_R\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right)> k_R   
+     *  \end{array} \right. \f]
+     *  - \f$ k_L \ge 0\f$
+     *  - \f$ k_R \ge 0\f$
+     *
+     *  @see Souvik Das, "A simple alternative to Crystall Ball fnuction"
+     *                   arXiv:1603.08591  [hep-ex]
+     *  @see https://arxiv.org/abs/1603.08591
+     *  @attention - the function is not normalized! 
+     *  Function was used in 
+     *  @see CMS collaboration, V.Khachatryan, 
+     *       "Search for resonant pair production of Higgs bosons decaying 
+     *        to two bottom quark\textendash{}antiquark pairs 
+     *        in proton-proton collisions at 8 TeV}",
+     *        Phys. Lett. B749 (2015) 560 
+     * @see https://arxiv.org/abs/1503.04114 
+     * @see https://doi.org/10.1016/j.physletb.2015.08.047 
+     * - Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$ 
+     */
+    class Das
+    {
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      /** constructor with full parameters 
+       *  @param mu peak location 
+       *  @param sigma sigma for Gaussian Core 
+       *  @param kL    left tail parameter 
+       *  @param kR    right tail parameter 
+       */
+      Das 
+      ( const double mu     = 0 ,    // location parameter 
+        const double sigma  = 1 ,    // width parameter 
+        const double kL     = 2 ,    // left tails 
+        const double kR     = 2 ) ;  // right tail 
+      // ======================================================================      
+    public :
+      // ======================================================================
+      /// evaluate  pdf  
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// get location parameter 
+      inline double mu       () const { return m_mu    ; }
+      /// get width parameter 
+      inline double sigma    () const { return m_sigma ; }
+      /// get left tail 
+      inline double kL       () const { return m_kL    ; }
+      /// get right tail 
+      inline double kR       () const { return m_kR    ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set location parameter 
+      bool        setMu       ( const double value ) ;
+      /// set width parameter 
+      bool        setSigma    ( const double value ) ;
+      /// set left tail 
+      bool        setKL       ( const double value ) ;
+      /// set right tail 
+      bool        setKR       ( const double value ) ;
+      /// set location parameter 
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
+      // ======================================================================
+    public: // derived  
+      // ======================================================================
+      /// get location parameter 
+      inline double location () const { return mu () ; }
+      /// get mode  
+      inline double mode     () const { return mu () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double low  , 
+        const double high ) const ;      
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parameter 
+      double m_mu    { 0 } ; // location parameter 
+      /// width  parameter 
+      double m_sigma { 1 } ; // width parameter 
+      /// left tail 
+      double m_kL    { 2 } ; // left tail
+      /// right tail 
+      double m_kR    { 2 } ; // right tail      
+      // ======================================================================
+    };
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

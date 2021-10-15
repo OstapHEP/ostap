@@ -377,6 +377,35 @@ def test_genhyperbolic () :
     models.add ( reso )
 
 
+# =============================================================================
+## Das 
+# =============================================================================
+def test_das () :
+    
+    logger = getLogger ( 'test_das' )
+
+    logger.info ('Test Das: Gaussian with symmetric exponential tails ' )
+    from   ostap.fitting.resolution import ResoDas
+    reso = ResoDas ( 'Das' , mass ,  k  = ( 1.0 , 1.e-5 , 200 )  )
+    
+    from   ostap.logger.utils   import rooSilent
+    with rooSilent() : 
+        result, frame = reso. fitTo ( dataset0 )
+        with wait ( 1 ) , use_canvas ( 'test_das' ) : 
+            result, frame = reso. fitTo ( dataset0 , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        logger.info ( 'ResoDas:  RMS        %s ' % reso.rms          () )  
+        logger.info ( 'ResoDas:  FWHM       %s ' % reso.fwhm         () )
+        logger.info ( "ResoDas: fit results\n%s" % result.table (
+            title = 'symmetric Das resolution model' , prefix = '# ' ) )
+        
+    models.add ( reso )
+
+
 
 # =============================================================================
 ## check that everything is serializable
@@ -430,7 +459,10 @@ if '__main__' == __name__ :
     
     with timing ("GenHyperbolic" , logger ) :  
         test_genhyperbolic  () ## generalised Hyperbolic resolution model
-    
+
+    with timing ("Das"        , logger ) :  
+        test_das          ()   ## Das resolution model
+
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  
         test_db ()          
