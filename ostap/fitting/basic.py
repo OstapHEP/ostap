@@ -1805,7 +1805,7 @@ class PDF (FUNC) :
         >>>  print 'MEDIAN: %s ' % pdf.median()
         """
         from ostap.stats.moments import median as _median
-        return self._gets_stat_ ( _median , **kwargs )
+        return self._get_stat_ ( _median , **kwargs )
 
     # =========================================================================
     ## get the effective mean
@@ -2770,8 +2770,9 @@ class RESOLUTION(MASS) :
                    sigma_title = ''   ) :
         
         ## mean-value
-        if mean is None : mean = ROOT.RooRealConstant.value ( 0 ) 
-        
+        if mean is None :
+            mean = ROOT.RooRealConstant.value ( 0 ) 
+            
         with CheckMean ( False ) :
             super(RESOLUTION,self).__init__ ( name        = name        ,
                                               xvar        = xvar        ,

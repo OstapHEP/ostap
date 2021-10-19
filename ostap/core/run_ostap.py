@@ -35,7 +35,7 @@ __date__    = "2012-09-10"
 __version__ = '$Revision$'
 # =============================================================================
 import ROOT, os, sys   
-ROOT.PyConfig.IgnoreCommandLineOptions = True
+## ROOT.PyConfig.IgnoreCommandLineOptions = True
 try :
     from cString import StringIO
 except :

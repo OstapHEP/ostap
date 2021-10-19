@@ -4,11 +4,11 @@
 # Copyright (c) Ostap developers.
 # ============================================================================= 
 # @file test_fitting_resolutions.py
-# Test module for ostap/fitting/resolution.py
-# - It tests various resoltuion models
+# Test module for ostap/fitting/resolution2.py
+# - It tests various asymmetric resolution models
 # ============================================================================= 
 """Test module for ostap/fitting/resolution.py
-- It tests various resoltuion models
+- It tests various asymmetric resolution models
 """
 # ============================================================================= 
 from   __future__               import print_function
@@ -17,35 +17,56 @@ __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
+ROOT.PyConfig.IgnoreCommandLineOptions = False 
+# 
 import ostap.fitting.roofit 
 from   ostap.core.core          import VE, dsID
 from   builtins                 import range
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait
 import ostap.logger.table       as     T 
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_resolutions' )
+    logger = getLogger ( 'ostap.test_fitting_resolutions2' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
 ## make simple test mass 
-mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , -3 , 3 )
+mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , -5 , 5 )
+
+logger.info ( 'BATCH? %s' % ROOT.gROOT.IsBatch() ) 
+
 
 from   ostap.fitting.resolution import ResoHypatia
-reso = ResoHypatia       ( 'H'    , mass   ,
+reso = ResoHypatia       ( 'H'    , mass  ,
                            sigma  =   0.5  ,
                            zeta   =   2.0  , 
-                           kappa  =   0.0  ,
+                           kappa  =   0.1  ,
                            lambd  =  -1.0  ,
-                           sigma0 =   0.01 )
+                           sigma0 =   0.01 ) 
+
+##from   ostap.fitting.resolution import ResoGenHyperbolic
+##reso = ResoGenHyperbolic ( 'GH'   , mass  ,
+##                           sigma  =  0.5  ,
+##                           zeta   =  2.0  , 
+##                           kappa  =  0.1  ,
+##                           lambd  = -1.0  )
+
+## from   ostap.fitting.resolution import ResoHyperbolic
+## reso = ResoHyperbolic    ( 'HH'   , mass  ,
+##                           sigma  =  0.5  ,
+##                           zeta   =  10   , 
+##                           kappa  =  0.1  )
 
 dataset = reso.generate ( 10000 )
+
 logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) ) 
+
+models = set() 
 
 
 # =============================================================================
@@ -71,9 +92,6 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     logger.info ( 'Global features for %s\n%s' % ( title2 , table ) ) 
     
 
-models = set() 
-
-
 # =============================================================================
 ## Single gauss
 # =============================================================================
@@ -81,51 +99,27 @@ def test_gauss () :
 
     logger = getLogger ( 'test_gauss' )
     
-    logger.info ('Test ResoGauss:  single Gaussian resolution model' )
+    logger.info ('Test ResoGauss: bifurcated Gaussian resolution model' )
     from   ostap.fitting.resolution import ResoGauss 
-    reso = ResoGauss( 'Gauss' , mass ,  sigma = ( 0.2 , 0.01 , 5 )  )
+    reso = ResoGauss( 'Gauss' , mass ,
+                      mean  = ( 0.0 , -1   , +1  ) , 
+                      sigma = ( 0.5 ,  0.1 , 1.0 ) ,
+                      kappa = ( 0.0 , -1.0 , 1.0 ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_gauss' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
-        
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :
-        make_print ( reso , result , 'Gaussian', logger )
 
-    models.add ( reso )
     
-# =============================================================================
-## Double gauss
-# =============================================================================
-def test_2gauss () :
-    
-    logger = getLogger ( 'test_2gauss' )
-
-    logger.info ('Test ResoGauss2:  double Gaussian resolution model' )
-    from   ostap.fitting.resolution import ResoGauss2
-    reso = ResoGauss2( 'Gauss2' , mass ,
-                       sigma    = ( 0.2 , 0.01 , 5     ) ,
-                       fraction = ( 0.5 , 0.01 , 0.95  ) , 
-                       scale    = ( 1.2 , 1.01 , 5.0   ) )
-    
-    result, frame = reso. fitTo ( dataset , silent = True )
-    result, frame = reso. fitTo ( dataset , silnet = True )
-    with wait ( 1 ) , use_canvas ( 'test_2gauss' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
-        
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Double Gaussian', logger )
-        
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Gaussian', logger )
 
-        
+    models.add ( reso  )
+    
 # =============================================================================
 ## Symmetric Apollonios
 # =============================================================================
@@ -133,13 +127,14 @@ def test_apo2 () :
     
     logger = getLogger ( 'test_apo2' )
 
-    logger.info ('Test ResoApo2:  symmetric Apollonios resolution model' )
+    logger.info ('Test ResoApo2:  asymmetric Apollonios resolution model' )
     from   ostap.fitting.resolution import ResoApo2
-    reso= ResoApo2( 'Apollonious2' , mass ,
-                    sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
-                    beta  = ( 0.4 ,  0.01 , 20.0 ) ) 
+    reso = ResoApo2( 'Apollonios2' , mass ,
+                     mean  = ( 0.0 , -0.1  , 0.1 ) , 
+                     sigma = ( 0.4 ,  0.1  , 1.0 ) ,
+                     beta  = ( 1   , 1.e-5 , 100 ) ,
+                     kappa = ( 0.1 , -1    , +1  ) )
     
-    result, frame = reso. fitTo ( dataset , silent = True )
     result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_apo2' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
@@ -148,105 +143,59 @@ def test_apo2 () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Apollonious/2', logger )
-    
+        make_print ( reso , result , 'Asymmetric Apollonios2', logger )
+        
     models.add ( reso )
 
-        
 # =============================================================================
-## Symmetric double-sided Crystal Ball 
+## Asymmetric double-sided Crystal Ball 
 # =============================================================================
 def test_cb2 () :
     
     logger = getLogger ( 'test_cb2' )
 
-    logger.info ('Test ResoCB2: symmetric double-sided Crystal Ball resolution model' )
+    logger.info ('Test ResoCB2: asymmetric double-sided Crystal Ball resolution model' )
     from   ostap.fitting.resolution import ResoCB2
-    reso = ResoCB2( 'CrystalBall2' , mass ,                        
-                    sigma = ( 0.4 ,  0.01 ,  5.0 ) ,
-                    n     = ( 1.0 ,  0.0  , 20.0 ) ,
-                    alpha = ( 1.0 ,  0.5  ,  5.0 ) )
+    reso = ResoCB2( 'CrystalBall2' , mass ,
+                    mean   = ( 0.0 , -0.1  ,  0.1 ) , 
+                    sigma  = ( 0.2 ,  0.1  ,  1.0 ) ,
+                    alpha  = ( 1.0 ,  0.5  ,  3.0 ) ,
+                    n      = ( 1.0 ,  0.0  , 20.0 ) ,
+                    kappaN = ( 0   ,  -1   , +1   ) ,
+                    kappaA = ( 0   ,  -1   , +1   ) )
     
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_cb2' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
-    else :     
-        make_print ( reso , result , 'Symmetric Crystal Ball/2', logger )
- 
-    models.add ( reso)
-
-
-# =============================================================================
-## Hyperbolic secant 
-# =============================================================================
-def test_sech () :
-    
-    logger = getLogger ( 'test_sech' )
-
-    logger.info ('Test ResoSech: hyperbolic secant resolution model' )
-    from   ostap.fitting.resolution import ResoSech
-    reso = ResoSech ( 'Sech' , mass , sigma = ( 0.5 , 0.01 , 5.0 ) )
-    
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
-    with wait ( 1 ) , use_canvas ( 'test_sech' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+    else :
+        make_print ( reso , result , 'Asymmetric Crystal Ball', logger )
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        make_print ( reso , result , 'Hyperbolic secant', logger )
- 
-    models.add ( reso)
+    models.add ( reso )
 
 
 # =============================================================================
-## Logistic 
-# =============================================================================
-def test_logistic () :
-    
-    logger = getLogger ( 'test_logistic' )
-
-    logger.info ('Test ResoLogistic: logistic (sech-squared) resolution model' )
-    from   ostap.fitting.resolution import ResoLogistic
-    reso = ResoLogistic ( 'Logistic' , mass ,  sigma = ( 0.4 , 0.01 , 5.0 ) )
-            
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
-    with wait ( 1 ) , use_canvas ( 'test_logistic' ) : 
-        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
-        
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        make_print ( reso , result , 'Logistic', logger )
- 
-    models.add ( reso)
-
-
-# =============================================================================
-## symmetric Bukin
+## Asymmetric Bukin
 # =============================================================================
 def test_bukin () :
     
     logger = getLogger ( 'test_bukin' )
 
-    logger.info ('Test ResoBukin: symmetric Bukin resolution model' )
+    logger.info ('Test ResoBukin: asymmetric Bukin resolution model' )
     from   ostap.fitting.resolution import ResoBukin
-
     reso = ResoBukin ( 'Bukin' , mass ,
-                       sigma = ( 0.1 , 0.01 , 5.0 ) ,
-                       rho   = (   0 , 0 , 10     ) )
-
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+                       mean   = (  0.0  , -0.1  ,  0.1 ) , 
+                       sigma  = (  0.4  ,  0.1  ,  1.0 ) ,
+                       rho    = (  0.4  ,  0    ,  10  ) ,
+                       xi     = ( -0.04 , -10   , +10  ) ,
+                       kappa  = (  0.04 , -1    , +1   ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_bukin' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -254,25 +203,25 @@ def test_bukin () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Bukin', logger )
- 
-    models.add ( reso)
-
-
-
+        make_print ( reso , result , 'Asymmetric Bukin', logger )
+        
+    models.add ( reso )
+    
 # =============================================================================
-## symmetric Johnson's SU 
+## Asymmetric Johnson's SU 
 # =============================================================================
 def test_johnsonSU () :
     
-    logger.info ('Test JohnsonSU: symmetric JohnsonSU  resolution model' )
+    logger.info ('Test JohnsonSU: asymmetric JohnsonSU  resolution model' )
     from   ostap.fitting.resolution import ResoJohnsonSU 
     reso = ResoJohnsonSU ( 'JohnsonSU' , mass ,
+                           mean  = ( 0.0 , -0.1  ,  0.1 ) ,                            
                            delta = ( 1.7 , 1.e-6 , 1000 ) ,
-                           lambd = ( 0.2 , 1.e-6 , 1000 ) ) 
-    
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+                           lambd = ( 0.2 , 1.e-6 , 1000 ) ,
+                           gamma = ( 0   , -100  , 100  ) ) 
+                           
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_johnsonSU' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -280,9 +229,10 @@ def test_johnsonSU () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Jonhson-SU', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Johnson-SU', logger )
+        
+    models.add ( reso )
+
 
 
 # =============================================================================
@@ -294,11 +244,15 @@ def test_sinhasinh () :
 
     logger.info ('Test SinhAsinh: symmetric SinhAsinh resolution model' )
     from   ostap.fitting.resolution import ResoSinhAsinh
-    reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,  
-                           delta = ( 0.7 , 1.e-5 , 1000 ) )
+    reso = ResoSinhAsinh ( 'SinhAsinh' , mass ,
+                           mean    = ( 0.0 , -0.1  ,  0.1 ) ,                            
+                           delta   = ( 0.7 , 1.e-5 , 1000 ) ,
+                           sigma   = ( 0.2 ,  0.1  ,  1.0 ) ,
+                           epsilon = ( 0   , -100  ,  100 ) ) 
+                           
     
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_sinhasinh' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -306,26 +260,28 @@ def test_sinhasinh () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric SinhAsinh', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric SinhAsinh', logger )
+        
+    models.add ( reso )
 
 
 # =============================================================================
-## Hyperbolic 
+## Asymmetric Hyperbolic 
 # =============================================================================
 def test_hyperbolic () :
     
     logger = getLogger ( 'test_hyperbolic' )
 
-    logger.info ('Test Hyperbolic: symmetric Hyperbolic resolution model' )
+    logger.info ('Test Hyperbolic: asymmetric Hyperbolic resolution model' )
     from   ostap.fitting.resolution import ResoHyperbolic
     reso = ResoHyperbolic ( 'Hyperbolic' , mass ,
-                            sigma = ( 0.1 , 0.01 , 5.0 ) ,                            
-                            zeta = ( 1.0 , 1.e-5 , 1.e+5 ) )
-
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+                            mu      = ( 0.1  , -5    ,  5   ) ,                            
+                            sigma   = ( 0.5  ,  0.1  ,  1.0 ) ,
+                            kappa   = ( -3   , -100  , +100 ) ,                            
+                            zeta    = ( +30  , 1.e-5 , 1.e+5 ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_hyperbolic' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -333,9 +289,9 @@ def test_hyperbolic () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Hyperbolic', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Hyperbolic', logger )
+        
+    models.add ( reso )
 
 
 # =============================================================================
@@ -345,15 +301,17 @@ def test_genhyperbolic () :
     
     logger = getLogger ( 'test_genhyperbolic' )
 
-    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
+    logger.info ('Test Hyperbolic: asymmetric generalised Hyperbolic resolution model' )
     from   ostap.fitting.resolution import ResoGenHyperbolic
     reso = ResoGenHyperbolic ( 'GenHyperbolic' , mass ,
-                               sigma = ( 0.1 , 0.01 , 5.0 ) ,
-                               zeta = ( 1.0 , 1.e-5 , 1.e+5 ) ,
-                               lambd =  (-20,20) )
-
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+                               mu    = ( 0.1  , -5    ,  5    ) ,                            
+                               sigma = ( 0.5  ,  0.1  ,  1.0  ) ,
+                               kappa = ( -0   , -100  , +100  ) ,                            
+                               zeta  = ( +30  , 1.e-1 , 1.e+5 ) , 
+                               lambd = ( -2  , -100  ,  100   ) )
+    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -361,52 +319,60 @@ def test_genhyperbolic () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric GenHyperbolic', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Generalised Hyperbolic', logger )
+        
+    models.add ( reso )
 
 # =============================================================================
-## Hypatia
+## Hypatia 
 # =============================================================================
 def test_hypatia () :
-    
+
     logger = getLogger ( 'test_hypatia' )
 
-    logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
+    logger.info ('Test Hypatia: asymmetric Hypatia resolution model' )
     from   ostap.fitting.resolution import ResoHypatia
     reso = ResoHypatia ( 'Hypatia' , mass ,
-                         sigma = ( 0.1 , 0.01 , 5.0 ) ,
-                         zeta = ( 1.0 , 1.e-5 , 1.e+5 ) ,
-                         lambd = ( -20,20 ) ,
-                         sigma0 = 0.01 ) 
+                         mu     = ( 0.1  , -5    ,  5    ) ,                            
+                         sigma  = ( 0.5  ,  0.1  ,  1.0  ) ,
+                         kappa  = ( -0   , -100  , +100  ) ,                            
+                         zeta   = ( +30  , 1.e-1 , 1.e+5 ) , 
+                         lambd  = ( -2  , -100  ,  100   ) ,
+                         sigma0 = 0.01                   )
     
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
-    with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
+    with wait ( 1 ) , use_canvas ( 'test_hypatia' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Hypatia', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Hypatia', logger )
+        
+    models.add ( reso )
+
+
+    
 
 # =============================================================================
 ## Das 
 # =============================================================================
 def test_das () :
+
     
     logger = getLogger ( 'test_das' )
 
     logger.info ('Test Das: Gaussian with symmetric exponential tails ' )
     from   ostap.fitting.resolution import ResoDas
-    reso = ResoDas ( 'Das' , mass ,  k  = ( 1.0 , 1.e-5 , 20 ) , 
-                     sigma = ( 0.1 , 0.01 , 5.0 ) )
+    reso = ResoDas ( 'Das' , mass ,
+                     mean  = ( 0.1 , -3 , 3 ) ,                    
+                     k     = ( 1.0 , 1.e-5 , 200 ) ,
+                     kappa = ( 0.1 , -1 , 1  ) )  
     
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+    result, frame = reso. fitTo ( dataset , silent = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_das' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -414,9 +380,9 @@ def test_das () :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
         print(result)
     else :     
-        make_print ( reso , result , 'Symmetric Das', logger )
- 
-    models.add ( reso)
+        make_print ( reso , result , 'Asymmetric Das', logger )
+        
+    models.add ( reso )
 
 # ==============================================================================
 ## dump all models
@@ -450,7 +416,6 @@ def dump_models () :
     table = T.table ( rows , title = "Model's features" ,  prefix = '# ' )
     logger.info ( 'Features of models\n%s' % table )
   
-  
 
 # =============================================================================
 ## check that everything is serializable
@@ -468,36 +433,30 @@ def test_db() :
         for m in models : db['model %s' % m.name ] = m
         db['models'   ] = models
         db.ls() 
-        
+
+  
+    
 # =============================================================================
 if '__main__' == __name__ :
 
+    
     with timing ("Gauss"     , logger ) :  
         test_gauss      () ## single Gaussian resolution model
         
-    with timing ("2-Gauss"   , logger ) :  
-        test_2gauss     () ## double Gaussian resolution model
-        
     with timing ("Apo2"      , logger ) :  
-        test_apo2       () ## symmetric Apollonios resoltuion model
+        test_apo2       () ## Apollonios resoltuion model
         
     with timing ("CB2"       , logger ) :  
         test_cb2        () ## double-sided Crystal Ball resoltuion model
         
-    with timing ("Sech"      , logger ) :  
-        test_sech       () ## hyperbolic secant resolution model
-
-    with timing ("Logistic"  , logger ) :  
-        test_logistic   () ## logistic resolution model
-        
     with timing ("Bukin"     , logger ) :  
         test_bukin      () ## Bukin resolution model
     
-    with timing ("SinhAsinh" , logger ) :  
-        test_sinhasinh  () ## SinhAsinh resolution model
-
     with timing ("JohnsonSU" , logger ) :  
         test_johnsonSU  () ## JohnsonSU resolution model
+
+    with timing ("SinhAsinh" , logger ) :  
+        test_sinhasinh  () ## SinhAsinh resolution model
 
     with timing ("Hyperbolic" , logger ) :  
         test_hyperbolic  () ## Hyperbolic resolution model
@@ -506,10 +465,10 @@ if '__main__' == __name__ :
         test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
     with timing ("Hypatia" , logger ) :  
-        test_hypatia       () ## generalised Hyperbolic resolution model
+        test_hypatia        () ## Hypatia resoltuion model
 
-    with timing ("Das"        , logger ) :  
-        test_das          ()   ## Das resolution model
+    with timing ("Das"      , logger ) :  
+        test_das           ()   ## Das resolution model
 
     ## check finally that everything is serializeable:
     with timing ("Save to DB"    , logger ) :  

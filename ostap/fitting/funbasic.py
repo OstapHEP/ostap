@@ -690,6 +690,28 @@ class FUNC(XVar) :
         return  w [ 1 ] - w [ 0 ]
 
     # ========================================================================
+    ## get the skewness 
+    def skewness ( self , **kwargs ) :
+        """Get the skewness 
+        >>>  fun = ...
+        >>>  print('Skewness: %s ' % fun.skewness())
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import skewness as _calc
+        return self._get_stat_ ( _calc , **kwargs )
+
+    # ========================================================================
+    ## get the kurtosis
+    def kurtosis ( self , **kwargs ) :
+        """Get the kurtosis
+        >>>  fun = ...
+        >>>  print('Kurtosis: %s ' % fun.kurtosis())
+        """
+        ## use generic machinery 
+        from ostap.stats.moments import kurtosis as _calc
+        return self._get_stat_ ( _calc , **kwargs )
+
+    # ========================================================================
     ## Get the effective midpoint/location:
     #  a mid point of an interval \f$ [x_{low}, x_{high}]\f$,
     #  \f$ x_{mid} = \frac{ x_{low} + x_{high}}{2}\f$, where  
@@ -715,9 +737,20 @@ class FUNC(XVar) :
         >>>  pdf.fitTo ( ... )
         >>>  print 'MODE: %s ' % pdf.mode()
         """
-        from ostap.stats.moments import mode as _mode
-        return self._get_stat_ ( _mode , **kwargs )
+        from ostap.stats.moments import mode as _calc
+        return self._get_stat_ ( _calc , **kwargs )
 
+    # =========================================================================
+    ## get the mediane 
+    def median ( self , **kwargs ) :
+        """Get the effective mode
+        >>>  pdf = ...
+        >>>  pdf.fitTo ( ... )
+        >>>  print 'MODE: %s ' % pdf.mode()
+        """
+        from ostap.stats.moments import median as _calc
+        return self._get_stat_ ( _calc , **kwargs )
+    
     # =========================================================================
     ## simple 'function-like' interface 
     def __call__ ( self , x , error = False , normalized = False ) :
@@ -1353,6 +1386,9 @@ class FUNC2(FUNC,YVar) :
     def mid_point  ( self , *args , **kwargs ) : return self.__disabled ( "mid_point"  ) 
     def mode       ( self , *args , **kwargs ) : return self.__disabled ( "mode"       ) 
     def derivative ( self , *args , **kwargs ) : return self.__disabled ( "derivative" ) 
+    def skewness   ( self , *args , **kwargs ) : return self.__disabled ( "skewness"   ) 
+    def kurtosis   ( self , *args , **kwargs ) : return self.__disabled ( "kurtosis"   ) 
+    def median     ( self , *args , **kwargs ) : return self.__disabled ( "median"     ) 
 
 # =============================================================================
 ## @class Fun2D

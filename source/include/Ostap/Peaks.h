@@ -2624,12 +2624,20 @@ namespace Ostap
      * In general it has exponential tails for \f$ \lambda >0 \f$ and Gaussian core.
      * For negative \f$ \lambda \f$ tails are more heavy..
      *
+     * Special cases:
+     *  - \f$ \lampba = 1 \f$    : hyperbolic  
+     *  - \f$ \lampba = -1/2 \f$ : NIG   (normal inverse Gaussian)
+     *  - \f$ \lambda = 0  \f$   : hyperbola 
+     *  - \f$ \lambda = 1/2  \f$ : hyperboloid 
+     * 
      * @see Ostap::Math::Hyperbolic
-     *  Usefun subclasses 
+     * Useful subclasses 
      *  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
      *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
      *  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
      *  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+     *
+     *  
      */
     class GenHyperbolic
     {

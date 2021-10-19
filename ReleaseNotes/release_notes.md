@@ -4,10 +4,14 @@
  1. split histo parameterization tests 
  1. add function parameterization test 
  1. Add Das fnuction: `Ostap::Math::Das`, `Ostap::Models::Das`, `Das_pdf`, `ResoDas` - gaussian with exponential tails 
-  
+ 1. Add asymmetry parameters for many resolution functions 
+ 1. add test for ``asymmetric resolutions''
+ 1. change pickling/unpickling for `RooRealVar`
+ 
 ## Backward incompatible changes: 
  
 ## Bug fixes:
+
  1. fit two small typos in `ostap/math/derivative.py` (Thanks to Dmitry Golubkov) 
  1. fix the issue with `BernsteinEven`
 

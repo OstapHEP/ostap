@@ -29,7 +29,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random, array 
-from   ostap.core.core  import VE, hID
+from   ostap.core.core  import VE, hID, Ostap 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types )
 # =============================================================================
@@ -1108,6 +1108,161 @@ def binning ( edges , nbins = 0 , name = '' ) :
     return ROOT.RooBinning ( nb - 1 , buffer , name ) 
     
     
+# =============================================================================
+## Dedicated unpickling factory for RooRealVar
+def rrv_factory ( args , errors , binnings , fixed ) :
+    """ Dedicated unpickling factory for `ROOT.RooRealVar`
+    """
+    ## create it
+    rrv = ROOT.RooRealVar ( *args )
+
+    ## set errors if needed 
+    if errors :
+        if   2 == len ( errors ) : rrv.setAsymError ( *errors ) 
+        elif 1 == len ( errors ) : rrv.setError     ( *errors )
+
+    for b in binnings :
+        nb = b.GetName() 
+        if nb : rrv.setBinning ( b , nb ) 
+        
+    rrv.setConstant ( fixed )
+    
+    return rrv
+
+# =============================================================================
+## Reducing of <code>RooRealVar</code> for pickling/unpickling 
+#  @see RooRooRealVar 
+def rrv_reduce ( rrv ) :
+    """ Reducing of `ROOT.RooRealVar` for pickling 
+    - see ROOT.RooRooRealVar 
+    """
+    
+    name    = rrv.name 
+    title   = rrv.title
+    value   = rrv.getVal () 
+
+    has_min = rrv.hasMin ()
+    has_max = rrv.hasMax ()
+
+    ## constructor arguments 
+    if has_min and has_max :
+        args = name , title , value ,  rrv.getMin () , rrv.getMax ()              , rrv.getUnit ()
+    elif has_min : 
+        args = name , title , value ,  rrv.getMin () , ROOT.RooNumber.infinity () , rrv.getUnit () 
+    elif has_max : 
+        args = name , title , value , -ROOT.RooNumber.infinity () , rrv.getMax () , rrv.getUnit () 
+    else :
+        args = name , title , value ,  rrv.getUnit () 
+
+    ## errors 
+    if   rrv.hasAsymError () :
+        errors = rrv.getAsymErrorLo () , rrv.getAsymErrorHi ()
+    elif rrv.hasError   () :
+        errors = rrv.getError() ,
+    else :
+        errors = () 
+
+    ## bining schemes 
+    bnames   = rrv.getBinningNames()
+    binnings = [] 
+    for nb in bnames:
+        if not nb : continue
+        bb = rrv.getBinning ( nb , False ) 
+        if bb.GetName () : binnings.append ( bb )
+        
+    binnings = tuple ( binnings ) 
+
+    ## fixed ? 
+    fixed = True if rrv.isConstant() else False 
+    
+    content = args , errors , binnings , fixed
+    
+    return rrv_factory , content 
+
+
+ROOT.RooRealVar.__reduce__ = rrv_reduce
+
+
+# =============================================================================
+## factory for unpickling of <code>RooFormulaVar</code> and
+#  <code>Ostap::FormulaVar</code>
+def rfv_factory ( klass , args , vars ) :
+    """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
+    """
+
+    lst = ROOT.RooArgList ()
+    for v in vars : lst.add ( v ) 
+
+    margs = list  ( args  )
+    margs.append  ( lst   )
+    margs = tuple ( margs ) 
+    
+    rfv = klass ( *margs )
+    
+    rfv.__vlst = lst
+    
+    return rfv
+    
+# =============================================================================
+## Reduce <code>RooFormulaVar</code> and <code>Ostap::FormulaVar</code> for pickling
+#  @see RooFormulaVar 
+#  @see Ostap::FormulaVar 
+def rfv_reduce ( rfv ) : 
+    """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
+    - see RooFormulaVar 
+    - see Ostap.FormulaVar 
+    """
+
+    name       = rfv.GetName  ()
+    title      = rfv.GetTitle ()
+    
+    rform      = rfv.formula  ()
+    
+    expression = rform.GetTitle() 
+
+    vars       = []
+    deps       = rform.actualDependents()
+    for d in deps : vars.append ( d )
+    vars = tuple ( vars ) 
+
+    args  = name , title , expression 
+    
+    return rfv_factory , ( type ( rfv ) , args , vars ) 
+
+ROOT.RooFormulaVar.__reduce__ = rfv_reduce
+Ostap.FormulaVar.__reduce__   = rfv_reduce
+
+# =============================================================================
+## get the actual expression from <code>RooFormualVar</code>
+#  @code
+#  fomular = ...
+#  expression = formular.expression()  
+#  @endcode
+def _rfv_expr_ ( var ) :
+    """Get the actual expression from `RooFormualVar`
+    >>> fomular = ...
+    >>> expression = formular.expression()  
+    """
+    return var.formula().GetTitle() 
+
+# ==============================================================================
+## string representaion of the RooFormulaVar
+def _rfv_str_ ( var ) :
+    """String representaion of the RooFormulaVar
+    """
+    return '%s : %s' % ( var.expression() , var.getVal() ) 
+
+# ==============================================================================
+## string representaion of the RooFormulaVar
+def _rfv_repr_ ( var ) :
+    """String representaion of the RooFormulaVar
+    """
+    return '%s : %s' % ( var.expression() , var.getVal() ) 
+
+ROOT.RooFormulaVar. expression = _rfv_expr_
+ROOT.RooFormulaVar. __str__    = _rfv_str_
+ROOT.RooFormulaVar. __repr__   = _rfv_repr_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar        ,

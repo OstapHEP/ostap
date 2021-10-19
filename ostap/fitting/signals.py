@@ -735,9 +735,9 @@ class Apollonios2_pdf(MASS) :
             self.__lst_L   )
         
         self.__beta    = self.make_var ( beta ,
-                                   'beta_%s'          % name  ,
-                                   '#beta_{Apo2}(%s)' % name  ,
-                                   beta , 0.01  , 1000 ) 
+                                         'beta_%s'          % name  ,
+                                         '#beta_{Apo2}(%s)' % name  ,
+                                         beta , 1 , 0.01  , 1000 ) 
         #
         ## finally build PDF
         #
@@ -1683,13 +1683,13 @@ class SinhAsinh_pdf(MASS) :
         ##
         self.__mu      = self.mean
         self.__epsilon = self.make_var ( epsilon ,
-                                   'epsilon_%s'   % name ,
-                                   '#epsilon(%s)' % name , epsilon ,
-                                   0 , -1000 , +1000 )
+                                         'epsilon_%s'   % name ,
+                                         '#epsilon(%s)' % name , epsilon ,
+                                         0 , -1000 , +1000 )
         self.__delta   = self.make_var ( delta ,
-                                   'delta_%s'   % name ,
-                                   '#delta(%s)' % name , delta ,
-                                   1 , 1.e-6 , 1000   )
+                                         'delta_%s'   % name ,
+                                         '#delta(%s)' % name , delta ,
+                                         1 , 1.e-6 , 1000   )
         
         #
         ## finally build pdf
@@ -2634,11 +2634,11 @@ class Hyperbolic_pdf(MASS) :
         ## Zeta
         self.__zeta  = self.make_var ( zeta                ,
                                        'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , None , zeta  , -100 , 100 ) 
+                                       '#zeta(%s)'  % name , zeta  ,  1 , 0  , 100 ) 
         ## kappa  
         self.__kappa = self.make_var ( kappa               ,
                                        'kappa_%s'   % name ,
-                                       '#kappa(%s)' % name , None , kappa ,   -5 ,   5 ) 
+                                       '#kappa(%s)' % name , kappa ,  0 , -10 , 10  ) 
         
         #
         ## finally build pdf
@@ -2822,21 +2822,21 @@ class GenHyperbolic_pdf(MASS) :
                          mean_name   = 'mu_%s'     % name ,
                          mean_title  = '#mu(%s)'   % name )
                  
-        self.__mu    = self.mean 
+        self.__mu     = self.mean 
         
         ## Zeta
-        self.__zeta  = self.make_var ( zeta                ,
-                                       'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , None , zeta  , 1.e-10 , 1.e+5 ) 
+        self.__zeta   = self.make_var ( zeta                 ,
+                                        'zeta_%s'     % name ,
+                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
         ## kappa  
-        self.__kappa = self.make_var ( kappa               ,
-                                       'kappa_%s'   % name ,
-                                       '#kappa(%s)' % name , None , kappa ,  -10 ,   10    ) 
-
+        self.__kappa  = self.make_var ( kappa                ,
+                                        'kappa_%s'    % name ,
+                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
+        
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
-                                       'lambda_%s'   % name ,
-                                       '#lambda(%s)' % name , None , kappa ,  -100 , 100 ) 
+                                        'lambda_%s'   % name ,
+                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
         
         #
         ## finally build pdf
@@ -2994,22 +2994,22 @@ class Hypatia_pdf(MASS) :
                          mean_name   = 'mu_%s'     % name ,
                          mean_title  = '#mu(%s)'   % name )
         
-        self.__mu    = self.mean 
-
+        self.__mu     = self.mean 
+        
         ## Zeta
-        self.__zeta  = self.make_var ( zeta                ,
-                                       'zeta_%s'    % name ,
-                                       '#zeta(%s)'  % name , None , zeta  , 1.e-10 , 1.e+5 ) 
+        self.__zeta   = self.make_var ( zeta                 ,
+                                        'zeta_%s'     % name ,
+                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
         ## kappa  
-        self.__kappa = self.make_var ( kappa               ,
-                                       'kappa_%s'   % name ,
-                                       '#kappa(%s)' % name , None , kappa ,  -5 ,   5      ) 
-
+        self.__kappa  = self.make_var ( kappa                ,
+                                        'kappa_%s'    % name ,
+                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
+        
         ## lambda 
         self.__lambda = self.make_var ( lambd               ,
                                         'lambda_%s'   % name ,
-                                        '#lambda(%s)' % name , None , kappa ,  -100 , 100   ) 
-            
+                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
+        
         ## create a generalized hyperbolic PDF 
         hname  = self.generate_name ( prefix = self.name , suffix = 'GHD' ) 
         self.__genhyp = GenHyperbolic_pdf ( name  = hname      , 
@@ -3072,7 +3072,7 @@ class Hypatia_pdf(MASS) :
         
     @property
     def cnvpars ( self ) :
-        """``cnvpars'' : parametters for convolution"""
+        """``cnvpars'' : parameters for convolution"""
         return self.__cnvpars 
 
     @property
@@ -3163,7 +3163,7 @@ class Hypatia_pdf(MASS) :
 # @see Ostap::Math::Das
 # @see Ostap::Models::Das
 class Das_pdf(MASS) :
-    """Simple gaussian function with exponential tails.
+    r"""Simple gaussian function with exponential tails.
     It corresponds to `ExpGaussExp` function from ref below
     
     - see Souvik Das, ``A simple alternative to Crystall Ball fnuction''

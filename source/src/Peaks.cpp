@@ -4020,9 +4020,9 @@ Ostap::Math::GenHyperbolic::GenHyperbolic
   , m_AL     ( -1 ) 
   , m_N      ( -1 ) 
 {
-  setSigma ( sigma  ) ;  
-  setZeta  ( lambda ) ;  
-  setZeta  ( zeta   ) ;  
+  setSigma  ( sigma  ) ;  
+  setLambda ( lambda ) ;  
+  setZeta   ( zeta   ) ;  
 }
 // ============================================================================
 bool Ostap::Math::GenHyperbolic::setMu    ( const double value ) 
