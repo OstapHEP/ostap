@@ -500,10 +500,12 @@ def valid_formula ( expression , varset ) :
     ## with rootError( ROOT.kError + 1 ) :
     from ostap.logger.utils import mute 
     with mute ( True , True ) : 
-        _f  = Ostap.FormulaVar ( expression , varset , False )
-        fok = _f.ok ()
-        del _f
-        
+       try:
+            _f  = Ostap.FormulaVar ( expression , varset, False )
+            fok = _f.ok ()
+            del _f
+        except:
+            fok = False        
     return fok
             
 # ==============================================================================
