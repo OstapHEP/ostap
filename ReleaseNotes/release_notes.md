@@ -7,6 +7,7 @@
  1. Add asymmetry parameters for many resolution functions 
  1. add test for ``asymmetric resolutions''
  1. change pickling/unpickling for `RooRealVar`
+ 1. more steps toward better pickling/unpickling  
  
 ## Backward incompatible changes: 
  
@@ -14,7 +15,7 @@
 
  1. fit two small typos in `ostap/math/derivative.py` (Thanks to Dmitry Golubkov) 
  1. fix the issue with `BernsteinEven`
-
+ 1. fix call for `RooFormulaVar::formula` for old versions of ROOT 
 
 # v1.6.4.0
 

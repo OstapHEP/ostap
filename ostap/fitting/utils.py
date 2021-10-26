@@ -1335,7 +1335,8 @@ class MakeVar ( object ) :
         name  = name  if name  else 'Formula_%s '    % self.name 
         title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
         
-        rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        ## rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        rfv = Ostap.FormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
         
         self.aux_keep.append ( vlst )
         self.aux_keep.append ( rvf  )

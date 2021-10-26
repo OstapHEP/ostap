@@ -714,26 +714,20 @@ class Apollonios2_pdf(MASS) :
         ## initialize the base
         # 
         MASS.__init__  ( self , name , xvar , mean , sigma  )
-
         
         self.__asym = self.make_var ( asymmetry                 ,
-                                'asym_%s'          % name ,
-                                '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
-        
-        self.__lst_R  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1-%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        self.__lst_L  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1+%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+                                      'asym_%s'          % name ,
+                                      '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
+
+        ## constreuct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
+
         self.__beta    = self.make_var ( beta ,
                                          'beta_%s'          % name  ,
                                          '#beta_{Apo2}(%s)' % name  ,
@@ -762,10 +756,20 @@ class Apollonios2_pdf(MASS) :
 
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Apollonios2 function"""
+        """``asym''- asymmetry parameter for Apollonios2 function (same as ``kappa''"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
         value = float ( value ) 
         assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
@@ -825,25 +829,18 @@ class BifurcatedGauss_pdf(MASS) :
         
         ## asymmetry parameter  
         self.__asym = self.make_var ( asymmetry                 ,
-                                'asym_%s'          % name ,
-                                '#asym_{asym}(%s)' % name ,
-                                asymmetry , 0 , -1 , 1  ) 
+                                      'asym_%s'          % name ,
+                                      '#asym_{asym}(%s)' % name ,
+                                      asymmetry , 0 , -1 , 1  )
         
-        ## Right-side sigma
-        self.__lst_R  = ROOT.RooArgList ( self.sigma , self.asym )
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1.0+%s)"   % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        ## Left-side sigma
-        self.__lst_L  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1.0-%s)"   % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
+        ## constreuct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
         
         #
         ## finally build pdf
@@ -873,6 +870,16 @@ class BifurcatedGauss_pdf(MASS) :
     def asym ( self, value ) :
         value = float ( value ) 
         assert -1 <= value <= 1, "``asymmetry''-parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Bifurcated Gaussian function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
 
     @property
@@ -1540,21 +1547,16 @@ class BifurcatedStudentT_pdf(MASS) :
                                 'asym_%s'        % name ,
                                 '#xi_{asym}(%s)' % name ,
                                 asymmetry , 0 , -1 , 1  ) 
-        
-        self.__lst_R  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_stt_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1+%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        self.__lst_L  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_stt_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1-%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+
+        ## construct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
+
         ## left exponent 
         self.__nL =  self.make_var ( nL                     ,
                                'nL_%s'         % name ,
@@ -1617,7 +1619,17 @@ class BifurcatedStudentT_pdf(MASS) :
     def asym ( self, value ) :
         value  = float ( value )
         assert -1<= value <=1 , "Asymmetry must be in he  range -1,1" 
-        self.__asym.setVal ( value ) 
+        self.__asym.setVal ( value )
+        
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
+        self.__asym.setVal ( value )
 
     @property
     def sigmaL( self ) :
@@ -2054,23 +2066,15 @@ class AsymmetricLaplace_pdf(MASS) :
 
         self.__slope = self.sigma
 
-            
-        ## Right-side lambda 
-        self.__lst_R   = ROOT.RooArgList ( self.slope , self.asym )
-        self.__lambdaR = ROOT.RooFormulaVar (
-            "lambdaR_%s"     % name   ,
-            "lambda_{R}(%s)" % name   ,
-            "%s*(1.0+%s)"    % ( self.slope.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        ## Left-side lambda 
-        self.__lst_L   = ROOT.RooArgList ( self.slope , self.asym ) 
-        self.__lambdaL = ROOT.RooFormulaVar (
-            "lambdaL_%s"     % name   ,
-            "lambda_{L}(%s)" % name   ,
-            "%s*(1.0-%s)"   % ( self.slope.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+        ## constreuct left and right lambdas
+        self.__lambdaL , self.__lambdaR = self.vars_from_asymmetry (
+            self.slope                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'lambdaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'lambdaR' , self.name ) ,
+            v1title = '#lambda_{L}: slope #times (1+#kappa)'        , 
+            v2title = '#lambda_{R}: slope #times (1-#kappa)'        )
+
         ## finally build pdf
         self.pdf = Ostap.Models.AsymmetricLaplace (
             self.roo_name ( 'alaplace_' ) , 
@@ -2116,6 +2120,16 @@ class AsymmetricLaplace_pdf(MASS) :
     def asym ( self, value ) :
         value = float ( value ) 
         assert -1 <= value <= 1, "``asymmetry''-parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
 
     @property
@@ -3716,8 +3730,8 @@ class BWMC_pdf(MASS) :
             ## for g in self.widths[1:] :
 
             ## create gamma 
-            gamma = ROOT.RooFormulaVar ( 'gamma_%s'    % name ,
-                                         '#Gamma_(%s)' % name , formula , self.widths )
+            gamma = Ostap.FormulaVar ( 'gamma_%s'    % name ,
+                                       '#Gamma_(%s)' % name , formula , self.widths )
             self.__trash.append ( gamma )
             
         # =====================================================================
@@ -3739,11 +3753,14 @@ class BWMC_pdf(MASS) :
                 gi  = self.widths[i]
                 lst = ROOT.RooArgList ( self.gamma ,  gi )
                 self.__formulas_lists.append ( lst ) 
-                br  = ROOT.RooFormulaVar ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
-                                           'Br_{%d}(%s)' % ( i + 1 , name ) ,
-                                           '%s / %s'     % ( gi.GetName() , self.gamma.GetName() ) , lst )
+                ## br  = ROOT.RooFormulaVar ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
+                ##                            'Br_{%d}(%s)' % ( i + 1 , name ) ,
+                ##                            '%s / %s'     % ( gi.GetName() , self.gamma.GetName() ) , lst )
+                br  =  Ostap.MoreRooFit.Division ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
+                                                   'Br_{%d}(%s)' % ( i + 1 , name ) , self.gamma , gi )
                 self.brfrs.add      ( br )
-                self.__trash.append ( br ) 
+                self.__trash.append ( br )
+                
         ##  branching fractions are specified 
         elif 2 == case : 
             
@@ -3759,9 +3776,12 @@ class BWMC_pdf(MASS) :
                 ls = ROOT.RooArgList ( self.gamma ,  br )
                 self.__trash.append  ( ls ) 
 
-                gg  = ROOT.RooFormulaVar ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
-                                           '#Gamma_{%d}(%s)' % ( i + 1 , name ) ,
-                                           '%s * %s'         % ( br.GetName() , self.gamma.GetName() ) , ls )
+                ## gg  = ROOT.RooFormulaVar ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
+                ##                           '#Gamma_{%d}(%s)' % ( i + 1 , name ) ,
+                ##                           '%s * %s'         % ( br.GetName() , self.gamma.GetName() ) , ls )
+                
+                gg  = Ostap.MoreRooFit.Product ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
+                                                 '#Gamma_{%d}(%s)' % ( i + 1 , name ) , self.gamma , br ) 
                 self.widths.add      ( gg )
                 self.__trash.append  ( gg ) 
             

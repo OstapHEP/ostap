@@ -29,9 +29,11 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, random, array 
-from   ostap.core.core  import VE, hID, Ostap 
+from   ostap.core.core        import VE, hID, Ostap
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
                                        integer_types , string_types )
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -777,7 +779,7 @@ def two_yields ( total , fraction ) :
     
     formula  = '(%s)*(1-(%s))'         % vnames  
     varlist  = ROOT.RooArgList    ( var1 , var2                      )
-    yield2   = ROOT.RooFormulaVar ( name , title , formula , varlist )
+    yield2   = Ostap.FormulaVar   ( name , title , formula , varlist )
     
     yield2._varlist = [ var1 , var2 , varlist ]
     
@@ -1229,8 +1231,6 @@ def rfv_reduce ( rfv ) :
     
     return rfv_factory , ( type ( rfv ) , args , vars ) 
 
-ROOT.RooFormulaVar.__reduce__ = rfv_reduce
-Ostap.FormulaVar.__reduce__   = rfv_reduce
 
 # =============================================================================
 ## get the actual expression from <code>RooFormualVar</code>
@@ -1259,10 +1259,70 @@ def _rfv_repr_ ( var ) :
     """
     return '%s : %s' % ( var.expression() , var.getVal() ) 
 
-ROOT.RooFormulaVar. expression = _rfv_expr_
-ROOT.RooFormulaVar. __str__    = _rfv_str_
-ROOT.RooFormulaVar. __repr__   = _rfv_repr_
+if (6,22) <= root_info : 
+    ROOT.RooFormulaVar. expression = _rfv_expr_
+    ROOT.RooFormulaVar. __str__    = _rfv_str_
+    ROOT.RooFormulaVar. __repr__   = _rfv_repr_
+    ROOT.RooFormulaVar.__reduce__  = rfv_reduce
+else :
+    Ostap.FormulaVar.__reduce__    = rfv_reduce
+    Ostap.FormulaVar. __str__      = _rfv_str_
+    Ostap.FormulaVar. __repr__     = _rfv_repr_
+    Ostap.FormulaVar.__reduce__    = rfv_reduce
 
+
+
+
+# =============================================================================
+## unpickle <code>Ostap::MoreFooFit::TwoVars</code> objects
+#  @see Ostap::MoreRooFit.TwoVars
+def r2v_factory ( klass , *args ) :
+    """unpickle `Ostap::MoreFooFit::TwoVars` objects
+    - see Ostap.MoreRooFit.TwoVars
+    """
+    return klass ( *args )
+
+# =============================================================================
+## Reduce <code>Ostap::MoreFooFit::TwoVars</code> objects
+#  @see Ostap::MoreRooFit.TwoVars
+def r2v_reduce ( vars ) :
+    """Reduce `Ostap::MoreFooFit::TwoVars` objects
+    - see Ostap.MoreRooFit.TwoVars
+    """
+    return r2v_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
+
+
+Ostap.MoreRooFit.TwoVars.__reduce__  = r2v_reduce
+
+
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Combination</code> objects
+#  @see Ostap::MoreRooFit.Combination
+def _rc_reduce ( vars ) :
+    """Reduce `Ostap.MoreFooFit.Combination` objects
+    - see Ostap.MoreRooFit.Combination
+    """
+    return r2v_factory , ( type ( var ) ,
+                           var.name , var.title ,
+                           var.x()  , var.y()   ,
+                           var.alpha() , var.beta() , var.gamma () )
+
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Asymmetry</code> objects
+#  @see Ostap::MoreRooFit.Asymmetry
+def _ra_reduce ( vars ) :
+    """Reduce  `Ostap::MoreFooFit::Asymmetry` objects
+    - see Ostap.MoreRooFit.Asymmetry
+    """
+    return r2v_factory , ( type ( var ) ,
+                           var.name , var.title ,
+                           var.x()  , var.y()   ,
+                           var.scale () )
+
+
+Ostap.MoreRooFit.Combination.__reduce__  = _rc_reduce
+Ostap.MoreRooFit.Asymmetry.  __reduce__  = _ra_reduce
+    
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar        ,

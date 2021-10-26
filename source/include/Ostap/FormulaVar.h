@@ -73,13 +73,13 @@ namespace Ostap
     // ========================================================================
     /** full constructor 
      *  @param name       formula name 
-     *  @param title      formula title 
+     *  @param title      formula title  (not used) 
      *  @param expression formula expression 
      *  @param dependent  formula dependents 
      *  @param check      check dependents?
      */
     FormulaVar ( const std::string& name         , 
-                 const std::string& title        , 
+                 const std::string& /* title */  , 
                  const std::string& expression   , 
                  const RooArgList & dependents   ,
                  const bool 	      check = true ) ;
@@ -100,7 +100,7 @@ namespace Ostap
      *  @param dependent  formula dependents 
      *  @param check      check dependents?
      */    
-    FormulaVar ( const std::string& name         , 
+    FormulaVar ( const std::string& expression   , 
                  const RooArgList & dependents   ,
                  const bool 	      check = true ) ;
     // ========================================================================
@@ -114,6 +114,11 @@ namespace Ostap
     // =========================================================================
     ///  destructor 
     virtual ~FormulaVar() ;
+    // =========================================================================
+  public:
+    // =========================================================================
+    /// get true formula expression 
+    std::string expression () const ;
     // =========================================================================
   };
   // ===========================================================================

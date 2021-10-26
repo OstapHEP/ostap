@@ -467,14 +467,19 @@ class Manca_pdf (PDF) :
                                  dm_y2s + 0.20 * s_y1s )
         
         self.__aset11 = ROOT.RooArgList ( self.__m1s , self.__dm2s )
-        self.__m2s    = ROOT.RooFormulaVar (
-            "m_" + name + '2S'   ,
-            "m2s(%s)"  % name    ,
-            "%s+%s" % ( self.__m1s.GetName() , self.__dm2s.GetName()  ) , 
-            self.__aset11       )
+
+            
+        ## self.__m2s    = ROOT.RooFormulaVar (
+        ## "m_" + name + '2S'   ,
+        ## "m2s(%s)"  % name    ,
+        ## "%s+%s" % ( self.__m1s.GetName() , self.__dm2s.GetName()  ) , 
+        ## self.__aset11       )
+        self.__m2s    = Ostap.MoreRooFit.Addition ( "m_" + name + '2S' ,
+                                                    "m2s(%s)"  % name  ,
+                                                    self.__m1s , self.__dm2s ) 
         
         self.__aset12 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m2s ) 
-        self.__s2s    = ROOT.RooFormulaVar (
+        self.__s2s    = Ostap.FormulaVar (
             "sigma_"  + name + '2S'    ,
             "#sigma_{Y2S}(%s)" % name  ,
             "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
@@ -502,15 +507,18 @@ class Manca_pdf (PDF) :
                                  dm_y3s + 0.20 * s_y1s )
         
         self.__aset21 = ROOT.RooArgList ( self.__m1s , self.__dm3s )
-        self.__m3s    = ROOT.RooFormulaVar (
-            "m_"       + name + '(3S)' ,
-            "m3s(%s)"  % name          ,
-            "%s+%s" % ( self.__m1s.GetName() , self.__dm3s.GetName() ) ,
-            self.__aset21       )
+        ## self.__m3s    = ROOT.RooFormulaVar (
+        ## "m_"       + name + '(3S)' ,
+        ## "m3s(%s)"  % name          ,
+        ## "%s+%s" % ( self.__m1s.GetName() , self.__dm3s.GetName() ) ,
+        ## self.__aset21       )
+        self.__m3s    = Ostap.MoreRooFit.Addition ( "m_" + name + '3S' ,
+                                                    "m3s(%s)"  % name  ,
+                                                    self.__m1s , self.__dm3s ) 
         
         
         self.__aset22 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m3s ) 
-        self.__s3s    = ROOT.RooFormulaVar (
+        self.__s3s    = Ostap.FormulaVar (
             "sigma_"  + name + '3S'    ,
             "#sigma_{Y3S}(%s)" % name  ,
             "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
@@ -820,14 +828,19 @@ class Manca2_pdf (PDF) :
                                  dm_y2s + 0.20 * s_y1s )
         
         self.__aset11 = ROOT.RooArgList ( self.__m1s , self.__dm2s )
-        self.__m2s    = ROOT.RooFormulaVar (
-            "m_" + name + '2S'   ,
-            "m2s(%s)"  % name    ,
-            "%s+%s" % ( self.__m1s.GetName() , self.__dm2s.GetName()  ) , 
-            self.__aset11       )
+        
+        ## self.__m2s    = ROOT.RooFormulaVar (
+        ##     "m_" + name + '2S'   ,
+        ##     "m2s(%s)"  % name    ,
+        ##     "%s+%s" % ( self.__m1s.GetName() , self.__dm2s.GetName()  ) , 
+        ##    self.__aset11       )
+        self.__m2s    = Ostap.MoreRooFit.Addition ( "m_" + name + '2S' ,
+                                                    "m2s(%s)"  % name  ,
+                                                    self.__m1s , self.__dm2s ) 
+        
         
         self.__aset12 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m2s ) 
-        self.s2s    = ROOT.RooFormulaVar (
+        self.s2s    = Ostap.FormulaVar (
             "sigma_"  + name + '2S'    ,
             "#sigma_{Y2S}(%s)" % name  ,
             "%s*(%s/%s)"  % ( self.__sigma.GetName() ,
@@ -856,15 +869,18 @@ class Manca2_pdf (PDF) :
                                  dm_y3s + 0.20 * s_y1s )
         
         self.__aset21 = ROOT.RooArgList ( self.__m1s , self.__dm3s )
-        self.__m3s    = ROOT.RooFormulaVar (
-            "m_"       + name + '(3S)' ,
-            "m3s(%s)"  % name          ,
-            "%s+%s" % ( self.__m1s.GetName() , self.__dm3s.GetName() ) ,
-            self.__aset21       )
+        ## self.__m3s    = ROOT.RooFormulaVar (
+        ##    "m_"       + name + '(3S)' ,
+        ##    "m3s(%s)"  % name          ,
+        ##    "%s+%s" % ( self.__m1s.GetName() , self.__dm3s.GetName() ) ,
+        ##    self.__aset21       )
+        self.__m3s    = Ostap.MoreRooFit.Addition ( "m_" + name + '3S' ,
+                                                    "m3s(%s)"  % name  ,
+                                                    self.__m1s , self.__dm3s ) 
         
         
         self.__aset22 = ROOT.RooArgList ( self.__sigma , self.__m1s , self.__m3s ) 
-        self.__s3s    = ROOT.RooFormulaVar (
+        self.__s3s    = Ostap.FormulaVar (
             "sigma_"  + name + '3S'    ,
             "#sigma_{Y3S}(%s)" % name  ,
             "%s*(%s/%s)"  % ( self.__sigma.GetName() ,

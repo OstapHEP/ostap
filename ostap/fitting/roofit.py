@@ -82,7 +82,7 @@ def var_from_name ( w , varset ) :
     vlst = ROOT.RooArgList()
     for s in varset : vlst.add ( s )
     #
-    f = ROOT.RooFormulaVar( w , w , vlst )
+    f = Ostap.FormulaVar( w , w , vlst )
     return f 
     
 # =============================================================================

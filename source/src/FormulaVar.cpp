@@ -42,10 +42,10 @@ ClassImp(Ostap::FormulaVar) ;
 // ============================================================================
 std::unique_ptr<Ostap::FormulaVar>  
 Ostap::makeFormula 
-( const std::string& name       , 
-  const std::string& title      , 
-  const std::string& expression , 
-  const RooArgList & dependents ) 
+( const std::string& name        , 
+  const std::string& title       , 
+  const std::string& expression  , 
+  const RooArgList & dependents  ) 
 {
   const std::string vname { Ostap::tmp_name ( "formula1_" , expression ) } ;
   //
@@ -270,7 +270,11 @@ Ostap::FormulaVar::FormulaVar
   const RooArgList & dependents    ,
   const bool 	      check          ) 
   : RooFormulaVar ( name       . c_str () , 
+#if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+                    expression . c_str () , 
+#else 
                     title      . c_str () , 
+#endif 
                     expression . c_str () , 
                     dependents            
 #if    ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
@@ -339,6 +343,17 @@ Ostap::FormulaVar::FormulaVar
 // ============================================================================
 Ostap::FormulaVar::~FormulaVar(){}
 // ============================================================================
+// get true formula expression 
+// ============================================================================
+std::string Ostap::FormulaVar::expression () const 
+{
+#if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
+  return           GetTitle() ;
+#else 
+  return formula().GetTitle() ;
+#endif 
+} 
+// =========================================================================
 
 // ============================================================================
 //                                                                      The END 

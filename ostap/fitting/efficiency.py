@@ -19,6 +19,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
+from   ostap.core.core        import Ostap 
 from   ostap.fitting.funbasic import FUNC, FUNC2 , FUNC3 , Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.basic    import PDF , Generic1D_pdf
 from   ostap.fitting.fit2d    import PDF2, Generic2D_pdf
@@ -77,11 +78,14 @@ class Efficiency ( object ) :
                 self.__scale = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
 
             self.__lst     = ROOT.RooArgList ( self.__scale , self.__eff_pdf.pdf )
-            _s = self.scale.GetName()
-            _p = self.eff_pdf.pdf.GetName() 
-            self.__eff_fun = ROOT.RooFormulaVar (
-                'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
-
+            _s             = self.scale.GetName()
+            _p             = self.eff_pdf.pdf.GetName()
+            
+            ## self.__eff_fun = Ostap.FormulaVar ( 'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
+            self.__eff_fun = Ostap.Product ( 'Eff_%s'           % self.name    ,
+                                             'efficiency %s*%s' % ( _s < _p )  ,
+                                             self.__scale , self.__eff_pdf.pdf )  
+            
         ## create the main PDF: RooEfficiency 
         self.__pdf =  ROOT.RooEfficiency (
             PDF.roo_name ( 'eff_' )       ,
