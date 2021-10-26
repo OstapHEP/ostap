@@ -62,7 +62,8 @@ def eff0 ( x ) :
 
 emax       = 1.0
 
-for i in range ( 1000 ) :
+N          = 5000
+for i in range ( N  ) :
     
     xv = random.uniform ( xmin , xmax )
     
@@ -146,10 +147,8 @@ def test_formula () :
         logger.info ( "Compare with true efficiency (using  RooFormulaVar)\n%s" % make_table (
             eff1 , title = 'using RooFormulaVer') )
 
-        with use_canvas ("test_formula") : 
-            eff1.draw ( ds )
-
-    time.sleep(2)
+    with wait ( 2 ) , use_canvas ("test_formula") : 
+        eff1.draw ( ds , nbins = 25 )
     
 # =============================================================================
 ## use PyVAR stuff
@@ -216,11 +215,9 @@ def test_pyVAR () :
         logger.info ( "Fit result using-PyVAR \n%s" % r2.table ( prefix = "# ") )
         logger.info ( "Compare with true efficiency (using PyVAR)\n%s" % make_table (
             eff2 , title = 'using PyVAR') )
-
-        with use_canvas ("test_pyVAR") : 
-            eff2.draw ( ds )
-
-    time.sleep(2)
+    
+    with wait ( 2 ) , use_canvas ("test_pyVAR") : 
+        eff2.draw ( ds , nbins = 25 )
     
 # =============================================================================
 ## use PyVAR2
@@ -263,10 +260,8 @@ def test_pyVAR2 () :
         logger.info ( "Compare with true efficiency (using PyVAR2)\n%s" % make_table (
             eff3 , title = 'using PyVAR2') )
 
-        with use_canvas ("test_pyVAR2") : 
-            eff3.draw ( ds )
-
-    time.sleep(2)
+    with wait ( 2 ) , use_canvas ("test_pyVAR2") : 
+        eff3.draw ( ds , nbins = 25 )
 
 # =============================================================================
 ## use PyVar stuff
@@ -344,10 +339,8 @@ def test_pyVar () :
         logger.info ( "Compare with true efficiency (using  PyVar)\n%s" % make_table (
             eff4 , title = 'using PyVar') )
 
-        with use_canvas ("test_pyVar") : 
-            eff4.draw ( ds )
-            
-    time.sleep(2)
+    with wait ( 2 ) , use_canvas ("test_pyVar") : 
+        eff4.draw ( ds , nbins = 25 )
 
 # =============================================================================
 if '__main__' == __name__ :

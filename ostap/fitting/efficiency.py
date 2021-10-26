@@ -82,9 +82,9 @@ class Efficiency ( object ) :
             _p             = self.eff_pdf.pdf.GetName()
             
             ## self.__eff_fun = Ostap.FormulaVar ( 'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
-            self.__eff_fun = Ostap.Product ( 'Eff_%s'           % self.name    ,
-                                             'efficiency %s*%s' % ( _s < _p )  ,
-                                             self.__scale , self.__eff_pdf.pdf )  
+            self.__eff_fun = Ostap.MoreRooFit.Product ( 'Eff_%s'           % self.name    ,
+                                                        'efficiency %s*%s' % ( _s , _p )  ,
+                                                        self.__scale , self.__eff_pdf.pdf )  
             
         ## create the main PDF: RooEfficiency 
         self.__pdf =  ROOT.RooEfficiency (

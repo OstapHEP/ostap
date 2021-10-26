@@ -20,6 +20,7 @@ from   ostap.logger.utils       import rooSilent
 from   ostap.fitting.efficiency import Efficiency1D
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -39,12 +40,14 @@ acc.defineType('reject',0)
 varset  = ROOT.RooArgSet  ( x , acc )
 ds      = ROOT.RooDataSet ( dsID() , 'test data' ,  varset )
 
-eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 2 , increasing = True )
-eff0.phis  = 3.1415/2 , 3.1415/2 
+eff0       = Models.Monotonic_pdf ( 'E0' , xvar = x , power = 3 , increasing = True )
+eff0.phis  = 3.1415/1 , 3.1415/2 , 3.1415/3  
 margin     = 1.25 
 emax       = margin * eff0 ( x.getMax() ) 
 
-for i in range ( 10000 ) :
+N = 20000
+
+for i in range ( N ) :
     
     xv = random.uniform ( xmin , xmax )
     
@@ -61,13 +64,33 @@ np     = 20
 dx     = (xmax-xmin)/np 
 points = [ dx * i for i in range ( np + 1 ) ]
 
+# =================================================================================
+## make comparison table 
+def make_table ( func , title , prefix = "# ") :
+
+    rows = [ ( 'x' , 'fitted eff [%]' , 'true eff [%]' , 'delta [%]' ) ]
+    for p in points :
+
+        e1  = 100 * func (  p , error = True ) 
+        e2  = 100 * eff0 ( p ) / emax 
+        d   = e1 - e2    
+        row = "%4.2f" % p , \
+              "%s"    %  e1.toString ( '(%5.2f+-%4.2f)'  ) ,\
+              "%.2f"  %  e2  ,\
+              "%s"    %  d .toString ( '(%5.2f+-%4.2f)'  )
+        
+        rows.append ( row )
+    from ostap.logger.table import table
+    return table ( rows , title = title , prefix = prefix ) 
+    
+
 # =============================================================================
 # use some PDF to parameterize efficiciency
 def test_pdf () :
 
     logger = getLogger ( 'test_pdf' )
 
-    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 3 , increasing = True )
+    effPdf = Models.Monotonic_pdf ( 'P6' , xvar = x , power = 4 , increasing = True )
 
     maxe   = margin * effPdf ( xmax )
     
@@ -77,16 +100,14 @@ def test_pdf () :
     eff2   = Efficiency1D ( 'E2' , effPdf , cut = acc  , scale = scale )
     
     r2     = eff2.fitTo ( ds )
-
-    with use_canvas ( 'test_pdf' ) : 
-        f2     = eff2.draw  ( ds )
+    
+    logger.info ( "Fit result using-Monotonic_pdf \n%s" % r2.table ( prefix = "# ") )
+    logger.info ( "Compare with true efficiency (using Monotonic_pdf)\n%s" % make_table (
+        eff2 , title = 'using Monotonic_pdf') )
+    
+    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
+        f2     = eff2.draw  ( ds , nbins = 25 )
         
-    for p in points :
-        e  = eff2 ( p , error = True )
-        ev = e.value()
-        e0 = eff0 ( p ) / emax  
-        logger.info ( ' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
-
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
@@ -102,17 +123,14 @@ def test_vars1 () :
     eff2   = Efficiency1D ( 'E3' , f.fun , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
-    
-    with use_canvas ( 'test_vars' ) : 
-        f2     = eff2.draw  ( ds )
-    
-    for p in points :
-        e  = eff2 ( p , error = True )
-        ev = e.value()
-        e0 = eff0 ( p ) / emax  
-        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
-
+    logger.info ( "Fit result using-BernsteinPoly \n%s" % r2.table ( prefix = "# ") )
+    logger.info ( "Compare with true efficiency (using BernsteinPoly)\n%s" % make_table (
+        eff2 , title = 'using BernsteinPoly') )
+    
+    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
+        f2     = eff2.draw  ( ds , nbins = 25 )
+        
 # =============================================================================
 # use some functions  to parameterize efficiciency
 def test_vars2 () :
@@ -132,16 +150,13 @@ def test_vars2 () :
     
     r2     = eff2.fitTo ( ds )
     
-    with use_canvas ( 'test_vars2' ) : 
-        f2     = eff2.draw  ( ds )
+    logger.info ( "Fit result using-MonotonicPoly \n%s" % r2.table ( prefix = "# ") )
+    logger.info ( "Compare with true efficiency (using MonotonicPoly)\n%s" % make_table (
+        eff2 , title = 'using MonotonicPoly') )
     
-    for p in points :
-        e  = eff2 ( p , error = True )
-        ev = e.value()
-        e0 = eff0 ( p ) / emax  
-        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
-
-
+    with wait ( 2 ) , use_canvas ( 'test_pdf' ) : 
+        f2     = eff2.draw  ( ds , nbins = 25 )
+        
 
 # =============================================================================
 # use some functions  to parameterize efficiciency
@@ -163,19 +178,15 @@ def test_vars3 () :
     eff2   = Efficiency1D ( 'E5' , F , cut = acc  , xvar = x )
     
     r2     = eff2.fitTo ( ds )
-    
-    with use_canvas ( 'test_vars3' ) : 
-        f2     = eff2.draw  ( ds )
-    
-    
-    for p in points :
-        e  = eff2 ( p , error = True )
-        ev = e.value()
-        e0 = eff0 ( p ) / emax  
-        logger.info (' Point/Eff %4.1f %s%% (%.2f%%)'   % ( p , (100*e).toString ( '(%5.2f+-%4.2f)' ) ,  e0 * 100 ) )
 
+    logger.info ( "Fit result using-Fun1D \n%s" % r2.table ( prefix = "# ") )
+    logger.info ( "Compare with true efficiency (using Fun1D)\n%s" % make_table (
+        eff2 , title = 'using Fnu1D') )
 
-
+    
+    with wait ( 2 ) , use_canvas ( 'test_vars3' ) : 
+        f2     = eff2.draw  ( ds , nbins = 25 )
+    
     
 # =============================================================================
 if '__main__' == __name__ :
