@@ -17,7 +17,12 @@ __all__     = (
     'H_Nfit' ,
     ) 
 # =============================================================================
-import ROOT
+import ROOT, abc 
+# =============================================================================
+import ostap.histos.histos 
+import ostap.fitting.fitresult 
+from   ostap.core.core        import Ostap, funID
+from   ostap.core.ostap_types import num_types, integer_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,20 +32,15 @@ else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # =============================================================================
-import ostap.histos.histos 
-import ostap.fitting.fitresult 
-from   ostap.core.core        import Ostap, funID
-from   ostap.core.ostap_types import num_types, integer_types 
-# =============================================================================
 # @class C1Fun
 # Helper wrapper for callable to TF1 object for fitting 
 class C1Fun(object) :
     """Helper wrapper for  callable to  TF1 object for fitting
     """
-
     def __init__ ( self , fun , xmin , xmax ) :
 
-        assert callable ( fun ) , 'Fun must be callable!'  
+        assert callable ( fun ) , "C1Fun: ``fun'' must be callable!"
+        
         self.__fun  = fun 
         self.__xmin = min ( xmin , xmax )
         self.__xmax = max ( xmin , xmax )
@@ -140,40 +140,83 @@ class C1Fun(object) :
 
 
 # =============================================================================
+# @class HFit
+class HFIT(object) :
+    __metaclass__ = abc.ABCMeta
+
+    ## constructor from hfit an dTF1 objects 
+    def __init__ ( self , hfit , tf1 ) :
+        
+        assert hfit and callable   ( hfit )              , "HFIT: ``hfit'' must be callable"
+        assert tf1  and isinstance ( tf1   , ROOT.TF1 )  , "HFIT: ``tf1'' must be ROOT.TF1"
+        
+        self.__hfit = hfit
+        self.__fun  = tf1
+        
+    @abc.abstractmethod
+    def norm ( self ) :
+        """Is this object represent normalised function?"""
+        return True 
+    @abc.abstractmethod
+    def npars ( self ) :
+        """number of parameters"""
+        return 0
+    @abc.abstractmethod
+    def __call__ ( self , x , pars = [] ) :
+        """The main call method"""
+        return None
+
+    @property
+    def fun  ( self ) :
+        """``fun'' : actual ROOT.TF1  object"""
+        return self.__fun 
+
+    @property
+    def hfit ( self ) :
+        """``hfin'' : actual ``hfit'' object"""
+        return self.__hfit 
+
+    ## get list of parameters 
+    def pars     ( self ) : return self.hfit.pars  ()
+    
+    def draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs ) 
+    def Draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs )    
+    def fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
+    def Fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
+    
+    
+# =============================================================================
 ## @class H_fit
 #  simple function to fit/represent the histogram with bernstein/spline
 #  and other types of function expansion 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
-class H_fit(object) :
+class H_fit(HFIT) :
     """Simple helper function to fit/represent the histogram with sum of
     Bernstein/b-spline/legendre/chebyshev, etc functions 
     """
     def __init__ ( self ,  hfit ) :
-        self._hfit = hfit
-        self.fun = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() )
+
+        ## create the function
+        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() )
+
+        ## initialize the base 
+        super(H_fit,self).__init__ ( hfit , tf1 ) 
     #
     def norm     ( self ) : return False 
-    def npars    ( self ) : return self._hfit.npars () 
-    def pars     ( self ) : return self._hfit.pars  ()
+    def npars    ( self ) : return self.hfit.npars () 
     #
-    def draw     ( self , *args ) : return self.fun.Draw( *args ) 
-    def Draw     ( self , *args ) : return self.fun.Draw( *args )
-    
-    def fit      ( self , h , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
-    def Fit      ( self , h , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
-    #   
     ## the major method 
     def __call__ ( self , x , pars = [] ) :
         
-        x0 = x if isinstance ( x , num_types ) else x[0]
+        x0 = float( x  ) if isinstance ( x , num_types ) else x [ 0 ]
         
         if pars :
-            np = self._hfit.npars() 
+            np = self.hfit.npars () 
             for i in range ( 0 , np ) :    
-                self._hfit.setPar ( i , pars[i] )
+                self.hfit.setPar ( i , pars[i] )
                 
-        return self._hfit( x0 )
+        return self.hfit( x0 )
     
 # =============================================================================
 ## @class H_Nfit
@@ -184,40 +227,39 @@ class H_fit(object) :
 #  - positive monotonic B-spline expansion, etc...
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
-class H_Nfit (object) :
+class H_Nfit (HFIT) :
     """ Simple helper function to fit/represent the histogram with
     the sum of bernstein positive polynominals
     """
     def __init__ ( self , hfit ) :
-        self._hfit = hfit
-        self.fun   = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() + 1 )
-        self.fun.SetParameter ( 0 , 1 ) 
         
-    def norm     ( self ) : return True  
-    def npars    ( self ) : return self._hfit.npars () + 1  ## NB: normalization!  
-    def pars     ( self ) : return self._hfit.pars  ()
-    
-    def draw     ( self , *args ) : return sef.fun.Draw( *args ) 
-    def Draw     ( self , *args ) : return sef.fun.Draw( *args )
-    
-    def fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
-    def Fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
+        ## create function 
+        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() + 1 )
+        
+        ## initialize the base 
+        super(H_Nfit,self).__init__ ( hfit , tf1 )
 
+        ## set normalization parameter 
+        self.fun.SetParameter ( 0 , 1 ) 
+
+    def norm     ( self ) : return True  
+    def npars    ( self ) : return self.hfit.npars () + 1  ## NB: normalization!  
+    
     ## the major method 
     def __call__ ( self , x , pars = [] ) :
 
         norm = 1.0
-        x0   = x if isinstance ( x , num_types ) else x [ 0 ]
+        x0   = float ( x ) if isinstance ( x , num_types ) else x [ 0 ]
         
         if pars :
 
-            norm = pars[0]
+            norm = float ( pars [ 0 ] ) 
             
-            np   = self._hfit.npars() 
+            np   = self.hfit.npars() 
             for i in range ( 0 , np ) :    
-                self._hfit.setPar ( i , pars[i+1] )
+                self.hfit.setPar ( i , pars[i+1] )
                 
-        return norm * self._hfit( x0 )
+        return norm * self.hfit( x0 )
 
 
 # =============================================================================

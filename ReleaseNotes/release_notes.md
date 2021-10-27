@@ -8,6 +8,7 @@
  1. add test for ``asymmetric resolutions''
  1. change pickling/unpickling for `RooRealVar`
  1. more steps toward better pickling/unpickling  
+ 1. add `params`, `limits` and `refit` arguments for histogram parameterrization utilities 
  
 ## Backward incompatible changes: 
  

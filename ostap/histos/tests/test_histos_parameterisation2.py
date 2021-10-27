@@ -294,9 +294,9 @@ def test_fourier () :
                    h6.fourier ( 6 ) ] 
 
     for h , f in zip  ( ( h5 , h6 ) , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_fourier %s' % h.GetTitle()  ) : 
-            h    .draw()
-            f.tf1.draw('same')
+        with wait ( 2 ) , use_canvas ( 'test_fourier: %s' % h.GetTitle () ) : 
+            h    .draw  ()
+            f.tf1.draw  ('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
@@ -311,19 +311,21 @@ def test_cosine() :
         params = [ h.cosine ( 4 ) for h in  histos ]
         
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_cosine %s' % h.GetTitle()  ) : 
+        with wait ( 2 ) ,  use_canvas ( 'test_cosine: %s' % h.GetTitle()  ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
+# =============================================================================
+def test_positive_spline () :
     
     logger =   getLogger("test_positive_spline")
     with timing ('P-spline [2,2]' , logger ) :
         params = [ h.pSpline ( degree = 2 , knots = 2 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
-        with wait ( 2 ) ,  use_canvas ( 'test_positive_spline %s' % h.GetTitle()  ) : 
+        with wait ( 2 ) ,  use_canvas ( 'test_positive_spline: %s' % h.GetTitle()  ) : 
             h    .draw()
             f.tf1.draw('same')
             logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
@@ -448,18 +450,28 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
     
-    test_bernstein           ()
-    test_legendre            ()
-    test_chebyshev           ()
-    test_monomial            ()
+    test_bernstein              ()
+    test_legendre               ()
+    test_chebyshev              ()
+    test_monomial               ()
 
-    test_positive            ()
-    test_monotonic           () 
-    test_convex              () 
-    test_convex_poly         ()
+    test_positive               ()
+    test_monotonic              () 
+    test_convex                 () 
+    test_convex_poly            ()
+
+    test_fourier                ()
+    test_cosine                 ()
     
-    test_fourier             ()
-    test_cosine              ()
+    test_positive_spline        ()
+    test_monotonic_spline       ()
+    test_convex_spline          ()
+    test_convex_only_spline     ()
+    
+
+    test_legendre_fast          ()
+    test_legendre2_fast         ()
+    test_legendre3_fast         ()
 
 # =============================================================================
 ##                                                                      The END 
