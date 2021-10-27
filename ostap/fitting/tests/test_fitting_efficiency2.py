@@ -62,7 +62,7 @@ def eff0 ( x ) :
 
 emax       = 1.0
 
-N          = 5000
+N          = 2000
 for i in range ( N  ) :
     
     xv = random.uniform ( xmin , xmax )
