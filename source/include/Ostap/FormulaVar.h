@@ -130,10 +130,11 @@ namespace Ostap
    *  @return the formula  
    */
   std::unique_ptr<FormulaVar>  
-  makeFormula ( const std::string& name       , 
-                const std::string& title      , 
-                const std::string& expression , 
-                const RooArgList & dependents ) ;
+  makeFormula 
+  ( const std::string& name       , 
+    const std::string& title      , 
+    const std::string& expression , 
+    const RooArgList & dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param name  formula name 
@@ -142,9 +143,10 @@ namespace Ostap
    *  @return the formula  
    */
   std::unique_ptr<FormulaVar>  
-  makeFormula ( const std::string& name       , 
-                const std::string& expression , 
-                const RooArgList & dependents ) ;
+  makeFormula 
+  ( const std::string& name       , 
+    const std::string& expression , 
+    const RooArgList & dependents ) ;
   // ===========================================================================
   /** make formula (skip unnesessary dependents)
    *  @param expression formula expression
@@ -152,8 +154,19 @@ namespace Ostap
    *  @return the formula  
    */
   std::unique_ptr<FormulaVar>  
-  makeFormula ( const std::string& expression , 
-                const RooArgList & dependents ) ;
+  makeFormula
+  ( const std::string& expression , 
+    const RooArgList & dependents ) ;
+  // ===========================================================================
+  /** valid formula expression ?
+   *  @param expression formula expression
+   *  @param dependent  formula dependents 
+   *  @return true for valid formula
+   */
+  bool 
+  validFormula 
+  ( const std::string& expression , 
+    const RooArgList & dependents ) ;
   // ===========================================================================
 } //                                                  The end of namespace Ostap 
 // =============================================================================

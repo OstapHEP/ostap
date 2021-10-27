@@ -1108,7 +1108,8 @@ def binning ( edges , nbins = 0 , name = '' ) :
 
     buffer = array.array ( 'd', edges )
     return ROOT.RooBinning ( nb - 1 , buffer , name ) 
-    
+
+
     
 # =============================================================================
 ## Dedicated unpickling factory for RooRealVar

@@ -495,6 +495,7 @@ def valid_formula ( expression , varset ) :
         return result
 
     assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
+
     
     ## from ostap.logger.utils import rooSilent, rootErro
     ## with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
@@ -502,18 +503,9 @@ def valid_formula ( expression , varset ) :
     
     from ostap.logger.utils import mute 
     with mute ( True , True ) :
-        
-        try:
-            
-            _f  = Ostap.FormulaVar ( expression , varset, False )
-            fok = _f.ok ()
-            del _f
-            
-        except:
-            
-            fok = False
-            
-    return fok
+
+        return Ostap.validFormula ( expression , varset )
+    
         
 # ==============================================================================
 ## @class SelStat
