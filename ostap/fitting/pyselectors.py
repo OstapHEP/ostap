@@ -495,19 +495,26 @@ def valid_formula ( expression , varset ) :
         return result
 
     assert isinstance ( varset  , ROOT.RooArgList ), 'Invalid type %s' % type (varset)
+    
     ## from ostap.logger.utils import rooSilent, rootErro
     ## with rooSilent ( ROOT.RooFit.FATAL + 1 , True ) :
     ## with rootError( ROOT.kError + 1 ) :
+    
     from ostap.logger.utils import mute 
-    with mute ( True , True ) : 
-       try:
+    with mute ( True , True ) :
+        
+        try:
+            
             _f  = Ostap.FormulaVar ( expression , varset, False )
             fok = _f.ok ()
             del _f
-        except:
-            fok = False        
-    return fok
             
+        except:
+            
+            fok = False
+            
+    return fok
+        
 # ==============================================================================
 ## @class SelStat
 #  Helper class to keep the statististics for SelectorWithVars 

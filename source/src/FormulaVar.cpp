@@ -268,7 +268,7 @@ Ostap::FormulaVar::FormulaVar
   const std::string& title         , 
   const std::string& expression    , 
   const RooArgList & dependents    ,
-  const bool 	      check          ) 
+  const bool         check         ) 
   : RooFormulaVar ( name       . c_str () , 
 #if    ROOT_VERSION_CODE < ROOT_VERSION(6,22,0)
                     expression . c_str () , 
