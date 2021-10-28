@@ -1,4 +1,16 @@
+## New features:
+
+  1. add more decorators for `TCollection` and `TSeqCollection`: `get`, '__getitem__' , '__contains__'
+  1. few tweaks for `ostap.plotting.canvas` module
+ 
+## Backward incompatible changes: 
+ 
+## Bug fixes:
+
+   1. fix failing tests 
+
 # v1.6.4.1
+
 ## New features:
  1. Add local functions for calculation of  symmetric Carlson forms 
  1. Add test for symmetric Carlson forms 

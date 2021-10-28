@@ -14,7 +14,7 @@ __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = (
     'getCanvas'        , ## get/create canvas 
-    'getCanvases'      , ## get all created canvases 
+    'getCanvases'      , ## get all existing canvases 
     'canvas_partition' , ## split canvas into several pads with no space between pads 
     'canvas_pull'      , ## split canvas into two pads with no vertical interspace
     'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
@@ -27,7 +27,7 @@ __all__     = (
     'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
-import ROOT, os, tempfile  
+import ROOT, os, tempfile, math   
 import ostap.core.core
 import ostap.plotting.style
 from   sys import version_info as python_version
@@ -41,12 +41,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-_canvases = {}
-# =============================================================================
 from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
                                          margin_left  , margin_right  ,
                                          margin_top   , margin_bottom )
 
+_canvases = [] 
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -60,25 +59,39 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
     if not name : name = 'glCanvas'
-    cnv   = _canvases.get ( name , None )
-    if not cnv :
-        ## create new canvas 
-        ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
-        cnv  = ROOT.TCanvas ( name , title , width , height )
-        ## adjust newly created canvas
-        ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
-        groot = ROOT.ROOT.GetROOT() 
-        if not groot.IsBatch() :
-            dw = width  - cnv.GetWw()
-            dh = height - cnv.GetWh()
-            cnv.SetWindowSize ( width + dw , height + dh )
-            
-        ## 
-        _canvases [ name ] = cnv
-        
+
+    cnvlst = ROOT.gROOT.GetListOfCanvases()
+    cnv    = cnvlst.get ( name , None ) 
+    if cnv and isinstance ( cnv , ROOT.TCanvas ) :
+        _canvases.append ( cnv ) 
+        return cnv 
+
+    ## create new canvas
+    mx    = max ( 100 , math.floor ( 0.85 * width  ) + 1 )
+    my    = max ( 100 , math.floor ( 0.70 * height ) + 1 )
+    
+    wtopx = ( 30 * len ( cnvlst ) ) % mx 
+    wtopy = ( 25 * len ( cnvlst ) ) % my
+    
+    ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
+    cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
+    ## adjust newly created canvas
+    ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
+    groot = ROOT.ROOT.GetROOT() 
+    if not groot.IsBatch() :
+        dw = width  - cnv.GetWw()
+        dh = height - cnv.GetWh()
+        cnv.SetWindowSize ( width + dw , height + dh )
+                
+    _canvases.append ( cnv ) 
     return cnv
 
-
+# =============================================================================
+import atexit
+@atexit.register 
+def clean_canvases () :
+    while _canvases : _canvases.pop()
+    
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -337,16 +350,9 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
 # =============================================================================
 ## get all known canvases 
 def getCanvases () :
-    """ Get all known canvases """ 
-    return _canvases.keys() 
-
-def _remove_canvases_() :
-    keys = list( _canvases.keys() )
-    for k in keys : del _canvases[k]
-        
-import atexit
-atexit.register ( _remove_canvases_ )
-
+    """ Get all known canvases """
+    
+    return tuple ( ( c.GetName() for c in ROOT.gROOT.GetListOfCanvases() if  ( c and isintance ( c , ROOT.TCanvas ) ) ) ) 
 # =============================================================================
 
 # =============================================================================
@@ -703,7 +709,6 @@ def draw_pads ( objects            ,
     >>> frames = ...
     >>> draw_pads ( frames , pads , fontsize = 25 ) 
     """
-
     assert isinstance  ( fontsize , int ) and 5 < fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
     
     for obj , pad_ in zip ( objects , pads ) : 
@@ -926,7 +931,8 @@ class Canvas(KeepCanvas) :
         self.__title  = title 
         self.__width  = width
         self.__height = height
-        self.__kwargs = kwargs 
+        self.__kwargs = kwargs
+        self.__cnv    = None 
         ## 
         KeepCanvas.__init__ ( self ) 
         
@@ -937,11 +943,12 @@ class Canvas(KeepCanvas) :
         KeepCanvas.__enter__ ( self )
 
         if not self.__name :
-            self.__name = 'gl_canvas#%d' % len ( _canvases )
-            while self.__name in _canvases : 
-                h = self.__name , title , width , height , len ( _canvases ) 
+            cnvlst = ROOT.gROOT.GetListOfCanvases() 
+            self.__name = 'gl_canvas#%d' % len ( cnvlst )
+            while self.__name in cnvlst : 
+                h = self.__name , title , width , height , len ( cnvlst ) 
                 self.__name = 'gl_canvas#%d' % hash ( h ) 
-
+                
         if not self.__title :
             self.__title = self.__name
 
@@ -966,7 +973,7 @@ class Canvas(KeepCanvas) :
     ## context manager: exit 
     def __exit__ ( self , *_ ) :
         KeepCanvas.__exit__ ( self , *_ ) 
-
+        self.__cnv = None 
     
 # =============================================================================
 ## helper context manager to create and configure a canvas (and pad)

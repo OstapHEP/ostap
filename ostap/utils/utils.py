@@ -471,6 +471,7 @@ class KeepCanvas(object) :
     def __exit__  ( self , *_ ) :
         if self.__old_canvas:
             self.__old_canvas.cd()
+        self.__old_canvas = None             
     @property
     def old_canvas ( self ) :
         """``old_canvas'': canvas to be preserved"""

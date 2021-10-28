@@ -8,8 +8,6 @@
 # =============================================================================
 """Core objects for ostap 
 """
-# =============================================================================
-from   __future__        import print_function
 # ============================================================================= 
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
@@ -63,7 +61,21 @@ __all__     = (
     )
 # =============================================================================
 import math, sys, os 
+from   sys                    import version_info  as python_version 
+from   builtins               import range
 import ROOT, cppyy
+# =============================================================================
+## ROOT.ROOT.EnableThreadSafety()
+from   ostap.math.base        import ( Ostap    , std     , cpp ,  
+                                       iszero   , isequal ,
+                                       isint    , islong  ,
+                                       inrange  , strings , 
+                                       natural_number     ,
+                                       natural_entry      )
+from   ostap.math.ve          import VE
+from   ostap.stats.counters   import SE , WSE 
+from   ostap.core.meta_info   import root_info
+from   ostap.core.ostap_types import integer_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -72,21 +84,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.core' )
 else                       : logger = getLogger( __name__     )
 # =============================================================================
 logger.debug ( 'Core objects/classes/functions for Ostap')
-# =============================================================================
-## ROOT.ROOT.EnableThreadSafety()
-
-from   ostap.math.base      import ( Ostap    , std     , cpp ,  
-                                     iszero   , isequal ,
-                                     isint    , islong  ,
-                                     inrange  , strings , 
-                                     natural_number     ,
-                                     natural_entry      )
-
-from   sys                  import version_info  as python_version 
-from   ostap.math.ve        import VE
-from   ostap.stats.counters import SE , WSE 
-from   builtins             import range
-from   ostap.core.meta_info import root_info  
 # =============================================================================
 
 ## @var global ROOT/gROOT object 
@@ -515,10 +512,179 @@ def is_sorted ( lst ) :
 import ostap.core.build_dir 
 
 # =============================================================================
+## "Contains" method for <code>TCollection</code> object
+#   @code
+#   collection = ... 
+#   'name' in collection
+#   obj    in collection 
+#   @endcode 
+#   @see TCollection
+#   @see TCollection::FindObject
+def _rtc_contains_ ( lst , item ) :
+    """Contains method for `TCollection` object
+    >>> collection = ...
+    >>> 'name' in collection
+    >>> obj    in collection 
+    - see TCollection
+    - see TCollection.FindObject
+    """
+    return lst.FindObject ( item ) 
+
+# =============================================================================
+## "Contains" method for <code>TSeqCollection</code> object
+#   @code
+#   lst = ... 
+#   'name' in lst 
+#   obj    in lst
+#   5      in lst 
+#   @endcode 
+#   @see TSeqCollection
+#   @see TSeqCollection::FindObject
+def _rtl_contains_ ( lst , item ) :
+    """Contains method for `TSeqCollection` object
+    >>> lst  = ...
+    >>> 'name' in lst 
+    >>> obj    in lst
+    >>> 5 in lst 
+    - see TSeqCollection
+    - see TSeqCollection.FindObject
+    """
+    if isinstance ( item , integer_types ) :
+        return 0 <= item < len ( lst ) 
+        
+    return _rtc_contains_ ( lst , item ) 
+
+ROOT.TCollection   . __contains__ = _rtc_contains_
+ROOT.TSeqCollection. __contains__ = _rtl_contains_
+
+# =============================================================================
+## "Get-item" method for <code>TCollection</code> object
+#   @code
+#   collection = ... 
+#   collection['name'] 
+#   @endcode 
+#   @see TCollection
+#   @see TCollection::FindObject
+def _rtc_getitem_ ( lst , item ) :
+    """``Get-item'' method for `TCollection` object
+    >>> collection = ...
+    >>> collection['name'] 
+    - see TCollection
+    - see TCollection.FindObject
+    """
+    
+    obj = lst.FindObject ( item )
+    if not valid_pointer ( obj ) :
+        raise KeyError("No such key is found: %s" % str ( item ) )
+    return obj 
+    
+
+# =============================================================================
+## "Get-item " method for <code>TSeqCollection</code> object
+#   @code
+#   lst = ... 
+#   lst['name']
+#   lst[ 5    ]
+#   lst[ -3   ]
+#   lst[ 5:10 ]
+#   lst[ 5:   ]
+#   @endcode 
+#   @see TSeqCollection
+#   @see TSeqCollection::FindObject
+#   @see TSeqCollection::At
+def _rtl_getitem_ ( lst , item ) :
+    """``Get-item'' method for `TSeqCollection` object
+    >>> lst  = ...
+    >>> lst['lst'] 
+    >>> lst[ 5    ]
+    >>> lst[ -3   ]
+    >>> lst[ 5:10 ]
+    >>> lst[ 5:   ]
+    - see TSeqCollection
+    - see TSeqCollection.FindObject
+    - see TSeqCollection.At
+    """
+
+    if isinstance ( item , slice ) :
+
+        result  = type ( lst ) ()
+        for index in item.indices ( len ( lst ) ) :
+            result.Add ( lst.At ( index ) )
+
+        return result
+
+    elif isinstance ( item , integer_types ) :
+        
+        len_lst = len ( lst ) 
+        if item < 0 : item += len ( lst ) ## allow negative indices! 
+        
+        if not 0 <= item < len_lst :
+            raise KeyError("No such key is found: %s" % item )
+
+        return lst.At ( item )
+            
+    return _rtc_getitem_ ( lst , item ) 
+
+ROOT.TCollection    . __getitem__ = _rtc_getitem_
+ROOT.TSeqCollection . __getitem__ = _rtl_getitem_
+
+# =============================================================================
+## "Get" method for <code>TCollection</code> object
+#   @code
+#   collection = ... 
+#   collection.get('name') 
+#   @endcode 
+#   @see TCollection
+#   @see TCollection::FindObject
+def _rtc_get_ ( lst , item , default = None ) :
+    """``Get'' method for `TCollection` object
+    >>> collection = ...
+    >>> collection.get( 'name' , defaultvalue ) 
+    - see TCollection
+    - see TCollection.FindObject
+    """
+    obj = lst.FindObject ( item )
+    return obj if valid_pointer ( obj ) else default 
+
+# =============================================================================
+## "Get" method for <code>TSeqCollection</code> object
+#   @code
+#   lst = ... 
+#   lst.get('name') 
+#   @endcode 
+#   @see TSeqCollection
+#   @see TSeqCollection::FindObject
+#   @see TSeqCollection::At 
+def _rtl_get_ ( lst , item , default = None ) :
+    """``Get'' method for `TSeqCollection` object
+    >>> lst = ...
+    >>> lst.get( 'name' , defaultvalue ) 
+    - see TSeqCollection
+    - see TSeqCollection.FindObject
+    - see TSeqCollection.At 
+    """
+    if isinstance ( item , integer_types ) :
+        
+        len_lst = len ( lst )
+        if item < 0 : item += len_lst  ## allow negative indices
+        
+        if not 0 <= item < len_lst  : return default
+
+        return lst.At ( item ) 
+    
+    return _rtc_get_ ( lst , item , default ) 
+
+ROOT.TCollection    . get = _rtc_get_
+ROOT.TSeqCollection . get = _rtl_get_
+
+
+# =============================================================================
 _decorated_classes_ = (
-    ROOT.TObject    ,
-    ROOT.TNamed     ,
-    ROOT.TDirectory , 
+    ROOT.TObject        ,
+    ROOT.TNamed         ,
+    ROOT.TDirectory     ,
+    ROOT.TCollection    , 
+    ROOT.TSeqCollection , 
     )
 
 _new_methods_       = (
@@ -527,6 +693,13 @@ _new_methods_       = (
     ROOT.TNamed .name  ,
     ROOT.TNamed .title ,
     ROOT.TNamed .path  ,
+    #
+    ROOT.TCollection    . __contains__ ,
+    ROOT.TCollection    . __getitem__  ,
+    ROOT.TCollection    . get          ,
+    ROOT.TSeqCollection . __contains__ ,
+    ROOT.TSeqCollection . __getitem__  ,
+    ROOT.TSeqCollection . get          ,
     )
 
 # =============================================================================
