@@ -321,8 +321,8 @@ def test_cosine() :
 def test_positive_spline () :
     
     logger =   getLogger("test_positive_spline")
-    with timing ('P-spline [2,2]' , logger ) :
-        params = [ h.pSpline ( degree = 2 , knots = 2 ) for h in  histos ]
+    with timing ('P-spline [2,3]' , logger ) :
+        params = [ h.pSpline ( degree = 2 , knots = 3 ) for h in  histos ]
 
     for h , f in zip ( histos , params ) :
         with wait ( 2 ) ,  use_canvas ( 'test_positive_spline: %s' % h.GetTitle()  ) : 
@@ -334,11 +334,11 @@ def test_positive_spline () :
 def test_monotonic_spline () :
     
     logger =   getLogger("test_monotonic_spline")
-    with timing ('M-spline [2,2]' , logger ) :
-        params = [ h1.mSpline ( degree = 2 , knots = 2 , increasing = False ) , 
-                   h2.mSpline ( degree = 2 , knots = 2 , increasing = True  ) ,
-                   h3.mSpline ( degree = 2 , knots = 2 , increasing = True  ) , 
-                   h4.mSpline ( degree = 2 , knots = 2 , increasing = False ) ]
+    with timing ('M-spline [2,3]' , logger ) :
+        params = [ h1.mSpline ( degree = 2 , knots = 3 , increasing = False ) , 
+                   h2.mSpline ( degree = 2 , knots = 3 , increasing = True  ) ,
+                   h3.mSpline ( degree = 2 , knots = 3 , increasing = True  ) , 
+                   h4.mSpline ( degree = 2 , knots = 3 , increasing = False ) ]
         
     for h , f in zip ( histos , params ) :
         with wait ( 2 ) ,  use_canvas ( 'test_monotonic_spline %s' % h.GetTitle()  ) : 
@@ -351,11 +351,11 @@ def test_monotonic_spline () :
 def test_convex_spline () :
     
     logger =   getLogger("test_convex_spline")
-    with timing ('C-spline [2,2]' , logger ) :
-        params = [ h1.cSpline ( degree = 2 , knots = 2 , increasing = False , convex = True  ) , 
-                   h2.cSpline ( degree = 2 , knots = 2 , increasing = True  , convex = True  ) ,
-                   h3.cSpline ( degree = 2 , knots = 2 , increasing = True  , convex = False ) ,
-                   h4.cSpline ( degree = 2 , knots = 2 , increasing = False , convex = False ) ]
+    with timing ('C-spline [2,3]' , logger ) :
+        params = [ h1.cSpline ( degree = 2 , knots = 3 , increasing = False , convex = True  ) , 
+                   h2.cSpline ( degree = 2 , knots = 3 , increasing = True  , convex = True  ) ,
+                   h3.cSpline ( degree = 2 , knots = 3 , increasing = True  , convex = False ) ,
+                   h4.cSpline ( degree = 2 , knots = 3 , increasing = False , convex = False ) ]
         
     for h , f in zip ( histos , params ) :
         with wait ( 2 ) ,  use_canvas ( 'test_convex_spline %s' % h.GetTitle()  ) : 
@@ -368,13 +368,13 @@ def test_convex_spline () :
 def test_convex_only_spline () :
     
     logger =   getLogger("test_convex_only_spline")
-    with timing ('Convex/Concave-spline [2,2]' , logger ) :
-        params = [ h1.convexSpline  ( degree = 2 , knots = 2 ) , 
-                   h2.convexSpline  ( degree = 2 , knots = 2 ) , 
-                   h3.concaveSpline ( degree = 2 , knots = 2 ) ,
-                   h4.concaveSpline ( degree = 2 , knots = 2 ) ,
-                   h5.convexSpline  ( degree = 2 , knots = 2 ) ,
-                   h6.concaveSpline ( degree = 2 , knots = 2 ) ]
+    with timing ('Convex/Concave-spline [2,3]' , logger ) :
+        params = [ h1.convexSpline  ( degree = 2 , knots = 3 ) , 
+                   h2.convexSpline  ( degree = 2 , knots = 3 ) , 
+                   h3.concaveSpline ( degree = 2 , knots = 3 ) ,
+                   h4.concaveSpline ( degree = 2 , knots = 3 ) ,
+                   h5.convexSpline  ( degree = 2 , knots = 3 ) ,
+                   h6.concaveSpline ( degree = 2 , knots = 3 ) ]
         
     for h , f in zip ( histos , params ) :
         with wait ( 2 ) ,  use_canvas ( 'test_convex_only_spline %s' % h.GetTitle()  ) : 
