@@ -67,12 +67,12 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
         return cnv 
 
     ## create new canvas
-    mx    = max ( 100 , math.floor ( 0.85 * width  ) + 1 )
-    my    = max ( 100 , math.floor ( 0.70 * height ) + 1 )
+    mx    = max ( 100 , int ( math.floor ( 0.85 * width  ) ) + 1 )
+    my    = max ( 100 , int ( math.floor ( 0.70 * height ) ) + 1 )
     
-    wtopx = ( 30 * len ( cnvlst ) ) % mx 
-    wtopy = ( 25 * len ( cnvlst ) ) % my
-    
+    wtopx = int ( ( 30 * len ( cnvlst ) ) % mx )
+    wtopy = int ( ( 25 * len ( cnvlst ) ) % my ) 
+
     ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
     cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
     ## adjust newly created canvas
