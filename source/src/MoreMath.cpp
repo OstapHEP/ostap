@@ -1250,24 +1250,6 @@ double Ostap::Math::elliptic_KZ ( const double beta  , const double k   )
   const double cosbeta = std::cos ( beta ) ;
   const double alpha   = 1.0L - k * k * sinbeta * sinbeta ;
   //
-  // gsl_sf_result result ;
-  // const int ierror = gsl_sf_ellint_RJ_e ( 0.0       ,
-  //                                         1 - k * k ,
-  //                                         1.0       ,
-  //                                         alpha     ,
-  //                                         GSL_PREC_DOUBLE , &result ) ;
-  // if ( ierror ) 
-  // {
-  //   //
-  //   gsl_error ( "Error from gsl_sf_ellint_RJ_e" , __FILE__ , __LINE__ , ierror ) ;
-  //   if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-  //   { return std::numeric_limits<double>::quiet_NaN(); }
-  //   //
-  // }
-  // //
-  // return k * k * sinbeta * cosbeta * std::sqrt ( alpha ) * result.val / 3 ;
-  //
-  // @see https://arxiv.org/abs/math/9409227 Eq. (63) 
   const double r = carlson_RJ  ( 0 , 1 - k * k , 1 , alpha ) ;
   return k * k * sinbeta * cosbeta * std::sqrt ( alpha ) * r / 3 ;
 }
@@ -1287,24 +1269,37 @@ double Ostap::Math::elliptic_KmE ( const double k   )
   // see https://arxiv.org/abs/math/9409227  Eq. (57)
   return k * k * carlson_RD ( 0 , 1 - k * k , 1 ) / 3 ; 
   // ==========================================================================
-  // //
-  // gsl_sf_result result ;
-  // const int ierror = gsl_sf_ellint_RD_e ( 0.0       ,
-  //                                         1 - k * k ,
-  //                                         1.0       ,
-  //                                         GSL_PREC_DOUBLE , &result ) ;
-  // if ( ierror ) 
-  // {
-  //   //
-  //   gsl_error ( "Error from gsl_sf_ellint_RD_e" , __FILE__ , __LINE__ , ierror ) ;
-  //   if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
-  //   { return std::numeric_limits<double>::quiet_NaN(); }
-  //   //
-  // }
-  // //
-  // return k * k * result.val / 3 ;
 }
 // ============================================================================
+/* elliptic \f$ \Pi(\alpha^2,k)\f$ function 
+ *  - \f$ alpha^2 < 1 \f$ 
+ *  - \f$ k      < 1 \f$ 
+ *  \f[ \Pi(\alpha^2, k) - K(k) = 
+ *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+ */ 
+// ============================================================================
+double Ostap::Math::elliptic_PI
+( const double alpha2 , 
+  const double k      ) 
+{
+  return elliptic_K ( k ) + 
+    alpha2 * carlson_RJ ( 0 , 1 - k * k , 1 , 1 - alpha2 ) / 3 ;
+}
+// ============================================================================
+/* elliptic \f$ \Pi(\alpha^2,k) - K(k) \f$ function 
+ *  \f[ \Pi(\alpha^2, k) - K(k) \equiv  
+ *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+ *  - \f$ alpha^2 < 1 \f$ 
+ *  - \f$ k      < 1 \f$ 
+ */ 
+// ============================================================================
+double Ostap::Math::elliptic_PImK  
+( const double alpha2 , 
+  const double k      )
+{ return alpha2 * carlson_RJ ( 0 , 1 - k * k , 1 , 1 - alpha2 ) / 3 ; }
+// ========================================================================
+
+
 
 // ============================================================================
 // Symmetric Carlson forms 

@@ -1132,6 +1132,18 @@ namespace Ostap
     ( const double x  , 
       const double m1 , 
       const double m2 ) ; 
+    // =========================================================================
+    /** three-body phase space
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     *  @param m3 the mass of the 3rd particle 
+     */
+    double phasespace3 
+    ( const double x  , 
+      const double m1 , 
+      const double m2 , 
+      const double m3 ) ; 
     // ========================================================================
     /** three-body phase space, analytic symmetric expression via 
      *  elliptic  integrals 
@@ -1151,7 +1163,57 @@ namespace Ostap
      *  @param m2 the mass of the 2nd particle 
      *  @param m3 the mass of the 3rd particle 
      */
-    double phasespace3 
+    double phasespace3s
+    ( const double x  , 
+      const double m1 , 
+      const double m2 , 
+      const double m3 ) ; 
+    // =========================================================================
+    /** three-body phase space via the explicit numerical integration
+     * 
+     *  \f[ R_3(s) = \frac{\pi^2}{4s}\int_{(m_2+m_3)^2}^{(\sqrt{s}-m_1)^2}
+     *  \frac{ds_2}{s_2} 
+     *  \lambda^{1/2}(s_2, , s , m_1^2) 
+     *  \lambda^{1/2}(s_2, , m_2^2 , m_3^2) 
+     *  \f]
+     *
+     *  @see Eq. (2.17) in E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+     *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+     *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
+     *
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     *  @param m3 the mass of the 3rd particle 
+     */
+    double phasespace3i 
+    ( const double x  , 
+      const double m1 , 
+      const double m2 , 
+      const double m3 ) ;
+    // =========================================================================
+    /** three-body phase space, analytic nonsymmetric expression via 
+     *  elliptic  integrals 
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     *  @param m3 the mass of the 3rd particle 
+     */
+    double phasespace3a
+    ( const double x  , 
+      const double m1 , 
+      const double m2 , 
+      const double m3 ) ; 
+    // =========================================================================
+    /** nonrelativistic three-body phase space, 
+     *  good approximation when 
+     *  \f$ \sqrt{s} - m_1 - m_2 - m_3 \ll \min ( m_1, m_2,m_3 ) \f$
+     *  @param x the mass of the system 
+     *  @param m1 the mass of the 1st particle 
+     *  @param m2 the mass of the 2nd particle 
+     *  @param m3 the mass of the 3rd particle 
+     */
+    double phasespace3nr
     ( const double x  , 
       const double m1 , 
       const double m2 , 
@@ -1181,7 +1243,7 @@ namespace Ostap
     double phasespace3 
     ( const double x  ) ;
     // ========================================================================
-  } //                                      end of namespace Ostap::Kinenmatics 
+  } //                                       end of namespace Ostap::Kinematics 
   // ==========================================================================
   namespace Math 
   {

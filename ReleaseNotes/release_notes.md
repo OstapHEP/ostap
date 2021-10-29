@@ -4,8 +4,9 @@
   1. few tweaks for `ostap.plotting.canvas` module
   1. add `+=` operator for `ROOT.TCollection`
   1. allow to specify colors by names for `xxx.draw ( ... , <xxx>_color=<XXX> )` commands
+  1. add analytic non-symmetric expression for 3-body phase space via elliptic integrals  
  
-## Backward incompatible changes: 
+## Backward incompatible 
  
 ## Bug fixes:
 

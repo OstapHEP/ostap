@@ -409,25 +409,31 @@ namespace Ostap
      *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_F ( const double phi , const double k   ) ;
+    double elliptic_F 
+    ( const double phi , 
+      const double k   ) ;
     // ========================================================================
     /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
      *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_E ( const double phi , const double k   ) ;
+    double elliptic_E 
+    ( const double phi , 
+      const double k   ) ;
     // ========================================================================
     /** Complete elliptic integral \f$ E(k) \f$  
      *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_E ( const double k   ) ;
+    double elliptic_E 
+    ( const double k   ) ;
     // ========================================================================
     /** Complete elliptic integral \f$ K(k) \f$  
      *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_K ( const double k   ) ;
+    double elliptic_K 
+    ( const double k   ) ;
     // ========================================================================
     /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
      *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
@@ -437,14 +443,17 @@ namespace Ostap
      *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
-    double elliptic_KmE ( const double k   ) ;    
+    double elliptic_KmE 
+    ( const double k   ) ;    
     // ========================================================================
     /** Jacobi zeta function
      *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
      */
-    double elliptic_Z  ( const double beta  , const double k   ) ;
+    double elliptic_Z  
+    ( const double beta , 
+      const double k    ) ;
     // ========================================================================
     /** Product of Jacobi zeta function \f$ Z(\beta,k) \f$
      *  and complete elliptic integral \f$ K(k) \f$
@@ -457,7 +466,29 @@ namespace Ostap
      *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
-    double elliptic_KZ ( const double beta  , const double k   ) ;
+    double elliptic_KZ 
+    ( const double beta  , 
+      const double k   ) ;
+    // ========================================================================
+    /** elliptic \f$ \Pi(\alpha^2,k)\f$ function 
+     *  - \f$ alpha^2 < 1 \f$ 
+     *  - \f$ k      < 1 \f$ 
+     *  \f[ \Pi(\alpha^2, k) - K(k) = 
+     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+     */ 
+    double elliptic_PI
+    ( const double alpha2 , 
+      const double k      ) ;
+    // ========================================================================
+    /** elliptic \f$ \Pi(\alpha^2,k) - K(k) \f$ function 
+     *  \f[ \Pi(\alpha^2, k) - K(k) \equiv  
+     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+     *  - \f$ alpha^2 < 1 \f$ 
+     *  - \f$ k      < 1 \f$ 
+     */ 
+    double elliptic_PImK  
+    ( const double alpha2 , 
+      const double k      ) ;
     // ========================================================================
 
     // ========================================================================

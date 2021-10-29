@@ -1047,10 +1047,35 @@ double Ostap::Kinematics::phasespace3
            - 0.5 * d * d * ld ) * s_norm / p2 ;
 }
 // ============================================================================
-/** three-body phase space 
+/// three-body phase space 
+// ============================================================================
+double Ostap::Kinematics::phasespace3
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+{ return phasespace3s ( x , m1 , m2 , m3 ) ; }
+// ============================================================================
+/*  three-body phase space, analytic symmetric expression via 
+ *  elliptic  integrals 
+ *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
+ *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
+ *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+ *
+ *  @see A.Davydychev and R.Delbourgo,
+ *       "Explicitly symmetrical treatment of three body phase space",
+ *        J.Phys. A37 (2004) 4871, arXiv:hep-th/0311075",
+ *        doi = 10.1088/0305-4470/37/17/016
+ *  @see https://arxiv.org/abs/hep-th/0311075
+ *  @see https://iopscience.iop.org/article/10.1088/0305-4470/37/17/016
+ *
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ *  @param m2 the mass of the 2nd particle 
+ *  @param m3 the mass of the 3rd particle 
  */
 // ============================================================================
-double Ostap::Kinematics::phasespace3 
+double Ostap::Kinematics::phasespace3s
 ( const double x  , 
   const double m1 , 
   const double m2 , 
@@ -1084,6 +1109,7 @@ double Ostap::Kinematics::phasespace3
     //
   }
   //
+
   const long double M     = x     ;
   const long double p2    = M * M ;
   //
@@ -1125,6 +1151,133 @@ double Ostap::Kinematics::phasespace3
   //
   return ( sqrt_Qp * ( p2 + m1sq + m2sq + m3sq ) * E_minus_K
            +    Qp * (      KZ1  + KZ2  + KZ3  ) ) * s_norm / p2;
+}
+// ============================================================================
+/*  three-body phase space, analytic non-symmetric expression via 
+ *  elliptic  integrals 
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ *  @param m2 the mass of the 2nd particle 
+ *  @param m3 the mass of the 3rd particle 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace3a
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+{
+  //
+  static const double s_norm = 0.25 * M_PI * M_PI ;
+  //
+  const double xm1 = std::max ( 0.0 , m1 ) ;
+  const double xm2 = std::max ( 0.0 , m2 ) ;
+  const double xm3 = std::max ( 0.0 , m3 ) ;
+  //
+  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; }
+  //
+  if ( s_zero ( xm1 ) ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+  if ( s_zero ( xm2 ) ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+  if ( s_zero ( xm3 ) ) { return phasespace3 ( x , xm1 , xm2 ) ; }
+  //
+  { // Treat tiny masses 
+    const double xmax = x * 1.e-12 ;
+    //
+    if ( xm1 < xmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+    if ( xm2 < xmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+    if ( xm3 < xmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
+    //
+    const double mmax = std::max ( xm1 , std::max ( xm2 , xm3 ) ) * 1.e-12 ;
+    //
+    if ( xm1 < mmax ) { return phasespace3 ( x , xm2 , xm3 ) ; }
+    if ( xm2 < mmax ) { return phasespace3 ( x , xm1 , xm3 ) ; }
+    if ( xm3 < mmax ) { return phasespace3 ( x , xm1 , xm2 ) ; }
+    //
+  }
+  //
+  const long double M     = x     ;
+  const long double p     = M     ;
+  const long double p2    = p * p ;
+  //
+  const long double Qp = 
+    ( M + xm1 + xm2 + xm3 ) *
+    ( M + xm1 - xm2 - xm3 ) *
+    ( M - xm1 + xm2 - xm3 ) *
+    ( M - xm1 - xm2 + xm3 ) ;
+  //
+  const long double Qm = 
+    ( M - xm1 - xm2 - xm3 ) *
+    ( M - xm1 + xm2 + xm3 ) *
+    ( M + xm1 - xm2 + xm3 ) *
+    ( M + xm1 + xm2 - xm3 ) ;
+  //
+  const long double k = std::sqrt ( Qm / Qp ) ;
+  //
+  const long double sqrt_Qp  = std::sqrt ( Qp ) ;
+  //
+  const long double m1sq   = xm1 * xm1 ;
+  const long double m2sq   = xm2 * xm2 ;
+  const long double m3sq   = xm3 * xm3 ;
+  //
+  const long double m1_p_m2_sq = std::pow ( xm1 + xm2 , 2 ) ;
+  const long double m1_m_m2_sq = std::pow ( xm1 - xm2 , 2 ) ;
+  const long double p__m_m3_sq = std::pow ( p   - xm3 , 2 ) ;
+  const long double p__p_m3_sq = std::pow ( p   + xm3 , 2 ) ;
+  //
+  const double alpha1_sq = ( p__m_m3_sq -  m1_p_m2_sq ) / ( p__m_m3_sq - m1_m_m2_sq ) ;
+  const double alpha2_sq = m1_m_m2_sq / m1_p_m2_sq * alpha1_sq ;
+  //
+  const double E_factor  = 0.5 * Qp * ( m1sq + m2sq + m3sq + p2 ) ;
+  //
+  const double K_factor  = 4 * xm1 * xm2 
+    * ( p__m_m3_sq - m1_m_m2_sq ) 
+    * ( p__p_m3_sq - xm3 * p + xm1 * xm2 ) ;
+  //
+  const double Pi1_factor = + 8 * xm1 * xm2 
+    * ( ( m1sq + m2sq ) * ( p2 + m3sq ) - 2 * m1sq * m2sq  - 2 * m3sq * p2 ) ;
+  //
+  const double Pi2_factor = - 8 * xm1 * xm2 * std::pow ( p2 - m3sq , 2 ) ;
+  //
+  const double E     = Ostap::Math::elliptic_E    (             k ) ;
+  const double K     = Ostap::Math::elliptic_K    (             k ) ;
+  const double PImK1 = Ostap::Math::elliptic_PImK ( alpha1_sq , k ) ;
+  const double PImK2 = Ostap::Math::elliptic_PImK ( alpha2_sq , k ) ;
+  //
+  return s_norm * ( E * E_factor                                   + 
+                    K * ( K_factor     + Pi1_factor + Pi2_factor ) +
+                    PImK1 * Pi1_factor + 
+                    PImK2 * Pi2_factor )  / ( sqrt_Qp * p2 ) ;
+}
+// ============================================================================
+/*  non-relativistic three-body phase space, 
+ *  good approximation when 
+ *  \f$ \sqrt{s} - m_1 - m_2 - m_3 \ll \min ( m_1, m_2,m_3 ) \f$
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ *  @param m2 the mass of the 2nd particle 
+ *  @param m3 the mass of the 3rd particle 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace3nr
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+{
+  static const double s_norm = 0.5 * M_PI * M_PI * M_PI ;
+  //
+  const double xm1 = std::max ( 0.0 , m1 ) ;
+  const double xm2 = std::max ( 0.0 , m2 ) ;
+  const double xm3 = std::max ( 0.0 , m3 ) ;
+  //
+  const double sm = xm1 + xm2 + xm3 ;
+  if ( x <= sm ) { return 0 ; }
+  //
+  const double pm = xm1 * xm2 * xm3 ;
+  //
+  const double dm = x - sm ;
+  //
+  return s_norm * std::sqrt ( pm / sm ) * dm * dm / sm ;
 }
 // ============================================================================
 //                                                                      The END 

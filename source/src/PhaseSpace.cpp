@@ -345,6 +345,31 @@ namespace
     const Ostap::Math::PhaseSpace3* m_ps ;
   } ;
   // ==========================================================================
+  struct PS3
+  {
+    PS3 ( const double m  , 
+          const double m1 , 
+          const double m2 , 
+          const double m3 ) 
+      : m_s    ( m  * m  ) 
+      , m_m1sq ( m1 * m1 ) 
+      , m_m2sq ( m2 * m2 ) 
+      , m_m3sq ( m3 * m3 ) 
+    {}
+    PS3 () = delete ;
+    double operator () ( const double s2 ) const 
+    {
+      const double l1 = Ostap::Kinematics::triangle ( s2 , m_s    , m_m1sq ) ;
+      const double l2 = Ostap::Kinematics::triangle ( s2 , m_m2sq , m_m3sq ) ;
+      return std::sqrt ( l1 * l2 ) / s2 ;      
+    }
+  private: 
+    double m_s     ;
+    double m_m1sq  ;
+    double m_m2sq  ;
+    double m_m3sq  ;
+  } ;
+  // ==========================================================================
 }
 // ============================================================================
 /*  evaluate 3-body phase space
@@ -425,7 +450,6 @@ double Ostap::Math::PhaseSpace3::ps2_aux
   const double lam2 = Ostap::Kinematics::triangle 
     ( m_tmp * m_tmp ,  m12 * m12  , m_m3 * m_m3  ) ;
   if ( lam2 <= 0 ) { return 0 ; }
-  //
   //
   /** True integral is
    *  \f[ \int_{(m_1+m_2)^2}^{(M-m_3)^2} \frac{ds_1}{s_1}
@@ -602,6 +626,79 @@ double Ostap::Math::PhaseSpace3s::integral
   //
   return result ;
   //
+}
+// ============================================================================
+/* three-body phase space via the explicit numerical integration
+ * 
+ *  \f[ R_3(s) = \frac{\pi^2}{4s}\int_{(m_2+m_3)^2}^{(\sqrt{s}-m_1)^2}
+ *  \frac{ds_2}{s_2} 
+ *  \lambda^{1/2}(s_2, , s , m_1^2) 
+ *  \lambda^{1/2}(s_2, , m_2^2 , m_3^2) 
+ *  \f]
+ *
+ *  @see Eq. (2.17) in E.Byckling, K.Kajantie, "Particle kinematics", John Wiley & Sons,
+ *              London, New York, Sydney, Toronto, 1973, p.89, eq. (5.23)
+ *  @see https://userweb.jlab.org/~rafopar/Book/byckling_kajantie.pdf
+ *
+ *  @param x the mass of the system 
+ *  @param m1 the mass of the 1st particle 
+ *  @param m2 the mass of the 2nd particle 
+ *  @param m3 the mass of the 3rd particle 
+ */
+// ============================================================================
+double Ostap::Kinematics::phasespace3i 
+( const double x  , 
+  const double m1 , 
+  const double m2 , 
+  const double m3 ) 
+{
+  const double xm1 = std::max ( m1 , 0.0 ) ;
+  const double xm2 = std::max ( m2 , 0.0 ) ;
+  const double xm3 = std::max ( m3 , 0.0 ) ;
+  //
+  if ( x <= xm1 + xm2 + xm3 ) { return 0 ; }
+  //
+  if ( s_zero ( xm1 ) ) { return Ostap::Kinematics::phasespace3 ( x , xm2 , xm3 ) ; }
+  if ( s_zero ( xm2 ) ) { return Ostap::Kinematics::phasespace3 ( x , xm1 , xm3 ) ; }
+  if ( s_zero ( xm3 ) ) { return Ostap::Kinematics::phasespace3 ( x , xm1 , xm2 ) ; }
+  //
+  static const double s_norm = 0.25 * M_PI * M_PI ;
+  //
+  const double norm = s_norm / ( x * x ) ;
+  //
+  const double m_low   = xm2 + xm3 ;
+  const double m_high  = x   - xm1 ;
+  //
+  const double s2_low  = m_low  * m_low ;
+  const double s2_high = m_high * m_high ;
+  
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<PS3> s_integrator {} ;
+  static char s_message[] = "Integral(phasespace3i/PS3)" ;
+  //
+  static const Ostap::Math::WorkSpace s_workspace {} ;
+  //
+  static const std::string s_ps3 = "PS3" ;
+  const std::size_t tag = std::hash_combine ( s_ps3 , x , xm1 , xm2 , xm3 ) ;
+  //
+  const PS3 aux { x , xm1 , xm2 , xm3 } ;
+  const auto F = s_integrator.make_function ( &aux ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag    ,                       // unique tag 
+      &F     , 
+      s2_low , s2_high    ,          // low & high edges
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result * norm ;
 }
 // ============================================================================
 // constructor from threshold and number of particles
