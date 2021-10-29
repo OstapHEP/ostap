@@ -75,7 +75,7 @@ from   ostap.math.base        import ( Ostap    , std     , cpp ,
 from   ostap.math.ve          import VE
 from   ostap.stats.counters   import SE , WSE 
 from   ostap.core.meta_info   import root_info
-from   ostap.core.ostap_types import integer_types 
+from   ostap.core.ostap_types import integer_types, sequence_types, string_types   
 # =============================================================================
 # logging 
 # =============================================================================
@@ -299,14 +299,34 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         >>> obj.draw ( max         = 100 )
 
         """
-        
+
+        def check_color ( color ) :
+            
+            if isinstance ( color , string_types ) :
+                
+                clow = color.lower() 
+                if   clow in ( 'black'   ,     ) : return 1 
+                elif clow in ( 'red'     , 'r' ) : return 2 
+                elif clow in ( 'blue'    , 'b' ) : return 4 
+                elif clow in ( 'green'   , 'g' ) : return 8 ## dark green here 
+                elif clow in ( 'yellow'  , 'y' ) : return 5 
+                elif clow in ( 'cyan'    , 'c' ) : return 6 
+                elif clow in ( 'magenta' , 'm' ) : return 7                
+
+                ## get the color from ROOT by color name 
+                c = getattr ( ROOT , 'k' + clow.capitalize() , None )
+                if c and isinstance ( c , integer_types ) and 0 < c : return int ( c )
+                
+            return color
+
         from ostap.utils.cidict import cidict
         kw = cidict ( transform = cidict_fun , **kwargs )
         
         ## Line
         
         if 'LineColor'  in kw and hasattr ( obj , 'SetLineColor' ) :
-            obj.SetLineColor   ( kw.pop('LineColor' ) )
+            color = check_color ( kw.pop('LineColor' ) ) 
+            obj.SetLineColor   ( color )
         if 'LineStyle'  in kw and hasattr ( obj , 'SetLineStyle' ) :
             obj.SetLineStyle   ( kw.pop('LineStyle' ) )
         if 'LineWidth'  in kw and hasattr ( obj , 'SetLineWidth' ) :
@@ -315,7 +335,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         ## Marker
             
         if 'MarkerColor' in kw and hasattr ( obj , 'SetMarkerColor' ) :
-            obj.SetMarkerColor ( kw.pop('MarkerColor' ) )
+            color = check_color ( kw.pop('MarkerColor' ) ) 
+            obj.SetMarkerColor ( color )
         if 'MarkerStyle' in kw and hasattr ( obj , 'SetMarkerStyle' ) :
             obj.SetMarkerStyle ( kw.pop('MarkerStyle' ) )
         if 'MarkerSize'  in kw and hasattr ( obj , 'SetMarkerSize'  ) :
@@ -324,7 +345,8 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         ## Area
             
         if 'FillColor'   in kw and hasattr ( obj , 'SetFillColor' ) :
-            obj.SetFillColor   ( kw.pop('FillColor' ) )
+            color = check_color ( kw.pop('FillColor' ) ) 
+            obj.SetFillColor   ( color )
         if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
             obj.SetFillStyle   ( kw.pop('FillStyle' ) )
 
@@ -679,6 +701,42 @@ ROOT.TSeqCollection . get = _rtl_get_
 
 
 # =============================================================================
+## Add/append element (or elements) to <code>TCollection</code> container
+#  @code
+#  collectiom   = ...
+#  item         = ...
+#  collection  += item
+#  items        = ...
+#  collection  += items
+#  collection  += (item1, item2, item3) 
+#  @endcode 
+#  @see TCollection::Add 
+#  @see TCollection::AddAll 
+def _rtc_iadd_ ( self , item ) :
+    """Add/append element or elements to `ROOT.TCollection` container
+    >>> collectiom   = ...
+    >>> item         = ...
+    >>> collection  += item
+    >>> items        = ...
+    >>> collection  += items
+    >>> collection  += (item1, item2, item3)
+    - see ROOT.TCollection.Add 
+    - see ROOT.TCollection.AddAll 
+    """
+    
+    if   isinstance ( item , ROOT.TCollection ) : self.AddAll ( item )
+    elif isinstance ( item , ROOT.TObject     ) : self.Add    ( item ) 
+    elif isinstance ( item , sequence_types   ) :
+        for i in item : self += i
+    else : 
+        return NotImplemented
+
+    return self 
+
+
+ROOT.TCollection. __iadd__ = _rtc_iadd_ 
+    
+# =============================================================================
 _decorated_classes_ = (
     ROOT.TObject        ,
     ROOT.TNamed         ,
@@ -700,6 +758,8 @@ _new_methods_       = (
     ROOT.TSeqCollection . __contains__ ,
     ROOT.TSeqCollection . __getitem__  ,
     ROOT.TSeqCollection . get          ,
+    #
+    ROOT.TCollection    . __iadd__     ,
     )
 
 # =============================================================================

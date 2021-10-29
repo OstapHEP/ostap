@@ -2,6 +2,8 @@
 
   1. add more decorators for `TCollection` and `TSeqCollection`: `get`, '__getitem__' , '__contains__'
   1. few tweaks for `ostap.plotting.canvas` module
+  1. add `+=` operator for `ROOT.TCollection`
+  1. allow to specify colors by names for `xxx.draw ( ... , <xxx>_color=<XXX> )` commands
  
 ## Backward incompatible changes: 
  
