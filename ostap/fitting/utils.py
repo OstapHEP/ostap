@@ -1453,7 +1453,7 @@ class MakeVar ( object ) :
             var2               , ## second variable 
             scale = scale      , ## scale
             name  = asym_name  ,
-            ttile = asym_title ) 
+            title = asym_title ) 
 
         ## sum_scale * ( var1 + var2 ) 
         sum_var  = self.vars_add (
@@ -1462,7 +1462,7 @@ class MakeVar ( object ) :
             c1    = sum_scale  , ## factor c1 
             c2    = sum_scale  , ## factor c2 
             name  = sum_name   , ## name 
-            ttile = sum_title  ) ## title  
+            title = sum_title  ) ## title  
         
         return sum_var , asym_var
     
@@ -1489,6 +1489,14 @@ class MakeVar ( object ) :
         if hsumvar is None :
             return hsumvar , hsumvar
         
+        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( hsumvar , ROOT.RooAbsArg )  :
+            s = hsumvare.name
+            a = asymvare.name
+            if not v1name  : v1name  = '%sL' % s
+            if not v2name  : v2name = '%sR' % s            
+            if not v1title : v1title = '%s_{L} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
+            if not v2title : v2title = '%s_{R} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
+                 
         var1 = self.vars_combination ( hsumvar           ,
                                        asymvar           ,
                                        alpha   =  1      ,

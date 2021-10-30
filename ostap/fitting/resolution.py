@@ -483,8 +483,8 @@ class ResoCB2(RESOLUTION) :
     @alpha.setter
     def alpha ( self , value ) :
         value = float ( value )
-        assert 0.2<= value<=5 , "``alpha''-parameter must be in 0.2,10 interval"
-        self.__alpha.setVal ( value )
+        assert 0.1<= value<=6 , "``alpha''-parameter must be in [0.1,6] interval"
+        self.set_value ( self.__alpha , value  ) 
 
     @property
     def n ( self  ) :
@@ -493,8 +493,8 @@ class ResoCB2(RESOLUTION) :
     @n.setter
     def n ( self , value ) :
         value = float ( value )
-        assert 1.e-4 <= value <= 40,  "``n'' must be in [1.e-4,40] interval"
-        self.__n.setVal ( value )
+        assert 1.e-6 <= value <= 100,  "``n'' must be in [1.e-6,100] interval"
+        self.set_value ( self.__n , value  ) 
 
     @property
     def kappaN ( self ) :
@@ -524,7 +524,6 @@ class ResoCB2(RESOLUTION) :
         """``nR'' : parameter ``n'' for right tail
         """
         return self.__nR
-
 
     @property
     def alphaL ( self ) :
