@@ -1489,11 +1489,11 @@ class MakeVar ( object ) :
         if hsumvar is None :
             return hsumvar , hsumvar
         
-        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( hsumvar , ROOT.RooAbsArg )  :
-            s = hsumvare.name
-            a = asymvare.name
+        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( asymvar , ROOT.RooAbsArg )  :
+            s = hsumvar.name
+            a = asymvar.name
             if not v1name  : v1name  = '%sL' % s
-            if not v2name  : v2name = '%sR' % s            
+            if not v2name  : v2name  = '%sR' % s            
             if not v1title : v1title = '%s_{L} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
             if not v2title : v2title = '%s_{R} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
                  
