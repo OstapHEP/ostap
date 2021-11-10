@@ -63,9 +63,9 @@ class Reweighter(object) :
         
         assert original.shape[-1] == target.shape[-1] , \
                "Inconsistent shapes: %s vs %s " % ( target.shape , original.shape )          
-        assert ( not original_weight ) or len ( original_weight ) == len ( original ) , \
+        assert ( not original_weight is None ) or len ( original_weight ) == len ( original ) , \
                "Invalid length of ``original weights''"        
-        assert ( not target_weight   ) or len ( target_weight   ) == len ( target   ) , \
+        assert ( not target_weight   is None ) or len ( target_weight   ) == len ( target   ) , \
                "Invalid length of ``target weights''"
         
         self.__nvars = original.shape[-1]
@@ -74,8 +74,8 @@ class Reweighter(object) :
             warnings.simplefilter("ignore")    
             self.reweighter.fit ( original ,
                                   target   ,
-                                  original_weight = original_weight if original_weight else None , 
-                                  target_weight   = target_weight   if target_weight   else None )
+                                  original_weight = original_weight , 
+                                  target_weight   = target_weight   )
             
     def weight ( self                   ,
                  original               ,
