@@ -102,7 +102,7 @@ __all__ = (
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
-import ROOT, cppyy, math, sys 
+import ROOT, cppyy, math, sys
 # =============================================================================
 # logging 
 # =============================================================================
@@ -111,7 +111,8 @@ from   ostap.logger.colorized   import attention, allright
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pyselectors' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
-from   ostap.core.core          import cpp, Ostap, items_loop, dsID,   valid_pointer  
+from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
+                                         dsID , valid_pointer , binomEff ) 
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
 from   ostap.core.meta_info     import old_PyROOT 
 import ostap.fitting.roofit 
@@ -1313,7 +1314,12 @@ class SelectorWithVarsCached(SelectorWithVars) :
 #  tree = ...
 #  ds   = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
-def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , silent = False ) :
+def make_dataset ( tree              ,
+                   variables         ,
+                   selection = ''    ,
+                   name      = ''    ,
+                   title     = ''    ,
+                   silent    = False ) :
     """Create the dataset from the tree
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
@@ -1364,7 +1370,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
     ## 
     cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut()
-
+    
     ## extended varset
     stor    = set() 
     varsete = ROOT.RooArgSet()
@@ -1387,7 +1393,7 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
 
         assert not lvars is None , 'Unable to get the basic variables for %s' % expressions
         if not silent :
-            logger.info ("make_dataset: temporary varibales to be added %s" % str ( lvars ) ) 
+            logger.info ("make_dataset: temporary variables to be added %s" % str ( lvars ) ) 
         for lname in lvars :
             if not lname in varsete :
                 v = Variable ( lname )
@@ -1402,20 +1408,32 @@ def make_dataset ( tree , variables , selection = '' , name = '' , title = '' , 
     processed = tree.statVar ( '1' , selection    ).nEntries()
     skipped   = tree.statVar ( '1' , str ( cuts ) ).nEntries() 
 
+    
     stat = SelStat ( total , processed , processed - skipped )
+
+    f1 = len ( varsete ) * 1.0 / len ( tree.branches() )
+    f2 = skipped         * 1.0 / max ( 1 , total ) 
+    if f1 < 0.25 and f2 < 0.10 :
+        logger.warning ( "Only tiny fraction of variables (% 4.1f%%) and data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f1 * 100 , f2 * 100 ) ) 
+    elif f1 < 0.25 :
+        logger.warning ( "Only tiny fraction of variables (% 4.1f%%) is requested: prefiltering can speedup process" % ( f1 * 100  ) )
+    elif f2 < 0.1  : 
+        logger.warning ( "Only tiny fraction of data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f2 * 100 ) ) 
+        
 
     from ostap.logger.utils import rooSilent, rootError
     from ostap.utils.timing import timing
-        
-    if not silent : logger.info ( "Start to fill the dataset") 
-    with rooSilent ( ROOT.RooFit.ERROR  , True ) :
-        with rootError( ROOT.kWarning ) :
-
-            ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
-            varsete = ds.get()
-
+    from ostap.utils.utils  import NoContext
+    TIMING = timing if not silent else NoContext
+    
+    with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
+        with rooSilent ( ROOT.RooFit.ERROR  , True ) :
+            with rootError( ROOT.kWarning ) :            
+                ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
+                varsete = ds.get()
+                
     if not silent :
-        logger.info( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
+        logger.debug( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
     
     ## add complex expressions 
     if formulas :
@@ -1680,14 +1698,35 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                 if not silent :
                     from ostap.frames.frames import report_print
                     title =  'Tree -> Frame -> Tree filter/transformation '
-                    logger.info ( title + '\n%s' % report_print ( report , title , '# ') )
+
+                    ## reduce in number of branches 
+                    otv = len ( self.branches()     )
+                    with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
+                        ntv = len ( tt.tree.branches () )
+                    eff = binomEff ( ntv , otv ) * 100
+                    fmt_eff =  '%4.1g +- %-4.1g'
+                    eff = fmt_eff % ( eff.value() , eff.error() )
+                    eff = '{:^20}'.format ( eff ) 
+                    rows = [ ( '#BRANCHES' , '%s' % otv , '%s' % ntv , eff , '' ) ]             
+                    logger.info ( title + '\n%s' % report_print ( report , title , '# ' , more_rows = rows ) )
                     
                 total_0 = -1
                 for c in report :
                     if  total_0 < 0 : total_0 = c.GetAll()
                     else            : break
                         
-                if not silent : logger.info ( 'Write %s' % tf.filename  ) 
+                if not silent :
+                    s = -1 
+                    try :
+                        s = os.path.getsize ( tf.filename ) 
+                    except :
+                        s = -1
+                    if 0 < s : 
+                        logger.info ( 'Snapshot at %s %.3g[MB]' % ( tf.filename , float ( s ) / 2**20 ) )  
+                    else :
+                        logger.info ( 'Snapshot at %s '         %   tf.filename ) 
+
+                            
                 import ostap.io.root_file
 
                 assert frame.Count().GetValue()>0 , 'Selection result is empty'
@@ -1696,8 +1735,10 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     tree         = tt.tree
                     if not silent :
                         import ostap.logger.table as  T
-                        t = str ( tree )
-                        t = T.add_prefix ( t , '# ')
+                        title = 'Filtered frame/tree for further processing'
+                        t = tree.table ( prefix = '# ' )
+                        ## t = str ( tree )
+                        ## t = T.add_prefix ( t , '# ')
                         logger.info ( 'Filtered frame/tree for the futher processing:\n%s' % t )
                         
                     new_selector = SelectorWithVars ( nvars + vars_ ,
@@ -1749,6 +1790,8 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
 
     from ostap.fitting.roofit import useStorage
     
+    logger.info ( 'I am here 4' )
+
     with useStorage() :
         
         logger.info ('Prepare the cloned dataset with TTree-storage type')

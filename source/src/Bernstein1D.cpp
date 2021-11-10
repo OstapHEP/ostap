@@ -122,27 +122,28 @@ Ostap::Math::BernsteinEven::BernsteinEven
   const double               xmax ) 
   : m_bernstein ( pars.empty() ? 0 : 2 * pars.size() - 2 , xmin , xmax )
 {
-  for ( unsigned short i = 0 ; i < pars.size() ; ++i ) { setPar ( i , pars[i] ) ; }
+  setPars ( pars.begin() , pars.end() ) ;
 }
 // ============================================================================
-/* set k-parameter
+/*  set k-parameter
  *  @param k index
  *  @param value new value 
  *  @return true if parameter is actually changed 
  */
 // ============================================================================
 bool Ostap::Math::BernsteinEven::setPar
-( const unsigned short k , const double value ) 
+( const unsigned short k     , 
+  const double         value ) 
 {
   //
-  const unsigned short npb = m_bernstein.npars() ;
-  if ( npb <= k ) { return false ; }
+  const unsigned short np  =  npars  () ;
+  const unsigned short d   =  degree () ;
   //
-  if ( npb == 2 * k + 1 ) 
-  { return m_bernstein.setPar ( k , value ) ; }
+  if      ( np <=     k ) { return false ; }
+  else if ( d  == 2 * k ) { return m_bernstein.setPar ( k , value ) ; }
   //
-  const bool b1 = m_bernstein.setPar (           k , value ) ;
-  const bool b2 = m_bernstein.setPar ( npb - 1 - k , value ) ;
+  const bool b1 = m_bernstein.setPar (     k , value ) ;
+  const bool b2 = m_bernstein.setPar ( d - k , value ) ;
   //
   return b1 || b2 ;
   //
@@ -428,7 +429,7 @@ std::vector<double> Ostap::Math::Positive::pars  () const
   //
   const std::vector<double>& pa = m_sphereA.pars() ;
   t = std::copy ( pa.begin () , pa.end() , t ) ;
-  const std::vector<double>& pr = m_sphereA.pars() ;
+  const std::vector<double>& pr = m_sphereR.pars() ;
   t = std::copy ( pr.begin () , pr.end() , t ) ;
   //
   return r  ;  
@@ -451,8 +452,8 @@ Ostap::Math::PositiveEven::PositiveEven
 ( const unsigned short      N    ,
   const double              xmin ,
   const double              xmax )
-  : m_even   ( N , xmin , xmax )
-  , m_sphere ( N , 3 ) 
+  : m_even     ( N     , xmin , xmax )
+  , m_positive ( N / 2 , xmin , xmax )  
 {
   updateBernstein () ;
 }
@@ -463,98 +464,18 @@ Ostap::Math::PositiveEven::PositiveEven
 ( const std::vector<double>& pars ,
   const double               xmin ,
   const double               xmax )
-  : m_even      ( pars.size() , xmin , xmax )
-  , m_sphere    ( pars , 3 ) 
+  : m_even      ( 2 * pars.size() , xmin , xmax )
+  , m_positive  (     pars        , xmin , xmax ) 
 {
   updateBernstein () ;
 }
-// ============================================================================
-// constructor from the sphere with coefficients  
-// ============================================================================
-Ostap::Math::PositiveEven::PositiveEven
-( const Ostap::Math::NSphere& sphere , 
-  const double                xmin   , 
-  const double                xmax   )
-  : m_even    ( sphere.dim() , xmin , xmax )
-  , m_sphere  ( sphere ) 
-{
-  updateBernstein () ;
-}
-
-
 // ============================================================================
 // update bernstein coefficients
 // =============================================================================
 bool Ostap::Math::PositiveEven::updateBernstein ()
 {
-  ///
-  bool         update = false ;
-  /// degree 
-  const unsigned short o = m_even.degree() ;
-  //
-  const double   norm    = m_even.npars() / 
-    ( m_even.xmax() -  m_even.xmin () ) ;
-  //
-  // few simple cases 
-  //
-  if       ( 0 == o ) { return m_even.setPar( 0 , norm ) ; }
-  //
-  // get the parameters of "global" non-negative symmetric parabola 
-  //
-  const double a0 = m_sphere.x2(0)      ;
-  const double a1 = m_sphere.x2(1) - a0 ;
-  const double a2 = a0                  ;
-  //
-  // "elevate to degree of bernstein"
-  const unsigned short N =  m_even.bernstein().degree()  ;
-  std::vector<long double> v ( N + 1 ) ;
-  v[0] = a0 ;
-  v[1] = a1 ;
-  v[2] = a2 ;
-  std::fill ( v.begin() + 3 , v.end() , a2 ) ;
-  // repeate the elevation cycles: 
-  for ( unsigned short   n = 2  ; n < N ; ++n ) 
-  {
-    // "current" degree 
-    for ( unsigned short k = n ;  1<= k ; --k ) 
-    {
-      v[k]  = ( n + 1 - k ) * v[k] + k * v[k-1] ;
-      v[k] /=   n + 1  ;
-    } 
-  }
-  //
-  // now  we have a non-negative symmetric parabola coded.
-  //   - add a proper positive polynomial to it.
-  const unsigned short nV = v.size() ;
-  const unsigned short nX = m_sphere.nX() ;
-  for ( unsigned short ix = 2 ; ix < nX ; ++ix ) 
-  {
-    const double x = m_sphere.x2 ( ix ) ;
-    v[      ix - 2 ] += x ; 
-    v[ nV - ix + 1 ] += x ; // keep symmetry 
-  }
-  //
-  const double isum = norm / std::accumulate ( v.begin() , v.end() , 0.0L ) ;
-  //
-  const unsigned short nE = m_even.npars() ;
-  //
-  for ( unsigned short ix = 0 ; ix < nE ; ++ix ) 
-  {
-    const bool updated = m_even.setPar ( ix , 2 * v[ix] * isum ) ;
-    update = updated || update ;
-  }
-  //
-  return update ;
-}
-// =============================================================================
-// get the integral between low and high 
-// =============================================================================
-double Ostap::Math::PositiveEven::integral
-( const double low , const double high ) const 
-{ 
-  return 
-    s_equal ( low  , xmin() ) && s_equal ( high , xmax() ) ? 1 :
-    m_even.integral ( low , high )  ; 
+  const std::vector<double>& p = m_positive.bernstein().pars() ;
+  return m_even.setPars ( p.begin() , p.end() ) ;
 }
 // ============================================================================
 

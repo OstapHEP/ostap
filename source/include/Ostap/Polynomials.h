@@ -1299,7 +1299,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// number of parameters 
-      unsigned short npars  () const { return m_pars.size()     ; }
+      inline unsigned short npars  () const { return m_pars.size()     ; }
       /// all parameters are zero ?
       bool           zero   () const ;
       /** set k-parameter
@@ -1307,23 +1307,30 @@ namespace Ostap
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool setPar          ( const unsigned short k , const double value ) 
+      inline bool setPar          
+      ( const unsigned short k     , 
+        const double         value ) 
       { return k < m_pars.size() ?  _setPar ( k , value ) : false ; }
       /** set k-parameter
        *  @param k index
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool setParameter    ( const unsigned short k , const double value )
-      { return setPar      ( k , value ) ; }
+      inline bool setParameter
+      ( const unsigned short k     , 
+        const double         value ) { return setPar      ( k , value ) ; }
       /** set several/all parameters at once 
-       *  @param begin  start itertaor for the sequence of coefficients 
+       *  @param begin  start iterator for the sequence of coefficients 
        *  @param end    end   iterator for the sequence of coefficients 
        *  @return true if at least one parameter is actually changed 
        */
-      template <class ITERATOR>
-      inline bool setPars ( ITERATOR begin  , 
-                            ITERATOR end    ) ;
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      inline bool setPars 
+      ( ITERATOR begin  , 
+        ITERATOR end    ) ;
+      // ======================================================================
       /** set several/all parameters at once 
        *  @param pars (NIPUT) vector of parameters 
        *  @return true if at least one parameter is actually changed 
@@ -1332,10 +1339,10 @@ namespace Ostap
       { return setPars ( pars.begin() , pars.end() ) ; }
       // ======================================================================
       /// get the parameter value
-      double  par          ( const unsigned short k ) const
+      inline double  par          ( const unsigned short k ) const
       { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
       /// get the parameter value
-      double  parameter    ( const unsigned short k ) const { return par ( k ) ; }      
+      inline double  parameter    ( const unsigned short k ) const { return par ( k ) ; }      
       /// get all parameters:
       const std::vector<double>& pars () const { return m_pars ; }
       // ======================================================================
@@ -1358,7 +1365,9 @@ namespace Ostap
        *  @param value new value 
        *  @return true if parameter is actually changed 
        */
-      bool _setPar ( const unsigned short k , const double value ) ;
+      bool _setPar 
+      ( const unsigned short k     , 
+        const double         value ) ;
       // ======================================================================
     protected :
       // ======================================================================
@@ -1371,14 +1380,17 @@ namespace Ostap
      *  @param pars (NIPUT) vector of parameters 
      *  @return true if at least one parameter is actually changed 
      */
-    template <class ITERATOR>
-    inline bool Parameters::setPars ( ITERATOR begin  , 
-                                      ITERATOR end    ) 
+    template <class ITERATOR,
+              typename value_type = typename std::iterator_traits<ITERATOR>::value_type ,
+              typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+    inline bool Parameters::setPars 
+    ( ITERATOR begin  , 
+      ITERATOR end    ) 
     {
       bool update = false ;
       const unsigned int   N = m_pars.size()  ;
       for ( unsigned short k ; k < N && begin != end ;  ++k, ++begin ) 
-      { update = _setPar ( k  , *begin ) || update ; }
+      { update = _setPar ( k  , *begin ) ? true : update ; }
       return update ;
     }
     // ========================================================================
@@ -1402,15 +1414,16 @@ namespace Ostap
       template <typename ITERATOR,
                 typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                 typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
-        PolySum ( ITERATOR begin , 
-                  ITERATOR end   )
+      PolySum 
+      ( ITERATOR begin , 
+        ITERATOR end   )
         : Parameters ( begin , end )
       { if ( m_pars.empty() ) { m_pars.push_back ( 0 ) ; } }
       // ======================================================================
     public:
       // ======================================================================
       /// degree  of polynomial 
-      unsigned short degree () const { return m_pars.size() - 1 ; }
+      unsigned short degree () const { return m_pars.empty() ? 0 : m_pars.size() - 1 ; }
       /// degree  of polynomial 
       unsigned short n      () const { return degree () ; }
       // ======================================================================

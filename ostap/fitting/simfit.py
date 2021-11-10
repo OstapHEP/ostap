@@ -1063,10 +1063,10 @@ class SimFit ( MakeVar ) :
                  fix                            , ## variables to fix 
                  range          = ( 0 , None )  ,
                  silent         = True          ,
-                 opt_const      = True          ,
-                 max_calls      = 10000         ,
-                 max_iterations = -1            ,
-                 strategy       = None          ,
+                 ## opt_const      = True          ,
+                 ## max_calls      = 10000         ,
+                 ## max_iterations = -1            ,
+                 ## strategy       = None          ,
                  args           = () , **kwargs ) :
         """Evaluate ``significance'' using Wilks' theorem via NLL
         >>> data = ...
@@ -1079,10 +1079,10 @@ class SimFit ( MakeVar ) :
                                  fix            = fix             ,
                                  range          = range           , 
                                  silent         = silent          , 
-                                 opt_const      = opt_const       ,
-                                 max_calls      = max_calls       ,
-                                 max_iterations = max_iterations  ,
-                                 strategy       = strategy        ,
+                                 ## opt_const      = opt_const       ,
+                                 ## max_calls      = max_calls       ,
+                                 ## max_iterations = max_iterations  ,
+                                 ## strategy       = strategy        ,
                                  args           = args , **kwargs )
     
     # ========================================================================

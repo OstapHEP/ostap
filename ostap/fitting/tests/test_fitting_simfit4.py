@@ -182,6 +182,7 @@ def test_simfit4() :
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
+    rC , fC = model_sim.fitTo ( dataset , silent = True )
     
     with use_canvas ( 'test_simfit4' ) : 
         with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )

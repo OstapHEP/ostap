@@ -402,7 +402,7 @@ def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , prefix 
 
 # ===============================================================================
 ## Print the frame report data
-def report_print_table ( report , title  = '' , prefix = '' ) :
+def report_print_table ( report , title  = '' , prefix = '' , more_rows = [] ) :
     """Print a frame report data 
     """
     from ostap.core.core import binomEff
@@ -445,7 +445,9 @@ def report_print_table ( report , title  = '' , prefix = '' ) :
                               fmt_passed    % p  ,
                               fmt_eff       % ( e1.value () , e1.error () ) ,
                               fmt_cumulated % ( e2.value () , e2.error () ) ) )
-        
+    for row in more_rows :
+        table_data.append ( row ) 
+    
     import ostap.logger.table as T
     return T.table ( table_data , title , prefix )
 
@@ -465,11 +467,12 @@ def report_as_table ( report ) :
 
 # ===============================================================================
 ## Print the data frame report
-def report_print ( report , title  = '' , prefix = '' ) :
+def report_print ( report , title  = '' , prefix = '' , more_rows = [] ) :
     """Print the data frame report
     """
-    table = report_as_table ( report ) 
-    return report_print_table ( table , title, prefix )
+    table = report_as_table ( report )
+    
+    return report_print_table ( table , title, prefix , more_rows )
 
 
 # ==============================================================================

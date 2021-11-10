@@ -1037,7 +1037,7 @@ def _in_types ( t ) :
 
 # ==============================================================================
 ## print tree as table 
-def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , *args ) :
+def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , title = '' , *args ) :
     """
     """
     ## get list of branches 
@@ -1176,23 +1176,25 @@ def _rt_table_0_ ( tree , pattern = None , cuts = '' , prefix = '' , *args ) :
                               fmt_max   %           v [ 5 ] ,
                               fmt_num   %           v [ 6 ] ) )
 
-    tt = tree.GetTitle()
-    if tt and tt != tree.GetName() : 
-        title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
-    else :
-        title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
-
-    nb = len ( tree.branches () )
-    title += '%d branches' % nb 
-    nl = len ( tree.leaves   () )
-    if nl != nb : title += '%d leaves' % nl
+    if not title :
         
-    if isinstance ( tree , ROOT.TChain ) :
-        nfiles = len ( tree.files() )
-        if 1 < nfiles : title += '/%d files ' % nfiles 
+        tt = tree.GetTitle()
+        if tt and tt != tree.GetName() : 
+            title  = '%s("%s","%s") %d entries,' % ( tree.__class__.__name__ , tree.path , tt , len ( tree ) )
+        else :
+            title  = '%s("%s") %d entries,'      % ( tree.__class__.__name__ , tree.path ,      len ( tree ) )
+
+        nb = len ( tree.branches () )
+        title += '%d branches' % nb 
+        nl = len ( tree.leaves   () )
+        if nl != nb : title += '%d leaves' % nl
+        
+        if isinstance ( tree , ROOT.TChain ) :
+            nfiles = len ( tree.files() )
+            if 1 < nfiles : title += '/%d files ' % nfiles 
         
     import ostap.logger.table as T
-    t  = T.table (  table_data , title , prefix = prefix )
+    t  = T.table ( table_data , title , prefix = prefix )
     w  = T.table_width ( t )
     return t , w 
     
@@ -1281,12 +1283,12 @@ ROOT.TLeaf . get_short_type = _tl_type_short_
 #  data = ...
 #  print dat.table() 
 #  @endcode
-def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , *args ) :
+def _rt_table_ (  dataset ,  variables = [] ,   cuts = '' , prefix = '' , title = '' , *args ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _rt_table_0_ ( dataset , variables , cuts , prefix , *args )[0]
+    return _rt_table_0_ ( dataset , variables , cuts , prefix , title , *args )[0]
 
 
 # =============================================================================

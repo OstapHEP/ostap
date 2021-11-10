@@ -116,9 +116,13 @@ def test_simfit2 ( ) :
         ## fit 1
         with wait ( 1 ) : 
             r1 , f1 = model1.fitTo ( dataset1 , draw = True , nbins = 50 , silent = True )        
+            title = 'Results of fit to dataset1'
+            logger.info ( '%s\n%s' % ( title , r1.table ( title = title , prefix = '# ' ) ) )
         ## fit 2
         with wait ( 1 ) : 
             r2 , f2 = model2.fitTo ( dataset2 , draw = True , nbins = 50 , silent = True )
+            title = 'Results of fit to dataset2'
+            logger.info ( '%s\n%s' % ( title , r2.table ( title = title , prefix = '# ' ) ) )
         # =========================================================================
     
     ## combine data
@@ -139,6 +143,9 @@ def test_simfit2 ( ) :
     r , f = model_sim.fitTo ( dataset , silent = True )
     r , f = model_sim.fitTo ( dataset , silent = True )
     
+    title = 'Results of simultaneous fit'
+    logger.info ( '%s\n%s' % ( title , r.table ( title = title , prefix = '# ' ) ) )
+
     with use_canvas ( 'test_simfit2' ) : 
         with wait ( 1 ) : fA    = model_sim.draw ( 'A' , dataset , nbins = 50 )
         with wait ( 1 ) : fB    = model_sim.draw ( 'B' , dataset , nbins = 50 )
@@ -147,7 +154,6 @@ def test_simfit2 ( ) :
     ## significance 
     ## wilks = model_sim.wilks    ( 'SM2' , dataset  )
     
-    logger.info ( 'Fit  results are: %s ' % r )
 
 
 # =============================================================================

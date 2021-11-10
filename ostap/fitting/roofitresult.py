@@ -620,7 +620,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
+    ## rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
+    rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
@@ -654,15 +655,21 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
+
         cc = 'Not available' if root_info < ( 6 , 24 ) else ''
         if 0 <= cq and not  ( 6 , 24 ) <= root_info < ( 6 , 25 ) and 1 < len ( pars_float ) :
             
             mxr , mxv = r.max_cor    ( p )
+            
+            ## logger.warning ("globalCorr.... %s %s" %  ( p , cq ) )
+            gc = -1.0 
+            ## gc    = r.globalCorr ( p ) if 3 == cq else -1.00
+            ## cc        = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100 , mxv )
 
-            gc    = r.globalCorr ( p )
-
-            cc        = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100 , mxv )
-            if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+            cc        = '% +5.1f : %-s' % ( mxr*100 , mxv )
+            if 0.95 < abs ( mxr ) : cc = attention ( cc )
+            
+            ## if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
             max_corr = True
 
         row = p , n , s , cc
