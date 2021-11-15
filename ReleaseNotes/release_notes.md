@@ -1,5 +1,7 @@
 ## New features:
 
+ 1. add `reduce` method for polynomial and spline classes 
+
 ## Backward incompatible 
  
 ## Bug fixes:
@@ -76,7 +78,7 @@
   1. make user-fiennly frame -> histogram projetctions 
   1. add `frame_table`, 'frame_project', `frame_statVar` and other functions
   1. simplify `trees/data_utils.py` make it more robust and reduce number of alive `TChain` instances 
-  1. Extend a bit sumamry plot with simple `Point` and `Interval` objects
+  1. Extend a bit summary plot with simple `Point` and `Interval` objects
   1. add `pip install` for `CMAKE`
   1. fix `numpy.bool` warning for newer versions of `numpy`
   1. add `Ostap::Math::A2` 

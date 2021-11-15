@@ -1623,7 +1623,9 @@ namespace Ostap
                      const double               xmin  = -1 , 
                      const double               xmax  =  1 )  ;
       /// template constructor from sequence of parameters 
-      template <class ITERATOR>
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
       ChebyshevSum ( ITERATOR                 first , 
                      ITERATOR                 last  , 
                      const double             xmin  , 
@@ -1786,11 +1788,13 @@ namespace Ostap
                     const double                xmin   = -1 , 
                     const double                xmax   =  1 )  ;
       /// template constructor from sequence of parameters 
-      template <class ITERATOR>
-        LegendreSum ( ITERATOR                  first , 
-                      ITERATOR                  last  , 
-                      const double              xmin  , 
-                      const double              xmax  ) 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      LegendreSum ( ITERATOR                  first , 
+                    ITERATOR                  last  , 
+                    const double              xmin  , 
+                    const double              xmax  ) 
         : Ostap::Math::PolySum ( first , last ) 
         , m_xmin ( std::min ( xmin, xmax ) )
         , m_xmax ( std::max ( xmin, xmax ) )
@@ -1960,6 +1964,23 @@ namespace Ostap
       HermiteSum ( const unsigned short       degree =   0  ,
                    const double               xmin   =  -1  , 
                    const double               xmax   =   1  ) ;
+      // ======================================================================
+      /// constructor from the parameter list 
+      HermiteSum ( const std::vector<double>&  pars       , 
+                   const double                xmin   = -1 , 
+                   const double                xmax   =  1 )  ;
+      /// template constructor from sequence of parameters 
+      template <class ITERATOR,
+                typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+      HermiteSum ( ITERATOR                  first , 
+                   ITERATOR                  last  , 
+                   const double              xmin  , 
+                   const double              xmax  ) 
+        : Ostap::Math::PolySum ( first , last ) 
+        , m_xmin ( std::min ( xmin, xmax ) )
+        , m_xmax ( std::max ( xmin, xmax ) )
+      {}
       // ======================================================================
     public:
       // ======================================================================

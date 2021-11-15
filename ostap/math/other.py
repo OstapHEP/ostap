@@ -68,7 +68,7 @@ __version__ = "Version$Revision$"
 __all__     = () ## nothing to be imported !
 # =============================================================================
 import ROOT, cppyy
-
+import ostap.math.polynomials 
 
 
 # =============================================================================

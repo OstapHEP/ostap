@@ -133,11 +133,16 @@ ROOT.RooFormulaVar  . as_VE          = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooConstVar    . asVE           = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooFormulaVar  . asVE           = lambda s : VE ( s.getVal() , 0 )
 
+ROOT.RooRealVar     . __float__      = lambda s : s.getVal()
+ROOT.RooConstVar    . __float__      = lambda s : s.getVal()
+ROOT.RooAbsReal     . __float__      = lambda s : s.getVal() ## NB!!!
+
 
 ROOT.RooAbsReal       .__contains__ = lambda s,v : False ## ??? do we need it???
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
 
 # =====================================================================
+
 ROOT.RooAbsReal. minmax  = lambda s : ()
 ROOT.RooAbsReal.xminmax  = lambda s : ()
 ROOT.RooAbsRealLValue  . xmin            = lambda s : s.getMin()
@@ -1272,8 +1277,6 @@ else :
     Ostap.FormulaVar.__reduce__    = rfv_reduce
 
 
-
-
 # =============================================================================
 ## unpickle <code>Ostap::MoreFooFit::TwoVars</code> objects
 #  @see Ostap::MoreRooFit.TwoVars
@@ -1323,7 +1326,24 @@ def _ra_reduce ( vars ) :
 
 Ostap.MoreRooFit.Combination.__reduce__  = _rc_reduce
 Ostap.MoreRooFit.Asymmetry.  __reduce__  = _ra_reduce
-    
+
+
+
+# =============================================================================
+## Reduce <code>RooConstVar</code>
+#  @see RooConstVar 
+def rcv_reduce ( var ) :
+    """ Reduce `ROOT.RooConstVar`
+    - see ROOT.RooConstVar
+    """
+    return r2v_factory , ( type ( var )  ,
+                           var.name      ,
+                           var.title     ,
+                           float ( var ) )  
+
+ROOT.RooConstVar.__reduce__ = rcv_reduce 
+
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.RooRealVar        ,
@@ -1331,7 +1351,7 @@ _decorated_classes_ = (
     ROOT.RooFormulaVar     ,
     ROOT.RooAbsReal        ,
     ROOT.RooAbsRealLValue  ,
-    ROOT.RooUniformBinning
+    ROOT.RooUniformBinning ,
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 

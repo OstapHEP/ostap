@@ -389,6 +389,26 @@ def _ve_poisson_ ( s , fluctuate , accept = lambda s : True ) :
 VE.gauss   = _ve_gauss_
 VE.poisson = _ve_poisson_ 
 
+# ==============================================================================
+## factory for unpickling of <code>Ostap::Math::ValueWithError</code>
+#  @see Ostap::Math::ValueWithError
+def ve_factory ( value , cov2 ) :
+    """Factory for unpickling of <code>Ostap::Math::ValueWithError</code>
+    - see Ostap::Math::ValueWithError
+    """
+    return  VE ( value , cov2 ) 
+    
+# =============================================================================
+## reduce <code>Ostap::Math::ValueWithError</code>
+#  @see Ostap::Math::ValueWithError
+def ve_reduce ( v ) :
+    """reduce `Ostap.Math.ValueWithError`
+    - see Ostap.Math.ValueWithError
+    """
+    return ve_factory , ( v.value() , v.cov2() )
+
+Ostap.Math.ValueWithError.__reduce__ = ve_reduce
+
 # =============================================================================
 ## decorated classes 
 _decorated_classes_  = (
@@ -420,7 +440,11 @@ _new_methods_ = (
     VE . minmax           ,
     VE . gauss            , 
     VE . poisson          ,
+    VE . __reduce__       ,
    )
+
+
+
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -623,11 +623,13 @@ namespace Ostap
           const unsigned short order      = 3    ,
           const bool           increasing = true ) ;
       /// constructor from positive spline
-      MonotonicSpline ( const PositiveSpline& spline     ,
-                         const bool            increasing ) ;
+      MonotonicSpline 
+      ( const PositiveSpline& spline     ,
+        const bool            increasing ) ;
       /// constructor from the basic spline
-      MonotonicSpline ( const BSpline&        spline     ,
-                         const bool            increasing ) ;
+      MonotonicSpline
+      ( const BSpline&        spline     ,
+        const bool            increasing ) ;
       /// destructor
       virtual ~MonotonicSpline() ;
       // ======================================================================

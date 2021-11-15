@@ -81,7 +81,8 @@ __all__     = (
 import  ROOT, math  
 from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer
-from    ostap.math.base        import iszero, isequal, signum  
+from    ostap.math.base        import iszero, isequal, signum
+import  ostap.math.polynomials 
 # =============================================================================
 # logging 
 # =============================================================================

@@ -1641,10 +1641,22 @@ Ostap::Math::HermiteSum::HermiteSum
   : Ostap::Math::PolySum ( degree )
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1) 
+  , m_scale ( 1 ) 
 {
   m_scale /= ( m_xmax - m_xmin );
 }
+// ============================================================================
+// constructor from the parameter list 
+// ============================================================================
+Ostap::Math::HermiteSum::HermiteSum 
+( const std::vector<double>&  pars , 
+  const double                xmin , 
+  const double                xmax )
+  : HermiteSum ( pars.begin() , 
+                 pars.end  () , 
+                 xmin         , 
+                 xmax         )
+{}
 // ============================================================================
 // get the value
 // ============================================================================

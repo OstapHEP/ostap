@@ -119,6 +119,7 @@ with ROOTIgnore( 2001 ) :
     
     import ostap.io.root_file
     
+    import ostap.math.polynomials
     import ostap.math.models
     import ostap.utils.hepdata 
     import ostap.utils.pdg_format 

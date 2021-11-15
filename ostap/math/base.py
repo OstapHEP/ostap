@@ -59,8 +59,6 @@
   >>> dir( Ostap      )
 """
 # =============================================================================
-from __future__ import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
 __version__ = "Version: $Revision$"
@@ -103,7 +101,7 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy, sys, math 
-from   ostap.core.meta_info import root_version_int 
+from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -318,6 +316,9 @@ def make_vector ( TYPE , cnv , *args ) :
     ## create new vector 
     VT  = std.vector( TYPE ) ## vector type
     vct = VT ( )             ## vector instance
+    
+    vct.reserve ( len ( args ) )
+    
     if not  args : return vct 
     ## add arguments to the vector
     return _add_to ( vct , cnv , args[0] , *args[1:] )
@@ -784,8 +785,9 @@ def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
     xmax = math.ceil  ( a2 * ( 10**N ) ) * ( 10 ** b2 )
     
     return xmin , xmax
-    
-    
+
+
+import ostap.math.polynomials 
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -793,16 +795,14 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     _v = [ l for l in dir(Ostap     ) if 0 != l.find('__') ]
-    print(' dir(Ostap)      : ')
+    logger.info (' dir(Ostap)      : ')
     _v.sort()
-    for v in _v : print(v)
+    for v in _v : logger.info ( v )
+    
     _v = [ l for l in dir(Ostap.Math) if 0 != l.find('__') ]
-    print(' dir(Ostap.Math) : ')
+    logger.info (' dir(Ostap.Math) : ')
     _v.sort()
-    for v in _v : print(v)
-
-
-
+    for v in _v : logger.info ( v )
 
 
 # =============================================================================

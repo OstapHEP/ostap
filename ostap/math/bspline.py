@@ -50,6 +50,7 @@ from    ostap.core.core        import Ostap, funID
 from    ostap.core.ostap_types import is_integer
 from    ostap.math.base        import iszero, isequal, signum, doubles
 import  ostap.math.bernstein 
+import  ostap.math.polynomials
 # =============================================================================
 # logging 
 # =============================================================================
