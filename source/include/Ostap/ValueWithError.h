@@ -1228,7 +1228,7 @@ namespace Ostap
     { return abssum ( vct )  ; }
     // ========================================================================    
     /** evaluate polynomial
-     *  \f[ f(x) = a_0 + a_1x + a_2x^2 + ... + a_{n-1}x^{n-1} + a_nx^n\f]
+     *  \f[ f(x) = Чаa_0 + a_1x + a_2x^2 + ... + a_{n-1}x^{n-1} + a_nx^n\f]
      *  such as \f$f(0) = a_0 \f$      
      *  using Horner rule
      *  @param poly  INPUT the coefficients

@@ -1978,9 +1978,12 @@ namespace Ostap
                    const double              xmin  , 
                    const double              xmax  ) 
         : Ostap::Math::PolySum ( first , last ) 
-        , m_xmin ( std::min ( xmin, xmax ) )
-        , m_xmax ( std::max ( xmin, xmax ) )
-      {}
+        , m_xmin  ( std::min ( xmin, xmax ) )
+        , m_xmax  ( std::max ( xmin, xmax ) )
+        , m_scale ( 1 )
+      {
+        m_scale /= ( m_xmax - m_xmin ) ;
+      }
       // ======================================================================
     public:
       // ======================================================================

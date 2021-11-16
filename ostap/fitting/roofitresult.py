@@ -198,6 +198,7 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
             
     return m  
 
+
 # =============================================================================
 ## get the covariance matrix 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -221,6 +222,50 @@ def _rfr_covmatrix_  ( self ) :
             
     return m  
 
+# ============================================================================
+## get the required results in form of SVectorWithError object
+#  @code
+#  fit_resuts = ...
+#  res   = fit_results.results( 'A', 'B' , 'C' )
+#  print res, res.cov2() 
+#  @endcode
+#  @see Ostap::Math::SVectorWithError
+def _rfr_results_( self , var1 , var2 , *vars ) :
+    """Get the required results in form of SVectorWithError object
+    >>> fit_resuts = ...
+    >>> res   = fit_results.results( 'A', 'B' , 'C' )
+    >>> print res, res.cov2() 
+    """
+    
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1] 
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
+    
+    args = ROOT.RooArgList ( var1 , var2 )
+    for v in vars :
+        if isinstance ( v , str ) : v = self.param ( v ) [1] 
+        args.add ( v ) 
+
+        
+    cm = self.reducedCovarianceMatrix (  args )
+    N  = cm.GetNrows()
+
+    import ostap.math.linalg    
+    m  = Ostap.Math.SymMatrix ( N )()
+    v  = Ostap.Math.Vector    ( N )()
+    
+    S  = Ostap.Math.SVectorWithError  ( N )
+    
+    v  = S()
+    c2 = v.cov2()
+    
+    for i in range ( N ) :
+        v [ i ] = float ( self.param( var1 ) [ 0 ] )
+        for j in range ( i , N ) :
+            c2 [ i , j ] = cm ( i , j )
+
+    return v
+
+    
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix
 #  @code
@@ -506,34 +551,6 @@ def _rfr_asymmetry_ ( self , var1 , var2 ) :
     else : 
         return -1 * self.ratio ( var2 , var1 ) . asym ( _one )
 
-
-# ============================================================================
-## get the required results in form of SVectorWithError object
-#  @code
-#  fit_resuts = ...
-#  res   = fit_results.results( 'A', 'B' , 'C' )
-#  print res, res.cov2() 
-#  @endcode
-#  @see Ostap::Math::SVectorWithError
-def _rfr_results_( self , *vars ) :
-    """Get the required results in form of SVectorWithError object
-    >>> fit_resuts = ...
-    >>> res   = fit_results.results( 'A', 'B' , 'C' )
-    >>> print res, res.cov2() 
-    """
-    _n = len ( vars )
-    _r = Ostap.Math.SVectorWithError(_n,'double')()
-    _i = 0 
-    for _i1 in range( 0 , _n ) :
-        _v1                = vars[_i1]
-        _vv                = self.param ( _v1 ) [0]
-        _r       [ _i1   ] = _vv
-        _r.cov2()[_i1,_i1] = _vv.cov2() 
-        for _i2 in range ( _i1 + 1 , _n ) :
-            _v2  = vars[_i2]
-            _c12 = self.cov ( _v1 , _v2 ) 
-            _r.cov2()[_i1,_i2] = _c12 
-    return _r 
 
 # =============================================================================
 ## evaluate the certain  function/expression for the fit   result
@@ -896,7 +913,7 @@ ROOT.RooFitResult . max_corr        = _rfr_max_cor_
 ROOT.RooFitResult . cov             = _rfr_cov_
 ROOT.RooFitResult . covariance      = _rfr_cov_
 ROOT.RooFitResult . cov_matrix      = _rfr_cov_matrix_
-ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_
+ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_ 
 ROOT.RooFitResult . parValue        = lambda s,n : s.parameter(n)[0]
 ROOT.RooFitResult . sum             = _rfr_sum_
 ROOT.RooFitResult . plus            = _rfr_sum_
