@@ -1022,12 +1022,15 @@ for model in ( Ostap.Math.Chebyshev              ,
                #
                Ostap.Math.BernsteinDualBasis     ,
                ## interpolation polynomials 
-               Ostap.Math.Neville     ,
-               Ostap.Math.Lagrange    ,
-               Ostap.Math.Newton      ,
-               Ostap.Math.Barycentric ,
+               Ostap.Math.Neville                ,
+               Ostap.Math.Lagrange               ,
+               Ostap.Math.Newton                 ,
+               Ostap.Math.Berrut1st              ,
+               Ostap.Math.Berrut2nd              ,
+               Ostap.Math.FloaterHormann         ,
+               Ostap.Math.Barycentric            ,
                ##
-               Ostap.Math.GammaBW3    , 
+               Ostap.Math.GammaBW3               , 
                ## helper stufff
                ## Ostap.Functions.PyCallable        , 
                Ostap.Math.Piecewise              , 

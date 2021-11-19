@@ -16,6 +16,7 @@
 // ============================================================================
 #include "Ostap/Math.h"
 #include "Ostap/Polynomials.h"
+#include "Ostap/Interpolation.h"
 // ============================================================================
 /** @file Ostap/Bernstein.h
  *  Set of useful math-functions, related to Bernstein polynomials
@@ -38,8 +39,6 @@ namespace Ostap
     class ChebyshevSum ; // forward declaration
     class Polynomial   ; // forward declaration
     /// Interpolants 
-    class Barycentric  ; // forward declaration
-    class Newton       ; // forward declaration
     namespace Interpolation { class Table ; } // forward declaration
     // ========================================================================
     /** @class Bernstein
@@ -202,62 +201,6 @@ namespace Ostap
        */
       Bernstein 
       ( const Interpolation::Table& p ) ;
-      // ======================================================================
-      /** constructor from Barycentric Lagrange interpolant 
-       *  @param b    barycnetric lagrange interpolant 
-       *  @param xmin low  edge for Bernstein polynomial
-       *  @param xmax high edge for Bernstein polynomial
-       *  It relies on Newton-Bernstein algorithm
-       *  @see http://arxiv.org/abs/1510.09197
-       *  @see Mark Ainsworth and Manuel A. Sanches,
-       *       "Computing of Bezier control points of Lagrangian interpolant
-       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
-       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
-       */
-      Bernstein
-      ( const Barycentric& b    , 
-        const double       xmin ,
-        const double       xmax ) ;
-      // ======================================================================
-      /** constructor from Barycentric Lagrange interpolant 
-       *  @param b    barycnetric lagrange interpolant 
-       *  It relies on Newton-Bernstein algorithm
-       *  @see http://arxiv.org/abs/1510.09197
-       *  @see Mark Ainsworth and Manuel A. Sanches,
-       *       "Computing of Bezier control points of Lagrangian interpolant
-       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
-       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
-       */
-      Bernstein 
-      ( const Barycentric& b ) ;
-      // ======================================================================
-      /** constructor from Newton interpolant 
-       *  @param b    Newton interpolant 
-       *  @param xmin low  edge for Bernstein polynomial
-       *  @param xmax high edge for Bernstein polynomial
-       *  It relies on Newton-Bernstein algorithm
-       *  @see http://arxiv.org/abs/1510.09197
-       *  @see Mark Ainsworth and Manuel A. Sanches,
-       *       "Computing of Bezier control points of Lagrangian interpolant
-       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
-       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
-       */
-      Bernstein 
-      ( const Newton& b    , 
-        const double  xmin ,
-        const double  xmax ) ;
-      // ======================================================================
-      /** constructor from Newton interpolant 
-       *  @param b    newton interpolant 
-       *  It relies on Newton-Bernstein algorithm
-       *  @see http://arxiv.org/abs/1510.09197
-       *  @see Mark Ainsworth and Manuel A. Sanches,
-       *       "Computing of Bezier control points of Lagrangian interpolant
-       *       in arbitrary dimension", arXiv:1510.09197 [math.NA]
-       *  @see http://adsabs.harvard.edu/abs/2015arXiv151009197A
-       */
-      Bernstein 
-      ( const Newton& b ) ;
       // ======================================================================
     protected: // make it protected, since it does not eliminate duplicates  
       // ======================================================================
@@ -986,10 +929,6 @@ namespace Ostap
 // ============================================================================
 // some  specific interpolation part 
 // ============================================================================
-// Ostap
-// ============================================================================
-#include "Ostap/Interpolation.h"
-// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -1021,9 +960,10 @@ namespace Ostap
        *  @endcode 
        */
       Ostap::Math::Bernstein
-      bernstein ( const Table&  ip   ,
-                  const double  xmin , 
-                  const double  xmax ) ;
+      bernstein 
+      ( const Table&  ip   ,
+        const double  xmin , 
+        const double  xmax ) ;
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param p         interpolation points 
@@ -1042,7 +982,8 @@ namespace Ostap
        *  @endcode 
        */
       inline Ostap::Math::Bernstein
-      bernstein ( const Table&  ip   ) 
+      bernstein 
+      ( const Table&  ip   ) 
       { return bernstein ( ip , ip.xmin() , ip.xmax () ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1073,12 +1014,13 @@ namespace Ostap
       template <class XITERATOR, class YITERATOR>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( XITERATOR    xbegin , 
-                   XITERATOR    xend   ,   
-                   YITERATOR    ybegin , 
-                   YITERATOR    yend   , 
-                   const double xmin   , 
-                   const double xmax   )
+      bernstein_ 
+      ( XITERATOR    xbegin , 
+        XITERATOR    xend   ,   
+        YITERATOR    ybegin , 
+        YITERATOR    yend   , 
+        const double xmin   , 
+        const double xmax   )
       { return bernstein ( Table ( xbegin , xend , ybegin , yend ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1107,10 +1049,11 @@ namespace Ostap
       template <class XITERATOR, class YITERATOR>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( XITERATOR    xbegin , 
-                   XITERATOR    xend   ,   
-                   YITERATOR    ybegin , 
-                   YITERATOR    yend   )
+      bernstein_ 
+      ( XITERATOR    xbegin , 
+        XITERATOR    xend   ,   
+        YITERATOR    ybegin , 
+        YITERATOR    yend   )
       { return bernstein ( Table ( xbegin , xend , ybegin , yend ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1137,11 +1080,12 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION     func   , 
-                   XITERATOR    xbegin ,  
-                   XITERATOR    xend   ,  
-                   const double xmin   , 
-                   const double xmax   )
+      bernstein_
+      ( FUNCTION     func   , 
+        XITERATOR    xbegin ,  
+        XITERATOR    xend   ,  
+        const double xmin   , 
+        const double xmax   )
       { return bernstein ( Table ( func , xbegin , xend ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1166,9 +1110,10 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION     func   , 
-                   XITERATOR    xbegin ,  
-                   XITERATOR    xend   ) 
+      bernstein_
+      ( FUNCTION     func   , 
+        XITERATOR    xbegin ,  
+        XITERATOR    xend   ) 
       { return bernstein ( Table ( func , xbegin , xend ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1192,10 +1137,11 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION               func , 
-                   const Abscissas::Data& x    , 
-                   const double           xmin , 
-                   const double           xmax )
+      bernstein_ 
+      ( FUNCTION               func , 
+        const Abscissas::Data& x    , 
+        const double           xmin , 
+        const double           xmax )
       { return bernstein_ ( func , x.begin () , x.end () , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1219,8 +1165,9 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION               func , 
-                   const Abscissas::Data& x    ) 
+      bernstein_ 
+      ( FUNCTION               func , 
+        const Abscissas::Data& x    ) 
       { return bernstein_ ( func , x.begin () , x.end () ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1244,10 +1191,11 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION         func , 
-                   const Abscissas& a    ,
-                   const double     xmin , 
-                   const double     xmax )
+      bernstein_ 
+      ( FUNCTION         func , 
+        const Abscissas& a    ,
+        const double     xmin , 
+        const double     xmax )
       { return bernstein ( Table ( a , func ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1271,8 +1219,9 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION         func ,
-                   const Abscissas& a    ) 
+      bernstein_ 
+      ( FUNCTION         func ,
+        const Abscissas& a    ) 
       { return bernstein ( Table ( a , func ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
@@ -1296,11 +1245,12 @@ namespace Ostap
       template <class XITERATOR, class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      bernstein_ ( FUNCTION              func  , 
-                   const unsigned short  N     ,
-                   const double          xmin  , 
-                   const double          xmax  , 
-                   const Abscissas::Type t     ) 
+      bernstein_ 
+      ( FUNCTION               func  , 
+        const unsigned short   N     ,
+        const double           xmin  , 
+        const double           xmax  , 
+        const Abscissas::AType t     ) 
       {
         return bernstein_
           ( func , Abscissas ( N , xmin , xmax , t ) , xmin , xmax ) ;
@@ -1329,10 +1279,11 @@ namespace Ostap
       template <class FUNCTION>
       inline 
       Ostap::Math::Bernstein
-      lobatto  ( FUNCTION             func  , 
-                 const unsigned short N     , 
-                 const double         xmin  , 
-                 const double         xmax  )
+      lobatto
+      ( FUNCTION             func  , 
+        const unsigned short N     , 
+        const double         xmin  , 
+        const double         xmax  )
       {
         return bernstein 
           ( func , Abscissas ( N , xmin , xmax , Abscissas::Lobatto ) , xmin , xmax ) ;
@@ -1361,10 +1312,11 @@ namespace Ostap
        *  @endcode 
        */
       Ostap::Math::Bernstein
-      bernstein ( const std::vector<double>& x    ,  
-                  const std::vector<double>& y    , 
-                  const double               xmin , 
-                  const double               xmax );
+      bernstein
+      ( const std::vector<double>& x    ,  
+        const std::vector<double>& y    , 
+        const double               xmin , 
+        const double               xmax );
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func    the function 
@@ -1387,10 +1339,11 @@ namespace Ostap
        *  @endcode 
        */
       Ostap::Math::Bernstein
-      bernstein ( std::function<double(double)> func , 
-                  const std::vector<double>&    x    ,
-                  const double                  xmin , 
-                  const double                  xmax ) ;
+      bernstein
+      ( std::function<double(double)> func , 
+        const std::vector<double>&    x    ,
+        const double                  xmin , 
+        const double                  xmax ) ;
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form) using Gauss-Lobatto grid, 
        *  that minimises Runge's effect.
@@ -1413,10 +1366,11 @@ namespace Ostap
        *  @endcode 
        */  
       Ostap::Math::Bernstein
-      bernstein ( std::function<double(double)> func , 
-                  const unsigned short          N    , 
-                  const double                  xmin , 
-                  const double                  xmax ) ;
+      bernstein
+      ( std::function<double(double)> func , 
+        const unsigned short          N    , 
+        const double                  xmin , 
+        const double                  xmax ) ;
       // ======================================================================      
     } //                            end of namespace Ostap::Math::Interpolation
     // ========================================================================

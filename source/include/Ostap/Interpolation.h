@@ -44,7 +44,7 @@ namespace Ostap
      *  
      *  - Lagrange interpolation is numerically not very stable, and rather slow O(n^2)
      *  - Neville's algorithm has (a little bit) better numerical stability and a bit faster
-     *  - Barycentric Lagrange interpolation is very efficienct: 
+     *  - True Barycentric Lagrange interpolation is very efficienct: 
      *    O(n) for evaluation and O(n^2) for data-independendent initialization
      *
      *  Using simple Lagrange algorithm it is easy to get derivative with 
@@ -78,14 +78,16 @@ namespace Ostap
         /// the actual vector of data 
         typedef std::vector<double>  Data ; // the actual vector of data 
         // ====================================================================
-        enum Type { Uniform          = 0          , 
-                    Chebyshev        = 1          , //   roots of T_n     ( x ) 
-                    Chebyshev1       = Chebyshev  ,
-                    GaussChebyshev   = Chebyshev  , 
-                    Chebyshev2       = 2          , // extrema of T_{n-1} ( x ) 
-                    Lobatto          = Chebyshev2 , 
-                    ChebyshevLobatto = Chebyshev2 ,
-                    GaussLobatto     = Chebyshev2 } ;
+        enum AType 
+          { Generic          = -1          , 
+            Uniform          =  0          , 
+            Chebyshev        =  1          , //   roots of T_n     ( x ) 
+            Chebyshev1       =  Chebyshev  ,
+            GaussChebyshev   =  Chebyshev  , 
+            Chebyshev2       =  2          , // extrema of T_{n-1} ( x ) 
+            Lobatto          =  Chebyshev2 , 
+            ChebyshevLobatto =  Chebyshev2 ,
+            GaussLobatto     =  Chebyshev2 } ;
         // ====================================================================
       public:
         // ====================================================================
@@ -94,8 +96,9 @@ namespace Ostap
          *  @param sorted  indicate if input data is already sorted 
          *  @attention duplicated abscissas will be removed 
          */
-        Abscissas ( const Data&         x     , 
-                    const bool sorted = false ) ;
+        Abscissas
+        ( const Data&         x     , 
+          const bool sorted = false ) ;
         // ===================================================================
         /** templated constructor from the arbitrary sequence
          *  @param begin start of the sequnce 
@@ -103,11 +106,15 @@ namespace Ostap
          *  @param sorted  indicate if input data is already sorted 
          *  @attention duplicated abscissas will be removed 
          */
-        template <class ITERATOR>
-        Abscissas ( ITERATOR begin , 
-                    ITERATOR end   , 
-                    const bool sorted = false ) 
-          :  m_x ( begin , end ) 
+        template <class ITERATOR,
+                  typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+        Abscissas 
+        ( ITERATOR begin , 
+          ITERATOR end   , 
+          const bool sorted = false ) 
+          :  m_x     ( begin , end ) 
+          ,  m_atype ( Generic     )  
         { if ( !sorted ) { this->sort () ; } }
         // =================================================================
         /** templated constructor from the arbitrary sequence
@@ -118,11 +125,13 @@ namespace Ostap
          *  @attention duplicated abscissas will be removed 
          */
         template <class ITERATOR, class FUNCTION>
-        Abscissas ( ITERATOR   begin          , 
-                    ITERATOR   end            , 
-                    FUNCTION   fun            , 
-                    const bool sorted = false ) 
-          : m_x ( std::distance ( begin, end ) , 0.0 )  
+        Abscissas
+        ( ITERATOR   begin          , 
+          ITERATOR   end            , 
+          FUNCTION   fun            , 
+          const bool sorted = false ) 
+          : m_x     ( std::distance ( begin, end ) , 0.0 )  
+          , m_atype ( Generic     )  
         {
           std::transform ( begin , end , m_x.begin() , fun );
           if ( !sorted ) { this->sort () ; } 
@@ -133,21 +142,28 @@ namespace Ostap
          *  @param low  low edge of the interval 
          *  @param high high edge of the interval 
          *  @param t    interpolation type 
-         *  @see Ostap::Math::Interpolation::Abscissas::Type 
+         *  @see Ostap::Math::Interpolation::Abscissas::AType 
          */
-        Abscissas ( const unsigned short n                ,
-                    const double         low              ,   
-                    const double         high             , 
-                    const Type           t    = Chebyshev ) ;
+        Abscissas 
+        ( const unsigned short n                ,
+          const double         low              ,   
+          const double         high             , 
+          const AType          t    = Chebyshev ) ;
         // ====================================================================
         /// default constructor  
         Abscissas ()                    = default ;
         // ====================================================================
       public:
         // ====================================================================
+        /// number of interpolating points 
         unsigned int n       () const { return m_x.size  () ; }
+        /// number of interpolating points 
         unsigned int size    () const { return m_x.size  () ; }
+        /// no interpolation points ?
         bool         empty   () const { return m_x.empty () ; }
+        // ====================================================================
+        /// type of interpolation points 
+        AType        atype   () const { return m_atype      ; }
         // ====================================================================
       public:
         // ====================================================================
@@ -158,14 +174,22 @@ namespace Ostap
         // ====================================================================
         ///  get the absissas for the given index 
         double x    ( const unsigned short index ) const 
-        { return index < m_x.size() ? m_x [ index ] : m_x.back() ; }
+        { return m_x.empty() ? 0.0 : index < m_x.size() ? m_x [ index ] : m_x.back() ; }
         // ====================================================================
       public:
         // ====================================================================
         /// minimal  abscissa 
-        double xmin () const { return  m_x.front () ; }
+        double xmin () const 
+        {
+          static const double s_xmin = - std::numeric_limits<double>::max () ;
+          return m_x.empty () ? s_xmin : m_x.front () ; 
+        }
         /// maximal abscissas 
-        double xmax () const { return  m_x.back  () ; }
+        double xmax () const 
+        { 
+          static const double s_xmax =   std::numeric_limits<double>::max () ;
+          return m_x.empty () ? s_xmax : m_x.back  () ; 
+        }
         // ====================================================================
       public: // expose (const) iterators 
         // ====================================================================
@@ -177,22 +201,31 @@ namespace Ostap
         /** add one more abscissa in the list 
          *  @param xnew value to be added 
          *  @return -1 if point is NOT added or new index for added points  
+         *  @attention it can change teh type of abscissas! 
          */
-        int add     ( const double         xnew ) ;
+        int add  
+        ( const double         xnew ) ;
         /** remove the point with the given index 
          *  @param index poitn with the index 
          *  @return true if point is really removed 
+         *  @attention it can change teh type of abscissas! 
          */
-        bool remove ( const unsigned short index ) ;
+        bool remove 
+        ( const unsigned short index ) ;
         // ====================================================================
-      public: // make a slice fo the given  ascissas 
+      public: // make a slice for the given  ascissas 
         // ====================================================================
-        /// make a slice fo the given  ascissas 
+        /// make a slice fo the given abscissas 
         Abscissas slice ( const int i , const int j ) const ;
         // ====================================================================
       public:
         // ====================================================================
-        friend void swap ( Abscissas&  a , Abscissas& b ) { swap (  a.m_x , b.m_x ) ; }
+        // efficient swap to two abscissas 
+        void exchange ( Abscissas& right ) 
+        { 
+          swap ( m_x     , right.m_x     ) ; 
+          std::swap ( m_atype , right.m_atype ) ;
+        }
         // ====================================================================
       private:
         // ====================================================================
@@ -204,9 +237,14 @@ namespace Ostap
       private:
         // ====================================================================
         /// (sorted) vector of abscissas 
-        Data m_x {} ; // (sorted) vector of abscissas 
-        // ====================================================================
+        Data   m_x     {}          ; // (sorted) vector of abscissas 
+        /// type of abscissas 
+        AType  m_atype { Generic } ; // type of abscissas
+        //  ====================================================================
       };
+      // ======================================================================
+      /// swap interpolation abscissas
+      inline void swap ( Abscissas& a , Abscissas& b ) { a.exchange ( b ) ; }
       // ======================================================================
       /** @class Table
        *  Interpolation table 
@@ -217,12 +255,28 @@ namespace Ostap
       {
       public:
         // ====================================================================
+        /// actutal iterator ove ethe interpolation table 
+        typedef TABLE::const_iterator       iterator ;
+        /// actutal iterator ove ethe interpolation table (ditto)
+        typedef TABLE::const_iterator const_iterator ;
+        // ====================================================================
+      public:
+        // ====================================================================
         /** the simplest constructor 
          *  @param data   input data 
-         *  @param sorted indicate if data already  sorted and duplicated removed  
+         *  @param sorted indicate if data already  sorted and duplicates removed  
          */
-        Table ( const TABLE& data           , 
-                const bool   sorted = false ) ;
+        Table 
+        ( const TABLE& data           , 
+          const bool   sorted = false ) ;
+        // ====================================================================
+        /** the simplest constructor 
+         *  @param data   input data 
+         *  @param sorted indicate if data already  sorted and duplicates removed  
+         */
+        Table 
+        ( TABLE&&     data           , 
+          const bool  sorted = false ) ;
         // ====================================================================
         /** simple (efficient) constructor from abscissas and y-list 
          *  @param x input vector of abscissas  
@@ -230,18 +284,20 @@ namespace Ostap
          *  - if vector of y is longer  than vector x, extra values are ignored 
          *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
          */
-        Table ( const Abscissas&       x , 
-                const Abscissas::Data& y ) ;
+        Table
+        ( const Abscissas&       x , 
+          const Abscissas::Data& y ) ;
         // ====================================================================
-        /** simple contructor from x&y-lists 
+        /** simple constructor from x&y-lists 
          *  @param x input vector of x 
          *  @param y input vector of y 
          *  - if vector of y is longer  than vector x, extra values are ignored 
          *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
          *  @attention duplicated abscissas will be removed 
          */
-        Table ( const Abscissas::Data& x , 
-                const Abscissas::Data& y ) ;
+        Table
+        ( const Abscissas::Data& x , 
+          const Abscissas::Data& y ) ;
         // ====================================================================
         /** simple constructor from map/dictionary { x : f(x) }
          *  @param data map/dictionary with data  { x : f(x) }
@@ -249,8 +305,10 @@ namespace Ostap
          *  - "numerical" duplicates are removed
          */
         template <class KEY, class VALUE>
-        Table ( const std::map<KEY,VALUE>& data ) 
-          : m_table ( data.size() )  
+        Table
+        ( const std::map<KEY,VALUE>& data ) 
+          : m_table ( data.size()         )  
+          , m_atype ( Abscissas::Generic  )
         {
           TABLE::iterator i = m_table.begin() ;
           for ( const auto& item : data ) 
@@ -269,18 +327,26 @@ namespace Ostap
          *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
          *  @attention duplicated abscissas will be removed 
          */
-        template <class XITERATOR, class YITERATOR>
-        Table ( XITERATOR  xbegin         ,
-                XITERATOR  xend           ,
-                YITERATOR  ybegin         ,
-                YITERATOR  yend           , 
-                const bool sorted = false )
+        template <class XITERATOR, 
+                  class YITERATOR,
+                  typename xvalue_type = typename std::iterator_traits<XITERATOR>::value_type    ,
+                  typename yvalue_type = typename std::iterator_traits<YITERATOR>::value_type    ,
+                  typename = std::enable_if<std::is_convertible<xvalue_type,long double>::value> ,
+                  typename = std::enable_if<std::is_convertible<yvalue_type,long double>::value> >
+        Table
+        ( XITERATOR  xbegin         ,
+          XITERATOR  xend           ,
+          YITERATOR  ybegin         ,
+          YITERATOR  yend           ,
+          const bool sorted = false )
           : m_table ( std::distance ( xbegin , xend ) ) 
+          , m_atype ( Abscissas::Generic ) 
         {  
           // ==================================================================
           /// 1) copy x into the table 
           std::transform 
-            ( xbegin          , xend , 
+            ( xbegin          , 
+              xend            , 
               m_table.begin() , 
               [] ( double v ) { return std::make_pair ( v , 0.0 ) ; } );
           /// 2) copy y into the table 
@@ -293,7 +359,7 @@ namespace Ostap
               [] ( const auto& p , const double v ) 
               { return std::make_pair ( p.first , v ) ; } );
           /// 3) sort it & eliminate  duplicates 
-          this->get_sorted() ;  
+          this->get_sorted ( sorted ) ;  
           // ==================================================================
         }
         // ====================================================================
@@ -303,9 +369,11 @@ namespace Ostap
          *  @param abscissas interpolation abscissas 
          */
         template <class FUNCTION>
-        Table ( const Abscissas& a   , 
-                FUNCTION         fun )                
-          : m_table ( a.size() ) 
+        Table 
+        ( const Abscissas& a     , 
+          FUNCTION         fun   )                
+          : m_table ( a.size  () ) 
+          , m_atype ( a.atype () ) 
         {
           // ==================================================================
           std::transform 
@@ -322,11 +390,16 @@ namespace Ostap
          *  @param fun   function object 
          *  @attention duplicated abscissas will be removed 
          */
-        template <class ITERATOR, class FUNCTION>
-        Table  ( FUNCTION fun   , 
-                 ITERATOR begin , 
-                 ITERATOR end   ) 
-          : Table ( Abscissas ( begin, end ) , fun ) {}
+        template <class ITERATOR , 
+                  class FUNCTION ,
+                  typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
+        Table 
+        ( FUNCTION fun   , 
+          ITERATOR begin , 
+          ITERATOR end   ) 
+          : Table ( Abscissas ( begin, end ) , fun ) 
+        {}
         // ====================================================================
         /** templated constructor 
          *  @param fun  function object 
@@ -336,53 +409,80 @@ namespace Ostap
          *  @param t    interpolation type 
          */
         template <class FUNCTION>
-        Table ( FUNCTION              fun  , 
-                const unsigned short  n    , 
-                const double          low  ,   
-                const double          high , 
-                const Abscissas::Type t    ) 
-          : Table ( Abscissas ( n , low , high , t ) , fun ) {}
+        Table 
+        ( FUNCTION               fun  , 
+          const unsigned short   n    , 
+          const double           low  ,   
+          const double           high , 
+          const Abscissas::AType t    ) 
+          : Table ( Abscissas ( n , low , high , t ) , fun ) 
+        {}
         // ====================================================================
         /// default constructor
         Table () = default ;
+        /// copy constructor 
+        Table ( const Table&  ) = default ;
+        /// move constructor 
+        Table (       Table&& ) = default ;
         // ====================================================================
       public:
         // ====================================================================
-        unsigned int n       () const { return m_table.size  () ; }
+        /// number of interpolation points 
         unsigned int size    () const { return m_table.size  () ; }
+        /// no interpolation points 
         bool         empty   () const { return m_table.empty () ; }
         // ====================================================================
       public : // 
         // ====================================================================
         /// get the abscissas 
-        Abscissas abscissas () const ;
+        Abscissas        abscissas () const ;
+        /// get abscissas type 
+        Abscissas::AType atype     () const { return m_atype ; }
         // ====================================================================
       public:
         // ====================================================================
-        ///  get the absissas for the given index 
+        ///  get the abscissas for the given index 
         double x    ( const unsigned short index ) const 
-        { return index < m_table.size() ? m_table[ index ].first  : m_table.back().first  ; }
+        { 
+          static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+          return 
+            m_table.empty()        ? s_nan :
+            index < m_table.size() ? m_table[ index ].first : m_table.back().first  ;
+        }
         ///  get the value    for the given index 
         double y    ( const unsigned short index ) const 
-        { return index < m_table.size() ? m_table[ index ].second : m_table.back().second ; }
+        { 
+          static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+          return 
+            m_table.empty()        ? s_nan :
+            index < m_table.size() ? m_table[ index ].second : m_table.back().second ;
+        }
         // =====================================================================
       public:
         // ====================================================================
         /// minimal  abscissa 
-        double xmin () const { return  m_table.front ().first ; }
+        double xmin () const 
+        {
+          static const double s_xmin = - std::numeric_limits<double>::max () ;
+          return m_table.empty () ? s_xmin : m_table.front ().first ; 
+        }
         /// maximal abscissas 
-        double xmax () const { return  m_table.back  ().first ; }
+        double xmax () const 
+        { 
+          static const double s_xmax =   std::numeric_limits<double>::max () ;
+          return m_table.empty () ? s_xmax : m_table.back  ().first ; 
+        }
         // ====================================================================
-      public: // expose begin/end iterators 
+      public: // expose begin/end (const) iterators 
         // ====================================================================
         /// begin of the table 
-        TABLE::const_iterator begin () const { return m_table.begin () ; }
+        iterator begin () const { return m_table.begin () ; }
         /// end of the table 
-        TABLE::const_iterator end   () const { return m_table.end   () ; }
+        iterator end   () const { return m_table.end   () ; }
         // =====================================================================
       public: // show internal data 
         // =====================================================================
-        const TABLE& table () const { return m_table ; }
+        /// get internal data
         const TABLE& data  () const { return m_table ; }
         // =====================================================================
       public:
@@ -392,13 +492,16 @@ namespace Ostap
          *  @param y the value of function at x 
          *  @return the index of new point, or -1  if point if not added 
          */
-        int add     ( const  double x ,   const  double y ) ;
+        int add 
+        ( const  double x ,   
+          const  double y ) ;
         // ====================================================================
         /** remove the point with the  given index 
          *  @param index the point to be removed 
          *  @return   true if point is removed 
          */
-        bool remove ( unsigned short index ) ;
+        bool remove 
+        ( unsigned short index ) ;
         // ====================================================================
       public: // make interpolation 
         // ====================================================================
@@ -406,30 +509,39 @@ namespace Ostap
          *  https://en.wikipedia.org/wiki/Lagrange_polynomial
          *  - it is rather slow O(n^2)
          */
-        double lagrange ( const double x ) const ;
+        double lagrange 
+        ( const double x ) const ;
         // ====================================================================
         /** interpolation using Neville's algorithm
          *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
          *  - it is rather slow O(n^2)
          */
-        double neville  ( const double x ) const ;
+        double neville 
+        ( const double x ) const ;
+        // ====================================================================
+        /// interpolation using the 1st rational Berrut's interpolant 
+        double berrut1st 
+        ( const double x ) const ;
+        /// interpolation using the 2nd rational Berrut's interpolant 
+        double berrut2nd  
+        ( const double x ) const ;        
         // ====================================================================
       public: // interpolation with derivatives:
         // ====================================================================
         /** Interpolation using Neville's algorithm
          *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
          *  - it is rather slow O(n^2)
-         *  @return ( y(x) , dy/dx )
+         *  @return pair \f$(y(x),\frac{dy}{dx})\f$ 
          */
         std::pair<double,double> 
         neville2  
         ( const double       x ) const ;
         // ====================================================================
         /** Simple lagrange interpolation 
-         *  - it also evaluate the derivative wity respect to y_i 
+         *  - it also evaluates the derivative with respect to \f$ y_i\f$  
          *  @param x interpolation point
          *  @param iy index of y_i
-         *  @return ( y(x) , dy/d(y_i))
+         *  @return pair of \f$ (y(x),\frac{dy}{dy_i})\f$ 
          */
         std::pair<double,double>
         lagrange2
@@ -441,11 +553,14 @@ namespace Ostap
         /// make a slice for the given range of points 
         Table slice ( const int i , const int j ) const ;
         // ====================================================================
-      public:
+      protected :
         // ====================================================================
-        /// swap two collections of points 
-        friend void swap ( Table& a , Table& b ) 
-        { swap ( a.m_table , b.m_table ) ; }
+        /// swap two interpolation tables 
+        void exchange ( Table& right ) 
+        { 
+          swap      ( m_table , right.m_table ) ;
+          std::swap ( m_atype , right.m_atype ) ;
+        }
         // ====================================================================
       private:
         // ====================================================================
@@ -454,10 +569,12 @@ namespace Ostap
         // ====================================================================
       private :
         // ====================================================================
-        /// the actual table with data 
-        TABLE m_table ;
+        /// the actual table with data
+        TABLE            m_table {} ;             // the actual table with data
+        /// type of abscissas 
+        Abscissas::AType m_atype { Abscissas::Generic } ;  // type of abscissas
         // ====================================================================
-      } ;  
+      } ;
       // ======================================================================
       // The basic interpolation functions 
       // ======================================================================
@@ -637,7 +754,7 @@ namespace Ostap
         DITERATOR    dbegin , // NON-const!
         const double x      , 
         XADAPTOR     xvalue ) ;
-      // ======================================================================      
+      // ======================================================================
       /** very simple lagrange interpolation 
        *  @param  xs INPUT sequence of abscissas 
        *  @param  ys INPUT sequence of values 
@@ -806,1257 +923,7 @@ namespace Ostap
       ( const DATA&  data , 
         const double x  ) ;
       // ======================================================================      
-      /** @class Weights
-       *  helper class to keep barycentric weigths for Lagrange interpolation
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  Barycentric weigths are calcualted for 
-       *  - O(n) for <code>Chebyshev</code> and <code>Chebvyshev2</code>  abscissas 
-       *  - O(n) for <code>Uniform</code> abscissas, but much slower 
-       *  - O(n^2) for general case 
-       *  @see Ostap::Math::Interpolation::Abscissas
-       *  @see Ostap::Math::Interpolation::Abscissas::Type
-       */
-      class Weights
-      {
-      public:
-        // ====================================================================
-        ///  the actual type for vector of weights 
-        typedef Abscissas::Data                                         Data  ;
-        // ==================================================================== 
-      public:
-        // ====================================================================
-        /// constructor from abscissas 
-        Weights ( const Abscissas& a       ) ;
-        /// constructor from abscissas 
-        Weights ( const Abscissas::Data& a ) ; 
-        /// constructor from abscissas
-        Weights ( const unsigned short  n    ,
-                  const double          xmin , 
-                  const double          xmax , 
-                  const Abscissas::Type t    ) ;
-        // ====================================================================
-        template <class ITERATOR>
-        Weights 
-        ( ITERATOR   begin          , 
-          ITERATOR   end            ,
-          const bool sorted = false )
-          : m_a ( begin , end , sorted ) 
-          , m_w () 
-        { 
-          m_w.resize( m_a.size() ) ;
-          this->get_weights() ; 
-        }
-        // ====================================================================
-        template <class ITERATOR, class  FUNCTION>
-        Weights 
-        ( ITERATOR   begin          , 
-          ITERATOR   end            ,
-          FUNCTION   fun            ,
-          const bool sorted = false )
-          : m_a ( begin , end , fun , sorted ) 
-          , m_w () 
-        { 
-          m_w.resize( m_a.size() ) ;
-          this->get_weights() ; 
-        }
-        // ====================================================================
-        /// default constructor 
-        Weights ( ) = default ;
-        // ====================================================================
-      public :
-        // ====================================================================
-        unsigned int n       () const { return m_a.size  () ; }
-        unsigned int size    () const { return m_a.size  () ; }
-        bool         empty   () const { return m_a.empty () ; }
-        // ======================================================================
-      public:
-        // ====================================================================
-        /// get abscissas
-        const Abscissas&       abscissas () const { return m_a     ; }
-        const Abscissas&       a         () const { return m_a     ; }
-        const Abscissas::Data& x         () const { return m_a.x() ; }
-        /// get weights         
-        const Data&            weights   () const { return m_w     ; }
-        const Data&            w         () const { return m_w     ; }
-        /// get abscissa:
-        double abscissa ( unsigned short index ) const { return m_a.x ( index ) ; }
-        double x        ( unsigned short index ) const { return m_a.x ( index ) ; }
-        /// get weight: 
-        double weight   ( unsigned short index ) const 
-        { return index < m_w.size() ? m_w[index] : m_w.back() ; }
-        /// get weight: 
-        double w        ( unsigned short index ) const { return weight ( index ) ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /// minimal  abscissa 
-        double xmin () const { return  m_a.xmin () ; }
-        /// maximal abscissas 
-        double xmax () const { return  m_a.xmax () ; }
-        // ====================================================================
-      public:
-        // ====================================================================
-        /** add the point x into  collection 
-         *  @param x abscissas of the point to be added 
-         *  @return the index of new point, or -1  if point if not added 
-         */
-        int add     ( const  double x ) ;
-        // ====================================================================
-        /** remove the point with the  given index 
-         *  @param index the point to be removed 
-         *  @return   true if point is removed 
-         */
-        bool remove ( unsigned short index ) ;
-        // ====================================================================
-      public: 
-        // ====================================================================
-        /// get the slice 
-        Weights slice ( const int i , const int j ) const ;
-        // ====================================================================
-      public: 
-        // ====================================================================
-        /// swap two objects 
-        friend void swap ( Weights& a , Weights& b ) 
-        { swap ( a.m_a , b.m_a ) ; swap ( a.m_w , b.m_w ) ; }
-        // ====================================================================
-      private: 
-        // ====================================================================
-        /// calculate the barycentric weights 
-        void get_weights () ; // calculate the barycentric weights 
-        // ====================================================================
-      private: 
-        // ====================================================================
-        /// the abscissas 
-        Abscissas m_a {} ; // the abscissas        
-        ///  the weights 
-        Data      m_w {} ; // the weights 
-        // ====================================================================        
-      };
-      // ======================================================================      
     } //                            end of namespace Ostap::Math::Interpolation 
-    // ========================================================================
-    /** @class Neville 
-     *  Simple interpolation polynomial using Neville's algorithm 
-     *  @see https://en.wikipedia.org/wiki/Neville%27s_algorithm
-     *  @attention  it is not CPU efficient!
-     */
-    class Neville : public Interpolation::Table
-    {
-    public:
-      // ====================================================================== 
-      /** simple contructor from interpolation points  
-       *  @param x input vector of abscissas  
-       */
-      Neville ( const Interpolation::Table& p ) ;
-      // ====================================================================
-      // other constructors from the base class 
-      // ====================================================================
-      /** the simplest constructor 
-       *  @param data   input data 
-       *  @param sorted indicate if data already  sorted and duplicated removed  
-       */
-      Neville ( const Interpolation::TABLE& data           , 
-                const bool                  sorted = false ) 
-        : Interpolation::Table ( data , sorted ) {}
-      // ====================================================================== 
-      /** simple contructor from abscissas and y-list 
-       *  @param x input vector of abscissas  
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       */
-      Neville ( const Interpolation::Abscissas&       x , 
-                const Interpolation::Abscissas::Data& y ) 
-        : Interpolation::Table ( x , y ){}
-      // ===================================================================
-      /** simple contructor from x&y-lists 
-       *  @param x input vector of x 
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      Neville ( const Interpolation::Abscissas::Data& x , 
-                const Interpolation::Abscissas::Data& y ) 
-        : Interpolation::Table ( x , y ) {}
-      // ====================================================================
-      /** simple constructor from map/dictionary { x : f(x) }
-       *  @param data map/dictionary with data  { x : f(x) }
-       *  It is elatively efficient: no sorting
-       *  - "numerical" duplicates are removed
-       */
-      template <class KEY, class VALUE>
-      Neville ( const std::map<KEY,VALUE>& data ) 
-        : Interpolation::Table ( data ) {}
-      // ====================================================================
-      /** simple contructor from x&y-lists 
-       *  @param xbegin start  of sequence of abscissas 
-       *  @param xend   end    of sequence of abscissas 
-       *  @param ybegin start  of sequence of values 
-       *  @param yend   end    of sequence of values 
-       *  @param sorted indicate if data already sorted and duplicates removed  
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class XITERATOR, class YITERATOR>
-      Neville ( XITERATOR  xbegin         ,
-                XITERATOR  xend           ,
-                YITERATOR  ybegin         ,
-                YITERATOR  yend           , 
-                const bool sorted = false ) 
-        : Interpolation::Table ( xbegin , xend , ybegin , yend , sorted ){}
-      // ======================================================================
-      /** templated constructor 
-       *  (very efficient: no sorting, no removal of duplicate...)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Neville ( FUNCTION                        fun , 
-                const Interpolation::Abscissas& a   )
-        : Interpolation::Table ( fun , a ){}
-      // ======================================================================
-      /** templated constructor 
-       *  @param begin start  of x-sequence 
-       *  @param end   end    of x-sequence 
-       *  @param fun   function object 
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class ITERATOR, class FUNCTION>
-      Neville ( FUNCTION fun   , 
-                ITERATOR begin , 
-                ITERATOR end   ) 
-        : Interpolation::Table ( fun , begin, end ) {}
-      // ======================================================================
-      /** templated constructor 
-       *  @param fun  function object 
-       *  @param n    number of interpolation points 
-       *  @param low  low edge of interpolation region 
-       *  @param high high edge of interpolation region 
-       *  @param t    interpolation type 
-       */
-      template <class FUNCTION>
-      Neville ( FUNCTION                             fun  , 
-                const unsigned short                 n    , 
-                const double                         low  ,   
-                const double                         high , 
-                const Interpolation::Abscissas::Type t    ) 
-        : Interpolation::Table ( fun , n , low , high , t ) {}
-      // ======================================================================
-      /// default constructor
-      Neville () = default ;
-      // =====================================================================
-    public:
-      // ======================================================================
-      /// the main method: get the value of interpolated polynomial 
-      double evaluate    ( const  double x ) const { return neville  ( x ) ; }
-      /// the main method: get the value of interpolated polynomial 
-      double operator () ( const  double x ) const { return evaluate ( x ) ; }
-      // ======================================================================
-      /// get the derivative   (dy/dx) at point x 
-      double derivative  ( const  double x ) const { return neville2( x ).second  ; }
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Lagrange  
-     *  https://en.wikipedia.org/wiki/Lagrange_polynomial
-     *  @attention  it is not CPU efficient and numerically not stable 
-     */
-    class Lagrange : public Interpolation::Table 
-    {
-    public:
-      // ====================================================================== 
-      /** simple contructor from interpolation points  
-       *  @param x input vector of abscissas  
-       */
-      Lagrange ( const Interpolation::Table& p ) ;
-      // ====================================================================
-      // other constructors from the base class 
-      // ====================================================================
-      /** the simplest constructor 
-       *  @param data   input data 
-       *  @param sorted indicate if data already  sorted and duplicated removed  
-       */
-      Lagrange ( const Interpolation::TABLE& data           , 
-                 const bool                  sorted = false ) 
-        : Interpolation::Table ( data , sorted ) {}
-      // ====================================================================== 
-      /** simple contructor from abscissas and y-list 
-       *  @param x input vector of abscissas  
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       */
-      Lagrange ( const Interpolation::Abscissas&       x , 
-                 const Interpolation::Abscissas::Data& y ) 
-        : Interpolation::Table ( x , y ){}
-      // ===================================================================
-      /** simple contructor from x&y-lists 
-       *  @param x input vector of x 
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      Lagrange ( const Interpolation::Abscissas::Data& x , 
-                 const Interpolation::Abscissas::Data& y ) 
-        : Interpolation::Table ( x , y ) {}
-      // ====================================================================
-      /** simple constructor from map/dictionary { x : f(x) }
-       *  @param data map/dictionary with data  { x : f(x) }
-       *  It is elatively efficient: no sorting
-       *  - "numerical" duplicates are removed
-       */
-      template <class KEY, class VALUE>
-      Lagrange ( const std::map<KEY,VALUE>& data ) 
-        : Interpolation::Table ( data ) {}
-      // ====================================================================
-      /** simple contructor from x&y-lists 
-       *  @param xbegin start  of sequence of abscissas 
-       *  @param xend   end    of sequence of abscissas 
-       *  @param ybegin start  of sequence of values 
-       *  @param yend   end    of sequence of values 
-       *  @param sorted indicate if data already sorted and duplicates removed  
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class XITERATOR, class YITERATOR>
-      Lagrange ( XITERATOR  xbegin         ,
-                 XITERATOR  xend           ,
-                 YITERATOR  ybegin         ,
-                 YITERATOR  yend           , 
-                 const bool sorted = false ) 
-        : Interpolation::Table ( xbegin , xend , ybegin , yend , sorted ){}
-      // ======================================================================
-      /** templated constructor 
-       *  (very efficient: no sorting, no removal of duplicate...)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Lagrange ( FUNCTION                        fun , 
-                 const Interpolation::Abscissas& a   )
-        : Interpolation::Table ( fun , a ){}
-      // ======================================================================
-      /** templated constructor 
-       *  @param begin start  of x-sequence 
-       *  @param end   end    of x-sequence 
-       *  @param fun   function object 
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class ITERATOR, class FUNCTION>
-      Lagrange ( FUNCTION fun   , 
-                 ITERATOR begin , 
-                 ITERATOR end   ) 
-        : Interpolation::Table ( fun , begin, end ) {}
-      // ======================================================================
-      /** templated constructor 
-       *  @param fun  function object 
-       *  @param n    number of interpolation points 
-       *  @param low  low edge of interpolation region 
-       *  @param high high edge of interpolation region 
-       *  @param t    interpolation type 
-       */
-      template <class FUNCTION>
-      Lagrange ( FUNCTION                             fun  , 
-                 const unsigned short                 n    , 
-                 const double                         low  ,   
-                 const double                         high , 
-                 const Interpolation::Abscissas::Type t    ) 
-        : Interpolation::Table ( fun , n , low , high , t ) {}
-      // ======================================================================
-      /// default constructor
-      Lagrange () = default ;
-      // =====================================================================
-    public:
-      // ======================================================================
-      /// the main method: get the value of interpolated polynomial 
-      double evaluate    ( const  double x ) const { return lagrange ( x ) ; }
-      /// the main method: get the value of interpolated polynomial 
-      double operator () ( const  double x ) const { return evaluate ( x ) ; }
-      // ======================================================================
-      /// get the drivative with respect to i-th parameter (dy/d(y_i)) at point x 
-      double derivative  ( const double       x , 
-                           const unsigned int iy ) const 
-      { return lagrange2 ( x , iy ).second  ; }
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Barycentric 
-     *  Very efficient Barycentric Largange interpolation
-     *  For intialization the barycentric weigths are calculated as:
-     *  - O(n) for <code>Chebyshev</code> and <code>Chebvyshev2</code>  abscissas 
-     *  - O(n) for <code>Uniform</code> abscissas, but much slower 
-     *  - O(n^2) for general case 
-     *  @see Ostap::Math::Interpolation::Abscissas
-     *  @see Ostap::Math::Interpolation::Abscissas::Type
-     *  For evaluation it takes O(n) - that is very fast!
-     *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-     *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-     *       ISSN (print): 0036-1445
-     *       ISSN (online): 1095-7200
-     *  @see https://doi.org/10.1137/S0036144502417715
-     *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-     *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-     */
-    class Barycentric 
-    {
-      // ======================================================================
-    public:
-      // ======================================================================      
-      typedef  Interpolation::Abscissas::Data                            Data ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** templated constructor  (efficient, no sorting/no duplicate removal)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Barycentric 
-      ( FUNCTION                      fun , 
-        const Interpolation::Weights& w   ) 
-        : m_w ( w ) 
-        , m_y ( w.size() , 0.0 ) 
-      { std::transform ( this->x() . begin () , this->x() . end () , m_y.begin () , fun ) ; }
-      // ======================================================================
-      /** templated constructor (efficient, no sorting/no duplicate removal)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Barycentric 
-      ( FUNCTION                        fun , 
-        const Interpolation::Abscissas& a   ) 
-        : m_w ( a ) 
-        , m_y ( a.size() , 0.0 ) 
-      { std::transform ( a.begin () , a.end () , m_y.begin () , fun ) ; }
-      // ======================================================================
-      /** templated constructor (very efficient, no sorting/no duplicate removal)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Barycentric 
-      ( FUNCTION                             fun  , 
-        const unsigned int                   n    , 
-        const double                         low  ,   
-        const double                         high , 
-        const Interpolation::Abscissas::Type t    ) 
-        : Barycentric ( fun , Interpolation::Abscissas  ( n , low , high , t ) ) 
-      {}
-      // ======================================================================
-      /** templated constructor 
-       *  @param fun function object 
-       *  @param begin start of abscissas sequence 
-       *  @param end   end   of abscissas sequence 
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class FUNCTION, class ITERATOR>
-      Barycentric 
-      ( FUNCTION fun   , 
-        ITERATOR begin ,
-        ITERATOR end   )
-        : m_w ( begin , end ) 
-        , m_y () 
-      { 
-        m_y.resize     ( this -> size () ) ;
-        std::transform ( this -> x () . begin () , 
-                         this -> x () . end   () , m_y . begin () , fun ) ; 
-      }
-      // ======================================================================
-      /** templated constructor 
-       *  @param fun function object 
-       *  @param x   interpolation abscissas 
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class FUNCTION>
-      Barycentric
-      ( FUNCTION    fun , 
-        const Data& x   ) 
-        : Barycentric ( fun , x.begin() , x.end() ) 
-      {}
-      // ======================================================================
-      /** simple constructor from the interpolation table 
-       *  @param data interpolation table            
-       */
-      Barycentric 
-      ( const Interpolation::Table& data ) ; 
-      // ======================================================================
-      /** simple constructor from the interpolation data 
-       *  @param data interpolation data 
-       *  @param sorted indicate if data already sorted and duplicates are removed 
-       */
-      Barycentric
-      ( const Interpolation::TABLE& data           , 
-        const bool                  sorted = false ) ;
-      // ======================================================================
-      /** simple constructor from map/dictionary { x : f(x) }
-       *  @param data map/dictionary with data  { x : f(x) }
-       *  It is elatively efficient: no sorting
-       *  - "numerical" duplicates are removed
-       */
-      template <class KEY, class VALUE>
-      Barycentric 
-      ( const std::map<KEY,VALUE>& data ) 
-        : Barycentric ( Interpolation::Table ( data ) ) {}
-      // ====================================================================
-      /** simple constructor from x&y-lists 
-       *  @param x input vector of x 
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       */
-      Barycentric 
-      ( const Interpolation::Abscissas& x , 
-        const Data&                     y ) ; 
-      // ===================================================================
-      /** simple constructor from x&y-lists 
-       *  @attention this is the most CPU efficient constructor!
-       *  @param x input vector of 
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       */
-      Barycentric
-      ( const Interpolation::Weights&   x , 
-        const Data&                     y ) ;
-      // ===================================================================
-      /** simple constructor from x&y-lists 
-       *  @param x input vector of x 
-       *  @param x input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      Barycentric 
-      ( const Data& x , const Data& y ) ;
-      // ======================================================================
-      /// default constructor 
-      Barycentric () = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      unsigned int n       () const { return m_w.size  () ; }
-      unsigned int size    () const { return m_w.size  () ; }
-      bool         empty   () const { return m_w.empty () ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      const Interpolation::Abscissas&       abscissas () const { return m_w.abscissas () ; }
-      const Interpolation::Weights::Data&   weights   () const { return m_w.w ()         ; }
-      const Interpolation::Abscissas::Data& x         () const { return m_w.x ()         ; }
-      const Interpolation::Weights::Data&   w         () const { return m_w.w ()         ; }
-      const Data&                           y         () const { return m_y              ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get abscissa:
-      double abscissa ( unsigned short index ) const { return m_w.x ( index ) ; }
-      double x        ( unsigned short index ) const { return m_w.x ( index ) ; }
-      /// get weights 
-      double weight   ( unsigned short index ) const { return m_w.w ( index ) ; }
-      double w        ( unsigned short index ) const { return m_w.w ( index ) ; }
-      /// get function valeus 
-      double y        ( unsigned short index ) const 
-      { return index < m_y.size() ? m_y[index] : m_y.back() ; }
-      // ======================================================================
-    public:
-      // ====================================================================
-      /// minimal  abscissa 
-      double xmin () const { return  m_w.xmin () ; }
-      /// maximal abscissas 
-      double xmax () const { return  m_w.xmax () ; }
-      // ====================================================================
-    public:
-      // ======================================================================
-      /// evaluate the interpolation polynomial 
-      double evaluate   ( const double  x ) const ; //evaluate the polynomial 
-      /// evaluate the interpolation polynomial 
-      double operator() ( const double x ) const { return evaluate ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** add the point (x,y)  into  collection 
-       *  @param x abscissas of the point to be added 
-       *  @param y the value of function at x 
-       *  @return the index of new point, or -1  if point if not added 
-       */
-      int add     ( const  double x ,   const  double y ) ;
-      // ======================================================================
-      /** remove the point with the  given index 
-       *  @param index the point to be removed 
-       *  @return   true if point is removed 
-       */
-      bool remove ( const unsigned short index ) ;
-      // ======================================================================
-    public: 
-      // ======================================================================
-      /// get the slice
-      Barycentric slice 
-      ( const unsigned short i , 
-        const unsigned short j ) const ;
-      // ====================================================================
-    private: 
-      // ======================================================================
-      /// abscissas and weigths 
-      Interpolation::Weights m_w {} ; // abscissas and weigths 
-      /// function  values 
-      Data                   m_y {} ; // function values 
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class Newton 
-     *  Interpolation polynomial
-     *  https://en.wikipedia.org/wiki/Newton_polynomial
-     *  @attention it is efficient  and relatively stable numerically
-     */
-    class Newton
-    {
-    public:
-      // ====================================================================== 
-      /** simple contructor from interpolation points  
-       *  @param x input vector of abscissas  
-       */
-      Newton ( const Interpolation::Table& p ) ;
-      // ======================================================================
-      /** the simplest constructor 
-       *  @param data   input data 
-       *  @param sorted indicate if data already  sorted and duplicated removed  
-       */
-      Newton
-      ( const Interpolation::TABLE& data           , 
-        const bool                  sorted = false ) 
-        : m_table ( data        ) 
-        , m_diffs ( data.size() ) 
-      { this->get_differences() ; }
-      // ======================================================================
-      /** simple contructor from abscissas and y-list 
-       *  @param x input vector of abscissas  
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       */
-      Newton
-      ( const Interpolation::Abscissas&       x , 
-        const Interpolation::Abscissas::Data& y ) 
-        : m_table ( x , y    ) 
-        , m_diffs ( x.size() ) 
-      { this->get_differences() ; }      
-      // ======================================================================
-      /** simple contructor from x&y-lists 
-       *  @param x input vector of x 
-       *  @param y input vector of y 
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      Newton
-      ( const Interpolation::Abscissas::Data& x , 
-        const Interpolation::Abscissas::Data& y ) 
-        : m_table ( x , y    ) 
-        , m_diffs ( x.size() ) 
-      { this->get_differences() ; }
-      // ======================================================================
-      /** simple constructor from map/dictionary { x : f(x) }
-       *  @param data map/dictionary with data  { x : f(x) }
-       *  It is elatively efficient: no sorting
-       *  - "numerical" duplicates are removed
-       */
-      template <class KEY, class VALUE>
-      Newton ( const std::map<KEY,VALUE>& data ) 
-        : m_table ( data        ) 
-        , m_diffs ( data.size() ) 
-      { this->get_differences() ; }
-      // ======================================================================
-      /** simple contructor from x&y-lists 
-       *  @param xbegin start  of sequence of abscissas 
-       *  @param xend   end    of sequence of abscissas 
-       *  @param ybegin start  of sequence of values 
-       *  @param yend   end    of sequence of values 
-       *  @param sorted indicate if data already sorted and duplicates removed  
-       *  - if vector of y is longer  than vector x, extra values are ignored 
-       *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class XITERATOR, class YITERATOR>
-      Newton 
-      ( XITERATOR  xbegin         ,
-        XITERATOR  xend           ,
-        YITERATOR  ybegin         ,
-        YITERATOR  yend           , 
-        const bool sorted = false ) 
-        : m_table ( xbegin , xend , ybegin , yend , sorted )
-        , m_diffs () 
-      { this->get_differences() ; }
-      // ======================================================================
-      /** templated constructor 
-       *  (very efficient: no sorting, no removal of duplicate...)
-       *  @param fun       function object 
-       *  @param abscissas interpolation abscissas 
-       */
-      template <class FUNCTION>
-      Newton
-      ( FUNCTION                        fun , 
-        const Interpolation::Abscissas& a   )
-        : m_table ( a  , fun )
-        , m_diffs ( a.size() )
-      { this->get_differences() ; }
-      // ======================================================================
-      /** templated constructor 
-       *  @param begin start  of x-sequence 
-       *  @param end   end    of x-sequence 
-       *  @param fun   function object 
-       *  @attention duplicated abscissas will be removed 
-       */
-      template <class ITERATOR, class FUNCTION>
-      Newton
-      ( FUNCTION fun   , 
-        ITERATOR begin , 
-        ITERATOR end   ) 
-        : m_table ( fun , begin , end )
-        , m_diffs ()
-      { this->get_differences() ; }
-      // ======================================================================
-      /** templated constructor 
-       *  @param fun  function object 
-       *  @param n    number of interpolation points 
-       *  @param low  low edge of interpolation region 
-       *  @param high high edge of interpolation region 
-       *  @param t    interpolation type 
-       */
-      template <class FUNCTION>
-      Newton
-      ( FUNCTION                             fun  , 
-        const unsigned short                 n    , 
-        const double                         low  ,   
-        const double                         high , 
-        const Interpolation::Abscissas::Type t    ) 
-        : m_table ( fun , n , low , high , t )
-        , m_diffs ()
-      { this->get_differences() ; }
-      /// default constructor
-      Newton () = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// the main method: get the value of interpolated polynomial 
-      double evaluate   ( const double x ) const ; //evaluate the polynomial 
-      /// evaluate the interpolation polynomial 
-      double operator() ( const double x ) const { return evaluate ( x ) ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get abscissa:
-      double abscissa ( unsigned short index ) const { return m_table.x ( index ) ; }
-      /// get the abscissa
-      double x        ( unsigned short index ) const { return m_table.x ( index ) ; }
-      /// get the function value 
-      double y        ( unsigned short index ) const { return m_table.x ( index ) ; }
-      /// get the divided differece 
-      double d        ( unsigned short index ) const 
-      { return index < m_diffs.size() ? m_diffs [ index ] : 0.0 ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// minimal  abscissa 
-      double xmin () const { return  m_table.xmin () ; }
-      /// maximal abscissas 
-      double xmax () const { return  m_table.xmax () ; }
-      // ======================================================================
-    public: // show some internal data 
-      // ======================================================================
-      const Interpolation::Table& table () const { return m_table         ; }
-      const Interpolation::TABLE& data  () const { return m_table.data () ; }
-      // ======================================================================
-    public: // add & remove interpolation points 
-      // ======================================================================
-      /** add the point (x,y) into interpolation table 
-       *  @param x abscissas of the point to be added 
-       *  @param y the value of function at x 
-       *  @return the index of new point, or -1  if point if not added
-       */
-      int add     ( const  double x ,   const  double y ) ;
-      // ======================================================================
-      /** remove the point with the  given index 
-       *  @param index the point to be removed 
-       *  @return   true if point is removed 
-       */
-      bool remove ( unsigned short index ) ;
-      // ======================================================================
-    public: // make a slice fo the given  ascissas 
-      // ======================================================================
-      /// make a slice for the given range of points 
-      Newton slice ( const int i , const int j ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// swap two collections of points 
-      friend void swap ( Newton& a , Newton& b ) 
-      { 
-        swap ( a.m_table , b.m_table ) ;
-        swap ( a.m_diffs , b.m_diffs ) ;
-      }
-      // ======================================================================
-    private: // get the divided differences 
-      // ======================================================================
-      /// get the divided differences 
-      void get_differences () ; // get the divided differences 
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the interpolation table 
-      Interpolation::Table m_table {} ; // the interpolation table 
-      /// vector of divided differences 
-      std::vector<double>  m_diffs {} ; // vector of divided differences 
-      // ======================================================================
-    } ;
-    // ========================================================================
-    namespace Interpolation 
-    {
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: O(n)
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  Weights  weights     = ... ;
-       *  auto interpolant     = lagrange ( fun , weights ) ;
-       *  const double   x     = ... ;
-       *  const double   value = interpolant ( value ) 
-       *  @endcode 
-       *  @param func the function 
-       *  @param weights precomputed barycentric weights 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( FUNCTION         func    ,  
-                 const Weights&   weights )
-      { return Ostap::Math::Barycentric ( func , weights ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: O(n)
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  Abscissas abscissas  = ... ;
-       *  auto interpolant     = lagrange ( fun , abscissas ) ;
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param abscissas interpolation abscissas  
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      template <class FUNCTION>
-      inline  
-      Ostap::Math::Barycentric
-      lagrange ( FUNCTION         func      ,  
-                 const Abscissas& abscissas )
-      { return Ostap::Math::Barycentric ( func , abscissas ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  auto interpolant     = lagrange ( fun , 12 , 0. , 1. , Abscissas::Chebyshev ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param N         number of interpolation absicssas
-       *  @param low       low  edge of interpolating ranage 
-       *  @param high      high edge of interpolating ranage 
-       *  @param i         interpolation type       
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( FUNCTION              func ,  
-                 const unsigned int    N    , 
-                 const double          low  ,   
-                 const double          high , 
-                 const Abscissas::Type t    )        
-      { return Ostap::Math::Barycentric ( func , N , low , high , t ) ; }      
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  auto interpolant     = lagrange ( fun , {{ 0.0 , 0.1 , 0.2,  0.3, 0.7, 1.0 }} ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x         interpolation abscissas 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */      
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Barycentric
-      lagrange  ( FUNCTION                               func ,  
-                  const  Ostap::Math::Barycentric::Data& x    )
-      { return Ostap::Math::Barycentric ( func , x ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code 
-       *  Table          table = ... ; // interpolation table 
-       *  auto interpolant     = lagrange ( table ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param table    interpolation table 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */      
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( const Table& data )   
-      { return Ostap::Math::Barycentric ( data ) ; }
-      // ======================================================================      
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code 
-       *  TABLE          table = ... ; // interpolation table 
-       *  auto interpolant     = lagrange ( table ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param table    interpolation table 
-       *  @param sorted indicate if data is sorted and duplicates are removed 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( const TABLE& data , const bool sorted = false )   
-      { return Ostap::Math::Barycentric ( data , sorted ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code
-       *  typdef std::map<double,double> MAP ;
-       *  MAP data ;
-       *  data[1.0] = std::sin ( 1.0 ) ;
-       *  data[1.5] = std::sin ( 1.5 ) ;
-       *  data[2.0] = std::sin ( 2.0 ) ;
-       *  data[2.5] = std::sin ( 2.5 ) ;
-       *  auto interpolant     = lagrange ( data) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param data      interpolation table 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      template <class KEY,class VALUE>
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( const std::map<KEY,VALUE>& data )   
-      { return Ostap::Math::Barycentric ( data ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code
-       *  typedef std::vector<double> DATA ;
-       *  DATA data {{ std::sin( 0.1 ) , std::sin( 0.1 ) , std::sin( 0.3) }} ;
-       *  Abscissas a          = ... ;
-       *  auto interpolant     = lagrange ( a , data ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x     interpolation abscissas 
-       *  @param y     interpolation data 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      inline   
-      Ostap::Math::Barycentric
-      lagrange ( const Abscissas&                      x , 
-                 const Ostap::Math::Barycentric::Data& y )
-      { return Ostap::Math::Barycentric ( x , y ) ; }
-      // ======================================================================
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code
-       *  typedef std::vector<double> DATA ;
-       *  DATA data {{ std::sin( 0.1 ) , std::sin( 0.1 ) , std::sin( 0.3) }} ;
-       *  Weights w          = ... ;
-       *  auto interpolant     = lagrange ( w , data ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param w     precomputed   interpolation weights 
-       *  @param y     interpolation data 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( const Weights&                        w , 
-                 const Ostap::Math::Barycentric::Data& y )
-      { return Ostap::Math::Barycentric ( w , y ) ; }
-      // ======================================================================      
-      /** Very efficient Barycentric Lagrange Interpolation: 
-       *  @code
-       *  typedef std::vector<double> DATA ;
-       *  DATA xx {{           0.1   ,           0.2   ,            0.3   }} ;
-       *  DATA yy {{ std::sin( 0.1 ) , std::sin( 0.2 ) , std::sin ( 0.3 ) }} ;
-       *  Weights w          = ... ;
-       *  auto interpolant     = lagrange ( xx , yy) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x     interpolation abscissas 
-       *  @param y     interpolation data 
-       *  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
-       *       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-       *       ISSN (print): 0036-1445
-       *       ISSN (online): 1095-7200
-       *  @see https://doi.org/10.1137/S0036144502417715
-       *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-       *  @see Ostap::Math::Barycentric
-       */
-      inline 
-      Ostap::Math::Barycentric
-      lagrange ( const Ostap::Math::Barycentric::Data& x , 
-                 const Ostap::Math::Barycentric::Data& y )
-      { return Ostap::Math::Barycentric ( x , y ) ; }
-      // ======================================================================      
-      //  Newton interpolation 
-      // ======================================================================      
-      /** Newton interpolation
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  Abscissas abscissas  = ... ;
-       *  auto interpolant     = newton ( fun , abscissas ) ;
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param abscissas interpolation abscissas  
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Newton
-      newton ( FUNCTION         func      ,  
-               const Abscissas& abscissas )
-      { return Ostap::Math::Newton ( func , abscissas ) ; }
-      // =======================================================================
-      /** Newton interpolation
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  auto interpolant     = newton ( fun , 12 , 0. , 1. , Abscissas::Chebyshev ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param N         number of interpolation absicssas
-       *  @param low       low  edge of interpolating ranage 
-       *  @param high      high edge of interpolating ranage 
-       *  @param i         interpolation type       
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Newton
-      newton ( FUNCTION              func ,  
-               const unsigned int    N    , 
-               const double          low  ,   
-               const double          high , 
-               const Abscissas::Type t    )        
-      { return Ostap::Math::Newton( func , N , low , high , t ) ; }
-      // ======================================================================      
-      /** Newton interpolation
-       *  @code 
-       *  auto fun             = [] ( double x ) { return std::sin(x) ; } ;
-       *  auto interpolant     = newton ( fun , {{ 0.0 , 0.1 , 0.2,  0.3, 0.7, 1.0 }} ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x         interpolation abscissas 
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      template <class FUNCTION>
-      inline 
-      Ostap::Math::Newton
-      newton ( FUNCTION               func ,  
-               const Abscissas::Data& x    )
-      { return Ostap::Math::Newton ( func , x ) ; }
-      // ======================================================================      
-      /** Newton interpolation
-       *  @code 
-       *  Table          table = ... ; // interpolation table 
-       *  auto interpolant     = newton ( table ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param table    interpolation table  
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      inline 
-      Ostap::Math::Newton
-      Newton  ( const Table& data )   
-      { return Ostap::Math::Newton ( data ) ; }
-      // ======================================================================      
-      /** Newton interpolation
-       *  @code 
-       *  TABLE          table = ... ; // interpolation table 
-       *  auto interpolant     = newton ( table ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param table    interpolation table 
-       *  @param sorted indicate if data is sorted and duplicates are removed 
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      inline 
-      Ostap::Math::Newton
-      newton ( const TABLE& data , const bool sorted = false )   
-      { return Ostap::Math::Newton ( data , sorted ) ; }
-      // ======================================================================
-      /** Newton interpolation
-       *  @code
-       *  typdef std::map<double,double> MAP ;
-       *  MAP data ;
-       *  data[1.0] = std::sin ( 1.0 ) ;
-       *  data[1.5] = std::sin ( 1.5 ) ;
-       *  data[2.0] = std::sin ( 2.0 ) ;
-       *  data[2.5] = std::sin ( 2.5 ) ;
-       *  auto interpolant     = newton ( data) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param data      interpolation table 
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-       template <class KEY,class VALUE>
-      inline 
-      Ostap::Math::Newton
-      newton ( const std::map<KEY,VALUE>& data )   
-      { return Ostap::Math::Newton ( data ) ; }
-      // ======================================================================
-      /** Newton interpolation
-       *  @code
-       *  typedef std::vector<double> DATA ;
-       *  DATA data {{ std::sin( 0.1 ) , std::sin( 0.1 ) , std::sin( 0.3) }} ;
-       *  Abscissas a          = ... ;
-       *  auto interpolant     = lagrange ( a , data ) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x     interpolation abscissas 
-       *  @param y     interpolation data 
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      inline   
-      Ostap::Math::Newton
-      newton ( const Abscissas&       x , 
-               const Abscissas::Data& y )
-      { return Ostap::Math::Newton( x , y ) ; }
-      // ======================================================================
-      /** Newton interpolation
-       *  @code
-       *  typedef std::vector<double> DATA ;
-       *  DATA xx {{           0.1   ,           0.2   ,            0.3   }} ;
-       *  DATA yy {{ std::sin( 0.1 ) , std::sin( 0.2 ) , std::sin ( 0.3 ) }} ;
-       *  Weights w          = ... ;
-       *  auto interpolant     = lagrange ( xx , yy) 
-       *  const double  x      = ... ;
-       *  const double  value  = interpolant ( value ) 
-       *  @endcode 
-       *  @param func      the function 
-       *  @param x     interpolation abscissas 
-       *  @param y     interpolation data 
-       *  @see https://en.wikipedia.org/wiki/Newton_polynomial
-       *  @see Ostap::Math::Newton 
-       */
-      inline 
-      Ostap::Math::Newton
-      newton ( const Abscissas::Data& x , 
-               const Abscissas::Data& y )
-      { return Ostap::Math::Newton ( x , y ) ; }
-      // ======================================================================
-    }
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
@@ -2350,6 +1217,8 @@ Ostap::Math::Interpolation::neville2
   }
   return std::make_pair ( *ybegin , *dbegin ) ;
 }
+
+
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -1,6 +1,7 @@
 ## New features:
 
  1. add `reduce` method for polynomial and spline classes 
+ 1. largelty rewrite and extend all interpolation stuff 
 
 ## Backward incompatible 
  

@@ -15,6 +15,7 @@
 #include "Ostap/Math.h"
 #include "Ostap/NSphere.h"
 #include "Ostap/StatusCode.h"
+#include "Ostap/Interpolation.h"
 // ============================================================================
 /** @file Ostap/BSpline.h
  *  Simple implementation of (B,M,I)-splines and related stuff
@@ -1538,8 +1539,6 @@ namespace Ostap
     namespace Interpolation
     {
       // ======================================================================
-      class Table ;
-      // ======================================================================
       /** define parameters for the interpolation spline 
        *  @param data (INPUT)  table of data 
        *  @param bs   (UPDATE) the spline 
@@ -1548,28 +1547,32 @@ namespace Ostap
       Ostap::StatusCode
       bspline 
       ( const Ostap::Math::Interpolation::Table& data ,
-        Ostap::Math::BSpline&                    bs   ) ;      
+        Ostap::Math::BSpline&                    bs   ) ;
       // ======================================================================
       /** define parameters for the interpolation spline 
        *  @param xy (INPUT)   vector of data 
        *  @param bs (UPDATE) the spline 
        *  @return status code 
        */
+      inline 
       Ostap::StatusCode
       bspline 
-      ( std::vector< std::pair<double,double> >  xy ,
-        Ostap::Math::BSpline&                    bs ) ;      
+      ( const Ostap::Math::Interpolation::TABLE& data ,
+        Ostap::Math::BSpline&                    bs ) 
+      { return bspline ( Table ( data ) , bs ) ; }
       // ======================================================================
       /** create the interpolation spline 
        *  @param xy (INPUT)   vector of data 
        *  @param bs (UPDATE) the spline 
        *  @return status code 
        */
+      inline 
       Ostap::StatusCode
       bspline  
-      ( const std::vector<double>& x  ,
-        const std::vector<double>& y  ,
-        Ostap::Math::BSpline&      bs ) ;      
+      ( const Ostap::Math::Interpolation::Abscissas::Data& x  ,
+        const Ostap::Math::Interpolation::Abscissas::Data& y  ,
+        Ostap::Math::BSpline&                              bs ) 
+      { return bspline ( Table ( x , y ) , bs ) ; }
       // ======================================================================
       /** interpolate function <code>func</code> using  its value at x 
        *  @param func  (INPPUT) the function 
@@ -1581,9 +1584,9 @@ namespace Ostap
       inline 
       Ostap::Math::BSpline 
       spline_interpolate 
-      ( FUNCTION                   func      ,
-        const std::vector<double>& x         , 
-        const unsigned short       order = 3 ) 
+      ( FUNCTION                                           func      ,
+        const Ostap::Math::Interpolation::Abscissas::Data& x         ,
+        const unsigned short                               order = 3 ) 
       {
         /// get some reasonable knots from  proposed  vector of abscissas 
         std::vector<double> knots = knots_from_abscissas ( x , order ) ;
@@ -1635,11 +1638,11 @@ namespace Ostap
       inline 
       Ostap::StatusCode
       bspline_ 
-      ( FUNCTION                   func , 
-        const std::vector<double>& x    ,
-        Ostap::Math::BSpline&      bs   )
+      ( FUNCTION                                           func , 
+        const Ostap::Math::Interpolation::Abscissas::Data& x    ,
+        Ostap::Math::BSpline&                              bs   )
       {
-        std::vector< std::pair<double,double> >  xy (  x.size() ) ;
+        Ostap::Math::Interpolation::TABLE xy (  x.size() ) ;
         std::transform 
           ( x.begin() , x.end  () , xy.begin() , 
             [&func]( const double a ) { return std::make_pair (  a , func ( a ) ) ; } ) ;

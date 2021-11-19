@@ -50,6 +50,7 @@
 #include "Ostap/HistoStat.h"
 #include "Ostap/KramersKronig.h"
 #include "Ostap/Interpolation.h"
+#include "Ostap/Interpolants.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Line.h"
 #include "Ostap/LineTypes.h"

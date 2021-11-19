@@ -81,7 +81,7 @@ class Timer(object):
     ##
     def __init__  ( self                          ,
                     name   = ''                   ,
-                    logger = None                 ,
+                    logger = ''                   ,
                     format = 'Timing %-18s %.3fs' ,
                     start  = ''                   ) :
         
@@ -91,6 +91,8 @@ class Timer(object):
             self.logger = logger.info
         elif logger and callable   ( logger ) :
             self.logger = logger
+        elif logger is None :
+            self.logger = None 
         else :
             self.logger = self.__logger 
 
@@ -102,19 +104,21 @@ class Timer(object):
         
     def __enter__ ( self ) :
         self.start = _timer ()
-        if self.start_message :
+        if self.logger and self.start_message :
             self.logger ( self.start_message )
         return self
     
     def __exit__  ( self, *_ ) :
         self.stop  = _timer ()
-        self.delta = self.stop - self.start         
-        try :
-            message = self.format       % ( self.name , self.delta ) 
-        except TypeError :
-            message = 'Timing %-18s %s' % ( self.name , self.delta )
-
-        self.logger ( message )
+        self.delta = self.stop - self.start
+        
+        if self.logger :
+            
+            try :
+                message = self.format       % ( self.name , self.delta ) 
+            except TypeError :
+                message = 'Timing %-18s %s' % ( self.name , self.delta )                
+            self.logger ( message )
             
 # =============================================================================
 ## Simple context manager to measure the time

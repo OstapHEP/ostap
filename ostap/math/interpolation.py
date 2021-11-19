@@ -109,9 +109,9 @@ def _a_str_ ( self , nmax = 8 ) :
     _n = self.n()
     if _n <= nmax : return 'Abscissas(%s)' % self.x()
     ##
-    n2 = nmax/2
-    s1 = ', '.join( ( str ( x ) for x in self.x() [    : n2 ] ) )
-    s2 = ', '.join( ( str ( x ) for x in self.x() [ -1 :    ] ) )
+    n2 = nmax//2
+    s1 = ', '.join( ( '%.3g' % x  for x in self.x() [    : n2 ] ) ) 
+    s2 = ', '.join( ( '%.3g' % x  for x in self.x() [ -1 :    ] ) ) 
     return 'Abscissas(n=%d,[%s, ... , %s])' % ( self.n() , s1 , s2 ) 
 # =======================================================================================
 ## iterator over interpolation abscissas
@@ -190,6 +190,7 @@ Ostap.Math.Interpolation.Abscissas.__repr__     = _a_str_
 Ostap.Math.Interpolation.Abscissas.__iter__     = _a_iter_
 Ostap.Math.Interpolation.Abscissas.__len__      = lambda s : s.n()
 Ostap.Math.Interpolation.Abscissas.iteritems    = _a_iteritems_ 
+Ostap.Math.Interpolation.Abscissas.items        = _a_iteritems_ 
 Ostap.Math.Interpolation.Abscissas.__getitem__  = _a_getitem_  
 Ostap.Math.Interpolation.Abscissas.__delitem__  = _a_delitem_  
 
@@ -207,15 +208,15 @@ def _p_str_ ( self , nmax = 7 ) :
     """Printout for interpolation Table
     >>> print a  
     """
-    _n = self.n()
+    _n = self.size ()
     if _n <= nmax :
-        s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
+        s = ', '.join ( ( "%.3g: %.3g" %  (x,y)  for x,y in self ) ) 
         return 'Table({%s})' % s 
     ##
     n2 = nmax/2
 
-    s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%s: %s' % self[ self.n() -1 ]
+    s1 = ', '.join ( ( '%.3g: %.3g' % self[i] for i in  range ( n2 ) ) ) 
+    s2 =               '%.3g: %.3g' % self[ self.n() -1 ]
     
     return 'Table(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
                      
@@ -230,7 +231,7 @@ def _p_iter_ ( self ) :
     >>> a =  ...
     >>> for x,y in a : print x,y  
     """
-    N = self.n()
+    N = len ( self ) 
     for i in range ( N ) :
         yield self.x ( i ) , self.y ( i )  
 # =============================================================================
@@ -243,7 +244,7 @@ def _p_iteritems_ ( self ) :
     >>> a =  ...
     >>> for i,p in a.iteritems() : print i,p
     """
-    N = self.n()
+    N = len ( self  )
     for i in range ( N ) :
         yield i , ( self.x ( i ) , self.y ( i ) )  
 
@@ -262,7 +263,7 @@ def _p_getitem_ ( self , i ) :
     """
     if   is_integer ( i ) :
         
-        if 0 <= i < self.n () :
+        if 0 <= i < len ( self ) :
             return self.x ( i ) , self.y ( i )
         
         raise IndexError ('Invalid key %s' % i )
@@ -271,307 +272,95 @@ def _p_getitem_ ( self , i ) :
         
         start , stop , step = i.indices ( self.n() )
         if   1 == step : return self.slice ( start , stop )
-        _x = self.x() [i] 
-        _y = self.y() [i] 
-        return Ostap.Math.Interpolation.Table ( _x , _y )
-        
+
     raise TypeError ('Invalid key type/value %s' % i )
 
-# =============================================================================
-## remove point from the point collection
-#  @code
-#  a = ...
-#  del a[2]
-#  @endcode 
-def _p_delitem_ (   self , i ) : 
-    """Remove point from abscissas
-    >>> a = ...
-    >>> del a[2]
-    """
-    if   isinstance ( i , int   ) :
-        if 0 <= i < self.n () : return self.remove ( i )
-        raise IndexError ('Invalid key %s' % i )
+## # =============================================================================
+## ## remove point from the point collection
+## #  @code
+## #  a = ...
+## #  del a[2]
+## #  @endcode 
+## def _p_delitem_ (   self , i ) : 
+##     """Remove point from abscissas
+##     >>> a = ...
+##     >>> del a[2]
+##     """
+##     if   isinstance ( i , int   ) :
+##         if 0 <= i < self.n () : return self.remove ( i )
+##         raise IndexError ('Invalid key %s' % i )
     
-    raise TypeError ('Invalid key/value %s' % i )
+##     raise TypeError ('Invalid key/value %s' % i )
 
 Ostap.Math.Interpolation.Table.__str__      = _p_str_
 Ostap.Math.Interpolation.Table.__repr__     = _p_str_
 Ostap.Math.Interpolation.Table.__iter__     = _p_iter_
-Ostap.Math.Interpolation.Table.__len__      = lambda s : s.n()
+Ostap.Math.Interpolation.Table.__len__      = lambda s : s.size()
 Ostap.Math.Interpolation.Table.iteritems    = _p_iteritems_ 
+Ostap.Math.Interpolation.Table.items        = _p_iteritems_ 
 Ostap.Math.Interpolation.Table.__getitem__  = _p_getitem_  
-Ostap.Math.Interpolation.Table.__delitem__  = _p_delitem_  
+## Ostap.Math.Interpolation.Table.__delitem__  = _p_delitem_  
 
-# =============================================================================
-## Weights for barycentric Lagrange interpolation
-# ============================================================================= 
+# ==================================================================================
+## dump interpoaltion table in a form of readabel table
+#  @code
+#  table = ...
+#  print ( table.table (prefix = '# ' )
+#  @endcode 
+def _p_table_ ( t , title = '' , prefix = '' , fmt = '%+.6g' ) :
+    """Dump interpoaltion table in a form of readabel table
+    >>> table = ...
+    >>> print ( table.table ( prefix = '# ' )
+    """
+    n = len ( t )
+    rows = [ ( '   X' , '   Y' )  ]
+    for i in range ( n ) :
+        row = fmt % t.x( i ) , fmt % t.y ( i )
+        rows.append ( row )
+            
+    import ostap.logger.table as T 
+    if not title : title = 'Interpolation table %s ' % t.__class__.__name__ 
+    return T.table ( rows , title = title , prefix = prefix , alignment = 'll' )
 
-# =============================================================================
-## printout for the interpolation points
+
+Ostap.Math.Interpolation.Table.table = _p_table_ 
+
+# ==================================================================================
+## Neville, Lagrange, & Berrut  interpolants
+# ==================================================================================
+
+# ==================================================================================
+## printout for interpolants 
 #  @code
 #  print a 
 #  @endcode 
-def _w_str_ ( self , nmax = 7 ) :
-    """Printout for interpolation Weights 
-    >>> print a  
-    """
-    _n = self.n()
-    if _n <= nmax :
-        s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
-        return 'Weights({%s})' % s 
-    ##
-    n2 = nmax/2
-
-    s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%s: %s' % self[ self.n() -1 ]
-    
-    return 'Weights(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
-                     
-# =======================================================================================
-## iterator over interpolation points 
-#  @code
-#  a =  ...
-#  for x,w in a : print x,w
-#  @endcode 
-def _w_iter_ ( self ) :
-    """ Iterator over interpolation weights 
-    >>> a =  ...
-    >>> for x,w in a : print x,w  
-    """
-    N = self.n()
-    for i in range ( N ) :
-        yield self.x ( i ) , self.w ( i )  
-# =============================================================================
-## Iterator over (i,(x,w)) triplets 
-#  a =  ...
-#  for i,p in a.iteritems() : print i,p
-#  @endcode 
-def _w_iteritems_ ( self ) :
-    """Iterator over (index,point) pairs
-    >>> a =  ...
-    >>> for i,p in a.iteritems() : print i,p
-    """
-    N = self.n()
-    for i in range ( N ) :
-        yield i , ( self.x ( i ) , self.w( i ) )  
-
-# =============================================================================
-## Get the item or slice 
-#  @code
-#  a  = ...
-#  x1 = a[1]
-#  a1 = a[:10] 
-#  @endcode d
-def _w_getitem_ ( self , i ) :
-    """Get the item or slice 
-    >>> a  = ...
-    >>> x1 = a[1]
-    >>> a1 = a[:10]
-    """
-    if   is_integer ( i ) :
-        
-        if 0 <= i < self.n () :
-            return self.x ( i ) , self.w ( i )
-        
-        raise IndexError ('Invalid key %s' % i )
-    
-    elif isinstance ( i , slice ) :
-        
-        start , stop , step = i.indices ( self.n() )
-        if   1 == step : return self.slice ( start , stop )
-        _x = self.x() [i] 
-        return Ostap.Math.Interpolation.Weights ( _x )
-        
-    raise TypeError ('Invalid key type/value %s' % i )
-
-# =============================================================================
-## remove the point from  the point collection
-#  @code
-#  a = ...
-#  del a[2]
-#  @endcode 
-def _w_delitem_ (   self , i ) : 
-    """Remove point from weights 
-    >>> a = ...
-    >>> del a[2]
-    """
-    if   isinstance ( i , int   ) :
-        if 0 <= i < self.n () : return self.remove ( i )
-        raise IndexError ('Invalid key %s' % i )
-    
-    raise TypeError ('Invalid key/value %s' % i )
-
-Ostap.Math.Interpolation.Weights.__str__      = _w_str_
-Ostap.Math.Interpolation.Weights.__repr__     = _w_str_
-Ostap.Math.Interpolation.Weights.__iter__     = _w_iter_
-Ostap.Math.Interpolation.Weights.__len__      = lambda s : s.n()
-Ostap.Math.Interpolation.Weights.iteritems    = _w_iteritems_ 
-Ostap.Math.Interpolation.Weights.__getitem__  = _w_getitem_  
-Ostap.Math.Interpolation.Weights.__delitem__  = _w_delitem_  
-
-
-# ==================================================================================
-## Neville & Lagrange interpolants
-# ==================================================================================
-
-# ==================================================================================
-## printout for Neville interpolant 
-#  @code
-#  print a 
-#  @endcode 
-def _n_str_ ( self , nmax = 7 ) :
+def print_interpolant ( self , name , nmax = 7 ) :
     """Printout for Neville interpolant
     >>> print a  
     """
-    _n = self.n()
-    if _n <= nmax :
-        s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
-        return 'Neville({%s})' % s 
+    n =  len ( self ) 
+    if n <= nmax :
+        s = ', '.join ( ( "%.3g: %.3g" %  (x,y)  for x,y in self ) ) 
+        return '%s({%s})' % ( name , s )  
     ##
-    n2 = min ( 2 , _n ) 
-    s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%s: %s' % self[ self.n() -1 ]
+    n2 = min ( 2 , n ) 
+    s1 = ', '.join ( ( '%.3g: %.3g' % self[i] for i in  range ( n2 ) ) ) 
+    s2 =               '%.3g: %.3g' % self[ n - 1 ]
     
-    return 'Neville(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
-# =============================================================================
-## printout for Largange interpolant 
-#  @code
-#  print a 
-#  @endcode 
-def _l_str_ ( self , nmax = 7 ) :
-    """Printout for Lagrange interpolant
-    >>> print a  
-    """
-    _n = self.n()
-    if _n <= nmax :
-        s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
-        return 'Lagrange({%s})' % s 
-    ##
-    n2 = min ( 2 , _n ) 
+    return '%s(n=%d,{%s, ... , %s})' % ( name , n , s1 , s2 )
 
-    s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%s: %s' % self[ self.n() -1 ]
-    
-    return 'Lagrange(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
+Ostap.Math.Neville         .__str__   = lambda s : print_interpolant ( s , 'Neville'        , 7 )
+Ostap.Math.Lagrange        .__str__   = lambda s : print_interpolant ( s , 'Lagrange'       , 7 )
+Ostap.Math.Newton          .__str__   = lambda s : print_interpolant ( s , 'Newton'         , 7 )
+Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berrut1st'      , 7 )
+Ostap.Math.Berrut2nd       .__str__   = lambda s : print_interpolant ( s , 'Berrut2nd'      , 7 )
+Ostap.Math.FloaterHormann  .__str__   = lambda s : print_interpolant ( s , 'FloaterHormann' , 7 )
+Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'    , 7 )
 
-
-Ostap.Math.Neville .__str__      = _n_str_
-Ostap.Math.Neville .__repr__     = _n_str_
-Ostap.Math.Lagrange.__str__      = _l_str_
-Ostap.Math.Lagrange.__repr__     = _l_str_
 
 # ==================================================================================
 ## Barycentric Lagrange interpolant 
 # ==================================================================================
-
-# =============================================================================
-## printout for Barycentric Largange interpolant 
-#  @code
-#  print a 
-#  @endcode 
-def _b_str_ ( self , nmax = 7 ) :
-    """Printout for Lagrange interpolant
-    >>> print a  
-    """
-    _n = self.n()
-    if _n <= nmax :
-        s = ', '.join ( ( "%s: %s" %  (x,y)  for x,y in self ) ) 
-        return 'Barycentric({%s})' % s 
-    ##
-    n2 = nmax/2
-
-    return 'BARYCENTRIC!'
-
-    s1 = ', '.join ( ( '%s: %s' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%s: %s' % self[ self.n() -1 ]
-    
-    return 'Barycentric(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
-
-
-# =======================================================================================
-## iterator over interpolation points 
-#  @code
-#  a =  ...
-#  for x,y in a : print x,y  
-#  @endcode 
-def _b_iter_ ( self ) :
-    """ Iterator over interpolation points 
-    >>> a =  ...
-    >>> for x,y in a : print x,y  
-    """
-    N = self.n()
-    for i in range ( N ) :
-        yield self.x ( i ) , self.y ( i )  
-# =============================================================================
-## Iterator over (index,x) pairs
-#  a =  ...
-#  for i,p in a.iteritems() : print i,p
-#  @endcode 
-def _b_iteritems_ ( self ) :
-    """Iterator over (index,point) pairs
-    >>> a =  ...
-    >>> for i,p in a.iteritems() : print i,p
-    """
-    N = self.n()
-    for i in range ( N ) :
-        yield i , ( self.x ( i ) , self.y ( i ) )  
-
-# =============================================================================
-## Get the item or slice 
-#  @code
-#  a  = ...
-#  x1 = a[1]
-#  a1 = a[:10] 
-#  @endcode d
-def _b_getitem_ ( self , i ) :
-    """Get the item or slice 
-    >>> a  = ...
-    >>> x1 = a[1]
-    >>> a1 = a[:10]
-    """
-    if   is_integer ( i ) :
-        
-        if 0 <= i < self.n () :
-            return self.x ( i ) , self.y ( i )
-        
-        raise IndexError ('Invalid key %s' % i )
-    
-    elif isinstance ( i , slice ) :
-        
-        start , stop , step = i.indices ( self.n() )
-        if   1 == step : return self.slice ( start , stop )
-        _x = self.x() [i] 
-        _y = self.y() [i] 
-        return Ostap.Math.Interpolation.Barycentric( _x , _y )
-        
-    raise TypeError ('Invalid key type/value %s' % i )
-
-# =============================================================================
-## remove point from  the point collection
-#  @code
-#  a = ...
-#  del a[2]
-#  @endcode 
-def _b_delitem_ (   self , i ) : 
-    """Remove point from abscissas
-    >>> a = ...
-    >>> del a[2]
-    """
-    if   isinstance ( i , int   ) :
-        if 0 <= i < self.n () : return self.remove ( i )
-        raise IndexError ('Invalid key %s' % i )
-    
-    raise TypeError ('Invalid key/value %s' % i )
-
-
-Ostap.Math.Barycentric.__str__      = _b_str_
-Ostap.Math.Barycentric.__repr__     = _b_str_
-Ostap.Math.Barycentric.__iter__     = _b_iter_
-Ostap.Math.Barycentric.__len__      = lambda s : s.n()
-Ostap.Math.Barycentric.iteritems    = _b_iteritems_ 
-Ostap.Math.Barycentric.__getitem__  = _b_getitem_  
-Ostap.Math.Barycentric.__delitem__  = _b_delitem_  
-
 
 
 Abscissas = Ostap.Math.Interpolation.Abscissas
@@ -639,7 +428,6 @@ def lagrange ( func , abscissas  = None ) :
     MT = Mapping
 
     ## switch on abscissas:
-    _W = isinstance ( abscissas , Ostap.Math.Interpolation.Weights   )
     _A = isinstance ( abscissas , Ostap.Math.Interpolation.Abscissas )
     
     if   isinstance ( abscissas , GT ) : abscissas = [ x for x in abscissas ]
@@ -669,7 +457,7 @@ def lagrange ( func , abscissas  = None ) :
         raise TypeError("Can't treat ``func''=%s"  %  func )
     ##
     from ostap.math.base import doubles
-    if _W or _A : return Ostap.Math.Barycentric ( abscissas , doubles ( func ) )
+    if _A : return Ostap.Math.Barycentric ( abscissas , doubles ( func ) )
     ##
     return Ostap.Math.Barycentric ( doubles ( abscissas ) , doubles ( func ) )
 
