@@ -8,6 +8,7 @@
 // Ostap
 // ================================================================================
 #include "Ostap/Interpolation.h"
+#include "Ostap/Interpolants.h"
 #include "Ostap/Bernstein.h"
 #include "Ostap/StatEntity.h"
 // ================================================================================

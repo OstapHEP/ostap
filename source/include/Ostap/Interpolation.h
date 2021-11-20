@@ -385,6 +385,17 @@ namespace Ostap
         }     
         // ====================================================================
         /** templated constructor 
+         *  (very efficient: no sorting, no removal of duplicate...)
+         *  @param fun       function object 
+         *  @param abscissas interpolation abscissas 
+         */
+        template <class FUNCTION>
+        Table 
+        ( FUNCTION         fun   ,
+          const Abscissas& a     )
+          : Table ( a , fun ) {}
+        // ====================================================================
+        /** templated constructor 
          *  @param begin start  of x-sequence 
          *  @param end   end    of x-sequence 
          *  @param fun   function object 
@@ -399,6 +410,18 @@ namespace Ostap
           ITERATOR begin , 
           ITERATOR end   ) 
           : Table ( Abscissas ( begin, end ) , fun ) 
+        {}
+        // ====================================================================
+        /** templated constructor 
+         *  (very efficient: no sorting, no removal of duplicate...)
+         *  @param fun       function object 
+         *  @param abscissas interpolation abscissas 
+         */
+        template <class FUNCTION>
+        Table 
+        ( FUNCTION               fun   ,
+          const Abscissas::Data& a     )
+          : Table ( fun , a.begin() , a.end () ) 
         {}
         // ====================================================================
         /** templated constructor 
@@ -1217,8 +1240,6 @@ Ostap::Math::Interpolation::neville2
   }
   return std::make_pair ( *ybegin , *dbegin ) ;
 }
-
-
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

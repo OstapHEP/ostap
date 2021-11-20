@@ -1405,7 +1405,7 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual comparator 
-      Zero< std::vector<double> > m_zero ;
+      Ostap::Math::Zero< std::vector<double> > m_zero ;
       // ======================================================================      
     };
     // ========================================================================
@@ -1426,7 +1426,7 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      Tiny<double> m_tiny ;
+      Ostap::Math::Tiny<double> m_tiny ;
       // ======================================================================      
     };
     // ========================================================================
@@ -1438,7 +1438,8 @@ namespace Ostap
      *  @return   the spline object that represents upper convex hull 
      */
     Ostap::Math::BSpline
-    upper_convex_hull ( const Ostap::Math::Bernstein& p ) ;
+    upper_convex_hull 
+    ( const Ostap::Math::Bernstein& p ) ;
     // ========================================================================
     /** calculate the lower convex hull for Bernstein Polynomial 
      *  \f$ B(x)  \ge  L (x) \f$ 
@@ -1446,21 +1447,24 @@ namespace Ostap
      *  @return   the spline object that represents lower convex hull 
      */
     Ostap::Math::BSpline
-    lower_convex_hull ( const Ostap::Math::Bernstein& p ) ;
+    lower_convex_hull 
+    ( const Ostap::Math::Bernstein& p ) ;
     // ========================================================================
     /** get control polygon  for Bernstein polynomial
      *  @param p  bernstein Polynomial
      *  @return   the spline object that represents the control polygon
      */
     Ostap::Math::BSpline
-    control_polygon   ( const Ostap::Math::Bernstein& p ) ;
+    control_polygon 
+    ( const Ostap::Math::Bernstein& p ) ;
     // ========================================================================
     /** get control polygon  for Basic spline
      *  @param p  basic spline 
      *  @return   the spline object that represents the control polygon
      */
     Ostap::Math::BSpline
-    control_polygon   ( const Ostap::Math::BSpline& p ) ;
+    control_polygon 
+    ( const Ostap::Math::BSpline& p ) ;
     // ========================================================================
     /** get abscissas of crossing points of the control polygon with x-axis
      *  @param  b     (INPUT) bernstein polynomial
@@ -1468,8 +1472,9 @@ namespace Ostap
      *  @return abscissas of crossing points of the control  polygon
      */
     std::vector<double> 
-    crossing_points  ( const Ostap::Math::BSpline& b              , 
-                       const bool                  formal = false ) ;
+    crossing_points  
+    ( const Ostap::Math::BSpline& b              , 
+      const bool                  formal = false ) ;
     // ========================================================================
     /** scale all coefficients with 2**i
      *  @param  b (INPUT) B-spline 
@@ -1478,8 +1483,9 @@ namespace Ostap
      */
     inline 
     Ostap::Math::BSpline
-    ldexp ( const Ostap::Math::BSpline& b , 
-            const short                 i ) { return b.ldexp ( i ) ; }
+    ldexp
+    ( const Ostap::Math::BSpline& b , 
+      const short                 i ) { return b.ldexp ( i ) ; }
     // ========================================================================
     /** calculate the value of spline defined by vector of knot and vector of 
      *  points using de-boor-cox algorithm
@@ -1511,11 +1517,12 @@ namespace Ostap
      *  @return multiplicity of inserted knot  
      */
     unsigned short 
-    boehm ( const double         x       , 
-            std::vector<double>& knots   ,
-            std::vector<double>& pars    , 
-            const unsigned short order   , 
-            const unsigned short num = 1 ) ;
+    boehm 
+    ( const double         x       , 
+      std::vector<double>& knots   ,
+      std::vector<double>& pars    , 
+      const unsigned short order   , 
+      const unsigned short num = 1 ) ;
     // ========================================================================
     /** get a vector of knots from their Greville's abscissas 
      *  @param aabscissas (INPUT) vector of greville's abscissas 
@@ -1523,8 +1530,9 @@ namespace Ostap
      *  @return vector of knots 
      */
     std::vector<double> 
-    knots_from_abscissas ( std::vector<double>   abscissas , 
-                           const  unsigned short degree    ) ;
+    knots_from_abscissas
+    ( std::vector<double>   abscissas , 
+      const  unsigned short degree    ) ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================
