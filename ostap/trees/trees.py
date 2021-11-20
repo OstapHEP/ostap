@@ -1580,8 +1580,12 @@ def _rc_slice_ ( chain , varname , cut = '' , weight = '', transpose = False ) :
             result  = r
             weights = w
         else :
-            result  = numpy.concatenate ( ( result  , r ) , axis = 0 if Transpose else 1 ) 
-            weights = numpy.concatenate ( ( weigths , w ) )
+            result  = numpy.concatenate ( ( result  , r ) , axis = 0 if transpose else 1 )
+            
+            if    weight is None or 0 == len ( weights ) : weights = w
+            elif  w      is None or 0 == len ( w       ) : pass
+            else :
+                weights = numpy.concatenate ( ( weights , w ) )
             
         del t
         

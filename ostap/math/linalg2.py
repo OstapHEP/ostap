@@ -1037,6 +1037,21 @@ class LinAlg(object) :
         """
         s = len ( vct )
         for i in range ( s ) : yield vct ( i )
+
+    # =============================================================================
+    ## iterator for SVector
+    #  @code
+    #  vct = ...
+    #  for i in vct.keys() : print i 
+    #  @endcode
+    @staticmethod
+    def V_KEYS ( vct ) :
+        """Iterator for SVector
+        >>> vct = ...
+        >>> for i in vct.keys() : print i 
+        """
+        s = len ( vct )
+        for i in range ( s ) : yield i 
             
     # =============================================================================
     ## iterator for SVector
@@ -1184,8 +1199,26 @@ class LinAlg(object) :
         kcols = mtrx.kCols
         for i in range ( krows ) :
             for j in range ( kcols ) :
-                yield self ( i , j )
-                
+                yield mtrx ( i , j )
+
+    # =============================================================================
+    ## iterator for SMatrix
+    #  @code
+    #  matrix = ...
+    #  for i in matrix.keys() : print i 
+    #  @endcode
+    @staticmethod 
+    def M_KEYS ( mtrx ) :
+        """Iterator for SMatrix
+        >>> matrix = ...
+        >>> for i in matrix.keys() : print i 
+        """
+        krows = mtrx.kRows
+        kcols = mtrx.kCols
+        for i in range ( krows ) :
+            for j in range ( kcols ) :
+                yield ( i , j )
+
     # =============================================================================
     ## iterator for SMatrix
     #  @code
@@ -1221,6 +1254,7 @@ class LinAlg(object) :
         rows = mtrx.kRows
         cols = mtrx.kCols
         line = ''
+
         for i in range ( rows ) :
             line += ' |'
             for j in range ( cols ) :
@@ -1534,7 +1568,9 @@ class LinAlg(object) :
         t. __iter__     = LinAlg.V_ITER      
         t. iteritems    = LinAlg.V_ITEMS
         t.     items    = LinAlg.V_ITEMS
-
+        t.  keys        = LinAlg.V_KEYS 
+        t. ikeys        = LinAlg.V_KEYS 
+        
         t.to_array      = LinAlg.V_ARRAY ## plain array.array 
 
         t.tvector       = LinAlg.M_TM 
@@ -1598,6 +1634,8 @@ class LinAlg(object) :
         m.__iter__      = LinAlg.M_ITER 
         m.iteritems     = LinAlg.M_ITEMS 
         m.    items     = LinAlg.M_ITEMS
+        m. keys         = LinAlg.M_KEYS  
+        m.ikeys         = LinAlg.M_KEYS  
         m.__contains__  = lambda s,ij : 0<=ij[0]<s.kRows and 0<=ij[1]<s.kCols
 
         m.row           = LinAlg.M_ROW

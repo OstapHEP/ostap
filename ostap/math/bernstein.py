@@ -931,13 +931,13 @@ def _new_init_ ( t ,  *args )  :
     - or std::vector<std::complex<double>>
     """
     from ostap.math.base        import doubles      , complexes
-    from ostap.core.ostap_types import string_types , listlike_types 
+    from ostap.core.ostap_types import sequence_types 
     
     largs = list (  args )
 
     for i , arg in enumerate ( largs ) :
 
-        if not isinstance ( arg ,  ( list , tuple ) ) : continue 
+        if not isinstance ( arg , sequence_types ) : continue 
         
         try: 
             _arg = doubles  ( arg  )

@@ -305,7 +305,7 @@ def test_abssin () :
 
     fun = lambda x : abs( math.sin ( x ) )
 
-    N , low , high = 16 , -0.1 , 0.1
+    N , low , high = 20 , -0.1 , 0.1
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin|' , N , low , high )  ) 
     
     return run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = logger , name = '|sin(x)|' ) 
@@ -318,7 +318,7 @@ def test_abs2sin () :
 
     fun = lambda x : abs( math.sin ( 2*x ) )
 
-    N , low , high = 20 , 0 , math.pi  
+    N , low , high = 24 , 0 , math.pi  
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin(2x)|' , N , low , high )  ) 
     
     random.seed ( 50948524584 )
@@ -335,7 +335,7 @@ def test_random_grid_sin () :
 
     tfun = math.sin 
     
-    N , low , high = 12 , 0 , 4 * math.pi  
+    N , low , high = 14 , 0 , 3 * math.pi  
 
     dct = {} 
     while N > len ( dct ) :
@@ -355,11 +355,11 @@ def test_random_grid_sin () :
 def test_random_grid_abssin () :
 
     
-    logger = getLogger ( 'test_random_grid_absin' ) 
+    logger = getLogger ( 'test_random_grid_abssin' ) 
 
     tfun = lambda x : abs ( math.sin ( x ) ) 
     
-    N , low , high = 12 , 0 , 4 * math.pi  
+    N , low , high = 20 , 0 , 1.5 * math.pi  
 
     dct = {} 
     while N > len ( dct ) :
@@ -373,6 +373,29 @@ def test_random_grid_abssin () :
     
     return run_grid_interpolation ( tfun , dct , N , low , high , scale = 1.e-4 , logger = logger , name = '|sin(x)|') 
 
+# =============================================================================
+## interpolate the table of values 
+def test_random_grid_sin2 () :
+
+    
+    logger = getLogger ( 'test_random_grid_sin2' ) 
+
+    tfun = lambda x : math.sin ( x ) **2  
+    
+    N , low , high = 14 , 0 , 2 * math.pi  
+
+    dct = {} 
+    while N > len ( dct ) :
+        xi = random.uniform ( low , high )
+        dct [ xi ] = tfun ( xi ) 
+
+    dct [ low  ] = tfun ( low  )
+    dct [ high ] = tfun ( high )
+    
+    logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin|' , N , low , high )  )
+    
+    return run_grid_interpolation ( tfun , dct , N , low , high , scale = 1.e-4 , logger = logger , name = 'sin^2(x)') 
+
 
 # =============================================================================
 ## interpolate the table of values 
@@ -382,7 +405,7 @@ def test_random_grid_gauss () :
 
     tfun = lambda x : Ostap.Math.gauss_pdf ( x ) 
     
-    N , low , high = 10 , -5 , 5 
+    N , low , high = 16 , -4 , 4
 
     dct = {} 
     while N > len ( dct ) :
@@ -404,6 +427,7 @@ if '__main__' == __name__ :
     ## test_abs2sin            ()
     test_random_grid_sin    ()
     test_random_grid_abssin ()
+    test_random_grid_sin2   ()
     test_random_grid_gauss  ()
     
     

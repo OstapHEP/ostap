@@ -4,10 +4,34 @@
 ## @file ostap/math/interpolation.py
 #  Module with some useful utilities for dealing with interpolation.
 #
-#  In particular, it providies very efficient Barycentric Lagrange interpolation
-#  - it takes O(n)   flops for initialization with Chebyshev/Lobatto or Uniform abscissas 
-#  - it takes O(n^2) flops for initialization with arbitrary interpolation      abscissas
-#  - it takes O(n)   flops for evaluation! It is very fast!
+#  It providesl follwoing interpolations (C++ fast)
+#  - Lagrange  polynomial interpolation                                 (relativelu slow)
+#  - Neville   polynomial interpolartion aka Nevile-Aitken interpolaton (slow)
+#  - Newton    polynimial interpolation                                 (fastest)
+#  - True Barycentric polymomial interpolation                          (relatively fast)
+#  - Berrut's 1st rational interpoaltion                                (fast)
+#  - Berrut's 2nd rational interpoaltion                                (fast)
+#  - Floater-Hormann rational interpolation                             (fast)
+#  - Bernstein polynomial inetrpoaltion                                  
+#
+#  @see Ostap::Math::Lagrange 
+#  @see Ostap::Math::Neville 
+#  @see Ostap::Math::Newton  
+#  @see Ostap::Math::Berycentric 
+#  @see Ostap::Math::Berrut1st 
+#  @see Ostap::Math::Berrut2nd 
+#  @see Ostap::Math::FloaterHormann
+#
+#  Features 
+#  - Lagrange scheme allows to calcualet also the derivative with respect to \f$y_i\f$
+#  - Neville scheme allows to calculate also the derivative with respect to \f$x\f$
+#  - Newton, Berrut 1st, Berrut's 2nd, true-Barycentric and Floater-Hormann are very fast,
+#    but they require some tiem for initialization adn thie time can be large.
+#  - All polymonial interpoaltion behaves badly for largde degrees and unform/random grids
+#  - Usage of dedicated Chebyshev and/or Lobatto grids partly solved this issue, butonly partly
+#  - For large nmber of pointes rational interpolants behaves more stable, particularly
+#    Floater-Hormann wwith relatively small value of parameter \f$d\f$ 
+#
 #
 #  @see Jean-Paul Berrut and Lloyd N. Trefethen, 
 #       Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
@@ -23,42 +47,70 @@
 #  - Both are rather slow: O(n^2) flops for evaluation,  while Neville is a bit faster 
 #  - Lagrange algorithm is not stable numerically,  and Neville algorithm is more stable
 #
-#  @see Ostap::Math::Interpolation
-#  @see Ostap::Math::Neville 
-#  @see Ostap::Math::Lagrange 
-#  @see Ostap::Math::Newton 
-#  @see Ostap::Math::Barycentric
-#
 #  For  completeness see also:
 #  - interpolation with Bersntein polynomials using on Newton-Bernstein algorithm
 #  - interpolation with B-splines
 #
+#  In addition purely python interpolators are provdied
+#  - Berrut1st
+#  - Berrut1st
+#  - Barycentric
+#  - FloaterHormann
+# 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2018-07-22
 # =============================================================================
 """Useful utilities for dealing with interpolation.
 
-In particular it provides very efficient ``Barycentric Lagrange interpolation'':
+  It providesl follwoing interpolations (C++ fast)
+  - Lagrange  polynomial interpolation                                 (relativelu slow)
+  - Neville   polynomial interpolartion aka Nevile-Aitken interpolaton (slow)
+  - Newton    polynimial interpolation                                 (fastest)
+  - True Barycentric polymomial interpolation                          (relatively fast)
+  - Berrut's 1st rational interpoaltion                                (fast)
+  - Berrut's 2nd rational interpoaltion                                (fast)
+  - Floater-Hormann rational interpolation                             (fast)
+  - Bernstein polynomial inetrpoaltion                                  
+  
+  - see Ostap.Math.Lagrange 
+  - see Ostap.Math.Neville 
+  - see Ostap.Math.Newton  
+  - see Ostap.Math.Berycentric 
+  - see Ostap.Math.Berrut1st 
+  - see Ostap.Math.Berrut2nd 
+  - see Ostap.Math.FloaterHormann
 
-- it takes O(n)   flops for initialization with Chebyshev/Lobatto or uniform abscissas 
-- it takes O(n^2) flops for initialization with arbitrary interpolation      abscissas
-- it takes O(n)   flops for evaluation! It is very fast! 
+  Features 
+  - Lagrange scheme allows to calcualet also the derivative with respect to \f$y_i\f$
+  - Neville scheme allows to calculate also the derivative with respect to \f$x\f$
+  - Newton, Berrut 1st, Berrut's 2nd, true-Barycentric and Floater-Hormann are very fast,
+  but they require some tiem for initialization adn thie time can be large.
+  - All polymonial interpoaltion behaves badly for largde degrees and unform/random grids
+  - Usage of dedicated Chebyshev and/or Lobatto grids partly solved this issue, butonly partly
+  - For large nmber of pointes rational interpolants behaves more stable, particularly
+  Floater-Hormann wwith relatively small value of parameter \f$d\f$ 
+  
 
-- see Jean-Paul Berrut and Lloyd N. Trefethen, 
-...   Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
-...   ISSN (print): 0036-1445
-...   ISSN (online): 1095-7200
-- see https://doi.org/10.1137/S0036144502417715
-- see https://en.wikipedia.org/wiki/Lagrange_polynomial
-- see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+  - see Jean-Paul Berrut and Lloyd N. Trefethen, 
+  Barycentric Lagrange Interpolation, SIAM Rev., 46(3), 501–517.
+  
+  - see https://doi.org/10.1137/S0036144502417715
+  - see https://en.wikipedia.org/wiki/Lagrange_polynomial
+  - see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+  
+  Straightforward Lagrange and Neville algorithms are also provided:
+  - both are rather slow: O(n^2) flops for evaluation,  while Neville is a bit faster 
+  - Lagrange algorithm is not stable numerically, while Neville algorithm is more stable
+  
+  For completeness see also:
+  - interpolation with bersntein polynomials using on Newton-Bernstein algorithm
+  - interpolation with B-splines
 
-Straightforward Lagrange and Neville algorithms are also provided:
-- both are rather slow: O(n^2) flops for evaluation,  while Neville is a bit faster 
-- Lagrange algorithm is not stable numerically, while Neville algorithm is more stable
-
-For completeness see also:
-- interpolation with bersntein polynomials using on Newton-Bernstein algorithm
-- interpolation with B-splines 
+  In addition purely python interpolators are provdied
+  - Berrut1st
+  - Berrut1st
+  - Barycentric
+  - FloaterHormann
 """
 # =============================================================================
 __version__ = "$Revision$"
@@ -76,15 +128,21 @@ __all__     = (
     # for completeness  
     'interpolate_bernstein' , ## Newton-Bernstein interpolation 
     'interpolate_bspline'   , ## Basic spline interpolation
+    # python interpolators
+    'Berrut1st'             , ## rational Berrut's 1st interpolant 
+    'Berrut2nd'             , ## rational Berrut's 2nd interpolant 
+    'Barycentric'           , ## polynomian true Barycentric interpolant 
+    'FloaterHormann'        , ## rational Floater-Hormann interpolant 
     )
 # =============================================================================
-import  ROOT, math, sys 
-from    builtins          import range
-from    ostap.core.core   import cpp, Ostap
-from    ostap.core.ostap_types  import is_integer
-from    ostap.math.base   import iszero, isequal, doubles 
+import  ROOT, math, sys, abc  
+from    builtins               import range
+from    ostap.core.core        import cpp, Ostap
+from    ostap.core.ostap_types import ( is_integer, sequence_types,
+                                        integer_types , dictlike_types )  
+from    ostap.math.base        import iszero, isequal, doubles 
 # =============================================================================
-from   ostap.logger.logger import getLogger
+from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
@@ -194,7 +252,43 @@ Ostap.Math.Interpolation.Abscissas.items        = _a_iteritems_
 Ostap.Math.Interpolation.Abscissas.__getitem__  = _a_getitem_  
 Ostap.Math.Interpolation.Abscissas.__delitem__  = _a_delitem_  
 
+# =============================================================================
+## create abscissas
+def _a_new_init_ ( a , arg1 , *args ) :
+    """ create abscissas
+    """
+    
+    if isinstance ( arg1 , Ostap.Math.Interpolation.Abscissas ) :
+        return a._old_init_ (           arg1   ) 
 
+    if isistance ( arg1 , sequence_types ) :
+        if not args : 
+            return a._old_init_ ( doubles ( arg1 ) )
+        elif 1 == len ( args ) and isinstance ( args[0] , bool ) :
+            return a._old_init_ ( doubles ( arg1 ) , args[0] )
+            
+    if isinstance ( arg1 , integer_types ) and 0 <= args1 :
+        if   2 == len ( args ) :
+            return a._old_init_ ( arg1 , args[0] , args[1] )
+        elif 3 == len ( args ) and isinstance ( args[2] , integer_types ) and 0 <= args[2] :
+            return a._old_init_ ( arg1 , *args  )
+
+    return a._old_init_ ( doubles ( arg1 , *args ) )
+        
+# =============================================================================
+Abscissas = Ostap.Math.Interpolation.Abscissas 
+if not hasattr ( Abscissas , '_old_init_' ) :
+    Abscissas . _old_init_ = Abscissas . __init__
+    ## modified contructor 
+    def __aa_new_init__ ( a , arg1 , *args ) :
+        """Modified constructor for interpolaiton abscissas 
+        """
+        _a_new_init_ ( a , args1 , *args )
+    __aa_new_init__ .__doc__ += '\n' + _a_new_init_ .__doc__
+    __aa_new_init__ .__doc__ += '\n' + Abscissas . _old_init_ . __doc__
+    Abscissas . __init__  = __aa_new_init__
+    
+       
 # =============================================================================
 ## Interpolation points 
 # ============================================================================= 
@@ -547,12 +641,14 @@ def points ( func , abscissas  = None ) :
     ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
 
+
 # =============================================================================
 ## Bernstein & BSpline interpolation
 # =============================================================================
 from ostap.math.bernstein import interpolate as interpolate_bernstein
 from ostap.math.bspline   import interpolate as interpolate_bspline  
 # =============================================================================
+
 
 # =============================================================================
 ## Scipy-based spline interpolation
@@ -562,6 +658,228 @@ try :
     __all__ =  __all__ + ( 'SplineInterpolator', ) 
 except  ImportError :
     pass 
+
+
+# =============================================================================
+from operator import mul as op_mul
+from operator import add as op_add 
+
+# =============================================================================
+## Base class for barycentric-like interpolation 
+class BaseInterpolant(object) :
+    """Base class for barycentric-like interpolation 
+    """
+    
+    __metaclass__ = abc.ABCMeta
+  
+    def __init__ ( self             ,
+                   data             ,
+                   scaler  = op_mul , 
+                   adder   = op_add ) :
+
+        self.__table = [] 
+        if   isinstance ( data , dictlike_types ) :
+            for x , v in data.items() :
+                self.__table.append ( ( x , v ) )
+        elif isinstance ( data , sequence_types ) :
+            for x , v in data :
+                self.__table.append ( ( x , v ) )
+        else :
+            
+            raise ...
+        
+        self.__table.sort ( key = lambda i : i[0] )
+        assert self.table , 'Interpolation table must not be empty!'
+        
+        self.__adder  = adder
+        self.__scaler = scaler 
+
+    ## make the actual interpolation 
+    def __call__ ( self , x ) :
+        """Make the actual interpolation""" 
+    
+        s1 = None
+        s2 = 0
+
+        x  = float ( x )
+        
+        for i, item in enumerate ( self.__table  ) :
+            
+            xi , yi = item
+            
+            if x == xi or isequal ( x , xi ) : return yi  ## RETURN
+            
+            ## calculate weight 
+            wi = self.weight ( i ) * 1.0 / ( x - xi ) 
+
+            if 0 == i :
+                s1 = self.__scaler ( yi , wi )
+            else :
+                s1 = self.__adder  ( s1 , self.__scaler ( yi , wi ) )
+                
+            s2 += wi 
+        
+        return self.__scaler ( s1 , 1.0/s2 )
+
+    @property
+    def scaler ( self ) :
+        """``scaler'' : operation ( obj , weight ) -> obj"""
+        return self.scaler
+
+    @property
+    def adder ( self ) :
+        """``adder'' : operation  ( obj , obj ) -> obj"""
+        return self.adder 
+        
+
+    # =========================================================================
+    @abc.abstractmethod
+    def weight ( self , index ) :
+        """Get the weigth for the given interpolation node"""
+        return NotImplemented
+         
+    # =========================================================================
+    @property
+    def table ( self ) :
+        """``table'' : actual interpolation table"""
+        return self.__table
+
+    # =========================================================================
+    ## the length of the interpolation table
+    #  - number of interpolation points 
+    def __len__ ( self ) :
+        """the length of the interpolation table
+        - number of interpolation points
+        """
+        return len ( self.__table )
+    
+# =============================================================================
+## Berrut's 1st barycentric rational interpolant
+class Berrut1st(BaseInterpolant) :
+    """Berrut's 1st barycentric rational interpolant
+    """ 
+    def weight ( self , index ) :
+        """Get the weigth for the given interpolation node"""
+        return 1.0 if ( index % 2 ) else -1.0 
+
+# =============================================================================
+## Berrut's 2nd barycentric rational interpolant
+class Berrut2nd(BaseInterpolant) :
+    """Berrut's 2nd  barycentric rational interpolant
+    """ 
+    def weight ( self , index ) :
+        """Get the weigth for the given interpolation node"""
+        
+        if index == 0 : return 1.0
+        N = len ( self ) 
+        if index + 1 == N  :
+            return 1.0 if ( N % 2 ) else -1.0 
+
+        return 2.0 if ( index  % 2 ) else -2.0 
+
+# =============================================================================
+## true Barycentric polymnomial interpolant
+class Barycentric(BaseInterpolant) :
+    """True barycentric polynomial interpolant
+    """
+    def __init__ ( self             ,
+                   data             ,
+                   scaler  = op_mul , 
+                   adder   = op_add ) :
+        
+        super(Barycentric,self).__init__ ( data , scaler , adder )
+
+        N = len ( self )
+
+        ws = [] 
+        for i, item in enumerate ( self.table ) :
+
+            xi , yi = item
+
+            ww = 1.0
+            for j in range ( N ) :
+                if i != j :
+                    xj = self.table[j][0] 
+                    ww *= ( xi - xj )
+                    
+            ws.append ( 1.0 / ww )
+            
+        self.__weigths = tuple ( ws ) 
+        
+    def weight ( self , index ) :
+        """Get the weigth for the given interpolation node"""
+
+        return self.__weigths[index]
+    
+    @property
+    def weights ( self ) :
+        """Get list of weights"""
+        return self.__weights
+
+
+# =============================================================================
+## FloaterHormann rational interpolant
+class FloaterHormann(BaseInterpolant) :
+    """FloaterHormann rational interpolant
+    """
+    def __init__ ( self             ,
+                   data             ,
+                   degree  = 3      , 
+                   scaler  = op_mul , 
+                   adder   = op_add ) :
+
+        assert isinstance ( degree , integer_types ) and 0 <= degree , \
+               "FloaterHormann: ``degree'' must be non-negative!"
+        
+        super(FloaterHormann,self).__init__ ( data , scaler , adder )
+
+        N = len ( self )
+        n = max ( 0  , N - 1 ) 
+
+        self.__degree = min ( degree , N )
+        
+        d = self.__degree
+            
+        ws = []
+        
+        for i in range ( N  ) :
+
+            xi = self.table[i][0]
+
+            ib = 0.0
+            jmin = max ( i - d , 0     )
+            jmax = min ( i     , n - d ) 
+            for j in range ( jmin , jmax + 1 ) :
+
+                kmin = j
+                kmax = j + d
+
+                bb = 1.0
+                for k in range ( kmin , kmax + 1 ) :
+
+                    xk = self.table[k][0]
+                    if k != i : bb /= abs ( xi - xk )
+                ib += bb
+                
+            wi =  ib * ( 1 if i % 2 else -1 ) 
+            ws.append ( wi )
+
+        self.__weigths = tuple ( ws ) 
+        
+    def weight ( self , index ) :
+        """Get the weigth for the given interpolation node"""
+
+        return self.__weigths[index]
+    
+    @property
+    def weights ( self ) :
+        """Get list of weights"""
+        return self.__weights
+
+    @property
+    def degree ( self ) :
+        """``degree'' : degree for FloaterHormann rational interpolant"""
+        return self.__degree
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -262,12 +262,9 @@ ROOT.TMatrix.__str__   = _tmg_str_
 def _add_to ( vct , cnv , arg1 , *args ) :
     """Add something to std::vector 
     """
-    from types       import GeneratorType as GT
+    from ostap.core.ostap_types import sequence_types
     
-    IT = Iterable
-
     VT = type(vct)
-
     VS = std.vector('std::string')
     
     ## the special treatment of vector of  strings 
@@ -279,7 +276,7 @@ def _add_to ( vct , cnv , arg1 , *args ) :
     ## the first argument: iterable or generator?
     elif isinstance ( arg1 , VT ) :
         for a in arg1 : vct.push_back ( a )
-    elif isinstance ( arg1 , ( GT , IT ) ) :
+    elif isinstance ( arg1 , sequence_types ) :      ## SEQUENCE
         for a in arg1 : vct.push_back ( cnv ( a ) )                
     else :        
         try :

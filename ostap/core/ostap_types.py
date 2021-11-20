@@ -73,16 +73,16 @@ else :
     from collections     import Container     as Collection
     from types           import GeneratorType as Generator 
 
-iterable_types = Iterable,
-num_types      = integer_types + ( float , ) 
-str_types = str,
+iterable_types  = Iterable,
+num_types       = integer_types + ( float , ) 
+str_types       = str,
 
-list_types     = list , tuple
-listlike_types = list_types + ( set , C.Sequence )
-dict_types     = dict ,
-dictlike_types = dict ,               C.Mapping  
-sequence_types = list_types + ( Sequence , Collection , Iterable , Generator )
-sized_types    = Sized , 
+list_types      = list , tuple
+listlike_types  = list_types + ( set , C.Sequence )
+dict_types      = dict ,
+dictlike_types  = dict ,               C.Mapping  
+sequence_types  = list_types + ( Sequence , Collection , Iterable , Generator )
+sized_types     = Sized , 
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :

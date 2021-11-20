@@ -11,6 +11,7 @@ __all__     = ()
 # =============================================================================
 import  ROOT
 from    ostap.math.base    import Ostap
+from    array              import array
 # =============================================================================
 # logging 
 # =============================================================================
@@ -114,7 +115,7 @@ def poly_reduce ( p ) :
     - see Ostap.Math.PositiveEven 
     """
     return poly_factory , ( type ( p ) ,
-                            tuple ( p.pars() ) ,
+                            array ( 'd' ,  p.pars() ) ,
                             p.xmin () ,
                             p.xmax () )
 
@@ -139,7 +140,7 @@ def pm_reduce ( p ) :
     - see Ostap.Math.Monotonic
     """
     return poly_factory , ( type ( p ) ,
-                            tuple ( p.pars() ) ,
+                            array ( 'd' , p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.increasing() else False )
@@ -152,7 +153,7 @@ def pc_reduce ( p ) :
     - see Ostap.Math.Convex
     """
     return poly_factory , ( type ( p ) ,
-                            tuple ( p.pars() ) ,
+                            array ( 'd' ,  p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.increasing () else False , 
@@ -166,7 +167,7 @@ def pco_reduce ( p ) :
     - see Ostap.Math.ConvexOnly
     """
     return poly_factory , ( type ( p ) ,
-                            tuple ( p.pars() ) ,
+                            array ( 'd' , p.pars() ) ,
                             p.xmin () ,
                             p.xmax () ,
                             True if p.convex     () else False ) 
@@ -208,8 +209,8 @@ def sp_reduce (  sp ) :
     - see Ostap.Math.PositiveSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          tuple ( sp.knots() ) ,
-                          tuple ( sp.pars () ) ) 
+                          array ( 'd' , sp.knots() ) ,
+                          array ( 'd' , sp.pars () ) ) 
 
 Ostap.Math.BSpline        . __reduce__ = sp_reduce 
 Ostap.Math.PositiveSpline . __reduce__ = sp_reduce 
@@ -223,8 +224,8 @@ def spm_reduce (  sp ) :
     - see Ostap.Math.MonotonicSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          tuple ( sp.knots() ) ,
-                          tuple ( sp.pars () ) , 
+                          array ( sp.knots() ) ,
+                          array ( sp.pars () ) , 
                           True if sp.increasing () else False )
                           
 Ostap.Math.MonotonicSpline . __reduce__ = spm_reduce 
@@ -237,13 +238,12 @@ def spc_reduce (  sp ) :
     - see Ostap.Math.ConvexSpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          tuple ( sp.knots() ) ,
-                          tuple ( sp.pars () ) , 
+                          array ( sp.knots() ) ,
+                          array ( sp.pars () ) , 
                           True if sp.increasing () else False , 
                           True if sp.convex     () else False )
                           
 Ostap.Math.ConvexSpline . __reduce__ = spc_reduce 
-
 
 
 # =============================================================================
@@ -254,8 +254,8 @@ def spco_reduce (  sp ) :
     - see Ostap.Math.ConvexOnlySpline 
     """
     return sp_factory , ( type  ( sp ) ,
-                          tuple ( sp.knots() ) ,
-                          tuple ( sp.pars () ) , 
+                          array ( sp.knots() ) ,
+                          array ( sp.pars () ) , 
                           True if p.convex     () else False )
                           
 Ostap.Math.ConvexOnlySpline . __reduce__ = spco_reduce 

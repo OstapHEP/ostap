@@ -1,11 +1,15 @@
 ## New features:
 
  1. add `reduce` method for polynomial and spline classes 
- 1. largelty rewrite and extend all interpolation stuff 
+ 1. largerly rewrite and extend all interpolation stuff 
+ 1. more improvemements for serialization of polynomial-like stuff 
+ 1. add generic python interpolators with tests for matrices
 
 ## Backward incompatible 
  
 ## Bug fixes:
+
+ 1. fix bugs in `tree.py`  (Thanks to Daria Savrina)
 
 # v1.6.4.2
 
