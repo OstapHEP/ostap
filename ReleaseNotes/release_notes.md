@@ -12,7 +12,7 @@
 ## Bug fixes:
 
  1. fix bugs in `tree.py`  (Thanks to Daria Savrina)
- 1. fix newly introduiced but in (python) constructor of bernstein polynomoals  
+ 1. fix newly introduiced bug in (python) constructor of bernstein polynomoals  
 
 # v1.6.4.2
 
