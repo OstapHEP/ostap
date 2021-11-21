@@ -30,28 +30,41 @@ def test_solve ():
     # 1) construct function with known roots
     
     ## roots in [0,1]
-    troots  =          [  random.uniform(0.001,0.999) for i in  range ( 5 ) ]
+    troots  =          [  random.uniform(0.05,0.95) for i in  range ( 4 ) ]
     troots.sort() 
     
-    ## roots in [1,10]
-    roots   = troots + [  random.uniform(1.001,9.999) for i in  range ( 4 ) ]
+    ## roots in [2,9]
+    roots   = troots + [  random.uniform(2,9) for i in  range ( 4 ) ]
     roots.sort ()
     
     ## complex roots  
-    croots  = [ complex ( random.uniform(-3,-1) , random.gauss ( 0 , 3 ) ) for i in range (  4) ]
-    croots += [ complex ( random.uniform( 2, 4) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
-    
+    croots  = [ complex ( random.uniform(-6,-1) , random.uniform ( -5 , 5 ) ) for i in range ( 3 ) ]
+    croots += [ complex ( random.uniform( 3, 6) , random.uniform ( -5 , 5 ) ) for i in range ( 3 ) ]
+
     ## Bernstein polynomial with known roots
-    bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
-    
+    bs = Ostap.Math.Bernstein (  0 , 1 , roots ) ##  , croots )
+
     logger.info ( "Bernstein: %s" % bs ) 
     
     ##  find roots of Bernstein  polynomial     
     rr = bs.solve()
-    logger.info ('Roots found : [%s]' %  ( ', '.join ( "%.6f" % r for r in rr  )  ) )
+    rr = [ r for r in rr ]
+    rr.sort()
     
-    troots.sort() 
-    logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
+    logger.info ('Roots found : [ %s]' %  ( ', '.join ( "%.6f" % r for r in rr     ) ) )    
+    logger.info ('Roots true  : [ %s]' %  ( ', '.join ( "%.6f" % r for r in troots ) ) )
+
+
+    if len ( rr ) != len ( troots ) :
+        logger.error ( 'Mismatch in number of roots found!' )
+    else :
+        diff = 0.0 
+        for i,r in enumerate ( rr ) :
+            diff += abs ( r  - troots[i] )
+            
+        diff /= len ( rr ) 
+        logger.info ( 'Mean root distance is %.4g' % diff ) 
+    
 
 # ============================================================================
 ##  check number of roots using Sturm' sequence 

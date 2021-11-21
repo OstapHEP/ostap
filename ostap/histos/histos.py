@@ -3057,7 +3057,7 @@ def _h3_random_ ( h3 ) :
     y = ctypes.c_double ( 1.0 )
     z = ctypes.c_double ( 2.0 )
     #
-    h3.GetRandom3( x , y , z )
+    h3.GetRandom3 ( x , y , z )
     #
     return float( x.value ) , float( y.value ) , float( z.value )
 
@@ -3071,6 +3071,87 @@ ROOT.TH3D.random = _h3_random_
 ROOT.TH1F.random = lambda s : s.GetRandom() 
 ROOT.TH1D.random = lambda s : s.GetRandom()
 
+# =============================================================================
+## Shoot several random numbers from 1D histogram
+#  @code
+#  h1 = ...
+#  for v in h1.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h1_shoot_ ( h1 , N , accept = lambda v : True ) :
+    """ Shoot several random numbers from 1D histogram
+    >>> h1 = ...
+    >>> for v in h1.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        v = h1.random()
+        while not accept ( v ) :
+            v = h1.random()
+
+        yield v 
+        
+# =============================================================================
+## Shoot several random numbers from 2D histogram
+#  @code
+#  h2 = ...
+#  for x,y in h2.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h2_shoot_ ( h2 , N , accept = lambda x,y : True ) :
+    """ Shoot several random numbers from 2D histogram
+    >>> h2 = ...
+    >>> for x,y in h2.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        x, y  = h2.random()
+        while not accept ( x , y ) :
+            x, y  = h2.random()
+            
+        yield x , y 
+
+# =============================================================================
+## Shoot several random numbers from 3D histogram
+#  @code
+#  h3 = ...
+#  for x,y,z in h3.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h3_shoot_ ( h3 , N , accept = lambda x,y,z : True ) :
+    """ Shoot several random numbers from 3D histogram
+    >>> h3 = ...
+    >>> for x,y,z in h3.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        x, y , z  = h3.random()
+        while not accept ( x , y , z ) :
+            x , y , z  = h3.random()
+            
+        yield x , y , z 
+
+ROOT.TH1F.shoot = _h1_shoot_
+ROOT.TH1D.shoot = _h1_shoot_
+ROOT.TH2F.shoot = _h2_shoot_
+ROOT.TH2D.shoot = _h3_shoot_
+ROOT.TH3F.shoot = _h3_shoot_
+ROOT.TH3D.shoot = _h3_shoot_
 
 # =============================================================================
 ## operation with the histograms 
@@ -7761,6 +7842,15 @@ _new_methods_   = (
     #
     ROOT.TH1F.random   ,
     ROOT.TH1D.random   ,
+    #
+    ROOT.TH2F.shoot    ,
+    ROOT.TH2D.shoot    ,
+    #
+    ROOT.TH3F.shoot    ,
+    ROOT.TH3D.shoot    ,
+    #
+    ROOT.TH1F.shoot    ,
+    ROOT.TH1D.shoot    ,
     #
     _h2_oper_    ,
     _h2_ioper_   ,

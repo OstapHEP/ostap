@@ -233,9 +233,45 @@ for t in ( 'int'                  ,
             _l = len(v)
             for i in  range(_l) :
                 yield v[i]
-        v.__iter__ = _v_iter_ 
-    
+        v.__iter__ = _v_iter_
 
+# =============================================================================
+## Convert vector of floating types to string 
+def float_vct_str ( vct , format = '%.5g' ) :
+    """Convert vector of floating types to string"""
+    try :
+        return '[ ' + ', '.join ( [ format % v for v in vct ] ) + ' ]'  
+    except TypeError :
+        pass
+    return float_vct_str ( vct , format = '%.5g' )
+
+# =============================================================================
+## Convert vector of complex types to string 
+def complex_vct_str ( vct , format = '%.5g%-+.5gj' ) :
+    """Convert vector of complex types to string"""
+    try :
+        lst = [] 
+        for c in vct :
+            cc   = complex ( c )
+            item = format % ( cc.real , cc.imag )
+            lst.append ( cc )        
+        return '[ ' + ', '.join ( lst ) + ' ]'  
+    except TypeError :
+        pass
+    return complex_vct_str ( vct , format = '%.5g%-+.5gj' )
+
+for t in ( 'float' , 'double' ):
+    
+    v = std.vector ( t )
+    v.__repr__ = float_vct_str 
+    v.__str__  = float_vct_str 
+
+for t in ( 'std::complex<double>' , 'std::complex<float>'  ) :
+
+    v = std.vector( t )
+    v.__repr__ = complex_vct_str    
+    v.__str__  = complex_vct_str    
+    
 # =============================================================================
 ## self-printout of TMaxtrix 
 def _tmg_str_ ( self , fmt = ' %+11.4g') :
@@ -417,6 +453,10 @@ SPD.__setitem__ = _spd_setitem_
 COMPLEX  = cpp.std.complex ( 'double'      )
 COMPLEXf = cpp.std.complex ( 'float'       )
 COMPLEXl = cpp.std.complex ( 'long double' )
+
+VCOMPLEX   = cpp.std.vector ( COMPLEX )
+VDOUBLE    = cpp.std.vector ('double' )
+VCT_TYPES  = VDOUBLE, VCOMPLEX 
 # =============================================================================
 if root_version_int < 62200 : 
     def _real_ ( s ) : return s.real ()

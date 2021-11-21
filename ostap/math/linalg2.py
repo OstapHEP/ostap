@@ -324,13 +324,13 @@ class LinAlg(object) :
     def CLEANUP () :
         """Cleanup LinAlg
         """
-        
+
         while LinAlg.decorated_matrices :
             LinAlg.restore ( LinAlg.decorated_matrices.pop() ) 
         while LinAlg.decorated_vectors  :
             LinAlg.restore ( LinAlg.decorated_vectors .pop() ) 
         
-
+        
         while LinAlg.known_ssymmatrices : LinAlg.known_ssymmatrices . popitem ()
         while LinAlg.known_smatrices    : LinAlg.known_smatrices    . popitem ()
         while LinAlg.known_svectors     : LinAlg.known_svectors     . popitem ()
@@ -1736,7 +1736,7 @@ class LinAlg(object) :
                'Invalid length of the vector %s/%s' % ( n , type ( l ) )
 
         tt = n , t 
-        v = LinAlg.known_svectors.get ( tt , None )
+        v  = LinAlg.known_svectors.get ( tt , None )
         if  v is None :
             v = ROOT.ROOT.Math.SVector ( t , n )
             LinAlg.known_svectors [ tt ] = v
@@ -1746,7 +1746,12 @@ class LinAlg(object) :
             if not tt  in LinAlg.known_svectorse    : LinAlg.  VectorE ( n ,     t )    
             tt1 = n , n , t 
             if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
-            
+
+            ## create also all smaller vectors 
+            for i in range ( 2 , n ) :
+                ti = i , t
+                if not ti in LinAlg.known_svectors : LinAlg.Vector ( i ,  t )                
+                
         return v 
     
     # =========================================================================
@@ -1769,18 +1774,36 @@ class LinAlg(object) :
         tt = k , n , t
         m = LinAlg.known_smatrices.get ( tt , None )
         if m is None :
+            
             m = ROOT.ROOT.Math.SMatrix ( t , k , n )
             LinAlg.known_smatrices [ tt ] = m
             LinAlg.deco_matrix ( m )
-            ##
+
+            ## check k-dimension 
             tt1 = k , t
             if not tt1 in LinAlg.known_svectors     : LinAlg.   Vector ( k , t )
             if not tt1 in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( k , t )    
+
+            ## check N-dimension
             tt2 = n , t
             if not tt2 in LinAlg.known_svectors     : LinAlg.   Vector ( n , t )
             if not tt2 in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( n , t )    
 
-            
+            ## check transposed matrix 
+            tt3 = n , k , t
+            if not tt3 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , k , t ) 
+
+            ## create also smaller vectors 
+            for i in range ( 2 , max ( k , n )  ):
+                ti = i , t
+                if not ti in LinAlg.known_svectors  : LinAlg.Vector ( i ,  t )                
+                
+            ## create also smaller matrices 
+            for i  in range ( 2 , k + 1 ) :
+                for j in range ( 2 , n + 1 ) :
+                    tti = i , j , t
+                    if not tti in LinAlg.known_smatrices :  LinAlg.   Matrix ( i , j , t ) 
+                    
         return m 
 
 
@@ -1807,9 +1830,24 @@ class LinAlg(object) :
             LinAlg.deco_symmatrix  ( m )
             ##
             if not tt  in LinAlg.known_svectors  : LinAlg.Vector ( n ,     t )
+
             tt1 = n , n , t 
             if not tt1 in LinAlg.known_smatrices : LinAlg.Matrix ( n , n , t )
 
+            ## create also all smaller vectors and matrices 
+            for i in range ( 2 , n ):
+                ti = i , t
+                if not ti in LinAlg.known_svectors     : LinAlg.   Vector ( i , t )                
+                if not ti in LinAlg.known_ssymmatrices : LinAlg.SymMatrix ( i , t )
+
+            ## create also smaller matrices 
+            for i in range ( 2 , n + 1 ) :
+                tv = i , t
+                if not tv in LinAlg.known_svectors      : LinAlg.Vector ( i ,  t )
+                for j in range ( i , n + 1 ) :
+                    tti = i , j , t
+                    if not tti in LinAlg.known_smatrices :  LinAlg. Matrix ( i , j , t ) 
+                                    
         return m
     
     # =========================================================================
@@ -1840,6 +1878,10 @@ class LinAlg(object) :
             tt1 = n , n , t 
             if not tt1 in LinAlg.known_smatrices    : LinAlg.   Matrix ( n , n , t )
 
+            for i in range ( 2 , n ) :
+                ti = i , t
+                if not ti in LinAlg.known_svectorse  : LinAlg. VectorE ( i , t )                
+                
         return v 
 
     # =========================================================================
