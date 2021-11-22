@@ -1,3 +1,5 @@
+# v1.6.5.0
+
 ## New features:
 
  1. add `reduce` method for polynomial and spline classes 
