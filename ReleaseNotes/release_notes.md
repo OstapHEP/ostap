@@ -1,3 +1,10 @@
+## New features:
+
+## Backward incompatible  
+
+## Bug fixes:
+
+
 # v1.6.5.0
 
 ## New features:
@@ -15,7 +22,7 @@
 ## Bug fixes:
 
  1. fix bugs in `tree.py`  (Thanks to Daria Savrina)
- 1. fix newly introduiced bug in (python) constructor of bernstein polynomoals  
+ 1. fix newly introduced bug in (python) constructor of bernstein polynomoals  
 
 # v1.6.4.2
 
