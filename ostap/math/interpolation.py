@@ -684,9 +684,8 @@ class BaseInterpolant(object) :
         elif isinstance ( data , sequence_types ) :
             for x , v in data :
                 self.__table.append ( ( x , v ) )
-        else :
-            
-            raise ...
+        else :            
+            raise TypeError('Invalid type %s' % type ( data ) )  
         
         self.__table.sort ( key = lambda i : i[0] )
         assert self.table , 'Interpolation table must not be empty!'

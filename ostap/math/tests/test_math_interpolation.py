@@ -338,8 +338,11 @@ def test_random_grid_sin () :
     N , low , high = 14 , 0 , 3 * math.pi  
 
     dct = {} 
+    mid = 0.5  * ( low + high ) 
     while N > len ( dct ) :
-        xi = random.uniform ( low , high )
+        xi = random.uniform ( low , mid  )
+        dct [ xi ] = tfun ( xi ) 
+        xi = random.uniform ( mid , high )
         dct [ xi ] = tfun ( xi ) 
 
     dct [ low  ] = tfun ( low  )
@@ -359,11 +362,14 @@ def test_random_grid_abssin () :
 
     tfun = lambda x : abs ( math.sin ( x ) ) 
     
-    N , low , high = 20 , 0 , 1.5 * math.pi  
+    N , low , high = 14 , 0 , math.pi  
 
     dct = {} 
+    mid = 0.5  * ( low + high ) 
     while N > len ( dct ) :
-        xi = random.uniform ( low , high )
+        xi = random.uniform ( low , mid  )
+        dct [ xi ] = tfun ( xi ) 
+        xi = random.uniform ( mid , high )
         dct [ xi ] = tfun ( xi ) 
 
     dct [ low  ] = tfun ( low  )
@@ -385,8 +391,11 @@ def test_random_grid_sin2 () :
     N , low , high = 14 , 0 , 2 * math.pi  
 
     dct = {} 
+    mid = 0.5  * ( low + high ) 
     while N > len ( dct ) :
-        xi = random.uniform ( low , high )
+        xi = random.uniform ( low , mid  )
+        dct [ xi ] = tfun ( xi ) 
+        xi = random.uniform ( mid , high )
         dct [ xi ] = tfun ( xi ) 
 
     dct [ low  ] = tfun ( low  )
@@ -405,11 +414,14 @@ def test_random_grid_gauss () :
 
     tfun = lambda x : Ostap.Math.gauss_pdf ( x ) 
     
-    N , low , high = 16 , -4 , 4
+    N , low , high = 14 , -4 , 4
 
     dct = {} 
+    mid = 0.5  * ( low + high ) 
     while N > len ( dct ) :
-        xi = random.uniform ( low , high )
+        xi = random.uniform ( low , mid  )
+        dct [ xi ] = tfun ( xi ) 
+        xi = random.uniform ( mid , high )
         dct [ xi ] = tfun ( xi ) 
 
     dct [ low  ] = tfun ( low  )

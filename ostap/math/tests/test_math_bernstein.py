@@ -54,14 +54,12 @@ def test_solve ():
     logger.info ('Roots found : [ %s]' %  ( ', '.join ( "%.6f" % r for r in rr     ) ) )    
     logger.info ('Roots true  : [ %s]' %  ( ', '.join ( "%.6f" % r for r in troots ) ) )
 
-
     if len ( rr ) != len ( troots ) :
         logger.error ( 'Mismatch in number of roots found!' )
     else :
         diff = 0.0 
         for i,r in enumerate ( rr ) :
-            diff += abs ( r  - troots[i] )
-            
+            diff += abs ( r  - troots[i] )            
         diff /= len ( rr ) 
         logger.info ( 'Mean root distance is %.4g' % diff ) 
     
