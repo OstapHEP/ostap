@@ -183,7 +183,8 @@ def test_cspline () :
     
     logger = getLogger ( 'test_cspline' )
     logger.info ("Test positive decreasing convex spline of order 3 with 1 inner knot")
-    spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 1 , 3 , increasing = False , convex = True )
+    ## spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 1 , 3 , increasing = False , convex = True )
+    spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 1 , 3 , False , True )
     model  = Models.CSpline_pdf ( 'C3' , x , spline )
 
     ## fit it! 
