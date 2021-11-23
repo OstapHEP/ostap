@@ -1,5 +1,7 @@
 ## New features:
 
+ 1. add new test/example 'test_fitting_resolution3.py' with relativerly realistic exmapel of simultaneous firtrting of "data" and "MC", propagating uncertainuty from MC resoltuoion shape to results of fit to dat ausing simultaneous fit 
+
 ## Backward incompatible  
 
 ## Bug fixes:

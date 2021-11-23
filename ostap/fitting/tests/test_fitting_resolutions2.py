@@ -7,11 +7,9 @@
 # Test module for ostap/fitting/resolution2.py
 # - It tests various asymmetric resolution models
 # ============================================================================= 
-"""Test module for ostap/fitting/resolution.py
+"""Test module for ostap/fitting/resolution2.py
 - It tests various asymmetric resolution models
 """
-# ============================================================================= 
-from   __future__               import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import

@@ -59,12 +59,12 @@ __all__     = (
 # =============================================================================
 import ROOT
 # =============================================================================
+from ostap.fitting.basic import Ostap, RESOLUTION, CheckMean 
+# =============================================================================    
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.resolution' )
 else                       : logger = getLogger ( __name__                   )
 # =============================================================================
-from ostap.fitting.basic import Ostap, RESOLUTION, CheckMean 
-# =============================================================================    
 ## @var ZERO : zero constant 
 ZERO   = ROOT.RooRealConstant.value ( 0 ) 
 # =============================================================================    
@@ -380,7 +380,7 @@ class ResoCB2(RESOLUTION) :
     def __init__ ( self          , 
                    name          ,   ## the  name 
                    xvar          ,   ## the  variable 
-                   sigma         ,   ## core r esolution
+                   sigma         ,   ## core resolution
                    alpha  = 1.5  ,   ## alpha  
                    n      = 5    ,   ## power-law exponent
                    fudge  = 1    ,   ## fudge-factor 
@@ -398,14 +398,14 @@ class ResoCB2(RESOLUTION) :
         
         self.__alpha = self.make_var (
             alpha                  ,
-            'alpha_'    + name ,
-            '#lpha(%s)' % name , alpha , 0.1   , 10 )
+            'alpha_'     + name ,
+            '#alpha(%s)' % name , alpha , 0.05   , 10 )
         
         self.__n     = self.make_var (
             n                  ,
-            'n_'        + name ,
-            'n(%s)'     % name , n     , 1.e-6 , 50 )
-
+            'n_'         + name ,
+            'n(%s)'      % name , n     , 1.e-6 , 50 )
+        
         if kappaN is None :
 
             self.__kappaN = ZERO

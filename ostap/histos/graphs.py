@@ -2376,7 +2376,7 @@ def _gr_append_ ( graph , *point ) :
     return len ( graph )
 
 # =============================================================================
-## pop the point fro mthe graph
+## pop the point from the graph
 #  @code
 #  graph = ...
 #  graph.pop ( 3 ) ## pop the point #3
