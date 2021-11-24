@@ -41,14 +41,6 @@ __all__     = (
     'all_strings'     , ## all argumets of string  types?
     )
 # =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
-else                       : logger = getLogger( __name__     )
-# =============================================================================
-logger.debug ( 'Core objects/classes/functions for Ostap')
-# =============================================================================
 import math
 from   sys import version_info as python_version 
 if ( 3 , 0 ) <= python_version :
@@ -71,18 +63,39 @@ elif ( 3 , 3 ) <= python_version :
 else :
     from collections     import Sequence , Iterable , Sized            
     from collections     import Container     as Collection
-    from types           import GeneratorType as Generator 
+    from types           import GeneratorType as Generator
+    
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger 
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.core.ostap_types' )
+else                       : logger = getLogger( __name__     )
+# =============================================================================
+logger.debug ( 'Core objects/classes/functions for Ostap')
+# =============================================================================
 
 iterable_types  = Iterable,
 num_types       = integer_types + ( float , ) 
 str_types       = str,
 
 list_types      = list , tuple
-listlike_types  = list_types + ( set , C.Sequence )
+
+import array 
+listlike_types  = list_types + ( set , C.Sequence , array.array )
+# =============================================================================
+try :
+    import numpy as np
+    listlike_types  = listlike_types + ( np.ndarray , )    
+except ImportError :
+    pass 
+# =============================================================================
 dict_types      = dict ,
-dictlike_types  = dict ,               C.Mapping  
-sequence_types  = list_types + ( Sequence , Collection , Iterable , Generator )
-sized_types     = Sized , 
+dictlike_types  = dict ,  C.Mapping  
+sequence_types  = listlike_types + ( Sequence , Collection , Iterable , Generator )
+sized_types     = Sized ,
+# =============================================================================
+
 # =============================================================================
 ## Is this number of a proper integer?
 def is_integer ( v ) :
