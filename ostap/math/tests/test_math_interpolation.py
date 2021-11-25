@@ -28,8 +28,9 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_interpolation' ) 
 else                       : logger = getLogger ( __name__                        )
 # =============================================================================
+functions = set () 
 
-## calcualet "distance" between two functions 
+## calculate "distance" between two functions 
 def distance ( fun1 , fun2 , low , high ) :
     """calculate ``distance'' between two functions"""
 
@@ -88,7 +89,20 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
             
- 
+    for n,t in interpolants :
+        functions.add ( ( name , t ) ) 
+
+        if not hasattr ( t , 'table' ) : continue
+        print ( 'NAME' , n , name ) 
+        import pickle 
+        t = interpolants[1][1]
+        
+        print (  t.table() )
+        tt = pickle.loads ( pickle.dumps( t ) )
+        print ( tt.table() )
+        
+        
+
     with wait ( 3 ) , use_canvas ( name ) :
         ff = lambda x : fun  ( x )
         f1_draw ( ff , xmin = low , xmax = high , linecolor = 2 , linewidth = 2 )
@@ -210,6 +224,9 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     for d in range ( 1 , 5 ) : 
         interpolants.append ( ( 'BSpline/%s' % d , interpolate_bspline  ( data , None , d ) ) ) 
     
+    for n,t in interpolants :
+        functions.add ( ( name , t ) ) 
+
     with wait ( 1 ) , use_canvas ( name ) :
         
         ff = lambda x : tfunc  ( x )
@@ -430,18 +447,45 @@ def test_random_grid_gauss () :
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'gauss' , N , low , high )  )
     
     return run_grid_interpolation ( tfun , dct , N , low , high , scale = 1.e-3 , logger = logger , name = 'gauss') 
+
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for i,f in enumerate ( functions , start = 1 ) :
+            n , ff = f 
+            db[ '%03d:%s:%s' % ( i , n , ff.__class__.__name__ ) ] = ff
+        db['functions'   ] = functions 
+        db.ls() 
+    ## with DBASE.open ( 'test.db' , 'r' ) as db  :
+    ##     for key in db :
+    ##         f = db[key]
+    ##         if hasattr ( f , 'draw' ) :
+    ##             with wait ( 2 ) , use_canvas ( key ) :
+    ##                 f.draw() 
+                    
     
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_cos                () 
-    ## test_abssin             ()
-    ## test_abs2sin            ()
+    test_cos                () 
+    test_abssin             ()
+    test_abs2sin            ()
     test_random_grid_sin    ()
     test_random_grid_abssin ()
     test_random_grid_sin2   ()
     test_random_grid_gauss  ()
     
+    ## check finally that everything is serializeable:
+    with timing ('test_db' , logger ) :
+        test_db ()
     
 # =============================================================================
 ##                                                                      The END 

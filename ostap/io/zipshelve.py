@@ -167,6 +167,7 @@ import zlib        ## use zlib to compress DB-content
 import shelve      ## 
 import shutil
 from ostap.io.compress_shelve import CompressShelf
+from ostap.io.dbase           import TmpDB 
 # =============================================================================
 ## @class ZipShelf
 #  Zipped-version of ``shelve''-database
@@ -376,40 +377,34 @@ def open ( filename                                 ,
 #  TEMPORARY Zipped-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
-class TmpZipShelf(ZipShelf):
+class TmpZipShelf(ZipShelf,TmpDB):
     """TEMPORARY Zipped-version of ``shelve''-database     
     """    
-    def __init__(
-        self                                   ,
-        protocol    = HIGHEST_PROTOCOL         , 
-        compress    = zlib.Z_BEST_COMPRESSION  ,
-        silent      = False                    ,
-        keyencoding = ENCODING                 ) :
-
-        ## create temporary file name 
-        import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.zdb' )
+    def __init__( self                                   ,
+                  protocol    = HIGHEST_PROTOCOL         , 
+                  compress    = zlib.Z_BEST_COMPRESSION  ,
+                  silent      = False                    ,
+                  keyencoding = ENCODING                 , 
+                  remove      = True                     ,   ## immediate remove 
+                  keep        = False                    ) : ## keep it 
+        
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.zdb' , remove = remove , keep = keep ) 
          
-        ZipShelf.__init__ ( self        ,  
-                            filename    ,
-                            'c'         ,
-                            protocol    ,
-                            compress    , 
-                            False       , ## writeback 
-                            silent      ,
-                            keyencoding ) 
+        ZipShelf.__init__ ( self          ,  
+                            self.tmp_name ,
+                            'c'           ,
+                            protocol      ,
+                            compress      , 
+                            False         , ## writeback 
+                            silent        ,
+                            keyencoding   )
         
     ## close and delete the file 
     def close ( self )  :
-        ## close the shelve file
         ZipShelf.close ( self )
-        fname = self.nominal_dbname 
-        ## delete the file 
-        if os.path.exists ( fname ) :
-            try :
-                os.unlink ( fname )
-            except : 
-                pass
+        TmpDB.clean    ( self ) 
+            
             
 # =============================================================================
 ## helper function to open TEMPORARY ZipShelve data base#
@@ -418,7 +413,9 @@ class TmpZipShelf(ZipShelf):
 def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
             compresslevel = zlib.Z_BEST_COMPRESSION , 
             silent        = True                    ,
-            keyencoding   = ENCODING                ) :
+            keyencoding   = ENCODING                ,
+            remove        = True                    ,    ## immediate remove 
+            keep          = False                   ) :  ## keep it 
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -429,7 +426,9 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL        ,
     return TmpZipShelf ( protocol      ,
                          compresslevel ,
                          silent        ,
-                         keyencoding   ) 
+                         keyencoding   ,
+                         remove        ,
+                         keep          ) 
     
 # =============================================================================
 if '__main__' == __name__ :

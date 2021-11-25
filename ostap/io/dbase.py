@@ -19,6 +19,7 @@ __all__ = (
     'whichdb'    , ## guess database type  
     'dbopen'     , ## open database
     'Item'       , ## item: named tuple (time,payload)
+    'TmpDB'      , ## mixing for tempoirary database 
     )
 # =============================================================================
 import sys, os, collections
@@ -266,6 +267,58 @@ def dbsize  ( filename  ) :
             
     return num, size 
 
+
+# ============================================================================
+## @class TmpDB
+#  Mixin class fo rtemporary databases
+class TmpDB(object) :
+    """Mixin class for temporary databases
+    """
+
+    def __init__ ( self            ,
+                   suffix          ,
+                   remove  = True  ,
+                   keep    = False ) :
+        
+        self.__keep = True if keep  else False
+        
+        ## create temporary file name 
+        import ostap.utils.cleanup as CU 
+        fname = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' ,
+                                      suffix = suffix         ,
+                                      keep   = self.keep      )
+        
+        self.__tmp_name = fname        
+        self.__remove   = True if ( remove and not self.keep ) else False 
+        
+    @property
+    def tmp_name ( self ) :
+        """``tmp_name'' : get the generated temporary file nale
+        """
+        return self.__tmp_name
+    
+    @property
+    def remove ( self ) :
+        """``remove'':  remove the temporary file immediately (just after``clonse''),
+        otherwise remove it at the shutdown
+        """
+        return self.__remove
+    
+    @property
+    def keep   ( self )  :
+        """``keep'' keep the file and not delete it
+        """
+        return self.__keep 
+    
+    ## remove the file 
+    def clean  ( self ) :
+        """remove the file
+        """
+        fname = self.nominal_dbname 
+        if self.remove and os.path.exists ( fname ) :
+            import ostap.utils.cleanup as CU
+            CU.CleanUp.remove_file ( fname ) 
+            
 # =============================================================================
 if '__main__' == __name__ :
     

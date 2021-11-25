@@ -140,6 +140,7 @@ class  CleanUp(object) :
     _tmpfiles  = set ()
     _tmpdirs   = set ()
     _protected = set ()
+    _failed    = set ()
     
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
@@ -199,7 +200,7 @@ class  CleanUp(object) :
     @staticmethod
     def tempdir ( suffix = '' , prefix = 'ostap-tmp-dir-' , date = True ) :
         """Get the name of the newly created temporary directory.
-        The directory will be cleaned-up and deleted at-exit.
+        The directory will be cleaned-up and deleted at-exit
         >>> dirname = CleanUp.tempdir() 
         """
         with UseTmpDir ( tmp_dir () ) :
@@ -249,7 +250,7 @@ class  CleanUp(object) :
             return fname
 
     @staticmethod
-    def tempfile ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True ) :
+    def tempfile ( suffix = '' , prefix = 'ostap-tmp-' , dir = None , date = True , keep = False ) :
         """Get the name of the temporary file.
         - The file will be deleted at-exit
         >>> fname = CleanUp.tempfile() 
@@ -258,6 +259,8 @@ class  CleanUp(object) :
                                         dir    = dir    , date   = date   )
         assert not os.path.exists  ( fname )
         CleanUp._tmpfiles.add ( fname )
+        
+        if keep : CleanUp._protected.add ( fname )
         return fname
 
     @staticmethod
@@ -282,6 +285,7 @@ class  CleanUp(object) :
             except : pass
             
         if os.path.exists  ( fname ) and os.path.isfile ( fname ) :
+            CleanUp._failed.add ( fname ) 
             logger.error   ( 'failed to remove file : %s' %  fname  )
             return False 
         return True 
@@ -303,11 +307,13 @@ class  CleanUp(object) :
                     try    : os.rmdir   ( dd  )
                     except : pass
                     if os.path.exists ( dd ) and os.path.isdir ( dd )   :
+                        CleanUp._failed.add ( dd  ) 
                         logger.error ( 'failed to remove %s in temporary directory %s ' % ( dd , fdir ) )                        
             ## 4: finally remove the root
             try    : os.rmdir ( fdir )
             except : pass 
         if os.path.exists ( fdir ) and os.path.isdir ( fdir ) :
+            CleanUp._failed.add ( fdir ) 
             logger.error ( 'failed to  remove : %s' % fdir  )
             
     @staticmethod
@@ -327,7 +333,6 @@ if base_tmp_dir and for_cleanup :
 import atexit
 @atexit.register
 def _cleanup_ () :
-
     
     ## 1. clean up the files 
     tmp_files  = CleanUp._tmpfiles
@@ -353,11 +358,55 @@ def _cleanup_ () :
     ## 4. remove base tmp directory 
     if for_cleanup and base_tmp_dir :
         CleanUp.remove_dir ( base_tmp_dir  )
-        
-    for fname in CleanUp._protected :
-        if os.path.exists ( fname ) and os.path.isfile ( fname ) :
-            logger.info ( "Temporary file is kept : %s" % fname )
 
+    if CleanUp._protected :
+        title = 'Kept temporary files'
+        rows = [] 
+        for fname in CleanUp._protected :
+            if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+                row = '%s' % fname
+                rows.append ( row )
+        if rows : 
+            rows.sort()
+            rows = [  ('%d' % i , f ) for i, f in enumerate ( rows , start = 1 ) ]
+            rows = [ ( '#', title ) ] + rows 
+            import ostap.logger.table as T
+            table = T.table ( rows , title = title , prefix = "# " , alignment = 'rl' )
+            logger.info ( '%s:\n%s' % ( title , table ) ) 
+            
+    if CleanUp._failed :
+        title = 'Not removed directories/files'
+        rows  = []
+
+        def alldirs ( path ) :
+            a , b = os.path.split ( path )
+            yield a
+            while a and b :
+                a , b = os.path.split ( a )
+                yield a
+
+        pdirs = set() 
+        for pp in CleanUp._protected :
+            pdirs |= set ( ( p for p in alldirs ( pp ) ) ) 
+            
+        for fname in CleanUp._failed :
+            if os.path.exists ( fname ) and os.path.isdir  ( fname ) and not fname in pdirs :
+                row = '%s' % fname
+                rows.append ( row )
+        for fname in CleanUp._failed :
+            if fname in CleanUp._protected : continue 
+            if os.path.exists ( fname ) and os.path.isfile ( fname ) :
+                row = '%s' % fname
+                rows.append ( row )
+                
+        if rows : 
+            rows.sort()
+            rows = [  ('%d' % i , f ) for i, f in enumerate ( rows , start = 1 ) ]
+            rows = [ ( '#', title ) ] + rows 
+            import ostap.logger.table as T
+            title = 'Not removed directories/files'
+            table = T.table ( rows , title = title  , prefix = "# " , alignment = 'rl' )
+            logger.warning ( '%s\n%s' % ( title , table ) ) 
         
 # =============================================================================
 ## @class TempFile

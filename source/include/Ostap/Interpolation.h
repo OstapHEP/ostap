@@ -457,8 +457,6 @@ namespace Ostap
         // ====================================================================
       public : // 
         // ====================================================================
-        /// get the abscissas 
-        Abscissas        abscissas () const ;
         /// get abscissas type 
         Abscissas::AType atype     () const { return m_atype ; }
         // ====================================================================
@@ -480,6 +478,13 @@ namespace Ostap
             m_table.empty()        ? s_nan :
             index < m_table.size() ? m_table[ index ].second : m_table.back().second ;
         }
+        // =====================================================================
+      public: // get abscissas & data 
+        // ====================================================================
+        /// get abscissas       (by value!)  
+        Abscissas       abscissas () const ;
+        /// get function values (by value!) 
+        Abscissas::Data values    () const ;
         // =====================================================================
       public:
         // ====================================================================

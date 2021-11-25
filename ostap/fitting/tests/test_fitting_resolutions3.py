@@ -95,10 +95,10 @@ ds_DATA     = model.generate ( 50000 )
 reso_MC = Models.ResoCB2 ( 'RMC'                                      ,
                            xvar  = dm                                 ,
                            sigma =  ( 1 * MeV , 0.1 * MeV , 5  *MeV ) ,  
-                           alpha =  ( 1.5  , 0.5   , 5.0  )            ,
-                           n     =  ( 10   , 0     , 50   )            ,
-                           kappaN = ( 0.05 , -0.95 , 0.95 )            , ## small asymmetry 
-                           kappaA = ( 0.05 , -0.95 , 0.95 )            ) ## small asymmetry 
+                           alpha =  ( 1.5  , 0.5   , 5.0  )           ,
+                           n     =  ( 10   , 0     , 50   )           ,
+                           kappaN = ( 0.05 , -0.95 , 0.95 )           , ## small asymmetry 
+                           kappaA = ( 0.05 , -0.95 , 0.95 )           ) ## small asymmetry 
 model_MC = Models.Fit1D ( signal = reso_MC , background  = None , suffix = '_MC' )
 
 ## fit MC data with resolution models
@@ -115,15 +115,14 @@ logger.info ( '%s\n%s' % ( title , rMC.table ( title = title , prefix = '# ' ) )
 # ===============================================================================
 ## 2b: Create fit resolution model (DATA)
 # ===============================================================================
-fudge      = ROOT.RooRealVar ( 'fudge' , 'fudge-factor' , 0.5 , 2.0 )
-sigma_corr = reso_MC.vars_multiply ( reso_MC.sigma , fudge , name = 'Sigma_DATA' ) 
-reso_DATA  = Models.ResoCB2 ( 'RDATA'                 ,
-                              xvar  = mass            ,
-                              sigma =  sigma_corr     ,  
-                              alpha =  reso_MC.alpha  , 
-                              n     =  reso_MC.n      ,
-                              kappaN = reso_MC.kappaN , ## small asymmetry 
-                              kappaA = reso_MC.kappaA ) ## small asymmetry 
+reso_DATA  = Models.ResoCB2 ( 'RDATA'                     ,
+                              xvar  = mass                ,
+                              sigma = reso_MC.sigma       ,  
+                              alpha = reso_MC.alpha       ,
+                              fudge = ( 1.1 , 0.1 , 5.0 ) , ## NB: fudge-factor  
+                              n     =  reso_MC.n          ,
+                              kappaN = reso_MC.kappaN     , ## small asymmetry 
+                              kappaA = reso_MC.kappaA     ) ## small asymmetry 
 
 phi_DATA = Models.BreitWigner_pdf ( 'BWDATA' , xvar = mass ,
                                     breitwigner  = phi  ,

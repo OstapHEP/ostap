@@ -2783,9 +2783,9 @@ class RESOLUTION(MASS) :
                                               sigma_name  = sigma_name  ,
                                               sigma_title = sigma_title )
             
-        self.__fudge            = fudge
-        
+        self.__fudge            = fudge        
         self.__fudge_constraint = None
+        self.__sigma_corr       = None
         
         if isinstance ( fudge , VE ) :
             
@@ -2794,8 +2794,8 @@ class RESOLUTION(MASS) :
             
             value  = fudge.value()
             error  = fudge.error()
-            vmin   = max ( 0 , value - 5 * error )
-            vmax   =           value + 5 * error
+            vmin   = max ( 1.e-6 , value - 10 * error )
+            vmax   =               value + 10 * error
             
             ## make fudge-factor to be a variable 
             self.__fudge = self.make_var ( value ,
@@ -2803,19 +2803,45 @@ class RESOLUTION(MASS) :
                                            'fudge_factor(%s)' % self.name ,
                                            None                           ,
                                            value , vmin , vmax            )
-            
+
             ## create soft/gaussian constraint for fudge-factor
             self.__fudge_constraint = self.soft_constraint (
                 self.fudge ,
                 fudge      ,
                 name  = 'Fudge_constraint_%s'  % self.name ,
                 title = 'Fudge_constraint(%s)' % self.name )
+            
+        elif isinstance ( fudge , ROOT.RooAbsReal ) :
+            
+            ## make fudge-factor to be a variable 
+            self.__fudge = self.make_var ( fudge  ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name , None )
+            
+        elif isinstance ( fudge , num_types ) and 1 == fudge :
 
-        if isinstance ( self.fudge , num_types ) and 1 == fudge : 
+            ## fudge is trivial 
+            self.__fudge = ROOT.RooFit.RooConst ( fudge )
+
             ## corrected sigma is trivial 
             self.__sigma_corr   =    self.sigma
-        else : 
-            ## create the corrected sigma 
+            
+        elif isinstance ( fudge , num_types ) :
+            
+            ## fudge is trivial 
+            self.__fudge = ROOT.RooFit.RooConst ( fudge )
+
+        else :
+                
+            ## make fudge-factor to be a variable 
+            self.__fudge = self.make_var ( fudge  ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name ,
+                                           None                           , fudge )
+            
+        ## create corrected sigma 
+        if self.__sigma_corr is None :            
+            ## corrected sigma 
             self.__sigma_corr = self.vars_multiply ( self.sigma ,
                                                      self.fudge ,
                                                      'Corrected_%s' % self.sigma.name )

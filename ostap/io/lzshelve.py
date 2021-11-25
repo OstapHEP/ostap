@@ -143,12 +143,6 @@ __all__ = (
     'tmpdb'   ,   ## create TEMPORARY data base 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.lzshelve' )
-else                      : logger = getLogger ( __name__             )
-# =============================================================================
-logger.debug ( "Simple generic (c)Pickle-based ``LZMA''-database"    )
-# =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
 try:
@@ -173,6 +167,13 @@ import lzma        ## use lzma to compress DB-content
 import shelve      ## 
 import shutil
 from   ostap.io.compress_shelve import CompressShelf
+from   ostap.io.dbase           import TmpDB 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.lzshelve' )
+else                      : logger = getLogger ( __name__             )
+# =============================================================================
+logger.debug ( "Simple generic (c)Pickle-based ``LZMA''-database"    )
 # =============================================================================
 ## @class LzShelf
 #  ``LZMA''-version of ``shelve''-database
@@ -366,43 +367,37 @@ def open ( filename                            ,
 #  TEMPORARY lzma-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
-class TmpLzShelf(LzShelf):
+class TmpLzShelf(LzShelf,TmpDB):
     """
     TEMPORARY ``LZMA''-version of ``shelve''-database     
     """    
-    def __init__(
-        self                              ,
-        protocol    = HIGHEST_PROTOCOL    , 
-        compress    = lzma.PRESET_DEFAULT ,
-        silent      = False               ,
-        keyencoding = ENCODING            ) :
+    def __init__( self                              ,
+                  protocol    = HIGHEST_PROTOCOL    , 
+                  compress    = lzma.PRESET_DEFAULT ,
+                  silent      = False               ,
+                  keyencoding = ENCODING            , 
+                  remove      = True                ,
+                  keep        = False               ) :
 
-        ## create temporary file name 
-        ## import tempfile
-        ## filename = tempfile.mktemp  ( prefix = 'ostap-tmpdb-' , suffix = '.lzdb' )
-        import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'ostap-tmpdb-' , suffix = '.lzdb' )
-        
-        LzShelf.__init__ ( self        ,  
-                           filename    ,
-                           'c'         ,
-                           protocol    ,
-                           compress    , 
-                           False       , ## writeback 
-                           silent      ,
-                           keyencoding ) 
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
+
+        ## open DB 
+        LzShelf.__init__ ( self          ,  
+                           self.tmp_name ,
+                           'c'           ,
+                           protocol      ,
+                           compress      , 
+                           False         , ## writeback 
+                           silent        ,
+                           keyencoding   ) 
         
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
         LzShelf.close ( self )
-        ## delete the file 
-        fname = self.nominal_dbname 
-        if os.path.exists ( fname ) :
-            try :
-                os.unlink ( fname )
-            except : 
-                pass
+        ## delete the file
+        TmpDB  .clean ( self ) 
             
 # =============================================================================
 ## helper function to open TEMPORARY ZipShelve data base#
@@ -411,7 +406,9 @@ class TmpLzShelf(LzShelf):
 def tmpdb ( protocol      = HIGHEST_PROTOCOL    ,
             compresslevel = lzma.PRESET_DEFAULT , 
             silent        = True                ,
-            keyencoding   = ENCODING            ) :
+            keyencoding   = ENCODING            ,
+            remove        = True                ,   ## immediate remove 
+            keep          = False               ) : ## keep it 
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -422,7 +419,9 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL    ,
     return TmpLzShelf ( protocol      ,
                         compresslevel ,
                         silent        ,
-                        keyencoding   ) 
+                        keyencoding   ,
+                        remove        ,
+                        keep          ) 
     
 # =============================================================================
 if '__main__' == __name__ :

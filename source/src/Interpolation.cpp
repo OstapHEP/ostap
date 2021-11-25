@@ -1,6 +1,10 @@
 // ===========================================================================
 // Include files
 // ===========================================================================
+// STD/STL
+// ===========================================================================
+#include <algorithm>
+// ===========================================================================
 // Ostap
 // ===========================================================================
 #include "Ostap/Math.h"
@@ -473,8 +477,9 @@ Ostap::Math::Interpolation::Table::slice
   const int ii = i < 0 ? i + size () : i ;
   const int jj = j < 0 ? j + size () : j ;
   //
-  if ( ii < 0 || jj < 0 || jj <= ii ) { return Table () ; }
-  //
+  if ( ii <  0 || jj < 0 || jj <= ii ) { return Table () ; } // RETURN 
+  if ( ii == 0 && jj + 1 == size ()  ) { return *this    ; } // RETURN
+  
   Table newt {} ;
   newt.m_table.resize ( jj - ii ) ;
   std::copy ( m_table      .begin () + ii , 
@@ -483,8 +488,43 @@ Ostap::Math::Interpolation::Table::slice
   return newt  ; 
 }
 // ============================================================================
-
-
+// get abscissas       (by value!)  
+// ============================================================================
+Ostap::Math::Interpolation::Abscissas
+Ostap::Math::Interpolation::Table::abscissas () const 
+{
+  switch ( m_atype ) 
+  {
+  case Ostap::Math::Interpolation::Abscissas::Uniform          : ;
+  case Ostap::Math::Interpolation::Abscissas::Chebyshev        : ;
+  case Ostap::Math::Interpolation::Abscissas::Chebyshev2       : 
+    { return Abscissas ( size() , xmin() , xmax() , m_atype ) ; }
+  defaut:
+    break ;
+  }
+  //
+  std::vector<double> values ( size () , 0.0 ) ;
+  std::transform ( begin        () ,
+                   end          () , 
+                   values.begin () , 
+                   [] ( const TABLE::value_type& p ) -> double 
+                   { return p.first ; } ) ;
+  return values ;  
+}
+// ============================================================================
+// get abscissas       (by value!)  
+// ============================================================================
+Ostap::Math::Interpolation::Abscissas::Data
+Ostap::Math::Interpolation::Table::values () const 
+{
+  std::vector<double> vals ( size () , 0.0 ) ;
+  std::transform ( begin      () ,
+                   end        () , 
+                   vals.begin () , 
+                   [] ( const TABLE::value_type& p ) -> double 
+                   { return p.second ; } ) ;
+  return vals ; 
+}
 // ============================================================================
 /*  simple constructor from the interpolation points  
  *  @param p input vector of abscissas  

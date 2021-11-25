@@ -130,14 +130,10 @@ __all__ = (
     'tmpdb'       ,   ## helper function to create the temporary database 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
-else                      : logger = getLogger ( __name__ )
-# =============================================================================
 import os , sys , zlib, collections, datetime   
 import sqlite3
 from   ostap.io.sqlitedict  import SqliteDict
-from   ostap.io.dbase       import Item
+from   ostap.io.dbase       import Item, TmpDB 
 from   ostap.core.meta_info import meta_info 
 # =============================================================================
 try:
@@ -151,6 +147,10 @@ try :
     from io        import             BytesIO
 except ImportError : 
     from cStringIO import StringIO as BytesIO         
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
+else                      : logger = getLogger ( __name__ )
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -575,7 +575,7 @@ def open ( *args , **kwargs ):
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 #  @see SQLiteShelf
-class TmpSQLiteShelf(SQLiteShelf):
+class TmpSQLiteShelf(SQLiteShelf,TmpDB):
     """TEMPORARY SQLite-based ``shelve-like'' database with compressed content. 
     see SQLiteShelf
     """
@@ -583,17 +583,30 @@ class TmpSQLiteShelf(SQLiteShelf):
                    tablename      = 'ostap'                 ,
                    compress_level = zlib.Z_BEST_COMPRESSION , 
                    journal_mode   = "DELETE"                ,
-                   protocol       = HIGHEST_PROTOCOL        ) :
+                   protocol       = HIGHEST_PROTOCOL        ,
+                   remove         = True                    ,
+                   keep           = False                   ) :
         
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
+        
+        ## open DB  
         SQLiteShelf.__init__ ( self            ,
-                               None            ,
+                               self.tmp_name   ,
                                'c'             ,
                                tablename       ,
                                True            , ## False , ## writeback/autocommit
                                compress_level  ,
                                journal_mode    ,
                                protocol        ) 
-        
+            
+    ## close and delete the file 
+    def close ( self )  :
+        ## close the shelve file
+        SQLiteShelf.close ( self )
+        ## delete the file
+        TmpDB  .clean     ( self ) 
+     
 # =============================================================================
 ## open new TEMPORARY SQLiteShelve data base
 # @code
@@ -619,5 +632,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

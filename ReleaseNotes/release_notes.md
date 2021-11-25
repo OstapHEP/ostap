@@ -2,6 +2,9 @@
 
  1. add new test/example 'test_fitting_resolution3.py' with relativerly realistic exmapel of simultaneous firtrting of "data" and "MC", propagating uncertainuty from MC resoltuoion shape to results of fit to dat ausing simultaneous fit 
  1. add `array.array` and `numpy/.ndarray` into list of `listlike_types` for `ostap.core.ostapo_types` module 
+ 1. make use of `fudge` argument for `test_fitting_resolution3.py`
+ 1. add keys `remove` (default is `True`) and `keep` (defautl is `False`) for temporary databases. The first one forces immediate rmoeval of the file (instead of the end-of-the-task action), the second forces temproary file to be non-deleted  
+ 1. add more printout for the `ostap.utils.cleanup` module 
 
 ## Backward incompatible  
 

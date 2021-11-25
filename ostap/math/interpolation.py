@@ -51,9 +51,9 @@
 #  - interpolation with Bersntein polynomials using on Newton-Bernstein algorithm
 #  - interpolation with B-splines
 #
-#  In addition purely python interpolators are provdied
+#  In addition purely python interpolators are provided 
 #  - Berrut1st
-#  - Berrut1st
+#  - Berrut2nd
 #  - Barycentric
 #  - FloaterHormann
 # 
@@ -106,9 +106,9 @@
   - interpolation with bersntein polynomials using on Newton-Bernstein algorithm
   - interpolation with B-splines
 
-  In addition purely python interpolators are provdied
+  In addition purely python interpolators are provided
   - Berrut1st
-  - Berrut1st
+  - Berrut2nd
   - Barycentric
   - FloaterHormann
 """
@@ -136,6 +136,7 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math, sys, abc  
+from    array                  import array
 from    builtins               import range
 from    ostap.core.core        import cpp, Ostap
 from    ostap.core.ostap_types import ( is_integer, sequence_types,
@@ -164,13 +165,25 @@ def _a_str_ ( self , nmax = 8 ) :
     """Printout for interpolation Abscissas
     >>> print a  
     """
-    _n = self.n()
-    if _n <= nmax : return 'Abscissas(%s)' % self.x()
+    n = self.n()
+    a = self.atype() 
+    if n <= nmax or 0 <= a :
+        if   Ostap.Math.Interpolation.Abscissas.Uniform    == a : 
+            return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Uniform'    )
+        elif Ostap.Math.Interpolation.Abscissas.Chebyshev  == a : 
+            return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Chebyshev'  )
+        elif Ostap.Math.Interpolation.Abscissas.Chebyshev2 == a : 
+            return 'Abscissas(%d,%+.4g,%+.4g,%s)' % ( n , self.xmin () , self.xmax() , 'Chebyshev2' )
+        else :
+            return 'Abscissas(%d,%s)'    % ( n , self.x () ) 
+            
     ##
     n2 = nmax//2
     s1 = ', '.join( ( '%.3g' % x  for x in self.x() [    : n2 ] ) ) 
-    s2 = ', '.join( ( '%.3g' % x  for x in self.x() [ -1 :    ] ) ) 
-    return 'Abscissas(n=%d,[%s, ... , %s])' % ( self.n() , s1 , s2 ) 
+    s2 = ', '.join( ( '%.3g' % x  for x in self.x() [ -1 :    ] ) )
+    
+    return 'Abscissas(n=%d,[%s, ... , %s])'    % ( n , s1 , s2 )
+        
 # =======================================================================================
 ## iterator over interpolation abscissas
 #  @code
@@ -261,13 +274,13 @@ def _a_new_init_ ( a , arg1 , *args ) :
     if isinstance ( arg1 , Ostap.Math.Interpolation.Abscissas ) :
         return a._old_init_ (           arg1   ) 
 
-    if isistance ( arg1 , sequence_types ) :
+    if isinstance ( arg1 , sequence_types ) :
         if not args : 
             return a._old_init_ ( doubles ( arg1 ) )
         elif 1 == len ( args ) and isinstance ( args[0] , bool ) :
             return a._old_init_ ( doubles ( arg1 ) , args[0] )
             
-    if isinstance ( arg1 , integer_types ) and 0 <= args1 :
+    if isinstance ( arg1 , integer_types ) and 0 <= arg1 :
         if   2 == len ( args ) :
             return a._old_init_ ( arg1 , args[0] , args[1] )
         elif 3 == len ( args ) and isinstance ( args[2] , integer_types ) and 0 <= args[2] :
@@ -283,7 +296,7 @@ if not hasattr ( Abscissas , '_old_init_' ) :
     def __aa_new_init__ ( a , arg1 , *args ) :
         """Modified constructor for interpolaiton abscissas 
         """
-        _a_new_init_ ( a , args1 , *args )
+        _a_new_init_ ( a , arg1 , *args )
     __aa_new_init__ .__doc__ += '\n' + _a_new_init_ .__doc__
     __aa_new_init__ .__doc__ += '\n' + Abscissas . _old_init_ . __doc__
     Abscissas . __init__  = __aa_new_init__
@@ -302,17 +315,17 @@ def _p_str_ ( self , nmax = 7 ) :
     """Printout for interpolation Table
     >>> print a  
     """
-    _n = self.size ()
-    if _n <= nmax :
+    n = self.size ()
+    if n <= nmax :
         s = ', '.join ( ( "%.3g: %.3g" %  (x,y)  for x,y in self ) ) 
         return 'Table({%s})' % s 
     ##
-    n2 = nmax/2
+    n2 = nmax//2
 
     s1 = ', '.join ( ( '%.3g: %.3g' % self[i] for i in  range ( n2 ) ) ) 
-    s2 =               '%.3g: %.3g' % self[ self.n() -1 ]
+    s2 =               '%.3g: %.3g' % self[ n - 1 ]
     
-    return 'Table(n=%d,{%s, ... , %s})' % ( self.n() , s1 , s2 )
+    return 'Table(n=%d,{%s, ... , %s})' % ( n , s1 , s2 )
                      
 # =======================================================================================
 ## iterator over interpolation points 
@@ -395,29 +408,30 @@ Ostap.Math.Interpolation.Table.items        = _p_iteritems_
 Ostap.Math.Interpolation.Table.__getitem__  = _p_getitem_  
 ## Ostap.Math.Interpolation.Table.__delitem__  = _p_delitem_  
 
+
 # ==================================================================================
-## dump interpoaltion table in a form of readabel table
+## Print interpolation table as table
 #  @code
-#  table = ...
-#  print ( table.table (prefix = '# ' )
+#  table= ...
+#  print ( table.table() )
 #  @endcode 
-def _p_table_ ( t , title = '' , prefix = '' , fmt = '%+.6g' ) :
-    """Dump interpoaltion table in a form of readabel table
-    >>> table = ...
-    >>> print ( table.table ( prefix = '# ' )
+def _tab_print_ ( t , title = '' , prefix = '' , alignment = 'll' , xfmt = '%+.5g' , yfmt = '%+-.5g' ) :
+    """Print interpolation table as table
+    >>> table= ...
+    >>> print ( table.table() )
     """
-    n = len ( t )
-    rows = [ ( '   X' , '   Y' )  ]
-    for i in range ( n ) :
-        row = fmt % t.x( i ) , fmt % t.y ( i )
+    rows = [ ('Abscissa' , 'Value' ) ] 
+    for i in range ( t.size() ) :
+        x = t.x ( i )
+        y = t.y ( i )
+        row = xfmt %  x, yfmt % y
         rows.append ( row )
-            
-    import ostap.logger.table as T 
-    if not title : title = 'Interpolation table %s ' % t.__class__.__name__ 
-    return T.table ( rows , title = title , prefix = prefix , alignment = 'll' )
+        
+    if not title : title = 'Interpolation Table' 
+    import ostap.logger.table as T
+    return T.table ( rows , title = title , prefix = prefix , alignment = alignment )
 
-
-Ostap.Math.Interpolation.Table.table = _p_table_ 
+Ostap.Math.Interpolation.Table.table = _tab_print_ 
 
 # ==================================================================================
 ## Neville, Lagrange, & Berrut  interpolants
@@ -450,7 +464,6 @@ Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berr
 Ostap.Math.Berrut2nd       .__str__   = lambda s : print_interpolant ( s , 'Berrut2nd'      , 7 )
 Ostap.Math.FloaterHormann  .__str__   = lambda s : print_interpolant ( s , 'FloaterHormann' , 7 )
 Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'    , 7 )
-
 
 # ==================================================================================
 ## Barycentric Lagrange interpolant 
@@ -640,6 +653,82 @@ def points ( func , abscissas  = None ) :
     if _A : return Ostap.Math.Interpolation.Table (   abscissas   , doubles ( func ) )
     ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
+
+# ============================================================================
+## factory for deserialisation of interpolation abscissas 
+def abs_factory ( klass , arg , *args ) :
+    """Factory for deserialisation of interpolation abscissas
+    """
+    if isinstance ( arg , sequence_types ) :
+        vals = doubles ( arg )
+        return klass ( vals , *args )
+    
+    return klass ( arg , *args ) 
+
+# =============================================================================
+## Reduce interpolation abscissas 
+def abs_reduce ( a ) :
+    """Reduce interpolation abscissas 
+    """
+    at = a.atype()
+    if at in ( Ostap.Math.interpolation.Abscissas.Uniform    ,
+               Ostap.Math.interpolation.Abscissas.Chebyshev  ,
+               Ostap.Math.interpolation.Abscissas.Chebyshev2 ) :
+        return abs_factory, ( type(a) , a.xmin() , a.xmax () , int ( at ) )
+
+    return abs_factory, ( type(a) , array ('d' , a.x() ) ) 
+
+# ============================================================================
+## the factory for serialisation of the interpolation table 
+def tab_factory ( klass , abscissas , values ) :
+    """The factory for serialisation of the interpolation table
+    """
+    return klass ( abscissas , doubles ( values ) ) 
+## ===========================================================================
+## Reduce the interpolation table 
+def tab_reduce ( table ) :
+    """Reduce the interpolation table"""
+    return tab_factory , ( type ( table )                  ,
+                           table.abscissas ()              ,
+                           array ( 'd' , table.values () ) )
+
+Ostap.Math.Interpolation.Table. __reduce__ = tab_reduce
+
+# ============================================================================
+## the factory for serialisation of the interpolation objects 
+def int_factory ( klass , values , abscissas , *args ) :
+    """The factory for serialisation of the interpolation table
+    """
+    the_table = Ostap.Math.Interpolation.Table ( doubles ( values ) , abscissas )
+    return klass ( the_table , *args )
+
+## ===========================================================================
+## Reduce the interpolation object 
+def int_reduce ( table ) :
+    """Reduce the interpolation object"""
+    return int_factory , ( type ( table )                  ,
+                           table.abscissas ()              ,
+                           array ( 'd' , table.values () ) ) 
+
+## ===========================================================================
+## Reduce the interpolation Floater-Hormann interpolant 
+def intfh_reduce ( table ) :
+    """Reduce the Floater-Hormann interpolant"""
+    return int_factory , ( type ( table )                  ,
+                           table.abscissas ()              ,
+                           array ( 'd' , table.values () ) , 
+                           table.d ()                      ) 
+
+for t in ( Ostap.Math.Neville     ,
+           Ostap.Math.Lagrange    , 
+           Ostap.Math.Newton      , 
+           Ostap.Math.Barycentric , 
+           Ostap.Math.Berrut1st   , 
+           Ostap.Math.Berrut2nd   ) :
+    
+    t.__reduce__ = int_reduce 
+
+Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
 
 
 # =============================================================================
