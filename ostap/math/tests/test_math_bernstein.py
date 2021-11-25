@@ -18,8 +18,10 @@ else                       : logger = getLogger ( __name__                    )
 import random  
 import ostap.math.models 
 import ostap.math.bernstein
-from   ostap.core.core      import Ostap
+from   ostap.core.core      import Ostap, SE 
 from   ostap.utils.timing   import timing 
+# ============================================================================
+functions = set() 
 # ============================================================================
 ##  test solution of equation  B(x) = c
 def test_solve ():
@@ -62,7 +64,8 @@ def test_solve ():
             diff += abs ( r  - troots[i] )            
         diff /= len ( rr ) 
         logger.info ( 'Mean root distance is %.4g' % diff ) 
-    
+
+    functions.add ( bs ) 
 
 # ============================================================================
 ##  check number of roots using Sturm' sequence 
@@ -108,6 +111,7 @@ def test_nroots ():
         else : 
             logger.info  ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
         
+    functions.add ( bs ) 
        
 # ============================================================================
 ##  test Bernstein interpolation 
@@ -132,6 +136,8 @@ def test_interpolation ():
         s += vf-vb
             
     logger.info ('Interpolation quality %s' % s )
+
+    functions.add ( bs ) 
 
 
 # ============================================================================
@@ -165,6 +171,11 @@ def test_division ():
     a3,r3 = divmod ( bs, b3 )
     logger.info ('Reminder, roots: %.6f [%s]' % ( r3.norm () , ', '.join ( "%.6f" % r for r in a3.solve() ) ) )
 
+    functions.add ( bs ) 
+    functions.add ( b1 ) 
+    functions.add ( b2 ) 
+    functions.add ( b3 ) 
+
 # =============================================================================
 def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
     d = abs ( a - b ) 
@@ -182,7 +193,9 @@ def test_elevatereduce () :
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
     for i in b :
         b[i] = random.uniform ( -10 , 10 )
-    
+
+    functions.add ( b ) 
+
     for r in (1,2,3,4,5) : 
         be = b.elevate(r)
         br = be.reduce(r)
@@ -193,7 +206,10 @@ def test_elevatereduce () :
             yr = br(x)
             check_equality ( y  , ye  , 'Invalid elevate' , 1.e-6 )
             check_equality ( y  , yr  , 'Invalid reduce'  , 1.e-6 )
-            
+
+        functions.add ( be ) 
+        functions.add ( br ) 
+
     logger.info ('Elevate/reduce  is OK' )
 
 # ==============================================================================
@@ -228,7 +244,9 @@ def test_poly () :
             raise ValueError ( 'Invalid polynom value y(%s)=%s (%s/%s)' % ( x , y , ymin , ymax ) )
  
     logger.info ('Random     poly is OK' )
-    
+
+    functions.add ( b ) 
+
 # ==============================================================================
 ## test  for even polynomials 
 def test_even () :
@@ -253,6 +271,8 @@ def test_even () :
 
     
     logger.info ('Even       poly is OK' )
+
+    functions.add ( b ) 
 
 # ==============================================================================
 ## test  for monotonic polynomial 
@@ -280,6 +300,8 @@ def test_monotonic () :
         
     logger.info ('Increasing poly is OK' )
     
+    functions.add ( b ) 
+
     b = BPM ( 5 , 0 , 2 , False )
     for i in  b :  b[i] = random.uniform ( -10 , 10 )
     
@@ -295,6 +317,8 @@ def test_monotonic () :
         if y1 < y2 :
             raise ValueError ( 'Invalid Decreasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
         
+    functions.add ( b ) 
+
     logger.info ('Decreasing poly is OK' )
 
 # =============================================================================
@@ -314,6 +338,11 @@ def test_convex () :
     for b in ( b_11   , b_01 , b_10 , b_00 ) : 
         for i in b : b[i] = random.uniform ( -10 , 10 ) 
             
+    functions.add ( b_11 ) 
+    functions.add ( b_01 ) 
+    functions.add ( b_10 ) 
+    functions.add ( b_00 ) 
+
     for i in range(500) :
         
         ##  note:  x1 <  x2 
@@ -358,7 +387,10 @@ def test_convexonly () :
     
     for b in ( b_11   , b_01 ) : 
         for i in b  : b[i] = random.uniform ( -10 , 10 ) 
-            
+
+    functions.add ( b_11 ) 
+    functions.add ( b_01 ) 
+
     for i in range(500) :
         
         ##  note:  x1 <  x2 
@@ -432,6 +464,8 @@ def test_transformation () :
     
     b = BP ( 5 , 0 , 2  )
 
+    functions.add ( b ) 
+
     for i in range ( 50 ) :
         
         for i in b  : b[i] = random.uniform ( -10 , 10 ) 
@@ -447,7 +481,16 @@ def test_transformation () :
         ## Legendre  sum 
         ls = LS ( b  )
         bl = BP ( ls ) 
+
+        functions.add ( ms ) 
+        functions.add ( bm )
         
+        functions.add ( cs ) 
+        functions.add ( bc )
+        
+        functions.add ( ls ) 
+        functions.add ( bl ) 
+
         for i in range( 100 ) :
             
             x1 = random.uniform ( b.xmin() , b.xmax() )
@@ -466,6 +509,44 @@ def test_transformation () :
     logger.info ('Transformation  is OK' )
 
 # =============================================================================
+def test_pickle () :
+    logger = getLogger ( 'test_pickle'        ) 
+    logger.info ( 'Check pickling/unpickling' )
+
+    import pickle
+    rows = [ ( '#', 'before' , 'after' , 'mean' , 'rms' ) ] 
+    for i, f in enumerate ( functions , start = 1 ) :
+
+        fs = pickle.loads ( pickle.dumps ( f ) )
+        s  = SE () 
+        for j in range ( 1000 ) :
+            x = random.uniform ( f.xmin() , f.xmax() )
+            s += abs ( fs ( x ) - f ( x ) )
+        row = '%d' % i , f.__class__.__name__ , fs.__class__.__name__ , '%-+.4g' % s.mean() , '%-+.4g' % s.rms() 
+        rows.append ( row )
+
+    import ostap.logger.table as T
+    title = "Compare before/after eserialisation"
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' ) 
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
+
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for i , f in enumerate ( functions , start = 1 ) :
+            db[ '%03d:%s' % ( i , f.__class__.__name__ ) ] = f 
+        db['functions'   ] = functions 
+        db.ls() 
+
+# =============================================================================
 if '__main__' == __name__ :
 
     test_solve          ()
@@ -481,7 +562,11 @@ if '__main__' == __name__ :
     test_integration    ()
     test_transformation ()
 
-
+    ## check finally that everything is serializeable:
+    test_pickle () 
+    with timing ('test_db' , logger ) :
+        test_db ()
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

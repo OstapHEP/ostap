@@ -525,7 +525,7 @@ class FUNC(XVar) :
             
         ## check the predefined drawing options for this PDF
         if key in self.draw_options :
-            return self.draw_options.get ( k )
+            return self.draw_options.get ( key )
             
         ## check the default options
         for k in dir ( FD ) :

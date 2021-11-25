@@ -20,6 +20,7 @@ from   ostap.math.models        import f1_draw
 from   ostap.utils.utils        import wait
 from   ostap.utils.timing       import timing 
 from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.progress_bar import progress_bar 
 import ostap.logger.table       as     T 
 # =============================================================================
 # logging 
@@ -89,19 +90,6 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
             
-    for n,t in interpolants :
-        functions.add ( ( name , t ) ) 
-
-        if not hasattr ( t , 'table' ) : continue
-        print ( 'NAME' , n , name ) 
-        import pickle 
-        t = interpolants[1][1]
-        
-        print (  t.table() )
-        tt = pickle.loads ( pickle.dumps( t ) )
-        print ( tt.table() )
-        
-        
 
     with wait ( 3 ) , use_canvas ( name ) :
         ff = lambda x : fun  ( x )
@@ -448,6 +436,30 @@ def test_random_grid_gauss () :
     
     return run_grid_interpolation ( tfun , dct , N , low , high , scale = 1.e-3 , logger = logger , name = 'gauss') 
 
+# =============================================================================
+def test_pickle () :
+    logger = getLogger ( 'test_pickle'        ) 
+    logger.info ( 'Check pickling/unpickling' )
+
+    import pickle
+    rows = [ ( '#', 'before' , 'after' , 'mean' , 'rms' ) ]
+    for i, f in enumerate ( progress_bar ( functions ) , start = 1 ) :
+
+        n , ff = f 
+        fs = pickle.loads ( pickle.dumps ( ff ) )
+        s  = SE () 
+        for j in range ( 1000 ) :
+            x = random.uniform ( ff.xmin() , ff.xmax() )
+            s += abs ( fs ( x ) - ff ( x ) )
+        
+        row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , '%-+.4g' % s.mean() , '%-+.4g' % s.rms() 
+        rows.append ( row )
+
+    import ostap.logger.table as T
+    title = "Compare before/after serialisation"
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' ) 
+    logger.info ( '%s\n%s' % ( title , table ) ) 
+
 
 # =============================================================================
 ## check that everything is serializable
@@ -464,13 +476,6 @@ def test_db() :
             db[ '%03d:%s:%s' % ( i , n , ff.__class__.__name__ ) ] = ff
         db['functions'   ] = functions 
         db.ls() 
-    ## with DBASE.open ( 'test.db' , 'r' ) as db  :
-    ##     for key in db :
-    ##         f = db[key]
-    ##         if hasattr ( f , 'draw' ) :
-    ##             with wait ( 2 ) , use_canvas ( key ) :
-    ##                 f.draw() 
-                    
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -484,6 +489,7 @@ if '__main__' == __name__ :
     test_random_grid_gauss  ()
     
     ## check finally that everything is serializeable:
+    test_pickle () 
     with timing ('test_db' , logger ) :
         test_db ()
     

@@ -665,7 +665,8 @@ def  get_options ( config , option , default ) :
 
     opts = config.get ( option , fallback = '()' )
     opts = opts.strip   ( ) 
-    opts = opts.replace ('\n', ' ' ) 
+    opts = opts.replace ('\n', ' ' )
+
     try : 
         options = eval( opts , globals() )
         if isinstance ( options , ROOT.RooCmdArg ) : options = options ,
@@ -673,7 +674,7 @@ def  get_options ( config , option , default ) :
         if any ( not isinstance ( o , ROOT.RooCmdArg ) for o in options ) :
             raise TypeError('Invalid type  for %s : %s' % ( option , opts ) ) 
     except :
-        logger.error("Can't parse/eval option %s : %s" % ( option , opts ) ) 
+        logger.error("Can't parse/eval option %s : %s" % ( option , opts ) , exc_info = True ) 
         options = default 
 
     return options
@@ -773,20 +774,21 @@ default_background2D_style = default_background_style
 ## get the options/styles from configurtaion parser 
 # =============================================================================
 def  get_style ( config , style , default ) :
-    
+
     if not style in config : return default
 
     opts = config.get ( style , fallback = '()' )
     opts = opts.strip   ( ) 
-    opts = opts.replace ('\n', ' ' ) 
+    opts = opts.replace ('\n', ' ' )
+
     try : 
         options = eval( opts , globals() )
-        if isinstance ( options , Style ) : opts = opts ,
-        if isinstance ( options , list  ) : opts = tuple ( options )
+        if isinstance ( options , Style ) : options = options ,
+        if isinstance ( options , list  ) : options = tuple ( options )
         if any ( not isinstance ( o , Style ) for o in options ) :
             raise TypeError('Invalid style type for %s : %s' % ( style , opts ) ) 
     except :
-        logger.error("Can't parse %s : %s" % (  style , opts ) ) 
+        logger.error("Can't parse %s : %s" % (  style , opts ) , exc_info = True ) 
         options = default 
 
     return options

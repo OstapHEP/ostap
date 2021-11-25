@@ -9,7 +9,7 @@
 ## Backward incompatible  
 
 ## Bug fixes:
-
+ 1. fix the bug  in `ostap.plotting.fit_draw` for parsing of drawing styles/options 
 
 # v1.6.5.0
 
