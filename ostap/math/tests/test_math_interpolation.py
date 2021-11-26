@@ -310,7 +310,7 @@ def test_abssin () :
 
     fun = lambda x : abs( math.sin ( x ) )
 
-    N , low , high = 20 , -0.1 , 0.1
+    N , low , high = 16 , -0.1 , 0.1
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin|' , N , low , high )  ) 
     
     return run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = logger , name = '|sin(x)|' ) 
@@ -323,7 +323,7 @@ def test_abs2sin () :
 
     fun = lambda x : abs( math.sin ( 2*x ) )
 
-    N , low , high = 24 , 0 , math.pi  
+    N , low , high = 16 , 0 , math.pi  
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin(2x)|' , N , low , high )  ) 
     
     random.seed ( 50948524584 )
@@ -452,7 +452,7 @@ def test_pickle () :
             x = random.uniform ( ff.xmin() , ff.xmax() )
             s += abs ( fs ( x ) - ff ( x ) )
         
-        row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , '%-+.4g' % s.mean() , '%-+.4g' % s.rms() 
+        row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , '%-+.5g' % s.mean() , '%-+.5g' % s.rms() 
         rows.append ( row )
 
     import ostap.logger.table as T
@@ -487,7 +487,7 @@ if '__main__' == __name__ :
     test_random_grid_abssin ()
     test_random_grid_sin2   ()
     test_random_grid_gauss  ()
-    
+
     ## check finally that everything is serializeable:
     test_pickle () 
     with timing ('test_db' , logger ) :

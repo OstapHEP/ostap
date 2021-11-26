@@ -288,6 +288,16 @@ namespace Ostap
         ( const Abscissas&       x , 
           const Abscissas::Data& y ) ;
         // ====================================================================
+        /** simple (efficient) constructor from abscissas and y-list 
+         *  @param y input vector of y 
+         *  @param x input vector of abscissas  
+         *  - if vector of y is longer  than vector x, extra values are ignored 
+         *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
+         */
+        Table
+        ( const Abscissas::Data& y , 
+          const Abscissas&       x ) ;
+        // ====================================================================
         /** simple constructor from x&y-lists 
          *  @param x input vector of x 
          *  @param y input vector of y 

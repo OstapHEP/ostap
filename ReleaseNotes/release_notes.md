@@ -5,11 +5,13 @@
  1. make use of `fudge` argument for `test_fitting_resolution3.py`
  1. add keys `remove` (default is `True`) and `keep` (defautl is `False`) for temporary databases. The first one forces immediate rmoeval of the file (instead of the end-of-the-task action), the second forces temproary file to be non-deleted  
  1. add more printout for the `ostap.utils.cleanup` module 
+ 1. add more constructors for `Ostap::Math::Interpolation::Table`
 
 ## Backward incompatible  
 
 ## Bug fixes:
  1. fix the bug  in `ostap.plotting.fit_draw` for parsing of drawing styles/options 
+ 1. fix minor bug with ordering 
 
 # v1.6.5.0
 

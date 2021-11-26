@@ -269,6 +269,19 @@ Ostap::Math::Interpolation::Table::Table
       { return std::make_pair ( p.first , v ) ; } );
 }
 // ============================================================================
+/*  simple constructor from abscissas and y-list 
+ *  @param x input vector of abscissas  
+ *  @param y input vector of y 
+ *  - if vector of y is longer  than vector x, extra values are ignored 
+ *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
+ */
+// ============================================================================
+Ostap::Math::Interpolation::Table::Table
+( const Ostap::Math::Interpolation::Abscissas::Data& y , 
+  const Ostap::Math::Interpolation::Abscissas&       x ) 
+  : Table ( x , y ) 
+{}
+// ============================================================================
 /*  simple contructor from x&y-lists 
  *  @param x input vector of x 
  *  @param y input vector of y 

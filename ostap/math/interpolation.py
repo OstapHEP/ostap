@@ -696,10 +696,10 @@ Ostap.Math.Interpolation.Table. __reduce__ = tab_reduce
 
 # ============================================================================
 ## the factory for serialisation of the interpolation objects 
-def int_factory ( klass , values , abscissas , *args ) :
+def int_factory ( klass , abscissas , values , *args ) :
     """The factory for serialisation of the interpolation table
     """
-    the_table = Ostap.Math.Interpolation.Table ( doubles ( values ) , abscissas )
+    the_table = Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) )
     return klass ( the_table , *args )
 
 ## ===========================================================================
