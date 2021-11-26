@@ -78,19 +78,19 @@ __all__     = (
     'bernsteineven_sum' , ## - ditto -
     ) 
 # =============================================================================
-import ROOT
+import ROOT, ctypes
+# =============================================================================
+from   ostap.core.core         import cpp, Ostap
+from   ostap.core.ostap_types  import is_integer, num_types
+import ostap.math.models
 # =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.logger.logger' )
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.math.param' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some parameterization utilities')
-# =============================================================================
-from   ostap.core.core   import cpp, Ostap
-from   ostap.core.ostap_types  import is_integer, num_types
-import ostap.math.models
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
@@ -105,9 +105,11 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
         elif hasattr ( func , 'GetXmin'  ) : xmin = func.GetXmin  ()
         elif hasattr ( func , 'GetXaxis' ) : xmin = func.GetXaxis ().GetXmin()
         elif hasattr ( func , 'GetRange' ) :
-            xmn  = ROOT.Double()
-            xmx  = ROOT.Double()
+            xmn  = ctypes.c_double()
+            xmx  = ctypes.c_double()
             func.GetRange(xmn,xmx)
+            xmn  = float ( xmn.value )
+            xmx  = float ( xmx.value )
             xmin = xmn 
         else :
             raise AttributeError( "%s: unable to catch xmin %s" % ( name , xmin ) )
@@ -118,9 +120,11 @@ def _get_xminmax_ ( func , xmin , xmax , name = 'get_xminmax') :
         elif hasattr ( func , 'GetXmax'  ) : xmax = func.GetXmax  () 
         elif hasattr ( func , 'GetXaxis' ) : xmax = func.GetXaxis ().GetXmax()  
         elif hasattr ( func , 'GetRange' ) :
-            xmn  = ROOT.Double()
-            xmx  = ROOT.Double()
+            xmn  = ctypes.c_double()
+            xmx  = ctypes.c_double()
             func.GetRange ( xmn , xmx )
+            xmn  = float ( xmn.value )
+            xmx  = float ( xmx.value )            
             xmax = xmx
         else :
             raise AttributeError( "%s: unable to catch xmax %s" % ( name , xmax ) )
@@ -211,7 +215,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     csum = Ostap.Math.ChebyshevSum ( N , xmin , xmax )
     
     ## transform x to local variable -1<t<1 
-    tx   = lambda x : lsum.t ( x )
+    tx   = lambda x : csum.t ( x )
 
     import math 
     _cos = math.cos
@@ -228,7 +232,7 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
         
         c_n = 0.0
         for k in range ( 0, N  ) :
-            c_n += fk[k] * _cos( _piN * n * ( k + 0.5 ) )
+            c_n += fk [ k ] * _cos ( _piN * n * ( k + 0.5 ) )
             
         if 0 == n : c_n *= 0.5
         csum.setPar ( n , c_n * scale ) 
@@ -269,10 +273,10 @@ def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
     ## prepare sampling 
     f_sample = 2 * N
     t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
-    
+
     ## make Fast Fourier Transform 
-    y = numpy.fft.rfft ( vfunc ( t ) ) / t.size
-    y *= 2
+    y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
+    y *= 2.0 / t.size
     
     #
     ## decode the results:
@@ -389,7 +393,7 @@ def bezier_sum ( func , N , xmin , xmax , **kwargs ) :
     args = {} 
     for i in  range ( 0 , N + 1 ) :
 
-        index = N,i
+        index = N , i
         
         if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
@@ -429,13 +433,13 @@ bernstein_sum = bezier_sum
 #  @endcode 
 #  @see Gaudi::Math::BernsteinEven
 #  @param func (INPUT) the function
-#  @param N    (INPUT) the half-degree (actual polynomial degree is 2*N
+#  @param N    (INPUT) the degree of even polynomial 
 #  @param xmin (INPUT) the low  edge of the domain
 #  @param xmax (INPUT) the high edge of the domain
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2016-07-03
 def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
-    """Make a function/histiogram representation in terms of Bezier sum
+    """Make a function/histogram representation in terms of Bezier sum
     (sum of Bernstein Polynomials)
     >>> func = lambda x : x * x
     >>> fsum = beziereven_sum ( func , 2 , -1 , 1 )
@@ -452,13 +456,13 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     
     npars = bsum.bernstein().npars() 
     ## constants 
-    b_i   = npars *[0.0]
+    b_i   = npars * [ 0.0 ]
     
     xmid  = 0.5 * ( xmin + xmax ) 
     ## symmetric function: f(xmid-x)=f(xmid+x) 
     def _sym_func_ ( x ) :
-        x1 =        x
-        x2 = xmid - x
+        x1 =            x
+        x2 = 2 * xmid - x
         y1 = float ( func ( x1 ) )
         y2 = float ( func ( x2 ) )
         return 0.5 * ( y1 + y2 ) 
@@ -468,7 +472,8 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
     args = {} 
     for i in  range ( len ( b_i ) )  : 
         
-        index = 2 * N + 1 , i
+        ## index = 2 * N + 1 , i
+        index = bsum.degree () , i
         
         if not index in _bernstein_dual_basis_ :
             ## create the dual basic function
@@ -488,11 +493,11 @@ def beziereven_sum ( func , N , xmin , xmax , **kwargs ) :
             
         b_i[i] = c_i 
         
-    ## fill result with symmetrized coefficients 
+    ## fill result with symmetrized coefficients
     last = npars - 1 
     for i in bsum :
-        bsum.setPar( i , 0.5 * ( b_i[ i ] + b_i [ last - i ] ) ) 
-        
+        bsum.setPar ( i , 0.5 * ( b_i [ i ] + b_i [ last - i ] ) ) 
+
     return bsum
 
 
@@ -508,5 +513,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

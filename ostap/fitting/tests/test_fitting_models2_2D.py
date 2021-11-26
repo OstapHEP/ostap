@@ -15,12 +15,14 @@ from   __future__        import print_function
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import Ostap, std, VE, dsID
-from   ostap.logger.utils   import rooSilent 
-import ostap.io.zipshelve   as     DBASE
-from   ostap.utils.timing   import timing 
-from   builtins             import range
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import Ostap, std, VE, dsID
+from   ostap.logger.utils       import rooSilent 
+import ostap.io.zipshelve       as     DBASE
+from   ostap.utils.timing       import timing 
+from   builtins                 import range
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -29,6 +31,8 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
     logger = getLogger ( 'test_fitting_models2_2D' )
 else : 
     logger = getLogger ( __name__ )
+# =============================================================================
+root_version = ROOT.ROOT.GetROOT().GetVersionInt()
 # =============================================================================
 ## make simple test mass 
 m_x     = ROOT.RooRealVar ( 'mass_x' , 'Some test mass(X)' , 3 , 3.2 )
@@ -94,7 +98,8 @@ signal2.sigma = m.error ()
 ## gauss as signal, const as background 
 # =============================================================================
 def test_const () :
-    
+
+    logger = getLogger  ('test_const' )
     logger.info ('Simplest (factorized) fit model:  ( Gauss + const ) x ( Gauss + const ) ' )
     model   = Models.Fit2D (
         signal_x = signal1  ,
@@ -102,15 +107,15 @@ def test_const () :
         )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ( 'test_const' ) : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -128,7 +133,10 @@ def test_const () :
 # =============================================================================
 ## gauss as signal, second order polynomial as background 
 # =============================================================================
-def test_p2xp2 () : 
+def test_p2xp2 () :
+
+    logger = getLogger  ('test_p2xp2' )
+    
     logger.info ('Simple (factorized) fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) ' )
     model   = Models.Fit2D (
         suffix   = '_2' , 
@@ -141,15 +149,15 @@ def test_p2xp2 () :
         )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas  ( 'test_p2xp2') : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -168,7 +176,10 @@ def test_p2xp2 () :
 # =============================================================================
 ## gauss as signal, 1st order polynomial as background + non-factorizeable BB
 # =============================================================================
-def test_p1xp1_BB () : 
+def test_p1xp1_BB () :
+
+    logger = getLogger ( 'test_p1xp1_BB' ) 
+        
     logger.info ('Simplest non-factorized fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BB' )
     model   = Models.Fit2D (
         suffix   = '_3' , 
@@ -180,15 +191,15 @@ def test_p1xp1_BB () :
         )
     
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ( 'test_p1xp1_BB') : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
         
         
     if 0 != result.status() or 3 != result.covQual() :
@@ -208,7 +219,8 @@ def test_p1xp1_BB () :
 ## gauss as signal, 1st order polynomial as background 
 # =============================================================================
 def test_p1xp1_BBs () :
-    
+
+    logger = getLogger ( 'test_p1xp1_BBs' ) 
     logger.info ('Non-factorized symmetric background fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     model   = Models.Fit2D (
         suffix   = '_4' , 
@@ -220,16 +232,15 @@ def test_p1xp1_BBs () :
         )
     
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ( 'test_p1xp1_BBs') : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
-        
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -248,6 +259,8 @@ def test_p1xp1_BBs () :
 # =============================================================================
 def test_p1xp1_BBss () :
     
+    logger = getLogger ( 'test_p1xp1_BBss' ) 
+
     logger.info ('Symmetrised fit model with non-factorized symmetric background:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     sb      = ROOT.RooRealVar('sb','SB',2500 , 0,10000)
     model   = Models.Fit2D (
@@ -265,13 +278,16 @@ def test_p1xp1_BBss () :
     model.SB = 2500
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ( 'test_p1xp1_BBss') : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
+
         model. draw1 ( dataset )
         model. draw2 ( dataset )
         
@@ -292,6 +308,10 @@ def test_p1xp1_BBss () :
 ## gauss as signal, 1st order polynomial as background 
 # =============================================================================
 def test_p1xp1_BBsym () :
+
+    
+    logger = getLogger ( 'test_p1xp1_BBsym' ) 
+
     logger.info ('Symmetric non-factorized fit model:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + BBsym' )
     sb      = ROOT.RooRealVar('sb','SB',0,10000)
     model   = Models.Fit2DSym (
@@ -310,8 +330,8 @@ def test_p1xp1_BBsym () :
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -330,6 +350,9 @@ def test_p1xp1_BBsym () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_pbxpb_BB  () :
+
+    logger = getLogger ( 'test_pbxpb_BB' ) 
+
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + (expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_7' , 
@@ -344,15 +367,15 @@ def test_pbxpb_BB  () :
     model.bkg_1y   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ( 'test_pbxpb_BB') : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -371,6 +394,9 @@ def test_pbxpb_BB  () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_pbxpb_BBs () :
+
+    logger = getLogger ( 'test_pbxpb_BBs' ) 
+
     logger.info ('Non-factorizeable background component:  ( Gauss + expo*P1 ) (x) ( Gauss + expo*P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2D (
         suffix   = '_8' , 
@@ -385,13 +411,16 @@ def test_pbxpb_BBs () :
     model.bkg_1y   .tau  .fix ( 0 )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ('test_pbxpb_BBs' )  : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
+
         model. draw1 ( dataset )
         model. draw2 ( dataset )
 
@@ -413,6 +442,9 @@ def test_pbxpb_BBs () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_pbxpb_BBsym () :
+
+    logger = getLogger ( 'test_pbxpb_BBsym' ) 
+
     logger.info ('Symmetric fit model with non-factorizeable background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + Sym(expo*P1)**2')
     model   = Models.Fit2DSym (
         suffix   = '_9' , 
@@ -423,15 +455,15 @@ def test_pbxpb_BBsym () :
         )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ('test_pbxpb_BBsym' ) : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -451,6 +483,8 @@ def test_pbxpb_BBsym () :
 # =============================================================================
 def test_psxps_BBs () :
         
+    logger = getLogger ( 'test_psxps_BBs' ) 
+
     logger.info ('Non-factorizeable symmetric background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2D (
@@ -463,15 +497,15 @@ def test_psxps_BBs () :
         )
 
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas ('test_psxps_BBs' ) : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -490,6 +524,10 @@ def test_psxps_BBs () :
 ## gauss as signal, expo times 1st order polynomial as background 
 # =============================================================================
 def test_psxps_BBsym () :
+
+
+    logger = getLogger ( 'test_psxps_BBsym' ) 
+
     logger.info ('Simmetric fit model with non-factorizeable background component:  ( Gauss + P1 ) (x) ( Gauss + P1 ) + (PS*P1)**2')
     PS      = Ostap.Math.PhaseSpaceNL( 1.0  , 5.0 , 2 , 5 )
     model   = Models.Fit2DSym (
@@ -502,15 +540,15 @@ def test_psxps_BBsym () :
     
     
     ## fit with fixed mass and sigma
-    with rooSilent() : 
+    with rooSilent() , use_canvas (  'test_psxps_BBsym' ) : 
         result, frame = model. fitTo ( dataset )
         model.signal_x.sigma.release () 
         model.signal_y.sigma.release ()
         model.signal_x.mean .release () 
         model.signal_y.mean .release () 
         result, frame = model. fitTo ( dataset )
-        model. draw1 ( dataset )
-        model. draw2 ( dataset )
+        with wait ( 1 ) : model. draw1 ( dataset )
+        with wait ( 1 ) : model. draw2 ( dataset )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d '
@@ -530,8 +568,8 @@ def test_psxps_BBsym () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+
+    with timing ( 'Save everything to DBASE' , logger ), DBASE.tmpdb() as db : 
         db['m_x'     ] = m_x
         db['m_y'     ] = m_y
         db['vars'    ] = varset
@@ -544,19 +582,18 @@ def test_db() :
 if '__main__' == __name__ :
     
     from ostap.utils.timing import timing
-    with timing ('test_const'       ) : test_const       ()          
-    with timing ('test_p2xp2'       ) : test_p2xp2       ()          
-    with timing ('test_p1xp1_BB'    ) : test_p1xp1_BB    ()          
-    with timing ('test_p1xp1_BBss'  ) : test_p1xp1_BBss  ()          
-    with timing ('test_p1xp1_BBsym' ) : test_p1xp1_BBsym ()          
-    with timing ('test_pbxpb_BB'    ) : test_pbxpb_BB    ()          
-    with timing ('test_pbxpb_BBs'   ) : test_pbxpb_BBs   ()          
-    with timing ('test_pbxpb_BBsym' ) : test_pbxpb_BBsym ()          
-    with timing ('test_psxps_BBs'   ) : test_psxps_BBs   ()          
-    with timing ('test_psxps_BBsym' ) : test_psxps_BBsym ()          
+    with timing ('test_const'       , logger ) : test_const       ()          
+    with timing ('test_p2xp2'       , logger ) : test_p2xp2       ()          
+    with timing ('test_p1xp1_BB'    , logger ) : test_p1xp1_BB    ()          
+    with timing ('test_p1xp1_BBss'  , logger ) : test_p1xp1_BBss  ()          
+    with timing ('test_p1xp1_BBsym' , logger ) : test_p1xp1_BBsym ()          
+    with timing ('test_pbxpb_BB'    , logger ) : test_pbxpb_BB    ()          
+    with timing ('test_pbxpb_BBs'   , logger ) : test_pbxpb_BBs   ()          
+    with timing ('test_pbxpb_BBsym' , logger ) : test_pbxpb_BBsym ()          
+    with timing ('test_psxps_BBs'   , logger ) : test_psxps_BBs   ()          
+    with timing ('test_psxps_BBsym' , logger ) : test_psxps_BBsym ()          
 
-
-    with timing ( 'Save to DB'     ) : test_db ()          
+    with timing ('Save to DB' ) : test_db ()          
     
 # =============================================================================
 ##                                                                      The END 

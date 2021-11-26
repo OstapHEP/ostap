@@ -17,6 +17,9 @@ __all__     = (
     #
     'RangeVar'          , ## Helper class to temporary change a range for the variable 
     'MakeVar'           , ## Helper bade class that allow storage of newly created RooFit objects
+    'XVar'              , ## helper to deal with x-variable
+    'YVar'              , ## helper to deal with y-variable
+    'ZVar'              , ## helper to deal with z-variable
     #
     "H1D_dset"          , ## 1D-histogram to RooDataHist converter 
     "H2D_dset"          , ## 2D-histogram to RooDataHist converter 
@@ -36,23 +39,53 @@ __all__     = (
     'ParamsPoly'        , ##  helper class for RooFit polynomials
     'ShiftScalePoly'    , ##  helper class for RooFit polynomials
     #
-    "NameDuplicates"    , ## allow/disallow name duplicates 
+    "NameDuplicates"    , ## allow/disallow name duplicates
     )
 # =============================================================================
-import ROOT, math, string
+import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   ostap.core.core        import Ostap, rootID, VE, items_loop
-from   ostap.core.ostap_types import ( num_types     , list_types   ,
-                                       integer_types , string_types ,
-                                       is_good_number               )
-from   ostap.logger.utils     import roo_silent
-from   sys                    import version_info as python_version 
-from   ostap.math.random_ext  import ve_gauss, poisson  
+from   builtins                import range 
+from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
+from   ostap.core.ostap_types  import ( num_types      , list_types     ,
+                                        integer_types  , string_types   ,
+                                        is_good_number , sequence_types )
+from   ostap.logger.utils      import roo_silent
+from   sys                     import version_info as python_version 
+from   ostap.math.random_ext   import ve_gauss, poisson
+from   ostap.core.meta_info    import root_version_int
+from   ostap.fitting.variables import SETVAR 
+from   ostap.fitting.roocmdarg import flat_args, check_arg 
 # =============================================================================
-from   ostap.logger.logger import getLogger
+from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.utils' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+try :
+    from string import ascii_letters
+except ImportError :
+    from string import letters as ascii_letters
+# =============================================================================
+## make a name from prefix, name and suffix 
+def make_name ( prefix , name , suffix ) :
+    """Make a name from prefix, name and suffix
+    """
+    
+    prefix = prefix.replace ( ' ' , '' ) 
+    suffix = suffix.replace ( ' ' , '' )
+    name   = name  .replace ( ' ' , '' )
+
+    while prefix.endswith   ( '_' ) : prefix = prefix[:-1]
+    while suffix.startswith ( '_' ) : suffix = suffix[1:] 
+
+    if   prefix and name and suffix : return "%s_%s_%s" % ( prefix , name , suffix ) 
+    elif prefix and suffix          : return "%s_%s"    % ( prefix ,        suffix ) 
+    elif prefix and name            : return "%s_%s"    % ( prefix , name          ) 
+    elif suffix and name            : return "%s_%s"    % (          name , suffix )
+
+    return "%s" % ( name or prefix or suffix ) 
+
+    
 # =============================================================================
 ## MINUIT covariance matrix status:
 # - status = -1 :  not available (inversion failed or Hesse failed)
@@ -83,6 +116,7 @@ def cov_qual ( status ) : return _cov_qual_.get( status , "%s" % status )
 # - status = 4    : Reached call limit
 # - status = 5    : Any other failure
 _fit_status_ = {
+    0    : ' 0/success' ,
     1    : ' 1/Covariance was made pos defined',
     2    : ' 2/Hesse is invalid',
     3    : ' 3/Edm is above max',
@@ -177,7 +211,20 @@ class NameDuplicates(object) :
     def allowed ( cls ) : return cls.__allowed
     @classmethod
     def allow   ( cls , allowed ) :
-        cls.__allowed = True if allowed else False 
+        cls.__allowed = True if allowed else False
+    # =========================================================================
+    def __init__   ( self , allow  ) :
+        self.__allow  = True if allow else False
+        self.__backup = self.allowed()
+    def __enter__  ( self ) :        
+        self.__backup = self.allowed()
+        self.allow ( self.__allow )
+        return self
+    def __exit__   ( self , *_     ) :
+        self.allow ( self.__backup )
+# =============================================================================
+
+
 # =============================================================================
 ## keep the list of local loggers  
 _loggers  = {}           
@@ -187,7 +234,7 @@ _loggers  = {}
 #   - creation of <code>ROOT.RooRealVar objects</code>
 #   - store newly created RooFit objects
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2018-07-14  
+#  @date 2018-07-14
 class MakeVar ( object ) :
     """Helper class that allows implement several purely  technical methods:
     - creation of <code>ROOT.RooRealVar objects</code>
@@ -195,14 +242,16 @@ class MakeVar ( object ) :
     """
     __pdf_names = set()
     __var_names = set()
+    __numnames  = 0
     
     ## @attention ensure that important attributes are available even before __init__
     def __new__( cls, *args, **kwargs):
         if  python_version.major > 2 : obj = super(MakeVar, cls).__new__( cls )
         else                         : obj = super(MakeVar, cls).__new__( cls , *args , **kwargs )
-            
-        obj.__aux_keep = []                      ## ATTENTION!        
-        obj.__name     = None                    ## ATTENTION!
+        ##
+        obj.__aux_keep     = []                     ## ATTENTION!        
+        obj.__name        = None                    ## ATTENTION!
+        obj.__local_names = set()
         return obj
     
     ##  produce ERROR    message using the local logger 
@@ -232,11 +281,11 @@ class MakeVar ( object ) :
 
     @property
     def aux_keep ( self ) :
-        """``aux_keep'' -  the list of objects to be kept by this PDF"""
+        """``aux_keep'' -  the list of objects to be kept by this PDF/FUN"""
         return self.__aux_keep
     @property
     def logger   ( self ) :
-        """``logger'': get the local Logger object"""
+        """``logger'': get the local logger object"""
         name    = self.name
         logname = str ( self.__class__.__name__ ) 
         if name : logname += '(' + name + ')'
@@ -252,11 +301,81 @@ class MakeVar ( object ) :
     @name.setter
     def name ( self , value ) :
         assert isinstance ( value , str ) , "``name'' must  be a string, %s/%s is given" % ( value , type ( value ) )
+        if self.__name == value : return 
         if value in self.__pdf_names and not NameDuplicates.allowed() :
-            self.warning ( 'The name "%s" for PDF already defined!' % value )
+            self.warning ( 'The name "%s" for PDF/FUN already defined!' % value )
         self.__pdf_names.add ( value )     
         self.__name = value
 
+    ## # =============================================================================
+    ## ## generate some unique name
+    ## @classmethod 
+    ## def generate_name ( cls , prefix = '' , suffix = '' ) :
+    ##     name = prefix + suffix 
+    ##     while name in cls.__pdf_names or name in cls.__var_names or not name :
+    ##         name = prefix + ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix 
+    ##     return name
+
+    # =============================================================================
+    ## generate some unique name for PDF/FUN and objects
+    @staticmethod 
+    def generate_name ( prefix = '' , suffix = '' ) :
+        """Generate some unique name for PDF/FUN and objects
+        """
+                
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = make_name ( prefix , '' , suffix ) 
+                                                   
+        MakeVar.__numnames += 1            
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) :
+            
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+
+            name = make_name ( prefix , part , suffix )
+            
+            MakeVar.__numnames += 1
+
+        return name
+    
+    # =============================================================================
+    ## generate some unique name for <code>RooFit</code>
+    #  @see TNamed 
+    #  @see RooNameReg 
+    #  @see RooAbsArg 
+    @staticmethod
+    def roo_name ( prefix = 'roo' , suffix = '' ) :
+        """Generate some unique name for <code>RooFit</code>
+        - see `ROOT.RooNameReg` 
+        - see `ROOT.TNamed`
+        - see `ROOT.RooAbsArg`
+        """
+
+        regname = ROOT.RooNameReg.instance()
+
+        prefix = prefix.replace ( ' ' , '' )
+        if prefix.endswith('_') : prefix = prefix[:-1]
+        
+        suffix = suffix.replace ( ' ' , '' )
+        if suffix.startswith('_') : suffix = suffix[1:] 
+
+        name = make_name ( prefix , '' , suffix ) 
+                                                   
+        MakeVar.__numnames += 1            
+        while ( name in MakeVar.__pdf_names ) or ( name in MakeVar.__var_names ) or ( not name ) or regname.known ( name ) : 
+            
+            part = ''.join ( ( random.choice ( ascii_letters ) for i in range ( 6 ) )  ) + suffix
+            
+            name = make_name ( prefix , part , suffix )
+            
+            MakeVar.__numnames += 1
+
+        return name
+            
     # =============================================================================
     ## create/modify  the variable
     #  Helper function for creation/modification/adjustment of variable
@@ -270,7 +389,11 @@ class MakeVar ( object ) :
     #  @endcode
     #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
     #  @date 2013-12-01
-    def make_var ( self , var , name , comment = '' , fix = None , *args ) :
+    def make_var ( self           ,
+                   var            ,
+                   name           , ## name 
+                   comment = ''   , ## title 
+                   fix     = None , *args ) :
         """Make/modify  the variable:
         
         v = self.make_var ( 10   , 'myvar' , 'mycomment' )
@@ -287,26 +410,39 @@ class MakeVar ( object ) :
         if   isinstance   ( var , tuple ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar ( self.var_name ( name ) , comment , *var )
+            self.debug ( 'Create variable/1:  %s' % var ) 
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
 
         ## if only name is specified :
-        if   isinstance  ( var , string_types ) and 2 <= len ( args ):
+        if   isinstance  ( var , string_types ) and 1 <= len ( args ) <= 3 :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var     = ROOT.RooRealVar( self.var_name ( var ) , name + comment , *args )
+            self.debug ( 'Created variable/2: %s' % var ) 
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
             
         # var = value 
         if isinstance   ( var , num_types ) :
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
-            if   not    args       : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
-            elif 2 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
-            elif 3 == len ( args ) : var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
-                
+            if   not    args       :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var             )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable                           
+                self.debug ( 'Create variable/3: %s' % var ) 
+            elif 2 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args     )
+                self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/4: %s' % var ) 
+            elif 3 == len ( args ) :
+                var = ROOT.RooRealVar ( self.var_name ( name ) , comment , var , *args[1:] )
+                self.aux_keep.append  ( var ) ##  ATTENTION: store newly created variable
+                self.debug ( 'Create variable/5: %s' % var ) 
+
         ## create the variable from parameters 
         if not isinstance ( var , ROOT.RooAbsReal ) : 
             assert name and isinstance ( name , string_types ) , "make_var: invalid name '%s'" % name
             var = ROOT.RooRealVar ( self.var_name ( name ) , comment , *args )
+            self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
+            self.debug ( 'Create variable/6: %s' % var ) 
             
-        self.aux_keep.append ( var ) ##  ATTENTION: store newly created variable
-
         ## fix it, if needed
         if   isinstance ( fix , bool       ) : pass 
         elif isinstance ( fix , num_types  ) :
@@ -332,9 +468,27 @@ class MakeVar ( object ) :
         if name in self.__var_names and not NameDuplicates.allowed() :
             self.warning ( 'The variable name "%s" is already defined!' % name )
             
-        self.__var_names.add ( name )
+        self.__var_names.add   ( name )
+        self.__local_names.add ( name )
         return name
-    
+
+    # =========================================================================
+    ## delete the obejct
+    #  - remove the registered names in storages
+    #  - clear the local storage of names 
+    def __del__ ( self ) :
+        """Delete the obejct
+        - remove the registered names in storages
+        - clear the local storage of names 
+        """
+        
+        if self.name and self.name in self.__pdf_names :
+            self.__pdf_names.remove ( self.name ) 
+            while self.__local_names :
+                a = self.__local_names.pop ()
+                if a in self.__var_names :
+                    self.__var_names.remove  ( a ) 
+        
     # =========================================================================
     ## create ROOT.RooFit.Binning from TAxis
     #  @see RooFit::Binning
@@ -406,7 +560,7 @@ class MakeVar ( object ) :
         _args = []
         for a in args :
             if not isinstance ( a , ROOT.RooCmdArg ) :
-                self.warning ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
+                self.error ( 'parse_args: unknown argument type %s/%s, skip' % ( a , type ( a ) ) )
             else : _args.append ( a ) 
 
         from ostap.plotting.fit_draw import keys  as drawing_options
@@ -485,7 +639,7 @@ class MakeVar ( object ) :
             elif kup in ( 'ASYMPTOTIC'       ,
                           'ASYMPTOTICERR'    ,
                           'ASYMPTOTICERROR'  ,
-                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= ROOT.gROOT.GetVersionInt() :
+                          'ASYMPTOTICERRORS' ) and isinstance ( a , bool ) and 61900 <= root_version_int :
                 
                 if   a and dataset and     dataset.isWeighted()           : pass 
                 elif a and dataset and not dataset.isWeighted()           :
@@ -494,10 +648,13 @@ class MakeVar ( object ) :
                 elif       dataset and     dataset.isWeighted() and not a :
                     self.warning ('parse_args: AsymptoticError-flag is False for     weighted dataset')                    
 
+                if a and root_version_int < 62006 :
+                    self.warning ("``Asymptotic=True'' will crash if Title!=Name (ROOT-10668)")
+                    
                 _args.append (  ROOT.RooFit.AsymptoticError ( a ) )
                     
             elif kup in ( 'BATCH'            ,
-                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= ROOT.gROOT.GetVersionInt() :
+                          'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= root_version_int :
                 _args.append (  ROOT.RooFit.BatchMode ( a ) )                                
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
                 _args.append   (  ROOT.RooFit.Extended ( a ) )                
@@ -548,6 +705,28 @@ class MakeVar ( object ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+            elif kup in ( 'MINOS'    ,       ) and isinstance ( a , string_types   ) \
+                     and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :                
+                _v = self.params()[ a ]
+                _s = ROOT.RooArgSet ( _v )
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos        ( _s )  )                
+            elif kup in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
+
+                _s     = ROOT.RooArgSet()
+                _pars = self.params ( dataset ) if hasattr  ( self , 'params' ) else ROOT.RooArgSet() 
+                for v in a :
+                    if   v in _pars and isinstance ( v , string_types ):
+                        _v = _pars [ v ] 
+                        _s.add ( _v )
+                    elif v in _pars and isinstance ( v , ROOT.RooAbsArg  ) :
+                        _s.add (  v )
+                    else :
+                        self.error ( "Can not find %s in parameetrs" % v )
+
+                self.aux_keep.append ( _s ) 
+                _args.append   (  ROOT.RooFit.Minos ( _s )  )
+                                
             elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
             elif kup in ( 'CLONE'            ,
@@ -572,23 +751,42 @@ class MakeVar ( object ) :
             else :
                
                 self.error ( 'parse_args: Unknown/illegal keyword argument: %s/%s, skip it ' % ( k , type ( a ) ) )
-
-        keys       = [ a.GetName() for a in _args ]        
-        if not 'NumCPU' in keys :
+            
+        
+        if not check_arg ( 'numcpu' , *_args ) :
             if  dataset and not isinstance ( dataset , ROOT.RooDataHist ) :
                 _args.append ( ncpu ( len ( dataset ) ) )
             else :
                 nc = numcpu()
-                if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) ) 
+                if  1 < nc : _args.append ( ROOT.RooFit.NumCPU ( nc ) )
 
+                
         # =============================================================
-        ## check sumw2 for the weighted datasets 
-        if dataset and dataset.isWeighted() :
-            for a in _args :
-                if 'SumW2Error'      == a.name and not bool ( a.getInt ( 0 ) ) :
-                    logger.warning ("parse_args: 'sumw2=False' is specified for the weighted  dataset!")
-                if 'AsymptotocError' == a.name and not bool ( a.getInt ( 0 ) ) :
-                    logger.warning ("parse_args: 'asymptorocerror=False' is specified for the weighted  dataset!")
+        ## check options for the weighted datasets 
+        if dataset :
+            
+            weighted = dataset.isWeighted ()            
+            sw2      = check_arg ( 'SumW2Error'      , *_args )
+            aer      = check_arg ( 'AsymptoticError' , *_args )
+
+            if 62500 <= root_version_int                 and \
+               isinstance ( dataset , ROOT.RooDataHist ) and ( not sw2 ) and ( not aer ) :
+                _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
+            elif sw2 and aer :
+                logger.warning ( "parse_args: Both ``SumW2Error'' and ``AsymptoticError'' are specified" )                
+            elif weighted   and sw2 :
+                value = bool ( sw2.getInt( 0 ) )
+                if not value : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
+            elif weighted and aer : 
+                value = bool ( aer.getInt( 0 ) )
+                if not value : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
+            elif weighted :                
+                logger.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
+                _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
+            elif not weighted and sw2 :
+                logger.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
+            elif not weighted and aer :
+                logger.warning ( "parse_args:``AsymptoticError'' is specified for non-weighted dataset" )
 
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
@@ -606,30 +804,88 @@ class MakeVar ( object ) :
             self.warning ("duplicated options!")            
         #
         if kset : self.debug ( 'parse_args: Parsed arguments %s' % keys )
-        ## if kset : self.info  ( 'parse_args: Parsed arguments %s' % keys )
         else    : self.debug ( 'parse_args: Parsed arguments %s' % keys )
-        
-        def chunks(lst, n):
-            """Yield successive n-sized chunks from lst."""
-            for i in range(0, len(lst), n):
-                yield lst[i:i + n]
 
-        ## _args.append ( ROOT.RooFit.BatchMode ( True ) )
+
+        ## store them 
+        self.aux_keep.append ( _args ) 
         
-        nn = 4 
-        while nn < len ( _args ) :
-            _a = [] 
-            for c in chunks ( _args , nn ) :
-                _a.append ( ROOT.RooFit.MultiArg ( *c ) )
-            _args = _a 
-                                    
-        return tuple ( _args )
-    
+        return tuple ( _args ) 
+
+    # =========================================================================
+    ## set value to a given value with the optional check
+    #  @code
+    #  pdf = ...
+    #  pdf.set_value ( my_var1 , 10 )
+    #  pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+    #  @endcode 
+    @staticmethod 
+    def set_value ( var , value , ok = lambda a , b : True ) :
+        """set value to a given value with the optional check
+        pdf = ...
+        pdf.set_value ( my_var1 , 10 )
+        pdf.set_value ( my_var2 , 10 , lambda a,b : b>0 ) 
+        """
+
+        ## must be roofit variable! 
+        assert isinstance ( var , ROOT.RooAbsRealLValue ) , 'Invalid type of ``var'' %s' % type ( var )
+        
+        if not hasattr ( var ,  'setVal' ) :
+            raise ValueError ( "No value can be set for %s/%s" % ( var , type ( var ) ) )  
+
+        ## convert to float 
+        value = float ( value )
+
+        ## check for the range, if defined 
+        minmax = var.minmax ()
+        if minmax :
+            mn , mx = minmax
+            if not ( mn <= value <= mx or isequal ( mn , value ) or isequal ( mx , value ) ) :
+                raise ValueError ( "Value %s is outside of the [%s,%s] region" % ( value , mn , mx ) ) 
+            
+        ## check for external conditions, if specified  
+        if not ok ( var , value ) :
+            raise ValueError ( "Value %s is not OK" % value ) 
+
+        ## finally set the value 
+        var.setVal ( value )
+
+        return isequal ( value , var.getVal () ) 
+
+    # =========================================================================
+    ## gettter for certain fit components from the provided list 
+    def component_getter ( self , components ) :
+        """Gettter for certain fit components from the provided list
+        """
+        nc = len ( components )
+        if   0 == nc : return ()
+        elif 1 == nc : return components [ 0 ] 
+        return tuple ( c for c in components )
+
+    # ======================================================
+    ## setter for certian fit components form provided list 
+    def component_setter ( self , components , value ) :
+        """Setter for certian fit components form provided list
+        """
+        assert 0 < len ( components ) , 'Empty list of components, setting is not possible!'
+        
+        if   isinstance ( value , num_types          ) : values = float ( value ) , 
+        elif isinstance ( value , VE                 ) : values = value.value ()  , 
+        elif isinstance ( value , ROOT.RooAbsReal    ) : values = float ( value ) , 
+        elif isinstance ( value , ROOT.RooArgList    ) : values = tuple ( float ( v ) for v in value ) 
+        elif isinstance ( value , sequence_types     ) : values = tuple ( float ( v ) for v in value ) 
+        else :
+            self.warning ("component setter: unknown type for ``value'':%s/%s" % ( str( value) , type ( value ) ) )
+            values = value 
+
+        for c , v in zip  ( components , values )  :
+            self.set_value (  c , v ) 
+
     # =========================================================================
     ## Create some expressions with variables
     # =========================================================================
     
-    # =============================================================================
+    # =========================================================================
     ## construct (on-flight) variable for the product of
     #  <code>var1</code> and <code>var2</code> \f$ v \equiv  v_1 v_2\f$ 
     #  @code
@@ -681,7 +937,7 @@ class MakeVar ( object ) :
 
     # =============================================================================
     ## construct (on-flight) variable for the sum  of
-    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  v_1 + v_2\f$ 
+    #  <code>var1</code> and <code>var2</code> \f$ v\equiv  c_1v_1 + c_2v_2\f$ 
     #  @code
     #  var1 = ...
     #  var2 = ...
@@ -690,8 +946,8 @@ class MakeVar ( object ) :
     #  var5 = xxx.vars_sum ( var1 , var2 )
     #  var6 = xxx.vars_sum ( var1 , 2.0  )    
     #  @endcode 
-    def vars_add ( self , var1 , var2 , name = '' , title = '' ) :
-        """Construct (on-flight) variable for var1+var2 
+    def vars_add ( self , var1 , var2 , c1 = 1 , c2 = 1 , name = '' , title = '' ) :
+        """Construct (on-flight) variable for var1*c1+var2*c2 
         >>> var1 = ...
         >>> var2 = ...
         >>> var3 = xxx.vars_add ( var1 , var2   )
@@ -700,29 +956,48 @@ class MakeVar ( object ) :
         >>> var6 = xxx.vars_sum ( var1 , 2 , 'sigma2' , title = 'Scaled sigma' )
         """
         
+        assert isinstance ( c1 , num_types ) and isinstance ( c2 , num_types ),\
+               "vars_add: c1 and c2 must be numeric types!"
+
+        c1 = float ( c1 )
+        c2 = float ( c2 )
+        
+        if   0 == c1 and 0 == c2 :
+            return ROOT.RooRealConstant.value ( 0 ) 
+        elif 0 == c1 : 
+            return self.vars_multiply ( var2 , c2 , name = name , title = title )
+        elif 0 == c2 :
+            return self.vars_multiply ( var1 , c1 , name = name , title = title )
+        
         f1 = isinstance ( var1 , num_types )
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res  = float ( var1 ) + float ( var2 )
+            res  = float ( var1 ) * float ( c1 ) + float ( var2 ) * float ( c2 )
             return ROOT.RooRealConstant.value ( res ) 
         elif f1 :
             ## shortcut 
-            if 0 == var1 : return var2                      ## SHORTCUT
+            if 0 == var1 :
+                return self.var_multiply ( var2 , c2 , name = name , title = title )  ## SHORTCUT 
             #
-            var1 = ROOT.RooRealConstant.value ( var1 )                         
-            return self.vars_add ( var1 , var2 , name , title )
+            var1 = ROOT.RooRealConstant.value ( float ( var1 ) * float ( c1 ) )                         
+            return self.vars_add ( var1 , var2 , name = name , title = title )
         elif f2 :
             ## shortcut 
-            if 0 == var2 : return var1                      ## SHORTCUT
+            if 0 == var2 :
+                return self.var_multiply ( var1 , c1 , name = name , title = title )  ## SHORTCUT 
             #
-            var2 = ROOT.RooRealConstant.value ( var2 ) 
-            return self.vars_add ( var1 , var2 , name , title )
+            var2 = ROOT.RooRealConstant.value ( float ( var2 ) * float ( c2 ) ) 
+            return self.vars_add ( var1 , var2 , name =name , title = title  )
         
         self.aux_keep.append ( var1 )
         self.aux_keep.append ( var2 )
 
-        result = Ostap.MoreRooFit.Addition  ( var1 , var2 )
+        if c1 == 1 and c2 == 1 : 
+            result = Ostap.MoreRooFit.Addition  (                var1 , var2           )
+        else :
+            result = Ostap.MoreRooFit.Addition  ( name , title , var1 , var2 , c1 , c2 )
+                
         self.aux_keep.append ( result  )
                 
         return result
@@ -870,7 +1145,7 @@ class MakeVar ( object ) :
     #  var3 = xxx.vars_reldifference ( var1 , var2 )
     #  var4 = xxx.vars_reldifference ( var1 , 2.0  )    
     #  @endcode 
-    def vars_asymmetry ( self , var1 , var2 , name = '' , title = '' ) :
+    def vars_asymmetry ( self , var1 , var2 , scale = 1 , name = '' , title = '' ) :
         """Construct (on-flight) variable for (var1-var2)/(var2+var1)
         >>> var1 = ...
         >>> var2 = ...
@@ -884,25 +1159,25 @@ class MakeVar ( object ) :
         f2 = isinstance ( var2 , num_types )
 
         if f1 and f2 :
-            res  = ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
+            res  = scale * ( float ( var1 ) - float ( var2 ) ) / ( float ( var2 ) + float ( var1 ) )
             return ROOT.RooRealConstant.value ( res ) 
         elif f1 :
             ## shortcut 
-            if 0 == var1 : return ROOT.RooRealConstant.value ( -1 ) ## shortcut
+            if 0 == var1 : return ROOT.RooRealConstant.value ( -1.0 * scale ) ## shortcut
             #
             var1 = ROOT.RooRealConstant.value ( var1 ) 
-            return self.vars_asymmetry ( var1 , var2 , name , title )
+            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
         elif f2 :
             ## shortcut 
-            if 0 == var2 : return ROOT.RooRealConstant.value (  1 ) ## shortcut
+            if 0 == var2 : return ROOT.RooRealConstant.value (  1.0 * scale ) ## shortcut
             #
             var2 = ROOT.RooRealConstant.value ( var2 ) 
-            return self.vars_asymmetry ( var1 , var2 , name , title )
+            return self.vars_asymmetry ( var1 , var2 , scale = scale , name = name , title = title )
         
         self.aux_keep.append ( var1 )
         self.aux_keep.append ( var2 )
 
-        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 )
+        result = Ostap.MoreRooFit.Asymmetry ( var1 , var2 , name , title , scale )
         self.aux_keep.append ( result  )
         
         return result
@@ -1060,12 +1335,184 @@ class MakeVar ( object ) :
         name  = name  if name  else 'Formula_%s '    % self.name 
         title = title if title else 'Formula:%s/%s'  % ( formula , self.name )
         
-        rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        ## rfv = ROOT.RooFormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
+        rfv = Ostap.FormulaVar ( self.var_name ( name ) , title , formula_ , vlst )
         
         self.aux_keep.append ( vlst )
         self.aux_keep.append ( rvf  )
         
         return rfv 
+
+    # =========================================================================
+    ## make a specific combination of variables:  alpha*var1*(bet+gamma*var2)    
+    #  \f$ r = \alpha v_1 ( \beta + \gamma * v_2 ) \    
+    def vars_combination ( self ,
+                           var1 ,
+                           var2 ,
+                           alpha  = 1   ,
+                           beta   = 1   ,
+                           gamma  = 1   ,
+                           name   = ''  , 
+                           title  = ''  ) :
+        
+        f1 = isinstance ( var1 , num_types )
+        f2 = isinstance ( var2 , num_types )
+
+        assert isinstance ( alpha , num_types ) , "vars_combination: ``alpha'' must be numeric types!"
+        assert isinstance ( beta  , num_types ) , "vars_combination: ``alpha'' must be numeric types!"
+        assert isinstance ( gamma , num_types ) , "vars_combination: ``alpha'' must be numeric types!"
+
+        if   0 == alpha               : return ROOT.RooRealConstant.value ( 0 ) 
+        elif 0 == beta and 0 == gamma : return ROOT.RooRealConstant.value ( 0 ) 
+
+        alpha = float ( alpha )
+        beta  = float ( beta  )
+        gamma = float ( gamma )
+        
+        
+        if f1 and f2 :
+
+            res  = beta   + gamma * float ( var2 )
+            res *=          alpha * float ( var1 )
+            
+            return ROOT.RooRealConstant.value ( 0 )
+        
+        elif f1 :
+            
+            return self.sum_add      ( float ( var1 ) * alpha * beta        ,
+                                       var2                                 ,
+                                       c2    = alpha * gamma * float ( v1 ) , 
+                                       name  = name                         ,
+                                       title = title                        ) 
+        elif f2 :
+            
+            return self.sum_multiply ( var1 ,
+                                       alpha * ( beta + gamma * float ( v2 ) ) ,
+                                       name  = name ,
+                                       title = title ) 
+        
+        
+        self.aux_keep.append ( var1 )
+        self.aux_keep.append ( var2 )
+
+        if not name :
+            if   1 == alpha and 1 == beta and +1 == gamma :
+                name = '%s*(1+%s)' % ( var1.name , var2.name )
+            elif 1 == alpha and 1 == beta and -1 == gamma :
+                name = '%s*(1-%s)' % ( var1.name , var2.name )
+            else :
+                name = 'Var_%g*%s*(%s%+g*%s)' % ( alpha , var1.name , beta , gamma , var2.name )
+                
+        if not title : title = name
+                    
+        result = Ostap.MoreRooFit.Combination ( var1  , var2  ,
+                                                name  , title ,
+                                                alpha , beta  , gamma )
+        
+        self.aux_keep.append ( result  )
+        
+        return result
+        
+        
+            
+            
+        
+    # =========================================================================
+    ## (var1,var2) <--> (var, asymmetry)
+    # =========================================================================
+
+    # =========================================================================
+    ## Convert pair of variables into ``sum'' & ``asymmetry'' pair:
+    # - ``sum''       :  sum_scale  * ( var1 + var2  )
+    # - ``asymmetry'' :  asym_scale * ( var1 - var2 ) / (var1+ + var2 ) 
+    # @code
+    # var1 = ...
+    # var2 = ...
+    # hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
+    # @endcode 
+    def vars_to_asymmetry ( self             ,
+                            var1             ,   ## the first variable 
+                            var2             ,   ## the second variable
+                            asym_scale = 1   ,   ## scale factor asymmetry
+                            sum_scale  = 0.5 ,   ## scale factor for ``sum''
+                            asym_name  = ''  ,   ## name for asymmetry variable
+                            sum_name   = ''  ,   ## name for ``sum'' variable                              
+                            asym_title = ''  ,   ## title for asymmetry variable 
+                            sum_title  = ''  ) : ## title for ``sum'' variable 
+        """Convert pair of variables into ``sum'' & ``asymmetry'' pair
+        - ``sum''       :  sum_scale  * ( var1 + var2  )
+        - ``asymmetry'' :  asym_scale * ( var1 - var2 ) / (var1+ + var2 ) 
+        >>> var1 = ...
+        >>> var2 = ...
+        >>> hsum , asum = self.vars_to_asymmetry ( var1 , var2 ) 
+        """
+        
+        ## asym_scale * (var1-var2)/(var1+var2)
+        asym_var = self.vars_asymmetry (
+            var1               , ## first vatiable 
+            var2               , ## second variable 
+            scale = scale      , ## scale
+            name  = asym_name  ,
+            title = asym_title ) 
+
+        ## sum_scale * ( var1 + var2 ) 
+        sum_var  = self.vars_add (
+            var1               , ## first variable 
+            var2               , ## second variable
+            c1    = sum_scale  , ## factor c1 
+            c2    = sum_scale  , ## factor c2 
+            name  = sum_name   , ## name 
+            title = sum_title  ) ## title  
+        
+        return sum_var , asym_var
+    
+    # ========================================================================= 
+    ## convert a pair of variables ``half-sum''&``asymmetry'' into ``var1'', ``var2''
+    #  @code
+    #  halfsum   = ...
+    #  asymmetry = ...
+    #  var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
+    #  @endcode 
+    def vars_from_asymmetry ( self         ,
+                              hsumvar      , ## half-sum 
+                              asymvar      , ## asymmetry 
+                              v1name  = '' , 
+                              v2name  = '' ,
+                              v1title = '' ,
+                              v2title = '' ) :
+        """Convert a pair of variables ``half-sum''&``asymmetry'' into ``var1'', ``var2''
+        >>> halfsum   = ...
+        >>> asymmetry = ...
+        >>> var1 , var2 = self.vars_from_asymmetry ( halfsum , asymmetry )
+        """
+
+        if hsumvar is None :
+            return hsumvar , hsumvar
+        
+        if isinstance ( hsumvar , ROOT.RooAbsArg ) and isinstance ( asymvar , ROOT.RooAbsArg )  :
+            s = hsumvar.name
+            a = asymvar.name
+            if not v1name  : v1name  = '%sL' % s
+            if not v2name  : v2name  = '%sR' % s            
+            if not v1title : v1title = '%s_{L} : %s #times (1 + %s_{%s}) ' %  ( s , s , a , s ) 
+            if not v2title : v2title = '%s_{R} : %s #times (1 - %s_{%s}) ' %  ( s , s , a , s ) 
+                 
+        var1 = self.vars_combination ( hsumvar           ,
+                                       asymvar           ,
+                                       alpha   =  1      ,
+                                       beta    =  1      ,
+                                       gamma   = +1      , 
+                                       name    = v1name  ,
+                                       title   = v1title )
+        
+        var2 = self.vars_combination ( hsumvar           ,
+                                       asymvar           ,
+                                       alpha   =  1      ,
+                                       beta    =  1      ,
+                                       gamma   = -1      , 
+                                       name    = v2name  ,
+                                       title   = v2title )
+        return var1 , var2 
         
         
     # =========================================================================
@@ -1317,7 +1764,7 @@ class MakeVar ( object ) :
         >>> n =  pdf.gen_sample ( 10            ) ## get poissonian 
         >>> n =  pdf.gen_sample ( VE ( 10 , 3 ) ) ## get gaussian stuff
         """
-        if   isinstance ( nevents , num_types ) and 0  < nevents :
+        if   isinstance ( nevents , num_types ) and 0 < nevents :
             return poisson ( nevents )
         elif isinstance ( nevents , VE ) and \
                  ( ( 0 <= nevents.cov2 () and 0 < nevents                       ) or 
@@ -1331,7 +1778,26 @@ class MakeVar ( object ) :
             
         self.error ( "Can't generate positive number from %s/%s" % ( events , type ( events ) ) )
         return 
-    
+
+    # =========================================================================
+    ## get the proper min/max range for the variable  
+    def vmnmx    ( self , var , vmin , vmax ) :
+        """Get the proper min/max range for the variable 
+        """
+        if var.xminmax() :
+            vmn , vmx = var.xminmax ()
+            if   is_good_number ( vmin ) : vmin = max ( vmin , vmn )
+            else                         : vmin = vmn
+            if   is_good_number ( vmax ) : vmax = min ( vmax , vmx )
+            else                         : vmax = vmx
+
+        assert is_good_number ( vmin ), 'Invalid type of ``min'' %s/%s' % ( vmin , type ( vmin ) )
+        assert is_good_number ( vmax ), 'Invalid type of ``max'' %s/%s' % ( vmin , type ( vmin ) )
+        assert vmin < vmax, 'Invalid min/max range: %s/%s' % ( vmin , vmax )
+        
+        return vmin , vmax
+
+  
 # =============================================================================
 
 
@@ -1340,42 +1806,85 @@ class MakeVar ( object ) :
 #  @code
 #  h   = ...
 #  dset = H1D_dset ( h )
-#  @endcode 
+#  @endcode
+#  One can create binned (default) or weighted datasets depending
+#  on the value of <code>weighted</code> parameter
+#  @code
+#  h   = ...
+#  wset = H1D_dset ( h , weighted = True  )
+#  bset = H1D_dset ( h , weighted = False ) ## default 
+#  @endcode
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_dset(MakeVar) :
     """Simple convertor of 1D-histogram into data set
     >>> h   = ...
     >>> dset = H1D_dset ( h )
+    One can create `binned` (default) or `weighted` data set
+    >>> wset = H1D_dset ( h , weighted = True  )
+    >>> bset = H1D_dset ( h , weighted = False ) ## default 
     """
-    def __init__ ( self            , 
-                   histo           ,
-                   xaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             , 
+                   histo            ,
+                   xaxis    = None  , ## predefined axis/variable ? 
+                   density  = False ,
+                   weighted = False , ## weighted or binned? 
+                   silent   = False ) :
+        
+        import ostap.histos.histos
+        
         #
         ## use mass-variable
         #
-        assert isinstance ( histo , ROOT.TH1 ) , "``histo'' is not ROOT.TH1"
+        assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim () , "``histo'' is not ROOT.TH1"
         self.__histo      = histo 
         self.__histo_hash = hash ( histo )
         
+
         name           = histo.GetName()
         self.__xaxis   = self.make_var ( xaxis , 'x_%s' % name , 'x-axis(%s)' % name , None , *(histo.xminmax()) )
         
         self.__density = True if density else False 
         self.__silent  = silent 
-        
+
+        self.__wvar    = None
+
         with roo_silent ( self.silent ) :  
-            
-            self.__vlst = ROOT.RooArgList    ( self.xaxis )
-            self.__vimp = ROOT.RooFit.Import ( self.histo , self.density )
-            self.__dset = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
-            
+
+            ## create weighted dataset ?
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h1weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max ) 
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__wvar )
+                self.__wset = ROOT.RooArgSet   ( self.__wvar      )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
+                self.__dset = ROOT.RooDataSet  (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset , *self.__warg )
+
+                xvar = self.__xaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+                        
+            ## create binned dataset 
+            else :
+                
+                self.__vlst = ROOT.RooArgList    ( self.xaxis )
+                self.__vimp = ROOT.RooFit.Import ( self.histo , self.density )
+                self.__dset = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned data set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
+                
     @property     
     def xaxis ( self ) :
         """The histogram x-axis variable"""
@@ -1400,7 +1909,10 @@ class H1D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
-
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
 
 # =============================================================================
 ## simple convertor of 2D-histo to data set
@@ -1409,14 +1921,21 @@ class H1D_dset(MakeVar) :
 class H2D_dset(MakeVar) :
     """Simple convertor of 2D-histogram into data set
     """
-    def __init__ ( self            ,
-                   histo           ,
-                   xaxis   = None  ,
-                   yaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             ,
+                   histo            ,
+                   xaxis    = None  ,
+                   yaxis    = None  ,
+                   density  = False ,
+                   weighted = False ,
+                   silent   = False ) :
         #
-        assert isinstance ( histo , ROOT.TH2 ) , "``histo'' is not ROOT.TH2"
+        import ostap.histos.histos
+        
+        assert isinstance ( histo , ROOT.TH2 ) and 2 == histo.dim() , "``histo'' is not ROOT.TH2"
         self.__histo      =        histo
         self.__histo_hash = hash ( histo )
 
@@ -1434,15 +1953,40 @@ class H2D_dset(MakeVar) :
         self.__density = True if density else False 
         self.__silent  = silent
         
+        self.__wvar    = None
+
         with roo_silent ( silent ) : 
 
-            self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis )
-            self.__vimp  = ROOT.RooFit.Import ( histo , density )
-            self.__dset  = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
+            ## create weighted dataset 
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h2weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__yaxis , self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__dset = ROOT.RooDataSet (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset ,
+                    self.__warg )
+
+                xvar = self.__xaxis
+                yvar = self.__yaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , y , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        yvar.setVal     ( y.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+
+            ## create binned dataset 
+            else : 
+                self.__vlst  = ROOT.RooArgList    ( self.__xaxis , self.__yaxis )
+                self.__vimp  = ROOT.RooFit.Import ( histo , density )
+                self.__dset  = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned sata set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
             
     @property     
     def xaxis  ( self ) :
@@ -1472,6 +2016,10 @@ class H2D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
     
 # =============================================================================
 ## simple convertor of 3D-histo to data set
@@ -1480,15 +2028,22 @@ class H2D_dset(MakeVar) :
 class H3D_dset(MakeVar) :
     """Simple convertor of 3D-histogram into data set
     """
-    def __init__ ( self            ,
-                   histo           ,
-                   xaxis   = None  ,
-                   yaxis   = None  ,
-                   zaxis   = None  ,
-                   density = False ,
-                   silent  = False ) :
+    
+    w_min = -1.e+100 
+    w_max =  1.e+100
+    
+    def __init__ ( self             ,
+                   histo            ,
+                   xaxis    = None  ,
+                   yaxis    = None  ,
+                   zaxis    = None  ,
+                   density  = False ,
+                   weighted = False ,
+                   silent   = False ) :
         
-        assert isinstance ( histo , ROOT.TH3 ) , "``histo'' is not ROOT.TH3"
+        import ostap.histos.histos
+
+        assert isinstance ( histo , ROOT.TH3 ) and 3 == histo.dim () , "``histo'' is not ROOT.TH3"
         self.__histo      =        histo
         self.__histo_hash = hash ( histo )
         #
@@ -1509,16 +2064,44 @@ class H3D_dset(MakeVar) :
         
         self.__density = True if density else False 
         self.__silent  = silent
-                
+        
+        self.__wvar    = None
+        
         with roo_silent ( silent ) : 
 
-            self.__vlst  = ROOT.RooArgList    ( self.xaxis , self.yaxis , self.zaxis )
-            self.__vimp  = ROOT.RooFit.Import ( histo , density )
-            self.__dset  = ROOT.RooDataHist   (
-                rootID ( 'hds_' ) ,
-                "Data set for histogram '%s'" % histo.GetTitle() ,
-                self.__vlst  ,
-                self.__vimp  )
+            ## create weighted dataset 
+            if weighted :
+                
+                wname = weighted if isinstance ( weighted , string_types ) else 'h2weight'
+                
+                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
+                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__yaxis , self.__zaxis, self.__wvar )
+                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar )
+                self.__dset = ROOT.RooDataSet  (
+                    rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
+                    self.__vset ,
+                    self.__warg )
+
+                xvar = self.__xaxis
+                yvar = self.__yaxis
+                zvar = self.__zaxis
+                wvar = self.__wvar 
+                with SETVAR ( xvar ) :
+                    for i, x , y , z , v in histo.items () :
+                        xvar.setVal     ( x.value () )
+                        yvar.setVal     ( y.value () )
+                        zvar.setVal     ( z.value () )
+                        self.__dset.add ( self.__vset , v.value() , v.error() ) 
+
+            ## create binned dataset 
+            else : 
+                                
+                self.__vlst  = ROOT.RooArgList    ( self.__xaxis , self.__yaxis , self.__zaxis )
+                self.__vimp  = ROOT.RooFit.Import ( histo , density )
+                self.__dset  = ROOT.RooDataHist   (
+                    rootID ( 'bhds_' ) , "Binned data set for histogram '%s'" % histo.GetTitle() ,
+                    self.__vlst  ,
+                    self.__vimp  )
             
     @property     
     def xaxis  ( self ) :
@@ -1552,7 +2135,179 @@ class H3D_dset(MakeVar) :
     def histo_hash ( self ) :
         """Hash value for the histogram"""
         return self.__histo_hash
+    @property
+    def weight ( self ) :
+        """``weight'' : get weight variable if defined, None otherwise"""
+        return self.__wvar
     
+# =============================================================================
+## @class XVar
+#  Helper class to keep all properties of the x-variable
+class XVar(MakeVar) :
+    """Helper class to keep all properteis the x-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(XVar, cls).__new__( cls )
+        else                         : obj = super(XVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__xvar_init = False  
+        return obj
+
+    def  __init__ ( self , xvar ):
+
+        if self.__xvar_init : return
+        else                : self.__xvar_init = False
+        
+        self.__xvar = None
+
+        if   isinstance ( xvar , ROOT.TH1   ) : xvar = xvar.xminmax()
+        elif isinstance ( xvar , ROOT.TAxis ) : xvar = xvar.GetXmin() , xvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( xvar , tuple ) and 2 == len ( xvar ) :  
+            self.__xvar = self.make_var ( xvar         , ## var 
+                                          'x'          , ## name 
+                                          'x-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *xvar        ) ## min/max 
+        elif isinstance ( xvar , ROOT.RooAbsReal ) :
+            self.__xvar = self.make_var ( xvar         , ## var 
+                                          'x'          , ## name 
+                                          'x-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``x-variable''is not specified properly %s/%s" % ( xvar , type ( xvar ) ) )
+                
+    @property 
+    def xvar ( self ) :
+        """``x''-variable  (same as ``x'')"""
+        return self.__xvar
+    @property 
+    def x    ( self ) :
+        """``x''-variable (same as ``xvar'')"""
+        return self.xvar
+    def xminmax ( self ) :
+        """Min/max values for x-variable"""
+        return self.xvar.minmax()
+
+    ## get the proper xmin/xmax range
+    def xmnmx    ( self , xmin , xmax ) :
+        """Get the proper xmin/xmax range
+        """
+        return self.vmnmx ( self.xvar , xmin , xmax )
+
+# =============================================================================
+## @class YVar
+#  Helper class to keep all properties of the y-variable
+class YVar(MakeVar) :
+    """Helper class to keep all properteis the y-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(YVar, cls).__new__( cls )
+        else                         : obj = super(YVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__yvar_init = False  
+        return obj
+
+    def  __init__ ( self , yvar ):
+         
+        if self.__yvar_init : return
+        else                : self.__yvar_init = False
+
+        self.__yvar = None
+
+        if   isinstance ( yvar , ROOT.TH1   ) : yvar = yvar.xminmax()
+        elif isinstance ( yvar , ROOT.TAxis ) : yvar = yvar.GetXmin() , yvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( yvar , tuple ) and 2 == len ( yvar ) :  
+            self.__yvar = self.make_var ( yvar         , ## var 
+                                          'y'          , ## name 
+                                          'y-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *yvar        ) ## min/max 
+        elif isinstance ( yvar , ROOT.RooAbsReal ) :
+            self.__yvar = self.make_var ( yvar         , ## var 
+                                          'y'          , ## name 
+                                          'y-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``y-variable''is not specified properly %s/%s" % ( yvar , type ( yvar ) ) )
+                
+    @property 
+    def yvar ( self ) :
+        """``y''-variable (same as ``y'')"""
+        return self.__yvar
+    @property 
+    def y    ( self ) :
+        """``y''-variable (same as ``yvar'')"""
+        return self.yvar
+    def yminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.yvar.minmax()
+
+    ## get the proper ymin/ymax range
+    def ymnmx    ( self , ymin , ymax ) :
+        """Get the proper ymin/ymax range
+        """
+        return self.vmnmx ( self.yvar , ymin , ymax )
+
+
+# =============================================================================
+## @class ZVar
+#  Helper class to keep all properties of the z-variable
+class ZVar(MakeVar) :
+    """Helper class to keep all properteis the z-variable
+    """
+    def __new__( cls, *args, **kwargs):
+        if  python_version.major > 2 : obj = super(ZVar, cls).__new__( cls )
+        else                         : obj = super(ZVar, cls).__new__( cls , *args , **kwargs )
+        ##
+        obj.__zvar_init = False  
+        return obj
+        
+    def  __init__ ( self , zvar ):
+         
+        if self.__zvar_init : return
+        else                : self.__zvar_init = False
+
+        self.__zvar = None
+
+        if   isinstance ( zvar , ROOT.TH1   ) : zvar = zvar.xminmax()
+        elif isinstance ( zvar , ROOT.TAxis ) : zvar = zvar.GetXmin() , yvar.GetXmax()
+        
+        ## create the variable 
+        if isinstance ( zvar , tuple ) and 2 == len ( zvar ) :  
+            self.__zvar = self.make_var ( zvar         , ## var 
+                                          'z'          , ## name 
+                                          'z-variable' , ## title/comment
+                                          None         , ## fix ? 
+                                          *zvar        ) ## min/max 
+        elif isinstance ( zvar , ROOT.RooAbsReal ) :
+            self.__zvar = self.make_var ( zvar         , ## var 
+                                          'z'          , ## name 
+                                          'z-variable' , ## title/comment
+                                          fix = None   ) ## fix ? 
+        else :
+            raise TypeError( "``z-variable'' is not specified properly %s/%s" % ( zvar , type ( zvar ) ) )
+                
+    @property 
+    def zvar ( self ) :
+        """``y''-variable (same as ``z'')"""
+        return self.__zvar
+    @property 
+    def z    ( self ) :
+        """``z''-variable (same as ``zvar'')"""
+        return self.zvar
+    def zminmax ( self ) :
+        """Min/max values for y-variable"""
+        return self.zvar.minmax()
+
+    ## get the proper xmin/xmax range
+    def zmnmx    ( self , xmin , xmax ) :
+        """Get the proper zmin/zmax range
+        """
+        return self.vmnmx ( self.zvar , zmin , zmax )
 
 # =============================================================================
 ## @class Phases
@@ -1625,23 +2380,7 @@ class Phases(MakeVar) :
 
     @phis.setter
     def phis ( self , values ) :
-
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__phis , values ) :
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )                 
-            s.setVal   ( vv )
-        nphi = len ( self.__phis )
+        self.component_setter ( self.__phis , values )
 
     @property
     def phi_list ( self ) :
@@ -1738,22 +2477,8 @@ class ParamsPoly(MakeVar) :
         """``pars'' : the polynomial coefficients/parameters"""
         return self.__pars    
     @pars.setter
-    def pars ( self , values ) :    
-        from ostap.core.ostap_types import num_types , list_types
-        ##
-        if   isinstance ( values , num_types          ) : values = [ values           ]
-        elif isinstance ( values , VE                 ) : values = [ values.value()   ]
-        elif isinstance ( values , ROOT.RooAbsReal    ) : values = [ float ( values ) ] 
-        elif isinstance ( values , list_types         ) : pass
-        elif isinstance ( values , ROOT.RooArgList    ) : pass
-        else :
-            raise TypeError("Unknown type for ``values'' %s/%s" % (  values , type ( values ) ) )
-
-        for s , v in  zip ( self.__pars , values ) :
-            vv = float ( v  )
-            if s.minmax () and not vv in s :
-                self.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) )
-            s.setVal   ( vv )
+    def pars ( self , values ) :
+        self.component_setter ( self.__pars , values )
             
     def reset_pars ( self , value = 0 ) :
         """Set all pars to be value 
@@ -1813,7 +2538,7 @@ class ShiftScalePoly ( Phases ) :
     def a ( self , value ) :
         vv = float ( value )
         if self.__a.minmax () and not vv in self.__a  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__a.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__a.minmax() , self.__a.name ) )
         self.__a.setVal ( vv )
 
     @property
@@ -1824,7 +2549,7 @@ class ShiftScalePoly ( Phases ) :
     def b ( self , value ) :
         vv = float ( value )
         if self.__b.minmax () and not vv in self.__b  :
-            self.error ("Value %s is outside the allowed region %s"  % ( vv , self.__b.minmax() ) )
+            self.error ("Value %s is outside the allowed region %s for %s"  % ( vv , self.__b.minmax() . self.__b.name ) )
         self.__b.setVal ( vv )
     
     @property
@@ -1893,6 +2618,7 @@ def get_i ( what , i , default = None ) :
     elif isinstance ( what , list_types      ) and 0 <= i < len ( what ) : return what[i] 
 
     return default
+        
         
 # =============================================================================
 ## consruct MsgTopic
@@ -2004,6 +2730,7 @@ if not hasattr (  Ostap.Utils.AddTopic , '_old_init_' ) :
     Ostap.Utils.AddTopic.__enter__  = lambda s : s
     Ostap.Utils.AddTopic.__exit__   = lambda s,*_ : s.exit() 
     
+
 
 # ================================================================================
 ## remove topic from Roofit message streams

@@ -19,6 +19,7 @@ __all__     = (
     )
 # =============================================================================
 import ROOT
+from   ostap.core.core        import Ostap 
 from   ostap.fitting.funbasic import FUNC, FUNC2 , FUNC3 , Fun1D , Fun2D , Fun3D 
 from   ostap.fitting.basic    import PDF , Generic1D_pdf
 from   ostap.fitting.fit2d    import PDF2, Generic2D_pdf
@@ -77,16 +78,21 @@ class Efficiency ( object ) :
                 self.__scale = ROOT.RooRealVar ( 'effscale_%s' % self.name , 'scale factor for efficiency (%s)' % self.name , *scale )
 
             self.__lst     = ROOT.RooArgList ( self.__scale , self.__eff_pdf.pdf )
-            _s = self.scale.GetName()
-            _p = self.eff_pdf.pdf.GetName() 
-            self.__eff_fun = ROOT.RooFormulaVar (
-                'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
-
+            _s             = self.scale.GetName()
+            _p             = self.eff_pdf.pdf.GetName()
+            
+            ## self.__eff_fun = Ostap.FormulaVar ( 'Eff_%s' % self.name , '%s*%s'  % ( _s , _p ) , self.__lst )
+            self.__eff_fun = Ostap.MoreRooFit.Product ( 'Eff_%s'           % self.name    ,
+                                                        'efficiency %s*%s' % ( _s , _p )  ,
+                                                        self.__scale , self.__eff_pdf.pdf )  
+            
         ## create the main PDF: RooEfficiency 
         self.__pdf =  ROOT.RooEfficiency (
-            "EffPdf_%s"   % self.name ,
-            "EffPdf(%s)"  % self.name ,
-            self.eff_fun , self.cut , self.accept )
+            PDF.roo_name ( 'eff_' )       ,
+            "Efficiency  %s"  % self.name ,
+            self.eff_fun                  ,
+            self.cut                      ,
+            self.accept                   )
 
         if 3 == len ( vars ) : 
             ## pdf-object for fit 
@@ -94,7 +100,7 @@ class Efficiency ( object ) :
                                              xvar  = vars[0]  ,
                                              yvar  = vars[1]  ,
                                              zvar  = vars[2]  ,
-                                             name  = 'eff_fit_%s'   % self.name ,
+                                             name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                              special        = True  ,
                                              add_to_signals = False )
             ## pdf-object for drawing
@@ -102,7 +108,7 @@ class Efficiency ( object ) :
                                               xvar  = vars[0]        ,
                                               yvar  = vars[1]        ,
                                               zvar  = vars[2]        ,
-                                              name  = 'eff_draw_%s'  % self.name ,
+                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         elif 2 == len (  vars ) :
@@ -110,27 +116,27 @@ class Efficiency ( object ) :
             self.__pdf_fit  = Generic2D_pdf ( pdf   = self.pdf ,
                                               xvar  = vars[0]  ,
                                               yvar  = vars[1]  ,
-                                              name  = 'eff_fit_%s'   % self.name ,
+                                              name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
             ## pdf-object for drawing
             self.__pdf_draw = Generic2D_pdf ( pdf   = self.eff_fun   ,
                                               xvar  = vars[0]        ,
                                               yvar  = vars[1]        ,
-                                              name  = 'eff_draw_%s'  % self.name ,
+                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         elif 1 == len (  vars ) :
             ## pdf-object for fit 
             self.__pdf_fit  = Generic1D_pdf ( pdf   = self.pdf ,
                                               xvar  = vars[0]  ,
-                                              name  = 'eff_fit_%s'   % self.name ,
+                                              name  = PDF.generate_name ( 'eff_fit_%s'   % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
             ## pdf-object for drawing
             self.__pdf_draw = Generic1D_pdf ( pdf   = self.eff_fun   ,
                                               xvar  = vars[0]        ,
-                                              name  = 'eff_draw_%s'  % self.name ,
+                                              name  = PDF.generate_name ( 'eff_draw_%s'  % self.name ) ,
                                               special        = True  ,
                                               add_to_signals = False )
         else :
@@ -810,5 +816,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

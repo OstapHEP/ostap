@@ -14,27 +14,31 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = () ## noting to import 
 # =============================================================================
-import ROOT, os  
+import ROOT, cppyy, os  
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.fixes.fixes')
 else                      : logger = getLogger ( __name__           ) 
 # =============================================================================
-## suppress welcome message from RooFit
-from ostap.logger.utils import mute
-with mute() :
-    v = ROOT.RooRealVar()
-    del v
+## print 'FIXES! before '
+## cpp = cppyy.gbl 
+## ## suppress welcome message from RooFit
+## from ostap.logger.utils import mute
+## with mute( True , True ) :
+##     v = ROOT.RooRealVar()
+##     del v
+## print 'FIXES! after!'
     
-try :
-    enabled = ROOT.ROOT.IsImplicitMTEnabled ()
-    if enabled : logger.debug ("ImplicitMT is  enabled")
-    else       : logger.debug ("ImplicitMT is disabled")
-except AttributeError :
-    ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
-    ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
-    ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
-    logger.info ("``Enable/Disable''Implicit MT is not available") 
+## try :
+##     enabled = ROOT.ROOT.IsImplicitMTEnabled ()
+##     if enabled : logger.debug ("ImplicitMT is  enabled")
+##     else       : logger.debug ("ImplicitMT is disabled")
+## except AttributeError :
+##     ROOT.ROOT.IsImplicitMTEnabled  = lambda *_ : False
+##     ROOT.ROOT.EnableImplicitMT     = lambda *_ : False
+##     ROOT.ROOT.DisableImplicitMT    = lambda *_ : False 
+##     logger.info ("``Enable/Disable''Implicit MT is not available") 
+
 
 # =============================================================================
 # Include path for ACLiC:
@@ -66,11 +70,13 @@ for item in opath :
             else           : npath.append (       item      )
             npath_.append ( nitem ) 
             ## for CINT
-            ROOT.gROOT.ProcessLine ('.include  %s' % nitem )
-            
+            groot = ROOT.ROOT.GetROOT()
+            groot.ProcessLine ('.include  %s' % nitem )
+
 if npath : npath[0] = '-I'+npath[0]
 npath = ' -I'.join(npath)
 ROOT.gSystem.SetIncludePath( npath ) 
+npath = ROOT.gSystem.GetIncludePath()
 logger.debug ( 'New include path: %s' % npath  )
 # =============================================================================
 
@@ -82,5 +88,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger ) 
 
 # =============================================================================
-# The EDN
+##                                                                      The END
 # =============================================================================

@@ -11,16 +11,19 @@
 - It tests various ``background-like'' smooth polynomial shapes
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__               import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent 
+from   ostap.utils.timing       import timing 
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -56,42 +59,36 @@ models = set()
 ## Test  Poly(4)-Distribution
 # =============================================================================
 def test_poly4 () :
-    
+
+    logger = getLogger ( 'test_poly4' ) 
     logger.info("Test  Poly(4)-Distribution")
-    model = Models.PolyPos_pdf('P4'  , x , power = 4 )
+    model = Models.PolyPos_pdf('P4'  , x , power = 3 )
     
-    result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
+    with wait ( 1 ) , use_canvas ( 'test_poly4' ) : 
+        model.draw ( dataset )        
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tPoly4:        phi= %-17s " % phi.ve() ) 
+    title = 'Positive polynomial'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
     models.add ( model ) 
 
 # =============================================================================
-## Test  monotonic Poly(4)-Distribution
+## Test  monotonic Poly(5)-Distribution
 # =============================================================================
-def test_monotonic4 () :
+def test_monotonic5 () :
+
+    logger = getLogger ( 'test_monotonic5' )
+    logger.info("Test  monotonic Poly(5)-Distribution") 
+    model = Models.Monotonic_pdf( 'M4'  , x , power = 4, increasing = False  )
     
-    logger.info("Test  monotonic Poly(4)-Distribution")
-    model = Models.Monotonic_pdf('M4'  , x , power = 4 , increasing = False  )
-    
-    with rooSilent() : 
-        result,f  = model.fitTo ( dataset )  
-        result,f  = model.fitTo ( dataset )  
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
+    with wait ( 1 ) , use_canvas ( 'test_monotonic5' ) : 
         model.draw ( dataset )        
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tMonotonic4:  phi= %-17s " % phi.ve() ) 
-            
+    title = 'Positive decreasing polynomial'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
+
     models.add ( model ) 
 
 # =============================================================================
@@ -99,41 +96,39 @@ def test_monotonic4 () :
 # =============================================================================
 def test_convex4() :
     
+    logger = getLogger ( 'test_convex4' )
+
     logger.info("Test  convex Poly(4)-Distribution")
     model = Models.Convex_pdf('C4'  , x , power = 4 , increasing = False , convex = True  )
     
-    result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )  
+    with wait ( 1 ) , use_canvas ( 'test_convex4' ) : 
+        model.draw ( dataset )        
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tConvex4:      phi= %-17s " % phi.ve() ) 
+    title = 'Positive decreasing convex polynomial'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
     models.add ( model ) 
 
 # =============================================================================
 ## Test  Poly(2)*Expo -Distribution
 # =============================================================================
-def test_expopoly2() : 
+def test_expopoly2() :
+
+    logger = getLogger ( 'test_expopoly2' )
+
     logger.info("Test  Poly(2)*Expo -Distribution")
-    model = Models.Bkg_pdf('P2e'  , x , power = 2 )
+    model = Models.Bkg_pdf('P2e'  , x , power = 1 )
     model.tau.fix(-1.25)
 
     result,f  = model.fitTo ( dataset , silent = True )
     model.tau.release() 
-    result,f  = model.fitTo ( dataset , silent = True )  
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )    
+    with wait ( 1 ) , use_canvas ( 'test_expopoly2' ) : 
+        model.draw ( dataset )        
     
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( "\tTau:          tau= %-17s " %  result( model.tau ) [0] ) 
-        for phi in model.phis : 
-            logger.info ( "\tExpoPoly2:    phi= %-17s " % phi.ve() ) 
+    title = 'Expo*polynom'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
     models.add ( model ) 
 
@@ -142,22 +137,21 @@ def test_expopoly2() :
 # =============================================================================
 def test_pspline () : 
     
-    logger.info ("Test positive spline of order 3 with 2 inner knots ")
+    logger = getLogger ( 'test_pspline' )
+
+    logger.info ("Test positive spline of order 3 with 1 inner knot ")
     ## define spline 
-    spline = cpp.Ostap.Math.PositiveSpline( x.xmin() , x.xmax() , 2 , 3 )
+    spline = cpp.Ostap.Math.PositiveSpline( x.xmin() , x.xmax() , 1 , 3 )
     ## build the model
     model  = Models.PSpline_pdf ( 'S3' , x , spline )
 
     ## fit it! 
-    result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5  )
+    with wait ( 1 ) , use_canvas ( 'test_pspline' ) : 
+        model.draw ( dataset )        
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tpSpline:      phi= %-17s " % phi.ve() ) 
+    title = 'Positive spline'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
     models.add ( model ) 
 
@@ -166,21 +160,20 @@ def test_pspline () :
 # =============================================================================
 def test_mspline () :
     
-    logger.info ("Test positive decreasing spline of order 3 with 2 inner knots ")
-    spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 2 , 3 , False )
-    model  = Models.MSpline_pdf ( 'S3' , x , spline )
+    logger = getLogger ( 'test_mspline' )
+
+    logger.info ("Test positive decreasing spline of order 3 with 1 inner knot ")
+    spline = cpp.Ostap.Math.MonotonicSpline( x.xmin() , x.xmax() , 1 , 3 , False )
+    model  = Models.MSpline_pdf ( 'M3' , x , spline )
 
     ## fit it! 
-    result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
+    with wait ( 1 ) , use_canvas ( 'test_mspline' ) : 
+        model.draw ( dataset )        
         
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tmSpline:      phi= %-17s " % phi.ve() ) 
-            
+    title = 'Positive descreasing spline'
+    logger.info('%s\n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) )
+
     models.add ( model ) 
 
 # =============================================================================
@@ -188,20 +181,19 @@ def test_mspline () :
 # =============================================================================
 def test_cspline () :
     
-    logger.info ("Test positive decreasing convex spline of order 3 with 2 inner knots")
-    spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 2 , 3 , False , True )
+    logger = getLogger ( 'test_cspline' )
+    logger.info ("Test positive decreasing convex spline of order 3 with 1 inner knot")
+    ## spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 1 , 3 , increasing = False , convex = True )
+    spline = cpp.Ostap.Math.ConvexSpline( x.xmin() , x.xmax() , 1 , 3 , False , True )
     model  = Models.CSpline_pdf ( 'C3' , x , spline )
 
     ## fit it! 
-    result,f  = model.fitTo ( dataset , silent = True )
-    model.draw ( dataset )        
-        
-    if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        for phi in model.phis : 
-            logger.info ( "\tcSpline:      phi= %-17s " % phi.ve() ) 
+    result,f  = model.fitTo ( dataset , silent = True , refit = 5 )
+    with wait ( 1 ) , use_canvas ( 'test_cspline' ) : 
+        model.draw ( dataset )        
+
+    title = 'Positive descreasing convex spline'
+    logger.info('%s \n%s' % ( title , result.table ( title = title , prefix = '# ' ) ) ) 
             
     models.add ( model ) 
 
@@ -210,7 +202,9 @@ def test_cspline () :
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
+
+    logger = getLogger ( 'test_db' )
+    logger.info('Saving all objects into DBASE')    
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
     with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
@@ -222,16 +216,24 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_poly4       () ## Polynomial (4)
-    test_monotonic4 () ## Monotonic polynomial (4)
-    test_convex4     () ## Convex polynomial (4)
-    test_expopoly2   () ## Exponent times positive polynomial (2)
-    test_pspline     () ## Positive spline of order 3 with two knots 
-    test_mspline     () ## Positive monotonic spline of order 3 with two knots 
-    test_cspline     () ## Positive monotonic convex spline of order 3 with two knots 
+    with timing ( "Poly4" , logger ) : 
+        test_poly4       () ## Polynomial (4)
+    with timing ( "Monotonic5" , logger ) : 
+        test_monotonic5 () ## Monotonic polynomial (5)
+    with timing ( "Convex4"   , logger ) : 
+        test_convex4     () ## Convex polynomial (4)
+    with timing ( "ExpoP2"    , logger ) : 
+        test_expopoly2   () ## Exponent times positive polynomial (2)
+    with timing ( "p-Spline"  , logger ) :         
+        test_pspline     () ## Positive spline of order 3 with two knots 
+    with timing ( "m-Spline"  , logger ) :         
+        test_mspline     () ## Positive monotonic spline of order 3 with two knots 
+    with timing ( "c-Spline"  , logger ) :         
+        test_cspline     () ## Positive monotonic convex spline of order 3 with two knots 
 
     ## check finally that everything is serializeable:
-    test_db          ()          
+    with timing ( "Save to DB"  , logger ) :         
+        test_db          ()          
 
 # =============================================================================
 ##                                                                      The END 

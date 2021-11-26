@@ -79,9 +79,11 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math  
-from    ostap.core.core  import cpp, Ostap, funID
+from    ostap.core.core        import Ostap , funID
 from    ostap.core.ostap_types import is_integer
-from    ostap.math.base  import iszero, isequal, signum  
+from    ostap.math.base        import iszero, isequal, signum
+
+import  ostap.math.polynomials 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -90,7 +92,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.bernstein' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## short name 
-Bernstein = cpp.Ostap.Math.Bernstein
+Bernstein = Ostap.Math.Bernstein
 # =============================================================================
 ## get control polygon for Bernstein polynomial   
 def control_polygon ( bp )  :
@@ -630,7 +632,8 @@ def solve (  bp  , C = 0 , split = 2 ) :
     ## start the of root-polishing machinery
     # ========================================================================= 
 
-    f = bp 
+    f = bp
+
     d1 = f .derivative ()
     d2 = d1.derivative ()
     
@@ -928,14 +931,20 @@ def _new_init_ ( t ,  *args )  :
     - std::vector<double> 
     - or std::vector<std::complex<double>>
     """
-    from ostap.math.base        import doubles      , complexes
-    from ostap.core.ostap_types import string_types , listlike_types 
+    from ostap.math.base        import doubles , complexes, VCT_TYPES 
+    from ostap.core.ostap_types import Generator, Sequence, list_types  
     
     largs = list (  args )
 
     for i , arg in enumerate ( largs ) :
-
-        if not isinstance ( arg ,  ( list , tuple ) ) : continue 
+        
+        if   isinstance  ( arg , VCT_TYPES )  : continue 
+        
+        if   isinstance ( arg , Generator  ) : pass
+        elif isinstance ( arg , Sequence   ) : pass
+        elif isinstance ( arg , list_types ) : pass
+        else :
+            continue
         
         try: 
             _arg = doubles  ( arg  )
@@ -950,9 +959,9 @@ def _new_init_ ( t ,  *args )  :
         except TypeError : pass
         
     targs = tuple ( largs )
-
+        
     ## use old constructor 
-    t._old_init_ ( *targs ) 
+    return t._old_init_ ( *targs ) 
 
 # =============================================================================
 ## set parameter for polynomial/spline functions
@@ -1382,5 +1391,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

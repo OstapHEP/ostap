@@ -114,15 +114,21 @@ namespace std
 // constructor from the filename 
 // ============================================================================
 Ostap::Utils::Tee::Tee  ( const std::string&  filename   )
-  : m_file   ( new std::ofstream ( filename.c_str() ) ) 
-  , m_own    ( true    ) 
-  , m_buffer (         ) 
-  , m_keep   ( nullptr ) 
+  : m_file        ( new std::ofstream ( filename.c_str() ) ) 
+  , m_own         ( true    ) 
+  , m_buffer_cout ( nullptr ) 
+  , m_buffer_cerr ( nullptr ) 
+  , m_keep_cout   ( nullptr ) 
+  , m_keep_cerr   ( nullptr ) 
 {
   std::cout << std::flush ;
-  m_keep   = std::cout.rdbuf() ;
-  m_buffer.reset ( new std::teebuf ( m_keep , m_file->rdbuf() ) ) ;
-  std::cout.rdbuf ( m_buffer.get() ) ;
+  std::cerr << std::flush ;
+  m_keep_cout = std::cout.rdbuf() ;
+  m_keep_cerr = std::cerr.rdbuf() ;
+  m_buffer_cout.reset ( new std::teebuf ( m_keep_cout , m_file->rdbuf() ) ) ;
+  m_buffer_cerr.reset ( new std::teebuf ( m_keep_cerr , m_file->rdbuf() ) ) ;
+  std::cout.rdbuf ( m_buffer_cout.get() ) ;
+  std::cerr.rdbuf ( m_buffer_cerr.get() ) ;
 }
 // ============================================================================
 // constructor from the stream
@@ -154,20 +160,30 @@ void Ostap::Utils::Tee::enter (){}
 void Ostap::Utils::Tee::exit  ()  
 {
   std::cout << std::flush ;
+  std::cerr << std::flush ;
   if ( m_file ) { (*m_file) << std::flush ; }
-  // avoid double exit 
-  if ( nullptr == m_keep ) { return ; }
   //
   // 1. restore std::cout 
-  std::cout.rdbuf ( m_keep ) ;
+  if ( nullptr != m_keep_cout ) 
+  {
+    std::cout.rdbuf ( m_keep_cout ) ;
+    m_keep_cout = nullptr ;
+  }
+  // 2. restore std::cerr
+  if ( nullptr != m_keep_cerr ) 
+  {
+    std::cerr.rdbuf ( m_keep_cerr ) ;
+    m_keep_cerr = nullptr ;
+  }
   // 3. delete/close  the file (if needed) 
-  if ( m_own ) { m_file.reset   () ; }
-  else         { m_file.release () ; }
-  //
-  m_keep = nullptr ;
+  if ( m_file ) 
+  {
+    if ( m_own ) { m_file.reset   () ; }
+    else         { m_file.release () ; }
+  }
 }
 // ============================================================================
-//  The END 
+//                                                                      The END 
 // ============================================================================
 
 

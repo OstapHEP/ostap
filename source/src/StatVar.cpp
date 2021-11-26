@@ -11,6 +11,7 @@
 // ============================================================================
 // ROOT
 // ============================================================================
+#include "RVersion.h"
 #include "TTree.h"
 #include "TCut.h"
 #include "RooDataSet.h"
@@ -24,6 +25,9 @@
 #include "Ostap/MatrixUtils.h"
 #include "Ostap/StatVar.h"
 #include "Ostap/FormulaVar.h"
+#include "Ostap/P2Quantile.h"
+#include "Ostap/Moments.h"
+#include "Ostap/GetWeight.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -561,7 +565,7 @@ namespace
    *   @param  last  (INPUT) the last event to  process
    *   @return the quantile value 
    */
-  std::vector<double> 
+  Ostap::StatVar::Quantiles
   _quantiles_
   ( TTree&                  tree      ,
     const std::set<double>& quantiles , //  0<q<1 
@@ -592,7 +596,7 @@ namespace
       ++num ;
     }
     //
-    if ( 0 == num ) { return std::vector<double>() ; }
+    if ( 0 == num ) { return Ostap::StatVar::Quantiles ( std::vector<double>() , num ) ; }
     //
     typedef std::vector<double> VALUES ;
     VALUES values{} ; values.reserve ( num ) ;
@@ -612,6 +616,7 @@ namespace
       //
       var.evaluate  ( results ) ;
       values.insert ( values.end() , results.begin() , results.end() ) ;
+      //
     }
     //
     std::vector<double> result ; result.reserve ( quantiles.size() ) ;
@@ -625,7 +630,7 @@ namespace
       result.push_back ( *start ) ;
     }
     //
-    return result ;
+    return Ostap::StatVar::Quantiles ( result , values.size () ) ; 
   }
   // ==========================================================================
   /*   get quantile of the distribution  
@@ -637,7 +642,55 @@ namespace
    *   @param  last  (INPUT) the last event to  process
    *   @return the quantile value 
    */
-  std::vector<double> 
+  Ostap::StatVar::Quantiles
+  _p2quantiles_
+  ( TTree&                  tree      ,
+    const std::set<double>& quantiles , //  0<q<1 
+    Ostap::Formula&         var       ,
+    Ostap::Formula*         cuts      , 
+    const unsigned long     first     ,
+    const unsigned long     last      ) 
+  {
+    // the loop 
+    const unsigned long the_last = std::min ( last , (unsigned long) tree.GetEntries() ) ;
+    //
+    Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
+    const bool with_cuts = nullptr != cuts ? true : false ;
+    //
+    std::vector<Ostap::Math::GSL::P2Quantile> qs ( quantiles.begin() , quantiles.end() ) ;
+    //
+    unsigned long num = 0  ;
+    std::vector<double> results {} ;
+    for ( unsigned long entry = first ; entry < the_last ; ++entry ) 
+    {      
+      long ievent = tree.GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree.LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      const long double w = with_cuts ? cuts->evaluate() : 1.0L ;
+      //
+      if ( !w  ) { continue ; }                           // CONTINUE       
+      //
+      var.evaluate  ( results ) ;
+      for ( auto& q : qs ) { q.add  ( results.begin() , results.end () ) ; }
+      num += results.size();
+    }
+    //
+    return Ostap::StatVar::Quantiles ( std::vector<double>( qs.begin (), qs.end () )  , num ) ;
+  }
+  // ==========================================================================
+  /*   get quantile of the distribution  
+   *   @param tree  (INPUT) the input tree 
+   *   @param q     (INPUT) quantile value   0 < q < 1  
+   *   @param expr  (INPUT) the expression 
+   *   @param cuts  (INPUT) selection cuts 
+   *   @param  first (INPUT) the first  event to process 
+   *   @param  last  (INPUT) the last event to  process
+   *   @return the quantile value 
+   */
+  Ostap::StatVar::Quantiles 
   _quantiles_
   ( const RooAbsData&       data      ,
     const std::set<double>& quantiles , //  0<q<1 
@@ -705,10 +758,307 @@ namespace
       result.push_back ( *start ) ;
     }
     //
-    return result ;
+    return Ostap::StatVar::Quantiles ( result , values.size () ) ; 
+  }
+  // ==========================================================================
+  /*   get (Appeoximate) quantile of the distribution using  P^2 algorithm  
+   *   @param tree  (INPUT) the input tree 
+   *   @param q     (INPUT) quantile value   0 < q < 1  
+   *   @param expr  (INPUT) the expression 
+   *   @param cuts  (INPUT) selection cuts 
+   *   @param  first (INPUT) the first  event to process 
+   *   @param  last  (INPUT) the last event to  process
+   *   @return the quantile value 
+   */
+  Ostap::StatVar::Quantiles 
+  _p2quantiles_
+  ( const RooAbsData&       data      ,
+    const std::set<double>& quantiles , //  0<q<1 
+    const RooAbsReal&       var       ,
+    const RooAbsReal*       cuts      , 
+    const unsigned long     first     ,
+    const unsigned long     last      , 
+    const char*             cut_range ) 
+  {
+    // the loop 
+    const unsigned long the_last = std::min ( last , (unsigned long) data.numEntries() ) ;
+    //
+    const bool  weighted = data.isWeighted () ;
+    //
+    std::vector<Ostap::Math::GSL::P2Quantile> qs ( quantiles.begin() , quantiles.end() ) ;
+    //
+    unsigned long num = 0 ;
+    for ( unsigned long entry = first ; entry < the_last ; ++entry )
+    {
+      const RooArgSet* vars = data.get( entry ) ;
+      if ( nullptr == vars )                              { break    ; } // BREAK 
+      //
+      if ( cut_range && !vars->allInRange ( cut_range ) ) { continue ; } // CONTINUE    
+      // apply cuts:
+      const long double wc = nullptr != cuts ? cuts -> getVal() : 1.0L ;
+      if ( !wc ) { continue ; }                                          // CONTINUE  
+      // apply weight:
+      const long double wd = weighted  ? data.weight()   : 1.0L ;
+      if ( !wd ) { continue ; }                                          // CONTINUE    
+      // cuts & weight:
+      const long double w  = wd *  wc ; 
+      if ( !w  ) { continue ; }                                          // CONTINUE        
+      //
+      for ( auto& q : qs ) { q.add ( var.getVal() ) ; }
+      ++num ;
+    }
+    //
+    return Ostap::StatVar::Quantiles ( std::vector<double>( qs.begin (), qs.end () )  , num ) ;
+  }
+  // ==========================================================================
+  /** calculate the moment of order "order" relative to the center "center"
+   *  @param  tree   (INPUT) input tree 
+   *  @param  expr   (INPUT) expression  (must  be valid TFormula!)
+   *  @param  cuts   (INPUT) cuts 
+   *  @param  order  (INPUT) the order 
+   *  @param  center (INPUT) the center 
+   *  @param  first  (INPUT) the first  event to process 
+   *  @param  last   (INPUT) the last event to  process
+   *  @return the moment 
+   */
+  void _moment_
+  ( TTree&               tree    ,
+    Ostap::Math::Moment& counter ,
+    Ostap::Formula&      var     ,
+    Ostap::Formula*      cuts    , 
+    const unsigned long  first   , 
+    const unsigned long  last    )
+  {
+    // 
+    // the loop
+    const unsigned long nEntries = std::min ( last , (unsigned long) tree.GetEntries() ) ;
+    if ( last <= first  ) { return ; } // RETURN ???    
+    //
+    Ostap::Utils::Notifier notify ( &tree , &var , cuts ) ;
+    const bool with_cuts = nullptr != cuts ? true : false ;
+    //
+    std::vector<double> results {} ;
+    for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+    {      
+      long ievent = tree.GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree.LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      const long double w = with_cuts ? cuts->evaluate() : 1.0L ;
+      //
+      if  ( !w ) { continue ; }                            // ATTENTION!
+      //
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) { counter.update ( r ) ; } 
+    }
+    //
+  }
+  // ==========================================================================
+  /** calculate the moment of order "order" relative to the center "center"
+   *  @param  tree   (INPUT) input tree 
+   *  @param  expr   (INPUT) expression  (must  be valid TFormula!)
+   *  @param  cuts   (INPUT) cuts 
+   *  @param  order  (INPUT) the order 
+   *  @param  center (INPUT) the center 
+   *  @param  first  (INPUT) the first  event to process 
+   *  @param  last   (INPUT) the last event to  process
+   *  @return the moment 
+   */
+  void _moment_
+  ( TTree&                tree    ,
+    Ostap::Math::WMoment& counter ,
+    Ostap::Formula&       var     ,
+    Ostap::Formula*       weight  ,
+    Ostap::Formula*       cuts    , 
+    const unsigned long   first   , 
+    const unsigned long   last    )
+  {
+    // 
+    // the loop
+    const unsigned long nEntries = std::min ( last , (unsigned long) tree.GetEntries() ) ;
+    if ( last <= first  ) { return ; } // RETURN ???    
+    //
+    Ostap::Utils::Notifier notify ( &tree , &var , weight , cuts ) ;
+    const bool with_cuts   = nullptr != cuts   ? true : false ;
+    const bool with_weight = nullptr != weight ? true : false ;
+    //
+    std::vector<double> results {} ;
+    for ( unsigned long entry = first ; entry < nEntries ; ++entry ) 
+    {      
+      long ievent = tree.GetEntryNumber ( entry ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      ievent      = tree.LoadTree ( ievent ) ;
+      if ( 0 > ievent ) { break ; }                        // BREAK
+      //
+      const double c = with_cuts   ? cuts  ->evaluate() : 1.0 ;
+      if  ( !c ) { continue ; }                            // ATTENTION!
+      //
+      const double w = with_weight ? weight->evaluate() : 1.0 ;
+      var.evaluate ( results ) ;
+      for ( const long double r : results ) { counter.update ( r , w  ) ; } 
+    }
+    //
   }
   // ==========================================================================
 } //                                                 end of anonymous namespace
+// ============================================================================
+/*  check if there is at least one entry that satisfies criteria 
+ *  @param tree       (INPUT) the tree 
+ *  @param cuts       (INPUT) criteria 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( TTree*              tree  , 
+  const std::string&  cuts  ,   
+  const unsigned long first ,
+  const unsigned long last  )
+{
+  // check arguments 
+  if ( nullptr == tree || last <= first || tree->GetEntries() < first ) { return false ; }
+  //
+  Ostap::Formula formula ( cuts , tree ) ;
+  if ( !formula.GetNdim() )         { return false  ; }  // RETURN
+  //
+  Ostap::Utils::Notifier notify ( tree , &formula ) ;
+  //
+  const unsigned long nEntries =
+    std::min ( last , (unsigned long) tree->GetEntries() ) ;
+  //
+  std::vector<double>  results {} ;
+  for ( unsigned long entry = first ; entry < nEntries ; ++entry )
+  {
+    long ievent = tree->GetEntryNumber ( entry ) ;
+    if ( 0 > ievent ) { return false  ; }                // RETURN
+    //
+    ievent      = tree->LoadTree ( ievent ) ;
+    if ( 0 > ievent ) { return false  ; }                // RETURN
+    //
+    formula.evaluate ( results ) ;
+    for  ( const double r : results ) 
+    { if ( r ) { return true ; } }
+    //
+  }
+  return false ;
+}
+// ============================================================================
+/*  check if there is at least one entry that satisfies criteria 
+ *  @param tree       (INPUT) the tree 
+ *  @param cuts       (INPUT) criteria 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( TTree*              tree  , 
+  const TCut&         cuts  ,   
+  const unsigned long first ,
+  const unsigned long last  )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( tree , _cuts , first , last ) ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const std::string&  cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  if ( nullptr == data || last <= first || data->numEntries() < first ) { return false ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
+  //
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    //
+    // apply cuts:
+    const long double wc = selection -> getVal() ;
+    if ( wc ) { return true ; }
+  }
+  //
+  return false ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const std::string&  cuts      , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{ return hasEntry ( data , cuts , "" , first , last ) ; }
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const TCut&         cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( data , _cuts , cut_range , first , last ) ;
+}
+// ============================================================================
+/** check if there is at least one entry that satisfies criteria 
+ *  @param data       (INPUT) data 
+ *  @param cuts       (INPUT) criteria 
+ *  @param cut_range  (INPUT) cut range 
+ *  @param first      (INPUT) the first entry 
+ *  @param last       (INPUT) the last entry
+ *  @return true if there exist at leats one entry 
+ */
+// ============================================================================
+bool Ostap::StatVar::hasEntry 
+( const RooAbsData*   data      , 
+  const TCut&         cuts      , 
+  const unsigned long first     ,
+  const unsigned long last      ) 
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return hasEntry ( data , _cuts , "" , first , last ) ;
+}
 // ============================================================================
 /*  build statistic for the <code>expression</code>
  *  @param tree (INPUT) the tree
@@ -856,7 +1206,7 @@ Ostap::StatVar::statVar
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
 {
@@ -923,7 +1273,7 @@ unsigned long Ostap::StatVar::statVars
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const std::string&                      cuts        ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
@@ -998,7 +1348,7 @@ unsigned long Ostap::StatVar::statVars
 unsigned long Ostap::StatVar::statVars
 ( TTree*                                  tree        ,  
   std::vector<Ostap::StatVar::Statistic>& result      ,  
-  const std::vector<std::string>&         expressions ,
+  const Ostap::StatVar::Names&            expressions ,
   const TCut&                             cuts        ,
   const unsigned long                     first       ,
   const unsigned long                     last        ) 
@@ -1289,6 +1639,137 @@ Ostap::StatVar::statVar
   }
   //
   return result ;
+}
+// ============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const Ostap::StatVar::Names&    expressions ,
+  const TCut&                     cuts        ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  const std::string cuts_ = cuts.GetTitle() ;
+  return statVars ( data , result , expressions , cuts_ , "" , first , last ) ;
+}
+// ============================================================================
+/*  build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection  
+ *  @param cut_range   (INPUT)  cut range  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const Ostap::StatVar::Names&    expressions ,
+  const TCut&                     cuts        ,
+  const std::string&              cut_range   ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  const std::string cuts_ = cuts.GetTitle() ;
+  return statVars ( data , result , expressions , cuts_ , cut_range , first , last ) ;
+}
+// ============================================================================
+/** build statistic for the <code>expressions</code>
+ *  @param data        (INPUT)  input data 
+ *  @param result      (UPDATE) the output statistics for specified expressions 
+ *  @param expressions (INPUT)  the list of  expressions
+ *  @param cuts        (INPUT)  the selection 
+ *  @param cut_range   (INPUT)  cut range  
+ *  @param first       (INPUT)  the first entry to process 
+ *  @param last        (INPUT)  the last entry to process (not including!)
+ *  @return number of processed entries 
+ *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+ *  @date   2021-06-04
+ */
+// ============================================================================
+unsigned long
+Ostap::StatVar::statVars
+( const RooAbsData*               data        , 
+  std::vector<Statistic>&         result      , 
+  const Ostap::StatVar::Names&    expressions ,
+  const std::string&              cuts        ,
+  const std::string&              cut_range   ,
+  const unsigned long             first       ,
+  const unsigned long             last        ) 
+{
+  // 
+  const unsigned int N = expressions.size() ;
+  //
+  result.resize ( N ) ; 
+  for ( auto& r : result ) { r.reset () ; }
+  //
+  if ( expressions.empty()              ) { return 0 ; }
+  if ( nullptr == data || last <= first ) { return 0 ; }
+  if ( data->numEntries() <= first      ) { return 0 ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts       , *data , true ) } ;
+  //
+  typedef std::unique_ptr<Ostap::FormulaVar> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  //
+  for ( const auto& e : expressions  ) 
+  {
+    auto p = make_formula ( e , *data , false ) ;
+    if ( !p ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;  
+  }
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  // start the loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE    
+    //
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    for ( unsigned int i = 0 ; i < N ; ++i ) 
+    {
+      const double v = formulas[i]->getVal () ;
+      result[i].add ( v , w ) ;
+    }
+    //
+  }
+  //
+  return result.empty() ? 0 : result[0].nEntries() ;
 }
 // ============================================================================
 /*  calculate the covariance of two expressions
@@ -1683,7 +2164,8 @@ Ostap::StatVar::kurtosis
  *   @return the quantile value 
  */
 // ============================================================================
-double Ostap::StatVar::quantile
+Ostap::StatVar::Quantile
+Ostap::StatVar::quantile
 ( TTree&              tree  ,
   const double        q     , //  0<q<1 
   const std::string&  expr  , 
@@ -1709,15 +2191,65 @@ double Ostap::StatVar::quantile
                     "Ostap::StatVar::quantile"     ) ;
   }
   //
-  const std::vector<double> result = _quantiles_ 
+  auto result = _quantiles_ 
     ( tree , std::set<double> {{ q }} , var , cut.get() , first , last ) ; 
   //
-  Ostap::Assert ( 1 == result.size()         , 
+  Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
                   "Ostap::StatVar::interval" ) ;
   //
-  return result[0] ;
+  return Quantile ( result.quantiles[0] , result.nevents ) ;
 }
+// ============================================================================
+/*   get approximate  quantile of the distribution  using p^2 algortihm
+ *   @param tree  (INPUT) the input tree 
+ *   @param q     (INPUT) quantile value   0 < q < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @return the quantile value 
+ */
+// ============================================================================
+Ostap::StatVar::Quantile
+Ostap::StatVar::p2quantile
+( TTree&              tree  ,
+  const double        q     , //  0<q<1 
+  const std::string&  expr  , 
+  const std::string&  cuts  , 
+  const unsigned long first ,
+  const unsigned long last  ) 
+{
+  Ostap::Assert ( 0 < q && q < 1             , 
+                  "Invalid quantile"         ,
+                  "Ostap::StatVar::quantile" ) ;
+  //
+  Ostap::Formula var ( expr , &tree ) ;
+  Ostap::Assert ( var.ok()                              , 
+                  "Invalid expression:\"" + expr + "\"" ,
+                  "Ostap::StatVar::quantile"            ) ;
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !cuts.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( "", cuts , &tree ) ; 
+    Ostap::Assert ( cut && cut->ok()               ,
+                    "Invalid cut:\"" + cuts + "\"" ,
+                    "Ostap::StatVar::quantile"     ) ;
+  }
+  //
+  auto result = _p2quantiles_ 
+    ( tree , std::set<double> {{ q }} , var , cut.get() , first , last ) ; 
+  //
+  Ostap::Assert ( 1 == result.quantiles.size()         , 
+                  "Invalid quantiles size"   ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  return Quantile ( result.quantiles[0] , result.nevents ) ;
+}
+// ============================================================================
+
+
 // ============================================================================
 /*   get quantiles of the distribution  
  *   @param tree  (INPUT) the input tree 
@@ -1729,7 +2261,7 @@ double Ostap::StatVar::quantile
  *   @return the quantile value 
  */
 // ============================================================================
-std::vector<double> 
+Ostap::StatVar::Quantiles
 Ostap::StatVar::quantiles
 ( TTree&                     tree      ,
   const std::vector<double>& quantiles , 
@@ -1768,6 +2300,55 @@ Ostap::StatVar::quantiles
   return _quantiles_ ( tree , qs , var  ,  cut.get() , first , last ) ; 
 }
 // ============================================================================
+/*   get (approximate) quantiles of the distribution using P^2 algorithm   
+ *   @param tree  (INPUT) the input tree 
+ *   @param q     (INPUT) quantile value   0 < q < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @return the quantile value 
+ */
+// ============================================================================
+Ostap::StatVar::Quantiles
+Ostap::StatVar::p2quantiles
+( TTree&                     tree      ,
+  const std::vector<double>& quantiles , 
+  const std::string&         expr      , 
+  const std::string&         cuts      , 
+  const unsigned long        first     ,
+  const unsigned long        last      ) 
+{
+  //
+  std::set<double> qs ;
+  for ( double v : quantiles ) { qs.insert ( v ) ; }
+  Ostap::Assert ( !qs.empty ()                ,
+                  "Invalid quantiles"         ,
+                  "Ostap::StatVar::quantiles" ) ;
+  Ostap::Assert ( 0 < *qs. begin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;  
+  Ostap::Assert ( 1 > *qs.rbegin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;
+  //
+  Ostap::Formula var ( expr , &tree ) ;
+  Ostap::Assert ( var.ok()                              ,
+                  "Invalid expression:\"" + expr + "\"" ,
+                  "Ostap::StatVar::quantile"            ) ;
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !cuts.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( cuts , &tree ) ; 
+    Ostap::Assert ( cut && cut->ok()               , 
+                    "Invalid cut:\"" + cuts + "\"" ,
+                    "Ostap::StatVar::quantile"     ) ;
+  }
+  //
+  return _p2quantiles_ ( tree , qs , var  ,  cut.get() , first , last ) ; 
+}
+// ============================================================================
 /*  get the interval of the distribution  
  *   @param tree  (INPUT) the input tree 
  *   @param q1    (INPUT) quantile value   0 < q1 < 1  
@@ -1784,7 +2365,7 @@ Ostap::StatVar::quantiles
  *   @code 
  */
 // ============================================================================
-Ostap::StatVar::Interval 
+Ostap::StatVar::QInterval 
 Ostap::StatVar::interval 
 ( TTree&              tree  ,
   const double        q1    , //  0<q1<1 
@@ -1815,14 +2396,71 @@ Ostap::StatVar::interval
                     "Ostap::StatVar::interval"     ) ;
   }
   //
-  const std::vector<double> result = 
+  auto result = 
     _quantiles_ ( tree , std::set<double>{{ q1 , q2 }} , 
                   var  ,  cut.get() , first , last ) ; 
-  Ostap::Assert ( 2 == result.size()         ,
+  Ostap::Assert ( 2 == result.quantiles.size()         ,
                   "Invalid interval"         ,
                   "Ostap::StatVar::interval" ) ;
   //
-  return std::make_pair( result[0] , result[1] ) ;
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
+}
+// ============================================================================
+/*  get the approximate  interval of the distribution  usnig P^2 algorithm
+ *   @param tree  (INPUT) the input tree 
+ *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+ *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @return the quantile value 
+ *   @code
+ *   Tree& tree = ... ;
+ *   /// get 90% interval:
+ *   Interval ab = p2interval ( tree , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+ *   @code 
+ */
+// ============================================================================
+Ostap::StatVar::QInterval 
+Ostap::StatVar::p2interval 
+( TTree&              tree  ,
+  const double        q1    , //  0<q1<1 
+  const double        q2    , //  0<q2<1 
+  const std::string&  expr  , 
+  const std::string&  cuts  , 
+  const unsigned long first ,
+  const unsigned long last  ) 
+{
+  Ostap::Assert ( 0 < q1 && q1 < 1 , 
+                  "Invalid quantile1"        ,
+                  "Ostap::StatVar::interval" ) ;
+  Ostap::Assert ( 0 < q2 && q2 < 1 , 
+                  "Invalid quantile2"        ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  Ostap::Formula var ( expr , &tree ) ;
+  Ostap::Assert ( var.ok()                              , 
+                  "Invalid expression:\"" + expr + "\"" ,
+                  "Ostap::StatVar::interval"            ) ;
+  //
+  std::unique_ptr<Ostap::Formula> cut { nullptr } ;
+  if  ( !cuts.empty() ) 
+  { 
+    cut = std::make_unique<Ostap::Formula>( "", cuts , &tree ) ; 
+    Ostap::Assert ( cut && cut->ok()               ,
+                    "Invalid cut:\"" + cuts + "\"" ,
+                    "Ostap::StatVar::interval"     ) ;
+  }
+  //
+  auto result = 
+    _p2quantiles_ ( tree , std::set<double>{{ q1 , q2 }} , 
+                    var  ,  cut.get() , first , last ) ; 
+  Ostap::Assert ( 2 == result.quantiles.size()         ,
+                  "Invalid interval"         ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
 }
 // ============================================================================
 /** get the number of equivalent entries 
@@ -2300,7 +2938,8 @@ Ostap::StatVar::kurtosis
  *   @return the quantile value 
  */
 // ============================================================================
-double Ostap::StatVar::quantile
+Ostap::StatVar::Quantile
+Ostap::StatVar::quantile
 ( const RooAbsData&   data      ,
   const double        q         , //  0<q<1 
   const std::string&  expr      , 
@@ -2322,15 +2961,60 @@ double Ostap::StatVar::quantile
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
-  const std::vector<double> result = _quantiles_ 
+  auto result = _quantiles_ 
     (  data,  std::set<double>{{ q }} , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
   //
-  Ostap::Assert ( 1 == result.size()         ,
+  Ostap::Assert ( 1 == result.quantiles.size()         ,
                   "Invalid quantile size"    ,
                   "Ostap::StatVar::quantile" ) ;
   //
-  return result[0] ;
+  return Quantile ( result.quantiles[0] , result.nevents ) ;
+}
+// ============================================================================
+/*   get (approximate) quantile of the distribution using P^2 algorithm
+ *   @param data   (INPUT) the input data
+ *   @param q      (INPUT) quantile value   0 < q < 1  
+ *   @param expr   (INPUT) the expression 
+ *   @param cuts   (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @param  cut_range (INPUT) cut range 
+ *   @return the quantile value 
+ */
+// ============================================================================
+Ostap::StatVar::Quantile
+Ostap::StatVar::p2quantile
+( const RooAbsData&   data      ,
+  const double        q         , //  0<q<1 
+  const std::string&  expr      , 
+  const std::string&  cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      )
+{
+  Ostap::Assert ( 0 < q && q < 1             , 
+                  "Invalid quantile"         ,
+                  "Ostap::StatVar::quantile" ) ;
+  //
+  const unsigned long num_entries = data.numEntries() ;
+  const unsigned long the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first ) { return  0 ; }    // RETURN
+  //
+  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  //  
+  auto result = _p2quantiles_ 
+    (  data,  std::set<double>{{ q }} , 
+       *expression ,  cut.get() , first , the_last , cutrange ) ;
+  //
+  Ostap::Assert ( 1 == result.quantiles.size()         ,
+                  "Invalid quantile size"    ,
+                  "Ostap::StatVar::quantile" ) ;
+  //
+  return Quantile ( result.quantiles[0] , result.nevents ) ;
 }
 // ============================================================================
 /*   get the interval of the distribution  
@@ -2349,7 +3033,7 @@ double Ostap::StatVar::quantile
  *   @code 
  */
 // ============================================================================
-Ostap::StatVar::Interval 
+Ostap::StatVar::QInterval 
 Ostap::StatVar::interval 
 ( const RooAbsData&   data      ,
   const double        q1        , //  0<q1<1 
@@ -2369,21 +3053,74 @@ Ostap::StatVar::interval
   //
   const unsigned long num_entries = data.numEntries() ;
   const unsigned long the_last    = std::min ( num_entries , last ) ;
-  if ( the_last <= first ) { return  std::make_pair(0.0,0.0) ; }    // RETURN
+  if ( the_last <= first ) { return QInterval() ; }    // RETURN
   //
   const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
   //
   const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
   const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
   //  
-  const std::vector<double> result = _quantiles_ 
+  auto result = _quantiles_ 
     (  data,  std::set<double>{{ q1 , q2 }} , 
        *expression ,  cut.get() , first , the_last , cutrange ) ;
-  Ostap::Assert ( 2 ==  result.size()        ,
+  Ostap::Assert ( 2 ==  result.quantiles.size()        ,
                   "Invalid quantile size"    ,
                   "Ostap::StatVar::quantile" ) ;
   //
-  return std::make_pair( result[0] , result[1] ) ;
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles [1] ) , result.nevents ) ;
+}
+// ============================================================================
+/*   get the approximate  interval of the distribution  usnig  P^2 algorithm
+ *   @param data  (INPUT) the input data
+ *   @param q1    (INPUT) quantile value   0 < q1 < 1  
+ *   @param q2    (INPUT) quantile value   0 < q2 < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @return the quantile value 
+ *   @code
+ *   const RooAbsData& data = ... ;
+ *   /// get 90% interval:
+ *   Interval ab = p2interval ( data , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+ *   @code 
+ */
+// ============================================================================
+Ostap::StatVar::QInterval 
+Ostap::StatVar::p2interval 
+( const RooAbsData&   data      ,
+  const double        q1        , //  0<q1<1 
+  const double        q2        , //  0<q2<1 
+  const std::string&  expr      , 
+  const std::string&  cuts      , 
+  const std::string&  cut_range , 
+  const unsigned long first     ,
+  const unsigned long last      )
+{
+  Ostap::Assert ( 0 < q1 && q1 < 1           , 
+                  "Invalid quantile1"        ,
+                  "Ostap::StatVar::quantile" ) ;
+  Ostap::Assert ( 0 < q2 && q2 < 1           , 
+                  "Invalid quantile2"        ,
+                  "Ostap::StatVar::quantile" ) ;
+  //
+  const unsigned long num_entries = data.numEntries() ;
+  const unsigned long the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first ) { return  QInterval()  ; }    // RETURN
+  //
+  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  //  
+  auto result = _p2quantiles_ 
+    (  data,  std::set<double>{{ q1 , q2 }} , 
+       *expression ,  cut.get() , first , the_last , cutrange ) ;
+  Ostap::Assert ( 2 ==  result.quantiles.size()        ,
+                  "Invalid quantile size"    ,
+                  "Ostap::StatVar::quantile" ) ;
+  //
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles [1] ) , result.nevents ) ;
 }
 // ============================================================================
 /*   get quantiles of the distribution  
@@ -2396,7 +3133,7 @@ Ostap::StatVar::interval
  *   @return the quantile value 
  */
 // ============================================================================
-std::vector<double> 
+Ostap::StatVar::Quantiles
 Ostap::StatVar::quantiles
 ( const RooAbsData&          data      ,
   const std::vector<double>& quantiles , 
@@ -2430,6 +3167,53 @@ Ostap::StatVar::quantiles
   return _quantiles_ ( data  , qs  , 
                        *expression , cut.get() , 
                        first , the_last , cutrange ) ;
+}
+// ============================================================================
+/*   get (approximate) quantiles of the distribution using P^2 algorithm  
+ *   @param data  (INPUT) the input data
+ *   @param q     (INPUT) quantile value   0 < q < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @param  first (INPUT) the first  event to process 
+ *   @param  last  (INPUT) the last event to  process
+ *   @return the quantile value 
+ */
+// ============================================================================
+Ostap::StatVar::Quantiles
+Ostap::StatVar::p2quantiles
+( const RooAbsData&          data      ,
+  const std::vector<double>& quantiles , 
+  const std::string&         expr      , 
+  const std::string&         cuts      , 
+  const std::string&         cut_range , 
+  const unsigned long        first     ,
+  const unsigned long        last      )
+{
+  std::set<double> qs ;
+  for ( double v : quantiles ) { qs.insert( v ) ; }
+  Ostap::Assert (  !qs.empty()                 , 
+                   "Invalid quantiles"         ,
+                   "Ostap::StatVar::quantiles" ) ;
+  Ostap::Assert ( 0 < *qs. begin ()            ,  
+                  "Invalid quantile"           ,
+                  "Ostap::StatVar::quantiles"  ) ;
+  Ostap::Assert ( 1 > *qs.rbegin ()            ,  
+                  "Invalid quantile"           ,
+                  "Ostap::StatVar::quantiles"  ) ;
+  //
+  const unsigned long num_entries = data.numEntries() ;
+  const unsigned long the_last    = std::min ( num_entries , last ) ;
+  if ( the_last <= first )
+  { return  Ostap::StatVar::Quantiles  ( std::vector<double>() , 0 ) ; }    // RETURN
+  //
+  const char* cutrange  = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const std::unique_ptr<Ostap::FormulaVar> expression { make_formula ( expr , data        ) } ;
+  const std::unique_ptr<Ostap::FormulaVar> cut        { make_formula ( cuts , data , true ) } ;
+  //  
+  return _p2quantiles_ ( data  , qs  , 
+                         *expression , cut.get() , 
+                         first , the_last , cutrange ) ;
 }
 // ============================================================================
 // Actions with frames 
@@ -2504,7 +3288,13 @@ Ostap::StatVar::statVar
     .Define ( var    ,  "1.0*(" + expression + ")"   )
     .Define ( weight , no_cuts ? "1.0"  : "1.0*(" + cuts + ")" ) ;
   //
-  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  const unsigned int nSlots =
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  ROOT::GetThreadPoolSize     () ;
+#else 
+  ROOT::GetImplicitMTPoolSize () ;
+#endif
+  //
   std::vector<Statistic> _stat ( nSlots ? nSlots : 1 ) ;
   //
   auto fun = [&_stat] ( unsigned int slot , double v , double w ) 
@@ -2574,7 +3364,13 @@ unsigned long Ostap::StatVar::statCov
     .Define ( var2   ,                   "1.0*(" + exp2 + ")" ) 
     .Define ( weight , no_cuts ? "1.0" : "1.0*(" + cuts + ")" ) ;
   ///
-  const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+  const unsigned int nSlots =
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
+  ROOT::GetThreadPoolSize     () ;
+#else 
+  ROOT::GetImplicitMTPoolSize () ;
+#endif
+  //
   std::vector<Statistic>           _sta1 ( nSlots ? nSlots : 1 ) ;
   std::vector<Statistic>           _sta2 ( nSlots ? nSlots : 1 ) ;
   std::vector<Ostap::SymMatrix2x2> _cov2 ( nSlots ? nSlots : 1 ) ;
@@ -3015,8 +3811,8 @@ Ostap::Math::ValueWithError Ostap::StatVar::kurtosis
 namespace 
 {
   // ==========================================================================
-  /// get quantiles 
-  std::vector<double> _quantiles_ 
+  /// get quantiles
+  Ostap::StatVar::Quantiles _quantiles_ 
   ( Ostap::DataFrame        frame , 
     const std::set<double>& qs    , 
     const std::string&      expr  , 
@@ -3047,9 +3843,32 @@ namespace
       start = values.begin() + current ;
       result.push_back ( *start ) ;
     }
-    values.clear() ;
-    
-    return  result ;
+    return  Ostap::StatVar::Quantiles ( result , values.size() ) ;
+  }
+  // ==========================================================================
+  /// get approximate  quantiles using P^2 algorithm  
+  Ostap::StatVar::Quantiles
+  _p2quantiles_ 
+  ( Ostap::DataFrame        frame     , 
+    const std::set<double>& quantiles , 
+    const std::string&      expr      , 
+    const std::string&      cuts      ) 
+  {
+    const bool no_cuts = trivial (  cuts ) ; 
+    //
+    const std::string var   = Ostap::tmp_name ( "v_"   , expr ) ;
+    const std::string bcut  = Ostap::tmp_name ( "b_"   , cuts ) ;
+    //
+    std::vector<Ostap::Math::GSL::P2Quantile> qs ( quantiles.begin() , quantiles.end() ) ;
+    // decorate the frame 
+    auto t = frame
+      .Define   ( bcut    , no_cuts ? "true" : "(bool) ( " + cuts + " ) ;" ) 
+      .Filter   ( bcut    )    
+      .Define   ( var     , "1.0*(" + expr + ")" ) ;
+    auto l = t.Count() ;
+    t.Foreach  (  [&qs] ( double v ) { for  ( auto&q : qs ) { q.add ( v ) ; } } , { var } ) ;
+    // 
+    return  Ostap::StatVar::Quantiles ( std::vector<double>( qs.begin() , qs.end() ) , *l ) ;
   }
   // ==========================================================================
 }
@@ -3062,7 +3881,8 @@ namespace
  *   @return the quantile value 
  */
 // ============================================================================
-double Ostap::StatVar::quantile
+Ostap::StatVar::Quantile
+Ostap::StatVar::quantile
 ( Ostap::DataFrame    frame  ,
   const double        q      , //  0<q<1 
   const std::string&  expr   , 
@@ -3072,10 +3892,35 @@ double Ostap::StatVar::quantile
                   "Invalid quantile"         ,
                   "Ostap::StatVar::quantile" ) ;
   auto result = _quantiles_ ( frame , std::set<double>{{ q }} , expr , cuts ) ;
-  Ostap::Assert ( 1 == result.size()         , 
+  Ostap::Assert ( 1 == result.quantiles.size()         , 
                   "Invalid quantiles size"   ,
                   "Ostap::StatVar::interval" ) ;
-  return result [0] ;
+  return Ostap::StatVar::Quantile ( result.quantiles[0] , result.nevents ) ;
+}
+// ============================================================================
+/**  get approximate quantile of the distribution using  P^2 algorithm  
+ *   @param frame  (INPUT) the input data
+ *   @param q      (INPUT) quantile value   0 < q < 1  
+ *   @param expr   (INPUT) the expression 
+ *   @param cuts   (INPUT) selection cuts 
+ *   @return the quantile value 
+ */
+// ============================================================================
+Ostap::StatVar::Quantile
+Ostap::StatVar::p2quantile
+( Ostap::DataFrame    frame  ,
+  const double        q      , //  0<q<1 
+  const std::string&  expr   , 
+  const std::string&  cuts   ) 
+{
+  Ostap::Assert ( 0 < q && q < 1             , 
+                  "Invalid quantile"         ,
+                  "Ostap::StatVar::quantile" ) ;
+  auto result = _p2quantiles_ ( frame , std::set<double>{{ q }} , expr , cuts ) ;
+  Ostap::Assert ( 1 == result.quantiles.size()         , 
+                  "Invalid quantiles size"   ,
+                  "Ostap::StatVar::interval" ) ;
+  return Ostap::StatVar::Quantile ( result.quantiles[0] , result. nevents ) ;
 }
 // ========================================================================    
 /*  get quantiles of the distribution  
@@ -3086,7 +3931,8 @@ double Ostap::StatVar::quantile
  *   @return the quantile value 
  */
 // ========================================================================    
-std::vector<double> Ostap::StatVar::quantiles
+Ostap::StatVar::Quantiles
+Ostap::StatVar::quantiles
 ( Ostap::DataFrame           frame     ,
   const std::vector<double>& quantiles , 
   const std::string&         expr      , 
@@ -3109,6 +3955,39 @@ std::vector<double> Ostap::StatVar::quantiles
   //
   return _quantiles_ ( frame , qs , expr , cuts ) ;
 }
+// ========================================================================    
+/*   get approximate  quantiles of the distribution  using P^2 algorithm 
+ *   @param frame (INPUT) the input frame
+ *   @param q     (INPUT) quantile value   0 < q < 1  
+ *   @param expr  (INPUT) the expression 
+ *   @param cuts  (INPUT) selection cuts 
+ *   @return the quantile value 
+ */
+// ========================================================================    
+Ostap::StatVar::Quantiles
+Ostap::StatVar::p2quantiles
+( Ostap::DataFrame           frame     ,
+  const std::vector<double>& quantiles , 
+  const std::string&         expr      , 
+  const std::string&         cuts      ) 
+{
+  Ostap::Assert ( 1 <= quantiles.size()          , 
+                  "Invalid vector of quantiles"  ,
+                  "Ostap::StatVar::quantile"     ) ;
+  std::set<double> qs ;
+  for ( double v : quantiles ) { qs.insert ( v ) ; }
+  Ostap::Assert ( !qs.empty ()                ,
+                  "Invalid quantiles"         ,
+                  "Ostap::StatVar::quantiles" ) ;
+  Ostap::Assert ( 0 < *qs. begin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;  
+  Ostap::Assert ( 1 > *qs.rbegin ()           , 
+                  "Invalid quantile"          ,
+                  "Ostap::StatVar::quantiles" ) ;
+  //
+  return _p2quantiles_ ( frame , qs , expr , cuts ) ;
+}
 // ============================================================================
 /* Get the interval of the distribution  
  * @param tree  (INPUT) the input tree 
@@ -3124,7 +4003,7 @@ std::vector<double> Ostap::StatVar::quantiles
  * @code 
  */
 // ============================================================================
-Ostap::StatVar::Interval 
+Ostap::StatVar::QInterval 
 Ostap::StatVar::interval 
 ( Ostap::DataFrame    frame ,
   const double        q1    , //  0<q1<1 
@@ -3139,14 +4018,248 @@ Ostap::StatVar::interval
                   "Invalid quantile2"        ,
                   "Ostap::StatVar::interval" ) ;
   //
-  const std::vector<double> result = 
-    _quantiles_ ( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
-  Ostap::Assert ( 2 == result.size()         ,
+  auto result = _quantiles_( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
+  Ostap::Assert ( 2 == result.quantiles.size()         ,
                   "Invalid interval"         ,
                   "Ostap::StatVar::interval" ) ;
   //
-  return std::make_pair( result[0] , result[1] ) ;
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
 }
 // ============================================================================
-// The END
+/* Get the approximate  interval of the distribution  using P^2 algorithm
+ * @param tree  (INPUT) the input tree 
+ * @param q1    (INPUT) quantile value   0 < q1 < 1  
+ * @param q2    (INPUT) quantile value   0 < q2 < 1  
+ * @param expr  (INPUT) the expression 
+ * @param cuts  (INPUT) selection cuts 
+ * @return the quantile value 
+ * @code
+ * FRAME& frame = ... ;
+ * /// get 90% interval:
+ * Interval ab = interval ( frame , 0.05 , 0.95 , 'mass' , 'pt>3' ) ;
+ * @code 
+ */
+// =======================x=====================================================
+Ostap::StatVar::QInterval 
+Ostap::StatVar::p2interval 
+( Ostap::DataFrame    frame ,
+  const double        q1    , //  0<q1<1 
+  const double        q2    , //  0<q2<1 
+  const std::string&  expr  , 
+  const std::string&  cuts  )
+{
+  Ostap::Assert ( 0 < q1 && q1 < 1 , 
+                  "Invalid quantile1"        ,
+                  "Ostap::StatVar::interval" ) ;
+  Ostap::Assert ( 0 < q2 && q2 < 1 , 
+                  "Invalid quantile2"        ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  auto result = _p2quantiles_ ( frame , std::set<double>{{ q1 , q2 }} ,  expr , cuts ) ; 
+  Ostap::Assert ( 2 == result.quantiles.size()         ,
+                  "Invalid interval"         ,
+                  "Ostap::StatVar::interval" ) ;
+  //
+  return QInterval ( Interval ( result.quantiles[0] , result.quantiles[1] ) , result.nevents ) ;
+}
+// ============================================================================
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data     , 
+  const Ostap::StatVar::Names&       vars     , 
+  const std::string&                 cuts     ,
+  Ostap::StatVar::Table&             table    ,
+  Ostap::StatVar::Column&            weights  ,
+  const unsigned long                first    ,
+  const unsigned long                last     )
+{ return get_table ( data , vars , cuts , table , weights , "" , first , last )  ; }
+// ============================================================================
+/*  get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param cuts selection criteria 
+ *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data    , 
+  const Ostap::StatVar::Names&       vars    , 
+  const TCut&                        cuts    , 
+  Ostap::StatVar::Table&             table   ,
+  Ostap::StatVar::Column&            weights ,
+  const unsigned long                first   ,
+  const unsigned long                last    )
+{ 
+  const std::string _cuts = cuts.GetTitle() ;
+  return get_table ( data , vars , _cuts , table , weights , ""  , first , last  ) ; 
+}
+// ============================================================================
+/*  get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data    , 
+  const Ostap::StatVar::Names&       vars    , 
+  Ostap::StatVar::Table&             table   ,
+  Ostap::StatVar::Column&            weights ,
+  const unsigned long                first   ,
+  const unsigned long                last    )
+{ return get_table ( data , vars , std::string("")  , table , weights , "" , first , last ) ; }
+// ============================================================================
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param cut_range cut range 
+ *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data      , 
+  const Ostap::StatVar::Names&       vars      , 
+  const TCut&                        cuts      ,
+  Ostap::StatVar::Table&             table     ,
+  Ostap::StatVar::Column&            weights   ,
+  const std::string&                 cut_range ,
+  const unsigned long                first     ,
+  const unsigned long                last      )
+{
+  const std::string _cuts = cuts.GetTitle() ;
+  return get_table ( data , vars , _cuts , table , weights , cut_range  , first , last  ) ; 
+}
+// =============================================================================
+/** get variables from dataset in form of the table 
+ *  @param data input dataset
+ *  @param vars list of variables
+ *  @param table output table
+ *  @param weights column of weigths (empty for non-weighted data) 
+ *  @param cut_range cut range 
+ *  @param first first entry 
+ *  @param last  last entry 
+ */
+// ============================================================================
+unsigned long 
+Ostap::StatVar::get_table 
+( const RooAbsData*                  data      , 
+  const Ostap::StatVar::Names&       vars      , 
+  const std::string&                 cuts      ,
+  Ostap::StatVar::Table&             table     ,
+  Ostap::StatVar::Column&            weights   ,
+  const std::string&                 cut_range ,
+  const unsigned long                first     ,
+  const unsigned long                last      )
+{
+  //
+  const unsigned int N = vars.size() ;
+  //
+  if ( vars.empty()                     ) { table.clear() ; weights.clear() ; return 0 ; }
+  if ( nullptr == data || last <= first ) { table.clear() ; weights.clear() ; return 0 ; }
+  if ( data->numEntries() <= first      ) { table.clear() ; weights.clear() ; return 0 ; }
+  //
+  const std::unique_ptr<Ostap::FormulaVar> selection { make_formula ( cuts , *data , true ) } ;
+  //
+  typedef std::unique_ptr<Ostap::FormulaVar> UOF ;
+  std::vector<UOF> formulas ; formulas.reserve ( N ) ;
+  //
+  for ( const auto& e : vars ) 
+  {
+    auto p = make_formula ( e , *data , false ) ;
+    if ( !p ) { return 0 ; }
+    formulas.push_back ( std::move ( p ) ) ;  
+  }
+  //
+  const bool  weighted = data->isWeighted() ;
+  const char* cutrange = cut_range.empty() ?  nullptr : cut_range.c_str() ;
+  //
+  const unsigned long the_last  = std::min ( last , (unsigned long) data->numEntries() ) ;
+  //
+  unsigned long NN = 0 ;
+  //
+  // start the first loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd *  wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    ++NN ;
+  }
+  //
+  if  ( 0 == NN ) { table.clear()  ; weights.clear() ; return NN ; } // RETURN 
+  //
+  table.resize ( N ) ;
+  for ( unsigned short i = 0 ; i < N ; ++i ) { table[i].resize ( NN ) ; }
+  //
+  if ( weighted ) { weights.resize ( NN ) ; }
+  else            { weights.clear  ()     ; }
+  //
+  unsigned long ii = 0 ;
+  // start the second loop
+  for ( unsigned long entry = first ; entry < the_last ; ++entry )
+  {
+    //
+    const RooArgSet* vars = data->get( entry ) ;
+    if ( nullptr == vars  )                           { break    ; } // RETURN
+    if ( cutrange && !vars->allInRange ( cutrange ) ) { continue ; } // CONTINUE
+    // apply cuts:
+    const long double wc = selection ? selection -> getVal() : 1.0L ;
+    if ( !wc ) { continue ; }                                   // CONTINUE  
+    // apply weight:
+    const long double wd = weighted  ? data->weight()        : 1.0L ;
+    if ( !wd ) { continue ; }                                   // CONTINUE    
+    // cuts & weight:
+    const long double w  = wd * wc ;
+    if ( !w  ) { continue ; }                                   // CONTINUE        
+    //
+    if  ( weighted ) { weights [ ii ] = w ; }
+    //
+    for ( unsigned int i = 0 ; i  < N ; ++i ) 
+    {
+      const double v = formulas[i]->getVal()  ;
+      table[i][ii] = v ;
+    }
+    //
+    ++ii  ; 
+    //
+  }
+  return NN ;
+}
+
+
+
+// ============================================================================
+//                                                                      The END
 // ============================================================================

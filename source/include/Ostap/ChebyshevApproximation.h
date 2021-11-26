@@ -11,6 +11,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/ValueWithError.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 // forward declarations 
 // ============================================================================
@@ -43,7 +44,7 @@ namespace Ostap
        *  @param N the approximation order 
        */
       ChebyshevApproximation 
-      ( const std::function<double(double)>& func , 
+      ( std::function<double(double)>        func , 
         const double                         a    , 
         const double                         b    , 
         const unsigned short                 N    ) ;
@@ -60,6 +61,16 @@ namespace Ostap
         const double             b    , 
         const unsigned short     N    ) ;
       // ======================================================================
+      /// templated constructor 
+      template <class FUNCTION>
+      ChebyshevApproximation 
+      ( FUNCTION             func , 
+        const double         a    , 
+        const double         b    , 
+        const unsigned short N    ) 
+        : ChebyshevApproximation ( std::function<double(double)> ( func ) , a , b , N ) 
+      {}
+      // ======================================================================
       /// copy constructor 
       ChebyshevApproximation ( const ChebyshevApproximation&  right ) ;
       /// move constructor 
@@ -73,15 +84,20 @@ namespace Ostap
       // default (protected) constructor 
       ChebyshevApproximation () ;
       // ======================================================================
+    public: // convert to ChebyshevSum
+      // ======================================================================
+      /// convert it to pure chebyshev sum 
+      ChebyshevSum polynomial() const ;      
+      // ======================================================================
     public:
       // ======================================================================
       ///  the main method: evaluate the approximation sum 
       double operator () ( const double         x ) const { return evaluate ( x ) ; }
-      /** the main method: evaluate the approximation sum 
-       *  using at most <code>n</code> terms 
-       */
-      double operator () ( const double         x , 
-                           const unsigned short n ) const { return evaluate ( x , n ) ; }
+      // /** the main method: evaluate the approximation sum 
+      //  *  using at most <code>n</code> terms 
+      //  */
+      // double operator () ( const double         x , 
+      //                     const unsigned short n ) const { return evaluate ( x , n ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -104,10 +120,12 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// get low edge 
       double xmin () const { return m_a ; }
+      /// get high edge 
       double xmax () const { return m_b ; }
       // ======================================================================
-    public: // derivatives and integrals 
+    public: // with uncertainty
       // ======================================================================
       /** the main method: evaluate the approximation sum 
        *  @return the approximation with the error estimate 
@@ -122,12 +140,42 @@ namespace Ostap
       eval_err ( const double         x , 
                  const unsigned short n ) const ;
       // ======================================================================
-    public:
+    public: // derivatives and integrals 
       // ======================================================================
       /// get a derivative  
       ChebyshevApproximation derivative () const ;
       /// get an integral: \f$ F(x) \equiv \int_a^{z} f(t) \deriv t  + C \f$ 
       ChebyshevApproximation integral   ( const double C = 0 ) const ;
+      // ======================================================================
+    public: // very simple operations 
+      // ======================================================================
+      /// shift by a constant 
+      ChebyshevApproximation& operator+= ( const double a ) ;
+      /// shift by a constant 
+      ChebyshevApproximation& operator-= ( const double a )
+      { (*this) += -a ; return *this ; }
+      // ======================================================================
+      /// scale by a constant 
+      ChebyshevApproximation& operator*= ( const double a ) ;
+      /// scale by a constant 
+      ChebyshevApproximation& operator/= ( const double a )
+      { (*this) *= (1/a ) ; return *this ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** Build chebyshev approximation for the function 
+       *  @param f the function 
+       *  @param a low   edge 
+       *  @param b high edge 
+       *  @param N the order of approximation 
+       */
+      template <class FUNCTION>
+      static inline ChebyshevApproximation
+      create ( FUNCTION             f ,  
+               const double         a , 
+               const double         b , 
+               const unsigned short N ) 
+      { return ChebyshevApproximation ( f ,  a , b , N ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -155,8 +203,54 @@ namespace Ostap
     };
     // ========================================================================
     /// swap two objects 
-    inline void swap ( ChebyshevApproximation& a , 
-                       ChebyshevApproximation& b ) { a.swap ( b ) ;}
+    inline void swap 
+    ( ChebyshevApproximation& a , 
+      ChebyshevApproximation& b ) { a.swap ( b ) ;}
+    // ========================================================================
+    /// add a constant 
+    inline ChebyshevApproximation operator+
+    ( const ChebyshevApproximation& a ,
+      const double                  b )
+    { ChebyshevApproximation r ( a ) ; r += b ; return r ; }
+    /// add a constant 
+    inline ChebyshevApproximation operator+
+    ( const double                  b ,
+      const ChebyshevApproximation& a ) { return a + b ; }
+    /// scale by a constant 
+    inline ChebyshevApproximation operator*
+    ( const ChebyshevApproximation& a ,
+      const double                  b )
+    { ChebyshevApproximation r ( a ) ; r *= b ; return r ; }
+    /// scale by a constant 
+    inline ChebyshevApproximation operator*
+    ( const double                  b ,
+      const ChebyshevApproximation& a ) { return a * b ; }
+    /// subtract a constant    
+    inline ChebyshevApproximation operator-
+    ( const ChebyshevApproximation& a ,
+      const double                  b ) { return a + ( -b ) ; }
+    /// scale by a constant    
+    inline ChebyshevApproximation operator/
+    ( const ChebyshevApproximation& a ,
+      const double                  b ) { return a * ( 1/ b ) ; }
+    // ========================================================================
+    /** Build Chebyshev polynomial approximation for the function 
+     *  @param f the function 
+     *  @param a low   edge 
+     *  @param b high edge 
+     *  @param N the order of approximation 
+     *  @see Ostap::Math::ChebyshevSum 
+     *  @see Ostap::Math::ChebyshevApproximation
+     *  @see Ostap::math::chebyshev_sum 
+     */
+    template <class FUNCTION>
+    inline Ostap::Math::ChebyshevSum 
+    approximate ( FUNCTION             f ,  
+                  const double         a , 
+                  const double         b , 
+                  const unsigned short N ) 
+    { return Ostap::Math::ChebyshevApproximation 
+        ( std::cref ( f ) ,  a , b , N ).polynomial () ; }
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================

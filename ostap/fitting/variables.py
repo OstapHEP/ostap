@@ -24,12 +24,16 @@ __all__     = (
     'total_ratio'     , ## ``converter'': A,B ->  (T,R) == ( A+B , A/B     )
     'total_ratio'     , ## ``converter'': A,B ->  (T,F) == ( A+B , A/(A+B) ) 
     'two_yields'      , ## ``converter'': T,F ->  (A,B) == ( R*F , T*(1-F) )
+    'depends_on'      , ## Is this "RooFit" function depends on the variable?
+    'binning'         , ## create RooBinning object 
     ) 
 # =============================================================================
-import ROOT, random
-from   ostap.core.core  import VE
+import ROOT, random, array 
+from   ostap.core.core        import VE, hID, Ostap
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import ( num_types     , list_types   ,
-                                       integer_types , string_types )   
+                                       integer_types , string_types )
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -129,11 +133,16 @@ ROOT.RooFormulaVar  . as_VE          = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooConstVar    . asVE           = lambda s : VE ( s.getVal() , 0 )
 ROOT.RooFormulaVar  . asVE           = lambda s : VE ( s.getVal() , 0 )
 
+ROOT.RooRealVar     . __float__      = lambda s : s.getVal()
+ROOT.RooConstVar    . __float__      = lambda s : s.getVal()
+ROOT.RooAbsReal     . __float__      = lambda s : s.getVal() ## NB!!!
+
 
 ROOT.RooAbsReal       .__contains__ = lambda s,v : False ## ??? do we need it???
 ROOT.RooAbsRealLValue .__contains__ = _rrv_contains_ 
 
 # =====================================================================
+
 ROOT.RooAbsReal. minmax  = lambda s : ()
 ROOT.RooAbsReal.xminmax  = lambda s : ()
 ROOT.RooAbsRealLValue  . xmin            = lambda s : s.getMin()
@@ -418,6 +427,10 @@ ROOT.RooRealVar . __iadd__  = _rrv_iadd_
 ROOT.RooRealVar . __isub__  = _rrv_isub_
 ROOT.RooRealVar . __idiv__  = _rrv_idiv_
 
+ROOT.RooRealVar . __truediv__ = ROOT.RooRealVar . __div__
+ROOT.RooRealVar .__rtruediv__ = ROOT.RooRealVar .__rdiv__
+ROOT.RooRealVar .__itruediv__ = ROOT.RooRealVar .__idiv__
+
 
 _new_methods_ += [
     ROOT.RooRealVar.__add__   , 
@@ -433,7 +446,11 @@ _new_methods_ += [
     #
     ROOT.RooRealVar.__iadd__  , 
     ROOT.RooRealVar.__isub__  , 
-    ROOT.RooRealVar.__idiv__  , 
+    ROOT.RooRealVar.__idiv__  ,
+    #
+    ROOT.RooRealVar . __truediv__ ,
+    ROOT.RooRealVar .__rtruediv__ , 
+    ROOT.RooRealVar .__itruediv__ ,
     ]
 
 # =============================================================================
@@ -536,11 +553,11 @@ def _rav_getvale_ ( self ) :
     """
     v = self.getVal()
     e = self.getError() 
-    return VE ( v , e*e ) if e>0 else v
+    return VE ( v , e * e ) if e > 0 else v
 
 # =============================================================================
 def _rav_setval_  ( self , value ) :
-    """Assign the valeu for the variable 
+    """Assign the value for the variable 
     >>> var = ...
     >>> var.value = 10 
     """
@@ -555,7 +572,7 @@ def _rav_setvalc_  ( self , value ) :
     >>> var.value = 10 
     """
     value = float ( value )
-    mn,mx  = self.getMin(), self.getMax() 
+    mn , mx  = self.getMin(), self.getMax() 
     if not mn <= value <= mx :
         logger.warning('Value %s is out the range [%s,%s]' %  ( value  , mn , mx ) ) 
     self.setVal ( value ) 
@@ -702,7 +719,7 @@ def  total_ratio ( var1 , var2 ) :
     assert isinstance ( var2 , ROOT.RooAbsReal,\
                         "Invalid type of ``var2'' %s/%s" % ( var2 , type ( var2 ) ) )
     
-    name     =  var1.name ,  var2.name 
+    name     = var1.name ,  var2.name 
     total    = add_var   ( var1 , var2 ,
                            name  = 'Total_%s_%s'               % names ,
                            title = 'Total yields of %s and %s' % names )
@@ -767,7 +784,7 @@ def two_yields ( total , fraction ) :
     
     formula  = '(%s)*(1-(%s))'         % vnames  
     varlist  = ROOT.RooArgList    ( var1 , var2                      )
-    yield2   = ROOT.RooFormulaVar ( name , title , formula , varlist )
+    yield2   = Ostap.FormulaVar   ( name , title , formula , varlist )
     
     yield2._varlist = [ var1 , var2 , varlist ]
     
@@ -1038,6 +1055,294 @@ ROOT.RooUniformBinning.__str__  = _rub_str_
 ROOT.RooUniformBinning.__repr__ = _rub_str_
 
 
+# =============================================================================
+## Does  this variable depends on another one?
+#  @code
+#  fun = ...
+#  var = ...
+#  if fun.depends_on ( var ) :
+#     ...
+#  @endcode
+def depends_on ( fun , var ) :
+    """Does  this variable depends on another one?
+    
+    >>> fun = ...
+    >>> var = ...
+    >>> if fun.depends_on ( var ) :
+    ...
+    
+    """
+    if isinstance ( var , ROOT.RooAbsCollection ) :
+        for v in var :
+            if depends_on ( fun , v ) : return True
+        return False
+
+    fpars = fun.getParameters ( 0 )
+    
+    ## direct dependency?
+    if var  in fpars : return True
+        
+    ## check indirect dependency
+    vvars = var.getParameters ( 0 )
+    for v in vvars :
+        if v in fpars : return True
+
+    ##
+    return False 
+
+ROOT.RooAbsReal.depends_on  = depends_on
+
+# =============================================================================
+## Create <code>RooBinnig</code> object
+#  @param edges vector of bin edges 
+#  @param nbins number of bins
+#  @param name  binning name
+#  @see RooBinning
+def binning ( edges , nbins = 0 , name = '' ) :
+    """Create `RooBinnig` object
+    - see ROOT.RooBinning
+    """
+    assert isinstance ( nbins , integer_types ) and 0 <= nbins, \
+           "Invalid ``nbins'' parameter %s/%s" % ( nbins , type ( nbins ) )
+
+    nb = len ( edges ) 
+    assert 2 <= nb , "Invalid length of ``edges'' array!"
+
+    if 2 == nb :
+        return ROOT.RooBinning ( max ( 1 , nbins ) , edges[0] , edges[1] , name ) 
+
+    buffer = array.array ( 'd', edges )
+    return ROOT.RooBinning ( nb - 1 , buffer , name ) 
+
+
+    
+# =============================================================================
+## Dedicated unpickling factory for RooRealVar
+def rrv_factory ( args , errors , binnings , fixed ) :
+    """ Dedicated unpickling factory for `ROOT.RooRealVar`
+    """
+    ## create it
+    rrv = ROOT.RooRealVar ( *args )
+
+    ## set errors if needed 
+    if errors :
+        if   2 == len ( errors ) : rrv.setAsymError ( *errors ) 
+        elif 1 == len ( errors ) : rrv.setError     ( *errors )
+
+    for b in binnings :
+        nb = b.GetName() 
+        if nb : rrv.setBinning ( b , nb ) 
+        
+    rrv.setConstant ( fixed )
+    
+    return rrv
+
+# =============================================================================
+## Reducing of <code>RooRealVar</code> for pickling/unpickling 
+#  @see RooRooRealVar 
+def rrv_reduce ( rrv ) :
+    """ Reducing of `ROOT.RooRealVar` for pickling 
+    - see ROOT.RooRooRealVar 
+    """
+    
+    name    = rrv.name 
+    title   = rrv.title
+    value   = rrv.getVal () 
+
+    has_min = rrv.hasMin ()
+    has_max = rrv.hasMax ()
+
+    ## constructor arguments 
+    if has_min and has_max :
+        args = name , title , value ,  rrv.getMin () , rrv.getMax ()              , rrv.getUnit ()
+    elif has_min : 
+        args = name , title , value ,  rrv.getMin () , ROOT.RooNumber.infinity () , rrv.getUnit () 
+    elif has_max : 
+        args = name , title , value , -ROOT.RooNumber.infinity () , rrv.getMax () , rrv.getUnit () 
+    else :
+        args = name , title , value ,  rrv.getUnit () 
+
+    ## errors 
+    if   rrv.hasAsymError () :
+        errors = rrv.getAsymErrorLo () , rrv.getAsymErrorHi ()
+    elif rrv.hasError   () :
+        errors = rrv.getError() ,
+    else :
+        errors = () 
+
+    ## bining schemes 
+    bnames   = rrv.getBinningNames()
+    binnings = [] 
+    for nb in bnames:
+        if not nb : continue
+        bb = rrv.getBinning ( nb , False ) 
+        if bb.GetName () : binnings.append ( bb )
+        
+    binnings = tuple ( binnings ) 
+
+    ## fixed ? 
+    fixed = True if rrv.isConstant() else False 
+    
+    content = args , errors , binnings , fixed
+    
+    return rrv_factory , content 
+
+
+ROOT.RooRealVar.__reduce__ = rrv_reduce
+
+
+# =============================================================================
+## factory for unpickling of <code>RooFormulaVar</code> and
+#  <code>Ostap::FormulaVar</code>
+def rfv_factory ( klass , args , vars ) :
+    """Factory for unpickling of `RooFormulaVar` and `Ostap.FormulaVar`
+    """
+
+    lst = ROOT.RooArgList ()
+    for v in vars : lst.add ( v ) 
+
+    margs = list  ( args  )
+    margs.append  ( lst   )
+    margs = tuple ( margs ) 
+    
+    rfv = klass ( *margs )
+    
+    rfv.__vlst = lst
+    
+    return rfv
+    
+# =============================================================================
+## Reduce <code>RooFormulaVar</code> and <code>Ostap::FormulaVar</code> for pickling
+#  @see RooFormulaVar 
+#  @see Ostap::FormulaVar 
+def rfv_reduce ( rfv ) : 
+    """Reduce `RooFormulaVar` and `Ostap::FormulaVar` for pickling
+    - see RooFormulaVar 
+    - see Ostap.FormulaVar 
+    """
+
+    name       = rfv.GetName  ()
+    title      = rfv.GetTitle ()
+    
+    rform      = rfv.formula  ()
+    
+    expression = rform.GetTitle() 
+
+    vars       = []
+    deps       = rform.actualDependents()
+    for d in deps : vars.append ( d )
+    vars = tuple ( vars ) 
+
+    args  = name , title , expression 
+    
+    return rfv_factory , ( type ( rfv ) , args , vars ) 
+
+
+# =============================================================================
+## get the actual expression from <code>RooFormualVar</code>
+#  @code
+#  fomular = ...
+#  expression = formular.expression()  
+#  @endcode
+def _rfv_expr_ ( var ) :
+    """Get the actual expression from `RooFormualVar`
+    >>> fomular = ...
+    >>> expression = formular.expression()  
+    """
+    return var.formula().GetTitle() 
+
+# ==============================================================================
+## string representaion of the RooFormulaVar
+def _rfv_str_ ( var ) :
+    """String representaion of the RooFormulaVar
+    """
+    return '%s : %s' % ( var.expression() , var.getVal() ) 
+
+# ==============================================================================
+## string representaion of the RooFormulaVar
+def _rfv_repr_ ( var ) :
+    """String representaion of the RooFormulaVar
+    """
+    return '%s : %s' % ( var.expression() , var.getVal() ) 
+
+if (6,22) <= root_info : 
+    ROOT.RooFormulaVar. expression = _rfv_expr_
+    ROOT.RooFormulaVar. __str__    = _rfv_str_
+    ROOT.RooFormulaVar. __repr__   = _rfv_repr_
+    ROOT.RooFormulaVar.__reduce__  = rfv_reduce
+else :
+    Ostap.FormulaVar.__reduce__    = rfv_reduce
+    Ostap.FormulaVar. __str__      = _rfv_str_
+    Ostap.FormulaVar. __repr__     = _rfv_repr_
+    Ostap.FormulaVar.__reduce__    = rfv_reduce
+
+
+# =============================================================================
+## unpickle <code>Ostap::MoreFooFit::TwoVars</code> objects
+#  @see Ostap::MoreRooFit.TwoVars
+def r2v_factory ( klass , *args ) :
+    """unpickle `Ostap::MoreFooFit::TwoVars` objects
+    - see Ostap.MoreRooFit.TwoVars
+    """
+    return klass ( *args )
+
+# =============================================================================
+## Reduce <code>Ostap::MoreFooFit::TwoVars</code> objects
+#  @see Ostap::MoreRooFit.TwoVars
+def r2v_reduce ( vars ) :
+    """Reduce `Ostap::MoreFooFit::TwoVars` objects
+    - see Ostap.MoreRooFit.TwoVars
+    """
+    return r2v_factory , ( type ( var ) , var.name , var.title , var.x() , var.y() )
+
+
+Ostap.MoreRooFit.TwoVars.__reduce__  = r2v_reduce
+
+
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Combination</code> objects
+#  @see Ostap::MoreRooFit.Combination
+def _rc_reduce ( vars ) :
+    """Reduce `Ostap.MoreFooFit.Combination` objects
+    - see Ostap.MoreRooFit.Combination
+    """
+    return r2v_factory , ( type ( var ) ,
+                           var.name , var.title ,
+                           var.x()  , var.y()   ,
+                           var.alpha() , var.beta() , var.gamma () )
+
+# ===================================================================
+## Reduce <code>Ostap::MoreFooFit::Asymmetry</code> objects
+#  @see Ostap::MoreRooFit.Asymmetry
+def _ra_reduce ( vars ) :
+    """Reduce  `Ostap::MoreFooFit::Asymmetry` objects
+    - see Ostap.MoreRooFit.Asymmetry
+    """
+    return r2v_factory , ( type ( var ) ,
+                           var.name , var.title ,
+                           var.x()  , var.y()   ,
+                           var.scale () )
+
+
+Ostap.MoreRooFit.Combination.__reduce__  = _rc_reduce
+Ostap.MoreRooFit.Asymmetry.  __reduce__  = _ra_reduce
+
+
+
+# =============================================================================
+## Reduce <code>RooConstVar</code>
+#  @see RooConstVar 
+def rcv_reduce ( var ) :
+    """ Reduce `ROOT.RooConstVar`
+    - see ROOT.RooConstVar
+    """
+    return r2v_factory , ( type ( var )  ,
+                           var.name      ,
+                           var.title     ,
+                           float ( var ) )  
+
+ROOT.RooConstVar.__reduce__ = rcv_reduce 
+
 
 # =============================================================================
 _decorated_classes_ = (
@@ -1046,7 +1351,7 @@ _decorated_classes_ = (
     ROOT.RooFormulaVar     ,
     ROOT.RooAbsReal        ,
     ROOT.RooAbsRealLValue  ,
-    ROOT.RooUniformBinning
+    ROOT.RooUniformBinning ,
 )
 
 _new_methods_ = tuple ( _new_methods_ ) 

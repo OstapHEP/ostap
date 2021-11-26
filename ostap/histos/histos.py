@@ -26,10 +26,10 @@ __all__     = (
     've_adjust'       , ## adjust the efficiency to be in physical range
     'Histo1DFun'      , ## 1D-histogram as function object 
     'Histo2DFun'      , ## 2D-histogram as function object 
-    'Histo3DFun'      , ## 3D-histogram as function object 
+    'Histo3DFun'      , ## 3D-histogram as function object
     )
 # =============================================================================
-import ROOT, sys, math
+import ROOT, sys, math, ctypes, array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -47,11 +47,15 @@ from ostap.core.core import ( cpp      , Ostap     ,
                               binomEff , binomEff2 ,
                               zechEff  , wilsonEff , agrestiCoullEff , 
                               iszero   , isequal   , inrange         , 
-                              isint    , islong    ,
+                              isint    , islong    , is_sorted       , 
                               natural_entry        ,
                               natural_number       )
-from ostap.core.ostap_types import integer_types, num_types , long_type
+from   ostap.math.base        import frexp10 
+from   ostap.core.ostap_types import integer_types, num_types , long_type, sequence_types 
+import ostap.plotting.draw_attributes 
 # =============================================================================
+
+
 inf_pos =  float('Inf')
 inf_neg = -float('Inf')
 # =============================================================================
@@ -63,13 +67,15 @@ def _h_new_init_ ( self , *args ) :
     """Modified TH* constructor:
     - ensure that created object/histogram goes to ROOT main memory
     """
-    with ROOTCWD() :
-        ROOT.gROOT.cd() 
-        self._old_init_   ( *args )
-        self.SetDirectory ( ROOT.gROOT )  ## NB! 
+    with ROOTCWD () :
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
+        init = self._old_init_   ( *args )
+        self.SetDirectory ( groot )  ## NB! 
         ## optionally:
         if not self.GetSumw2() : self.Sumw2()
-
+        return init 
+    
 # =============================================================================
 ## a bit modified 'Clone' function for histograms
 #  - it automatically assign unique ID
@@ -79,19 +85,20 @@ def _h_new_init_ ( self , *args ) :
 #  @attention clone is always goes to ROOT main memory!
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _h_new_clone_ ( self , name = '' , title = ''  ) :
+def _h_new_clone_ ( self , name = '' , title = '' , prefix = 'h_' ) :
     """Modifiled Clone-function
     - it automatically assigns unique ID
     - it ensures that cloned histogram is not going to die with
     the accidentally opened file/directory
     - a title can be optionally redefined 
     """
-    if not name : name = hID()
+    if not name : name = hID ( prefix = prefix )
     #
     with ROOTCWD() :
-        ROOT.gROOT.cd() 
+        groot = ROOT.ROOT.GetROOT()
+        groot.cd() 
         nh = self._old_clone_ ( name )
-        nh.SetDirectory ( ROOT.gROOT ) ## ATTENTION!
+        nh.SetDirectory ( groot )
         ## optionally 
         if not nh.GetSumw2() : nh.Sumw2()
         
@@ -113,9 +120,9 @@ for h in ( ROOT.TH1F , ROOT.TH1D ,
 
     if hasattr ( h , '_new_init_' ) and hasattr ( h , '_old_init_' ) : pass
     else : 
-        h._old_init_  =  h.__init__ 
-        h._new_init_  = _h_new_init_
-        h.__init__    = _h_new_init_
+        h._old_init_ =  h.__init__ 
+        h._new_init_ = _h_new_init_
+        ## h.__init__   = _h_new_init_  
 
 # =============================================================================
 # Decorate histogram axis and iterators 
@@ -178,7 +185,7 @@ def _h1_get_item_ ( h1 , ibin ) :
     nb = a.GetNbins ()
     #
     if     1 <=  ibin <= nb : pass
-    elif   1 <= -ibin <= nb : ibin += ( nb + 1 ) 
+    elif   1 <= -ibin <= nb : ibin += ( nb + 1 )
     else                    : raise IndexError 
     #
     val = h1.GetBinContent ( ibin ) 
@@ -2449,6 +2456,7 @@ def _h1_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
         
+    result.ResetStats() 
     return result
 
 
@@ -2479,6 +2487,7 @@ def _h1_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( i1 , v.value () ) 
         h1.SetBinError   ( i1 , v.error () )
         
+    h1.ResetStats() 
     return h1 
 
 
@@ -2614,7 +2623,8 @@ def _h1_pow_ ( h1 , val ) :
         #
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
-        
+
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -2641,6 +2651,7 @@ def _h1_abs_ ( h1 ) :
         result.SetBinContent ( i1 , v.value () ) 
         result.SetBinError   ( i1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3021,11 +3032,12 @@ def _h2_random_ ( h2 ) :
     >>> x,y = h2.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    h2.GetRandom2( _x , _y )
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
     #
-    return float(_x) , float(_y)
+    h2.GetRandom2( x , y )
+    #
+    return float( x.value ) , float( y.value )
 
 # =============================================================================
 ## get the random triplet from 3D-histogram
@@ -3041,12 +3053,14 @@ def _h3_random_ ( h3 ) :
     >>> x,y,z = h3.random() 
     """
     #
-    _x = ROOT.Double(0.0)
-    _y = ROOT.Double(1.0)
-    _z = ROOT.Double(2.0)
-    h3.GetRandom3( _x , _y ,_z)
+    x = ctypes.c_double ( 0.0 ) 
+    y = ctypes.c_double ( 1.0 )
+    z = ctypes.c_double ( 2.0 )
     #
-    return float(_x) , float(_y) , float(_z) 
+    h3.GetRandom3 ( x , y , z )
+    #
+    return float( x.value ) , float( y.value ) , float( z.value )
+
 
 ROOT.TH2F.random = _h2_random_
 ROOT.TH2D.random = _h2_random_
@@ -3057,6 +3071,87 @@ ROOT.TH3D.random = _h3_random_
 ROOT.TH1F.random = lambda s : s.GetRandom() 
 ROOT.TH1D.random = lambda s : s.GetRandom()
 
+# =============================================================================
+## Shoot several random numbers from 1D histogram
+#  @code
+#  h1 = ...
+#  for v in h1.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h1_shoot_ ( h1 , N , accept = lambda v : True ) :
+    """ Shoot several random numbers from 1D histogram
+    >>> h1 = ...
+    >>> for v in h1.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        v = h1.random()
+        while not accept ( v ) :
+            v = h1.random()
+
+        yield v 
+        
+# =============================================================================
+## Shoot several random numbers from 2D histogram
+#  @code
+#  h2 = ...
+#  for x,y in h2.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h2_shoot_ ( h2 , N , accept = lambda x,y : True ) :
+    """ Shoot several random numbers from 2D histogram
+    >>> h2 = ...
+    >>> for x,y in h2.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        x, y  = h2.random()
+        while not accept ( x , y ) :
+            x, y  = h2.random()
+            
+        yield x , y 
+
+# =============================================================================
+## Shoot several random numbers from 3D histogram
+#  @code
+#  h3 = ...
+#  for x,y,z in h3.shoot ( 10 ) :
+#  .... 
+#  @endcode
+def _h3_shoot_ ( h3 , N , accept = lambda x,y,z : True ) :
+    """ Shoot several random numbers from 3D histogram
+    >>> h3 = ...
+    >>> for x,y,z in h3.shoot ( 10 ) :
+    >>> .... 
+    """
+    
+    assert isinstance ( N , integer_types ) and 0 <= N ,\
+           'Invalid number of random shoots!'
+    
+    for i in range ( N ) : 
+        
+        x, y , z  = h3.random()
+        while not accept ( x , y , z ) :
+            x , y , z  = h3.random()
+            
+        yield x , y , z 
+
+ROOT.TH1F.shoot = _h1_shoot_
+ROOT.TH1D.shoot = _h1_shoot_
+ROOT.TH2F.shoot = _h2_shoot_
+ROOT.TH2D.shoot = _h3_shoot_
+ROOT.TH3F.shoot = _h3_shoot_
+ROOT.TH3D.shoot = _h3_shoot_
 
 # =============================================================================
 ## operation with the histograms 
@@ -3090,6 +3185,7 @@ def _h2_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result
 
 # =============================================================================
@@ -3120,6 +3216,7 @@ def _h2_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( ix1 , iy1 , v.value () ) 
         h1.SetBinError   ( ix1 , iy1 , v.error () )
 
+    h1.ResetStats() 
     return h1
 
 # =============================================================================
@@ -3300,6 +3397,7 @@ def _h2_pow_ ( h1 , val ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3326,6 +3424,7 @@ def _h2_abs_ ( h1 ) :
         result.SetBinContent ( ix1 , iy1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3450,6 +3549,7 @@ def _h3_oper_ ( h1 , h2 , oper ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
 
+    result.ResetStats() 
     return result
 
 
@@ -3480,6 +3580,7 @@ def _h3_ioper_ ( h1 , h2 , oper ) :
         h1.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         h1.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
 
+    h1.ResetStats() 
     return h1
 
 # =============================================================================
@@ -3600,6 +3701,7 @@ def _h3_pow_ ( h1 , val ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 
@@ -3676,6 +3778,7 @@ def _h3_abs_ ( h1 ) :
         result.SetBinContent ( ix1 , iy1 , iz1 , v.value () ) 
         result.SetBinError   ( ix1 , iy1 , iz1 , v.error () )
         
+    result.ResetStats() 
     return result 
 
 # =============================================================================
@@ -3793,6 +3896,7 @@ def _h1_add_function_integral_ ( h1 , func ) :
         ## update 
         h1[ibin]  = y + ii
 
+    h1.ResetStats() 
     return h1
 
 ROOT.TH1F.addFunctionIntegral = _h1_add_function_integral_
@@ -3860,6 +3964,7 @@ def _h1_effic_ ( h , increasing = True ) :
 
         result [ibin] = s1.frac( s2 ) if increasing else s2.frac( s1 ) 
 
+    result.ResetStats() 
     return result 
 
 
@@ -4018,6 +4123,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
             
             h2[i2] += val2
 
+    h2.ResetStats() 
     return h2
 
 
@@ -4044,6 +4150,7 @@ def _h1_transform_ ( h1 , func ) :
         
         h2 [ i ] = func ( x, y ) 
         
+    h2.ResetStats() 
     return h2 
 
 ROOT.TH1F. transform = _h1_transform_ 
@@ -4101,6 +4208,7 @@ def _h2_transform_ ( h2 , func ) :
         
         h3 [ ix , iy ] = func ( x, y , z ) 
         
+    h3.ResetStats() 
     return h3 
 
 ROOT.TH2F. transform = _h2_transform_ 
@@ -4254,6 +4362,7 @@ def _h_sample_ ( histo , accept = lambda s : True , nmax = 1000 ) :
         
         result [bin] = v2
         
+    result.ResetStats() 
     return result
 
 ROOT.TH1 ._sample_ = _h_sample_
@@ -4291,6 +4400,7 @@ def _h_poisson_ ( histo , fluctuate = False , accept = lambda s : True ) :
         
         result [bin] = v2
         
+    result.ResetStats() 
     return result
     
 ROOT.TH1 .poisson = _h_poisson_
@@ -4368,6 +4478,7 @@ def _fom_1_ ( s , b , alpha = 1 , increase = True ) :
         
         h [i] = _sb_ ( si , bi , alpha ) 
         
+    h.ResetStats() 
     return h 
 
 ROOT.TH1D . fom_1 = _fom_1_ 
@@ -4457,6 +4568,8 @@ def _bin_overlap_2D_ ( x1 , y1 , x2 , y2 ) :
 
 
 
+## print ('QUQUQU!!')
+
 
 # ==============================================================================
 ## rebin 1D-histogram with NUMBERS 
@@ -4488,7 +4601,8 @@ def _rebin_nums_1D_ ( h1 , template ) :
             o = _bin_overlap_1D_ ( i1[1] , i2[1] )
             
             h2 [ i2[0] ] +=  o * i1[2] 
-            
+
+    h2.ResetStats() 
     return h2 
 # =============================================================================
 ## rebin 1D-histogram as FUNCTION 
@@ -4519,6 +4633,7 @@ def _rebin_func_1D_ ( h1 , template ) :
             
             h2 [ i2[0] ] +=  o * i1[2]
             
+    h2.ResetStats() 
     return h2 
 
 
@@ -4544,8 +4659,10 @@ def _rebin_nums_2D_ ( h1 , template ) :
             o = _bin_overlap_2D_ ( i1[2] , i1[3] , i2[2] , i2[3] )
             
             h2 [ i2[0] , i2[1] ] +=  o * i1[4] 
-            
-    return h2 
+             
+    h2.ResetStats() 
+    return h2
+
 # =============================================================================
 ## rebin 2D-histogram as FUNCTION 
 def _rebin_func_2D_ ( h1 , template ) :
@@ -4571,6 +4688,7 @@ def _rebin_func_2D_ ( h1 , template ) :
             
             h2 [ i2[0] , i2[1] ] +=  o * i1[4]
             
+    h2.ResetStats() 
     return h2 
 
 for t in ( ROOT.TH1F , ROOT.TH1D ) :
@@ -4655,10 +4773,9 @@ def _h1_getslice_ ( h1 , i , j ) :
     edges = edges [i-1:j]
     
     typ = h1.__class__
-    from array import array
     result = typ ( hID  ()       ,
                    h1.GetTitle() ,
-                   len ( edges ) - 1 , array ( 'd' , edges ) )
+                   len ( edges ) - 1 , array.array ( 'd' , edges ) )
     
     result.Sumw2()
     result += h1
@@ -4668,7 +4785,97 @@ def _h1_getslice_ ( h1 , i , j ) :
 ROOT.TH1F  . __getslice__  =   _h1_getslice_ 
 ROOT.TH1D  . __getslice__  =   _h1_getslice_ 
 
+# =============================================================================
+## Create <code>TAxis</code>
+#  @code
+#  a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
+#  a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
+#  a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
+#  a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
+#  a = make_axis ( 0.0 , 1.0 , 2.0  )               ##   e1 , e2 , ...  
+#  @endcode
+def make_axis ( nbins , *bins ) :
+    """ Create <code>TAxis</code>    
+    >>> a = make_axis ( 2 , 0.0 , 1.0 )                  ## #bins ,min, max 
+    >>> a = make_axis ( 4 , 0.0 , 1.0 , 2.0 , 5.0 , 10 ) ## #bins , e1 , e2 , e3 , ...    
+    >>> a = make_axis ( 2 , [ 0.0 , 1.0 , 2.0 ]  )       ## #bins , [ e1 , e2 . ... ]  
+    >>> a = make_axis ( [ 0.0 , 1.0 , 2.0 ]  )           ## [ e1 , e2 , ... ] 
+    >>> a = make_axis (  0.0 , 1.0 , 2.0 , 3.0 , 4.0 )   ##   e1 , e2 , ... 
+    """
+    
+    if   isinstance ( nbins , ROOT.TAxis ) : return nbins 
 
+    if isinstance ( nbins , integer_types ) and 0 < nbins :
+        
+        if 1 == len ( bins ) and isinstance ( bins [ 0 ] , sequence_types ) :
+            abins = [ float ( e ) for e in bins [ 0 ] ]
+            if nbins +1 <= len ( abins ) :
+                abins = abins [ : nbins + 1 ] 
+                if is_sorted ( abins ) : 
+                    return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
+                
+        elif 2 == len ( bins ) and \
+               isinstance ( bins [ 0 ] , num_types ) and \
+               isinstance ( bins [ 1 ] , num_types ) and bins [ 0 ] < bins [ 1 ] :
+            return ROOT.TAxis ( nbins , bins [ 0 ] , bins [ 1 ] )
+        
+        elif nbins + 1 <= len ( bins ) :                    
+            abins = [ float ( e ) for e in bins [ : nbins + 1 ] ]
+            if is_sorted ( abins ) : 
+                return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
+
+    elif isinstance ( nbins , sequence_types ) and not bins :
+        
+        abins = [ float ( e ) for e in nbins ]
+        if 2 <= len ( abins ) and is_sorted ( abins ) : 
+            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) )
+        
+    if isinstance ( nbins , num_types ) and bins : 
+        abins = [ float ( nbins ) ] + [ float ( e ) for e in bins ]
+        if is_sorted ( abins ) : 
+            return ROOT.TAxis ( nbins , array.array ( 'd' , abins ) ) 
+
+    raise ArgumentError('make_axis: invalid arguments %s' % str ( ( nbins , ) + bins ) ) 
+
+# =============================================================================
+## create TH1D from model 
+def h1_from_model ( model , *args ) :
+    
+    if isinstance ( model , ROOT.ROOT.RDF.TH1DModel ) :
+        
+        bins = model.fBinXEdges
+        if bins : return ROOT.TH1D ( model.fName , model.fNbinsX , array.array  ('d' , model.fBinXEdges ) ) 
+        else    : return ROOT.TH1D ( model.fName , model.fNbinsX , model.fXLow , model.fXUp               ) 
+
+    if isinstance ( model , ROOT.TAxis ) :
+        return h1_axis ( model , title = '1D histogram' , name = hID () , double = True )
+
+    preps = []    
+    aargs = [ model ] + list ( args )
+    
+    if 1 < len ( aargs ) and isistance ( aargs[0] , string_types ) :
+        preps.append ( aargs[0] )
+        aargs = aargs [1:]
+    if 1 < len ( aargs ) and isistance ( aargs[0] , string_types ) :
+        preps.append ( aargs[0] )
+        aargs = aargs [1:]
+
+    axis = None 
+    if 1 <= len  ( aargs ) :
+        try :
+            axis = make_axis ( *aargs )
+        except :
+            pass
+        
+    if not axis : return None  ## RETURN
+    
+    if   2 == len ( preps ) : name , title = preps 
+    elif 1 == len ( preps ) : name , title = hID () , preps [0]  
+    else                    : name , title = hID () , '1D histo'
+    
+    return h1_axis ( axis , title = title , name = name , double = True )
+
+        
 # =============================================================================
 ## make 1D-histogram from axis
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -4691,10 +4898,9 @@ def h1_axis ( axis           ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH1 ) : typ = double
     else : typ = ROOT.TH1D if double else ROOT.TH1F
     #
-    from array import array 
     h1  = typ ( name  ,
                 title ,
-                len ( bins ) - 1 , array ( 'd' , bins ) )
+                len ( bins ) - 1 , array.array ( 'd' , bins ) )
     ##
     h1.Sumw2()
     return h1
@@ -4726,11 +4932,10 @@ def h2_axes ( x_axis            ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH2 ) : typ = double
     else : typ = ROOT.TH2D if double else ROOT.TH2F
     #
-    from array import array 
     h2  =  typ ( name  ,
                  title ,
-                 len ( x_bins ) - 1 , array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array ( 'd' , y_bins ) )
+                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
+                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) )
     ##
     h2.Sumw2()
     return h2
@@ -4766,12 +4971,11 @@ def h3_axes ( x_axis            ,
     if isinstance ( double , type ) and issubclass ( double , ROOT.TH3 ) : typ = double
     else : typ = ROOT.TH3D if double else ROOT.TH3F
     #
-    from array import array 
     return typ ( name  ,
                  title ,
-                 len ( x_bins ) - 1 , array ( 'd' , x_bins ) ,
-                 len ( y_bins ) - 1 , array ( 'd' , y_bins ) , 
-                 len ( z_bins ) - 1 , array ( 'd' , z_bins ) ) 
+                 len ( x_bins ) - 1 , array.array ( 'd' , x_bins ) ,
+                 len ( y_bins ) - 1 , array.array ( 'd' , y_bins ) , 
+                 len ( z_bins ) - 1 , array.array ( 'd' , z_bins ) ) 
 
 
 
@@ -4937,6 +5141,7 @@ def _h1_shift_ ( h , bias ) :
         x         += bias
         result[i]  = h ( x )
         
+    result.ResetStats() 
     return result
 
 
@@ -4964,6 +5169,7 @@ def _h1_irshift_ ( h , ibias ) :
         if j in h :  h [ i ] = h[ j ]
         else      :  h [ i ] = VE() 
         
+    h.ResetStats() 
     return h     
 
 # =============================================================================
@@ -4990,6 +5196,7 @@ def _h1_ilshift_ ( h , ibias ) :
         if j in h :  h [ i ] = h[ j ]
         else      :  h [ i ] = VE() 
         
+    h.ResetStats() 
     return h     
 
 # =============================================================================
@@ -5011,6 +5218,7 @@ def _h1_lshift_ ( h , ibias ) :
     if not result.GetSumw2()  : result.Sumw2()
     #
     result <<= ibias
+
     return result 
 
 # =============================================================================
@@ -5310,6 +5518,8 @@ def _h1_moment_ ( h1 , order ) :
     >>> mom   = histo.moment ( 4 , 0 ) 
     """
     #
+    h1.ResetStats()
+    #
     m = HStats.moment    ( h1 , order )
     e = HStats.momentErr ( h1 , order )
     #
@@ -5328,6 +5538,8 @@ def _h1_central_moment_ ( h1 , order ) :
     >>> cmom  = histo.centralMoment ( 4 ) 
     """
     #
+    h1.ResetStats()
+    #
     m = HStats.centralMoment    ( h1 , order )
     e = HStats.centralMomentErr ( h1 , order )
     #
@@ -5338,26 +5550,42 @@ _h1_central_moment_ .__doc__ += '\n' + HStats.centralMomentErr .__doc__
 
 # =============================================================================
 ## calculate bin-by-bin ``standardized moment''
+#  \f$ s_n = \frac{\mu_n}{\sigma^n} = \frac{\int (x-\mu)^n h(x) dx }{\sigma^n} \f$
 #  @see https://en.wikipedia.org/wiki/Standardized_moment
+#  for <code>exp_moment=True</code> it calculates
+#  \f$ \sign \mu_n \\frac{ \left| \mu_n \right|^{1/n} } {\sigma }\f$  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-09-04
-def _h1_std_moment_ ( h1 , order ) :
+def _h1_std_moment_ ( h1 , order ,  exp_moment = False ) :
     """Get ``bin-by-bin'' ``standardized moment''
     >>> histo = ...
     >>> cmom  = histo.stdMoment ( 4 ) 
      - see https://en.wikipedia.org/wiki/Standardized_moment
+     For `exp_moment==True`, it calcualtes the value
+      sign(cmom)*(abs(cmom)**1.0/order)
+     
     """
     #
+
     if   1 == order : return VE ( 0 , 0 ) 
     elif 2 == order : return VE ( 1 , 1 )
     #
-    mom   = h1.centralMoment ( order )
-    
+    mom   = h1.centralMoment ( order )    
     sigma = math.sqrt ( h1.rms().value() )
     
-    return mom / ( sigma ** order ) 
+    if exp_moment :
+        
+        mm = abs ( mom ) ** ( 1. / order )
+        if mom.value() < 0 : mm *= -1 
+        moment = mm / sigma
 
+    else :
 
+        moment = mom / ( sigma ** order ) 
+        
+
+    return moment 
+    
 # =============================================================================
 ## get skewness
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5367,6 +5595,9 @@ def _h1_skewness_ ( h1 ) :
     >>> histo = ...
     >>> skew  = histo.skewness () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.skewness    ( h1 )
     e = HStats.skewnessErr ( h1 )
     #
@@ -5384,6 +5615,9 @@ def _h1_kurtosis_ ( h1 ) :
     >>> histo = ...
     >>> k     = histo.kurtosis () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.kurtosis    ( h1 )
     e = HStats.kurtosisErr ( h1 )
     #
@@ -5401,6 +5635,9 @@ def _h1_mean_ ( h1 ) :
     >>> histo = ...
     >>> k     = histo.mean () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.mean    ( h1 )
     e = HStats.meanErr ( h1 )
     #
@@ -5419,6 +5656,9 @@ def _h1_rms_ ( h1 ) :
     >>> histo = ...
     >>> s     = histo.rms () 
     """
+    #
+    h1.ResetStats()
+    #
     m = HStats.rms    ( h1 )
     e = HStats.rmsErr ( h1 )
     #
@@ -5461,6 +5701,9 @@ def _h2_moment_ ( h2 , orderx , ordery  , x0 = 0.0 , y0 = 0.0 ) :
     >>> h2   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 0.0 , 0.0 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.moment2 ( h2 , orderx , ordery , x0 , y0 )
 
 _h2_moment_ . __doc__ +=  '\n' + HStats.moment2.__doc__  
@@ -5483,6 +5726,9 @@ def _h2_cmoment_ ( h2 , orderx , ordery ) :
     >>> h2   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.central_moment2 ( h2 , orderx , ordery )
 
 _h2_cmoment_ . __doc__ +=  '\n' + HStats.central_moment2.__doc__  
@@ -5506,6 +5752,9 @@ def _h2_smoment_ ( h2 , orderx , ordery ) :
     >>> h2   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.std_moment2 ( h2 , orderx , ordery )
 
 _h2_smoment_ . __doc__ +=  '\n' + HStats.std_moment2.__doc__  
@@ -5534,6 +5783,9 @@ def _h3_moment_ ( h3 , orderx , ordery , orderz  , x0 = 0.0 , y0 = 0.0 , z0 = 0.
     >>> h3   = ...
     >>> mom  = histo.moment  ( 2 , 3 , 4 , 0.0 , 0.0 , 0.0 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.moment3 ( h3 , orderx , ordery , orderz ,  x0 , y0 , z0 )
 
 _h3_moment_ . __doc__ +=  '\n' + HStats.moment3.__doc__ 
@@ -5558,6 +5810,9 @@ def _h3_cmoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> h3   = ...
     >>> mom  = histo.central_moment  ( 2 , 3 , 4 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.central_moment3 ( h3 , orderx , ordery , orderz  )
 
 _h3_cmoment_ . __doc__ +=  '\n' + HStats.central_moment3.__doc__ 
@@ -5582,6 +5837,9 @@ def _h3_smoment_ ( h3 , orderx , ordery , orderz  ) :
     >>> h3   = ...
     >>> mom  = histo.std_moment  ( 2 , 3 , 4 ) 
     """
+    #
+    h2.ResetStats()
+    #
     return HStats.std_moment3 ( h3 , orderx , ordery , orderz  )
 
 
@@ -5795,16 +6053,34 @@ def ve_adjust ( ve , mn = 0 , mx = 1.0 ) :
 ## draw the line for the histogram 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-01-21 
-def _level_ ( self , level = 0 , linestyle = 2 ) :
+def _level_ ( self , level = 0 , **kwargs ) :
     """Draw ``NULL''-line for the histogram
     >>> h.level ( 5 )    
+    >>> h.hline ( 5 ) ## ditto
     """
-    mn,mx = self.xminmax() 
+    mn,mx = self.xminmax()
     line = ROOT.TLine ( mn , level , mx , level )
-    line.SetLineStyle ( linestyle )
-    self._line_ = line
-    self._line_.Draw() 
-    return self._line_
+    line.draw ( **kwargs )
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line
+
+# =============================================================================
+## draw the vertical line for the histogram 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2013-01-21 
+def _vline_ ( self , x , ymin = 0 , ymax = None , **kwargs ) :
+    """Draw vertical line for the histogram
+    >>> h.vline ( 5 )    
+    """
+    if ymax is None : ymax = self.GetMaximum() 
+    mn , mx = ymin , ymax 
+    line = ROOT.TLine ( x , mn , x , mx )
+    line.draw( **kwargs ) 
+    if not hasattr ( self , '_lines_' ) : self._lines_ = [] 
+    self._lines_.append ( line ) 
+    return line 
+
 # =============================================================================
 ## draw null-level for histogram  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -5820,16 +6096,21 @@ ROOT.TH1F. level = _level_
 ROOT.TH1D. null  = _null_
 ROOT.TH1F. null  = _null_
 
+ROOT.TH1F. hline = _level_
+ROOT.TH1F. vline = _vline_
+ROOT.TH1D. hline = _level_
+ROOT.TH1D. vline = _vline_
+
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin ( left = True )  
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
@@ -5838,7 +6119,7 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin ( left = True )  
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     _a = h1.GetXaxis()
     _e = list ( _a.edges() ) 
@@ -5861,17 +6142,20 @@ def _h1_add_fake_bin_ ( h1 , left = True , value = 0 , width = 1.e-6 ) :
         j = i + 1 if left else i
         hn [ j ] = h1 [ i ]
         
+    #
+    hn.ResetStats()
+    #
     return hn 
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_left() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
@@ -5881,19 +6165,19 @@ def _h1_add_fake_bin_left_  ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_left()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , True , value , width )
 
 # =============================================================================
-## add "fake" bin into the historgam
+## add "fake" bin into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(1)=0...
 #  @code
 #  histo1 = ...
 #  histo2 = histo1.add_fake_bin_right() 
 #  @endcode
 #  Fake bin can extend the histogram range (for width>0) or 
-#  it can be in the historgam range (for width<0) 
+#  it can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
@@ -5903,7 +6187,7 @@ def _h1_add_fake_bin_right_ ( h1 , value = 0 , width = 1.e-6 ) :
     >>> histo1 = ...
     >>> histo2 = histo1.add_fake_bin_right()   
     Fake bin can extend the histogram range (for width>0) or 
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """    
     return _h1_add_fake_bin_ ( h1 , False , value , width ) 
 
@@ -5916,7 +6200,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -5928,7 +6212,7 @@ for _h in ( ROOT.TH1F , ROOT.TH1D ) :
 #  - 2: min y
 #  - 3: max y 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -5942,7 +6226,7 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 2: min y
     - 3: max y 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h2.GetXaxis()
@@ -5993,6 +6277,7 @@ def _h2_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
         
         hn [ j ] = h2 [ i ]
         
+    hn.ResetStats()
     return hn 
 
 
@@ -6000,7 +6285,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
     _h.add_fake_side       = _h2_add_fake_side_
 
 # =============================================================================
-## add "fake" side(row of bins) into the historgam
+## add "fake" side(row of bins) into the histogram
 #  It is useful to control the functional behaviour at edge bins, e.g. f(0)=0...
 #  @code
 #  histo1 = ...
@@ -6014,7 +6299,7 @@ for _h in ( ROOT.TH2F , ROOT.TH2D ) :
 #  - 4: min z
 #  - 5: max z 
 #  Fake bin can extend the histogram range (for width>0) and
-#  can be in the historgam range (for width<0) 
+#  can be in the histogram range (for width<0) 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2016-08-15
 def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
@@ -6029,7 +6314,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
     - 4: min z
     - 5: max z 
     Fake bin can extend the histogram range (for width>0) or
-    it can be in the historgam range (for width<0) 
+    it can be in the histogram range (for width<0) 
     """
     
     _ax = h3.GetXaxis()
@@ -6103,6 +6388,7 @@ def _h3_add_fake_side_ ( h2 , side , value = 0 , width = 1.e-6 ) :
         
         hn [ j ] = h3 [ i ]
         
+    hn.ResetStats()
     return hn 
 
 for _h in ( ROOT.TH3F , ROOT.TH3D ) :
@@ -6272,6 +6558,7 @@ def _h2_get_slice_ ( h2 , axis , ibins ) :
         if   1 == axis and ix in ibins : h_slice [ iy ] += h2 [ i ]
         elif 2 == axis and iy in ibins : h_slice [ ix ] += h2 [ i ]
         
+    h_slice.ResetStats()
     return h_slice 
 
 ROOT.TH2F . slice  = _h2_get_slice_ 
@@ -6394,6 +6681,7 @@ def _h3_get_slice_ ( h3 , axis , ibins ) :
         elif 2 == axis and iy in ibins : h_slice [ ix , iz ] += h3 [ i ]
         elif 3 == axis and iz in ibins : h_slice [ ix , iy ] += h3 [ i ] 
 
+    h_slice.ResetStats()
     return h_slice 
 
 ROOT.TH3F . slice  = _h3_get_slice_
@@ -6630,10 +6918,9 @@ def axis_bins ( bins         ) :
     bins.sort()
     #
     if 2 > len ( bins ) :
-        raise AtributeError("axis_bins: insufficient length of bins: %s" % bins )
+        raise AttributeError("axis_bins: insufficient length of bins: %s" % bins )
     #
-    from array import array 
-    return ROOT.TAxis ( len ( bins ) - 1 , array ( 'd' , bins ) )
+    return ROOT.TAxis ( len ( bins ) - 1 , array.array ( 'd' , bins ) )
     #
 
 # =============================================================================
@@ -6880,6 +7167,7 @@ def _h_same_dims_ ( histo , another ) :
 
 ROOT.TH1. same_dims = _h_same_dims_
 
+
 # =============================================================================
 ## same binning?
 def _h_same_bins_ ( histo , another ) :
@@ -6918,12 +7206,55 @@ def _h_same_bins_ ( histo , another ) :
 
 ROOT.TH1. same_bins = _h_same_bins_
     
-#
+# =============================================================================
+## histogram dimension
+#  Get dimension of the histogram
+#  @code
+#  histo = ...
+#  d     =  histo.dim() 
+#  @endcode
+def _h_dim_ ( self  ) :
+    """Get dimension of the histogram
+    >>> histo = ...
+    >>> d     =  histo.dim() 
+    """
+    if   isinstance ( self , ROOT.TH3 ) : return 3
+    elif isinstance ( self , ROOT.TH2 ) : return 2
+    
+    return 1 
+
+ROOT.TH1 .dim = _h_dim_
 
 # =============================================================================
-## transfrom the x-axis for the 1D-historgam
+## Get tuple of bins-dimensions 
+#  @code
+#  histo = ...
+#  nb    = histo.n_bins () 
+#  @endcode
+def _h_n_bins_ ( self ) :
+    """Get tuple of bins-dimensions 
+    >>> histo = ...
+    >>> nb    = histo.n_bins () 
+    """
+    if   isinstance ( self , ROOT.TH3 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        az = self.SetZaxis()
+        return ax.GetNbins() , ay.GetNbins(), az.xGetNbins() 
+    elif isinstance ( self , ROOT.TH2 ) :
+        ax = self.SetXaxis()
+        ay = self.SetYaxis()
+        return ax.GetNbins() , ay.GetNbins()
+    
+    ax = self.SetXaxis()
+    return ax.GetNbins() ,
+
+ROOT.TH1 .n_bins = _h_n_bins_
+
+# =============================================================================
+## transfrom the x-axis for the 1D-histogram
 def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
-    """Transfrom the x-axis for the 1D-historgam
+    """Transfrom the x-axis for the 1D-histogram
     """
     ax =  h1.GetXaxis()
     e  =  ax.edges()
@@ -6960,6 +7291,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
         ib = nh.findBin( nc )        
         if ib in nh : nh[ib] += value
         
+    nh.ResetStats()
     return nh 
 
 
@@ -6975,7 +7307,7 @@ def _h1_transform_x_ ( h1 , fun , numbers = False , deriv = None ) :
 #  @endcode
 #  Histogram is transformed as raw histigram (no Jacobian correction is applied)
 def _h1_transform_x_numbers_ ( h1 , fun ) :
-    """Make a historgam transfromation:
+    """Make a histogram transfromation:
     H(x)  ->  H'(y(x))
     where transformation is defined  y=fun(x)
     >>> h  = ...
@@ -7081,12 +7413,17 @@ ROOT.TH1.__hash__ = _h_hash_
 # =============================================================================
 
 # =============================================================================
-## represent historgam as ``density''
+## represent histogram as ``density''
 #  - the function with unit integral over the range
 def _h_density_ ( h1 ) :
-    """Represent historgam as  ``density''
+    """Represent histogram as  ``density''
     - the function with unit integral over the range
     """
+    ii = h1.integrate().value()
+    if isequal ( ii , 1.0 ) :
+        ## it is already density!, return the clone 
+        return h1.clone()
+    
     ## take into account bin width
     h  = h1.rescale_bins(1)
     ##  rescale to unit integral in range
@@ -7097,6 +7434,102 @@ for t in ( ROOT.TH1F , ROOT.TH1D ,
            ROOT.TH2F , ROOT.TH2D ,
            ROOT.TH3F , ROOT.TH3D ) :
     t.density = _h_density_
+
+# =============================================================================
+## Fill the histogram from iterable/generator/...
+#  @code
+#
+#  h1 = ... ## 1D histogram 
+#  h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#  
+#  h2  = ... ## 2D histogram#
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+#  h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  h3  = ... ## 2D histogram#
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+#  h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+#
+#  @endcode 
+def _h_fill_loop_ ( histo , filler ) :
+    """Fill the histogram from iterable/generator/...
+    >>> 
+    >>> h1 = ... ## 1Dhistogram 
+    >>> h1.fill_loop (  ( random.gauss(5,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h2  = ... ## 2D-histogram
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h2.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    
+    >>> h3  = ... ## 3D-histogram
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5)     ) for i in range ( 1000 ) ) ## use generator 
+    >>> h3.fill_loop (  ( random.gauss(5,1) , random.gauss(4,1) , random.gauss (3,0.5) , 1 ) for i in range ( 1000 ) ) ## use generator 
+    """
+
+    num = 0 
+    for item in filler :
+        num += 1
+        histo.Fill ( *item ) 
+
+    return num  
+
+ROOT.TH1.fill_loop = _h_fill_loop_
+
+
+# ==============================================================================
+## split the histogram into <code>n</code> sub-histograms 
+#  @code
+#  h1 = ...
+#  histos = h1.split(10) 
+#  @endcode 
+def _h1_split1_ ( h1 , n ) :
+    """Split the histogram into `n` sub-histograms
+    >>> h1 = ...
+    >>> histos = h1.split(10) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of sub-histograms %s' % n
+    
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import divide as _divide 
+    bins   = _divide ( n , range ( 1 , N ) )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] + 1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+# ==============================================================================
+## split the histogram into sub-histograms with at most <code>n</code> bins 
+#  @code
+#  h1 = ...
+#  histos = h1.split_bins(10) 
+#  @endcode 
+def _h1_split2_ ( h1 , n ) :
+    """Split the histogram into sub-histograms with at most <code>n</code> bins 
+    >>> h1 = ...
+    >>> histos = h1.split_bins ( 10 ) 
+    """
+    assert isinstance ( n , integer_types ) and 0 < n ,\
+           'Invalid number of bins  %s' % n
+
+    histos = []
+    N      = len ( h1 ) + 1 
+    from ostap.utils.utils import chunked as _chunked
+    bins   = _chunked ( range ( 1 , N ) , n )
+    for item in bins  :
+        lst = list ( item )
+        if not lst : return
+        h   = h1[ lst [ 0 ] : lst [ -1 ] +1 ]
+        histos.append ( h )
+    return tuple ( histos ) 
+
+for h in ( ROOT.TH1F , ROOT.TH1D ) :
+    h.split      = _h1_split1_
+    h.split_bins = _h1_split2_
+
 
 # =============================================================================
 _decorated_classes_ = (
@@ -7410,6 +7843,15 @@ _new_methods_   = (
     ROOT.TH1F.random   ,
     ROOT.TH1D.random   ,
     #
+    ROOT.TH2F.shoot    ,
+    ROOT.TH2D.shoot    ,
+    #
+    ROOT.TH3F.shoot    ,
+    ROOT.TH3D.shoot    ,
+    #
+    ROOT.TH1F.shoot    ,
+    ROOT.TH1D.shoot    ,
+    #
     _h2_oper_    ,
     _h2_ioper_   ,
     _h2_div_     ,
@@ -7518,6 +7960,10 @@ _new_methods_   = (
     ROOT.TH1F.null   ,
     ROOT.TH1D.level  ,
     ROOT.TH1F.level  ,
+    ROOT.TH1D.vline  ,
+    ROOT.TH1F.vline  ,
+    ROOT.TH1D.hline  ,
+    ROOT.TH1F.hline  ,
     #
     ROOT.TAxis.edges ,
     #
@@ -7640,6 +8086,9 @@ _new_methods_   = (
     ROOT.TH1  . allInts      ,
     ROOT.TH1  . natural      ,
     #
+    ROOT.TH1  . dim          ,
+    ROOT.TH1  . n_bins       ,
+    #
     ROOT.TH1.uniform_bins    ,
     ROOT.TH1.uniform         ,
     #
@@ -7649,7 +8098,12 @@ _new_methods_   = (
     ROOT.TH1F.dumpAsText     ,
     #
     ROOT.TH1F.transform_X_numbers  ,
-    ROOT.TH1F.transform_X_function 
+    ROOT.TH1F.transform_X_function ,
+    ##
+    ROOT.TH1   . fill_loop   ,
+    
+    ROOT.TH1F  . split       ,
+    ROOT.TH1F  . split_bins  ,
     )
 
 # =============================================================================
@@ -7660,5 +8114,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger ) 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

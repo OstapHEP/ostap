@@ -39,7 +39,8 @@ from   ostap.core.core       import cpp, Ostap
 from   ostap.math.base       import iszero
 from   ostap.fitting.utils   import Phases
 from   ostap.fitting.fit2d   import PDF2, Flat2D
-from   ostap.fitting.signals import Gauss_pdf, CB2_pdf 
+from   ostap.fitting.signals import Gauss_pdf, CB2_pdf
+from   ostap.core.meta_info  import root_info
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_2d' )
@@ -87,8 +88,8 @@ class PolyPos2D_pdf(PolyBase2) :
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
-                   nx = 2           ,   ##  polynomial degree in X 
-                   ny = 2           ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) : 
 
         ## check arguments 
@@ -103,8 +104,8 @@ class PolyPos2D_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Poly2DPositive (
-            'p2Dp_%s'            % name ,
-            'Poly2DPositive(%s)' % name ,
+            self.roo_name ( 'pol2_'  ) , 
+            'Positive 2D polynomial %s' % self.name ,
             self.xvar     ,
             self.yvar     ,
             self.nx       ,
@@ -167,7 +168,7 @@ class PolyPos2Dsym_pdf(PolyBase2) :
                    name             ,
                    xvar             ,   ##  the first  dimension  
                    yvar             ,   ##  the second dimension
-                   n  = 2           ,   ##  polynomial degree
+                   n        = 2     ,   ##  polynomial degree
                    the_phis = None  ) : 
         
         ## check arguments 
@@ -182,8 +183,8 @@ class PolyPos2Dsym_pdf(PolyBase2) :
         
         ## finally build PDF 
         self.pdf = Ostap.Models.Poly2DSymPositive (
-            'p2Dsp_%s'              % name ,
-            'Poly2DSymPositive(%s)' % name ,
+            self.roo_name ( 'pol2sym_'  ) , 
+            'Positive symmetric 2D polynomial %s' % self.name ,
             self.x        ,
             self.y        ,
             self.n        ,
@@ -256,8 +257,8 @@ class PSPol2D_pdf(PolyBase2) :
                    yvar             ,   ##  the second dimension
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -277,9 +278,9 @@ class PSPol2D_pdf(PolyBase2) :
         #
         ## finally build PDF 
         #
-        self.pdf = Ostap.Models.PS2DPol (
-            'ps2D_%s'     % name ,
-            'PS2DPol(%s)' % name ,
+        self.pdf = Ostap.Models.PS2DPol (            
+            self.roo_name ( 'ps2_'  ) , 
+            'Product of phase space factors (with polynomials) %s' % self.name ,
             self.x           ,
             self.y           ,
             self.phasespacex ,
@@ -383,8 +384,8 @@ class PSPol2D2_pdf(PolyBase2) :
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
                    mmax             ,   ##  max-mass 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -407,8 +408,8 @@ class PSPol2D2_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPol2 (
-            'ps2D2_%s'     % name ,
-            'PS2DPol2(%s)' % name ,
+            self.roo_name ( 'ps22_'  ) , 
+            'Product of phase space factors (with polynomials) %s' % self.name ,
             self.x           ,
             self.y           ,
             self.phasespacex ,
@@ -524,8 +525,8 @@ class PSPol2D3_pdf(PolyBase2) :
                    psx              ,   ##  phase space in X, Ostap::Math::PhaseSpaceNL 
                    psy              ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL
                    mmax             ,   ##  max-mass 
-                   nx   = 2         ,   ##  polynomial degree in X 
-                   ny   = 2         ,   ##  polynomial degree in Y 
+                   nx       = 2     ,   ##  polynomial degree in X 
+                   ny       = 2     ,   ##  polynomial degree in Y 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -547,8 +548,8 @@ class PSPol2D3_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPol3 (
-            'ps2D3_%s'     % name ,
-            'PS2DPol3(%s)' % name ,
+            self.roo_name ( 'ps23_'  ) , 
+            'Product of phase space factors (with polynomials) %s' % self.name ,
             self.x           ,
             self.y           ,
             self.phasespacex ,
@@ -677,8 +678,8 @@ class PSPol2Dsym_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPolSym (
-            'ps2Ds_%s'       % name ,
-            'PS2DPolSym(%s)' % name ,
+            self.roo_name ( 'ps2s_'  ) , 
+            'Symmetric product of phase space factors (with polynomials) %s' % self.name ,
             self.x          ,
             self.y          ,
             self.phasespace ,
@@ -811,8 +812,8 @@ class PSPol2D2sym_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPol2Sym (
-            'ps2D2s_%s'       % name ,
-            'PS2DPol2Sym(%s)' % name ,
+            self.roo_name ( 'ps22s_'  ) , 
+            'Symmetric product of phase space factors (with polynomials) %s' % self.name ,
             self.x          ,
             self.y          ,
             self.phasespace ,
@@ -953,8 +954,8 @@ class PSPol2D3sym_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.PS2DPol3Sym (
-            'ps2D2s_%s'       % name ,
-            'PS2DPol2Sym(%s)' % name ,
+            self.roo_name ( 'ps23s_'  ) , 
+            'Symmetric product of phase space factors (with polynomials) %s' % self.name ,
             self.x          ,
             self.y          ,
             self.phasespace ,
@@ -1047,12 +1048,12 @@ class ExpoPSPol2D_pdf(PolyBase2) :
     """
     def __init__ ( self             ,
                    name             ,
-                   xvar             ,   ##  the first  dimension  
-                   yvar             ,   ##  the second dimension
-                   psy = None       ,   ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
-                   nx  = 2          ,   ##  polynomial degree in X 
-                   ny  = 2          ,   ##  polynomial degree in Y 
-                   tau = None       , ##  the exponent 
+                   xvar             , ##  the first  dimension  
+                   yvar             , ##  the second dimension
+                   psy      = None  , ##  phase space in Y, Ostap::Math::PhaseSpaceNL 
+                   nx       = 2     , ##  polynomial degree in X 
+                   ny       = 2     , ##  polynomial degree in Y 
+                   tau      = None  , ##  the exponent 
                    the_phis = None  ) :
         
         ## check arguments 
@@ -1082,8 +1083,8 @@ class ExpoPSPol2D_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.ExpoPS2DPol (
-            'ps2D_%s'     % name ,
-            'PS2DPol(%s)' % name ,
+            self.roo_name ( 'eps2_'  ) , 
+            'Phase space times exponential (with polynomials) %s' % self.name ,
             self.x           ,
             self.y           ,
             self.tau         ,
@@ -1215,8 +1216,8 @@ class ExpoPol2D_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Expo2DPol (
-            'exp2D_%s'      % name ,
-            'Expo2DPol(%s)' % name ,
+            self.roo_name ( 'exp2_'  ) , 
+            'Exponentials (with polynomials) %s' % self.name ,
             self.x        ,
             self.y        ,
             self.taux     ,
@@ -1327,8 +1328,8 @@ class ExpoPol2Dsym_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Expo2DPolSym (
-            'exp2Ds_%s'        % name ,
-            'Expo2DPolSym(%s)' % name ,
+            self.roo_name ( 'exp2s_'  ) , 
+            'Symmetric exponentials (with polynomials) %s' % self.name ,
             self.x        ,
             self.y        ,
             self.tau      ,
@@ -1421,8 +1422,8 @@ class Spline2D_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Spline2D (
-            's2Dp_%s'      % name ,
-            'Spline2D(%s)' % name ,
+            self.roo_name ( 'spline2_'  ) , 
+            'Positive 2D spline %s' % self.name ,
             self.x        ,
             self.y        ,
             self.spline   ,
@@ -1480,8 +1481,8 @@ class Spline2Dsym_pdf(PolyBase2) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.Spline2DSym (
-            's2Dp_%s'         % name ,
-            'Spline2DSym(%s)' % name ,
+            self.roo_name ( 'spline2s_'  ) , 
+            'Positive symmetric 2D spline %s' % self.name ,
             self.x        ,
             self.y        ,
             self.spline   ,
@@ -1602,7 +1603,7 @@ class RooKeys2D_pdf(PDF2) :
 # =============================================================================
 # some tiny decoration of underlying classes 
 # =============================================================================
-_rv = ROOT.gROOT.GetVersionInt() // 10000
+root_major = root_info.major 
 def _2d_get_pars_ ( self ) :
     """
     Get parameters of underlying positive Berstein polynomial
@@ -1621,8 +1622,8 @@ def _2d_get_pars_ ( self ) :
         for i in range ( 0 , b.nX() + 1 ) :
             for j in range ( 0 , b.nY() + 1 ) :
                 
-                if _rv < 6 : m[i][j] = b.par(i,j)
-                else       : m[i, j] = b.par(i,j)
+                if  root_major < 6 : m[i][j] = b.par(i,j)
+                else               : m[i, j] = b.par(i,j)
                     
         return m 
         
@@ -1711,5 +1712,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

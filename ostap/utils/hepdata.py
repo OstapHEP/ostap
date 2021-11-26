@@ -95,7 +95,7 @@ class HepDataBase(object) :
     def missing ( self , keys ) :
         m = set()
         for key in keys : 
-            if not self.meta.has_key ( key ) : m.add ( key )
+            if not key in self.meta : m.add ( key )
         return m 
     
     def format ( self , header , keys ) :

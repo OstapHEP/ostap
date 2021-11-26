@@ -11,18 +11,19 @@
 - see Ostap.Kinematics.Dalitz
 """
 # ============================================================================= 
-from __future__ import print_function
+import ROOT, random, time  
+from   ostap.core.core        import Ostap
+import ostap.math.kinematic
+import ostap.math.dalitz
+from   ostap.utils.utils      import wait
+from   ostap.plotting.canvas  import use_canvas
 # ============================================================================= 
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_math_dalitz'   )
-else                       : logger = getLogger ( __name__             )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_dalitz'   )
+else                       : logger = getLogger ( __name__                   )
 # ============================================================================= 
-import ROOT, random 
-from   ostap.core.core import Ostap
-import ostap.math.kinematic
-import ostap.math.dalitz
 
 LV = Ostap.LorentzVector
 CT = Ostap.Kinematics.cos_theta
@@ -42,8 +43,21 @@ s  = ( p1 + p2 + p3 ).M2()
 d  = Ostap.Kinematics.Dalitz ( D.M () , p1.M () , p2.M () , p3.M () )
 
 
+d0 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0   , 0   )
+d1 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0   , 0   )
+d2 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0.2 , 0   )
+d3 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0   , 0.2 )
+d4 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0   )
+d5 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0   , 0.2 )
+d6 = Ostap.Kinematics.Dalitz ( 1 , 0   , 0.2 , 0.2 )
+d7 = Ostap.Kinematics.Dalitz ( 1 , 0.2 , 0.2 , 0.2 )
+
+plots = d0 , d1 , d2 , d3 , d4 , d5 , d6 , d7 
+
+# =============================================================================
 def test_dalitz1 () : 
-    
+
+    logger = getLogger  ('test_dalitz1' ) 
 
     logger.info ( 'E1     : %s' , d.E1 ( s1 ,  s2 ) )
     logger.info ( 'E2     : %s' , d.E2 ( s1 ,  s2 ) )
@@ -118,7 +132,10 @@ def test_dalitz1 () :
     logger.info ( 'density: %s '  % d.density_mass ( s1**0.5 , s2**0.5 ) )
 
 
+# =============================================================================
 def test_dalitz2 () :
+
+    logger = getLogger  ('test_dalitz2' )
 
     gr21  = d.graph21 () 
     gr21m = d.graph21 ( masses = True ) 
@@ -128,20 +145,43 @@ def test_dalitz2 () :
 
     gr32  = d.graph32 () 
     gr32m = d.graph32 ( masses = True ) 
-
-    gr21.draw  ( 'alc' )
-    gr31.draw  ( 'alc' )
-    gr32.draw  ( 'alc' )
-
-    gr21m.draw ( 'alc' )
-    gr31m.draw ( 'alc' )
-    gr32m.draw ( 'alc' )
     
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (21)' ) :
+        gr21.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (31)' ) :
+        gr31.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, squared masses (32)' ) :
+        gr32.draw  ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (21)' ) :
+        gr21m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (31)' ) :
+        gr31m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+    with wait ( 2 ) , use_canvas( 'test_dalitz2, masses (32)' ) :
+        gr32m.draw ( 'alcf' , linecolor = 2, linewidth = 2 , fillcolor = 2 )
+
+
+# =============================================================================
+def test_dalitz3 () :
+
+    for i , p  in enumerate ( plots ) : 
+        
+        with wait ( 2 ) , use_canvas( 'test_dalitz3 #%d'  % i ) :
+            
+            if   i == 0 : logger.info ( "All masses are     zero" )
+            elif i <  4 : logger.info ( "Two masses are     zero" )
+            elif i <  7 : logger.info ( "One mass   is      zero" )
+            else        : logger.info ( "All masses are non-zero" )
+            
+            gr  = p.graph21 ( masses = False ) 
+            gr.draw  ( 'alf' , linecolor = 2, linewidth = 2 , fillcolor=2)
+        
 # =============================================================================
 if '__main__' == __name__ :
 
     test_dalitz1 ()
     test_dalitz2 ()
+    test_dalitz3 ()
 
 # =============================================================================
 ##                                                                      The END 

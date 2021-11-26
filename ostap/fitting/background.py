@@ -37,7 +37,8 @@ __all__     = (
     'PSNL_pdf'          , ## L-body phase space from N-body decays  
     'PS23L_pdf'         , ## 2-body phase space from 3-body decays with orbital momenta
     ##
-    'PSSmear_pdf'       , ## smeared PhaseSpace-based PDF 
+    'PSSmear_pdf'       , ## smeared (left/right, Gaussian) PhaseSpace-based PDF 
+    'PSSmear2_pdf'      , ## smeared (left, generic)        PhaseSpace-based PDF 
     ## 
     ## get the native RooFit background shapes
     ##
@@ -52,13 +53,18 @@ import ROOT, math
 from   ostap.core.core     import cpp, Ostap
 from   ostap.core.ostap_types    import integer_types , num_types 
 from   ostap.math.base     import iszero
-from   ostap.fitting.basic import PDF , Sum1D
+from   ostap.fitting.basic import PDF , Sum1D, Combine1D
 from   ostap.fitting.utils import Phases, ParamsPoly 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.background' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
+## list of "left" phase space functions 
+PSL = ( Ostap.Math.PhaseSpaceLeft , Ostap.Math.PhaseSpaceNL ,
+        Ostap.Math.PhaseSpace2    , Ostap.Math.PhaseSpace3  , Ostap.Math.PhaseSpace3s )
+
+    
 models  = []
 # =============================================================================
 ##  @class PolyBase
@@ -71,7 +77,8 @@ class PolyBase(PDF,Phases) :
         xvar = self.make_var  ( xvar , 'xvar' , 'x-variable' )
         PDF   .__init__ ( self , name  , xvar      )
         Phases.__init__ ( self , power , the_phis  )
-        
+
+
 # =============================================================================        
 ## @class  Bkg_pdf
 #  The exponential modified with the positive polynomial 
@@ -116,8 +123,8 @@ class Bkg_pdf(PolyBase) :
                                       "tau(%s)" % name , tau , 0 , *limits_tau  )
         
         self.pdf  = Ostap.Models.ExpoPositive (
-            'expopos_%s'  % name ,
-            'expopos(%s)' % name ,
+            self.roo_name ( "exppol_"  ) ,
+            "Exponential modulated by positive polynom %s" % self.name , 
             self.xvar            ,
             self.tau             ,
             self.phi_list        ,
@@ -191,8 +198,8 @@ class PolyPos_pdf(PolyBase) :
         #
         ## build the model
         self.pdf   = Ostap.Models.PolyPositive (
-            'pp_%s'            % name ,
-            'PolyPositive(%s)' % name ,
+            self.roo_name ( "pol_"  ) ,
+            "Positive polynom %s" % self.name , 
             self.xvar            ,
             self.phi_list        ,
             xmin , xmax )
@@ -338,8 +345,8 @@ class PolyEven_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyPositiveEven (
-            'ppe_%s'               % name ,
-            'PolyPositiveEven(%s)' % name ,
+            self.roo_name ( "epol_"  ) ,
+            "Positive even polynom %s" % self.name , 
             self.xvar                     ,
             self.phi_list                 ,
             xmin ,
@@ -404,8 +411,8 @@ class Monotonic_pdf(PolyBase) :
         #
         ## build PDF
         self.pdf  = Ostap.Models.PolyMonotonic (
-            'pp_%s'              % name ,
-            'PolyMonotonic(%s)' % name ,
+            self.roo_name ( "mpol_"  ) ,
+            "%s polynomial %s" % ( "increasing" if self.increasing else "decreasing" , self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -490,8 +497,10 @@ class Convex_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyConvex (
-            'pp_%s'          % name ,
-            'PolyConvex(%s)' % name ,
+            self.roo_name ( "cpol_"  ) ,
+            "%s %s polynomial %s" % ( "convex"     if self.convex     else "concave"    ,
+                                      "increasing" if self.increasing else "decreasing" ,
+                                      self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin ,
@@ -577,8 +586,9 @@ class ConvexOnly_pdf(PolyBase) :
         #
         ## build PDF 
         self.pdf  = Ostap.Models.PolyConvexOnly (
-            'pp_%s'          % name ,
-            'PolyConvex(%s)' % name ,
+            self.roo_name ( "copol_"  ) ,
+            "%s polynomial %s" % ( "convex"     if self.convex     else "concave"    ,
+                                   self.name ) , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -637,7 +647,7 @@ class PSPol_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
-                   xvar             ,   ## the varibale 
+                   xvar             ,   ## the variable 
                    phasespace       ,   ## Ostap::Math::PhaseSpaceNL 
                    power    = 1     ,   ## degree of the polynomial
                    the_phis = None  ) : 
@@ -660,8 +670,8 @@ class PSPol_pdf(PolyBase) :
         self.__power = power
         # 
         self.pdf  = Ostap.Models.PhaseSpacePol (
-            'pspol_%s'          % name ,
-            'PhaseSpacePol(%s)' % name ,
+            self.roo_name ( "pspol_"  ) ,
+            "Phase space modulated by polynomial %s" % self.name  , 
             self.xvar            ,
             self.phasespace      ,  ## Ostap::Math::PhaseSpaceNL 
             self.phi_list        )
@@ -720,26 +730,23 @@ class PSLeftExpoPol_pdf(PolyBase) :
     ## constructor
     def __init__ ( self             ,
                    name             ,  ## the name 
-                   xvar             ,  ## the varibale 
-                   phasespace       ,  ## Ostap::Math::PhaseSpace(Left/2)
+                   xvar             ,  ## the variable
+                   phasespace       ,  ## phase space object 
                    power    = 2     ,  ## degree of the polynomial
                    tau      = None  ,  ## the exponent 
                    scale    = 1     ,  ## the exponent 
                    the_phis = None  ) :         
         #
-        #
+        ## check the type of phasespace 
+        assert isinstance ( phasespace , PSL ) or ( isinstance ( phasespce , integer_types ) and 2 <= ps ) , \
+               "Invalid type of ``phasespace'' %s/%s" % ( phasespace , type ( phasespace ) )
+
+        ## initialize the base 
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
         #
-        if isinstance ( phasespace , Ostap.Math.PhaseSpace2 ) :
-            ps         = phasespace 
-            ## phasespace = Ostap.Math.PhaseSpaceLeft ( 'a' , ps.m1() , ps.m2 () , 1 )
-            phasespace = Ostap.Math.PhaseSpaceLeft ( ps , 1 )
-            
-        assert isinstance ( phasespace , Ostap.Math.PhaseSpaceLeft ), \
-               'Illegal type of "phasespace" parameter'
 
-        self.__ps    = phasespace  ## Ostap::Math::PhaseSpaceNL
-        self.__power = power
+        self.__phasespace = phasespace 
+        self.__power      = power
         
         limits_tau = () 
         if self.xminmax() : 
@@ -759,13 +766,13 @@ class PSLeftExpoPol_pdf(PolyBase) :
         #
         self.__scale = self.make_var ( scale             ,
                                       "scale_%s"  % name ,
-                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+3 )
+                                      "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+6 )
         
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
-            'pslepol_%s'                % name ,
-            'PhaseSpaceLeftExpoPol(%s)' % name ,
+            self.roo_name ( "psepol_"  ) ,
+            "Phase space and exponent modulated by polynomial %s" % self.name  , 
             self.xvar            ,
-            self.phasespace      ,  ## Ostap::Math::PhaseSpaceLeft
+            self.phasespace      ,  
             self.tau             , 
             self.scale           , 
             self.phi_list        )
@@ -785,22 +792,24 @@ class PSLeftExpoPol_pdf(PolyBase) :
     def mass ( self ) :
         """``mass''-variable for the fit (alias for ``x'' or ``xvar'')"""
         return self.xvar
+    
     @property
     def power ( self ) :
         """``power''-parameter (polynomial order) for PSLeftExpoPol-function"""
         return self.__power
+    
     @property
     def phasespace ( self ) :
         """``phasespace''-function for PS*exp*pol function"""
-        return self.__ps    
+        return self.__phasespace
+    
     @property
     def tau ( self ) :
         """``tau''-parameter - exponential slope"""
         return self.__tau
     @tau.setter
     def tau ( self , value ) :
-        value = float ( value )
-        self.__tau.setVal ( value )
+        self.set_value ( self.__tau , float ( value ) ) 
         
     @property
     def scale( self ) :
@@ -808,8 +817,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
         return self.__scale
     @scale.setter
     def scale ( self , value ) :
-        value = float ( value )
-        self.__scale.setVal ( value )
+        self.set_value ( self.__scale , float ( value ) ) 
     
 models.append ( PSLeftExpoPol_pdf ) 
 
@@ -827,7 +835,7 @@ class TwoExpoPoly_pdf(PolyBase) :
     where Pol_n(x) is POSITIVE polynomial (Pol_n(x)>=0 over the whole range) 
     
     >>>  mass = ROOT.RooRealVar( ... ) 
-    >>>  bkg  = TwoExpoPolu_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
+    >>>  bkg  = TwoExpoPoly_pdf ( 'B' , mass , alpah = 1 , delta = 1 , x0 = 0 , power = 3 )
     
     """
     ## constructor
@@ -838,8 +846,8 @@ class TwoExpoPoly_pdf(PolyBase) :
                    delta    = None  ,   ## (alpha+delta) is the slope of the first exponent
                    x0       = 0     ,   ## f(x)=0 for x<x0 
                    power    = 0     ,   ## degree of polynomial
-                   xmin     = None  ,  ## optional x-min
-                   xmax     = None  ,  ## optional x-max                    
+                   xmin     = None  ,   ## optional x-min
+                   xmax     = None  ,   ## optional x-max                    
                    the_phis = None  ) : 
         #
         PolyBase.__init__  ( self , name , power , xvar , the_phis )
@@ -869,13 +877,13 @@ class TwoExpoPoly_pdf(PolyBase) :
         
         self.__x0     = self.make_var ( x0                  ,
                                   "x0_%s"     % name  ,
-                                  "x_{0}(%s)" % name  , x0    ,  *limits_x0 )
+                                  "x_{0}(%s)" % name  , x0  ,  *limits_x0 )
 
         #
         xmin , xmax = self.xminmax() 
         self.pdf  = Ostap.Models.TwoExpoPositive (
-            '2expopos_%s'  % name ,
-            '2expopos(%s)' % name ,
+            self.roo_name ( "pol2e_"  ) ,
+            "Two exponents  modulated by polynomial %s" % self.name  , 
             self.xvar             ,
             self.alpha            ,
             self.delta            ,
@@ -984,8 +992,8 @@ class Sigmoid_pdf(PolyBase) :
 
         xmin,xmax = self.xminmax() 
         self.pdf  = Ostap.Models.PolySigmoid (
-            'ps_%s'           % name ,
-            'PolySigmoid(%s)' % name ,
+            self.roo_name ( "sigmoid_"  ) ,
+            "Sigmoid modulated by polynomial %s" % self.name  , 
             self.xvar            ,
             self.phi_list        ,
             xmin                 ,
@@ -1084,8 +1092,8 @@ class PSpline_pdf(PolyBase) :
         #
         
         self.pdf  = Ostap.Models.PositiveSpline (
-            'ps_%s'              % name ,
-            'PositiveSpline(%s)' % name ,
+            self.roo_name ( "pspline_"  ) ,
+            "Positive spline %s" % self.name  , 
             self.xvar            ,
             self.spline          , 
             self.phi_list        )
@@ -1147,11 +1155,11 @@ class MSpline_pdf(PolyBase) :
         self.__spline = spline
         # 
         self.pdf  = Ostap.Models.MonotonicSpline (
-            'is_%s'                % name ,
-            'MonotonicSpline(%s)' % name ,
-            self.xvar                     ,
-            self.spline                   , 
-            self.phi_list                 )
+            self.roo_name ( "mspline_"  )      ,
+            "Monotonic spline %s" % self.name  , 
+            self.xvar                          ,
+            self.spline                        , 
+            self.phi_list                      )
 
         ## save configuration 
         self.config = {
@@ -1209,8 +1217,8 @@ class CSpline_pdf(PolyBase) :
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexSpline (
-            'is_%s'            % name ,
-            'ConvexSpline(%s)' % name ,
+            self.roo_name ( "cspline_"  )   ,
+            "Convex spline %s" % self.name  , 
             self.xvar                ,
             self.spline              , 
             self.phi_list            )
@@ -1269,8 +1277,8 @@ class CPSpline_pdf(PolyBase) :
         self.__spline = spline
         #
         self.pdf  = Ostap.Models.ConvexOnlySpline (
-            'is_%s'                % name ,
-            'ConvexOnlySpline(%s)' % name ,
+            self.roo_name ( "cospline_"  )   ,
+            "Convex spline %s" % self.name  , 
             self.xvar                ,
             self.spline              , 
             self.phi_list            )
@@ -1331,8 +1339,8 @@ class PS2_pdf(PDF) :
             assert am1  + am2 < mx , 'PS2: senseless setting of edges/threshold %s,%s vs %s' % ( mn , mx , am1+am2 )   
             
         self.pdf  = Ostap.Models.PhaseSpace2 (
-            'ps2_%s'          % name ,
-            'PhaseSpace2(%s)' % name ,
+            self.roo_name ( "ps2_"  )   ,
+            "Two body phase space  %s" % self.name  , 
             self.xvar                , self.m1  , self.m2 )
         
         ## save configuration 
@@ -1360,76 +1368,117 @@ class PS2_pdf(PDF) :
 models.append ( PS2_pdf ) 
 # =============================================================================
 ## @class  PSLeft_pdf
-#  Left edge of N-body phase space
+#  Left edge of N-body phase space (with possible scaling)
 #  @code 
 #  mass  = ... ## mass variable
 #  low   = 139 + 139 + 139  ## 3 pion mass
-#  model = PSLeft_pdf ( 'PDF' , mass , low , 3  )
+#  model = PSLeft_pdf ( 'PDF' , mass , 3 , low )
 #  @endcode 
 #  @see Ostap::Models::PhaseSpaceLeft
 #  @see Ostap::Math::PhaseSpaceLeft
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2011-07-25
 class PSLeft_pdf(PDF) :
-    """Left edge of N-body phase space function
+    """Left edge of N-body phase space function (with possible scaling)
     >>> mass  = ... ## mass variable
     >>> low   = 139 + 139 + 139  ## 3 pion mass
-    >>> model = PSLeft_pdf ( 'PDF' , mass , low , 3  )   
+    >>> model = PSLeft_pdf ( 'PDF' , mass , 3 , low )   
     """
     ## constructor
-    def __init__ ( self             ,
-                   name             ,   ## the name 
-                   xvar             ,   ## the variable
-                   N                ,   ## N 
-                   left   = None    ) : 
-        #
+    def __init__ ( self           ,
+                   name           , ## the name 
+                   xvar           , ## the variable
+                   phasespace     , ## phase space object 
+                   left   = None  ,
+                   scale  = None  ) : 
+        
+        ## check the type of phasespace 
+        assert isinstance ( phasespace , PSL ) or ( isinstance ( phasespce , integer_types ) and 2 <= ps ) , \
+               "Invalid type of ``phasespace'' %s/%s" % ( phasespace , type ( phasespace ) )
+
+        # 
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
         #
-        self.__N    = N
-        self.__left = self.make_var ( left                ,
-                                'left_%s'    % name ,
-                                'm_left(%s)' % name ,
-                                None , *self.xminmax() ) 
+        
+        self.__phasespace = phasespace
 
+        if self.xminmax() :
+            mn , mx = self.xminmax()
+            mn = max ( 0 , mn - 0.25 * ( mx - mn ) )
+            lminmax = mn , mx 
+        else :
+            lminmax = ()
+            
+        ## left threshold variable 
+        self.__left = self.make_var ( left                     ,
+                                      'left_%s'    % self.name ,
+                                      'm_left(%s)' % self.name , None , left , *lminmax ) 
+
+        ## scale variable 
+        if scale is None :
+            self.__scale = ROOT.RooFit.RooConst ( 1.0 )
+        else             :
+            self.__scale = self.make_var ( scale                   ,
+                                           'scale_%s'  % sefl.name ,
+                                           'scale(%s)' % self.name , None , scale , 0.1 , 1.e+6 )
+            
         if  self.xminmax() and self.left.minmax() : 
             mn  , mx  = self.xminmax()
             lmn , lmx = self.left.minmax()            
-            assert lmn <= mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
+            assert lmn < mx, "PSLeft_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , lmn, lmx ) 
+
 
         self.pdf  = Ostap.Models.PhaseSpaceLeft (
-            'psl_%s'             % name ,
-            'PhaseSpaceLeft(%s)' % name ,
-            self.xvar ,
-            self.left ,
-            self.N    ) 
+            self.roo_name ( "psl_"  )   ,
+            "Left edge of the phase space %s" % self.name  , 
+            self.xvar       ,
+            self.left       ,
+            self.scale      ,
+            self.phasespace )
         
         ## save configuration 
         self.config = {
-            'name'       : self.name ,
-            'xvar'       : self.xvar ,
-            'N'          : self.N    ,            
-            'left'       : self.left ,            
+            'name'       : self.name       ,
+            'xvar'       : self.xvar       ,
+            'phasespace' : self.phasespace ,            
+            'left'       : self.left       ,            
+            'scale'      : self.scale      ,            
             }
-
+        
     @property 
     def mass ( self ) :
         """``mass''-variable for the fit (the same as ``x'' or ``xvar'')"""
         return self.xvar
     
     @property
-    def N( self ) :
-        """define N-body phase space"""
-        return self.__N
+    def scale ( self ) : 
+        """``scale'' : scale-factor for left-threshold"""
+        return self.__scale
+    @scale.setter 
+    def scale ( self , value ) :
+        self.set_value ( self.__scale , float ( value ) , ok = lambda a , b : 0 < b ) 
+        
     @property
     def left( self ) :
         """(left) threshold for N-body phase space"""
         return self.__left
     @left.setter
     def left ( self , value ) :
-        value = float ( value )
-        self.__left.setVal ( value  )
-        return self.__left.getVal()
+        self.set_value ( self.__left , float ( value ) )
+    
+    @property
+    def threshold ( self ) :
+        """``threshold'' : threshold position, same as ``left''"""
+        return self.left
+    @threshold.setter
+    def threshold ( self , value ) :
+        self.left = value
+        
+    @property
+    def phasespace ( self ) :
+        """``phasespace'' : phase space object (or number of particles)"""
+        return self.__phasespace
 
 models.append ( PSLeft_pdf ) 
 # =============================================================================
@@ -1475,8 +1524,8 @@ class PSRight_pdf(PDF) :
             assert rmx > mn, "PSRight_pdf: senseless setting of edges/thresholds: %s,%s vs %s,%s"  % (  mn, mx , rmn, rmx ) 
             
         self.pdf  = Ostap.Models.PhaseSpaceRight (
-            'psr_%s'              % name ,
-            'PhaseSpaceRight(%s)' % name ,
+            self.roo_name ( "psr_"  )   ,
+            "Right edge of phase space %s" % self.name  , 
             self.xvar  ,
             self.right ,
             self.L     , 
@@ -1574,8 +1623,8 @@ class PSNL_pdf(PDF) :
 
         ## pdf 
         self.pdf  = Ostap.Models.PhaseSpaceNL (
-            'psnl_%s'          % name ,
-            'PhaseSpaceNL(%s)' % name ,
+            self.roo_name ( "ps_"  )   ,
+            "Phase space %s" % self.name  , 
             self.xvar  ,
             self.left  ,
             self.right ,
@@ -1687,8 +1736,8 @@ class PS23L_pdf(PDF) :
         self.__l  = l
         
         self.pdf  = Ostap.Models.PhaseSpace23L (
-            'ps23l_%s'          % name ,
-            'PhaseSpace23L(%s)' % name ,
+            self.roo_name ( "ps23_"  )   ,
+            "Phase space 2 from 3 %s" % self.name  , 
             self.xvar  ,
             self.m1    ,
             self.m2    ,
@@ -1765,7 +1814,7 @@ models.append ( PS23L_pdf )
 #  such as product of step* and step exceed 3, one can get very good approximation
 #  to real convolution.
 # 
-#  The gaussian function for smear/convolution is evaluated at folloiwing points
+#  The gaussian function for smear/convolution is evaluated at following points
 #  \f$ x_0, x_0\pm s\sigma,x_0\pm 2s\sigma,...x_0\pm ns\sigma,...\f$, where
 #   - \f$\sigma\f$ corresponds to <code>sigma</code> 
 #   - \f$s\f$ corresponds to <code>step</code> 
@@ -1840,12 +1889,12 @@ class PSSmear_pdf ( PDF ) :
         
         if   isinstance  ( ps0 , Ostap.Math.PhaseSpaceNL    ) :
             
-            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge ()
+            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge () , ps0.L() , ps0.N() 
             
-            ## 1.75 is a safety factor here 
-            assert xmx - xmn > 1.75 * 0.5 * asigma * nhalfsigma, \
-                   'Interval is too small (%s,%s) for such large smearing %s*%s' % (
-                xmn , xmx , sigma , 0.5 * nhalfsigma )
+            ## ## 1.75 is a safety factor here 
+            ## assert xmx - xmn > 1.75 * 0.5 * asigma * nhalfsigma, \
+            ##        'Interval is too small (%s,%s) for such large smearing %s*%s' % (
+            ##    xmn , xmx , sigma , 0.5 * nhalfsigma )
             
             if   0 < sigma : PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn + x , xmx , L , N )
             elif 0 > sigma : PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn , xmx + x , L , N )
@@ -1882,11 +1931,11 @@ class PSSmear_pdf ( PDF ) :
             psp = PS (  delta )
             psm = PS ( -delta )
 
-            pdfp = self.pdf0.clone ( name = name + '%dp' % i , phasespace = psp )
-            pdfm = self.pdf0.clone ( name = name + '%dm' % i , phasespace = psm )
+            pdfp = self.pdf0.clone ( name = self.generate_name ( name + '%dp' % i ) , phasespace = psp )
+            pdfm = self.pdf0.clone ( name = self.generate_name ( name + '%dm' % i ) , phasespace = psm )
             
             fraction = ROOT.RooConstVar ( 'fF%s%dfix' % ( name , i ) , '' , 0.5 )
-            pdfi     = Sum1D ( pdfp , pdfm , name = name + '%d' % i  , fraction = fraction )
+            pdfi     = Sum1D ( pdfp , pdfm , self.generate_name ( name + '%d' % i  ) , fraction = fraction )
             
             ## wp = gpdf ( step * i ) 
             wp = gcdf ( step * ( i + 0.5 ) ) - gcdf ( step * ( i - 0.5 ) ) 
@@ -1917,16 +1966,25 @@ class PSSmear_pdf ( PDF ) :
             f = ROOT.RooConstVar ( 'fF%spm%dfix' % ( name , i + 1 ) , '' , w )
             self.__ff.append ( f )
         self.__ff = tuple ( self.__ff )
-
-        ## create the final PDF 
-        self.pdf , self.__fractions , _ = self.add_pdf (
-            [ i.pdf for i in self.__pdfs ] ,
-            self.name                 , 
-            'Smeared(%s)' % self.name , 
-            'some_pattern%d'      , 
-            'some_pattern%d'      ,
-            recursive = False     ,
-            fractions = self.__ff )
+                
+        ## ## create the final PDF 
+        ## self.pdf , self.__fractions , _ = self.add_pdf (
+        ##     [ i.pdf for i in self.__pdfs ] ,
+        ##     self.name                 ,          
+        ##     'Smeared phasel space %s' % self.name , 
+        ##     'some_pattern%d'          , 
+        ##     'some_pattern%d'          ,
+        ##     recursive = False         ,
+        ##     fractions = self.__ff     )
+        
+        ## combine all components into single PDF 
+        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
+                                          xvar      = self.xvar      ,
+                                          name      = 'Smeared phase space %s' % self.name , 
+                                          recursive = False          ,
+                                          fractions = self.__ff      )
+        
+        self.pdf = self.combined_pdf.pdf
         
         self.config = {
             'name'   : self.name   ,            
@@ -1958,7 +2016,7 @@ class PSSmear_pdf ( PDF ) :
         return self.__pdfs
     @property
     def ws     ( self ) :
-        """``ws'' : calcualted fractions"""
+        """``ws'' : calculates fractions"""
         return self.__ws
     @property
     def ffs    ( self ) :
@@ -1967,8 +2025,241 @@ class PSSmear_pdf ( PDF ) :
     @property
     def fractions ( self ) :
         """``fractions'' : calcualted fractions"""
-        return tuple ( self.__fractions ) 
+        return self.combined_pdf.fractions 
+    @property
+    def combined_pdf ( self ) :
+        """``combinedpdf'' : the final combined PDF (e.g. for drawing)"""
+        return self.__combinedpdf
+    
+# ==============================================================================
+## @class PSSmear2_pdf
+#  Usefull class to represent "smear" phase space function
+#  @code
+#  pspdf = PSPol_pdf ( ... )
+#  gamma = 10 * MeV 
+#  shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+#  values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
+#  smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values ) 
+#  @endcode
+#  It is very useful to smear left thresholds for phase-space-based PDFs.
+#
+#  This PDF is a weighted sum of <code>len(values)</code> components
+#  with fixed coefficients. Each component corresponds to small shift in
+#  left edge of the phase space, and the components 
+#  are weighted accoring to profile function
+#
+#  It is *not* a real convolution with profile function, but some approximation
+# 
+#  The phase-space-based PDF is required to have a method <code>phasespace</code>
+#  that returns object of the type :
+#  - Ostap::Math::PhaseSpaceNL    
+#  - Ostap::Math::PhaseSpace2    
+#  - Ostap::Math::PhaseSpace3    
+#  - Ostap::Math::PhaseSpace3s    
+#  - Ostap::Math::PhaseSpaceLeft
+#
+#  The phase-space-based PDF is required to have constructor with keyword
+#  <code>phasespace</code>
+#  @see Ostap::Math::PhaseSpaceNL    
+#  @see Ostap::Math::PhaseSpace2    
+#  @see Ostap::Math::PhaseSpace3    
+#  @see Ostap::Math::PhaseSpace3s    
+#  @see Ostap::Math::PhaseSpaceLeft
+class PSSmear2_pdf ( PDF ) :
+    """ Usefull class to represent ``smear'' phase space function
+    >>> pspdf = PSPol_pdf ( ... )
+    >>> gamma = 10 * MeV 
+    >>> shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+    >>> values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
+    >>> smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values )
+    
+    - It is very useful to smear left thresholds for phase-space-based PDFs.
+    
+    - This PDF is a weighted sum of `len(values)` components
+    with fixed coefficients. Each component corresponds to small shift in
+    left edge of the phase space, and the components 
+    are weighted accoring to profile function
+    
+    - It is *not* a real convolution with profile function, but some approximation
+    
+    - The phase-space-based PDF is required to have a method `phasespace`
+    that returns object of the type :
+    - `Ostap.Math.PhaseSpaceNL`    
+    - `Ostap.Math.PhaseSpace2`    
+    - `Ostap.Math.PhaseSpace3`    
+    - `Ostap.Math.PhaseSpace3s`    
+    - `Ostap.Math.PhaseSpaceLeft`
+    """
+    def __init__ ( self          ,
+                   pdf0          ,
+                   profile       ,
+                   values        , 
+                   name   = ''   ) :
 
+        assert callable ( profile ) , "PSSmear2_pdf: ``profile'' must be callable!"
+
+        self.__profile  = profile
+        
+        ## initialize the base
+        name =  name if name else pdf0.name + '_smear2'
+        PDF.__init__ ( self , name , pdf0.xvar )
+
+        ## keep the template 
+        self.__pdf0 = pdf0
+        
+        vals = list ( set ( [ v for v in values ] ) ) 
+        vals.sort()
+        self.__values = tuple ( vals )
+        
+        nn = len ( self.values )        
+        assert 3 < nn , 'PSSmear2_pdf: At least three different points must be specified!'
+        
+        ##
+        ps0    = self.pdf0.phasespace
+
+        if   isinstance  ( ps0 , Ostap.Math.PhaseSpaceNL    ) :
+            
+            xmn , xmx , L , N = ps0.lowEdge () , ps0.highEdge () , ps0.L() , ps0.N() 
+            
+            PS = lambda x : Ostap.Math.PhaseSpaceNL ( xmn + x , xmx , L , N )
+
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace2     ) :
+
+            m1 , m2 = ps0.m1() , ps0.m2() 
+            PS = lambda x : Ostap.Math.PhaseSpace2 ( m1 + x , m2 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3     ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3 ( m1 + x , m2 , m3 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpace3s    ) :
+
+            m1 , m2 , m3 = ps0.m1() , ps0.m2() , ps0.m3() 
+            PS = lambda x : Ostap.Math.PhaseSpace3s ( m1 + x , m2 , m3 )
+            
+        elif isinstance  ( ps0 , Ostap.Math.PhaseSpaceLeft  ) :
+            
+            N = ps0.N ()
+            if 2 <= N :
+                t , s = ps0.threshold() , ps0.scale() 
+                PS = lambda x : Ostap.Math.PhaseSpaceLeft ( t + x , N , s )
+            else      :
+                ps2 = ps0.ps2() 
+                m1 , m2 , s = ps2.m1() , ps2.m2() , ps0.scale() 
+                PS2 = lambda x : Ostap.Math.PhaseSpace2    ( m1 + x    , m2 )
+                PS  = lambda x : Ostap.Math.PhaseSpaceLeft ( PS2 ( x ) , s  )
+
+        else :
+            
+            raise AttributeError ('Illegal type of "phasespace"!')
+
+        ## get numerical integration 
+        from ostap.math.integral import integral as _integral 
+
+        self.__pdfs = []
+        self.__ws   = []
+
+        nn = len ( self.values )        
+        for i , v in enumerate ( self.values ) : 
+
+            first = ( i     == 0  ) 
+            last  = ( i + 1 == nn )             
+            
+            if first  : xmin =         self.values [ i ]
+            else      : xmin = 0.5 * ( self.values [ i ] + self.values [ i - 1 ] )
+            
+            if last   : xmax =         self.values [ i ] 
+            else      : xmax = 0.5 * ( self.values [ i ] + self.values [ i + 1 ] )
+
+            ## calculate the contribution of this component
+            iint = _integral ( profile , xmin = xmin , xmax = xmax )
+            ## if first or last : iint *= 2 ## Needed? 
+
+            wv   = iint
+            
+            psv  = PS ( v )
+            pdfv = self.pdf0.clone ( name = self.generate_name ( self.name + '%dv' % i ) , phasespace = psv )
+
+            self.__pdfs.append ( pdfv )
+            self.__ws  .append ( wv   )
+            
+        self.__pdfs = tuple ( self.__pdfs )
+
+        ## normalize fractions
+        wsum = sum ( self.__ws )
+        assert 0 < wsum , 'PSSmear2_pdf: illegal sum of weights: %s/%d' % ( wsum , len ( self.__ws ) )
+        
+        self.__ws   = [ v/wsum for v in self.__ws ]
+        self.__ws   = tuple ( self.__ws [ :-1 ] )   ## and skip the last!
+
+        ## create fixed fractions 
+        self.__ff = []
+        for i , w in enumerate ( self.__ws  ) :
+            f = ROOT.RooConstVar ( self.generate_name ( 'f' + self.name + '_Ffix%d' % i ) , 'fixed fraction' , w )
+            self.__ff.append ( f )
+        self.__ff = tuple ( self.__ff )
+
+        ## ## create the final PDF 
+        ## self.pdf , self.__fractions , _ = self.add_pdf (
+        ##     [ i.pdf for i in self.__pdfs ] ,
+        ##     self.name                 ,          
+        ##     'Smeared phase-space %s' % self.name , 
+        ##     'some_pattern%d'          , 
+        ##     'some_pattern%d'          ,
+        ##     recursive = False         ,
+        ##     fractions = self.__ff     )
+        
+        ## combine all components into single PDF 
+        self.__combined_pdf = Combine1D ( [ p for p in self.__pdfs ] ,
+                                          xvar      = self.xvar      ,
+                                          name      = 'Smeared phase space %s' % self.name , 
+                                          recursive = False          ,
+                                          fractions = self.__ff      )
+        
+        self.pdf = self.combined_pdf.pdf
+        
+        self.config = {
+            'name'    : self.name    ,            
+            'pdf0'    : self.pdf0    ,
+            'values'  : self.values  , 
+            'profile' : self.profile ,  
+            }
+        
+    @property
+    def profile ( self ) :
+        """``profile'' : profiel for smearing"""
+        return self.__profile 
+    @property
+    def pdf0   ( self ) :
+        """``pdf0'' : non-smeared original PDF"""
+        return self.__pdf0
+    @property
+    def pdfs   ( self ) :
+        """``pdfs'' : the tuple of all PDFs"""
+        return self.__pdfs
+    @property
+    def ws     ( self ) :
+        """``ws'' : calculated fractions"""
+        return self.__ws
+    @property
+    def ffs    ( self ) :
+        """``ffs'' : calculated fractions"""
+        return self.__ff 
+    @property
+    def values ( self ) :
+        """``values'' : list of abscissas where profile is evaluated"""
+        return self.__values 
+    @property
+    def fractions ( self ) :
+        """``fractions'' : calcualted fractions"""
+        return self.combined_pdf.fractions 
+    @property
+    def combined_pdf ( self ) :
+        """``combined_pdf'' : the final combined PDF (e.g. for drawing)"""
+        return self.__combined_pdf
+
+    
 # ==============================================================================
 ##  @class RooPoly
 #   helper base class to implement various polynomial-like shapes
@@ -2011,8 +2302,8 @@ class RooPoly_pdf(RooPoly) :
 
         ## create PDF
         self.pdf = ROOT.RooPolynomial (
-            'roopoly_%s%d'         % ( name , self.power ) ,
-            'RooPolynomial(%s,%d)' % ( name , self.power ) ,
+            self.roo_name ( 'rpoly_' ) ,
+            'RooPolynomial %s|%d' % ( self.name , self.power ) ,
             self.xvar , self.__clist )
 
         ## save configuration 
@@ -2053,8 +2344,8 @@ class RooCheb_pdf(RooPoly) :
 
         ## create PDF 
         self.pdf = ROOT.RooChebyshev (
-            'roocheb_%s%d'        % ( name , self.power ) ,
-            'RooChebyshev(%s,%d)' % ( name , self.power ) ,
+            self.roo_name ( 'rcheb_' ) ,
+            'RooChebyshev %s|%d' % ( self.name , self.power ) ,
             self.xvar , self.__clist )
 
         ## save configuration 
@@ -2096,7 +2387,6 @@ class RooKeys1D_pdf(PDF) :
         PDF.__init__ (  self , name , xvar )
 
         self.__data    = data
-        self.__options = mirror
         self.__rho     = rho 
         self.__options = options 
         self.__nsigma  = nsigma 
@@ -2104,12 +2394,12 @@ class RooKeys1D_pdf(PDF) :
         self.__sort    = True if sort   else False 
 
         self.__keys_vlst = ROOT.RooArgList()
-        self.__keys_vlst.Add ( self.xvar )
+        self.__keys_vlst.add ( self.xvar )
         
         ## create PDF
         self.pdf = ROOT.RooNDKeysPdf (
-            "rookeys1_%s"        % name ,
-            "RooNDKeysPdf(%s,1)" % name ,
+            self.roo_name ( 'keys1_' ) , 
+            "Keys 1D %s"  % self.name ,
             self.__keys_vlst  ,
             self.data    ,
             self.options , 
@@ -2136,8 +2426,8 @@ class RooKeys1D_pdf(PDF) :
         return self.__data
     @property
     def options ( self ) :
-        """``options'' : ``ootions'' string for RooNDKeysPdf"""
-        return self.__mirror        
+        """``options'' : ``options'' string for RooNDKeysPdf"""
+        return self.__options        
     @property
     def rho    ( self )  :
         """``rho'' : ``rho'' parameter for RooNDKeysPdf"""
@@ -2272,7 +2562,7 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
     ## interprete it as exponential slope for Bkg-pdf 
     elif isinstance ( bkg , ROOT.RooAbsReal ) \
              or   isinstance ( bkg , float )  \
-             or ( isinstance ( bkg , tuple ) and 1 < len ( tuple ) <=3 ) :
+             or ( isinstance ( bkg , tuple ) and 1 < len ( bkg ) <=3 ) :
         
         model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
@@ -2363,5 +2653,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

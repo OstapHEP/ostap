@@ -54,7 +54,7 @@ namespace
   {
     return 
       0 == N ?  1 : 
-      0 == N ?  1 : 
+      1 == N ?  1 : 
       2 == N ?  2 : 
       3 == N ?  6 : 
       4 == N ? 24 : N * _factorial_d_ ( N - 1 ) ;
@@ -494,12 +494,12 @@ bool Ostap::Math::Parameters::zero  () const { return s_vzero ( m_pars ) ; }
 // ============================================================================
 // set k-parameter
 // ============================================================================
-bool Ostap::Math::Parameters::setPar 
+bool Ostap::Math::Parameters::_setPar 
 ( const unsigned short k , const double value ) 
 {
   if ( m_pars.size() <= k            ) { return false ; }
   if ( s_equal ( m_pars[k] , value ) ) { return false ; }
-  m_pars[k] = value ;
+  m_pars [ k ] = value ;
   return true ;
 }
 // ============================================================================
@@ -1641,10 +1641,22 @@ Ostap::Math::HermiteSum::HermiteSum
   : Ostap::Math::PolySum ( degree )
   , m_xmin  ( std::min ( xmin , xmax ) )
   , m_xmax  ( std::max ( xmin , xmax ) )
-  , m_scale ( 1) 
+  , m_scale ( 1 ) 
 {
   m_scale /= ( m_xmax - m_xmin );
 }
+// ============================================================================
+// constructor from the parameter list 
+// ============================================================================
+Ostap::Math::HermiteSum::HermiteSum 
+( const std::vector<double>&  pars , 
+  const double                xmin , 
+  const double                xmax )
+  : HermiteSum ( pars.begin() , 
+                 pars.end  () , 
+                 xmin         , 
+                 xmax         )
+{}
 // ============================================================================
 // get the value
 // ============================================================================

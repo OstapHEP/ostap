@@ -80,7 +80,7 @@ else                       : logger = getLogger( __name__ )
 logger.debug ( 'Some useful decorations for TFile objects')
 # ==============================================================================
 ## context manager to preserve current directory (rather confusing stuff in ROOT)
-from ostap.core.core import ROOTCWD
+from ostap.core.core import ROOTCWD, valid_pointer 
 # ===============================================================================
 ## write the (T)object to ROOT-file/directory
 #  @code
@@ -169,6 +169,40 @@ def _tnamed_rshift_ ( tnamed , rdir ) :
 
                  
 # ===============================================================================
+## get the (key,object) pair from ROOT-file/directory
+#  @code
+#  t = f.get_key_object ('A/tup') 
+#  h = f.get_key_object ('histo') 
+#  @endcode 
+#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
+#  @date 2015-07-30
+def _rd_key_object_ ( rdir , name ) :
+    """Get the (key.,object) pair from ROOT-file/directory
+    >>> t = f.get_key_object ('A/tup') 
+    >>> h = f.get_key_object ('histo') 
+    """
+    ##
+    if not rdir : raise IOError ( "TDirectory is invalid" )
+    ##
+    with ROOTCWD() :
+        ##
+        dirname , sep , fname = name.partition('/')
+        ##
+        while sep :
+            rdir.cd()
+            subdir = rdir.GetDirectory(dirname)
+            if not subdir :
+                raise KeyError("TDirectory[]: unknown directory name '%s%s'" % (rdir.GetPath() , dirname  ) ) 
+            rdir = subdir
+            dirname, sep , fname = fname.partition ('/') 
+
+        rdir.cd()
+        obj = rdir.Get ( dirname ) 
+        if not obj : raise KeyError ("TDirectory[]: unknown object '%s%s'" % ( rdir.GetPath(), dirname ) )
+        
+        return rdir.FindKey ( dirname ) , obj 
+                 
+# ===============================================================================
 ## get the object from ROOT-file/directory
 #  @code
 #  h1 = rfile['MyHisto'      ] 
@@ -182,6 +216,7 @@ def _rd_getitem_ ( rdir , name ) :
     >>> h = f['histo']
     """
     ##
+    
     if not rdir : raise IOError("TDirectory is invalid")
     ##
     with ROOTCWD() :
@@ -200,6 +235,18 @@ def _rd_getitem_ ( rdir , name ) :
         obj = rdir.Get ( dirname ) 
         if not obj : raise KeyError ("TDirectory[]: unknown object '%s%s'" % ( rdir.GetPath(), dirname ) )
         return obj 
+
+# ===============================================================================
+## get the key from ROOT-file/directory
+#  @author Vanya BELYAEV Ivan.Belyaev@iep.ru
+#  @date 2015-07-30
+def _rd_key_ ( rdir , name ) :
+    """Get the key from ROOT-file/directory
+    """
+    ##
+    key , obj = _rd_key_object ( rdir , name )
+    
+    return key 
 
 # ===============================================================================
 ## get the object from ROOT-file/directory 
@@ -705,8 +752,6 @@ def _rd_ls_table_ ( rdir , prefix = '# ' ) :
     table = T.table ( table , title = '%s' % name , prefix = '# ' )
     logger.info ( 'Directory %s:\n%s' % ( rdir.GetName() , table ) )
 
-
-
 # =============================================================================
 ## the basic protocol:
 
@@ -717,16 +762,19 @@ ROOT.TDirectory.__getattr__  = _rd_getattr_
 ROOT.TDirectory.__delitem__  = _rd_delitem_
 ROOT.TDirectory.__iter__     = _rd_iter_
 
+
 # =============================================================================
 ## the extended protocol
 
-ROOT.TDirectory.get          = _rd_get_
-ROOT.TDirectory.keys         = _rd_keys_
-ROOT.TDirectory.has_key      = _rd_contains_
-ROOT.TDirectory.iteritems    = _rd_iteritems_
-ROOT.TDirectory.iterkeys     = _rd_iterkeys_
-ROOT.TDirectory.itervalues   = _rd_itervalues_
-ROOT.TDirectory.ikeyskeys    = _rd_ikeyskeys_
+ROOT.TDirectory.get            = _rd_get_
+ROOT.TDirectory.keys           = _rd_keys_
+ROOT.TDirectory.has_key        = _rd_contains_
+ROOT.TDirectory.iteritems      = _rd_iteritems_
+ROOT.TDirectory.iterkeys       = _rd_iterkeys_
+ROOT.TDirectory.itervalues     = _rd_itervalues_
+ROOT.TDirectory.ikeyskeys      = _rd_ikeyskeys_
+ROOT.TDirectory.get_key        = _rd_key_
+ROOT.TDirectory.get_key_object = _rd_key_object_
 
 # =============================================================================
 ## some extra stuff 
@@ -763,6 +811,7 @@ _modes = {
     '+'        : 'UPDATE'   ,
     'rw'       : 'UPDATE'   ,
     'w+'       : 'UPDATE'   ,
+    '+w'       : 'UPDATE'   ,
     'new'      : 'NEW'      ,
     'create'   : 'RECREATE' ,
     'recreate' : 'RECREATE' ,
@@ -770,6 +819,7 @@ _modes = {
     'write'    : 'WRITE'    ,
     'update'   : 'UPDATE'   ,
     'append'   : 'APPEND'   ,
+    '++'       : 'APPEND'   ,
     ## 
     }
 
@@ -796,14 +846,14 @@ def _rf_new_init_ ( rfile , fname , mode = '' , *args ) :
     >>> print ROOT.gROOT.CurrentDirectory()
     Attention:  IOError exception is raised for invalid file/open_mode
     """
-    with ROOTCWD() :
+    with ROOTCWD () :
         logger.debug ("Open  ROOT file %s/'%s'" % ( fname , mode ) )
-        result = rfile._old_init_ ( fname , open_mode ( mode ) , *args )
-        if not rfile or not rfile.IsOpen() :
+        rinit = rfile._old_init_ ( fname , open_mode ( mode ) , *args )
+        if not rfile or not rfile.IsOpen() or rfile.IsZombie () :
             raise IOError   ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
-        return result
+        return rinit
     
-# =============================================================================
+# ============================================================================
 ## create ROOT.TFile without making it a current working directory 
 #  @code
 #  print ROOT.gROOT.CurrentDirectory()
@@ -820,7 +870,14 @@ def _rf_new_open_ ( fname , mode = '' , args = () , exception = False ) :
     """
     with ROOTCWD() :
         logger.debug ( "Open  ROOT file %s/'%s'" % ( fname , mode ) )
-        fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
+        try : 
+            fopen = ROOT.TFile._old_open_ ( fname , open_mode ( mode ) , *args )
+        except ( OSError, IOError ) :
+            if exception : raise
+            else : 
+                logger.error  ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
+                return None 
+            
         if not fopen or not fopen.IsOpen() :
             if  exception : 
                 raise IOError ( "Can't open ROOT file %s/'%s'" % ( fname , mode ) )
@@ -848,7 +905,7 @@ def _rf_new_close_ ( rfile , options = '' ) :
     if rfile and rfile.IsOpen() :
         with ROOTCWD() :
             logger.debug ( "Close ROOT file %s" % rfile.GetName() ) 
-            rfile ._old_close_ ( options )
+            return rfile ._old_close_ ( options )
             
 # =============================================================================
 ## another name, just for convinince
@@ -857,9 +914,10 @@ open = _rf_new_open_
 # =============================================================================
 if hasattr ( ROOT.TFile , '_new_init_' ) and hasattr ( ROOT.TFile , '_old_init_' ) : pass
 else :
-    
-    _rf_new_init_.__doc__  += '\n' + ROOT.TFile.__init__.__doc__
-    
+
+    if ROOT.TFile.__init__.__doc__ :
+        _rf_new_init_.__doc__  += '\n' + ROOT.TFile.__init__.__doc__
+
     ROOT.TFile._old_init_   = ROOT.TFile.__init__
     ROOT.TFile._new_init_   = _rf_new_init_ 
     ROOT.TFile.__init__     = _rf_new_init_ 
@@ -868,8 +926,10 @@ else :
 if hasattr ( ROOT.TFile , '_new_open_' ) and hasattr ( ROOT.TFile , '_old_open_' ) : pass
 else :
 
-    _rf_new_open_.__doc__  += '\n' + ROOT.TFile.Open.__doc__
-    _rf_new_open_           = staticmethod( _rf_new_open_ )
+    if ROOT.TFile.Open.__doc__ : 
+        _rf_new_open_.__doc__  += '\n' + ROOT.TFile.Open.__doc__
+        
+    _rf_new_open_           = staticmethod ( _rf_new_open_ )
     
     ROOT.TFile._old_open_   = ROOT.TFile.Open
     ROOT.TFile._new_open_   = _rf_new_open_ 
@@ -880,8 +940,9 @@ else :
 if hasattr ( ROOT.TFile , '_new_close_' ) and hasattr ( ROOT.TFile , '_old_close_' ) : pass
 else :
 
-    _rf_new_close_.__doc__  += '\n' + ROOT.TFile.Close.__doc__
-    
+    if ROOT.TFile.Close.__doc__ : 
+        _rf_new_close_.__doc__  += '\n' + ROOT.TFile.Close.__doc__
+        
     ROOT.TFile._old_close_   = ROOT.TFile.Close
     ROOT.TFile._new_close_   = _rf_new_close_ 
     ROOT.TFile.Close         = _rf_new_close_
@@ -957,6 +1018,42 @@ class REOPEN(object) :
                 r = self.tfile.ReOpen ('READ' ) 
                 if r < 0 : logger.error ("Can't reopen the file for READ!")            
 
+
+from ostap.core.core import _rd_valid_
+
+# ==============================================================================
+## length of the directory :  (recursive) number of keys
+#  @code
+#  rdir = ...
+#  len(rdir) 
+#  @endcode  
+def  _rd_len_ ( rdir ) :
+    """Length of the directory : (recursive) number of keys
+    >>> rdir = ...
+    >>> len(rdir) 
+    """
+    
+    if not rdir : return 0
+    
+    with ROOTCWD() :
+        ##
+        rdir.cd() 
+        lst = rdir.GetListOfKeys()
+
+        nkeys = lst.GetSize() if valid_pointer ( lst  ) else 0
+
+        for item in lst :
+
+            inam = item.GetName()
+            idir = rdir.GetDirectory ( inam )            
+
+            if idir and not idir is rdir :
+                nkeys += _rd_len_ ( idir  ) 
+    return nkeys
+
+
+ROOT.TDirectory.__len__ = _rd_len_
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TFile       ,
@@ -995,5 +1092,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -19,6 +19,7 @@ __all__     = (
 # =============================================================================
 from   builtins import range 
 import ROOT
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, VE, valid_pointer, iszero, isequal
 from   ostap.core.ostap_types   import string_types , integer_types
 import ostap.math.linalg      
@@ -93,7 +94,32 @@ def _rfr_param_  ( self , pname , float_only = False ) :
         elif hasattr ( pname , 'getName' ) : pname = pname.getName ()
         elif hasattr ( pname , 'name'    ) : pname = pname.   name () 
     p = self.parameters ( float_only )[ pname ] 
-    return p 
+    return p
+
+# =============================================================================
+## check if certain parameter (or index) is in <code>RooFitResult</code> object
+#  @code
+#  fit_result = ...
+#  print ( 1      in fit_results ) 
+#  print ( 'mean' in fit_results ) 
+#  print ( 'A'    in fit_results ) 
+#  @endcode 
+def _rfr_contains_ ( self , label ) :
+    """Check if certain parameter (or index) is in <code>RooFitResult</code> object
+    >>> fit_result = ...
+    >>> print ( 1      in fit_results ) 
+    >>> print ( 'mean' in fit_results ) 
+    >>> print ( 'A'    in fit_results ) 
+    """
+    
+    if   isinstance ( label , integer_types ) :
+        return 0 <= label < len ( self.floatParsFinal() ) + len ( self.constPars () )
+    elif isinstance ( label , string_types  ) :
+        return label in  self.floatParsFinal() or label in self.constPars ()
+    elif isinstance ( label , ROOT.RooAbsArg ) :
+        return label.GetName() in self
+    
+    return False 
 
 # =============================================================================
 ## iterator over fit results 
@@ -172,6 +198,7 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
             
     return m  
 
+
 # =============================================================================
 ## get the covariance matrix 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -195,6 +222,50 @@ def _rfr_covmatrix_  ( self ) :
             
     return m  
 
+# ============================================================================
+## get the required results in form of SVectorWithError object
+#  @code
+#  fit_resuts = ...
+#  res   = fit_results.results( 'A', 'B' , 'C' )
+#  print res, res.cov2() 
+#  @endcode
+#  @see Ostap::Math::SVectorWithError
+def _rfr_results_( self , var1 , var2 , *vars ) :
+    """Get the required results in form of SVectorWithError object
+    >>> fit_resuts = ...
+    >>> res   = fit_results.results( 'A', 'B' , 'C' )
+    >>> print res, res.cov2() 
+    """
+    
+    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1] 
+    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
+    
+    args = ROOT.RooArgList ( var1 , var2 )
+    for v in vars :
+        if isinstance ( v , str ) : v = self.param ( v ) [1] 
+        args.add ( v ) 
+
+        
+    cm = self.reducedCovarianceMatrix (  args )
+    N  = cm.GetNrows()
+
+    import ostap.math.linalg    
+    m  = Ostap.Math.SymMatrix ( N )()
+    v  = Ostap.Math.Vector    ( N )()
+    
+    S  = Ostap.Math.SVectorWithError  ( N )
+    
+    v  = S()
+    c2 = v.cov2()
+    
+    for i in range ( N ) :
+        v [ i ] = float ( self.param( var1 ) [ 0 ] )
+        for j in range ( i , N ) :
+            c2 [ i , j ] = cm ( i , j )
+
+    return v
+
+    
 # ==============================================================================
 ## Get vector of eigenvalues for the covariance matrix
 #  @code
@@ -269,12 +340,16 @@ def _rfr_max_cor_ ( self , v ) :
     
 # ===============================================================================
 ## get fit-parameter as attribute
+#  @code
+#  fit_result = ...
+#  sigma = fit_resul.sigma 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-03
 def _rfr_getattr_ ( self , att ) :
     """Get fit-parameter as attribute
     >>> r = ....
-    >>> print r.sigma 
+    >>> print( 'sigma is', r.sigma)
     """
     ##
     pars = self.floatParsFinal()
@@ -287,6 +362,31 @@ def _rfr_getattr_ ( self , att ) :
         
     raise AttributeError ( 'RooFitResult: invalid attribute %s ' % att )
 
+# =============================================================================
+## get fit-parameter through the key/name 
+#  @code
+#  fit_result = ...
+#  sigma = fit_result['sigma']
+#  @endcode
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2014-08-03
+def _rfr_getitem_ ( self , key  ) :
+    """Get fit-parameter through the key/name 
+    >>> fit_result = ...
+    >>> sigma = fit_result['sigma']
+    """
+    
+    ##
+    pars = self.floatParsFinal()
+    for p in pars :
+        if key == p.GetName() : return p      
+    #
+    pars = self.constPars()
+    for p in pars :
+        if key == p.GetName() : return p
+        
+    raise KeyError ( 'RooFitResult: invalid key %s ' % key  )
+    
 # ===========================================================================
 ## get correct estimate of sum of two (or more) variables,
 #  taking into account correlations
@@ -316,7 +416,7 @@ def _rfr_sum_ ( self , var1 , var2 , *vars ) :
         for j in range ( i ) :
             vj  = allvars [ j ]
             if isinstance ( vj , str ) : vj = self.param ( vj ) [1]
-            if vj in self.constPars()  : continue        
+            if vj in self.constPars() : continue        
             c2 += 2 * self.covariance ( vi , vj ) 
             
     return VE ( s , c2 ) 
@@ -452,34 +552,6 @@ def _rfr_asymmetry_ ( self , var1 , var2 ) :
         return -1 * self.ratio ( var2 , var1 ) . asym ( _one )
 
 
-# ============================================================================
-## get the required results in form of SVectorWithError object
-#  @code
-#  fit_resuts = ...
-#  res   = fit_results.results( 'A', 'B' , 'C' )
-#  print res, res.cov2() 
-#  @endcode
-#  @see Ostap::Math::SVectorWithError
-def _rfr_results_( self , *vars ) :
-    """Get the required results in form of SVectorWithError object
-    >>> fit_resuts = ...
-    >>> res   = fit_results.results( 'A', 'B' , 'C' )
-    >>> print res, res.cov2() 
-    """
-    _n = len ( vars )
-    _r = Ostap.Math.SVectorWithError(_n,'double')()
-    _i = 0 
-    for _i1 in range( 0 , _n ) :
-        _v1                = vars[_i1]
-        _vv                = self.param ( _v1 ) [0]
-        _r       [ _i1   ] = _vv
-        _r.cov2()[_i1,_i1] = _vv.cov2() 
-        for _i2 in range ( _i1 + 1 , _n ) :
-            _v2  = vars[_i2]
-            _c12 = self.cov ( _v1 , _v2 ) 
-            _r.cov2()[_i1,_i2] = _c12 
-    return _r 
-
 # =============================================================================
 ## evaluate the certain  function/expression for the fit   result
 # @code
@@ -507,18 +579,25 @@ def _rfr_evaluate_ ( self , func , args , partial = () ) :
 #  result = ...
 #  result.table() 
 #  @endcode 
-def _rfr_table_ ( r , title = '' , prefix = '' ) :
+def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     """ print RooFitResult  as a table
     >>> result = ...
     >>> result.table() 
     """
 
     from  ostap.fitting.utils    import fit_status, cov_qual
-    rows = [] 
-    if r.status() :
-        row = attention ( ' Status' )  , '' , attention ( fit_status ( r.status() ) ) , '' 
+    rows = []
+
+    ##  1. fit status
+    status = r.status() 
+    if status :
+        row = attention ( 'Status' )  , '' , attention ( fit_status ( status ) ) , '' 
         rows.append ( row )
-        
+    else :
+        row = 'Status'                , '' , allright  ( fit_status ( status ) ) , '' 
+        rows.append ( row )
+
+    ## 2. minumum NLL
     s , n = pretty_float ( r.minNll() )
     if n : n = '[10^%+d]' % n
     else : n = '' 
@@ -528,7 +607,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     s , n = pretty_float ( r.edm () )
     if n : n = '[10^%+d]' % n
     else : n = '' 
-    
+
     rows.append ( ( 'Estimated distance to minimum' , n , '  ' + s , '' ) )
     
     cq = r.covQual()
@@ -544,7 +623,6 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         
     rows.append ( ( 'Covariance matrix quality'     , '' , '  ' + cn , '' ) )
     
-
     for i in  range ( r.numStatusHistory() ) :
         label =  r.statusLabelHistory ( i )
         code  =  r.statusCodeHistory  ( i )
@@ -559,7 +637,8 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation') ] + rows
+    ## rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
+    rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
@@ -567,6 +646,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
     ## constant/fix parameters 
     crows = [] 
     for p in pars_all :
+
         if p in pars_float : continue 
         v , a = pars_all [ p ]
 
@@ -574,12 +654,14 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
 
         if n : n = '[10^%+d]' % n
         else : n = '' 
-        row = p , n , '  ' + s , ''  
+        row = p , n , '  ' + s + ' (fix)' , ''  
         crows.append ( row ) 
 
-    ## floating parameters 
-    frows = [] 
+    ## floating parameters
+    max_corr = False
+    frows    = []
     for p in pars_float :
+
         v , a = pars_float [ p ]
 
         if not a.hasAsymError() :
@@ -590,41 +672,54 @@ def _rfr_table_ ( r , title = '' , prefix = '' ) :
         if n : n = '[10^%+d]' % n
         else : n = '' 
 
-        cc = 'Not available'
-        if 0 <= cq :             
+
+        cc = 'Not available' if root_info < ( 6 , 24 ) else ''
+        if 0 <= cq and not  ( 6 , 24 ) <= root_info < ( 6 , 25 ) and 1 < len ( pars_float ) :
+            
             mxr , mxv = r.max_cor    ( p )
-            gc        = r.globalCorr ( p )
             
-            cc        = '%+5.3f/(%+5.3f,%s)' % ( gc , mxr , mxv )
-            if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+            ## logger.warning ("globalCorr.... %s %s" %  ( p , cq ) )
+            gc = -1.0 
+            ## gc    = r.globalCorr ( p ) if 3 == cq else -1.00
+            ## cc        = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100 , mxv )
+
+            cc        = '% +5.1f : %-s' % ( mxr*100 , mxv )
+            if 0.95 < abs ( mxr ) : cc = attention ( cc )
             
+            ## if 0.95 < abs ( gc ) or 0.95 < abs ( mxr ) : cc = attention ( cc )
+            max_corr = True
+
         row = p , n , s , cc
         frows.append ( row ) 
+
+    ## more parameters
+    mrows = []
+    for p in sorted ( more_vars ) :
+
+        func  = more_vars [ p ]
+        
+        v     = func ( r )
+        
+        s , n = pretty_ve  ( v ) 
+        
+        if n : n = '[10^%+d]' % n
+        else : n = '' 
+
+        cc = 'derived'
+        row = p , n , s , cc
+        mrows.append ( row ) 
 
     crows.sort()
     frows.sort()
 
-    all = rows + crows + frows
+    all = rows + crows + frows + mrows  
+
+    if not max_corr :
+        all = [ row[:-1] for row in all ] 
 
     import ostap.logger.table as T
 
-    all = T.align_column ( all , 0 , 'left' )
-    all = T.align_column ( all , 1 , 'left' )
-    all = T.align_column ( all , 2 , 'left' )
-    all = T.align_column ( all , 3 , 'left' )
-
-    for l in range ( len ( rows ) , len ( all ) ) :
-        line = all [ l ]
-        line = list ( line ) 
-        line [ 0 ] = allright ( line[0] )
-        all  [ l ] = tuple ( line  ) 
-
-    if title : 
-        return T.table ( all , title = title         , prefix = prefix )
-    else     :
-        return T.table ( all , title = r.GetTitle()  , prefix = prefix )
-
-
+    return T.table ( all , title = title if title else r.GetTitle() , prefix = prefix , alignment = 'llll' )
 
 # =============================================================================
 ## ``easy'' print of RooFitResult
@@ -691,14 +786,14 @@ def _rm_migrad_  ( self , refit = 0 , tag = "" , minos = () ) :
 ## run MINOS for set of parameters
 #  @code
 #  pdf = ...
-#  minuit = pdf.minuit()
+#  minuit = pdf.minuit( ... )
 #  minuit.migrad() 
 #  minuit.minos ( 'sigma' , 'mean' )  
 #  @endcode
 def _rm_minos_ ( self , *variables ) :
     """Run MINOS for set of parameters
     >>> pdf = ...
-    >>> minuit = pdf.minuit()
+    >>> minuit = pdf.minuit( ... )
     >>> minuit.migrad() 
     >>> minuit.minos ( 'sigma' , 'mean' )  
     """
@@ -712,7 +807,7 @@ def _rm_minos_ ( self , *variables ) :
 
     aset = ROOT.RooArgSet()
     res  = self.save()
-    
+
     for v in variables :
 
         if   isinstance   ( v , string_types ) or isinstance ( v , ROOT.RooAbsReal ) :
@@ -746,16 +841,65 @@ if not hasattr ( ROOT.RooMinimizer , '_old_minos_' ) :
     ROOT.RooMinimizer._old_minos_  = ROOT.RooMinimizer.minos
     _rm_minos_.__doc__ += '\n' + ROOT.RooMinimizer.minos.__doc__
     ROOT.RooMinimizer.     minos   = _rm_minos_ 
-    
 
+# =============================================================================
+## make 2D contours  in units of ``sigma''
+#  @code
+#  pdf    = ...
+#  minuit = pdf.minuit( ... )
+#  minuit.migrad() 
+#  contour = minuit.contour ( 'A' , 'B' ) 
+#  @endcode 
+def _rm_contour_ ( self                   ,
+                   var1                   ,
+                   var2                   ,
+                   npoints = 100          ,
+                   *levels                ) : 
+
+    """Make 2D contours  in uniys  of ``sigma''
+    >>> pdf    = ...
+    >>> minuit = pdf.minuit( ... )
+    >>> minuit.migrad() 
+    >>> contour = minuit.contour ( 'A' , 'B' ) 
+    """
     
+    assert isinstance ( npoints , integer_types ) and 2 < npoints ,\
+           'Invalid number of points %s' % npoints
+    
+    res  = self.save () 
+    if not isinstance ( var1 , ROOT.RooAbsReal ) : 
+        var1 = res.param ( var1 ) [ 1 ]
+    if not isinstance ( var2 , ROOT.RooAbsReal ) :         
+        var2 = res.param ( var2 ) [ 1 ] 
+            
+    n = 6 * [ 0.0 ]
+    for i , l in enumerate ( levels ) :
+        if len ( n ) <= i : break
+        ll = float ( l )
+        assert 0 <= l , 'Invalid level %s' % ll 
+        n [ i ] = ll  
+
+    return self._old_contour_ ( var1    , var2    ,
+                                n [ 0 ] , n [ 1 ] ,
+                                n [ 2 ] , n [ 3 ] ,
+                                n [ 4 ] , n [ 5 ] , npoints )
+
+
+if not hasattr ( ROOT.RooMinimizer , '_old_contour_' ) :
+    ROOT.RooMinimizer._old_contour_ = ROOT.RooMinimizer.contour 
+    _rm_contour_.__doc__ += '\n' + ROOT.RooMinimizer.contour.__doc__
+    ROOT.RooMinimizer. new_contour  = _rm_contour_ 
+    ROOT.RooMinimizer. contour      = _rm_contour_ 
+
 # =============================================================================
 ## some decoration over RooFitResult
 ROOT.RooFitResult . __repr__        = _rfr_print_
 ROOT.RooFitResult . __str__         = _rfr_print_
 ROOT.RooFitResult . __call__        = _rfr_param_
 ROOT.RooFitResult . __getattr__     = _rfr_getattr_ 
+ROOT.RooFitResult . __getitem__     = _rfr_getitem_ 
 ROOT.RooFitResult . __iter__        = _rfr_iter_
+ROOT.RooFitResult . __contains__    = _rfr_contains_
 ROOT.RooFitResult . iteritems       = _rfr_iteritems_
 ROOT.RooFitResult . dct_params      = _rfr_dct_params_
 ROOT.RooFitResult . parameters      = _rfr_params_
@@ -769,7 +913,7 @@ ROOT.RooFitResult . max_corr        = _rfr_max_cor_
 ROOT.RooFitResult . cov             = _rfr_cov_
 ROOT.RooFitResult . covariance      = _rfr_cov_
 ROOT.RooFitResult . cov_matrix      = _rfr_cov_matrix_
-ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_
+ROOT.RooFitResult . covmatrix       = _rfr_covmatrix_ 
 ROOT.RooFitResult . parValue        = lambda s,n : s.parameter(n)[0]
 ROOT.RooFitResult . sum             = _rfr_sum_
 ROOT.RooFitResult . plus            = _rfr_sum_
@@ -791,6 +935,7 @@ _new_methods_ += [
     ROOT.RooFitResult . __call__         ,
     ROOT.RooFitResult . __getattr__      ,
     ROOT.RooFitResult . __iter__         ,
+    ROOT.RooFitResult . __contains__     ,
     ROOT.RooFitResult . iteritems        ,
     ROOT.RooFitResult . parameters       ,
     ROOT.RooFitResult . params           ,
@@ -834,5 +979,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                     The END 
 # =============================================================================

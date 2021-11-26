@@ -72,15 +72,37 @@ namespace
 {
   // ==========================================================================
   /// check the specialization 
+  static_assert ( std::numeric_limits<long long> ::is_specialized     , 
+                  "std::numeric_limits<long long> is not specialized" ) ;
   static_assert ( std::numeric_limits<long> ::is_specialized     , 
                   "std::numeric_limits<long> is not specialized" ) ;
   static_assert ( std::numeric_limits<int>  ::is_specialized     , 
                   "std::numeric_limits<int>  is not specialized" ) ;
+  static_assert ( std::numeric_limits<short> ::is_specialized     , 
+                  "std::numeric_limits<short> is not specialized" ) ;
   // ==========================================================================
-  const double s_MAX_L =  0.1 + std::numeric_limits<long>::max () ;
-  const double s_MIN_L = -0.1 - std::numeric_limits<long>::max () ;
-  const double s_MAX_I =  0.1 + std::numeric_limits<int>::max  () ;
-  const double s_MIN_I = -0.1 - std::numeric_limits<int>::max  () ;
+  const double s_MAX_L  =  0.1 + std::numeric_limits<long>::max      () ;
+  const double s_MIN_L  = -0.1 - std::numeric_limits<long>::max      () ;
+  const double s_MAX_LL =  0.1 + std::numeric_limits<long long>::max () ;
+  const double s_MIN_LL = -0.1 - std::numeric_limits<long long>::max () ;
+  const double s_MAX_I  =  0.1 + std::numeric_limits<int>::max       () ;
+  const double s_MIN_I  = -0.1 - std::numeric_limits<int>::max       () ;
+  const double s_MAX_S  =  0.1 + std::numeric_limits<short>::max     () ;
+  const double s_MIN_S  = -0.1 - std::numeric_limits<short>::max     () ;
+  // ==========================================================================
+  static_assert ( std::numeric_limits<unsigned long long> ::is_specialized     , 
+                  "std::numeric_limits<unsigned long long> is not specialized" ) ;
+  static_assert ( std::numeric_limits<unsigned long>  ::is_specialized     , 
+                  "std::numeric_limits<long> is not specialized" ) ;
+  static_assert ( std::numeric_limits<unsigned int>   ::is_specialized     , 
+                  "std::numeric_limits<unsigned int>  is not specialized" ) ;
+  static_assert ( std::numeric_limits<unsigned short> ::is_specialized     , 
+                  "std::numeric_limits<unisgned short> is not specialized" ) ;
+  // ==========================================================================
+  const double s_MAX_UL  =  0.1 + std::numeric_limits<unsigned long>::max      () ;
+  const double s_MAX_ULL =  0.1 + std::numeric_limits<unsigned long long>::max () ;
+  const double s_MAX_UI  =  0.1 + std::numeric_limits<unsigned int>::max       () ;
+  const double s_MAX_US  =  0.1 + std::numeric_limits<unsigned short>::max     () ;
   // ==========================================================================
 }
 // ============================================================================
@@ -94,22 +116,9 @@ bool Ostap::Math::islong ( const double x )
   return 
     x <= s_MIN_L  ? false :
     x >= s_MAX_L  ? false :
-    lomont_compare_double ( x                        , 
-                            Ostap::Math::round ( x ) , 
-                            mULPS_double             ) ;
-}
-// ============================================================================
-/*  is the value actually long ?
- *  @author Vanya BELYAEV Ivan.Belyaev       
- *  @date 2011-07-18
- */
-// ============================================================================
-bool Ostap::Math::islong ( const float x ) 
-{
-  return 
-    x <= s_MIN_L  ? false :
-    x >= s_MAX_L  ? false :
-    lomont_compare_double ( x , round ( x ) , mULPS_float ) ;
+    lomont_compare_double ( x                   , 
+                            std::lround   ( x ) , 
+                            mULPS_double        ) ;
 }
 // ============================================================================
 /*  is the value actually int ?
@@ -136,6 +145,84 @@ bool Ostap::Math::isint ( const float x )
     x <= s_MIN_I  ? false :
     x >= s_MAX_I  ? false :
     lomont_compare_double ( x , round ( x ) , mULPS_float ) ;
+}
+// ============================================================================
+/*  is the value actually short int ?
+ */
+// ============================================================================
+bool Ostap::Math::isshort ( const double x ) 
+{
+  return 
+    x <= s_MIN_S  ? false :
+    x >= s_MAX_S  ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/*  is the value actually long long ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
+bool Ostap::Math::islonglong ( const double x ) 
+{
+  const long double x_ = x  ;
+  return 
+    x <= s_MIN_LL  ? false :
+    x >= s_MAX_LL  ? false :
+    lomont_compare_double ( x , std::llround ( x_ ) , mULPS_double ) ;
+}
+// ============================================================================
+/*  is the value actually unsigned int ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
+bool Ostap::Math::isuint ( const double x ) 
+{
+  const long double x_ = x  ;
+  return 
+    x <= -0.1      ? false :
+    x >= s_MAX_UI  ? false :
+    lomont_compare_double ( x , std::llround ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/*  is the value actually unsigned short int ?
+ */
+// ============================================================================
+bool Ostap::Math::isushort ( const double x ) 
+{
+  return 
+    x <= -0.1      ? false :
+    x >= s_MAX_US  ? false :
+    lomont_compare_double ( x , round ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/*  is the value actually unsigned long ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
+bool Ostap::Math::isulong ( const double x ) 
+{
+  const long double x_ = x  ;
+  return 
+    x <= -0.1      ? false :
+    x >= s_MAX_UL  ? false :
+    lomont_compare_double ( x , std::llround ( x ) , mULPS_double ) ;
+}
+// ============================================================================
+/*  is the value actually unisgned long long ?
+ *  @author Vanya BELYAEV Ivan.Belyaev       
+ *  @date 2011-07-18
+ */
+// ============================================================================
+bool Ostap::Math::isulonglong ( const double x ) 
+{
+  const long double x_ = x  ;
+  return 
+    x <= -0.1      ? false :
+    x >= s_MAX_ULL ? false :
+    lomont_compare_double ( x , std::llround ( x_ ) , mULPS_double ) ;
 }
 // ============================================================================
 /* check if the double value is actually equal to the integer value  

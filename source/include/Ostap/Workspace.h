@@ -4,6 +4,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// ROOT 
+// ============================================================================
+#include "RVersion.h"
+// ============================================================================
 namespace Ostap
 {
   // ==========================================================================
@@ -20,11 +24,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor
-      WorkSpace ( const std::size_t size  = 0 );
+      WorkSpace  ( const std::size_t size  = 0 ) ;
       /// (fictive) copy constructor
-      WorkSpace ( const WorkSpace&  right );
+      WorkSpace  ( const WorkSpace&  right ) ;
       /// move constructor 
-      WorkSpace (       WorkSpace&& right );
+      WorkSpace  (       WorkSpace&& right ) ;
       /// destructor
       ~WorkSpace () ;
       // ======================================================================
@@ -56,9 +60,10 @@ namespace Ostap
     private:
       // ======================================================================
       /// the actual GSL-workspace
-      // mutable char*  m_workspace ;  /// the actual GSL-workspace
+      /// mutable char*  m_workspace ;  /// the actual GSL-workspace
       // char* here to please dictionary generator...
-      mutable char* m_workspace  { nullptr } ; /// the actual GSL-workspace
+      /// mutable char* m_workspace  { nullptr } ; //! the actual GSL-workspace
+      mutable void* m_workspace  { nullptr } ; //! the actual GSL-workspace
       // ======================================================================
       /// size of the allocated workspace 
       std::size_t   m_size       { 0 } ;   /// size of the allocated workspace 

@@ -54,7 +54,11 @@ __all__     = (
     'KeepCanvas'         , ## context manager to keep the current ROOT canvas
     'InvisibleCanvas'    , ## context manager to use the invisible current ROOT canvas
     ##
-    'KeepArgs'           , ## context manager to keep sys.argv 
+    'KeepArgs'           , ## context manager to keep sys.argv
+    ##
+    'Wait'               , ## conitext manager to wait soem tiem bvefore and/or after action
+    ## 
+    'wait'               , ## conitext manager to wait soem tiem bvefore and/or after action 
     ##
     'ImplicitMT'         , ## context manager to enable/disable implicit MT in ROOT 
     ##
@@ -64,24 +68,59 @@ __all__     = (
     ##
     'which'              , ## which command (from shutil)
     ##
-    'gen_password'       , ## generate password/secret 
-   )
+    'gen_password'       , ## generate password/secret
+    ##
+    'vrange'             , ## helper loop over values between xmin and xmax
+    ## 
+    'log_range'          , ## helper loop over values between xmin and xmax in log
+    ## 
+    'lrange'             , ## helper loop over values between xmin and xmax in log
+    ##
+    'split_range'        , ## helper generator to splti large range into smaller chunks
+    ##
+    'chunked'            , ## break *iterable* into chunks of length *n*:
+    'divide'             , ## divide the elements from *iterable* into *n* parts
+    'grouper'            , ## collect data into fixed-length chunks or blocks"
+    ##
+    'make_iterable'      , ## create infinite or finite iterable 
+    ##
+    'checksum_files'     , ## get SHA512 sum for sequence of files
+    ##
+    'balanced'           , ## Simple utility to check balanced parenthesis/brackets, etc...
+    ##
+    'random_name'        , ## get some random name
+    'short_hash_name'    , ## get some short hash name
+    ##
+    'choices'            , ## `random.choiices` function 
+    )
+
 # =============================================================================
-import ROOT, time, os , sys ## attention here!!
-from   builtins            import range
+import ROOT, time, os , sys, math, time , random ## attention here!!
+from   builtins             import range
+from   itertools            import repeat, chain, islice 
+# =============================================================================
+from sys                    import version_info  as python_version 
+## timing stuff
+from ostap.utils.timing     import timing, timer
+## other useful stuff 
+from ostap.utils.basic      import isatty, with_ipython
+from ostap.core.ostap_types import integer_types 
+## ... and more useful stuff 
+from ostap.utils.memory     import memory, virtualMemory, Memory 
+# =============================================================================
+try :
+    from string import ascii_letters, digits 
+except ImportError :
+    from string import letters as ascii_letters
+    from string import digits
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.utils.utils' )
 else                       : logger = getLogger( __name__            )
 del getLogger
 # =============================================================================
-from sys                import version_info  as python_version 
-## timing stuff
-from ostap.utils.timing import timing, timer
-## other useful stuff 
-from ostap.utils.basic  import isatty, with_ipython
-## ... and more useful stuff 
-from ostap.utils.memory import memory, virtualMemory, Memory 
+## symbols for name generation 
+all_symbols = ascii_letters + digits 
 # =============================================================================
 ## @class Profiler
 #  Very simple profiler, based on cProfile module
@@ -327,13 +366,15 @@ class Batch(object) :
     ## contex manahger: ENTER
     def __enter__ ( self ) :
         import ROOT
-        self.old_state = ROOT.gROOT.IsBatch()
-        if self.old_state != self.__batch : ROOT.gROOT.SetBatch ( self.__batch ) 
+        groot = ROOT.ROOT.GetROOT()
+        self.old_state = groot.IsBatch()
+        if self.old_state != self.__batch : groot.SetBatch ( self.__batch ) 
         return self
     ## contex manager: EXIT
     def __exit__  ( self , *_ ) :
         import ROOT
-        if self.old_state != ROOT.gROOT.IsBatch() : ROOT.gROOT.SetBatch( self.old_state ) 
+        groot = ROOT.ROOT.GetROOT()
+        if self.old_state != groot.IsBatch() : groot.SetBatch( self.old_state ) 
 
 # =============================================================================
 ## context manager to keep ROOT ``batch'' state
@@ -354,38 +395,60 @@ def batch( batch = True ) :
 #  @code
 #  with KeepCWD ( new_dir ) :
 #    ....
-#  @endcode 
+#  @endcode
+#  - No action if no directory is specified 
 class KeepCWD(object) :
     """context manager to keep the current working directory
     >>> with KeepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
     def __init__ ( self , new_dir = '' ) :
-        self.cwd     = os.getcwd() 
-        self.new_dir = new_dir
         
+        self.__old_dir = os.getcwd ()
+        self.__new_dir = new_dir
+
+    ## ENTER : context mamager 
     def __enter__ (  self ) :
-        self.cwd = os.getcwd() 
-        if self.new_cdir and os.path.exists ( self.new_dir ) and os.path.isdir ( self.new_dir ) :
-            os.chdir ( self.new_dir )
-            return self
         
-    def __exit__ ( self , *_ ) :
-        if os.path.exists ( self.cwd ) and os.path.isdir ( self.cwd ) :
-            os.chdir ( os.cwd ) 
+        self.__old_dir = os.getcwd()
+        
+        if   self.new_dir :
+            os.chdir ( self.new_dir )
             
+        return self
+        
+    ## EXIT : context mamager 
+    def __exit__ ( self , *_ ) :
+        
+        if os.path.exists ( self.old_dir ) and os.path.isdir ( self.old_dir ) :
+            os.chdir ( self.old_dir )
+            
+    @property
+    def old_dir ( self ) :
+        """``old_dir'' : old working directory"""
+        return self.__old_dir
+
+    @property
+    def new_dir ( self ) :
+        """``new_dir'' : new current working directory"""
+        return self.__new_dir 
+
+    
 # =============================================================================
 ## context manager to keep the current working directory
 #  @code
 #  with keepCWD ( new_dir ) :
 #    ....
 #  @endcode 
+#  - No action if no directory is specified 
 def keepCWD ( new_dir = '' ) :
-    """context manager to keep the current working directory
+    """Context manager to keep the current working directory
     >>> with keepCWD( new_dir ) :
     ...
+    - No action if no directory is specified 
     """
-    return KeepCWD (  new_dir ) 
+    return KeepCWD ( new_dir ) 
         
 # =============================================================================
 ## @class KeepCanvas
@@ -399,13 +462,21 @@ class KeepCanvas(object) :
     >>> with KeepCanvas() :
     ... do something here 
     """
+    def __init__ ( self ) :
+        self.__old_canvas  = None 
     def __enter__ ( self ) :
-        import ROOT 
-        self.canvas = ROOT.gPad
+        import ROOT
+        cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None 
+        self.__old_canvas = cnv if cnv else None 
     def __exit__  ( self , *_ ) :
-        if self.canvas:
-            self.canvas.cd()
-
+        if self.__old_canvas:
+            self.__old_canvas.cd()
+        self.__old_canvas = None             
+    @property
+    def old_canvas ( self ) :
+        """``old_canvas'': canvas to be preserved"""
+        return self.__old_canvas
+    
 # =============================================================================
 #  Keep the current canvas
 #  @code
@@ -501,6 +572,50 @@ def keepArgs() :
     """
     return KeepArgs()
 
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with Wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+class Wait(object):
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with Wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """
+    def __init__ ( self , after = 0 , before = 0 ) :
+        self.__after  = after
+        self.__before = before 
+
+    def __enter__ ( self ) :
+        if 0 < self.__before :
+            time.sleep  ( self.__before ) 
+    def __exit__ ( self , *_ ) :
+        if 0 < self.__after :
+            time.sleep  ( self.__after  ) 
+    @property
+    def before ( self ) :
+        """``before'': wait some time before the action"""
+        return self.__before
+    
+    @property
+    def after  ( self ) :
+        """``after'': wait some time after the action"""
+        return self.__after
+
+# =============================================================================
+## context manager that invokes <code>time.sleep</code> before and after action
+#  @code
+#  with wait ( after = 5 , before = 0 ) :
+#  ...
+#  @endcode
+def wait ( after = 0 , before = 0 ) :
+    """Context manager that invokes <code>time.sleep</code> before and after action
+    >>> with wait ( after = 5 , before = 0 ) :
+    >>> ...
+    """    
+    return Wait  (after = after , before = before )
 
 # =============================================================================
 ## EnableImplicitMT
@@ -694,53 +809,479 @@ def cmd_exists ( command ) :
     """
     return which ( command ) is not None
 
-## return any( os.access ( os.path.join ( path , command  ) , os.X_OK ) for path in os.environ["PATH"].split(os.pathsep) )
+# =============================================================================
+## @class VRange
+#  Helper looper over the values between vmin and vmax :
+#  @code
+#  for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class VRange(object) :
+    """Helper looper over the values between vmin and vmax :
+    >>> for v in VRange ( vmin = 0 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert isinstance ( n , integer_types ) and 0 < n,\
+               'VRange: invalid N=%s/%s' % ( n  , type ( n ) ) 
+        
+        self.__vmin = vmin
+        self.__vmax = vmax
+        self.__n    = n 
+
+    @property
+    def vmin  ( self ) :
+        """``vmin'' : minimal value"""
+        return self.__vmin
+    @property
+    def vmax  ( self ) :
+        """``vmax'' : maximal value"""
+        return self.__vmax    
+    @property
+    def n ( self )  :
+        """``n'' : number of steps"""
+        return self.__n
+
+    def __len__     ( self ) : return self.__n + 1
+    def __iter__    ( self ) :
+        
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield self.vmin * f1 + f2 * self.vmax
+                
+# =============================================================================
+## loop over values between xmin and xmax 
+#  @code
+#  for x in vrange ( xmin , xmax , 200 ) :
+#         print (x) 
+#  @endcode
+def vrange ( vmin , vmax , n = 100 ) :
+    """ Loop  over range of values between xmin and xmax 
+    >>> for v in vrange ( vmin , vmax , 200 ) :
+    ...                print (v) 
+    """
+    return VRange ( vmin , vmax , n )
 
 
 # =============================================================================
-## loop over values between x_min and x_max 
+## @class LRange
+#  Helper looper over the values between vmin and vmax using log-steps 
 #  @code
-#  for x in vrange ( x_min , x_max , 200 ) :
+#  for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+#  ... print ( v ) 
+#  @endcode 
+class LRange(VRange) :
+    """Helper looper over the values between vmin and vmax using log-steps
+    >>> for v in LRange ( vmin = 1 , vmax = 5 , n = 100 ) :
+    >>> ... print ( v ) 
+    """
+    def __init__ ( self , vmin , vmax , n = 100 ) :
+        
+        assert 0 < vmin  and 0 < vmax,\
+           'LRange: invalid  non-positive vmin/ymax values: %s/%s' %  ( vmin , vmax )
+
+        super ( LRange , self ).__init__ ( vmin , vmax , n ) 
+
+        self.__lmin = math.log10 ( self.vmin )
+        self.__lmax = math.log10 ( self.vmax )
+                
+    @property
+    def lmin  ( self ) :
+        """``lmin'' : log10(minimal value)"""
+        return self.__lmin
+    @property
+    def lmax  ( self ) :
+        """``lmax'' : log10(maximal value)"""
+        return self.__lmax    
+
+    def __iter__    ( self ) :
+
+        n  = self.n 
+        fn = 1.0 / float ( n ) 
+        for i in range ( n + 1 ) :
+            #
+            if   0 == i : yield self.vmin
+            elif n == i : yield self.vmax
+            else        :
+                f2 = i * fn
+                f1 = 1 - f2
+                yield 10.0 ** ( self.__lmin * f1 + f2 * self.__lmax ) 
+            
+# =============================================================================
+## loop over values between xmin and xmax in log-scale 
+#  @code
+#  for x in log_range ( xmin , xmax , 200 ) :
 #         print (x) 
 #  @endcode
-def vrange ( x_min , x_max , n = 100 ) :
-    """ Loop  over range of values betwene x_min and x_max 
-    >>> for x in vrange ( x_min , x_max , 200 ) :
-    ...                print (x) 
+def log_range ( vmin , vmax , n = 100 ) :
+    """Loop over values between xmin and xmax in log-scale 
+    >>> for x in log_range ( xmin , xmax , 200 ) :
+    >>>      print (x) 
     """
-    assert isinstance ( n , int ) and 0 < n, 'Invalid N=%s/%s' % ( n  , type ( n ) ) 
+    return LRange ( vmin , vmax , n )
 
-    fn = 1.0 / float ( n ) 
-    for i in range ( n + 1 ) :
-        #
-        if   0 == i : yield x_max
-        elif n == i : yield x_min
-        else        :
-            f2 = i * fn
-            f1 = 1 - f2
-            yield  x_min * f1 + f2 * x_max 
+# =============================================================================
+## loop over values between xmin and xmax in log-scale 
+#  @code
+#  for v in lrange ( vmin , vmax , 200 ) : ## ditto 
+#         print (v) 
+#  @endcode
+def lrange ( vmin , vmax , n = 100 ) :
+    """:oop over values between vmin and vmax in log-scale 
+    >>> for v in lrange ( vmin , vmax , 200 ) :  ## ditto 
+    >>>      print (v) 
+    """
+    return LRange ( vmin , vmax , n )
 
+# =============================================================================
+## split range into smaller chunks:
+#  @code
+#  for i in split_range ( 0 , 10000 , 200 ) :
+#     for j in range (*i) :
+#          ... 
+#  @endcode 
+def split_range ( low , high , num ) :
+    """Split range into smaller chunks:
+    >>> for i in split_range ( 0 , 10000 , 200 ) :
+    >>>     for j in range (*i) :
+    >>>         ... 
+    """
+    if high <= low or num < 1 :
+        
+        yield low , low 
+        
+    else : 
+        
+        next = low + num 
+        while next < high :
+            yield low , next
+            low   = next
+            next += num 
+            
+        yield low , high
+
+# =============================================================================
+if (3,6) <= sys.version_info :
+    
+    choices = random.choices
+    
+else :
+    
+    def choices ( population , weights = None , cum_weights = None , k = 1 ) :
+        """ Simple variant of `random.choice`
+        """
+        assert weights is None and cum_weights is None,\
+               "choices: Neither ``weigths'' nor ``cum_weights'' are supported!"
+        
+        return [ random.choice ( population ) for i in range ( k ) ] 
+    
+# ========================================================================================
+## Generate some random name of given name
+#  @code
+#  name = random_name ( 5 ) 
+#  @endcode 
+def random_name ( size ) :
+    """Generate some random name of given name 
+    >>> name = random_name ( 5 )
+    """
+    assert 1 <= size , 'random_name: invalid size!'
+
+    first = random.choice  ( ascii_letters ) 
+    if 1 == size : return first
+    
+    return first  + ''.join ( choices ( sll_symbols , k = size - 1 ) ) 
+
+# ========================================================================================
+## generate some pseudo-random 6-symbol name from provided hash sources 
+def short_hash_name ( size , name , *names ) :
+    """generate some pseudo-random 6-symbol name from provided hash sources
+    """
+
+    size = max ( min ( size , 8 ) , 4 ) 
+
+    h = size , hash ( tuple ( ord ( i ) for i in name ) )
+    h = hash ( h ) 
+                   
+    for n in names :
+
+        h = h , hash ( tuple ( ord ( i ) for i in n ) )
+        h = hash ( h ) 
+        
+    h = abs ( h ) % ( 2 ** ( 4 * size ) )
+    
+    return ( '%%0%dx' % size ) % h 
+    
 # =============================================================================
 ## Generate the random string, that can be used as password or secret word
 #  @code
 #  password = gen_password () 
 #  @endcode 
-def gen_password ( len = 12 ) :
+def gen_password ( size = 12 ) :
     """Generate the random string, that can be used as password or secret word
     >>> password = gen_password () 
     """
-    import random , string
-    symbols = string.ascii_letters + string.digits
+    import random
     ## save random state 
     state = random.getstate ()
     ## reset the random seed
     random.seed ()
     ## generate the password 
-    result = ''.join ( random.choice ( symbols ) for i in range ( len ) )
+    result = ''.join ( choices ( all_symbols , k = size ) ) 
     ## restore the random state 
     random.setstate ( state )
     ## 
     return result
+
+
+# =============================================================================
+
+try :
+    
+    from more_itertools import chunked, divide 
+    
+except ImportError :
+    
+    from itertools import islice
+    from functools import partial
+    
+    # =========================================================================
+    ## Return first *n* items of the iterable as a list
+    #  @code 
+    #  take(3, range(10))  ## [0, 1, 2]
+    #  take(5, range(3))   ## [0, 1, 2]
+    #  @endcode
+    #
+    #  The function is copied from <code>more_itertools</code> 
+    def take(n, iterable):
+        """Return first *n* items of the iterable as a list.
+        
+        >>> take(3, range(10))
+        [0, 1, 2]
+        >>> take(5, range(3))
+        [0, 1, 2]
+        
+        Effectively a short replacement for ``next`` based iterator consumption
+        when you want more than one item, but less than the whole iterator.
+        
+        - the function is copied from `more_itertools`
+        """
+        return list(islice(iterable, n))
+    
+    # =========================================================================
+    ## Break *iterable* into lists of length *n*:
+    #  @code
+    #  list(chunked([1, 2, 3, 4, 5, 6], 3)) ## [[1, 2, 3], [4, 5, 6]]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, the last
+    #  returned list will be shorter:
+    #  @code 
+    #  list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3)) ## [[1, 2, 3], [4, 5, 6], [7, 8]]
+    #  @endcode 
+    #  <code>chunked</code> is useful for splitting up a computation on a large number
+    #  of keys into batches, to be pickled and sent off to worker processes. One
+    #  example is operations on rows in MySQL, which does not implement
+    #  server-side cursors properly and would otherwise load the entire dataset
+    #  into RAM on the client.
+    # 
+    #  The function is copied from <code>more_itertools</code>
+    def chunked(iterable, n):
+        """Break *iterable* into lists of length *n*:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6], 3))
+        [[1, 2, 3], [4, 5, 6]]
+        
+        If the length of *iterable* is not evenly divisible by *n*, the last
+        returned list will be shorter:
+        
+        >>> list(chunked([1, 2, 3, 4, 5, 6, 7, 8], 3))
+        [[1, 2, 3], [4, 5, 6], [7, 8]]
+        
+        To use a fill-in value instead, see the :func:`grouper` recipe.
+        
+        :func:`chunked` is useful for splitting up a computation on a large number
+        of keys into batches, to be pickled and sent off to worker processes. One
+        example is operations on rows in MySQL, which does not implement
+        server-side cursors properly and would otherwise load the entire dataset
+        into RAM on the client.
+        
+        - the function is copied from `more_itertools`
+        """
+        return iter(partial(take, n, iter(iterable)), [])
+
+    # =========================================================================
+    ## Divide the elements from *iterable* into *n* parts, maintaining order.
+    #  @code 
+    #  >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+    #  >>> list(group_1)
+    #  ...    [1, 2, 3]
+    #  >>> list(group_2)
+    #  ... [4, 5, 6]
+    #  @endcode
+    #  If the length of *iterable* is not evenly divisible by *n*, then the
+    #  length of the returned iterables will not be identical:
+    #  @code 
+    #  >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+    #  >>> [list(c) for c in children]
+    #  ... [[1, 2, 3], [4, 5], [6, 7]]
+    #  @endcode
+    # 
+    # If the length of the iterable is smaller than n, then the last returned
+    # iterables will be empty:
+    # @code
+    # >>> children = divide(5, [1, 2, 3])
+    # >>> [list(c) for c in children]
+    # ... [[1], [2], [3], [], []]
+    # @endcode
+    # 
+    # This function will exhaust the iterable before returning and may require
+    # significant storage. If order is not important, see :func:`distribute`,
+    # which does not first pull the iterable into memory.
+    #
+    # The function is copied from <code>more_itertools</code>
+    def divide ( n , iterable):
+        """Divide the elements from *iterable* into *n* parts, maintaining
+        order.
+        
+        >>> group_1, group_2 = divide(2, [1, 2, 3, 4, 5, 6])
+        >>> list(group_1)
+        [1, 2, 3]
+        >>> list(group_2)
+        [4, 5, 6]
+        
+        If the length of *iterable* is not evenly divisible by *n*, then the
+        length of the returned iterables will not be identical:
+        
+        >>> children = divide(3, [1, 2, 3, 4, 5, 6, 7])
+        >>> [list(c) for c in children]
+        [[1, 2, 3], [4, 5], [6, 7]]
+        
+        If the length of the iterable is smaller than n, then the last returned
+        iterables will be empty:
+        
+        >>> children = divide(5, [1, 2, 3])
+        >>> [list(c) for c in children]
+        [[1], [2], [3], [], []]
+        
+        This function will exhaust the iterable before returning and may require
+        significant storage. If order is not important, see :func:`distribute`,
+        which does not first pull the iterable into memory.
+        
+        - the function is copied from `more_itertools`
+        """
+        if n < 1:
+            raise ValueError('n must be at least 1')
+
+        seq = tuple(iterable)
+        q, r = divmod(len(seq), n)
+        
+        ret = []
+        for i in range(n):
+            start = (i * q) + (i if i < r else r)
+            stop = ((i + 1) * q) + (i + 1 if i + 1 < r else r)
+            ret.append(iter(seq[start:stop]))
+            
+        return ret
+
+# =============================================================================
+if ( 3 , 0 ) <= python_version :
+    from itertools import zip_longest
+else :
+    from itertools import izip_longest as zip_longest
+
+# =============================================================================
+## Collect data into fixed-length chunks or blocks"
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
+
+# =============================================================================
+## Create iterable from other iterable or non-iterable
+#  @code
+#  for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+#  for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+#  @endcode 
+def make_iterable ( what , default = None , size = -1 ) :
+    """Create infinite iterable from other iterable or no-iterable
+    >>> for a,b in zip ( 'abcde' , make_iterable ( 1 ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] ) ) : ...
+    >>> for a,b in zip ( 'abcde' , make_iterable ( [1,2,3] , 0 , 2 ) ) : ...
+    """
+    from   ostap.core.ostap_types import iterable_types
+
+    if not isinstance ( what , iterable_types ) : what = what, 
+
+    ## make infinite iterable 
+    result = chain ( what , repeat ( default ) )
+
+    ## cut it, if needed 
+    return result if size < 0 else islice ( result , size )
+
+# =============================================================================
+## calculate SHA512-checksum for the files
+#  @see hashlib
+#  @see hashlib.sha512
+#  @code
+#  s =  checksum_files ( 'a.txt', 'b.bin' ) 
+#  @endcode
+#  Non-existing files are ignored 
+#  @param files  list of filenames
+#  @return checksum for these files 
+def checksum_files ( *files ) :
+    """Calculate SHA512-checksum for the files
+    >>> s =  checksum_files ( 'a.txt', 'b.bin' ) 
+    Non-existing files are ignored 
+    - see `hashlib`
+    - see `hashlib.sha512`
+    """
+    import hashlib
+    hash_obj = hashlib.sha512 ()
+    for fname in files :
+        if os.path.exists ( fname ) and os.path.isfile ( fname ) : 
+            with open ( fname , "rb" ) as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash_obj.update(chunk)
+                    
+    return hash_obj.hexdigest()
+
+# =============================================================================
+## Simple utility to check balanced parenthesis/brackets, etc...
+#  @code
+#  expression = ' .... '
+#  ok = balanced ( expression ) 
+#  @encode 
+def  balanced ( expression , left = '([' , right = ')]' ) :
+    """Simple utility to check balanced parenthesis/brackets, etc...
+    >>> expression = ' .... '
+    >>> ok = balanced ( expression ) 
+    """
+    
+    assert left and len(left) == len ( right ) ,\
+           'balanced: invalid left/right arguments!'
+    
+    stack = []
+    for i in expression :
+        if   i in left  : stack.append ( i )
+        elif i in right :
+            pos = right.index ( i )
+            if stack  and  left[ pos ] == stack [ -1 ] :
+                stack.pop()
+            else :
+                return False
+
+    return True if not stack else False 
+
+
 
 # =============================================================================
 if '__main__' == __name__ :
@@ -751,5 +1292,5 @@ if '__main__' == __name__ :
     logger.info ( 80*'*' ) 
             
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

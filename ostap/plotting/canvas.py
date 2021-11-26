@@ -14,18 +14,26 @@ __date__    = "2014-10-19"
 __version__ = '$Revision$'
 __all__     = (
     'getCanvas'        , ## get/create canvas 
-    'getCanvases'      , ## get all created canvases 
+    'getCanvases'      , ## get all existing canvases 
     'canvas_partition' , ## split canvas into several pads with no space between pads 
     'canvas_pull'      , ## split canvas into two pads with no vertical interspace
     'draw_pads'        , ## plot sequence of object on sequence of pads, adjustinng axis label size
     'AutoPlots'        , ## context manager to activate the auto-plotting machinery
-    'auto_plots'       , ## ditto, but as function 
+    'auto_plots'       , ## ditto, but as function
+    'use_pad'          , ## context manager to modifty TPad
+    'KeepCanvas'       , ## context manager to keep/preserve currect canvas 
+    'keepCanvas'       , ## context manager to keep/preserve currect canvas 
+    'Canvas'           , ## context manager to create currect canvas
+    'use_canvas'       , ## context manager to create currect canvas
     )
 # =============================================================================
-import ROOT, os, tempfile  
+import ROOT, os, tempfile, math   
 import ostap.core.core
 import ostap.plotting.style
 from   sys import version_info as python_version
+from   ostap.utils.cidict import cidict
+from   ostap.utils.utils  import KeepCanvas, keepCanvas 
+from   ostap.core.core    import cidict_fun
 # =============================================================================
 # logging 
 # =============================================================================
@@ -33,12 +41,11 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger( 'ostap.plotting.canvas' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
-_canvases = {}
-# =============================================================================
 from ostap.plotting.makestyles import  ( canvas_width , canvas_height ,
                                          margin_left  , margin_right  ,
                                          margin_top   , margin_bottom )
 
+_canvases = [] 
 # =============================================================================
 ## get the canvas
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -51,23 +58,40 @@ def getCanvas ( name   = 'glCanvas'    ,   ## canvas name
     
     >>> cnv = getCanvas ( 'glnewCanvas' , width = 1200 , height = 1000 )
     """
-    cnv   = _canvases.get ( name , None )
-    if not cnv :
-        ## create new canvas 
-        ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
-        cnv  = ROOT.TCanvas ( name , 'Ostap' , width , height )
-        ## adjust newly created canvas
-        ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
-        if not ROOT.gROOT.IsBatch() :
-            dw = width  - cnv.GetWw()
-            dh = height - cnv.GetWh()
-            cnv.SetWindowSize ( width + dw , height + dh )
-            
-        ## 
-        _canvases [ name ] = cnv
-        
+    if not name : name = 'glCanvas'
+
+    cnvlst = ROOT.gROOT.GetListOfCanvases()
+    cnv    = cnvlst.get ( name , None ) 
+    if cnv and isinstance ( cnv , ROOT.TCanvas ) :
+        _canvases.append ( cnv ) 
+        return cnv 
+
+    ## create new canvas
+    mx    = max ( 100 , int ( math.floor ( 0.85 * width  ) ) + 1 )
+    my    = max ( 100 , int ( math.floor ( 0.70 * height ) ) + 1 )
+    
+    wtopx = int ( ( 30 * len ( cnvlst ) ) % mx )
+    wtopy = int ( ( 25 * len ( cnvlst ) ) % my ) 
+
+    ## cnv  = ROOT.TCanvas ( 'glCanvas', 'Ostap' , width , height )
+    cnv  = ROOT.TCanvas ( name , title , wtopx , wtopy , width , height )
+    ## adjust newly created canvas
+    ## @see http://root.cern.ch/root/html/TCanvas.html#TCanvas:TCanvas@4
+    groot = ROOT.ROOT.GetROOT() 
+    if not groot.IsBatch() :
+        dw = width  - cnv.GetWw()
+        dh = height - cnv.GetWh()
+        cnv.SetWindowSize ( width + dw , height + dh )
+                
+    _canvases.append ( cnv ) 
     return cnv
 
+# =============================================================================
+import atexit
+@atexit.register 
+def clean_canvases () :
+    while _canvases : _canvases.pop()
+    
 # =============================================================================
 all_extensions = (
     'pdf'  , 'png'  , 'gif' ,
@@ -104,8 +128,12 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     cnv.Update () 
     from ostap.logger.utils import rootWarning
     n , e  = os.path.splitext ( fname )
-    el = e.lower() 
-    if n and el in all_extensions : 
+
+    
+    el = e.lower()
+    if el.startswith('.') : el = el[1:]
+    
+    if n and el and ( el in all_extensions ) : 
         with rootWarning () :
             cnv.Update   () 
             cnv.Print    ( fname )
@@ -115,8 +143,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     if n and el in ( 'tgz' , 'gztar' , 'targz' , 'tar' ,
                      'zip' ,
                      'tbz' , 'tbz2'  , 'tarbz' , 'tarbz2' , 'bztar' , 'bz2tar' ,                     
-                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar') :
-        
+                     'txz' , 'tlz'   , 'tarxz' , 'tarlz'  , 'xztar' , 'lztar'  ) :            
         files = [] 
         for ext in exts :
             with rootWarning () :
@@ -245,7 +272,7 @@ class AutoPlots ( object ) :
                 directory = None
                 
         if not directory :
-            directory = tempfile.mkdtemp ( prefix = 'plots_' )
+            directory = tempfile.mkdtemp ( prefix = 'ostap-plots-' )
             logger.info ( 'AutoPlots: use directory "%s"' % directory ) 
 
         ## check the validity of pattern
@@ -306,7 +333,10 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
 
         if ROOT.gPad :
             plot = AutoPlots.plot()
-            if plot : ROOT.gPad >> plot
+            if plot :
+                cnv = ROOT.gPad.GetCanvas ()
+                if cnv : 
+                    cnv >> plot
             
         return result
     
@@ -320,16 +350,9 @@ if not hasattr ( ROOT.TObject , 'draw_with_autoplot' ) :
 # =============================================================================
 ## get all known canvases 
 def getCanvases () :
-    """ Get all known canvases """ 
-    return _canvases.keys() 
-
-def _remove_canvases_() :
-    keys = list( _canvases.keys() )
-    for k in keys : del _canvases[k]
-        
-import atexit
-atexit.register ( _remove_canvases_ )
-
+    """ Get all known canvases """
+    
+    return tuple ( ( c.GetName() for c in ROOT.gROOT.GetListOfCanvases() if  ( c and isintance ( c , ROOT.TCanvas ) ) ) ) 
 # =============================================================================
 
 # =============================================================================
@@ -353,7 +376,7 @@ def canvas_partition ( canvas                        ,
                        left_margin   = margin_left   , 
                        right_margin  = margin_right  , 
                        bottom_margin = margin_bottom , 
-                       top_margin    = margin_right  ,
+                       top_margin    = margin_top    ,
                        hSpacing      = 0.0           ,
                        vSpacing      = 0.0           ) :
     """Perform partition of Canvas into pads with no inter-margins
@@ -464,7 +487,8 @@ def canvas_partition ( canvas                        ,
 
             canvas.cd(0)
             pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
-            pad   = ROOT.gROOT.FindObject ( pname )
+            groot = ROOT.ROOT.GetROOT()
+            pad   = groot.FindObject ( pname )
             if pad : del pad
             pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
 
@@ -605,7 +629,8 @@ def canvas_vsplit ( canvas                        ,
             
         canvas.cd ( 0 )
         pname = 'glPad_%s_%d_%d' % ( canvas.GetName() , ix , iy )
-        pad   = ROOT.gROOT.FindObject ( pname )
+        groot = ROOT.ROOT.GetROOT()
+        pad   = groot.FindObject ( pname )
         if pad : del pad
         pad   = ROOT.TPad ( pname , '' ,  hposl , vposd  , hposr , vposu )
         
@@ -684,7 +709,6 @@ def draw_pads ( objects            ,
     >>> frames = ...
     >>> draw_pads ( frames , pads , fontsize = 25 ) 
     """
-
     assert isinstance  ( fontsize , int ) and 5 < fontsize , 'Invalid fontsize %s [pixels] ' % fontsize
     
     for obj , pad_ in zip ( objects , pads ) : 
@@ -738,8 +762,242 @@ def draw_pads ( objects            ,
         obj.draw ()
         
         if c : c.cd(0)
+
+# =============================================================================
+## change main parametes of TAttPad
+def set_pad ( pad , **config ) :
+    """Change main parametes of `TAttPad`"""
+
+    conf = cidict ( transform = cidict_fun )
+    conf.update ( config )
+
+    changed = {}
+
+    if 'frame_border_mode' in conf :
+        changed[ 'frame_border_mode' ] = pad.GetFrameBorderMode()
+        pad.SetFrameBorderMode ( conf.pop ('frame_border_mode') )
+
+    if 'frame_border_size' in conf :
+        changed[ 'frame_border_size' ] = pad.GetFrameBorderSize ()
+        pad.SetFrameBorderSize ( conf.pop ('frame_border_size') )
         
+    if 'frame_fill_color' in conf :
+        changed[ 'frame_fill_color' ] = pad.GetFrameFillColor ()
+        pad.SetFrameFillColor ( conf.pop ('frame_fill_color') )
+
+    if 'frame_fill_style' in conf :
+        changed[ 'frame_fill_style' ] = pad.GetFrameFillStyle ()
+        pad.SetFrameFillStyle ( conf.pop ('frame_fill_style') )
+
+    if 'frame_line_color' in conf :
+        changed[ 'frame_line_color' ] = pad.GetFrameLineColor ()
+        pad.SetFrameLineColor ( conf.pop ('frame_line_color') )
+
+    if 'frame_line_style' in conf :
+        changed[ 'frame_line_style' ] = pad.GetFrameLineStyle ()
+        pad.SetFrameLineStyle ( conf.pop ('frame_line_style') )
+
+    if 'frame_line_width' in conf :
+        changed[ 'frame_line_width' ] = pad.GetFrameLineWidth ()
+        pad.SetFrameLineWidth ( conf.pop ('frame_line_width') )
+
+    if 'a_file' in conf :
+        changed[ 'a_file' ] = pad.GetAfile ()
+        pad.SetAfile ( conf.pop ('a_file') )
+
+    if 'a_stat' in conf :
+        changed[ 'a_stat' ] = pad.GetAstat ()
+        pad.SetAstat ( conf.pop ('a_stat') )
+
+    if 'x_file' in conf :
+        changed[ 'x_file' ] = pad.GetXfile ()
+        pad.SetXfile ( conf.pop ('x_file') )
+
+    if 'x_stat' in conf :
+        changed[ 'x_stat' ] = pad.GetXstat ()
+        pad.SetXstat ( conf.pop ('x_stat') )
+
+    if 'y_file' in conf :
+        changed[ 'y_file' ] = pad.GetYfile ()
+        pad.SetYfile ( conf.pop ('y_file') )
+
+    if 'y_stat' in conf :
+        changed[ 'y_stat' ] = pad.GetYstat ()
+        pad.SetYstat ( conf.pop ('y_stat') )
+
+    
+    if 'top_margin' in conf or 'margin_top' in conf :                
+        changed ['margin_top']  = pad.GetTopMargin()
+        if 'top_margin' in conf    : pad.SetTopMargin    ( conf.pop ( 'top_margin'   ) )
+        else                       : pad.SetTopMargin    ( conf.pop ( 'margin_top'   ) )
         
+    if 'bottom_margin' in conf or 'margin_bottom' in conf :            
+        changed ['margin_bottom']  = pad.GetBottomMargin()
+        if 'bottom_margin' in con  : pad.SetBottomMargin ( conf.pop ( 'bottom_margin' ) )
+        else                       : pad.SetBottomMargin ( conf.pop ( 'margin_bottom' ) ) 
+        
+    if 'left_margin' in conf or 'margin_left' in conf :                
+        changed ['margin_left']  = pad.GetLeftMargin()
+        if 'left_margin' in conf   : pad.SetLeftMargin   ( conf.pop ( 'left_margin'   ) )
+        else                       : pad.SetLeftMargin   ( conf.pop ( 'margin_left'   ) )
+        
+    if 'right_margin' in conf or 'margin_right' in conf :                
+        changed ['margin_right']  = pad.GetRightMargin()
+        if 'right_margin' in conf  : pad.SetRightMargin  ( conf.pop ( 'right_margin'  ) )
+        else                       : pad.SetRightMargin  ( conf.pop ( 'margin_right'  ) )
+        
+    if conf :
+        logger.warning ("set_pad: unprocessed items: %s" % conf ) 
+
+    return changed 
+    
+# =============================================================================
+## helper context manager for <code>TAttPad</code> objects
+#  @see TAttPad 
+class UsePad(object) :
+    """Helper context manager for `TAttPad` objects
+    - see `TAttPad`
+    """
+
+    def  __init__ ( self , pad = None , **config ) :
+
+        self.__pad     = pad if ( pad and isinstance ( pad , ROOT.TAttPad ) ) else None 
+        self.__config  = config
+        self.__changed = {} 
+        
+    def __enter__ ( self ) :
+            
+        if not self.__pad and ROOT.gPad : self.__pad = ROOT.gPad
+        
+        if self.pad : 
+            self.__changed = set_pad ( self.pad , **self.config )
+
+        return self 
+        
+    def __exit__ ( self , *_ ) :
+
+        if self.pad and self.changed :
+            set_pad ( self.pad , **self.changed )
+
+    @property
+    def pad ( self ) :
+        """``pad'' : pad to be configured"""
+        return self.__pad
+    
+    @property
+    def config ( self ) :
+        """``config'' : cofiguration pad to be"""
+        return self.__config
+
+    @property
+    def changed ( self ) :
+        """``changed'' : changed parameters"""
+        return self.__changed
+    
+# =============================================================================
+## helper context manager to modify <code>TAttPad</code>
+#  @see TAttPad 
+def use_pad ( pad , **config ) :
+    """Helper context manager for `TAttPad` objects
+    - see `TAttPad`
+    """
+    return UsePad ( pad , **config ) 
+
+usePad = use_pad
+
+
+
+
+# =============================================================================
+## @class Canvas
+#  helper context manager to create and configure a canvas (and pad)
+#  @code
+#  with Canvas ( title = 'Canvas #2' , width = 1000 ) :
+#  ... 
+#  @endcode
+class Canvas(KeepCanvas) :
+    """Helper context manager to create and configure a canvas (and pad)
+    >>> with Canvas ( title = 'Canvas #2' , width = 1000 ) :
+    >>> ... 
+    """
+    def __init__ ( self                   ,
+                   name   = ''            ,
+                   title  = ''            ,
+                   width  = canvas_width  ,   ## canvas width
+                   height = canvas_height ,   ## canvas height 
+                   **kwargs               ) : ## Pad configuration
+        
+        self.__name   = name
+        self.__title  = title 
+        self.__width  = width
+        self.__height = height
+        self.__kwargs = kwargs
+        self.__cnv    = None 
+        ## 
+        KeepCanvas.__init__ ( self ) 
+        
+    ## context manager: exit 
+    def __enter__ ( self ) :
+
+        ## 1) use context manager 
+        KeepCanvas.__enter__ ( self )
+
+        if not self.__name :
+            cnvlst = ROOT.gROOT.GetListOfCanvases() 
+            self.__name = 'gl_canvas#%d' % len ( cnvlst )
+            while self.__name in cnvlst : 
+                h = self.__name , title , width , height , len ( cnvlst ) 
+                self.__name = 'gl_canvas#%d' % hash ( h ) 
+                
+        if not self.__title :
+            self.__title = self.__name
+
+        ## 2) create/use new canvas 
+        self.__cnv = getCanvas ( name   = self.__name   ,
+                                 title  = self.__title  ,
+                                 width  = self.__width  ,
+                                 height = self.__height )
+        
+        self.__name  = self.__cnv.GetName  () 
+        self.__title = self.__cnv.GetTitle () 
+
+        ## 3) make it active 
+        self.__cnv.cd() 
+
+        ## 4) apply pad settings
+        if self.__kwargs :
+            set_pad ( ROOT.gPad , **self.__kwargs ) 
+            
+        return self.__cnv  ## return current canvas 
+    
+    ## context manager: exit 
+    def __exit__ ( self , *_ ) :
+        KeepCanvas.__exit__ ( self , *_ ) 
+        self.__cnv = None 
+    
+# =============================================================================
+## helper context manager to create and configure a canvas (and pad)
+#  @code
+#  with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
+#  ... 
+#  @endcode
+def use_canvas ( name   = ''            ,
+                 title  = ''            ,
+                 width  = canvas_width  ,   ## canvas width
+                 height = canvas_height ,   ## canvas height 
+                 **kwargs               ) : ## Pad configuration
+    """Helper context manager to create and configure a canvas (and pad)
+    >>> with use_canvas ( title = 'Canvas #2' , width = 1000 ) :
+    >>> ... 
+    """
+    return Canvas ( name   = name   ,
+                    title  = title  ,
+                    width  = width  ,   ## canvas width
+                    height = height ,   ## canvas height 
+                    **kwargs        )   ## Pad configuration
+
+
+    
 # =============================================================================
 _decorated_classes_  = (
     ROOT.TVirtualPad , 
@@ -761,5 +1019,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

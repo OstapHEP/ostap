@@ -155,12 +155,12 @@ namespace Ostap
          *  @param sorted (input)  flag to be use for sorting 
          *  @return status code 
          */
-        template <class T, unsigned int D, class R>
+        template <class T, unsigned int D>
         inline Ostap::StatusCode 
         eigenVectors 
         ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
           ROOT::Math::SVector<T,D>&                                     vals , 
-          ROOT::Math::SMatrix<T,D,D,R>&                                 vecs , 
+          ROOT::Math::SMatrix<T,D,D>&                                   vecs , 
           const bool sorted = true ) const ;
         // ====================================================================
         /** evaluate the eigenvalues and eigenvectors of the symmetrical matrix 

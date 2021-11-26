@@ -6,6 +6,7 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooAddition.h"
+#include "RooAbsPdf.h"
 #include "RooGlobalFunc.h"
 // ============================================================================
 // Ostap
@@ -28,21 +29,33 @@
 ClassImp(Ostap::MoreRooFit::Addition      )
 ClassImp(Ostap::MoreRooFit::Subtraction   )
 ClassImp(Ostap::MoreRooFit::Division      )
+ClassImp(Ostap::MoreRooFit::Combination   )
 ClassImp(Ostap::MoreRooFit::Fraction      )
 ClassImp(Ostap::MoreRooFit::Asymmetry     )
 ClassImp(Ostap::MoreRooFit::Power         )
+ClassImp(Ostap::MoreRooFit::Abs           )
 ClassImp(Ostap::MoreRooFit::Exp           )
 ClassImp(Ostap::MoreRooFit::Log           )
+ClassImp(Ostap::MoreRooFit::Log10         )
 ClassImp(Ostap::MoreRooFit::Erf           )
+ClassImp(Ostap::MoreRooFit::Erfc          )
 ClassImp(Ostap::MoreRooFit::Sin           )
 ClassImp(Ostap::MoreRooFit::Cos           )
 ClassImp(Ostap::MoreRooFit::Tan           )
+ClassImp(Ostap::MoreRooFit::Sinh          )
+ClassImp(Ostap::MoreRooFit::Cosh          )
 ClassImp(Ostap::MoreRooFit::Tanh          )
+ClassImp(Ostap::MoreRooFit::Sech          )
 ClassImp(Ostap::MoreRooFit::Atan2         )
 ClassImp(Ostap::MoreRooFit::Gamma         )
 ClassImp(Ostap::MoreRooFit::LGamma        )
 ClassImp(Ostap::MoreRooFit::IGamma        )
 ClassImp(Ostap::MoreRooFit::Id            )
+ClassImp(Ostap::MoreRooFit::OneVar        )
+ClassImp(Ostap::MoreRooFit::TwoVars       )
+ClassImp(Ostap::MoreRooFit::FunOneVar     )
+ClassImp(Ostap::MoreRooFit::FunTwoVars    )
+ClassImp(Ostap::MoreRooFit::ProductPdf    )
 // ============================================================================
 namespace 
 {
@@ -83,9 +96,11 @@ namespace
   // ==========================================================================
   inline std::string  title2_ ( const std::string& title , 
                                const std::string&  oper  , 
-                               const TNamed&        b    )
+                                const TNamed&        b    )
   { return 
-      title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
+    title.empty () ? oper + "(" + b.GetName() + ")" : title  ; }
+  // ==========================================================================
+  inline bool a_zero ( const double x ) { return s_zero ( x ) ; }
   // ==========================================================================
 }
 // ============================================================================
@@ -100,6 +115,22 @@ Ostap::MoreRooFit::Addition::Addition
                   title_ ( title , "+"   , a , b ).c_str() , 
                   RooArgList  ( a , b ) )
 {}
+// ============================================================================
+// construct c1*a + c2*b 
+// ============================================================================
+Ostap::MoreRooFit::Addition::Addition
+( const std::string& name  , 
+  const std::string& title ,
+  RooAbsReal&        a     ,
+  RooAbsReal&        b     ,
+  RooAbsReal&        c1    ,
+  RooAbsReal&        c2    ) 
+  : RooAddition ( name .c_str() , title.c_str() ,
+                  RooArgList ( a  ,  b  ) , 
+                  RooArgList ( c1 ,  c2 ) )
+{}
+  
+
 // ============================================================================
 //  copy constructor 
 // ============================================================================
@@ -162,7 +193,7 @@ Ostap::MoreRooFit::Subtraction::Subtraction
   RooAbsReal&        b     )
   : Addition 
     ( name_  ( name  , "subtract" , a , b )  ,
-      title_ ( title , "-"        , a , b )  , a , b )
+      title_ ( title , "-"        , a , b )  , a , b , 1 , -1 )    
 {}
 // ============================================================================
 Ostap::MoreRooFit::Subtraction::Subtraction
@@ -179,144 +210,136 @@ Ostap::MoreRooFit::Subtraction*
 Ostap::MoreRooFit::Subtraction::clone ( const char* newname ) const 
 { return new Subtraction ( *this , newname ) ; }
 // ============================================================================
-Double_t Ostap::MoreRooFit::Subtraction::analyticalIntegral 
-( Int_t code            , 
-  const char* rangeName ) const 
-{
-  // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
-  CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
-    // cache got sterilized, trigger repopulation of this slot, then try again...
-    std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );  
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    RooArgSet dummy;
-    Int_t code2 = getAnalyticalIntegral(*iset,dummy,rangeName);
-    assert(code==code2); // must have revived the right (sterilized) slot...
-    return analyticalIntegral(code2,rangeName);
-  }
-  assert(cache!=0);
-  
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
-  {
-    // loop over cache, and sum...
-    std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
-    RooAbsReal *I;
-    double result(0);
-    bool   first = true  ;
-    while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) 
-    { 
-      if ( first )  { result += I->getVal() ; first = false ; }
-      else          { result -= I->getVal() ; }
-      
-    }
-    return result;
-  }
-#else
-  {
-    // loop over cache, and sum...
-    double result = 0   ;
-    bool   first  = true ;
-    for (auto I : cache->_I) 
-    {
-      //
-      const double tmp =  static_cast<const RooAbsReal*>(I)->getVal();
-      if ( first ) { result += tmp ; first = false ; }
-      else         { result -= tmp ;                 }
-      //
-    }
-    return result;
-  }
-#endif 
-}
-// ============================================================================
-Double_t Ostap::MoreRooFit::Subtraction::evaluate() const
-{
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,18,0)
-  {
-    Double_t sum(0);
-    bool first = true ;
-    const RooArgSet* nset = _set.nset() ;
-    RooFIter setIter = _set.fwdIterator() ;
-    RooAbsReal* comp ;
-    while((comp=(RooAbsReal*)setIter.next())) 
-    {
-      Double_t tmp = comp->getVal(nset) ;
-      if ( first ) { sum += tmp ; first = false ; }
-      else         { sum -= tmp ; }
-    }
-    return sum ;
-  }
-#else 
-  {
-    Double_t result = 0 ;
-    const RooArgSet* nset = _set.nset() ;
-    //
-    bool first = true ;
-    for ( const auto arg : _set) 
-    {
-      const auto comp = static_cast<RooAbsReal*>(arg);
-      const Double_t tmp = comp->getVal(nset);
-      if ( first ) { result += tmp ;  first = false ; }
-      else         { result -= tmp ;                  }
-    }
-  return result ;
-  }
-#endif 
-}
-// ============================================================================
 
 
 // ============================================================================
-// constructor with two variables 
+// constructor with variable
 // ============================================================================
-Ostap::MoreRooFit::Division::Division 
+Ostap::MoreRooFit::OneVar::OneVar
 ( const std::string& name  , 
   const std::string& title , 
-  RooAbsReal&        a     , 
-  RooAbsReal&        b     ) 
+  RooAbsReal&        x     ) 
   : RooAbsReal 
-    ( name_  ( name  , "divide" , a , b ).c_str() ,
-      title_ ( title , "/"      , a , b ).c_str() )
-  , m_A ( "!A" , "A" , this , a ) 
-  , m_B ( "!B" , "B" , this , b ) 
+    ( name2_  ( name  , "one" , x ).c_str() ,
+      title2_ ( title , "one" , x ).c_str() )
+  , m_x ( "!x" , "x" , this , x ) 
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
-Ostap::MoreRooFit::Division::Division 
-( const Ostap::MoreRooFit::Division& right , 
+Ostap::MoreRooFit::OneVar::OneVar
+( const Ostap::MoreRooFit::OneVar& right , 
   const char*               name  ) 
   : RooAbsReal ( right , name ) 
-  , m_A ( "!A" , this , right.m_A ) 
-  , m_B ( "!B" , this , right.m_B ) 
+  , m_x ( "!x" , this , right.m_x ) 
 {}
 // ============================================================================
 // destructor 
 // ============================================================================
-Ostap::MoreRooFit::Division::~Division(){}
+Ostap::MoreRooFit::OneVar::~OneVar(){}
 // ============================================================================
-// cloning
+
+
 // ============================================================================
-Ostap::MoreRooFit::Division* 
-Ostap::MoreRooFit::Division::clone ( const char* newname ) const 
-{ return new Division ( *this , newname ) ; }
+// constructor with variable
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::TwoVars
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        x     ,
+  RooAbsReal&        y     ) 
+  : OneVar ( name_   ( name  , "two" , x , y ) ,
+             title1_ ( title , "two" , x , y ) , x )
+  , m_y ( "!y" , "y" , this , y ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::TwoVars
+( const Ostap::MoreRooFit::TwoVars& right , 
+  const char*                       name  ) 
+  : OneVar ( right , name ) 
+  , m_y    ( "!y" , this , right.m_y ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::TwoVars::~TwoVars(){}
+// ============================================================================
+
+
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::FunOneVar::FunOneVar
+( const Ostap::MoreRooFit::FunOneVar& right , 
+  const char*                          name  ) 
+  : OneVar ( right , name ) 
+  , m_fun  ( right.m_fun ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::FunOneVar::~FunOneVar () {}
+// ============================================================================
+// clone method 
+// ============================================================================
+Ostap::MoreRooFit::FunOneVar*
+Ostap::MoreRooFit::FunOneVar::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::FunOneVar(*this, newname ) ;}
 // ============================================================================
 // the actual evaluation of the result 
 // ============================================================================
-Double_t Ostap::MoreRooFit::Division::evaluate () const 
+Double_t Ostap::MoreRooFit::FunOneVar::evaluate () const
 {
-  const double a = m_A ;
-  const double b = m_B ;
+  const long double x = m_x ;
   //
-  static const std::string s_self { "Ostap::MoreRooFit::Division" } ;
-  Ostap::Assert ( a + b != 0 , s_division_by_zero , s_self ) ;
-  //
-  return a / b ;
-}
+  return m_fun ( x ) ;
+} ;
 // ============================================================================
 
 
 
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::MoreRooFit::FunTwoVars::FunTwoVars
+( const Ostap::MoreRooFit::FunTwoVars& right , 
+  const char*                          name  ) 
+  : TwoVars ( right , name ) 
+  , m_fun2  ( right.m_fun2 ) 
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::FunTwoVars::~FunTwoVars(){}
+// ============================================================================
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::FunTwoVars::evaluate () const
+{
+  const double a = m_x ;
+  const double b = m_y ;
+  //
+  return m_fun2 ( a , b ) ;
+} ;
+// ============================================================================
+Ostap::MoreRooFit::FunTwoVars*
+Ostap::MoreRooFit::FunTwoVars::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::FunTwoVars( *this , newname ) ; }
+// ============================================================================
+
+// ============================================================================
+// constructor with two variables 
+// ============================================================================
+Ostap::MoreRooFit::Division::Division 
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_  ( name  , "divide" , a , b ) ,
+              title_ ( title , "/"      , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -325,89 +348,39 @@ Ostap::MoreRooFit::Fraction::Fraction
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_  ( name  , "divide" , a , b ) , 
-      title_ ( title , "/"      , a , b ) , a , b )
+  : TwoVars ( name_  ( name  , "fraction" , a , b ) ,
+              title_ ( title , "frac"     , a , b ) , a , b )
 {}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::MoreRooFit::Fraction::Fraction
-( const Ostap::MoreRooFit::Fraction& right , 
-  const char*                        name  ) 
-  : Division ( right , name ) 
-{}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::MoreRooFit::Fraction::~Fraction(){}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Fraction* 
-Ostap::MoreRooFit::Fraction::clone ( const char* newname ) const 
-{ return new Fraction ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Fraction::evaluate () const 
-{
-  const double a = m_A ;
-  const double b = m_B ;
-  //
-  static const std::string s_self { "Ostap::MoreRooFit::Fraction" } ;
-  Ostap::Assert ( a + b != 0 , s_division_by_zero , s_self ) ;
-  //
-  return a / ( a + b ) ;
-}
-// ============================================================================
-
- 
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Asymmetry::Asymmetry 
+Ostap::MoreRooFit::Combination::Combination
 ( const std::string& name  , 
   const std::string& title , 
   RooAbsReal&        a     , 
-  RooAbsReal&        b     ) 
-  : Division 
-    ( name_  ( name  , "asymmetry" , a , b ) , 
-      title_ ( title , " asym "    , a , b ) , a , b )
+  RooAbsReal&        b     , 
+  const double       alpha , 
+  const double       beta  , 
+  const double       gamma )
+  : TwoVars ( name_  ( name  , "combination" , a , b ) ,
+              title_ ( title , "comb"        , a , b ) , a , b )
+  , m_alpha ( alpha ) 
+  , m_beta  ( beta  ) 
+  , m_gamma ( gamma )
 {}
 // ============================================================================
-// copy constructor 
+// constructor with two variables 
 // ============================================================================
 Ostap::MoreRooFit::Asymmetry::Asymmetry
-( const Ostap::MoreRooFit::Asymmetry& right , 
-  const char*                            name  ) 
-  : Division ( right , name ) 
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ,
+  const double       scale ) 
+  : TwoVars ( name_  ( name  , "asymmetry" , a , b ) ,
+              title_ ( title , "asym"      , a , b ) , a , b )
+  , m_scale ( scale ) 
 {}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::MoreRooFit::Asymmetry::~Asymmetry(){}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Asymmetry* 
-Ostap::MoreRooFit::Asymmetry::clone ( const char* newname ) const 
-{ return new Asymmetry ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Asymmetry::evaluate () const 
-{
-  const double a = m_A ;
-  const double b = m_B ;
-  //
-  static const std::string s_self { "Ostap::MoreRooFit::Asymmetry" } ;
-  Ostap::Assert ( a + b != 0 , s_division_by_zero , s_self ) ;
-  //
-  return ( a - b ) / ( a + b ) ;
-}
-
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -416,55 +389,20 @@ Ostap::MoreRooFit::Power::Power
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_  ( name  , "pow" , a , b ) , 
-      title_ ( title , "** " , a , b ) , a , b )
+  : TwoVars ( name_  ( name  , "pow" , a , b ) ,
+              title_ ( title , "**"  , a , b ) , a , b )
 {}
 // ============================================================================
-// copy constructor 
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Power::Power
-( const Ostap::MoreRooFit::Power& right , 
-  const char*               name  ) 
-  : Division  ( right , name ) {}
-// ============================================================================
-// destructor 
-// ============================================================================
-Ostap::MoreRooFit::Power::~Power(){}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Power* 
-Ostap::MoreRooFit::Power::clone ( const char* newname ) const 
-{ return new Power ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Power::evaluate () const 
-{
-  const double a = m_A ;
-  const double b = m_B ;
-  //
-  const long double aL = a ;
-  const long double bL = b ;
-  //
-  if      ( s_zero ( b )          ) { return 1.0 ; }        // RETURN 
-  else if ( 0 < b && s_zero ( a ) ) { return 0.0 ; }        // RETURN
-  else if ( 0 < b && Ostap::Math::isint ( b ) )
-  {
-    const int nb = Ostap::Math::round   ( b ) ;
-    if      ( 0 == nb )             { return 1.0 ; }        // RETURN  
-    else if ( 0 <  nb ) 
-    {
-      const unsigned long NB = nb ;
-      return 0 == NB ? 1.0L : Ostap::Math::POW ( aL , NB ) ;  //   RETURN
-    } 
-  }
-  //
-  return std::pow ( aL , bL ) ;
-}
-// ============================================================================
-
+Ostap::MoreRooFit::Abs::Abs
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "abs" , a , b ) ,
+              title1_ ( title , "abs" , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -473,28 +411,9 @@ Ostap::MoreRooFit::Exp::Exp
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "exp" , a , b ) , 
-      title1_ ( name , "exp" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "exp" , a , b ) ,
+              title1_ ( title , "exp" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Exp* 
-Ostap::MoreRooFit::Exp::clone ( const char* newname ) const 
-{ return new Exp ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Exp::evaluate () const 
-{
-  const long double a = m_A ;
-  const long double b = m_B ;
-  //
-  return s_zero ( a ) || s_zero ( b ) ? 0 : std::exp ( a * b ) ;
-}
-// ============================================================================
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -503,34 +422,20 @@ Ostap::MoreRooFit::Log::Log
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "log" , a , b ) , 
-      title1_ ( name , "log" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "log" , a , b ) ,
+              title1_ ( title , "log" , a , b ) , a , b )
 {}
 // ============================================================================
-// cloning
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Log* 
-Ostap::MoreRooFit::Log::clone ( const char* newname ) const 
-{ return new Log ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Log::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  const long double ab = a * b ;
-  
-  static const std::string s_self { "Ostap::MoreRooFit::Log" } ;
-  Ostap::Assert ( ab > 0 , s_negative_log , s_self ) ;
-  //
-  return std::log ( ab ) ;
-}
-// ============================================================================
-
-
+Ostap::MoreRooFit::Log10::Log10
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "log10" , a , b ) ,
+              title1_ ( title , "log10" , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -539,29 +444,20 @@ Ostap::MoreRooFit::Erf::Erf
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "erf" , a , b ) , 
-      title1_ ( name , "erf" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "erf" , a , b ) ,
+              title1_ ( title , "erf" , a , b ) , a , b )
 {}
 // ============================================================================
-// cloning
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Erf* 
-Ostap::MoreRooFit::Erf::clone ( const char* newname ) const 
-{ return new Erf ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Erf::evaluate () const 
-{
-  const long double a = m_A ;
-  const long double b = m_B ;
-  //
-  return std::erf ( a * b ) ;
-}
-// ============================================================================
-
-
+Ostap::MoreRooFit::Erfc::Erfc
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "erfc" , a , b ) ,
+              title1_ ( title , "erfc" , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -570,30 +466,9 @@ Ostap::MoreRooFit::Sin::Sin
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "sin" , a , b ) , 
-      title1_ ( name , "sin" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "sin" , a , b ) ,
+              title1_ ( title , "sin" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Sin* 
-Ostap::MoreRooFit::Sin::clone ( const char* newname ) const 
-{ return new Sin ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Sin::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  const long double ab = a * b ;  
-  //
-  return std::sin( ab ) ;
-}
-// ============================================================================
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -602,32 +477,9 @@ Ostap::MoreRooFit::Cos::Cos
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "cos" , a , b ) , 
-      title1_ ( name , "cos" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "cos" , a , b ) ,
+              title1_ ( title , "cos" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Cos* 
-Ostap::MoreRooFit::Cos::clone ( const char* newname ) const 
-{ return new Cos ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Cos::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  const long double ab = a * b ;  
-  //
-  return std::cos ( ab ) ;
-}
-// ============================================================================
-
-
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -636,31 +488,31 @@ Ostap::MoreRooFit::Tan::Tan
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "tan" , a , b ) , 
-      title1_ ( name , "tan" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "tan" , a , b ) ,
+              title1_ ( title , "tan" , a , b ) , a , b )
 {}
 // ============================================================================
-// cloning
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Tan* 
-Ostap::MoreRooFit::Tan::clone ( const char* newname ) const 
-{ return new Tan ( *this , newname ) ; }
+Ostap::MoreRooFit::Sinh::Sinh
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "sinh" , a , b ) ,
+              title1_ ( title , "sinh" , a , b ) , a , b )
+{}
 // ============================================================================
-// the actual evaluation of the result 
+// constructor with two variables 
 // ============================================================================
-Double_t Ostap::MoreRooFit::Tan::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  const long double ab = a * b ;  
-  //
-  return std::tan( ab ) ;
-}
-// ============================================================================
-
-
+Ostap::MoreRooFit::Cosh::Cosh
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "cosh" , a , b ) ,
+              title1_ ( title , "cosh" , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -669,31 +521,20 @@ Ostap::MoreRooFit::Tanh::Tanh
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "tanh" , a , b ) , 
-      title1_ ( name , "tanh" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "tanh" , a , b ) ,
+              title1_ ( title , "tanh" , a , b ) , a , b )
 {}
 // ============================================================================
-// cloning
+// constructor with two variables 
 // ============================================================================
-Ostap::MoreRooFit::Tanh* 
-Ostap::MoreRooFit::Tanh::clone ( const char* newname ) const 
-{ return new Tanh ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Tanh::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  const long double ab = a * b ;  
-  //
-  return std::tanh( ab ) ;
-}
-// ============================================================================
-
-
+Ostap::MoreRooFit::Sech::Sech
+( const std::string& name  , 
+  const std::string& title , 
+  RooAbsReal&        a     , 
+  RooAbsReal&        b     ) 
+  : TwoVars ( name_   ( name  , "sech" , a , b ) ,
+              title1_ ( title , "sech" , a , b ) , a , b )
+{}
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -702,30 +543,9 @@ Ostap::MoreRooFit::Atan2::Atan2
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "atan2" , a , b ) , 
-      title1_ ( name , "atan2" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "atan2" , a , b ) ,
+              title1_ ( title , "atan2" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Atan2* 
-Ostap::MoreRooFit::Atan2::clone ( const char* newname ) const 
-{ return new Atan2 ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Atan2::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  return std::atan2 ( a , b ) ;
-}
-// ============================================================================
-
-
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -734,28 +554,9 @@ Ostap::MoreRooFit::Gamma::Gamma
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "gamma" , a , b ) , 
-      title1_ ( name , "gamma" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "gamma" , a , b ) ,
+              title1_ ( title , "gamma" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::Gamma* 
-Ostap::MoreRooFit::Gamma::clone ( const char* newname ) const 
-{ return new Gamma ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::Gamma::evaluate () const 
-{
-  const long double a = m_A ;
-  const long double b = m_B ;
-  //
-  return std::tgamma ( a * b ) ;
-}
-// ============================================================================
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -764,28 +565,9 @@ Ostap::MoreRooFit::LGamma::LGamma
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "lgamma" , a , b ) , 
-      title1_ ( name , "lgamma" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "lgamma" , a , b ) ,
+              title1_ ( title , "lgamma" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::LGamma* 
-Ostap::MoreRooFit::LGamma::clone ( const char* newname ) const 
-{ return new LGamma ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::LGamma::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  return std::lgamma ( a * b ) ;
-}
-// ============================================================================
-
 // ============================================================================
 // constructor with two variables 
 // ============================================================================
@@ -794,39 +576,111 @@ Ostap::MoreRooFit::IGamma::IGamma
   const std::string& title , 
   RooAbsReal&        a     , 
   RooAbsReal&        b     ) 
-  : Division 
-    ( name_   ( name , "igamma" , a , b ) , 
-      title1_ ( name , "igamma" , a , b ) , a , b )
+  : TwoVars ( name_   ( name  , "igamma" , a , b ) ,
+                 title1_ ( title , "igamma" , a , b ) , a , b )
 {}
-// ============================================================================
-// cloning
-// ============================================================================
-Ostap::MoreRooFit::IGamma* 
-Ostap::MoreRooFit::IGamma::clone ( const char* newname ) const 
-{ return new IGamma ( *this , newname ) ; }
-// ============================================================================
-// the actual evaluation of the result 
-// ============================================================================
-Double_t Ostap::MoreRooFit::IGamma::evaluate () const 
-{
-  const long double a  = m_A ;
-  const long double b  = m_B ;
-  //
-  return Ostap::Math::igamma ( a * b ) ;
-}
 // ============================================================================
 
 // ============================================================================
-// constructor with variable
+// the actual evaluation of the result 
+// ============================================================================
+Double_t Ostap::MoreRooFit::Division::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return a / b ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Fraction::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return a / ( a + b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Combination::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; 
+  return m_alpha * a * ( m_beta + m_gamma * b )  ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Asymmetry::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return m_scale * ( a - b ) / ( a + b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Power::evaluate () const 
+{ 
+  const double x = m_x ; 
+  const double y = m_y ;
+  if      ( a_zero ( y )                      ) { return 1.0 ; }
+  else if ( 0 < y && a_zero ( x )             ) { return 0.0 ; }
+  else if ( 0 < y && Ostap::Math::isint ( y ) ) 
+  { 
+    const int ny = Ostap::Math::round ( y ) ;
+    if      ( 0 == ny ) { return 1.0 ; }
+    return std::pow ( x , ny ) ;
+  }
+  return std::pow ( x , y ) ;
+}
+// ============================================================================
+Double_t Ostap::MoreRooFit::Abs::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::abs    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Exp::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::exp    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Log::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::log    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Log10::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::log10  ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Erf::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::erf    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Erfc::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::erfc   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Gamma::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::tgamma ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::LGamma::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::lgamma ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::IGamma::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; 
+  return Ostap::Math::igamma ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Sin::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::sin    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Cos::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::cos    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Tan::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::tan    ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Sinh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::sinh   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Cosh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::cosh   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Tanh::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::tanh   ( a * b ) ; }
+// ============================================================================
+Double_t Ostap::MoreRooFit::Sech::evaluate () const 
+{ 
+  const double a = m_x ; const double b = m_y ; 
+  return Ostap::Math::sech ( a * b ) ; 
+}
+// ============================================================================
+Double_t Ostap::MoreRooFit::Atan2::evaluate () const 
+{ const double a = m_x ; const double b = m_y ; return std::atan2  ( a , b ) ; }
+// ============================================================================
+
+
+
+
+
+
 // ============================================================================
 Ostap::MoreRooFit::Id::Id
 ( const std::string& name  , 
   const std::string& title , 
   RooAbsReal&        v     ) 
-  : RooAbsReal 
-    ( name2_  ( name  , "Id" , v ).c_str() ,
-      title2_ ( title , "Id" , v ).c_str() )
-  , m_V ( "!V" , "V" , this , v ) 
+  : OneVar 
+    ( name2_  ( name  , "Id" , v ) ,
+      title2_ ( title , "Id" , v ) , v ) 
 {}
 // ============================================================================
 // copy constructor 
@@ -834,8 +688,7 @@ Ostap::MoreRooFit::Id::Id
 Ostap::MoreRooFit::Id::Id
 ( const Ostap::MoreRooFit::Id& right , 
   const char*               name  ) 
-  : RooAbsReal ( right , name ) 
-  , m_V ( "!V" , this , right.m_V ) 
+  : OneVar ( right , name ) 
 {}
 // ============================================================================
 // destructor 
@@ -846,18 +699,92 @@ Ostap::MoreRooFit::Id::~Id(){}
 // ============================================================================
 Ostap::MoreRooFit::Id* 
 Ostap::MoreRooFit::Id::clone ( const char* newname ) const 
-{ return new Id( *this , newname ) ; }
+{ return new Id ( *this , newname ) ; }
 // ============================================================================
 // the actual evaluation of the result 
 // ============================================================================
 Double_t Ostap::MoreRooFit::Id::evaluate () const 
 {
-  const double v = m_V ;
-  //
+  const double v = m_x ;
   return v ;
 }
 // ============================================================================
+Double_t Ostap::MoreRooFit::Id::analyticalIntegral
+( Int_t            code     ,
+  const char*      range    ) const
+{ return m_x.arg().analyticalIntegral    ( code , range ) ; }
+//
+Double_t Ostap::MoreRooFit::Id::analyticalIntegralWN
+( Int_t            code     ,
+  const RooArgSet* normset  ,
+  const char*      range    ) const
+{ return m_x.arg().analyticalIntegralWN  ( code , normset , range ) ; }
+//  
+Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegral
+( RooArgSet&       allVars  ,
+  RooArgSet&       analVars ,
+  const char*      range    ) const
+{ return m_x.arg().getAnalyticalIntegral   ( allVars , analVars , range ) ; }
+//
+Int_t    Ostap::MoreRooFit::Id::getAnalyticalIntegralWN
+( RooArgSet&       allVars  ,
+  RooArgSet&       analVars ,
+  const RooArgSet* normset  ,
+  const char*      range    ) const
+{ return m_x.arg().getAnalyticalIntegralWN ( allVars , analVars , normset , range ) ; }
+// ============================================================================
 
+
+
+// ============================================================================
+/* constructor from name, title and two pdfs
+ *  @param name  name 
+ *  @param title name 
+ *  @param pdf1 the first pdf 
+ *  @param pdf2 the second pdf 
+ */
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::ProductPdf 
+( const char* name  , 
+  const char* title , 
+  RooAbsPdf&  pdf1  , 
+  RooAbsPdf&  pdf2  )
+  : RooAbsPdf  ( name , title ) 
+    //
+  , m_pdf1 ( "pdf1" , "The first PDF"  , this , pdf1 ) 
+  , m_pdf2 ( "pdf2" , "The second PDF" , this , pdf2 ) 
+{}
+// ============================================================================
+// "copy" constructor 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::ProductPdf 
+( const Ostap::MoreRooFit::ProductPdf& right , 
+  const char*                       name  ) 
+  : RooAbsPdf ( right , name ) 
+    //
+  , m_pdf1 ( "pdf1" , this , right.m_pdf1 ) 
+  , m_pdf2 ( "pdf2" , this , right.m_pdf2 )
+{}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf::~ProductPdf(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::MoreRooFit::ProductPdf*
+Ostap::MoreRooFit::ProductPdf::clone ( const char* newname ) const 
+{ return new Ostap::MoreRooFit::ProductPdf( *this , newname ) ; }
+// ============================================================================
+// the main method 
+// ============================================================================
+Double_t Ostap::MoreRooFit::ProductPdf::evaluate () const
+{
+  const double v1 = m_pdf1 ;
+  const double v2 = m_pdf2 ;
+  return v1 * v2 ;
+}
+// ============================================================================
 
 // ============================================================================
 //                                                                      The END

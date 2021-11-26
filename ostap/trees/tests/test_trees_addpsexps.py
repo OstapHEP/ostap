@@ -12,7 +12,8 @@ from   __future__               import print_function
 import ROOT, math, random 
 import ostap.trees.trees
 import ostap.histos.histos
-from   ostap.core.pyrouts       import Ostap, VE,   SE  
+from   ostap.core.pyrouts       import Ostap, VE,   SE
+from   ostap.utils.timing       import timing 
 from   ostap.trees.data         import Data 
 from   ostap.utils.progress_bar import progress_bar
 # ============================================================================= 
@@ -20,7 +21,7 @@ from   ostap.utils.progress_bar import progress_bar
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_trees_addpexps' )
-else                       : logger = getLogger ( __name__           )
+else                       : logger = getLogger ( __name__              )
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
@@ -64,7 +65,7 @@ def create_tree ( fname , nentries = 1000 ) :
 def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 
     from ostap.utils.cleanup import CleanUp    
-    files = [ CleanUp.tempfile ( prefix = 'ostap-test-trees-addbranch-%d-' % i ,
+    files = [ CleanUp.tempfile ( prefix = 'ostap-test-trees-addpsexps-%d-' % i ,
                                  suffix = '.root' ) for i in range ( nfiles)  ]
     
     for f in progress_bar ( files ) : create_tree ( f , nentries )
@@ -83,80 +84,88 @@ def test_modify_initial_tree ( NEXP =  10 ) :
     """Add pseudoexepriments into TTree/TChain
     """
     
-    files = prepare_data ( 1 , 100000 )
-    
-    logger.info ( 'Add %s pseudoexepriments into TTree/TChain'  %   NEXP ) 
-
-    logger.info ( '#files:    %s'  % len ( files ) )  
-    data = Data ( 'S' , files )
-    logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
-    
-    ## pseudo experiments
-    for e in progress_bar ( range ( NEXP ) ) :
-        h2_new = h2.sample()
-        func   = Ostap.Functions.FuncTH2 ( h2_new , 'pt' , 'eta' ) 
-        data.chain.add_new_branch ( 'w%d' % e , func )
+    logger = getLogger ( 'ostap.test_mofidy_initial_tree' )
+    with timing ('test_modify_initial_tree' , logger = logger ) : 
         
-    data = Data ( 'S' , files )
-    logger.info ( 'Tree/Chain after:\n%s' % data.chain.table ( prefix = '# ' ) )
-
-    counter = SE () 
-    for e in range ( NEXP ) :
-        weight     = 'w%d' % e 
-        accepted   = data.chain.sumVar ( '1' , weight *  cut ) 
-        rejected   = data.chain.sumVar ( '1' , weight * ~cut ) 
-        efficiency = 1 / ( 1 + rejected / accepted )
-        logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
-                                                                                 accepted   ,
-                                                                                 rejected   , 
-                                                                                 efficiency ) )
-        counter    += efficiency          
-    logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
-    logger.info ( 'Mean/rms: %s[%%]/%.4f]%%]' % ( counter.mean() * 100 ,
+        files = prepare_data ( 1 , 100000 )
+        
+        logger.info ( 'Add %s pseudoexepriments into TTree/TChain'  %   NEXP ) 
+        
+        logger.info ( '#files:    %s'  % len ( files ) )  
+        data = Data ( 'S' , files )
+        logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
+    
+        ## pseudo experiments
+        for e in progress_bar ( range ( NEXP ) ) :
+            h2_new = h2.sample()
+            func   = Ostap.Functions.FuncTH2 ( h2_new , 'pt' , 'eta' ) 
+            data.chain.add_new_branch ( 'w%d' % e , func )
+            
+        data = Data ( 'S' , files )
+        logger.info ( 'Tree/Chain after:\n%s' % data.chain.table ( prefix = '# ' ) )
+        
+        counter = SE () 
+        for e in range ( NEXP ) :
+            weight     = 'w%d' % e 
+            accepted   = data.chain.sumVar ( '1' , weight *  cut ) 
+            rejected   = data.chain.sumVar ( '1' , weight * ~cut ) 
+            efficiency = 1 / ( 1 + rejected / accepted )
+            logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
+                                                                                     accepted   ,
+                                                                                     rejected   , 
+                                                                                     efficiency ) )
+            counter    += efficiency
+            
+        logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
+        logger.info ( 'Mean/rms: %s[%%]/%.4f]%%]' % ( counter.mean() * 100 ,
                                                   counter.rms () * 100 ) ) 
 # =============================================================================
 ## Add pseudoexepriments into RooDataSet
 def test_add_to_dataset ( NEXP =  10 ) :
     """Add pseudoexepriments into RooDataSet
     """
-    
-    logger.info ( 'Add %s pseudoexepriments into RooDataSet'  %   NEXP ) 
+
+    logger = getLogger ( 'ostap.test_add_to_dataset' )
+    with timing ('test_add_to_dataset' , logger = logger ) : 
+
+        logger.info ( 'Add %s pseudoexepriments into RooDataSet'  %   NEXP ) 
         
-    files = prepare_data ( 1 , 100000 )
-
-
-    logger.info ( '#files:    %s'  % len ( files ) )  
-    data = Data ( 'S' , files )
-    logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
-
-    import ostap.fitting.selectors 
-    dataset , _ = data.chain.fill_dataset ( ['mass','pt','eta'] )
-
-    logger.info ( 'Initial dataset:\n%s' % dataset.table ( prefix = '# ' ) )
-      
-    ## pseudo experiments
-    for e in progress_bar ( range ( NEXP ) ) :
-        h2_new = h2.sample()
-        func   = Ostap.Functions.FuncRooTH2 ( h2_new , 'pt' , 'eta' ) 
-        dataset.add_new_var ( 'w%d' % e , func )
-
-    logger.info ( 'Dataset after:\n%s' % dataset.table ( prefix = '# ' ) )
+        files = prepare_data ( 1 , 100000 )
         
-    counter = SE () 
-    for e in range ( NEXP ) :
-        weight     = 'w%d' % e 
-        accepted   = dataset.sumVar ( '1' , weight *  cut ) 
-        rejected   = dataset.sumVar ( '1' , weight * ~cut ) 
-        efficiency = 1 / ( 1 + rejected / accepted )
-        logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
-                                                                                 accepted   ,
-                                                                                 rejected   , 
-                                                                                 efficiency ) )
-
         
-        counter    += efficiency          
-    logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
-    logger.info ( 'Mean/rms: %s[%%]/%.4f[%%]' % ( counter.mean() * 100 ,
+        logger.info ( '#files:    %s'  % len ( files ) )  
+        data = Data ( 'S' , files )
+        logger.info ( 'Initial Tree/Chain:\n%s' % data.chain.table ( prefix = '# ' ) )
+        
+        import ostap.fitting.pyselectors 
+        dataset , _ = data.chain.fill_dataset ( ['mass','pt','eta'] )
+        
+        logger.info ( 'Initial dataset:\n%s' % dataset.table ( prefix = '# ' ) )
+        
+        ## pseudo experiments
+        for e in progress_bar ( range ( NEXP ) ) :
+            h2_new = h2.sample()
+            func   = Ostap.Functions.FuncRooTH2 ( h2_new , 'pt' , 'eta' ) 
+            dataset.add_new_var ( 'w%d' % e , func )
+            
+        logger.info ( 'Dataset after:\n%s' % dataset.table ( prefix = '# ' ) )
+        
+        counter = SE () 
+        for e in range ( NEXP ) :
+            weight     = 'w%d' % e 
+            accepted   = dataset.sumVar ( '1' , weight *  cut ) 
+            rejected   = dataset.sumVar ( '1' , weight * ~cut ) 
+            efficiency = 1 / ( 1 + rejected / accepted )
+            logger.info ( "Experiment %3d, accepted/rejected %s/%s , eff = %s "  % ( e          ,
+                                                                                     accepted   ,
+                                                                                     rejected   , 
+                                                                                     efficiency ) )
+            
+            
+            counter    += efficiency
+        
+        logger.info ( 'Statistics of pseudoexperiments %s' % counter ) 
+        logger.info ( 'Mean/rms: %s[%%]/%.4f[%%]' % ( counter.mean() * 100 ,
                                                   counter.rms () * 100 ) ) 
     
 # =============================================================================

@@ -62,7 +62,7 @@ models = []
 #  It suits nicely for fits of multiplicity and/or chi2 distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class GammaDist_pdf(PDF) :
     """Gamma-distribution with shape/scale parameters
@@ -109,8 +109,8 @@ class GammaDist_pdf(PDF) :
                                  'theta_%s'            % name ,
                                  '#theta_{#Gamma}(%s)' % name , theta , 1 , 1.e-3 , 100 )
         self.pdf  = Ostap.Models.GammaDist (
-            'gd_%s'         % name ,
-            'GammaDist(%s)' % name ,
+            self.roo_name ( 'gamma_' ) ,
+            'Gamma distribution %s' % self.name , 
             self.x                 ,
             self.k                 ,
             self.theta             )
@@ -202,8 +202,8 @@ class GenGammaDist_pdf(PDF) :
                                  'l_{#Gamma}(%s)' % name , low , *limits_low )
         
         self.pdf  = Ostap.Models.GenGammaDist (
-            'ggd_%s'           % name ,
-            'GenGammaDist(%s)' % name ,
+            self.roo_name ( 'ggamma_' ) ,
+            'Generalized Gamma distribution %s' % self.name , 
             self.x         ,
             self.k         ,
             self.theta     ,
@@ -299,8 +299,8 @@ class Amoroso_pdf(PDF) :
                                  'a_{Amoroso}(%s)'      % name , a     , 1 , -10   ,  10  )
         
         self.pdf  = Ostap.Models.Amoroso (
-            'amo_%s'      % name ,
-            'Amoroso(%s)' % name ,
+            self.roo_name ( 'amo_' ) ,
+            'Amoroso %s' % self.name , 
             self.x         ,
             self.theta     ,
             self.alpha     ,
@@ -365,9 +365,9 @@ models.append ( Amoroso_pdf )
 #  It suits nicely for fits of log(multiplicity) and/or log(chi2) distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::LogGammaDist 
+#  @see Ostap::Models::LogGammaDist 
 #  @see Ostap::Math::LogGammaDist 
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class LogGammaDist_pdf(PDF) :
     """Distribution for log(x), where x follows Gamma distribution
@@ -390,8 +390,8 @@ class LogGammaDist_pdf(PDF) :
                                  '#theta_{log#Gamma}(%s)' % name , theta , 1 , 1.e-5 , 1000 )
 
         self.pdf  = Ostap.Models.LogGammaDist (
-            'lgd_%s'           % name ,
-            'LogGammaDist(%s)' % name ,
+            self.roo_name ( 'lgamma_' ) ,
+            'Log-Gamma %s' % self.name , 
             self.x                 ,
             self.k                 ,
             self.theta             )
@@ -431,11 +431,11 @@ models.append ( LogGammaDist_pdf )
 #  It suits nicely for fits of log10(multiplicity) and/or log10(chi2) distributions
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::Log10GammaDist 
+#  @see Ostap::Models::Log10GammaDist 
 #  @see Ostap::Math::Log10GammaDist 
-#  @see AnalysisModels::LogGammaDist 
+#  @see Ostap::Models::LogGammaDist 
 #  @see Ostap::Math::LogGammaDist 
-#  @see AnalysisModels::GammaDist 
+#  @see Ostap::Models::GammaDist 
 #  @see Ostap::Math::GammaDist 
 class Log10GammaDist_pdf(PDF) :
     """Distribution for log10(x), where x follows Gamma distribution
@@ -458,8 +458,8 @@ class Log10GammaDist_pdf(PDF) :
                                '#theta_{log10#Gamma}(%s)' % name , theta , 1 , 1.e-4 , 10000 )
 
         self.pdf  = Ostap.Models.Log10GammaDist (
-            'lgd10_%s'           % name ,
-            'Log10GammaDist(%s)' % name ,
+            self.roo_name ( 'l10gamma_' ) ,
+            'Log10 Gamma %s' % self.name , 
             self.x                 ,
             self.k                 ,
             self.theta             )
@@ -505,7 +505,7 @@ models.append ( Log10GammaDist_pdf )
 #                 J. Roy. Statist. Soc. Suppl. 8, 1, 128.
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2013-05-11
-#  @see AnalysisModels::LogGamma
+#  @see Ostap::Models::LogGamma
 #  @see Ostap::Math::LogGamma
 class LogGamma_pdf(PDF) :
     """ Log-Gamma distribution
@@ -547,8 +547,8 @@ class LogGamma_pdf(PDF) :
                                   '#alpha_{#log#Gamma}(%s)'  % name , alpha , 1 , 1.e-3 , 1000 )
         
         self.pdf  = Ostap.Models.LogGamma (
-            'lg_%s'        % name ,
-            'LogGamma(%s)' % name ,
+            self.roo_name ( 'loggamma_' ) ,
+            'Log-Gamma %s' % self.name    , 
             self.x     ,
             self.nu    ,
             self.lambd ,
@@ -641,8 +641,8 @@ class BetaPrime_pdf(PDF) :
                                   0 , *limits_delta )
             
         self.pdf  = Ostap.Models.BetaPrime (
-            'bp_%s'         % name ,
-            'BetaPrime(%s)' % name ,
+            self.roo_name ( 'betap_' )   ,
+            'Beta-prime %s' % self.name  , 
             self.x     ,
             self.alpha ,
             self.beta  ,
@@ -735,8 +735,8 @@ class Landau_pdf(PDF) :
                                   '#delta_{Landau}(%s)' % name , delta ,
                                   0 , *limits_delta )
         self.pdf  = Ostap.Models.Landau (
-            'land_%s'    % name ,
-            'Landau(%s)' % name ,
+            self.roo_name ( 'landau_' )   ,
+            'Landau %s' % self.name  , 
             self.x     ,
             self.scale ,
             self.delta )
@@ -820,8 +820,8 @@ class Argus_pdf(PDF) :
                                  'low_{Argus}(%s)'  % name , low , *limits_low )
         
         self.pdf  = Ostap.Models.Argus (
-            'arg_%s'    % name ,
-            'Argus(%s)' % name ,
+            self.roo_name ( 'argus_' )   ,
+            'ARGUS %s' % self.name  , 
             self.x     ,
             self.shape ,
             self.high  ,
@@ -935,8 +935,8 @@ class TwoExpos_pdf(PDF) :
                                   'x0_{2e}(%s)' % name , x0 , *limits_x0 )
         
         self.pdf  = Ostap.Models.TwoExpos (
-            'exp2_%s'    % name ,
-            '2Expos(%s)' % name ,
+            self.roo_name ( 'exp2_' )   ,
+            'Two exponentials %s' % self.name  , 
             self.x     ,
             self.alpha ,
             self.delta ,
@@ -1025,8 +1025,8 @@ class Gumbel_pdf(PDF) :
                                  'beta_{Gumbel}(%s)'      % name , beta ) 
         
         self.pdf  = Ostap.Models.Gumbel (
-            'gumbel_%s'  % name ,
-            'Gumbel(%s)' % name ,
+            self.roo_name ( 'gumbel_' )   ,
+            'Gumbel %s' % self.name  , 
             self.x              ,
             self.mu             ,
             self.beta           )
@@ -1122,8 +1122,8 @@ class Weibull_pdf(PDF) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Weibull (
-            "weibull_"    + name ,
-            "Weibull(%s)" % name ,
+            self.roo_name ( 'weibull_' )   ,
+            'Weibull %s' % self.name  , 
             self.xvar  ,
             self.scale ,
             self.shape ,
@@ -1236,8 +1236,8 @@ class Tsallis_pdf(PDF) :
                                 'T(%s) ' % name , T  , 1.e-3 , 1e+6 )
         
         self.pdf  = Ostap.Models.Tsallis (
-            'tsallis_'    + name  ,
-            'Tsallis(%s)' % name  ,
+            self.roo_name ( 'tsallis_' )   ,
+            'Tsallis %s' % self.name  , 
             self.pt               ,
             self.n                ,
             self.T                ,
@@ -1338,8 +1338,8 @@ class QGSM_pdf(PDF) :
                                 'b(%s) ' % name , b    , 0.    , 1e+6 )  
         
         self.pdf  = Ostap.Models.QGSM (
-            'qgsm_'    + name  ,
-            'QGSM(%s)' % name  ,
+            self.roo_name ( 'qgsm_' ) ,
+            'QGSM %s' % self.name , 
             self.pt               ,
             self.b                ,
             self.m0               )
@@ -1385,5 +1385,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -62,7 +62,7 @@ __all__     = (
     "uCalc" ,  ## calclulate the distance between two data points 
     )
 # ============================================================================
-import ROOT, math
+import ROOT, math, ctypes
 # =============================================================================
 # logging 
 # =============================================================================
@@ -120,12 +120,13 @@ def uCalc ( pdf            ,
     """
     import sys
     
-    tStat = ROOT.Double(-1)
+    tStat = ctypes.c_double (-1)
     sc    = Ostap.UStat.calculate ( pdf   ,
                                     data  ,
                                     histo ,
                                     tStat ,
                                     args  )
+    tStat = float ( tStat.value  ) 
     return histo, tStat 
     
     numEntries = data.numEntries ()

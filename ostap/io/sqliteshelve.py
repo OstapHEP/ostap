@@ -36,7 +36,7 @@
 # @code
 #
 # >>> import sqliteshelve as DBASE     ## import the SQLiteShelve module 
-# >>> db = DBASE.open ('a_db' , 'r' ) ## access existing dbase in read-only mode
+# >>> db = DBASE.open ('a_db' , 'r' )  ## access existing dbase in read-only mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -49,7 +49,7 @@
 # @code
 #
 # >>> import sqliteshelve as DBASE     ## import the SQLiteShelve module 
-# >>> db = DBASE.open ('a_db' )      ## access existing dbase in update mode
+# >>> db = DBASE.open ('a_db' )        ## access existing dbase in update mode
 # ...
 # >>> for key in db : print key
 # ...
@@ -130,13 +130,11 @@ __all__ = (
     'tmpdb'       ,   ## helper function to create the temporary database 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
-else                      : logger = getLogger ( __name__ )
-# =============================================================================
-import os , sys , zlib 
+import os , sys , zlib, collections, datetime   
 import sqlite3
-from   ostap.io.sqlitedict import SqliteDict
+from   ostap.io.sqlitedict  import SqliteDict
+from   ostap.io.dbase       import Item, TmpDB 
+from   ostap.core.meta_info import meta_info 
 # =============================================================================
 try:
     from cPickle   import Pickler, Unpickler , HIGHEST_PROTOCOL
@@ -149,6 +147,10 @@ try :
     from io        import             BytesIO
 except ImportError : 
     from cStringIO import StringIO as BytesIO         
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.sqliteshelve' )
+else                      : logger = getLogger ( __name__ )
 # =============================================================================
 _modes_ = {
     # =========================================================================
@@ -238,7 +240,8 @@ class SQLiteShelf(SqliteDict):
                    writeback      = True      , ## original name: "autocommit"
                    compress_level = zlib.Z_BEST_COMPRESSION , 
                    journal_mode   = "DELETE"  ,
-                   protocol       = PROTOCOL  ) :
+                   protocol       = PROTOCOL  ,
+                   timeout        = 30        ) :
         """Initialize a thread-safe sqlite-backed dictionary.
         The dictionary will be a table ``tablename`` in database file
         ``filename``. A single file (=database) may contain multiple tables.
@@ -285,11 +288,24 @@ class SQLiteShelf(SqliteDict):
                               tablename    = tablename    ,
                               flag         = mode         ,
                               autocommit   = writeback    ,
-                              journal_mode = journal_mode )
+                              journal_mode = journal_mode ,
+                              timeout      = timeout      )
         
-        self.__compression = compress_level 
-        self.__protocol    = protocol
-        self.__sizes       = {}
+        self.__compresslevel = compress_level 
+        self.__protocol      = protocol
+        self.__sizes         = {}
+
+        if self.flag in (  'w' , 'n' ) :
+            dct  = collections.OrderedDict() 
+            dct  [ 'Created by'                  ] = meta_info.User
+            dct  [ 'Created at'                  ] = datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' )  
+            dct  [ 'Created with Ostap version'  ] = meta_info.Ostap
+            dct  [ 'Created with Python version' ] = meta_info.Python
+            dct  [ 'Created with ROOT version'   ] = meta_info.ROOT 
+            dct  [ 'Pickle protocol'             ] = protocol 
+            dct  [ 'Compress level'              ] = self.__compresslevel 
+            self [ '__metainfo__' ] = dct
+
 
     @property
     def  writeback  ( self ):
@@ -299,12 +315,17 @@ class SQLiteShelf(SqliteDict):
         Otherwise, changes are committed on `self.commit()`,
         `self.clear()` and `self.close()`."""        
         return self.autocommit
-    
+
     @property
     def compression ( self ) :
         """The  compression level from zlib"""
-        return self.__compression
+        return self.__compresslevel
     
+    @property
+    def compresslevel ( self ) :
+        "``compress level'' : compression level"
+        return self.__compresslevel 
+
     @property
     def protocol    ( self ) :
         """The pickling protocol"""
@@ -382,7 +403,13 @@ class SQLiteShelf(SqliteDict):
         else    : mlen = 2 
         fmt = ' --> %%-%ds : %%s' % mlen
 
-        table = [ ( 'Key' , 'type' , '   size   ') ] 
+        table = [ ( 'Key' , 'type' , '   size   ', ' created/modified ') ]
+
+        meta = self.get( '__metainfo__' , {} )
+        for k in meta :
+            row = "META:%s" % k , '' , '' , str ( meta[k] )
+            table.append ( row  ) 
+        
         for k in keys :
             size = '' 
             ss   =   self.__sizes.get ( k , -1 )
@@ -396,8 +423,13 @@ class SQLiteShelf(SqliteDict):
                 size = '%7.2f GB' %  ( float ( ss ) / ( 1024 * 1024 * 1024 ) )
                 
             ot    = type ( self [ k ] )
-            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__ 
-            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size 
+            otype = ot.__cppname__ if hasattr ( ot , '__cppname__' ) else ot.__name__
+
+            rawitem = self.__get_raw_item__ ( k )
+            if isinstance ( rawitem , Item ) : timetag = rawitem.time
+            else                             : timetag = '' 
+
+            row = '{:15}'.format ( k ) , '{:15}'.format ( otype ) , size , timetag 
             table.append ( row )
 
         import ostap.logger.table as T
@@ -447,7 +479,7 @@ class SQLiteShelf(SqliteDict):
 
     # =============================================================================
     ## ``get-and-uncompress-item'' from dbase 
-    def __getitem__ ( self, key ):
+    def __get_raw_item__ ( self, key ):
         """ ``get-and-uncompress-item'' from dbase 
         """
         GET_ITEM = 'SELECT value FROM %s WHERE key = ?' % self.tablename
@@ -461,20 +493,50 @@ class SQLiteShelf(SqliteDict):
         return value
 
     # =============================================================================
+    ## ``get-and-uncompress-item'' from dbase 
+    def __getitem__ ( self, key ):
+        """ ``get-and-uncompress-item'' from dbase 
+        """
+
+        value  = self.__get_raw_item__ ( key )
+        if isinstance ( value , Item ) : value = value.payload 
+        return value
+
+    # =============================================================================
     ## ``set-and-compress-item'' to dbase 
     def __setitem__ ( self , key , value ) :
         """ ``set-and-compress-item'' to dbase 
         """
         ADD_ITEM = 'REPLACE INTO %s (key, value) VALUES (?,?)' % self.tablename
-        
+
+        item = Item ( datetime.datetime.now ().strftime( '%Y-%m-%d %H:%M:%S' ) , value )
+
         f     = BytesIO ()
         p     = Pickler ( f , self.protocol )
-        p.dump ( value )
+        p.dump ( item )
         blob  = f.getvalue ( ) 
         zblob = zlib.compress ( blob , self.compression )
         
         self.__sizes [ key ] = len ( zblob )
         self.conn.execute ( ADD_ITEM, ( key , sqlite3.Binary ( zblob ) ) )
+
+
+    # =========================================================================
+    ## close and compress (if needed)
+    def close ( self ) :
+        """ Close the file (and compress it if required) 
+        """
+
+        if self.flag == 'c' : 
+            dct = self.get ( '__metainfo__' , {} )
+            dct  [ 'Updated at'                  ] = datetime.datetime.now().strftime( '%Y-%m-%d %H:%M:%S' )   
+            dct  [ 'Updated by'                  ] = meta_info.User 
+            dct  [ 'Updated with Ostap version'  ] = meta_info.Ostap 
+            dct  [ 'Updated with Python version' ] = meta_info.Python 
+            dct  [ 'Updated with ROOT version'   ] = meta_info.ROOT   
+            self [ '__metainfo__' ] = dct
+
+        return SqliteDict.close ( self )
         
     ## context manager
     def __enter__ ( self      ) :
@@ -513,7 +575,7 @@ def open ( *args , **kwargs ):
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
 #  @see SQLiteShelf
-class TmpSQLiteShelf(SQLiteShelf):
+class TmpSQLiteShelf(SQLiteShelf,TmpDB):
     """TEMPORARY SQLite-based ``shelve-like'' database with compressed content. 
     see SQLiteShelf
     """
@@ -521,17 +583,30 @@ class TmpSQLiteShelf(SQLiteShelf):
                    tablename      = 'ostap'                 ,
                    compress_level = zlib.Z_BEST_COMPRESSION , 
                    journal_mode   = "DELETE"                ,
-                   protocol       = HIGHEST_PROTOCOL        ) :
+                   protocol       = HIGHEST_PROTOCOL        ,
+                   remove         = True                    ,
+                   keep           = False                   ) :
         
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.lzdb' , remove = remove , keep = keep ) 
+        
+        ## open DB  
         SQLiteShelf.__init__ ( self            ,
-                               None            ,
+                               self.tmp_name   ,
                                'c'             ,
                                tablename       ,
                                True            , ## False , ## writeback/autocommit
                                compress_level  ,
                                journal_mode    ,
                                protocol        ) 
-        
+            
+    ## close and delete the file 
+    def close ( self )  :
+        ## close the shelve file
+        SQLiteShelf.close ( self )
+        ## delete the file
+        TmpDB  .clean     ( self ) 
+     
 # =============================================================================
 ## open new TEMPORARY SQLiteShelve data base
 # @code
@@ -557,5 +632,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

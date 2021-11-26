@@ -8,32 +8,41 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-    strategy:
+  test_docker:
+     strategy:
       matrix:
-        python-version: [2.7]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        wget -nv http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh 
-        bash miniconda.sh -b -p $HOME/miniconda
-        export PATH="$HOME/miniconda/bin:$PATH"
-        hash -r
-        conda config --set always_yes yes --set changeps1 no
-        conda config --add channels conda-forge
-        conda create -q -n testenv nose root_base root-binaries root-dependencies gsl python future configparser  nose  cmake
-    - name: Build
-      run: |
-        export PATH="$HOME/miniconda/bin:$PATH"
-        export CONDA_ENV_PATH=$HOME/miniconda/envs/testenv
-        source activate testenv
-        mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install && cd ../
+        build: [1,2,3]
+        include:
+            - { build: 1, lcg: dev3/latest, platform: x86_64-centos7-gcc9-opt }
+            - { build: 2, lcg: dev3/latest, platform: x86_64-centos7-gcc8-opt }
+            - { build: 3, lcg: dev3python2/latest, platform: x86_64-centos7-gcc10-opt}
+      fail-fast: false
+     runs-on: ubuntu-latest 
+     steps:
+       - uses: actions/checkout@v2
+       - name: Install dependencies
+         run: |
+          ls 
+       - uses: cvmfs-contrib/github-action-cvmfs@v2
+       - name: Build
+         run: |
+          ls /cvmfs/sft.cern.ch 
+          docker  create -v  /osya --name ostap-build    gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest 
+          docker cp  /home/runner/work/ostap/ostap/  ostap-build:/osya
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/bootstrap ${{ matrix.lcg }} ${{ matrix.platform }}"
+       - name: Test
+         run: |
+          ls /cvmfs/sft.cern.ch 
+          docker run      -v /cvmfs:/cvmfs:shared -u:0  --volumes-from ostap-build  --security-opt seccomp=unconfined gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:latest /bin/bash -c "cd /osya/ostap  &&  ./scripts/test ${{ matrix.lcg }}  ${{ matrix.platform }}"
+       - name: copy artifacts
+         if: always()
+         run: |
+            docker cp  ostap-build:/osya/ostap/build .
+       - name: Archive production artifacts
+         if: always()
+         uses: actions/upload-artifact@v2
+         with:
+          name: test
+          path: build/Testing
+

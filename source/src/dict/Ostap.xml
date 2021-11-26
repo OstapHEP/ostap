@@ -2,15 +2,20 @@
 
 <lcgdict>
   
-  <class pattern    = "Ostap::*"                  />
-  <class pattern    = "Ostap::Math::*"            />  
-  <class pattern    = "Ostap::Math::GSL::*"       />  
-  <class pattern    = "Ostap::Utils::*"           />
-  <class pattern    = "Ostap::Models::*"          />
-  <class pattern    = "Ostap::Functions::*"       />
-  <class pattern    = "Ostap::Kinematics::*"      />
-  <class pattern    = "Ostap::MoreRooFit:*"       />
-
+  <class pattern    = "Ostap::*"                    />
+  <class pattern    = "Ostap::Math::*"              />  
+  <class pattern    = "Ostap::Math::GSL::*"         />  
+  <class pattern    = "Ostap::Utils::*"             />
+  <class pattern    = "Ostap::Models::*"            />
+  <class pattern    = "Ostap::Functions::*"         />
+  <class pattern    = "Ostap::Kinematics::*"        />
+  <class pattern    = "Ostap::MoreRooFit::*"        />
+  <class pattern    = "Ostap::Math::FormFactors::*" />
+  
+  <!--
+      <class pattern    = "Ostap::Math::Ops::*"       />  
+  -->
+  
   <function pattern = "Ostap::Math::*"            />
   <function pattern = "Ostap::Utils::*"           />
   <function pattern = "Ostap::Utils::Histos::*"   />
@@ -21,14 +26,19 @@
   <class name = "std::unary_function&lt;double,double&gt;" />
   <class name = "std::binary_function&lt;double,double,double&gt;" />
 
+
+  <class name = "std::function&lt;double(double,double,double,double)&gt;" />
+  <class pattern = "std::function&lt;double(*)&gt;" />
+
+
   <class name = "Ostap::Math::Tensors::Epsilon"  />
 
   <class pattern = "std::vector&lt;Ostap::WStatEntity,*&gt;" />
-  
+
   <class name   = "Ostap::Math::WorkSpace">
     <field name = "m_workspace" transient="true"/>      
   </class>
-  
+
   <exclusion>    
 
     <class name    = "Ostap::StatVar::Interval"     />
@@ -47,6 +57,7 @@
     <class pattern = "ROOT::Math::DisplacementVector*" />
     <class pattern = "ROOT::Math::LorentzVector*"      />
     <class pattern = "ROOT::Math::Impl::Plane3D*"      />
+
     
     
     <class name    = "Ostap::Utils::Tee">
@@ -75,10 +86,15 @@
     <class name    = "Ostap::Functions::FuncFormula">  
       <field name  = "m_formula" />      
     </class>
+
     <class name    = "Ostap::Functions::FuncRooFormula">  
       <field name  = "m_formula" />      
     </class>
 
+    <class name = "Ostap::ROOT_Selector"/>
+
+    <class function = "Ostap::Math::poly_to_bernstein"     />  
+    <class function = "Ostap::Math::bernstein_from_roots"  />  
 
   </exclusion>  
 </lcgdict>

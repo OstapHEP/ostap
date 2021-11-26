@@ -36,16 +36,21 @@ __author__  = 'Vanya BELYAEV Ivan.Belyaev@itep.ru'
 __date__    = '2016-02-23'
 __all__     = (
     'get_ppservers'    , ## get list of PP-servers  
-    'get_remote_conf'  , ## get PP-configuration for remote PP-server 
+    'get_remote_conf'  , ## get PP-configuration for remote PP-server
+    'ping'             , ## ping remote host
+    'good_pings'       , ## get alive hosts
+    'get_local_port'   , ## get local port number
+    'pool_context'     , ## useful context for the pathos's Pools
     )
 # =============================================================================
-from builtins import range
+import sys
+from   builtins import range
 # =============================================================================
 from ostap.logger.logger    import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.utils' )
 else                      : logger = getLogger ( __name__               ) 
 # =============================================================================
-## Get the PP-configuration for the remote host form the configuration file 
+## Get the PP-configuration for the remote host from the configuration file 
 #  @code
 #  env , script , profile = get_remote_config ( 'lxplu701.cern.ch' ) 
 #  @endcode
@@ -160,7 +165,6 @@ def get_ppservers  ( local_host = '' ) :
     return tuple ( ppsvc )
                 
 
-
 # =============================================================================
 ## Get the maximum size of jobs chunk
 #  for large number of parallel jobs one often gets error
@@ -211,7 +215,7 @@ def get_max_jobs_chunk ( jobs_chunk = None ) :
 #  jobid = ...
 #  random_random ( jobid ) 
 #  @endcode
-def random_random ( jobid ) :
+def random_random ( *jobid ) :
     """Random number setting for parallel jobs
     - python
     - ROOT.gRandom
@@ -224,16 +228,26 @@ def random_random ( jobid ) :
     ##
     random.seed ()
     ##
-    jhid = os.getpid () , os.getppid() , socket.getfqdn () , jobid , os.uname () , time.time () 
+    jhid = jobid 
+    jhid = jhid , os.getpid () , os.getppid() , os.uname()
+    jhid = jhid , socket.getfqdn ()
+    jhid = jhid , time.time ()
+    jhid = jhid , id ( ROOT )  , id ( sys )   , id ( random )
+    jhid = jhid , os.urandom ( 32 )
     jhid = hash ( jhid ) 
     ##
-    if sys.version_info.major < 3 : random.jumpahead ( jhid )
-    else :
-        njumps = jhid % 9967
-        for j in range ( njumps ) : random.uniform ( 0 , 1 )
+    random.seed ( jhid )
+    ## 
+    if sys.version_info.major < 3 :
+        random.jumpahead ( jhid )
+    ##
+    njumps = jhid % 9967
+    for j in range ( njumps ) :
+        random.uniform ( 0 , 1 )
+    ## 
 
     ## sleep a bit (up to one second) 
-    time.sleep ( random.uniform ( 0.1 , 1.0 ) )
+    time.sleep ( random.uniform ( 0.01 , 1.0 ) )
     
     ## now  initialize ROOT
     ROOT.gRandom.SetSeed ()
@@ -241,14 +255,147 @@ def random_random ( jobid ) :
     ## ... and Roofit
     ROOT.RooRandom.randomGenerator().SetSeed()
     
-    return random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
-
+    state = random.getstate() , ROOT.gRandom.GetSeed() , ROOT.RooRandom.randomGenerator().GetSeed() 
     
+
+# =============================================================================
+## ping the remote host 
+def ping ( host ) :
+    """Ping the host
+    """
+    logger.debug ( "Ping for %s" % host ) 
+    import subprocess , shlex 
+    command = "ping -c 1 -w 1 %s" % host 
+    args    = shlex.split( command )
+    try:
+        subprocess.check_call ( args                     ,
+                                stdout = subprocess.PIPE ,
+                                stderr = subprocess.PIPE )
+        return True 
+    except subprocess.CalledProcessError:
+        return False 
+
+ 
+# =============================================================================
+## get avive remote hosts (hosts with a good ping)
+#  @code
+#  good = good_pings ( '...' , '...' , '...' , '...' ) 
+#  @endocde 
+def good_pings ( *remotes ) :
+    """Get alive remote hosts (hosts with a good ping)
+    >>> good = good_pings ( '...' , '...' , '...' , '...' ) 
+    """
+    from ostap.core.ostap_types import string_types
+    
+    good = [] 
+    for rem in remotes :
+
+        remo = rem 
+        if isinstance ( rem , string_types )  : remo = [ rem ]
+        
+        for remote in remo  :
+            user , at , host = remote.rpartition('@')
+            host , _  , port = host.partition   (':')
+            if ping ( host ) : good.append ( host )
+            
+    return tuple ( good ) 
+
+# =============================================================================
+_patterns = []
+
+# ============================================================================
+## get the local port number from expressions:
+#  valid expressions (leading and trailing spacdes are ignored)
+#   - positive integer number
+#   - ' positive-integer-number '
+#   - ' localhost:positive-integer-number ' ##  case insensitive 
+#   - ' positive-integer-number:localhost ' ##  case insensitive 
+def get_local_port ( expression ) :    
+    """Get the local port number from expressions
+    Valid expressions (leading and trailing spacdes are ignored)
+    - positive integer-number
+    - `'  positive-integer-number  '`
+    - `'  localhost:positive-integer-number  '` ##  case insensitive 
+    - `'  positive-integer-number:localhost  '` ##  case insensitive 
+
+    """
+    from ostap.core.ostap_types import string_types, integer_types
+    
+    if isinstance ( expression , integer_types ) and 0 < expression :
+        return expression
+
+    if not _patterns :
+        
+        import re
+        _patterns.append ( re.compile ( r'\A(\d+)\Z'            , re.I ) ) 
+        _patterns.append ( re.compile ( r'\Alocalhost:(\d+)\Z'  , re.I ) ) 
+        _patterns.append ( re.compile ( r'\A\A(\d+):localhost\Z', re.I ) ) 
+        
+    if isinstance ( expression , string_types ) :
+
+        expr = expression.strip().lower()
+        for pattern in _patterns :
+
+            match = pattern.match ( expr )
+            if not match : continue
+            
+            port = int ( match.group ( 1 ) )
+            if 0 < port : return port            ## RETURN 
+
+    return None 
+                    
+# =============================================================================
+## Context manager for Pathos pools
+#  @code
+#  with PoolContext ( pool ) :
+#  ...   
+#  @encode
+class PoolContext(object) :
+    """Context manager for Pathos pools
+    >>> with PoolContext ( pool ) :
+    >>> ...   
+    """
+    def __init__ ( self , pool ) :
+        self.__pool = pool
+        
+    def __enter__ ( self )   :
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        self.__pool.restart ( True )
+        return self.__pool
+    
+    def __exit__  ( self , *_) :
+        self.__pool.close ()
+        self.__pool.join  ()
+        self.__pool.clear ()
+        sys.stdout .flush ()
+        sys.stderr .flush ()
+        
+    @property
+    def pool  ( self ) :
+        """``pool'' the actual Pathos pool"""
+        return self.__pool 
+
+
+# =============================================================================
+## Context manager for Pathos pools
+#  @code
+#  with pool_context ( pool ) :
+#  ...   
+#  @encode
+def pool_context  ( pool ) :
+    """Context manager for Pathos pools
+    >>> with pool_context ( pool ) :
+    >>> ...   
+    """    
+    return  PoolContext ( pool )
+
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )    
+
 # =============================================================================
 #                                                                       The END 
 # =============================================================================

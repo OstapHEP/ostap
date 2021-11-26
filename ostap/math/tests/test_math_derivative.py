@@ -13,21 +13,62 @@ It tests local implementation of numerical derivatives
 # ============================================================================= 
 from __future__ import print_function
 # ============================================================================= 
+import random
+from   math                  import sin, cos, pi 
+from   ostap.math.derivative import derivative, iszero 
+from   ostap.stats.counters  import SE
+from   ostap.utils.timing    import timing
+import ostap.logger.table    as     T 
+# ============================================================================= 
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_math_derivative' )
-else                       : logger = getLogger ( __name__               )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_derivative' )
+else                       : logger = getLogger ( __name__                    )
 # ============================================================================= 
 
 
-def test_derivative ():
+def test_derivative_1 ():
 
-    from math import sin, cos, pi 
-    from ostap.math.derivative import derivative, iszero 
-    import random
-    from ostap.stats.counters import SE
-    from ostap.utils.timing   import timing
+    logger = getLogger ( 'test_derivative_1' )
+    
+    cnt  = {} 
+    cntE = {} 
+    for I in range(1,9) : 
+        cnt  [I] = SE()
+
+    
+    func = lambda x :           sin(x)/x 
+    deri = lambda x : (cos(x) - sin(x)/x)/x 
+
+    with timing() :
+        
+        for i in range(10000) :
+            
+            x = random.uniform ( 0 , pi )
+            
+            d_true = deri ( x )
+            
+            for I in range ( 1 , 9 ) :
+                delta    = derivative ( func , x , I = I ) - d_true
+                cnt [I] += delta
+
+    rows = [ ('Order' , '#' , 'min' , 'max' ) ]
+    for i in cnt :
+        c = cnt[I] 
+        row = '%d' % i , '%d' % c.nEntries() , '%+.5g' % c.min() , '%+.5g' % c.max() 
+        rows.append ( row ) 
+        
+    table = T.table ( rows ,
+                      title  = 'Test numerical derivatives' ,
+                      prefix = '# ' , alignment = 'crll'     )
+    
+    logger.info ( 'Test numerical derivatives\n%s' % table )
+
+
+def test_derivative_2 ():
+
+    logger = getLogger ( 'test_derivative_2' )
     
     cnt  = {} 
     cntE = {} 
@@ -37,45 +78,38 @@ def test_derivative ():
     func = lambda x :     sin(10*x)+x
     deri = lambda x :  10*cos(10*x)+1
     
-    func = lambda x :           sin(x)/x 
-    deri = lambda x : (cos(x) - sin(x)/x)/x 
-
-    ## func = lambda x :   x**9
-    ## deri = lambda x : 9*x**8  
-
-    ## from math import sinh, cosh
-    ## func = lambda x :    sinh(2*x)
-    ## deri = lambda x :  2*cosh(2*x)
-
-    ## from math import tanh,cosh
-    ## func = lambda x :      tanh(3*x)
-    ## deri = lambda x :  3./(cosh(3*x)**2)
 
     with timing() :
         
-        for i in range(50000) :
+        for i in range(10000) :
             
             x = random.uniform ( 0 , pi )
             
             d_true = deri ( x )
             
-            for I in range(1,9) : 
-                delta = derivative ( func , x , I = I , err = True ) - d_true
-                ## delta = derivative ( sin , x , I = I ) - d_true
-                ## cnt [I] += delta*1.e+10  
-                ## cnt [I] += abs(delta/d_true)*1.e+10
-                if not iszero ( delta.cov2() ) :   
-                    cnt [I] += abs(delta.value())/delta.error()
-                
-    for I in range(1,9) : 
-        print(I,cnt  [I])
-        
+            for I in range ( 1 , 9 ) : 
+                delta    = derivative ( func , x , I = I ) - d_true
+                cnt [I] += delta
+
+    rows = [ ('Order' , '#' , 'min' , 'max' ) ]
+    for i in cnt :
+        c = cnt[I] 
+        row = '%d' % i , '%d' % c.nEntries() , '%+.5g' % c.min() , '%+.5g' % c.max() 
+        rows.append ( row ) 
+
+    table = T.table ( rows ,
+                      title  = 'Test numerical derivatives' ,
+                      prefix = '# ' , alignment = 'crll'     )
+    
+    logger.info ( 'Test numerical derivatives\n%s' % table )
+
         
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_derivative ()
+    test_derivative_1 ()
+    test_derivative_2 ()
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

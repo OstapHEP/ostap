@@ -299,9 +299,10 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian pdf 
      */
-    double gauss_pdf ( const double x         ,
-                       const double mu    = 0 ,
-                       const double sigma = 1 ) ;
+    double gauss_pdf
+    ( const double x         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
     // ========================================================================
     /** get the standard gaussian cdf 
      *  @see https://en.wikipedia.org/wiki/Normal_distribution
@@ -311,9 +312,42 @@ namespace Ostap
      *  @param sigma sigma (width)  
      *  @return the value of gaussian cdf 
      */
-    double gauss_cdf ( const double x         ,
-                       const double mu    = 0 ,
-                       const double sigma = 1 ) ;
+    double gauss_cdf 
+    ( const double x         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
+    // ========================================================================
+    /** get the Gaussian integral 
+     *  @see https://en.wikipedia.org/wiki/Normal_distribution
+     *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+     *  \f[ f(a,b;\mu,\sigma = \int_a^b \frac{1}{\sqrt{2\pi}\sigma}
+     *     \mathrm{e}^{-\frac{1}{2} \left( \frac{x-\mu}{\sigma}\right)^2}dx \f]
+     *  @param a low integration limit
+     *  @param b high integration limit
+     *  @param mu location of Gaussian
+     *  @param sigm awidth of the Gaussian
+     */
+    double gauss_int
+    ( const double a         ,
+      const double b         ,
+      const double mu    = 0 ,
+      const double sigma = 1 ) ;
+    // ========================================================================
+    /** Student's t-CDF 
+     *  \f[ f(t;\nu) = \left\{
+     *  \begin{array}{ll}
+     *  1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\ge0 \                                     \
+     *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+     *   & \mathrm{for}~t\<0
+     *  \end{array} \right. f]
+     *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+     *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+     *  @param  t t-value 
+     *  @param  nu parameter nu , $\nu>0$
+     */
+    double student_cdf ( const double t  , 
+                         const double nu ) ;
     // ========================================================================
     /** compute Owen's T-function
      *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 
@@ -375,25 +409,31 @@ namespace Ostap
      *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \dfrac{ d \psi }{\sqrt{1-k^2 \sin^2 \phi }}\f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_F ( const double phi , const double k   ) ;
+    double elliptic_F 
+    ( const double phi , 
+      const double k   ) ;
     // ========================================================================
     /** Trigonometric form of incomplete elliptic integral \f$ E(\phi,k) \f$
      *  \f[ F(\phi,k) \equiv \int_{0}^{\phi} \sqrt{1-k^2 \sin^2 \phi } d \psi \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_E ( const double phi , const double k   ) ;
+    double elliptic_E 
+    ( const double phi , 
+      const double k   ) ;
     // ========================================================================
     /** Complete elliptic integral \f$ E(k) \f$  
      *  \[ E(k) \equiv E ( \frac{\pi}{2}, k ) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_E ( const double k   ) ;
+    double elliptic_E 
+    ( const double k   ) ;
     // ========================================================================
     /** Complete elliptic integral \f$ K(k) \f$  
      *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      */
-    double elliptic_K ( const double k   ) ;
+    double elliptic_K 
+    ( const double k   ) ;
     // ========================================================================
     /** difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
      *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
@@ -403,14 +443,17 @@ namespace Ostap
      *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
-    double elliptic_KmE ( const double k   ) ;    
+    double elliptic_KmE 
+    ( const double k   ) ;    
     // ========================================================================
     /** Jacobi zeta function
      *  \f[ K(k) Z( \beta , k ) = K(k) E(\beta, k ) - E(k) F(\beta,k) \f] 
      *  @see https://en.wikipedia.org/wiki/Elliptic_integral
      *  http://functions.wolfram.com/EllipticIntegrals/JacobiZeta/introductions/IncompleteEllipticIntegrals/ShowAll.html
      */
-    double elliptic_Z  ( const double beta  , const double k   ) ;
+    double elliptic_Z  
+    ( const double beta , 
+      const double k    ) ;
     // ========================================================================
     /** Product of Jacobi zeta function \f$ Z(\beta,k) \f$
      *  and complete elliptic integral \f$ K(k) \f$
@@ -423,8 +466,346 @@ namespace Ostap
      *  @see https://doi.org/10.1007/BF02198293
      *  @see https://arxiv.org/abs/math/9409227
      */
-    double elliptic_KZ ( const double beta  , const double k   ) ;
+    double elliptic_KZ 
+    ( const double beta  , 
+      const double k   ) ;
+    // ========================================================================
+    /** elliptic \f$ \Pi(\alpha^2,k)\f$ function 
+     *  - \f$ alpha^2 < 1 \f$ 
+     *  - \f$ k      < 1 \f$ 
+     *  \f[ \Pi(\alpha^2, k) - K(k) = 
+     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+     */ 
+    double elliptic_PI
+    ( const double alpha2 , 
+      const double k      ) ;
+    // ========================================================================
+    /** elliptic \f$ \Pi(\alpha^2,k) - K(k) \f$ function 
+     *  \f[ \Pi(\alpha^2, k) - K(k) \equiv  
+     *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+     *  - \f$ alpha^2 < 1 \f$ 
+     *  - \f$ k      < 1 \f$ 
+     */ 
+    double elliptic_PImK  
+    ( const double alpha2 , 
+      const double k      ) ;
+    // ========================================================================
 
+    // ========================================================================
+    // Symmetric Carlson forms 
+    // ========================================================================
+    
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF_gsl  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF_int 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ_gsl
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+     *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RJ_int
+    ( const double x , 
+      const double y , 
+      const double z , 
+      const double p ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC_gsl 
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+     *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     *  For negative y, Cauchy principal value it returned 
+     *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+     */
+    double carlson_RC_int
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD_gsl  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RD_int  
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG_gsl 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+     *  \left[  (t+x)(t+y)\right]^{-1/2} 
+     *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG_int 
+    ( const double x , 
+      const double y , 
+      const double z ) ;
+    // ========================================================================
+    // specific cases of symmetric forms 
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_F(x,y) = R_F(x,y,0)\f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RF
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+    /** Symmetric Carlson form 
+     *  \f[ R_G(x,y) = R_G(x,y,0)\f]
+     *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+     *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+     *                Numerical Algorithms, 10, 1995,  13
+     *  @see https://doi.org/10.1007/BF02198293
+     *  @see https://arxiv.org/abs/math/9409227
+     */
+    double carlson_RG 
+    ( const double x , 
+      const double y ) ;
+    // ========================================================================
+
+    // ========================================================================
+    /** Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
+     * 
+     * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
+     *  \f$ V_2(m; \mu,\Gamma,\sigma) \equiv  S_2(m;\mu,\Gamma)\ast G(\delta m;\sigma)\f$ 
+     *  where 
+     *  - \f$ S_2 = \frac{1}{\pi}\frac{\mu\Gamma}{ (m^2-\mu^2)^2 + \mu^2\Gamma^2 } \f$    
+     *  - \f$ G(\delta m ; \sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} 
+     *     \mathrm{e}^{-\frac{1}{2} \left( \frac{\delta m }{\sigma} \right)^2} \f$$
+     *  
+     *  \f$ V_2(m; \mu,\Gamma,\sigma = \frac{H_2(a,u_1,u_2)}{2\sqrt{\pi}\sigma^2}\f$, where 
+     *  - \f$ u_1 = \frac{m-\mu }{\sqrt{2}\sigma} \f$
+     *  - \f$ u_2 = \frac{m+\mu }{\sqrt{2}\sigma} \f$
+     *  - \f$ a   = \frac{\mu\Gamma}{2\sigma^2} \f$
+     *
+     *  \f[ H_2(a,u_1,u_2) = 
+     *   \frac{a}{\pi} \int_{-\infty}{+\infty}  
+     *    \frac{dt}{  (u_1-t)^2(u_2-t0^2 + a^2 } \f] 
+     * @see Kycia, Radoslaw A.; Jadach, Stanislaw. 
+     *      "Relativistic Voigt profile for unstable particles in high energy physics". 
+     *      Journal of Mathematical Analysis and Applications. 463 (2): 1040–1051 
+     *      arXiv:1711.09304. doi:10.1016/j.jmaa.2018.03.065. ISSN 0022-247X.
+     * @see https://arxiv.org/abs/1711.09304
+     */
+    double H2 ( const double a  , 
+                const double u1 , 
+                const double u2 ) ;
+    
+    
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_e 
+     *  @see gsl_sf_bessel_K1_e 
+     *  @see gsl_sf_bessel_Kn_e 
+     */
+    double bessel_Kn         ( const int   n  , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_K0_scaled_e 
+     *  @see gsl_sf_bessel_K1_scaled_e 
+     *  @see gsl_sf_bessel_Kn_scaled_e 
+     */
+    double bessel_Kn_scaled  ( const int   n  , const double ) ;
+    // ========================================================================
+    /** modified Bessel function of the second kind  
+     *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_e 
+     */
+    double bessel_Knu        ( const double nu , const double x ) ;
+    // ========================================================================
+    /** scaled modified Bessel function of the second kind 
+     *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+     *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+     *  @see gsl_sf_bessel_Knu_scaled_e 
+     */
+    double bessel_Knu_scaled ( const double  nu , const double x ) ;
+    
+    
+    
     // ========================================================================
     // clenshaw summation algorithms 
     // ========================================================================

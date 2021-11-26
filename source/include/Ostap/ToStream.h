@@ -43,7 +43,7 @@ namespace Ostap
     // ========================================================================
     namespace details 
     {
-      /// copied from GaudiKErnel/SerializeSTL
+      /// copied from GaudiKernel/SerializeSTL
       struct IdentityOutputter 
       {
         template <typename T>

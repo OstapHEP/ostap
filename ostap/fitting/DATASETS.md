@@ -7,7 +7,7 @@ Almost all [`RooFit`](https://root.cern.ch/roofit) actions deal with `RooDataSet
 
 2.  Via explicit loop over `ROOT.TTree` entries and using `RooDataSet.add` method: very powerful and flexible method, can deals with arboyrary complex columns, expressions,  functions, etc...  but very CPU  inefficient for large data. Large speedup can be obtaine dvia efficicient filetring using `withCuts`-iterator
 
-3.  Using `Selectors` from [`selectors.py`](./selectors.py) module: set of very flexible and powerful technique. For simple cases is falls to (1), but in additon, it allowes to perform very  efficient filtering, exloit the powerful expressions and functions, inclusing `ROOT.RDataFrame` filtering. With the proper usage it could be very CPU efficient.  In addition it allows powerful paralellization, exploiting multicore and multiprocessor architechture
+3.  Using `Selectors` from [`pyselectors.py`](./pyselectors.py) module: set of very flexible and powerful technique. For simple cases is falls to (1), but in additon, it allowes to perform very  efficient filtering, exloit the powerful expressions and functions, inclusing `ROOT.RDataFrame` filtering. With the proper usage it could be very CPU efficient.  In addition it allows powerful paralellization, exploiting multicore and multiprocessor architechture
 
 ## Simple constructor of `RooDataSet`  and `make_dataset` method 
 
@@ -41,7 +41,7 @@ In this example the calculated/derived variable `pt2` will be added into `RooDat
 Any valid `RooFormulaVar` expressions can be used in this approach to define new variables. 
 ```python
 tree = ...
-from ostap.fitting  .selectors import Variable 
+from ostap.fitting.pyselectors import Variable 
 ds = tree.make_dataset ( variables = [ Variable( var = 'pt2' , 
            description = 'pT squared' , vmin  = 0 , vmax = 10 , acessor = 'pt*pt' ) , 
                          'p' , 'eta' ] , 

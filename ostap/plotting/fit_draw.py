@@ -177,7 +177,16 @@ else                       : logger = getLogger ( __name__         )
 def lineWidth ( w ) : return ROOT.RooFit.LineWidth ( w )
 def lineStyle ( s ) : return ROOT.RooFit.LineStyle ( s )
 def lineColor ( c ) : return ROOT.RooFit.LineColor ( c )
-#
+# ==============================================================================
+## compare the keys
+# ==============================================================================
+## transformation for the keys 
+def key_transform ( key ) : return key.lower().replace('_','')
+## compare two keys 
+def key_compare   ( key1 , key2 ) :
+    """Comparison of keys"""
+    return key1 == key2 or key_transform ( key1 ) == key_transform ( key2 )
+# ==============================================================================  
 ## the list of predefined "draw"-keys 
 keys = (
     'data_options'                ,
@@ -233,12 +242,11 @@ def draw_options ( **kwargs ) :
     ...      draw_opts = draw_options ( kwargs )
     """
     options = {}
-    for k,v in items_loop ( kwargs ) :
-        if k.lower() in keys : options[ k.lower() ] = v
-        if k.lower() in ( 'draw' , 'draw_option' , 'draw_options' ) :
-            if isinstance ( v , dict ) : options.update ( v ) 
+    for k , v  in items_loop ( kwargs ) :
+        for key in keys :
+            if key_compare ( k , key ) :
+                options [ k ] = v
     return options
-
 
 # =============================================================================
 ## @class Style
@@ -340,8 +348,9 @@ class Style(object):
 
         _fillopt = False
         if   isinstance ( fillcolor , integer_types ) and 0 < fillcolor :
-            self.__fillcolor = fillcolor 
-            cc = ROOT.gROOT.GetColor ( fillcolor )
+            self.__fillcolor = fillcolor
+            groot = ROOT.ROOT.GetROOT() 
+            cc    = groot.GetColor ( fillcolor )
             if cc and 1.0 == cc.GetAlpha () :
                 ## add tranparency
                 fillcolor = ROOT.TColor.GetColorTransparent ( fillcolor , transparency ) 
@@ -656,7 +665,8 @@ def  get_options ( config , option , default ) :
 
     opts = config.get ( option , fallback = '()' )
     opts = opts.strip   ( ) 
-    opts = opts.replace ('\n', ' ' ) 
+    opts = opts.replace ('\n', ' ' )
+
     try : 
         options = eval( opts , globals() )
         if isinstance ( options , ROOT.RooCmdArg ) : options = options ,
@@ -664,7 +674,7 @@ def  get_options ( config , option , default ) :
         if any ( not isinstance ( o , ROOT.RooCmdArg ) for o in options ) :
             raise TypeError('Invalid type  for %s : %s' % ( option , opts ) ) 
     except :
-        logger.error("Can't parse/eval option %s : %s" % ( option , opts ) ) 
+        logger.error("Can't parse/eval option %s : %s" % ( option , opts ) , exc_info = True ) 
         options = default 
 
     return options
@@ -764,20 +774,21 @@ default_background2D_style = default_background_style
 ## get the options/styles from configurtaion parser 
 # =============================================================================
 def  get_style ( config , style , default ) :
-    
+
     if not style in config : return default
 
     opts = config.get ( style , fallback = '()' )
     opts = opts.strip   ( ) 
-    opts = opts.replace ('\n', ' ' ) 
+    opts = opts.replace ('\n', ' ' )
+
     try : 
         options = eval( opts , globals() )
-        if isinstance ( options , Style ) : opts = opts ,
-        if isinstance ( options , list  ) : opts = tuple ( options )
+        if isinstance ( options , Style ) : options = options ,
+        if isinstance ( options , list  ) : options = tuple ( options )
         if any ( not isinstance ( o , Style ) for o in options ) :
             raise TypeError('Invalid style type for %s : %s' % ( style , opts ) ) 
     except :
-        logger.error("Can't parse %s : %s" % (  style , opts ) ) 
+        logger.error("Can't parse %s : %s" % (  style , opts ) , exc_info = True ) 
         options = default 
 
     return options
@@ -812,5 +823,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

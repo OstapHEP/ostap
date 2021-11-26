@@ -13,9 +13,7 @@
 #include "Ostap/Workspace.h"
 // ============================================================================
 /** @file Ostap/Peaks.h
- *
  *  Collection of useful peak-like models
- *
  *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
  *  @date 2010-04-19
  */
@@ -1622,7 +1620,7 @@ namespace Ostap
      *
      *  Note:
      *  Symmetric case of JonhsonSU distribution is
-     *  recovere by \f$\delta\rightarrow0\f$ for
+     *  recovered by \f$\delta\rightarrow0\f$ for
      *  "sinh-asinh" distribution, see
      *  Jones, M. C.; Pewsey, A. (2009).
      *  "Sinh-arcsinh distributions". Biometrika 96 (4): 761.
@@ -2370,6 +2368,553 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;
       // ======================================================================
     } ;     
+    // ========================================================================
+    /** @class Hyperbolic 
+     *  Hyperbolic disribtion
+     *  @see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+     *  @see  Barndorff-Nielsen, Ole, 
+     *    "Exponentially decreasing distributions for the logarithm of particle size". 
+     *    Proceedings of the Royal Society of London. Series A, 
+     *    Mathematical and Physical Sciences. 
+     *    The Royal Society. 353 (1674): 401–409
+     *     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+     * 
+     *  \f[  f(x;\mu, \beta, \delta, \gamma) = 
+     *  \frac{\gamma}{2\alpha\delta K_1(\delta \gamma)}
+     *  \mathrm{e}^{ -\sqrt{ \alpha^2\delta^2 + \alpha^2 (x-\mu)^2 } + \beta ( x - \mu)}
+     *  \f]
+     *  where 
+     *  - \f$ \alpha^2 = \beta^2\f + \gamma^2$
+     *  - \f$ K_1\f$ is a modified Bessel function of the second kind 
+     *  
+     * In the code we adopt parameterisation in terms of
+     *  - location parameter      \f$\mu\f$
+     *  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+     *  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+     *  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the shape 
+     *
+     * The parameters are defined as:
+     * \f[\begin{array}{lcl}
+     *     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_2(\zeta)}{\zetaK_1(zeta)} \\
+     *     \kappa   & \equiv & \frac{\beta}{\sigma} \\
+     *     \zeta    & \equiv & \delta \gamma \end{array} \f]
+     * - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+     * - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+     * - For small \f$ \zeta \f$ distribution shows kurtosis of 3 
+     *
+     * The inverse transformation is:
+     * \f[ \begin{array}{lcl}
+     *     \beta    & = & \frac{\kappa}{\sigma}            \\
+     *     \delta   & = & \frac{\zeta}{\gamma}             \\
+     *     \gamma   & = & \frac{\sqrt{A^*(\zeta)}}{\sigma} \\
+     *     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+     * 
+     * where \f$ A^{*}(\zeta) = \frac{\zeta K^*_2(\zeta)}{K^*_1(zeta)} \f$. 
+     * It is largely inspired by NIM A764 (2014) 150, arXiv:1312.5000, 
+     * but has much better properties when \f$ \zeta \rigtarrow 0 \f$ 
+     * @see D. Martinez Santos and F. Dupertuis,
+     *         "Mass distributions marginalized over per-event errors",
+     *          NIM A764 (2014) 150, arXiv:1312.5000
+     *          DOI: 10.1016/j.nima.2014.06.081",
+     *
+     *  The final form of the distribution is 
+     *  \f[  f(x;\mu,\sigma,\zeta,\kappa) = 
+     *     \frac{ A^{*2}(\zeta) } { 2 \sigma \sqrt{\kappa^2+A^{*2}(\zeta)} \zeta K^*_1(\zeta) } 
+     *     \mathrm{e}^{\zeta - \sqrt{ (\kappa^2+A^{*2}(\zeta)) \left(
+     *     \frac{\zeta^2}{A^{*2}(\zeta)} +\left( \frac{x-\mu}{\sigma}\right)^2  \right) } } 
+     *  \f]
+     *  where \f$ K^*_n(x)\f$ is a scaled modified Bessel functon to the second kind 
+     *   \f$ K^*_n(x) = \mathrm{e}^{x}K_1(x) \f$ 
+     *
+     *  In all expressions \f$ \left| \sigma \right|\f$ and 
+     *  \f$ \left| \zeta \right|\f$ are used instead of \f$\sigma\f$ and \f$\zeta\f$ 
+     * 
+     *  - For the finite values of \f$ \zeta\f$ it has 
+     *    Gaussian-like core and exponential tails 
+     * 
+     *  Useful subclasses: 
+     *  - \f$ \zeta\rigtharrow+\infty, \kappa=0\f$    : Gaussian function  
+     *  - \f$ \zeta\rigtharrow+\infty, \kappa\neq0\f$ : shifted Gaussian function  
+     *  - \f$ \zeta\rigtharrow+0 , \kappa=0\f$        : symmetric Laplace distribution
+     *  - \f$ \zeta\rigtharrow+0 , \kappa\neq0\f$     : asymmetric Laplace distribution  
+     */
+    class Hyperbolic 
+    {
+    public :
+      // =======================================================================
+      /** constructor from mu, sigma, zeta and kappa 
+       *  @param mu    related to location 
+       *  @param beta  related to asymmetry
+       *  @param sigma related to width 
+       *  @param zeta  related to what ?
+       */
+      Hyperbolic ( const double mu     = 0 ,   // related to location 
+                   const double sigma  = 1 ,   // related to withs  
+                   const double zeta   = 1 ,   // related to shape 
+                   const double kappa  = 0 ) ; // related to asymmetry 
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate  pdf  for Hyperbolic distribution
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  for Hyperbolic distribution
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// location parameter 
+      double mu       () const { return m_mu    ; } // location parameter 
+      /// sigma-parameter 
+      double sigma    () const { return m_sigma ; } // sigma-parameter 
+      /// squared sigma parameter 
+      double sigma2   () const { return m_sigma * m_sigma  ; } 
+      /// zeta-parameter 
+      double zeta     () const { return m_zeta  ; } // zeta-parameter 
+      /// squared zeta parameters
+      double zeta2    () const { return m_zeta  * m_zeta   ; }
+      /// asymmetry parameter kappa 
+      double kappa    () const { return m_kappa ; } // asymmetry parameter kappa 
+      /// squared asymmetry parameter
+      double kappa2   () const { return m_kappa * m_kappa ; }
+      // ======================================================================
+    public : // original parameters 
+      // ======================================================================
+      /// alpha parameter 
+      double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
+      /// squared alpha 
+      double alpha2   () const { return beta2 () + gamma2 ()       ; }      
+      /// beta parameter 
+      double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
+      /// squared beta parameter 
+      double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
+      /// gamma parameter 
+      double gamma    () const { return m_AL    / m_sigma          ; }
+      /// squared gamma parameter  
+      double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
+      /// delta parameter  
+      double delta    () const { return m_zeta * m_sigma / m_AL    ; }
+      /// squared delta parameter  
+      double delta2   () const { return std::pow  ( delta () , 2 ) ; }
+      //  =====================================================================
+    public : // features 
+      // ======================================================================
+      double location    () const { return mu ()   ; }
+      /// get the actual mode of the distribution
+      double mode        () const ; 
+      /// get mean value 
+      double mean        () const ;
+      /// get variance 
+      double variance    () const ;
+      /// get dispersion 
+      double dispersion  () const { return variance () ; }
+      /// get RMS 
+      double rms         () const { return std::sqrt ( variance () ) ; }
+      /// get RMS 
+      double RMS         () const { return rms ()      ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool setMu       ( const double value ) ;
+      bool setLocation ( const double value ) { return setMu ( value ) ; }
+      bool setSigma    ( const double value ) ;
+      bool setZeta     ( const double value ) ;
+      bool setKappa    ( const double value ) ;
+      // ======================================================================
+    public: // extended setter 
+      // ======================================================================
+      /** set "standard" parameters 
+       *  @param mu     mu-parameter, location 
+       *  @param beta   beta-parameter, asymmetry 
+       *  @param gamma  gamma-parameter, shape 
+       *  @param delta  delta-parameter, scale 
+       *  \f$ \delta \ge 0, left| \beta \right|<  \alpha \f$ 
+       */ 
+      bool setStandard
+      ( const double mu    ,
+        const double beta  , 
+        const double gamma , 
+        const double delta ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const { return 1 ; }
+      /// get the integral 
+      double integral ( const double low  , 
+                        const double high ) const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    private :
+      // ======================================================================
+      /// location parameter 
+      double m_mu    { 0 } ;  // location 
+      /// scale/width parameter 
+      double m_sigma { 1 } ;  // width parameter 
+      /// shape parameter
+      double m_zeta  { 1 } ;  // shape parameter
+      /// asymmetry parameter 
+      double m_kappa { 0 } ;  // asymmetry parameter
+      // ======================================================================
+    private:  // helper parameters 
+      // ======================================================================
+      /** "constant" that relates sigma and gamma 
+       *  \f$ A \equiv \frac{\zeta K^*_2(\zeta)}{K^*_1(\zeta)} \f$, 
+       *  where \f$ K^*_n(x) \f$ is scaled modified irregular Bessel function 
+       *  \f$ K^*_1(x) = \mathrmf{e}^{x}K_1(x)\f$
+       *  - it behaves nicely when \f$\zeta\rightarrow 0 \f$
+       *  - it behaves nicely when \f$\zeta\rightarrow +\infty \f$ 
+       */
+      double m_AL { -1 } ; // constant that relates sigma and gamma for fixed zeta 
+      // ======================================================================
+      /** helper normalization constant 
+       *  \f$ k_1 = \frac{1}{\zeta K^*_1 ( \zeta ) }\f$, 
+       *  where \f$ K^*_1(x) \f$ is scaled modified irregular Bessel function 
+       *  \f$ K^*_1(x) = \mathrmf{e}^{x}K_1(x)\f$
+       *  - it behaves nicely when \f$\zeta\rightarrow 0 \f$
+       *  - it behaves nicely when \f$\zeta\rightarrow +\infty \f$ 
+       */
+      double m_N { -1 } ; // helper normalization constant 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ; // integration workspace
+      // ======================================================================      
+    } ;
+    // ========================================================================    
+    /** @class GenHyperbolic
+     *  Generalized Hyperbolic distribution
+     *  @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+     *  
+     *  \f[ f(x;\lambda, \alpha,\beta,\gamma,\delta,\mu)= 
+     *  \frac{  (\gamma/\delta)^{\lambda} }{ \sqrt{2\pi} K_{\lambda}(\delta\gamma) }
+     *   \mathrm{e}^{\beta (x-\mu)}
+     *   \frac{  K_{\lambda -1/2} ( \alpha \sqrt{ \delta^2 + (x-\mu)^2} ) }
+     *   { (  \sqrt{ \delta^2 + (x-\mu)^{2} }  /\alpha)^{1/2-\lambda} } \f]
+     * where 
+     *  - $\alpha=\sqrt{\beta^2+\gamma^2}$
+     *
+     * In the code we adopt parameterisation in terms of
+     *  - location parameter      \f$\mu\f$
+     *  - shape parameter         \f$\lambda\f$
+     *  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+     *  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+     *  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the shape 
+     *  
+     * The parameters are defined as:
+     * \f[\begin{array}{lcl}
+     *     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_{\lambda+1}(\zeta)}{\zetaK_{\lambda}(zeta)} \\
+     *     \kappa   & \equiv & \frac{\beta}{\sigma} \\
+     *     \zeta    & \equiv & \delta \gamma \end{array} \f]
+     * - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+     * - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+     * - For small \f$\zeta\f$ distribution shows kurtosis of 3 
+     *
+     * The inverse transformation is:
+     * \f[ \begin{array}{lcl}
+     *     \beta    & = & \frac{\kappa}{\sigma}                      \\
+     *     \delta   & = & \frac{\zeta}{\gamma}                       \\
+     *     \gamma   & = & \frac{\sqrt{A_{\lambda}^*(\zeta)}}{\sigma} \\
+     *     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+     *
+     * In general it has exponential tails for \f$ \lambda >0 \f$ and Gaussian core.
+     * For negative \f$ \lambda \f$ tails are more heavy..
+     *
+     * Special cases:
+     *  - \f$ \lampba = 1 \f$    : hyperbolic  
+     *  - \f$ \lampba = -1/2 \f$ : NIG   (normal inverse Gaussian)
+     *  - \f$ \lambda = 0  \f$   : hyperbola 
+     *  - \f$ \lambda = 1/2  \f$ : hyperboloid 
+     * 
+     * @see Ostap::Math::Hyperbolic
+     * Useful subclasses 
+     *  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
+     *  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+     *  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
+     *  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+     *
+     *  
+     */
+    class GenHyperbolic
+    {
+    public:
+      // ======================================================================
+      /** constructor from mu, sigma, zeta and kappa 
+       *  @param mu     related to location 
+       *  @param sigma  related to width 
+       *  @param kappa  related to asymmetry
+       *  @param zeta   related to kurtosis 
+       *  @param lambda shape-related    
+       */
+      GenHyperbolic 
+      ( const double mu     = 0 ,  // related to location 
+        const double sigma  = 1 ,  // related to width 
+        const double zeta   = 1 ,  // related to kurtosis
+        const double kappa  = 0 ,  // related to asymmetry 
+        const double lambda = 1 ) ;
+      // ======================================================================
+    public :
+      // ======================================================================
+      /// evaluate  pdf  for Generalised Hyperbolic distribution
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  for Generalised Hyperbolic distribution
+      inline double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public: // accessors
+      // ======================================================================
+      /// location parameter 
+      inline double mu       () const { return m_mu     ; } // location parameter
+      /// location parameter 
+      inline double location () const { return m_mu     ; } // location parameter 
+      /// sigma parameter 
+      inline double sigma    () const { return m_sigma  ; } // sigma parameter 
+      /// squared sigma parameter 
+      inline double sigma2   () const { return m_sigma * m_sigma  ; } 
+      /// asymmetry parameter 
+      inline double kappa    () const { return m_kappa  ; } // kappa-parameter 
+      /// squared asymmetry parameter
+      inline double kappa2   () const { return m_kappa * m_kappa ; }
+      /// zeta parameters
+      inline double zeta     () const { return m_zeta   ; } // zeta-parameter 
+      /// squared zeta parameters
+      inline double zeta2    () const { return m_zeta  * m_zeta   ; }
+      /// shape parameter 
+      inline double lambda   () const { return m_lambda ; } // lambda-parameter 
+      /// shape parameter 
+      inline double lambd    () const { return m_lambda ; } // lambda-parameter  
+      // ======================================================================
+    public : // original parameters 
+      // ======================================================================
+      /// alpha parameter 
+      inline double alpha    () const { return std::hypot ( beta () , gamma () ) ; }
+      /// squared alpha 
+      inline  double alpha2   () const { return beta2 () + gamma2 ()       ; }      
+      /// beta parameter 
+      inline double beta     () const { return m_kappa / m_sigma ; } // beta-parameter 
+      /// squared beta parameter 
+      inline double beta2    () const { return std:: pow ( beta  () , 2 ) ; }
+      /// gamma parameter 
+      inline double gamma    () const { return m_AL    / m_sigma          ; }
+      /// squared gamma parameter  
+      inline double gamma2   () const { return std::pow  ( gamma () , 2 ) ; }
+      /// delta parameter  
+      inline double delta    () const { return m_zeta * m_sigma / m_AL    ; }
+      /// squared delta parameter  
+      inline double delta2   () const { return std::pow  ( delta () , 2 ) ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      bool        setMu       ( const double value ) ;
+      bool        setSigma    ( const double value ) ;
+      bool        setKappa    ( const double value ) ;
+      bool        setZeta     ( const double value ) ;
+      bool        setLambda   ( const double value ) ;
+      inline bool setLocation ( const double value ) { return setMu     ( value ) ; }
+      inline bool setLambd    ( const double value ) { return setLambda ( value ) ; }
+      // ======================================================================
+    public: // extended setter 
+      // ======================================================================
+      /** set "standard" parameters 
+       *  @param mu     mu-parameter, location 
+       *  @param beta   beta-parameter, asymmetry 
+       *  @param gamma  gamma-parameter, shape 
+       *  @param delta  delta-parameter, scale 
+       *  @param lambda lambda-parameter, shape 
+       *  
+       *  \f$ \alpha = \sqrt{\beta^2 + \gamma^2} \f$ 
+       *
+       *  \f[ \begin{array}{ll} 
+       *    \delta \ge 0, left| \beta \right|<  \alpha &  if~\lambda > 0 \\ 
+       *    \delta >   0, left| \beta \right|<  \alpha &  if~\lambda = 0 \\ 
+       *    \delta >   0, left| \beta \right|\le\alpha &  if~\lambda < 0 
+       *  \end{array}\f] 
+       */ 
+      bool setStandard
+      ( const double mu     , 
+        const double beta   , 
+        const double gamma  , 
+        const double delta  ,
+        const double lambda ) ;
+      // ======================================================================
+    public : // features 
+      // ======================================================================
+      /// get mean value 
+      double mean        () const ;
+      /// get variance 
+      double variance    () const ;
+      /// get dispersion 
+      inline double dispersion  () const { return variance () ; }
+      /// get RMS 
+      inline double rms         () const { return std::sqrt ( variance () ) ; }
+      /// get RMS 
+      inline double  RMS        () const { return rms ()      ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      inline double integral () const { return 1 ; }
+      /// get the integral 
+      double        integral
+      ( const double low  , 
+        const double high ) const ;      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    private: // main parametters 
+      // ======================================================================
+      /// mu - location parameter 
+      double  m_mu    { 0 } ;    // mu : location parameter 
+      /// sigma width parameter 
+      double  m_sigma { 1 } ;    // sigma - width parameter 
+      /// zeta  - related to kurtosis parameter 
+      double  m_zeta  { 1 } ;    // zeta  - related to kurtosis parameter 
+      /// kappa - asymmetry parameter 
+      double  m_kappa { 0 } ;    // kappa - asymmetry parameter 
+      /// lambda - shape parameter 
+      double m_lambda { 1 } ;    // lambda - shape parameter 
+      // ======================================================================
+    private : // helper "constants"
+      // ======================================================================
+      /** "constant" that relates sigma and gamma 
+       *  \f$ A \equiv \frac{\zeta K^*_{\lambda+1}(\zeta)}{K^*_{\lambda}(\zeta)} \f$, 
+       *  where \f$ K^*_{\nu}(x) \f$ is scaled modified irregular Bessel function 
+       *  \f$ K^*_{\nu}(x) = \mathrmf{e}^{x}K_{\nu}(x)\f$
+       *  - it behaves nicely when \f$\zeta\rightarrow 0 \f$
+       *  - it behaves nicely when \f$\zeta\rightarrow +\infty \f$ 
+       */
+      double  m_AL { -1 } ; // helper constant
+      // = ====================================================================
+      /** normalization constant 
+       *  \f$ \frac{1}{ \zeta^{\lambda} K_{\lambda}(zeta)}\f$,
+       *  where  \f$ K^*_{\nu}(z) \f$ is modified Bessel function 
+       */
+      double  m_N  { -1 } ; // normalization      
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ; // integration workspace
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Das
+     *  Simple gaussian function with exponential tails.
+     *  It corresponds to <code>ExpGaussExp</code> function, 
+     *  \f[ 
+     *    f (x ; \mu, \sigma, k_L, k_R ) = \frac{1}{\sqrt{2\pi}\sigma}
+     *   \left\{ \begin{array}[lcl}
+     *  \mathrm{e}^{  \frac{k_L^2}{2} + k_L\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right) < -k_L \\   
+     *  \mathrm{e}^{ \frac{1}{s} \left( \frac{x-\mu}{\sigma}\right)^2}
+     *   & \mathrm{for}  &  -k_L < \left(\frac{x-\mu}{\sigma}\right) < k_R \\    
+     *  \mathrm{e}^{  \frac{k_R^2}{2} - k_R\left(\frac{x-mu}{\sigma}\right) }
+     *   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right)> k_R   
+     *  \end{array} \right. \f]
+     *  - \f$ k_L \ge 0\f$
+     *  - \f$ k_R \ge 0\f$
+     *
+     *  @see Souvik Das, "A simple alternative to Crystall Ball fnuction"
+     *                   arXiv:1603.08591  [hep-ex]
+     *  @see https://arxiv.org/abs/1603.08591
+     *  @attention - the function is not normalized! 
+     *  Function was used in 
+     *  @see CMS collaboration, V.Khachatryan, 
+     *       "Search for resonant pair production of Higgs bosons decaying 
+     *        to two bottom quark\textendash{}antiquark pairs 
+     *        in proton-proton collisions at 8 TeV}",
+     *        Phys. Lett. B749 (2015) 560 
+     * @see https://arxiv.org/abs/1503.04114 
+     * @see https://doi.org/10.1016/j.physletb.2015.08.047 
+     * - Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$ 
+     */
+    class Das
+    {
+      // ======================================================================
+    public:
+      // ====================================================================== 
+      /** constructor with full parameters 
+       *  @param mu peak location 
+       *  @param sigma sigma for Gaussian Core 
+       *  @param kL    left tail parameter 
+       *  @param kR    right tail parameter 
+       */
+      Das 
+      ( const double mu     = 0 ,    // location parameter 
+        const double sigma  = 1 ,    // width parameter 
+        const double kL     = 2 ,    // left tails 
+        const double kR     = 2 ) ;  // right tail 
+      // ======================================================================      
+    public :
+      // ======================================================================
+      /// evaluate  pdf  
+      double pdf ( const  double x ) const ;
+      /// evaluate  pdf  
+      double operator() ( const double x ) const { return pdf ( x ) ; }      
+      // ======================================================================
+    public: // getters 
+      // ======================================================================
+      /// get location parameter 
+      inline double mu       () const { return m_mu    ; }
+      /// get width parameter 
+      inline double sigma    () const { return m_sigma ; }
+      /// get left tail 
+      inline double kL       () const { return m_kL    ; }
+      /// get right tail 
+      inline double kR       () const { return m_kR    ; }
+      // ======================================================================
+    public: // setters 
+      // ======================================================================
+      /// set location parameter 
+      bool        setMu       ( const double value ) ;
+      /// set width parameter 
+      bool        setSigma    ( const double value ) ;
+      /// set left tail 
+      bool        setKL       ( const double value ) ;
+      /// set right tail 
+      bool        setKR       ( const double value ) ;
+      /// set location parameter 
+      inline bool setLocation ( const double value ) { return setMu ( value ) ; }
+      // ======================================================================
+    public: // derived  
+      // ======================================================================
+      /// get location parameter 
+      inline double location () const { return mu () ; }
+      /// get mode  
+      inline double mode     () const { return mu () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the unique tag 
+      std::size_t tag () const ; // get the unique tag 
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral () const ;
+      /// get the integral 
+      double integral
+      ( const double low  , 
+        const double high ) const ;      
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// location parameter 
+      double m_mu    { 0 } ; // location parameter 
+      /// width  parameter 
+      double m_sigma { 1 } ; // width parameter 
+      /// left tail 
+      double m_kL    { 2 } ; // left tail
+      /// right tail 
+      double m_kR    { 2 } ; // right tail      
+      // ======================================================================
+    };
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

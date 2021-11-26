@@ -59,7 +59,7 @@ class AddChopping(Task) :
         return self.__output 
 
     ## merge results/datasets 
-    def merge_results ( self , result ) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output = result
         else :
             s = set()
@@ -101,7 +101,7 @@ class ChopperTraining(Task) :
         return self.__output
     
     ## merge results/datasets 
-    def merge_results ( self , result) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output =  result
         else :
             weights  = list ( self.__output[0] ) + list ( result[0] ) 
@@ -149,7 +149,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                           suffix        = '_response' , ## suffix for TMVA-variable 
                           options       =  ''         , ## TMVA-reader options
                           verbose       = True        , ## verbosity flag 
-                          aux           = 0.9         ) :
+                          aux           = 0.9         , **kwargs ) :
     """
     Helper function to add TMVA/chopping  response into dataset
     >>> tar_file = trainer.tar_file
@@ -186,7 +186,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
                           verbose       = verbose       ,
                           aux           = aux           )
     
-    wmgr  = WorkManager ( silent = False )
+    wmgr  = WorkManager ( silent = False , **kwargs )
     trees = ch.split    ( max_files = 1  )
     
     wmgr.process ( task , trees )
@@ -203,7 +203,7 @@ def addChoppingResponse ( chain                       , ## input dataset to be u
 ## Perform parallel training of TMVA/Chopping
 #  - internal  function for ostap.tools.chopping.Trainer
 #  @see  ostap.tools.chopping.Trainer
-def chopping_training ( chopper , ncpus = 'autodetect' , ppservers = () ) :
+def chopping_training ( chopper , **kwargs ) :
     """Perform parallel traning of TMVA/Chopping
     - internal  function for ostap.tools.chopping.Trainer
     - see  ostap.tools.chopping.Trainer
@@ -212,7 +212,7 @@ def chopping_training ( chopper , ncpus = 'autodetect' , ppservers = () ) :
     import sys
     
     task = ChopperTraining ()
-    wmgr = WorkManager ( silent = False , ncpus = ncpus , ppservers = ppservers )
+    wmgr = WorkManager ( silent = False , **kwargs )
     
     params = [ ( i , chopper ) for i in range ( chopper.N ) ]
     

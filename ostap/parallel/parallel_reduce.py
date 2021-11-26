@@ -77,7 +77,7 @@ class  ReduceTask(Task) :
         return Chain ( name = cname ,  files = [ cfile ] ) , rt.table 
     
     ## merge results/datasets 
-    def merge_results ( self, result ) :
+    def merge_results ( self, result , jobid = -1 ) :
         
         if result :
             if not self.__output : self.__output = result 
@@ -118,9 +118,7 @@ def reduce ( chain               ,
              output     = ''     ,
              name       = ''     , 
              addselvars = False  ,
-             silent     = False  ,
-             ## 
-             ppservers  = ()     ) :
+             silent     = False  , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -153,7 +151,7 @@ def reduce ( chain               ,
                         addselvars = addselvars ,
                         name       = name       )
     
-    wmgr  = WorkManager  ( ppservers = ppservers  , silent = silent    )
+    wmgr  = WorkManager  ( silent = silent , **kwargs )
     trees = ch.split     ( max_files = 1  )
     wmgr.process         ( task , trees   )
 

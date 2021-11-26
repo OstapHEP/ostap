@@ -12,40 +12,60 @@
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_math_bernstein' ) 
-else                       : logger = getLogger ( __name__              )
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.test_math_bernstein' ) 
+else                       : logger = getLogger ( __name__                    )
 # ============================================================================= 
 import random  
 import ostap.math.models 
 import ostap.math.bernstein
-from   ostap.core.core  import Ostap
-
+from   ostap.core.core      import Ostap, SE 
+from   ostap.utils.timing   import timing 
+# ============================================================================
+functions = set() 
 # ============================================================================
 ##  test solution of equation  B(x) = c
 def test_solve ():
     """Test solution of equation  B(x) = c 
     """
-
-    logger.info ('test_solve') 
+    logger = getLogger("test_solve")
+    
     # 1) construct function with known roots
     
     ## roots in [0,1]
-    troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
-    ## roots in [1,10]
-    roots   = troots + [  random.uniform(1.01,9.99) for i in  range(4) ]
+    troots  =          [  random.uniform(0.05,0.95) for i in  range ( 4 ) ]
+    troots.sort() 
+    
+    ## roots in [2,9]
+    roots   = troots + [  random.uniform(2,9) for i in  range ( 4 ) ]
+    roots.sort ()
+    
     ## complex roots  
-    croots  = [  complex ( random.uniform(-3,0),random.gauss(0,3) )  for i in  range(4) ]
+    croots  = [ complex ( random.uniform(-6,-1) , random.uniform ( -5 , 5 ) ) for i in range ( 3 ) ]
+    croots += [ complex ( random.uniform( 3, 6) , random.uniform ( -5 , 5 ) ) for i in range ( 3 ) ]
 
     ## Bernstein polynomial with known roots
-    bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
+    bs = Ostap.Math.Bernstein (  0 , 1 , roots ) ##  , croots )
 
-    ##  find roots of Bernstein  polynomial 
-        
-    rr = bs.solve()
-    logger.info ('Roots found : %s' % list( rr ) )
+    logger.info ( "Bernstein: %s" % bs ) 
     
-    troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    ##  find roots of Bernstein  polynomial     
+    rr = bs.solve()
+    rr = [ r for r in rr ]
+    rr.sort()
+    
+    logger.info ('Roots found : [ %s]' %  ( ', '.join ( "%.6f" % r for r in rr     ) ) )    
+    logger.info ('Roots true  : [ %s]' %  ( ', '.join ( "%.6f" % r for r in troots ) ) )
+
+    if len ( rr ) != len ( troots ) :
+        logger.error ( 'Mismatch in number of roots found!' )
+    else :
+        diff = 0.0 
+        for i,r in enumerate ( rr ) :
+            diff += abs ( r  - troots[i] )            
+        diff /= len ( rr ) 
+        logger.info ( 'Mean root distance is %.4g' % diff ) 
+
+    functions.add ( bs ) 
 
 # ============================================================================
 ##  check number of roots using Sturm' sequence 
@@ -53,33 +73,45 @@ def test_nroots ():
     """Check number of roots using Sturm' sequence 
     """
 
-    logger.info ('test_nroots') 
+    logger = getLogger("test_nroots")
+    
     # 1) construct function with known roots
     
     ## roots in [0,1]
-    troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
-    ## roots in [1,10]
-    roots   = troots + [  random.uniform(1.01,9.99) for i in  range(4) ]
-    ## complex roots  
-    croots  = [  complex ( random.uniform(-3,0),random.gauss(0,3) )  for i in  range(4) ]
+    troots  =          [  random.uniform(0.01,0.99) for i in  range ( 6 ) ]
+    troots.sort() 
 
+    ## roots in [1,10]
+    roots   = troots + [  random.uniform(1.01,9.99) for i in  range ( 4 ) ]
+    roots.sort ()
+    
+    ## complex roots  
+    croots  = [ complex ( random.uniform(-3 , -1 ) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
+    croots += [ complex ( random.uniform( 3 ,  5 ) , random.gauss ( 0 , 3 ) ) for i in range ( 4 ) ]
+    
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , roots , croots )
 
 
     troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    logger.info ('Roots true  : [%s]' %  ( ', '.join ( "%.6f" % r for r in troots )  ) )
     
-    for i in  range(20)  :
-        x1 = random.uniform (  0 , 0.70 )
-        x2 = random.uniform ( x1 , 1.00 )
-        x2 = bs.xmax() 
-        nr = bs.nroots ( x1 , x2 )
-        nc = 0
-        for r in  troots :
-            if x1 < r <= x2 :  nc=+1 
-        logger.info ('Roots between [%s,%s) : %d/%d '  % ( x1  , x2 , nr , nc ) )
+    for i in  range( 20 )  :
         
+        x1 = random.uniform (  0 , 0.80 )
+        x2 = random.uniform ( x1 , 1.00 )
+
+        nr = bs.nroots ( x1 , x2 )
+        nt = 0
+        for r in  troots :
+            if x1 <= r < x2 :  nt += 1
+
+        if nr != nt : 
+            logger.error ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
+        else : 
+            logger.info  ('Roots between [%.6f, %.6f) : %d [true is %d]'  % ( x1  , x2 , nr , nt ) )
+        
+    functions.add ( bs ) 
        
 # ============================================================================
 ##  test Bernstein interpolation 
@@ -87,7 +119,7 @@ def test_interpolation ():
     """Test bernstein interpolation
     """
 
-    logger.info ('test_interpolation')
+    logger = getLogger("test_interpolation")
 
     from math import sin,pi, sqrt
     
@@ -105,6 +137,8 @@ def test_interpolation ():
             
     logger.info ('Interpolation quality %s' % s )
 
+    functions.add ( bs ) 
+
 
 # ============================================================================
 ##  test polynomial divisions
@@ -112,16 +146,17 @@ def test_division ():
     """Test polynomial division
     """
 
-    logger.info ('test_division')
+    logger = getLogger("test_division")
+
     # 1) construct function with known roots
     
     ## roots in [0,1]
     troots  =          [  random.uniform(0.01,0.99) for i in  range(5) ]
+    troots.sort() 
     ## complex roots  
     croots  = [ complex ( random.uniform(-3, 0),random.gauss(0,3) )  for i in range(3) ]
 
-    troots.sort() 
-    logger.info ('Roots true  : %s' % troots     )
+    logger.info ('Roots true  : [%s]' % ( ', '.join( "%.6f"  % r for r in troots ) ) )    
 
     ## Bernstein polynomial with known roots
     bs = Ostap.Math.Bernstein (  0 , 1 , troots      , croots )
@@ -130,11 +165,16 @@ def test_division ():
     b3 = Ostap.Math.Bernstein (  0 , 1 , troots      )
 
     a1,r1 = divmod ( bs, b1 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r1.norm () , a1.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r1.norm () , ', '.join ( "%.6f" % r for r in a1.solve() ) ) )
     a2,r2 = divmod ( bs, b2 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r2.norm () , a2.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r2.norm () , ', '.join ( "%.6f" % r for r in a2.solve() ) ) )
     a3,r3 = divmod ( bs, b3 )
-    logger.info ('Reminder, roots: %s %s'  %  (  r3.norm () , a3.solve() ) )
+    logger.info ('Reminder, roots: %.6f [%s]' % ( r3.norm () , ', '.join ( "%.6f" % r for r in a3.solve() ) ) )
+
+    functions.add ( bs ) 
+    functions.add ( b1 ) 
+    functions.add ( b2 ) 
+    functions.add ( b3 ) 
 
 # =============================================================================
 def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
@@ -142,18 +182,20 @@ def check_equality ( a ,  b , message = '' , tolerance = 1.e-7 ) :
     if d > tolerance :
         raise ValueError ( message + ' |%s-%s|=%s>%s' % ( a , b , d , tolerance ) )
 
-
 # =========================================================================----
 ## test for elevate/reduce
 def test_elevatereduce () :
 
-    logger.info ('test_elevatereduce')
+    logger = getLogger("test_elevatereduce")
+
     BP = Ostap.Math.Bernstein
     
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
     for i in b :
         b[i] = random.uniform ( -10 , 10 )
-    
+
+    functions.add ( b ) 
+
     for r in (1,2,3,4,5) : 
         be = b.elevate(r)
         br = be.reduce(r)
@@ -164,14 +206,18 @@ def test_elevatereduce () :
             yr = br(x)
             check_equality ( y  , ye  , 'Invalid elevate' , 1.e-6 )
             check_equality ( y  , yr  , 'Invalid reduce'  , 1.e-6 )
-            
-    logger.info ('Elevate/reduce is OK' )
+
+        functions.add ( be ) 
+        functions.add ( br ) 
+
+    logger.info ('Elevate/reduce  is OK' )
 
 # ==============================================================================
 ## test  for polynomials 
 def test_poly () :
     
-    logger.info ('test_poly')
+    logger = getLogger("test_poly")
+
     BP = Ostap.Math.Bernstein
     
     # 1) create & evaluate the polynom 
@@ -181,7 +227,7 @@ def test_poly () :
     
     for i in  range(500) :
         x = random.uniform ( b.xmin() , b.xmax() )
-        y = b(x)
+        y = b ( x ) 
         check_equality ( y , 1 , 'Invalid polynom value:' )
         
     logger.info ('Constant   poly is OK' )
@@ -198,16 +244,18 @@ def test_poly () :
             raise ValueError ( 'Invalid polynom value y(%s)=%s (%s/%s)' % ( x , y , ymin , ymax ) )
  
     logger.info ('Random     poly is OK' )
-    
+
+    functions.add ( b ) 
+
 # ==============================================================================
 ## test  for even polynomials 
 def test_even () :
 
     
-    logger.info ('test_even')
+    logger = getLogger("test_even")
+
     BP = Ostap.Math.BernsteinEven
-    
-    
+        
     b  = BP ( 5 , 0. , 2. ) ## 5th order for x in [0,2]
     for i in  b  : b[i] = random.uniform(-10,10)
     
@@ -224,11 +272,13 @@ def test_even () :
     
     logger.info ('Even       poly is OK' )
 
+    functions.add ( b ) 
+
 # ==============================================================================
 ## test  for monotonic polynomial 
 def test_monotonic () :
     
-    logger.info ('test_monothonic')
+    logger = getLogger("test_monotonic")
 
     ## 8-9) check for Monotonic 
     BPM = Ostap.Math.Monotonic
@@ -250,6 +300,8 @@ def test_monotonic () :
         
     logger.info ('Increasing poly is OK' )
     
+    functions.add ( b ) 
+
     b = BPM ( 5 , 0 , 2 , False )
     for i in  b :  b[i] = random.uniform ( -10 , 10 )
     
@@ -265,6 +317,8 @@ def test_monotonic () :
         if y1 < y2 :
             raise ValueError ( 'Invalid Decreasing y(%s)=%s>y(%s)=%s' % ( x1 , y1 , x2 , y1 ) )
         
+    functions.add ( b ) 
+
     logger.info ('Decreasing poly is OK' )
 
 # =============================================================================
@@ -273,7 +327,7 @@ def test_convex () :
     """Test for Convex positive polynmomials 
     """
     
-    logger.info ('test_convex')
+    logger = getLogger("test_convex")
     BPC = Ostap.Math.Convex
     
     b_11 = BPC ( 5 , 0 , 2 , True  , True  )
@@ -284,6 +338,11 @@ def test_convex () :
     for b in ( b_11   , b_01 , b_10 , b_00 ) : 
         for i in b : b[i] = random.uniform ( -10 , 10 ) 
             
+    functions.add ( b_11 ) 
+    functions.add ( b_01 ) 
+    functions.add ( b_10 ) 
+    functions.add ( b_00 ) 
+
     for i in range(500) :
         
         ##  note:  x1 <  x2 
@@ -320,7 +379,7 @@ def test_convexonly () :
     """Test for Convex-Only positive polynmomials 
     """
     
-    logger.info ('test_convexonly')
+    logger = getLogger("test_convexonly")
     BPC = Ostap.Math.ConvexOnly
     
     b_11 = BPC ( 5 , 0 , 2 , True  )
@@ -328,7 +387,10 @@ def test_convexonly () :
     
     for b in ( b_11   , b_01 ) : 
         for i in b  : b[i] = random.uniform ( -10 , 10 ) 
-            
+
+    functions.add ( b_11 ) 
+    functions.add ( b_01 ) 
+
     for i in range(500) :
         
         ##  note:  x1 <  x2 
@@ -359,30 +421,31 @@ def test_integration () :
     """Test for polynomial interation
     """
     
-    logger.info ('test_integration')
+    logger = getLogger("test_integration")
     
     BP = Ostap.Math.Bernstein
     
     b = BP ( 5 , 0 , 2  )
-    for i in b  : b[i] = random.uniform ( -10 , 10 ) 
+    for i in b  : b[i] = random.uniform ( -1 , 50 ) 
 
     from ostap.math.integral import romberg 
-    
+
+    xmax = b.xmin() + 0.9 * ( b.xmax() - b.xmin() ) 
     for i in range ( 500 ) :
         
         ##  note:  x1 <  x2 
-        x1 = random.uniform ( b.xmin() , b.xmax() )
+        x1 = random.uniform ( b.xmin() ,   xmax   )
         x2 = random.uniform ( x1       , b.xmax() )
 
         i1 = b.integral (      x1 , x2 )
         i2 = romberg    ( b ,  x1 , x2 )
 
         dd = ( i1 - i2 )
-        ds = ( abs(i1) + abs ( i2 ) )
-        if abs ( dd ) > ds * 1.e-7 :
-            raise ValueError ( 'Invalid Integrals!' )
+        ds = ( abs ( i1 ) + abs ( i2 ) )
+        if 0 < ds < abs ( dd ) * 10**6 :
+            raise ValueError ( 'Invalid Integrals! %s  %s' % ( dd , ds*1.e-6 ) )
 
-    logger.info ('Integration     is  OK' )
+    logger.info ('Integration     is OK' )
 
 # =============================================================================
 ## test transformations
@@ -390,8 +453,9 @@ def test_transformation () :
     """Test for transformation
     """
     
-    logger.info ('test_transformation')
+    logger = getLogger("test_transformation")
 
+    
     BP = Ostap.Math.Bernstein
     MS = Ostap.Math.Polynomial   ## monomial sum 
     CS = Ostap.Math.ChebyshevSum ## chebyshev sum 
@@ -400,56 +464,109 @@ def test_transformation () :
     
     b = BP ( 5 , 0 , 2  )
 
+    functions.add ( b ) 
+
     for i in range ( 50 ) :
         
         for i in b  : b[i] = random.uniform ( -10 , 10 ) 
-    
-        ## monomial sum 
+        
+        ## Monomial sum 
         ms = MS ( b  )
         bm = BP ( ms ) 
-
-        ## chebyshev sum 
+        
+        ## Chebyshev sum 
         cs = CS ( b  )
         bc = BP ( cs ) 
-
-        ## chebyshev sum 
+        
+        ## Legendre  sum 
         ls = LS ( b  )
         bl = BP ( ls ) 
+
+        functions.add ( ms ) 
+        functions.add ( bm )
+        
+        functions.add ( cs ) 
+        functions.add ( bc )
+        
+        functions.add ( ls ) 
+        functions.add ( bl ) 
 
         for i in range( 100 ) :
             
             x1 = random.uniform ( b.xmin() , b.xmax() )
-
+            
             bv = b ( x1 )
             
-            check_equality ( bv , ms(x1) , 'Invalid Bernstein->Monomial  transformation' )
-            check_equality ( bv , bm(x1) , 'Invalid Bernstein<-Monomial  transformation' )
+            check_equality ( bv , ms ( x1 ) , 'Invalid Bernstein->Monomial  transformation' )
+            check_equality ( bv , bm ( x1 ) , 'Invalid Bernstein<-Monomial  transformation' )
             
-            check_equality ( bv , cs(x1) , 'Invalid Bernstein->Chebyshev transformation' )
-            check_equality ( bv , bc(x1) , 'Invalid Bernstein<-Chebyshev transformation' )
+            check_equality ( bv , cs ( x1 ) , 'Invalid Bernstein->Chebyshev transformation' )
+            check_equality ( bv , bc ( x1 ) , 'Invalid Bernstein<-Chebyshev transformation' )
             
-            check_equality ( bv , ls(x1) , 'Invalid Bernstein->Legendre  transformation' )
-            check_equality ( bv , bl(x1) , 'Invalid Bernstein<-Legendre  transformation' )
+            check_equality ( bv , ls ( x1 ) , 'Invalid Bernstein->Legendre  transformation' )
+            check_equality ( bv , bl ( x1 ) , 'Invalid Bernstein<-Legendre  transformation' )
+            
+    logger.info ('Transformation  is OK' )
+
+# =============================================================================
+def test_pickle () :
+    logger = getLogger ( 'test_pickle'        ) 
+    logger.info ( 'Check pickling/unpickling' )
+
+    import pickle
+    rows = [ ( '#', 'before' , 'after' , 'mean' , 'rms' ) ] 
+    for i, f in enumerate ( functions , start = 1 ) :
+
+        fs = pickle.loads ( pickle.dumps ( f ) )
+        s  = SE () 
+        for j in range ( 1000 ) :
+            x = random.uniform ( f.xmin() , f.xmax() )
+            s += abs ( fs ( x ) - f ( x ) )
+        row = '%d' % i , f.__class__.__name__ , fs.__class__.__name__ , '%-+.4g' % s.mean() , '%-+.4g' % s.rms() 
+        rows.append ( row )
+
+    import ostap.logger.table as T
+    title = "Compare before/after eserialisation"
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' ) 
+    logger.info ( '%s\n%s' % ( title , table ) ) 
 
 
-    logger.info ('Transformation  is  OK' )
+# =============================================================================
+## check that everything is serializable
+# =============================================================================
+def test_db() :
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
+    import ostap.io.zipshelve   as     DBASE
+    from ostap.utils.timing     import timing 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for i , f in enumerate ( functions , start = 1 ) :
+            db[ '%03d:%s' % ( i , f.__class__.__name__ ) ] = f 
+        db['functions'   ] = functions 
+        db.ls() 
 
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_poly           ()
-    test_even           ()
-    test_monotonic      ()
-    test_convex         () 
-    test_convexonly     ()
     test_solve          ()
     test_nroots         ()
     test_interpolation  ()
     test_division       ()
     test_elevatereduce  ()
+    test_poly           ()
+    test_even           ()
+    test_monotonic      ()
+    test_convex         () 
+    test_convexonly     ()
     test_integration    ()
     test_transformation ()
 
+    ## check finally that everything is serializeable:
+    test_pickle () 
+    with timing ('test_db' , logger ) :
+        test_db ()
+        
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

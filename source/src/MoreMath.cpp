@@ -19,6 +19,7 @@
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_log.h"
 #include "gsl/gsl_sf_psi.h"
+#include "gsl/gsl_sf_bessel.h"
 #include "gsl/gsl_sf_ellint.h"
 // ============================================================================
 // LHCbMath
@@ -33,6 +34,10 @@
 #include "GSL_sentry.h"
 #include "Faddeeva.hh"
 #include "gauss.h"
+#include "Ostap/Workspace.h"
+// #include "local_math.h"
+#include "local_gsl.h"
+#include "Integrator1D.h"
 // ============================================================================
 /** @file
  *  implementation file for function from file LHCbMath/MoreFunctions.h
@@ -771,7 +776,7 @@ double Ostap::Math::psi ( const double x )
 {
   //
   // use GSL: 
-  Ostap::Math::GSL::GSL_Error_Handler sentry ;
+  Ostap::Math::GSL::GSL_Error_Handler sentry ( false )  ;
   //
   gsl_sf_result result ;
   const int ierror = gsl_sf_psi_e ( x , &result ) ;
@@ -858,9 +863,10 @@ double Ostap::Math::gaussian_integral_left
  *  @return the value of gaussian pdf 
  */
 // ============================================================================
-double Ostap::Math::gauss_pdf ( const double x     ,
-                                const double mu    ,
-                                const double sigma )
+double Ostap::Math::gauss_pdf
+( const double x     ,
+  const double mu    ,
+  const double sigma )
 {
   static const double s_norm = 1.0/std::sqrt( 2.0 * M_PI ) ;
   const double dx = ( x  - mu ) / std::abs ( sigma ) ;
@@ -874,14 +880,72 @@ double Ostap::Math::gauss_pdf ( const double x     ,
  *  @return the value of gaussian cdf 
  */
 // ============================================================================
-double Ostap::Math::gauss_cdf ( const double x     ,
-                                const double mu    ,
-                                const double sigma )
+double Ostap::Math::gauss_cdf 
+( const double x     ,
+  const double mu    ,
+  const double sigma )
 {
   //
   static const double s_sqrt2 = std::sqrt( 2.0 ) ;
   const double y = ( x - mu ) / ( s_sqrt2 * std::abs ( sigma ) ) ;
   return 0.5 * ( 1 + std::erf ( y ) ) ;
+}
+// ============================================================================
+/*  get the Gaussian integral 
+ *  @see https://en.wikipedia.org/wiki/Normal_distribution
+ *  \f$ f(x) = \frac{1}{2} \left( 1 + erf ( \frac{x} { \sqrt{2} } ) \right) \f$ 
+ *  \f[ f(a,b;\mu,\sigma = \int_a^b \frac{1}{\sqrt{2\pi}\sigma}
+ *     \mathrm{e}^{-\frac{1}{2} \left( \frac{x-\mu}{\sigma}\right)^2}dx \f]
+ *  @param a low integration limit
+ *  @param b high integration limit
+ *  @param mu location of Gaussian
+ *  @param sigm awidth of the Gaussian
+ */
+// ============================================================================
+double Ostap::Math::gauss_int
+( const double a     ,
+  const double b     ,
+  const double mu    ,
+  const double sigma )
+{
+  static const double s_sqrt2 = std::sqrt( 2.0 ) ;
+  //
+  const double i_s = 1 / ( s_sqrt2 * std::abs ( sigma ) ) ;
+  //
+  const double ya = ( a - mu ) * i_s ;
+  const double yb = ( b - mu ) * i_s ;
+  //
+  return 
+    ( std::max ( ya , yb ) < -3 ) ? 
+    0.5 * ( std::erfc ( std::abs ( yb ) ) - std::erfc ( std::abs ( ya ) ) ) :
+    ( std::min ( ya , yb ) >  3 ) ? 
+    0.5 * ( std::erfc (            ya   ) - std::erfc (            yb   ) ) :
+    0.5 * ( std::erf ( yb ) - std::erf ( ya ) ) ;
+}
+// ============================================================================
+/*  Student's t-CDF 
+ *  \f[ f(t;\nu) = \left\{
+ *  \begin{array}{ll}
+ *   1-\frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\ge0 \\
+ *  \frac{1}{2}I_{x(t}}\left(\frac{\nu}{2}, \frac{1}{2}\right)   
+ *   & \mathrm{for}~t\<0
+ *  \end{array} \right. f]
+ *  where \f$ x(t) = \frac{\nu}{t^2+\nu}\f$ and 
+ *  \f$I_{x}(a,b)\f$ is incomplete beta function; 
+ *  @param  t t-value 
+ *  @param  nu parameter nu , $\nu>0$
+ */
+// ============================================================================
+double Ostap::Math::student_cdf 
+( const double t  , 
+  const double nu ) 
+{
+  const double anu = std::abs ( nu ) ; // NB!!
+  //
+  const double xt    = anu / ( t * t + anu ) ;
+  const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * anu , 0.5 , xt ) ;
+  return t >= 0 ? 1 - value : value ;
 }
 // ============================================================================
 namespace 
@@ -1055,6 +1119,9 @@ std::pair<double,double> Ostap::Math::pochhammer_with_derivative
 // ============================================================================
 // Elliptic integrals 
 // ============================================================================
+
+
+// ============================================================================
 /*  Complete elliptic integral \f$ K(k) \f$  
  *  \[ K(k) \equiv F ( \frac{\pi}{2}, k ) \f] 
  *  @see https://en.wikipedia.org/wiki/Elliptic_integral
@@ -1174,7 +1241,7 @@ double Ostap::Math::elliptic_Z ( const double beta  , const double k   )
  *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
  *                Numerical Algorithms, 10, 1995,  13
  *  @see https://doi.org/10.1007/BF02198293
- *  @see https://arxiv.org/abs/math/9409227
+ *  @see https://arxiv.org/abs/math/9409227 Eq. (63) 
  */
 // ============================================================================
 double Ostap::Math::elliptic_KZ ( const double beta  , const double k   ) 
@@ -1183,12 +1250,341 @@ double Ostap::Math::elliptic_KZ ( const double beta  , const double k   )
   const double cosbeta = std::cos ( beta ) ;
   const double alpha   = 1.0L - k * k * sinbeta * sinbeta ;
   //
+  const double r = carlson_RJ  ( 0 , 1 - k * k , 1 , alpha ) ;
+  return k * k * sinbeta * cosbeta * std::sqrt ( alpha ) * r / 3 ;
+}
+// ============================================================================
+/*  difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
+ *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
+ *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227  Eq.(57)
+ */
+// ============================================================================
+double Ostap::Math::elliptic_KmE ( const double k   )
+{
+  // ==========================================================================
+  // see https://arxiv.org/abs/math/9409227  Eq. (57)
+  return k * k * carlson_RD ( 0 , 1 - k * k , 1 ) / 3 ; 
+  // ==========================================================================
+}
+// ============================================================================
+/* elliptic \f$ \Pi(\alpha^2,k)\f$ function 
+ *  - \f$ alpha^2 < 1 \f$ 
+ *  - \f$ k      < 1 \f$ 
+ *  \f[ \Pi(\alpha^2, k) - K(k) = 
+ *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+ */ 
+// ============================================================================
+double Ostap::Math::elliptic_PI
+( const double alpha2 , 
+  const double k      ) 
+{
+  return elliptic_K ( k ) + 
+    alpha2 * carlson_RJ ( 0 , 1 - k * k , 1 , 1 - alpha2 ) / 3 ;
+}
+// ============================================================================
+/* elliptic \f$ \Pi(\alpha^2,k) - K(k) \f$ function 
+ *  \f[ \Pi(\alpha^2, k) - K(k) \equiv  
+ *   \frac{1}{3}\alpha^2 R_J( 0, 1-k^2, 1 , 1 - \alpha^2) \f] 
+ *  - \f$ alpha^2 < 1 \f$ 
+ *  - \f$ k      < 1 \f$ 
+ */ 
+// ============================================================================
+double Ostap::Math::elliptic_PImK  
+( const double alpha2 , 
+  const double k      )
+{ return alpha2 * carlson_RJ ( 0 , 1 - k * k , 1 , 1 - alpha2 ) / 3 ; }
+// ========================================================================
+
+
+
+// ============================================================================
+// Symmetric Carlson forms 
+// ============================================================================
+
+
+// ============================================================================
+/* Symmetric Carlson form 
+ *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RF 
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  const double A0 = ( x + y + z ) / 3 ;
+  // 
+  double xm = x  ;
+  double ym = y  ;
+  double zm = z  ;
+  double Am = A0 ;
+  //
+  const double dx = A0 - x ;
+  const double dy = A0 - y ;
+  const double dz = A0 - z ;
+  //
+  static const double s_R =std::pow ( 3 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
+  const double Q  = s_R * std::max ( std::abs ( dx ) , std::max ( std::abs ( dy ) , std::abs ( dz ) ) ) ;
+  //
+  double       Qn = Q  ;
+  double       p4 = 1  ;
+  for ( unsigned int m = 0 ; m < 100  ; ++m ) 
+  {
+    if ( 0 < m && Qn < std::abs ( Am ) ) { break ; }
+    //
+    const double xm_sq = std::sqrt ( xm ) ;
+    const double ym_sq = std::sqrt ( ym ) ;
+    const double zm_sq = std::sqrt ( zm ) ;
+    //
+    const double lm = xm_sq * ym_sq + xm_sq * zm_sq + ym_sq * zm_sq ;
+    //
+    const double Am1 = 0.25 * ( Am + lm ) ;
+    const double xm1 = 0.25 * ( xm + lm ) ;
+    const double ym1 = 0.25 * ( ym + lm ) ;
+    const double zm1 = 0.25 * ( zm + lm ) ;
+    //
+    xm = xm1 ;
+    ym = ym1 ;
+    zm = zm1 ;
+    Am = Am1 ;
+    Qn /= 4  ;    
+    p4 /= 4  ;
+  }
+  //
+  const double iA4 = p4 / Am  ;
+  const double X   = dx * iA4 ;
+  const double Y   = dy * iA4 ;
+  const double Z   = - ( X + Y );
+  //
+  const double XY = X * Y ;
+  const double Z2 = Z * Z ;
+  //
+  const double E2 = XY - Z2 ;
+  const double E3 = XY * Z  ;
+  //
+  static const double s_c1 = -1. /  10 ;
+  static const double s_c2 = +1. /  14 ;
+  static const double s_c3 = +1. /  24 ;
+  static const double s_c4 = -3. /  44 ;
+  static const double s_c5 = -5. / 208 ;
+  static const double s_c6 = +3. / 104 ;
+  static const double s_c7 = +1. /  16 ;
+  //
+  return ( 1 
+           + s_c1 * E2 
+           + s_c2 * E3 
+           + s_c3 * E2 * E2 
+           + s_c4 * E2 * E3 
+           + s_c5 * E2 * E2 * E2  
+           + s_c6 * E3 * E3 
+           + s_c7 * E2 * E2 * E3 ) / std::sqrt ( Am ) ;
+}
+// ============================================================================
+/* Symmetric Carlson form 
+ *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RF_gsl  
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  // if ( s_zero ( x ) ) { return carlson_RF ( y , z ) ; }
+  // if ( s_zero ( y ) ) { return carlson_RF ( x , z ) ; }
+  // if ( s_zero ( z ) ) { return carlson_RF ( x , y ) ; }
+  //
+  // use GSL 
   gsl_sf_result result ;
-  const int ierror = gsl_sf_ellint_RJ_e ( 0.0       ,
-                                          1 - k * k ,
-                                          1.0       ,
-                                          alpha     ,
-                                          GSL_PREC_DOUBLE , &result ) ;
+  const int ierror = gsl_sf_ellint_RF_e 
+    ( x , y , z , GSL_PREC_DOUBLE , &result ) ;
+  //
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_RF_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  return result.val ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RJ
+( const double x , 
+  const double y , 
+  const double z , 
+  const double p ) 
+{
+  //
+  const double A0 = 0.20 * ( x + y + z + 2 * p ) ;
+  // 
+  double xm = x  ;
+  double ym = y  ;
+  double zm = z  ;
+  double pm = p  ;
+  double Am = A0 ;
+  //
+  const double dx = A0 - x ;
+  const double dy = A0 - y ;
+  const double dz = A0 - z ;
+  const double dp = A0 - p ;
+  //
+  const double delta = ( p - x ) * ( p - y ) * ( p - z ) ;
+  //
+  static const double s_R =std::pow ( 0.25 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
+  const double Q  = s_R * std::max ( std::abs ( dx ) , 
+                                     std::max ( std::abs ( dy ) , 
+                                                std::max ( std::abs ( dz ) , 
+                                                           std::abs ( dp ) ) ) ) ;
+  //
+  unsigned int n       = 0 ;
+  double       Qn      = Q ;
+  double       p4      = 1 ;
+  // 
+  double       result  = 0 ;
+  double       sm      = 1 ;
+  //
+  for ( unsigned int m = 0 ; m < 100  ; ++m ) 
+  {
+    if ( 0 < m && Qn < std::abs ( Am ) ) { break ; }
+    //
+    const double xm_sq = std::sqrt ( xm ) ;
+    const double ym_sq = std::sqrt ( ym ) ;
+    const double zm_sq = std::sqrt ( zm ) ;
+    const double pm_sq = std::sqrt ( pm ) ;
+    //
+    const double lm = xm_sq * ym_sq + xm_sq * zm_sq + ym_sq * zm_sq ;
+    const double dm =  ( pm_sq + xm_sq ) * ( pm_sq + ym_sq ) * ( pm_sq + zm_sq ) ;
+    //
+    if ( 0 == m ) { sm = 0.5 * dm ; }
+    //
+    const double em = p4 * p4 * p4 * delta / ( dm * dm ) ;
+    if ( -1.5 < em && em < -0.5 &&  m < 3 )
+    {
+      const double b  = 2 * pm_sq * ( pm + xm_sq * ( ym_sq  +  zm_sq) + ym_sq * zm_sq ) / dm ;
+      result += 6 * p4 * carlson_RC ( 1 , b  ) / dm ;
+    }
+    else 
+    { result += 6 * p4 * carlson_RC ( 1 , 1 + em ) / dm  ; }
+    
+    //
+    const double Am1 = 0.25 * ( Am + lm ) ;
+    const double xm1 = 0.25 * ( xm + lm ) ;
+    const double ym1 = 0.25 * ( ym + lm ) ;
+    const double zm1 = 0.25 * ( zm + lm ) ;
+    const double pm1 = 0.25 * ( pm + lm ) ;
+    //
+    xm = xm1 ;
+    ym = ym1 ;
+    zm = zm1 ;
+    pm = pm1 ;
+    Am = Am1 ;
+    ++n      ;
+    Qn /= 4  ;
+    p4 /= 4  ;
+    //
+    const double rm = sm * ( 1 + std::sqrt  ( 1 + p4 * delta / ( sm * sm ) ) ) ;
+    sm = 0.5 * ( dm * rm - p4 * p4 * delta ) / ( dm + p4 * rm ) ;
+    //
+  }
+  //
+  const double iA4 =  p4 / Am  ;
+  const double X   =  dx * iA4 ;
+  const double Y   =  dy * iA4 ;
+  const double Z   =  dz * iA4 ;
+  const double P   = -0.5 * ( X + Y + Z );
+  //
+  const double XY  = X * Y ;
+  const double XZ  = X * Z ;
+  const double YZ  = Y * Z ;
+  const double XYZ = XY * Z ;
+  //
+  const double Z2  = Z  * Z ;
+  const double P2  = P  * P ;
+  const double P3  = P2 * P ;
+  //
+  const double E2  = XY + XZ + YZ - 3 * P2 ;
+  const double E3  = XYZ + 2 * E2 * P + 4 * P3 ;
+  const double E4  = ( 2 * XYZ + E2 * P + 3 * P3 ) * P ;
+  const double E5  = XYZ * P2 ;
+  //
+  static const double s_c1  = -3.  /  14 ;
+  static const double s_c2  = +1.  /   6 ;
+  static const double s_c3  = +9.  /  88 ;
+  static const double s_c4  = -3.  /  22 ;
+  static const double s_c5  = -9.  /  52 ;
+  static const double s_c6  = +3.  /  26 ;
+  //
+  static const double s_c7  = -1.  /  16 ;
+  static const double s_c8  = +3.  /  40 ;
+  static const double s_c9  = +3.  /  20 ;
+  static const double s_c10 = +45. / 272 ;
+  static const double s_c11 = -9.  /  68 ;
+  //
+  const double res = iA4 / std::sqrt ( Am ) * ( 1 
+                                                + s_c1  * E2 
+                                                + s_c2  * E3 
+                                                + s_c3  * E2 * E2 
+                                                + s_c4  * E4 
+                                                + s_c5  * E2 * E3 
+                                                + s_c6  * E5   
+                                                //
+                                                + s_c7  * E2 * E2 * E2 
+                                                + s_c8  * E3 * E3  
+                                                + s_c9  * E2 * E4  
+                                                + s_c10 * E2 * E2 * E3   
+                                                + s_c11 * ( E3 * E4 + E2 * E5 ) ) ;
+  //
+  // const double add = 3 * carlson_RC ( 1 , 1 + p4 * delta / ( sm * sm ) ) / sm  ;
+  //
+  return res + result ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RJ_gsl 
+( const double x , 
+  const double y , 
+  const double z , 
+  const double p ) 
+{
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_RJ_e 
+    ( x , y , z , p , GSL_PREC_DOUBLE , &result ) ;
+  //
   if ( ierror ) 
   {
     //
@@ -1198,26 +1594,130 @@ double Ostap::Math::elliptic_KZ ( const double beta  , const double k   )
     //
   }
   //
-  return k * k * sinbeta * cosbeta * std::sqrt ( alpha ) * result.val / 3 ;
+  return result.val ;
 }
 // ============================================================================
-/*  difference in complete elliptic integrals  \f$ K(k) \f$ and \f$ E(k) \f$
- *  \f[ K(k) - E(k) = \frac{k^2}{3}R_D\left(0,1-k^2,1\right)\f],
- *  where \f$ R_D(x,y,z)\f$ is a symmetric Carlson form 
+/*  Symmetric Carlson form 
+ *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+ *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ *  For negative y, Cauchy principal value it returned 
+ *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+ */
+// ============================================================================
+double Ostap::Math::carlson_RC
+( const double x , 
+  const double y ) 
+{
+  //
+  if ( y < 0 ) 
+  { return s_zero ( x ) ? 0.0 : std::sqrt ( x / ( x - y ) ) * carlson_RC ( x - y , -y ) ; }
+  //
+  const double A0 = ( x + 2 * y ) / 3 ;
+  // 
+  double xm = x  ;
+  double ym = y  ;
+  double Am = A0 ;
+  //
+  const double dx = A0 - x ;
+  //
+  static const double s_R =std::pow ( 3 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
+  const double Q  = s_R * std::abs ( dx ) ;
+  //
+  double Qn = Q ;
+  double p4 = 1 ;
+  //
+  for ( unsigned int m = 0 ; m < 100 ; ++m ) 
+  {
+    if ( 0 < m && Qn < std::abs ( Am ) ) { break ; }
+    //
+    const double xm_sq = std::sqrt ( xm ) ;
+    const double ym_sq = std::sqrt ( ym ) ;
+    //
+    const double lm = 2 * xm_sq * ym_sq + ym ;
+    //
+    const double xm1 =  0.25 * ( xm + lm ) ;
+    const double ym1 =  0.25 * ( ym + lm ) ;
+    const double Am1 =  0.25 * ( Am + lm ) ;
+    //
+    xm = xm1 ;
+    ym = ym1 ;
+    Am = Am1 ;
+    //
+    Qn /= 4  ;
+    p4 /= 4  ;
+  }
+  //
+  const double s = p4 * ( y - A0 ) / Am ;
+  //
+  static  const std::array<long double,8> s_poly 
+  { { 9.0L/8 , 159.0L/208 , 9.0L/22 , 3.0L/8 , 1.0L/7 , 3.0L/10 , 0.0 , 1.0L } } ;
+  //
+  const double result = 
+    Ostap::Math::Clenshaw::monomial_sum ( s_poly.begin () , s_poly.end   () , s ).first  ;
+  //
+  return result / std::sqrt ( Am )  ;  
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+ *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ *  For negative y, Cauchy principal value it returned 
+ *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+ */
+// ============================================================================
+double Ostap::Math::carlson_RC_gsl
+( const double x , 
+  const double y ) 
+{
+  //
+  if ( y < 0 ) 
+  { return s_zero ( x ) ? 0.0 : std::sqrt ( x / ( x - y ) ) * carlson_RC_gsl ( x - y , -y ) ; }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_ellint_RC_e 
+    ( x , y , GSL_PREC_DOUBLE , &result ) ;
+  //
+  if ( ierror ) 
+  {
+    //
+    gsl_error ( "Error from gsl_sf_ellint_RC_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+    //
+  }
+  //
+  return result.val ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
  *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
  *                Numerical Algorithms, 10, 1995,  13
  *  @see https://doi.org/10.1007/BF02198293
  *  @see https://arxiv.org/abs/math/9409227
  */
 // ============================================================================
-double Ostap::Math::elliptic_KmE ( const double k   )
+double Ostap::Math::carlson_RD_gsl  
+( const double x , 
+  const double y , 
+  const double z ) 
 {
   //
   gsl_sf_result result ;
-  const int ierror = gsl_sf_ellint_RD_e ( 0.0       ,
-                                          1 - k * k ,
-                                          1.0       ,
-                                          GSL_PREC_DOUBLE , &result ) ;
+  const int ierror = gsl_sf_ellint_RD_e 
+    ( x , y , z , GSL_PREC_DOUBLE , &result ) ;
+  //
   if ( ierror ) 
   {
     //
@@ -1227,8 +1727,692 @@ double Ostap::Math::elliptic_KmE ( const double k   )
     //
   }
   //
-  return k * k * result.val / 3 ;
+  return result.val ;
 }
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RD
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  const double A0 = 0.20 * ( x + y + 3 * z ) ;
+  // 
+  double xm = x  ;
+  double ym = y  ;
+  double zm = z  ;
+  double Am = A0 ;
+  //
+  const double dx = A0 - x ;
+  const double dy = A0 - y ;
+  const double dz = A0 - z ;
+  //
+  static const double s_R =std::pow ( 0.25 * 2 * GSL_DBL_EPSILON , -1.0/8 ) ;
+  const double Q  = s_R * std::max ( std::abs ( dx ) , std::max ( std::abs ( dy ) , std::abs ( dz ) ) ) ;
+  //
+  double result   = 0  ;
+  unsigned int n  = 0  ;
+  double       Qn = Q  ;
+  double       p4 = 1  ;
+  for ( unsigned int m = 0 ; m < 100  ; ++m ) 
+  {
+    if ( 0 < m && Qn < std::abs ( Am ) ) { break ; }
+    //
+    const double xm_sq = std::sqrt ( xm ) ;
+    const double ym_sq = std::sqrt ( ym ) ;
+    const double zm_sq = std::sqrt ( zm ) ;
+    //
+    const double lm = xm_sq * ym_sq + xm_sq * zm_sq + ym_sq * zm_sq ;
+    //
+    result += 3.0 * p4 / ( zm_sq * ( zm + lm ) ) ;
+    //
+    const double Am1 = 0.25 * ( Am + lm ) ;
+    const double xm1 = 0.25 * ( xm + lm ) ;
+    const double ym1 = 0.25 * ( ym + lm ) ;
+    const double zm1 = 0.25 * ( zm + lm ) ;
+    //
+    xm = xm1 ;
+    ym = ym1 ;
+    zm = zm1 ;
+    Am = Am1 ;
+    ++n      ;
+    Qn /= 4  ;
+    p4 /= 4  ;
+    
+  }
+  //
+  const double iA4 = p4 / Am  ;
+  const double X   = dx * iA4 ;
+  const double Y   = dy * iA4 ;
+  const double Z   = - ( X + Y ) / 3   ;
+  //
+  const double XY = X * Y ;
+  const double Z2 = Z * Z ;
+  //
+  const double E2 =       XY - 6 * Z2 ;
+  const double E3 = ( 3 * XY - 8 * Z2 ) * Z  ;
+  const double E4 = 3 * ( XY -     Z2 ) * Z2 ;
+  const double E5 = XY * Z2 * Z ;
+  //
+  static const double s_c1  = -3.  /  14 ;
+  static const double s_c2  = +1.  /   6 ;
+  static const double s_c3  = +9.  /  88 ;
+  static const double s_c4  = -3.  /  22 ;
+  static const double s_c5  = -9.  /  52 ;
+  static const double s_c6  = +3.  /  26 ;
+  static const double s_c7  = -1.  /  16 ;
+  static const double s_c8  = +3.  /  40 ;
+  static const double s_c9  = +3.  /  20 ;
+  static const double s_c10 = +45. / 272 ;
+  static const double s_c11 = -9.  /  68 ;
+  //
+  result += iA4 / std::sqrt ( Am ) * ( 1 
+                                       + s_c1  * E2 
+                                       + s_c2  * E3 
+                                       + s_c3  * E2 * E2 
+                                       + s_c4  * E4 
+                                       + s_c5  * E2 * E3 
+                                       + s_c6  * E5   
+                                       + s_c7  * E2 * E2 * E2 
+                                       + s_c8  * E3 * E3  
+                                       + s_c9  * E2 * E4  
+                                       + s_c10 * E2 * E2 * E3   
+                                       + s_c11 * ( E3 * E4 + E2 * E5 ) ) ;
+  //
+  return result ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} 
+ *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RG 
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  if ( s_zero  ( z ) ) { return carlson_RG ( z , x , y ) ; }
+  //
+  return ( z * carlson_RF ( x , y , z ) 
+           - ( x - z ) * ( y - z ) * carlson_RD ( x , y , z ) / 3   
+           + std::sqrt ( x * y / z ) ) / 2 ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} 
+ *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RG_gsl 
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  if ( s_zero  ( z ) ) { return carlson_RG_gsl ( z , x , y ) ; }
+  //
+  return ( z * carlson_RF_gsl ( x , y , z ) 
+           - ( x - z ) * ( y - z ) * carlson_RD_gsl ( x , y , z ) / 3   
+           + std::sqrt ( x * y / z ) ) / 2 ;
+}
+// ===========================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_F(x,y) = R_F(x,y,0)\f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RF 
+( const double x , 
+  const double y ) 
+{
+  if ( x <= 0 || y <= 0 ) 
+  {
+    //
+    gsl_error ( "Invalid arguments for Ostap::Math::carlson_RF(2)" , __FILE__ , __LINE__ , GSL_EDOM ) ;
+    return std::numeric_limits<double>::quiet_NaN();
+    //
+  }
+  else if (  s_equal ( x , y ) ) { return 0.5 * M_PI / std::sqrt ( x ) ; }
+  //
+  double xm = std::sqrt ( x ) ;
+  double ym = std::sqrt ( y ) ;
+  /// precision 
+  static const double s_R = 2 * std::sqrt ( 2 * GSL_DBL_EPSILON ) ;
+  //
+  for ( unsigned int n = 0 ; n < 10000 ; ++n ) 
+  {
+    if ( 0 < n && std::abs ( xm - ym ) < s_R * std::abs ( xm ) ) 
+    { return M_PI / ( xm + ym ) ; }
+    const double xm1 = 0.5 *     ( xm + ym )     ;
+    const double ym1 = std::sqrt ( xm * ym ) ;
+    xm  = xm1 ;
+    ym  = ym1 ;  
+  }
+  //
+  gsl_error ( "Too many iterations for Ostap::Math::carlson_RF(2)" , __FILE__ , __LINE__ , GSL_EMAXITER ) ;
+  return M_PI / ( xm + ym ) ;
+  //
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_G(x,y) = R_G(x,y,0)\f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RG 
+( const double x , 
+  const double y ) 
+{
+  if ( x <= 0 || y <= 0 ) 
+  {
+    //
+    gsl_error ( "Invalid arguments for Ostap::Math::carlson_RG(2)" , __FILE__ , __LINE__ , GSL_EDOM ) ;
+    return std::numeric_limits<double>::quiet_NaN();
+    //
+  }
+  //
+  double xm = std::sqrt ( x ) ;
+  double ym = std::sqrt ( y ) ;
+  /// precision 
+  static const double s_R = 2 * std::sqrt ( 2 * GSL_DBL_EPSILON ) ;
+  //
+  double result = ( xm + ym ) * ( xm + ym ) ;
+  //
+  for ( unsigned int n = 0 ; n < 10000 ; ++n ) 
+  {
+    if ( 0 < n && std::abs ( xm - ym ) < s_R * std::abs ( xm ) ) 
+    { return 0.125 * result * M_PI / ( xm + ym ) ; }
+    //
+    const double xm1 = 0.5 *     ( xm + ym )     ;
+    const double ym1 = std::sqrt ( xm * ym ) ;
+    xm      = xm1 ;
+    ym      = ym1 ;
+    result -= std::pow ( xm - ym , 2 ) * std::pow ( 2.0 , n + 1 ) ; 
+  }
+  //
+  gsl_error ( "Too many iterations for Ostap::Math::carlson_RG(2)" , __FILE__ , __LINE__ , GSL_EMAXITER ) ;
+  return 0.125 * result * M_PI / ( xm + ym ) ;
+  //
+}
+
+
+
+
+// ============================================================================
+// Symmetric Carlson forms via plain integrtaion
+// (just for cross-checks, validation and debugging
+// ============================================================================
+namespace 
+{
+  // =========================================================================
+  /// helper structure to calcualte RF via the plain integration
+  struct RF 
+  {
+    // ======================================================================
+    RF ( const double x , const double y , const double z ) 
+      : m_x ( x ) , m_y ( y ) , m_z ( z ) {}
+    // ======================================================================
+    // RF 
+    double operator () ( const double t ) const 
+    { return 0.5 / std::sqrt ( ( t + m_x ) * ( t + m_y ) * ( t + m_z ) ) ; }
+    // ======================================================================
+    double m_x ;
+    double m_y ;
+    double m_z ;    
+    // ======================================================================
+  };  
+  // =========================================================================
+  /// helper structure to calcualte RJ via the plain integration
+  struct RJ 
+  {
+    // ======================================================================
+    RJ ( const double x , const double y , const double z , const double p ) 
+      : m_x ( x ) , m_y ( y ) , m_z ( z ) , m_p ( p ) {}
+    // ======================================================================
+    // RJ 
+    double operator () ( const double t ) const 
+    { return 1.5 / std::sqrt ( ( t + m_x ) * ( t + m_y ) * ( t + m_z ) ) / ( t + m_p )  ; }
+    // ======================================================================
+    double m_x ;
+    double m_y ;
+    double m_z ;    
+    double m_p ;    
+    // ======================================================================
+  };  
+  // =========================================================================
+  /// helper structure to calcualte RC via the plain integration
+  struct RC
+  {
+    // ======================================================================
+    RC ( const double x , const double y ) 
+      : m_x ( x ) , m_y ( y ) {}
+    // ======================================================================
+    // RC 
+    double operator () ( const double t ) const 
+    { return 0.5 / ( std::sqrt ( t + m_x ) * ( t + m_y ) ) ; }
+    // ======================================================================
+    double m_x ;
+    double m_y ;
+    // ======================================================================
+  };  
+  // =========================================================================
+  /// helper structure to calcualte RD via the plain integration
+  struct RD 
+  {
+    RD ( const double x , const double y , const double z ) 
+      : m_x ( x ) , m_y ( y ) , m_z ( z ) {}
+    // ======================================================================
+    // RD 
+    double operator () ( const double t ) const 
+    { return 1.5 / std::sqrt ( ( t + m_x ) * ( t + m_y ) * ( t + m_z ) ) / ( t + m_z )  ; }
+    // ======================================================================
+    double m_x ;
+    double m_y ;
+    double m_z ;    
+    // ======================================================================
+  };  
+  // =========================================================================
+  /// helper structure to calcualte RG via the plain integration
+  struct RG 
+  {
+    // ======================================================================
+    RG ( const double x , const double y , const double z ) 
+      : m_x ( x ) , m_y ( y ) , m_z ( z ) {}
+    // RG 
+    double operator () ( const double t ) const 
+    {
+      double sum = m_x / ( t + m_x ) + m_y / ( t + m_y ) + m_z / ( t + m_z ) ;
+      return 0.25 * t / std::sqrt ( ( t + m_x ) * ( t + m_y ) * ( t + m_z ) ) * sum ; 
+    }
+    // ======================================================================
+    double m_x ;
+    double m_y ;
+    double m_z ;    
+    // ======================================================================
+  };  
+  // =========================================================================
+  /// statis integrtaion workspace 
+  const Ostap::Math::WorkSpace s_workspace { 100000 } ;
+  // =========================================================================
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_F(x,y,z) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2}dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RF_int 
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  static const Ostap::Math::GSL::Integrator1D<RF> s_integrator {} ;
+  static char s_message[] = "Integral(carlson_RF)" ;
+  //
+  const double  a1 = 0.1 ;
+  const double  a2 = 20  ;
+  //
+  const RF rf { x , y , z } ;
+  const auto F = s_integrator.make_function ( &rf ) ;
+  //
+  int    ierror   = 0   ;
+  double result1  = 0.0 ;
+  double error1   = 1.0 ;
+  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+    ( &F     ,
+      a2     ,                       // low limit 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;  
+  //
+  double result2  = 0.0 ;
+  double error2   = 1.0 ;
+  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+    ( &F     ,
+      0      ,  a1              ,    // integrtaion limits 
+      std::vector<double>()     ,    // no internal singular points 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  double result3  = 0.0 ;
+  double error3   = 1.0 ;
+  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+    ( &F     ,
+      a1     , a2         ,          // integration limits 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+
+  return result1 + result2 + result3 ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_J(x,y,z,p) = \int_0^{+\infty} 
+ *   \left[  (t+x)(t+y)(t+z) \right]^{-1/2} (t+p) dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RJ_int
+( const double x , 
+  const double y , 
+  const double z , 
+  const double p ) 
+{
+  //
+  static const Ostap::Math::GSL::Integrator1D<RJ> s_integrator {} ;
+  static char s_message[] = "Integral(carlson_RJ)" ;
+  //
+  const double  a1 = 0.1 ;
+  const double  a2 = 20  ;
+  //
+  const RJ rj { x , y , z , p } ;
+  const auto F = s_integrator.make_function ( &rj ) ;
+  //
+  int    ierror   = 0   ;
+  double result1  = 0.0 ;
+  double error1   = 1.0 ;
+  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+    ( &F     ,
+      a2     ,                       // low limit 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;  
+  //
+  double result2  = 0.0 ;
+  double error2   = 1.0 ;
+  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+    ( &F     ,
+      0      ,  a1              ,    // integrtaion limits 
+      std::vector<double>()     ,    // no internal singular points 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  double result3  = 0.0 ;
+  double error3   = 1.0 ;
+  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+    ( &F     ,
+      a1     , a2         ,          // integration limits 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result1 + result2 + result3 ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_C(x,y) = R_F(x,y,y) = \int_0^{+\infty} 
+ *   (t+x)^{-1/2}(t+y)^{-1}dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ *  For negative y, Cauchy principal value it returned 
+ *  \f[ R_C(x,-y) = \left(\frac{x}{x+y}\right)R_C(x+y,y), 0 < y \f] 
+ */
+// ============================================================================
+double Ostap::Math::carlson_RC_int
+( const double x , 
+  const double y ) 
+{
+  if ( y < 0 ) 
+  { return s_zero ( x ) ? 0.0 : std::sqrt ( x / ( x - y ) ) * carlson_RC_int ( x - y , -y ) ; }
+  //
+  static const Ostap::Math::GSL::Integrator1D<RC> s_integrator {} ;
+  static char s_message[] = "Integral(carlson_RC)" ;
+  //
+  const double  a1 = 0.1 ;
+  const double  a2 = 20  ;
+  //
+  const RC rc { x , y } ;
+  const auto F = s_integrator.make_function ( &rc ) ;
+  //
+  int    ierror   = 0   ;
+  double result1  = 0.0 ;
+  double error1   = 1.0 ;
+  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+    ( &F     ,
+      a2     ,                       // low limit 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;  
+  //
+  double result2  = 0.0 ;
+  double error2   = 1.0 ;
+  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+    ( &F     ,
+      0      ,  a1              ,    // integrtaion limits 
+      std::vector<double>()     ,    // no internal singular points 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  double result3  = 0.0 ;
+  double error3   = 1.0 ;
+  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+    ( &F     ,
+      a1     , a2         ,          // integration limits 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result1 + result2 + result3 ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_D (x,y,z) = R_J(x,y,z,z) = \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} (t+z)^{-3/2} dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RD_int  
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  static const Ostap::Math::GSL::Integrator1D<RD> s_integrator {} ;
+  static char s_message[] = "Integral(carlson_RD)" ;
+  //
+  const double  a1 = 0.1 ;
+  const double  a2 = 20  ;
+  //
+  const RD rd { x , y , z } ;
+  const auto F = s_integrator.make_function ( &rd ) ;
+  //
+  int    ierror   = 0   ;
+  double result1  = 0.0 ;
+  double error1   = 1.0 ;
+  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+    ( &F     ,
+      a2     ,                       // low limit 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;  
+  //
+  double result2  = 0.0 ;
+  double error2   = 1.0 ;
+  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+    ( &F     ,
+      0      ,  a1              ,    // integrtaion limits 
+      std::vector<double>()     ,    // no internal singular points 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  double result3  = 0.0 ;
+  double error3   = 1.0 ;
+  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+    ( &F     ,
+      a1     , a2         ,          // integration limits 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result1 + result2 + result3 ;
+}
+// ============================================================================
+/*  Symmetric Carlson form 
+ *  \f[ R_G (x,y,z) = \rac{1}{4} \int_0^{+\infty} 
+ *  \left[  (t+x)(t+y)\right]^{-1/2} 
+ *   \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right)  dt \f]
+ *  @see https://en.wikipedia.org/wiki/Elliptic_integral
+ *  @see Carlson, B.C., "Numerical computation of real or complex elliptic integrals", 
+ *                Numerical Algorithms, 10, 1995,  13
+ *  @see https://doi.org/10.1007/BF02198293
+ *  @see https://arxiv.org/abs/math/9409227
+ */
+// ============================================================================
+double Ostap::Math::carlson_RG_int  
+( const double x , 
+  const double y , 
+  const double z ) 
+{
+  //
+  static const Ostap::Math::GSL::Integrator1D<RG> s_integrator {} ;
+  static char s_message[] = "Integral(carlson_RG)" ;
+  //
+  const double  a1 = 0.1 ;
+  const double  a2 = 20  ;
+  //
+  const RG rg { x , y , z } ;
+  const auto F = s_integrator.make_function ( &rg ) ;
+  //
+  int    ierror   = 0   ;
+  double result1  = 0.0 ;
+  double error1   = 1.0 ;
+  std::tie ( ierror , result1 , error1 ) = s_integrator.gaqiu_integrate
+    ( &F     ,
+      a2     ,                       // low limit 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;  
+  //
+  double result2  = 0.0 ;
+  double error2   = 1.0 ;
+  std::tie ( ierror , result2 , error2 ) = s_integrator.gaqp_integrate
+    ( &F     ,
+      0      ,  a1              ,    // integrtaion limits 
+      std::vector<double>()     ,    // no internal singular points 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  double result3  = 0.0 ;
+  double error3   = 1.0 ;
+  std::tie ( ierror , result3 , error3 ) = s_integrator.gaq_integrate
+    ( &F     ,
+      a1     , a2         ,          // integration limits 
+      workspace ( s_workspace ) ,    // workspace
+      s_PRECISION         ,          // absolute precision
+      s_PRECISION         ,          // relative precision
+      s_workspace.size()  ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+
+  return result1 + result2 + result3 ;
+}
+// ============================================================================
+
+
+
+
+
+
+
+
+
 // ============================================================================
 /*  get the intermediate polynom \f$ g_l (x)\f$ used for the calculation of 
  *  the angular-momentum Blatt-Weisskopf centrifugal-barrier factor 
@@ -1291,7 +2475,162 @@ Ostap::Math::barrier_g
 // ============================================================================
 
 
+// ============================================================================
+/*  modified Bessel function of the second kind 
+ *  \f$ K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_e 
+ *  @see gsl_sf_bessel_K1_e 
+ *  @see gsl_sf_bessel_Kn_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_e ( x , &result ) :
+    gsl_sf_bessel_Kn_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_K0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_K1_e" : 
+                "Error from gsl_sf_bessel_Kn_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_n(x) \f$ for \f$ x>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_K0_scaled_e 
+ *  @see gsl_sf_bessel_K1_scaled_e 
+ *  @see gsl_sf_bessel_Kn_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Kn_scaled 
+( const int    n , 
+  const double x ) 
+{ 
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_K0_scaled_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_K1_scaled_e ( x , &result ) :
+    gsl_sf_bessel_Kn_scaled_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( ( 0 == n ) ? "Error from gsl_sf_bessel_K0_scaled_e" : 
+                ( 1 == n ) ? "Error from gsl_sf_bessel_K1_scaled_e" : 
+                "Error from gsl_sf_bessel_Kn_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** modified Bessel function of the second kind  
+ *  \f$ K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+/** scaled modified Bessel function of the second kind 
+ *  \f$ \mathrm{e}^x K_{\nu}(x) \f$ for \f$ x>0, \nu>0 \f$
+ *  @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions_:_I%CE%B1,_K%CE%B1
+ *  @see gsl_sf_bessel_Knu_scaled_e 
+ */
+// ============================================================================
+double Ostap::Math::bessel_Knu_scaled 
+( const double nu , 
+  const double x  ) 
+{ 
+  //
+  if ( isint ( nu ) ) 
+  {
+    const int n = Ostap::Math::round ( nu ) ;
+    return Ostap::Math::bessel_Kn_scaled ( n , x ) ;
+  }
+  //
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_bessel_Knu_scaled_e ( std::abs ( nu ) , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_bessel_Knu_scaled_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
+// ============================================================================
+
+
+
 
 // ============================================================================
-// The END 
+/* Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile
+ * 
+ * The relativistic Voigt profile \f$ V_2(m;\mu,\Gamma,\sigma) \f$  is
+ *  \f$ V_2(m; \mu,\Gamma,\sigma) \equiv  S_2(m;\mu,\Gamma)\ast G(\delta m;\sigma)\f$ 
+ *  where 
+ *  - \f$ S_2 = \frac{1}{\pi}\frac{\mu\Gamma}{ (m^2-\mu^2)^2 + \mu^2\Gamma^2 } \f$    
+ *  - \f$ G(\delta m ; \sigma) = \frac{1}{\sqrt{2\pi\sigma^2}} 
+ *     \mathrm{e}^{-\frac{1}{2} \left( \frac{\delta m }{\sigma} \right)^2} \f$$
+ *  
+ *  \f$ V_2(m; \mu,\Gamma,\sigma = \frac{H_2(a,u_1,u_2)}{2\sqrt{\pi}\sigma^2}\f$, where 
+ *  - \f$ u_1 = \frac{m-\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ u_2 = \frac{m+\mu }{\sqrt{2}\sigma} \f$
+ *  - \f$ a   = \frac{\mu\Gamma}{2\sigma^2} \f$
+ *
+ *  \f[ H_2(a,u_1,u_2) = 
+ *   \frac{a}{\pi} \int_{-\infty}{+\infty}  
+ *    \frac{dt}{  (u_1-t)^2(u_2-t0^2 + a^2 } \f] 
+ * @see Kycia, Radoslaw A.; Jadach, Stanislaw. 
+ *      "Relativistic Voigt profile for unstable particles in high energy physics". 
+ *      Journal of Mathematical Analysis and Applications. 463 (2): 1040–1051 
+ *      arXiv:1711.09304. doi:10.1016/j.jmaa.2018.03.065. ISSN 0022-247X.
+ * @see https://arxiv.org/abs/1711.09304
+ */
+// ============================================================================
+double Ostap::Math::H2 ( const double a  , 
+                         const double u1 , 
+                         const double u2 ) 
+{
+  if ( a  < 0 ) { return H2 ( std::abs ( a ) , u1 , u2 ) ; }
+  return 0 ;
+}
+
+
+
+// ============================================================================
+//                                                                      The END 
 // ============================================================================

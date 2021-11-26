@@ -37,7 +37,8 @@ if '.' not in sys.path :
     sys.path = ['.'] + sys.path 
     
 # =============================================================================
-from ostap.core.core import cpp, Ostap, VE, SE, WSE, hID 
+from ostap.core.core import cpp, Ostap, VE, SE, WSE, hID
+from ostap.math.base import doubles
 # =============================================================================
 if '__main__' == __name__ :
 
@@ -45,6 +46,6 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = __logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
 

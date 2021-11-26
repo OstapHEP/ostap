@@ -91,12 +91,12 @@ Ostap::Math::GSL::EigenSystem::eigenValues
 // ============================================================================
 // evaluate the eigenvalues and eigenvectors of the symmetrical matrix 
 // ============================================================================
-template <class T, unsigned int D, class R>
+template <class T, unsigned int D>
 inline Ostap::StatusCode 
 Ostap::Math::GSL::EigenSystem::eigenVectors 
 ( const ROOT::Math::SMatrix<T,D,D,ROOT::Math::MatRepSym<T,D> >& mtrx ,
   ROOT::Math::SVector<T,D>&                                     vals , 
-  ROOT::Math::SMatrix<T,D,D,R>&                                 vecs , 
+  ROOT::Math::SMatrix<T,D,D>&                                   vecs , 
   const bool sorted ) const
 {
   Ostap::StatusCode sc = _fill ( mtrx ) ;

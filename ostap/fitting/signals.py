@@ -46,6 +46,10 @@ Empricial PDFs to describe narrow peaks
   - Logistic_pdf   
   - RaisingCosine_pdf
   - QGaussian_pdf
+  - Hyperbolic_pdf
+  - GenHyperbolic_pdf
+  - Das_pdf
+  - Hypatia_pdf
   
 PDF to describe ``wide'' peaks
 
@@ -60,7 +64,7 @@ PDF to describe ``wide'' peaks
 Special stuff:
 
   - Voigt & PseudoVoigt
-  - BW23L
+  - BW3L
 
 """
 # =============================================================================
@@ -93,6 +97,10 @@ __all__ = (
     'Slash_pdf'              , ## symmetric peakk wot very heavy tails 
     'RaisingCosine_pdf'      , ## Raising  Cosine distribution
     'QGaussian_pdf'          , ## Q-gaussian distribution
+    'Hyperbolic_pdf'         , ## Hyperbolic distribution
+    'GenHyperbolic_pdf'      , ## Generalised Hyperbolic distribution
+    'Das_pdf'                , ## Das: Gaussian with exponentrial tails 
+    'Hypatia_pdf'            , ## Generalised Hyperbolic distribution
     'AsymmetricLaplace_pdf'  , ## asymmetric laplace 
     'Sech_pdf'               , ## hyperbolic secant  (inverse-cosh) 
     'Losev_pdf'              , ## asymmetric hyperbolic secant
@@ -105,12 +113,13 @@ __all__ = (
     'Flatte_pdf'             , ## Flatte-function  (pipi/KK)
     'LASS_pdf'               , ## kappa-pole
     'Bugg_pdf'               , ## sigma-pole
-    'Swanson_pdf'            , ## Swanson's S-wave cusp 
     ##
     'Voigt_pdf'              , ## Voigt-profile
     'PseudoVoigt_pdf'        , ## PseudoVoigt-profile
-    'BW23L_pdf'              , ## BW23L
     'BWMC_pdf'               , ## BWMC
+    'BWPS_pdf'               , ## BWPS
+    'BW3L_pdf'               , ## BW3L
+    'FlattePS_pdf'           , ## Flatte-PS 
     #
     )
 # =============================================================================
@@ -120,8 +129,9 @@ from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' )
 else                       : logger = getLogger ( __name__                )
 # =============================================================================
-from   ostap.core.core     import cpp , Ostap 
-from   ostap.fitting.basic import MASS, PDF 
+from   ostap.core.core        import cpp , Ostap, VE  
+from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args
+from   ostap.fitting.utils    import Phases 
 # =============================================================================
 models = [] 
 # =============================================================================
@@ -149,8 +159,8 @@ class Gauss_pdf(MASS) :
         ## build pdf
         # 
         self.pdf = ROOT.RooGaussian (
-            'gauss_%s'  % name ,
-            "Gauss(%s)" % name ,
+            self.roo_name ( 'gauss_' ) ,
+            "Gauss %s" % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma )
@@ -232,8 +242,8 @@ class CrystalBall_pdf(MASS) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.CrystalBall (
-            'cb_%s'           % name ,
-            'CrystalBall(%s)' % name ,
+            self.roo_name ( 'cb_'  )       , 
+            'Crystal Ball %s' % self.name  ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -295,8 +305,8 @@ class CrystalBallRS_pdf(CrystalBall_pdf) :
         ## finally build PDF 
         #
         self.pdf = Ostap.Models.CrystalBallRS (
-            'cbrs_%s'           % name ,
-            'CrystalBallRS(%s)' % name ,
+            self.roo_name ( 'cbrs_' )  , 
+            'Right-sided Crystal Ball %s' % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -366,8 +376,8 @@ class CB2_pdf(MASS) :
                                  "n_{R}(%s)"      % name , nR        , 1   , 1.e-8 , 50 )
         
         self.pdf = Ostap.Models.CrystalBallDS(
-            "cb2_"       + name ,
-            "CB_{2}(%s)" % name ,
+            self.roo_name ( 'cb2_' ) , 
+            "double-sided Crystal Ball %s" % self.name ,
             self.xvar    ,
             self.mean    ,
             self.sigma   ,
@@ -491,8 +501,8 @@ class Needham_pdf(MASS) :
                               -0.00018  * unit**2 , -10 * unit**2 , 10 * unit**2 )
         #
         self.pdf = Ostap.Models.Needham (
-            'needham_%s'  % name ,
-            'needham(%s)' % name ,
+            self.roo_name ( 'needham_' ) , 
+            'Needham function %s' % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -600,8 +610,8 @@ class Apollonios_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf  = Ostap.Models.Apollonios (
-            "apollo_"        + name ,
-            "Apollonios(%s)" % name ,
+            self.roo_name ( 'apo_' ) , 
+            "Apollonios %s" % self.name   ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -704,36 +714,30 @@ class Apollonios2_pdf(MASS) :
         ## initialize the base
         # 
         MASS.__init__  ( self , name , xvar , mean , sigma  )
-
         
         self.__asym = self.make_var ( asymmetry                 ,
-                                'asym_%s'          % name ,
-                                '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
-        
-        self.__lst_R = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1-%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        self.__lst_L = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1+%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+                                      'asym_%s'          % name ,
+                                      '#asym_{Apo2}(%s)' % name , asymmetry , 0, -1 , 1  ) 
+
+        ## constreuct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
+
         self.__beta    = self.make_var ( beta ,
-                                   'beta_%s'          % name  ,
-                                   '#beta_{Apo2}(%s)' % name  ,
-                                   beta , 0.01  , 1000 ) 
+                                         'beta_%s'          % name  ,
+                                         '#beta_{Apo2}(%s)' % name  ,
+                                         beta , 1 , 0.01  , 1000 ) 
         #
         ## finally build PDF
         #
         self.pdf  = Ostap.Models.Apollonios2 (
-            "apollo2_"        + name ,
-            "Apollonios2(%s)" % name ,
+            self.roo_name ( 'apo2_' ) , 
+            "Apollonios2 %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -752,10 +756,20 @@ class Apollonios2_pdf(MASS) :
 
     @property
     def asym ( self ) :
-        """``asymmetry''-parameter for Apollonios2 function"""
+        """``asym''- asymmetry parameter for Apollonios2 function (same as ``kappa''"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
         value = float ( value ) 
         assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
@@ -815,32 +829,25 @@ class BifurcatedGauss_pdf(MASS) :
         
         ## asymmetry parameter  
         self.__asym = self.make_var ( asymmetry                 ,
-                                'asym_%s'          % name ,
-                                '#asym_{asym}(%s)' % name ,
-                                asymmetry , 0 , -1 , 1  ) 
+                                      'asym_%s'          % name ,
+                                      '#asym_{asym}(%s)' % name ,
+                                      asymmetry , 0 , -1 , 1  )
         
-        ## Right-side sigma
-        self.__lst_R  = ROOT.RooArgList ( self.sigma , self.asym )
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1.0+%s)"   % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        ## Left-side sigma
-        self.__lst_L  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1.0-%s)"   % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
+        ## constreuct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
         
         #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.BifurcatedGauss (
-            "fbgau_"         + name ,
-            "BifurGauss(%s)" % name ,
+            self.roo_name ( "bfgauss_" )  , 
+            "Bifurcated Gauss %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -863,6 +870,16 @@ class BifurcatedGauss_pdf(MASS) :
     def asym ( self, value ) :
         value = float ( value ) 
         assert -1 <= value <= 1, "``asymmetry''-parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Bifurcated Gaussian function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
         self.__asym.setVal ( value )
 
     @property
@@ -915,9 +932,9 @@ class DoubleGauss_pdf(MASS) :
             'CoreFraction'      + name ,
             'CoreFraction(%s)'  % name , fraction , 0 , 1 ) 
         
-        self.pdf = Ostap.Models.DoubleGauss (           
-            "f2gau_"          + name ,
-            "DoubleGauss(%s)" % name ,
+        self.pdf = Ostap.Models.DoubleGauss (
+            self.roo_name ( 'gauss2_' ) , 
+            "double Gauss %s" % self.name ,
             self.mass     ,
             self.sigma    ,
             self.fraction ,
@@ -1025,30 +1042,28 @@ class GenGaussV1_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self  , name , xvar , mean  , alpha ) 
+        MASS.__init__  ( self  , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = alpha ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
+                 
         
         #
         ## rename it!
         #
         self.__alpha = self.sigma
-        if self.alpha != alpha : 
-            sname  = self.alpha.GetName  ()
-            stitle = self.alpha.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'alpha' )
-            gtitle = stitle.replace ( 'sigma' , 'alpha' )
-            self.alpha.SetName  ( gname  ) 
-            self.alpha.SetTitle ( gtitle )
-            
+        
         self.__beta  = self.make_var ( beta ,
-                                 'beta_%s'        % name  ,
-                                 '#beta_{v1}(%s)' % name  , beta , 
-                                 2 , 1.e-4  , 1.e+6 ) 
+                                       'beta_%s'        % name  ,
+                                       '#beta_{v1}(%s)' % name  , beta , 
+                                       2 , 1.e-4  , 1.e+6 ) 
         #
         ## finally build PDF
         #
         self.pdf = Ostap.Models.GenGaussV1 (
-            "gengV1_"        + name ,
-            "GenGaussV1(%s)" % name ,
+            self.roo_name ( 'gaussgv1_' ) , 
+            "generalized Gauss-V1 %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.alpha  ,
@@ -1118,19 +1133,15 @@ class GenGaussV2_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , alpha ) 
-        
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = alpha ,
+                         sigma_name  = 'alpha_%s'   % name ,
+                         sigma_title = '#alpha(%s)' % name )
         #
         ## rename it!
         #
         self.__alpha = self.sigma        
-        sname      = self.alpha.GetName  ()
-        stitle     = self.alpha.GetTitle ()
-        gname      = sname .replace ( 'sigma' , 'alpha' )
-        gtitle     = stitle.replace ( 'sigma' , 'alpha' )
-        self.alpha.SetName  ( gname  ) 
-        self.alpha.SetTitle ( gtitle )
-        
         self.__xi    = self.mean 
         self.__kappa = self.make_var ( kappa ,
                                  'kappa_%s'        % name  ,
@@ -1141,8 +1152,8 @@ class GenGaussV2_pdf(MASS) :
         ## finally build PDF
         #
         self.pdf = Ostap.Models.GenGaussV2 (
-            "gengV2_"        + name ,
-            "GenGaussV2(%s)" % name ,
+            self.roo_name ( 'gaussgv2_' ) , 
+            "generalized Gauss-V2 %s" % self.name ,
             self.xvar   ,
             self.xi     ,
             self.alpha  ,
@@ -1211,7 +1222,11 @@ class SkewGauss_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , omega )
+        MASS.__init__  ( self , name , xvar , 
+                         mean        = mean  ,
+                         sigma       = omega ,
+                         sigma_name  = 'omega_%s'   % name ,
+                         sigma_title = '#omega(%s)' % name )
         
                 
         #
@@ -1219,16 +1234,7 @@ class SkewGauss_pdf(MASS) :
         #
         
         self.__omega = self.sigma        
-        sname      = self.sigma.GetName  ()
-        stitle     = self.sigma.GetTitle ()
-        gname      = sname .replace ( 'sigma' , 'omega' )
-        gtitle     = stitle.replace ( 'sigma' , 'omega' )
-        self.omega.SetName  ( gname  ) 
-        self.omega.SetTitle ( gtitle )
-        
-
-        self.__xi   = self.mean 
-        
+        self.__xi   = self.mean         
         self.__alpha = self.make_var ( alpha ,
                                  'alpha_%s'   % name  ,
                                  '#alpha(%s)' % name  , alpha, 
@@ -1237,8 +1243,8 @@ class SkewGauss_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SkewGauss (
-            "skewg_"         + name ,
-            "SkewGauss(%s)" % name ,
+            self.roo_name ( 'gausssk_' ) , 
+            "skew Gauss %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.omega  ,
@@ -1367,8 +1373,8 @@ class Bukin_pdf(MASS) :
         ## create PDF
         # 
         self.pdf = Ostap.Models.Bukin (
-            "bkn_"      + name ,
-            "Bukin(%s)" % name ,
+            self.roo_name ( 'bukin_' ) , 
+            "Bukin %s" % self.name ,
             self.xvar  ,
             self.mean  ,
             self.sigma ,
@@ -1469,8 +1475,8 @@ class StudentT_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.StudentT (
-            "stT_"         + name ,
-            "StudentT(%s)" % name ,
+            self.roo_name ( 'studentt_' ) , 
+            "Student's t %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigma  ,
@@ -1541,21 +1547,16 @@ class BifurcatedStudentT_pdf(MASS) :
                                 'asym_%s'        % name ,
                                 '#xi_{asym}(%s)' % name ,
                                 asymmetry , 0 , -1 , 1  ) 
-        
-        self.__lst_R  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaR = ROOT.RooFormulaVar (
-            "sigmaR_stt_%s"     % name   ,
-            "sigma_{R}(%s)" % name   ,
-            "%s*(1+%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        self.__lst_L  = ROOT.RooArgList ( self.sigma , self.asym ) 
-        self.__sigmaL = ROOT.RooFormulaVar (
-            "sigmaL_stt_%s"     % name   ,
-            "sigma_{L}(%s)" % name   ,
-            "%s*(1-%s)"     % ( self.sigma.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+
+        ## construct left and right sigmas 
+        self.__sigmaL , self.__sigmaR = self.vars_from_asymmetry (
+            self.sigma                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'sigmaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'sigmaR' , self.name ) ,
+            v1title = '#sigma_{L}: #sigma #times (1+#kappa)'        , 
+            v2title = '#sigma_{R}: #sigma #times (1-#kappa)'        )
+
         ## left exponent 
         self.__nL =  self.make_var ( nL                     ,
                                'nL_%s'         % name ,
@@ -1570,8 +1571,8 @@ class BifurcatedStudentT_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.BifurcatedStudentT (
-            "bstT_"         + name ,
-            "BStudentT(%s)" % name ,
+            self.roo_name ( 'sttbf_' ) , 
+            "Bifurcated Student's t %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.sigmaL ,
@@ -1618,7 +1619,17 @@ class BifurcatedStudentT_pdf(MASS) :
     def asym ( self, value ) :
         value  = float ( value )
         assert -1<= value <=1 , "Asymmetry must be in he  range -1,1" 
-        self.__asym.setVal ( value ) 
+        self.__asym.setVal ( value )
+        
+    @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
+        self.__asym.setVal ( value )
 
     @property
     def sigmaL( self ) :
@@ -1644,8 +1655,8 @@ models.append ( BifurcatedStudentT_pdf )
 #
 #   Location & scale  parameters are the usual representation of the family of 
 #   distributions:
-#    - \f$\epsilon\f$ parameter control the skewness 
-#    - \f$\delta\f$   parameter control the kurtosis 
+#    - \f$\epsilon\f$ parameter controls the skewness 
+#    - \f$\delta\f$   parameter controls the kurtosis 
 #   Normal distribution reappears as \f$\epsilon=0\f$ and \f$\delta=1\f$ 
 #  The heavy tails correspond to \f$\delta<1\f$, 
 #  light tails correpond to \f$\delta>1\f$
@@ -1653,7 +1664,7 @@ models.append ( BifurcatedStudentT_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2014-08-02
 class SinhAsinh_pdf(MASS) :
-    """SinhAsing-function: 
+    """SinhAsinh-function: 
     see Jones, M. C.; Pewsey, A. (2009).
     ``Sinh-arcsinh distributions''. Biometrika 96 (4): 761. 
     doi:10.1093/biomet/asp053
@@ -1684,20 +1695,20 @@ class SinhAsinh_pdf(MASS) :
         ##
         self.__mu      = self.mean
         self.__epsilon = self.make_var ( epsilon ,
-                                   'epsilon_%s'   % name ,
-                                   '#epsilon(%s)' % name , epsilon ,
-                                   0 , -1000 , +1000 )
+                                         'epsilon_%s'   % name ,
+                                         '#epsilon(%s)' % name , epsilon ,
+                                         0 , -1000 , +1000 )
         self.__delta   = self.make_var ( delta ,
-                                   'delta_%s'   % name ,
-                                   '#delta(%s)' % name , delta ,
-                                   1 , 1.e-6 , 1000   )
+                                         'delta_%s'   % name ,
+                                         '#delta(%s)' % name , delta ,
+                                         1 , 1.e-6 , 1000   )
         
         #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.SinhAsinh (
-            "sinhaT_"        + name ,
-            "SinhAsinh(%s)" % name ,
+            self.roo_name ( 'sinasinh_' ) , 
+            "Sinh-Asinh %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ,
@@ -1760,7 +1771,7 @@ models.append ( SinhAsinh_pdf )
 #
 #  Note:
 #  Symmetric case of JonhsonSU distribution is 
-#  recovere by \f$\delta\rightarrow0\f$ for 
+#  recovered by \f$\delta\rightarrow0\f$ for 
 #  "sinh-asinh" distribution, see 
 #  Jones, M. C.; Pewsey, A. (2009). 
 #  "Sinh-arcsinh distributions". Biometrika 96 (4): 761. 
@@ -1812,28 +1823,18 @@ class JohnsonSU_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self    , name , xvar , xi  , lambd   ) ## mean    , sigma  )
-
+        MASS.__init__  ( self    , name , xvar ,
+                         mean        = xi                   ,
+                         sigma       = lambd                ,
+                         mean_name   = 'xi_%s'       % name ,
+                         mean_title  = '#xi(%s)'     % name ,
+                         sigma_name  = 'lambda_%s'   % name ,
+                         sigma_title = '#lambda(%s)' % name )
+        
         self.__xi = self.mean
-        if not self.xi is xi : ## newly created 
-            oname   = self.xi.GetName ()
-            otitle  = self.xi.GetTitle()
-            nname   = oname .replace ( 'mean' , 'xi' )
-            ntitle  = otitle.replace ( 'mean' , 'xi' )
-            self.xi.SetName  ( nname  )
-            self.xi.SetTitle ( ntitle )
-            
         self.__lambd = self.sigma
-        if not self.lambd is lambd : ## newly created 
-            oname    = self.lambd.GetName ()
-            otitle   = self.lambd.GetTitle()
-            nname    = oname .replace ( 'sigma' , 'lambda' )
-            ntitle   = otitle.replace ( 'sigma' , 'lambda' )
-            self.lambd.SetName  ( nname  )
-            self.lambd.SetTitle ( ntitle )
-            self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
-
-            
+        self.lambd.setMax ( self.lambd.getMax() * 10 ) ## adjust it! 
+    
         self.__delta   = self.make_var ( delta                 ,
                                    'delta_%s'     % name ,
                                    '#delta(%s)'   % name , delta ,
@@ -1849,8 +1850,8 @@ class JohnsonSU_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.JohnsonSU (
-            "jSU_"          + name ,
-            "JohnsonSU(%s)" % name ,
+            self.roo_name ( 'jsu_' ) , 
+            "Johnson's SU %s" % self.name ,
             self.xvar      ,
             self.xi        ,
             self.lambd     ,
@@ -1922,7 +1923,7 @@ models.append ( JohnsonSU_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-024
 class Atlas_pdf(MASS) :
-    """Modified gaussian with exponential tails
+    r"""Modified gaussian with exponential tails
     \f$  f(x) \propto \exp( -frac{\delta x^{1+\dfrac{1}{1+\delta x/2}}}{2})\f$,
     where \f$\delta x = \left| x - \mu \right|/\sigma\f$
     Function is taken from http://arxiv.org/abs/arXiv:1507.07099    
@@ -1943,8 +1944,8 @@ class Atlas_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Atlas (
-            "atlas_"    + name ,
-            "ATLAS(%s)" % name ,
+            self.roo_name ( 'atlas_' ) , 
+            "ATLAS/ZEUS %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     )
@@ -1982,22 +1983,18 @@ class Slash_pdf(MASS) :
                    scale   = None ) : ## related to scale
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar , mean, scale )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = scale ,
+                         sigma_name  = 'scale_%s'   % name ,
+                         sigma_title = '#scale(%s)' % name )
         
         self.__scale = self.sigma
-        if self.scale != scale : 
-            sname  = self.scale.GetName  ()
-            stitle = self.scale.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.scale.SetName  ( gname  ) 
-            self.scale.SetTitle ( gtitle )
-
 
         ## finally build pdf
         self.pdf = Ostap.Models.Slash (
-            "slash_"    + name ,
-            "Slash(%s)" % name ,
+            self.roo_name ( 'slash_' ) , 
+            "Slash %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.scale     )
@@ -2057,7 +2054,11 @@ class AsymmetricLaplace_pdf(MASS) :
                    asymmetry = 0    ) : ## 0 corresponds to symmetric laplace 
 
         ## initialize the base
-        MASS.__init__  ( self , name , xvar , mean , slope )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = slope ,
+                         sigma_name  = 'slope_%s'   % name ,
+                         sigma_title = '#slope(%s)' % name )
         
         self.__asym = self.make_var ( asymmetry               ,
                                 'asym_%s'        % name ,
@@ -2065,35 +2066,19 @@ class AsymmetricLaplace_pdf(MASS) :
 
         self.__slope = self.sigma
 
-        ## rename it if needed 
-        if self.__slope != slope :
-            sname  = self.slope.GetName  ()
-            stitle = self.slope.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'slope' )
-            gtitle = stitle.replace ( 'sigma' , 'slope' )
-            self.slope.SetName  ( gname  ) 
-            self.slope.SetTitle ( gtitle )          
-            
-        ## Right-side lambda 
-        self.__lst_R   = ROOT.RooArgList ( self.slope , self.asym )
-        self.__lambdaR = ROOT.RooFormulaVar (
-            "lambdaR_%s"     % name   ,
-            "lambda_{R}(%s)" % name   ,
-            "%s*(1.0+%s)"    % ( self.slope.GetName() , self.asym.GetName() ) ,
-            self.__lst_R   )
-        
-        ## Left-side lambda 
-        self.__lst_L   = ROOT.RooArgList ( self.slope , self.asym ) 
-        self.__lambdaL = ROOT.RooFormulaVar (
-            "lambdaL_%s"     % name   ,
-            "lambda_{L}(%s)" % name   ,
-            "%s*(1.0-%s)"   % ( self.slope.GetName() , self.asym.GetName() ) ,
-            self.__lst_L   )
-        
+        ## constreuct left and right lambdas
+        self.__lambdaL , self.__lambdaR = self.vars_from_asymmetry (
+            self.slope                                    , ## mean/average sigma 
+            self.asym                                     , ## asymmetry parametet
+            v1name  =  self.roo_name ( 'lambdaL' , self.name ) ,
+            v2name  =  self.roo_name ( 'lambdaR' , self.name ) ,
+            v1title = '#lambda_{L}: slope #times (1+#kappa)'        , 
+            v2title = '#lambda_{R}: slope #times (1-#kappa)'        )
+
         ## finally build pdf
         self.pdf = Ostap.Models.AsymmetricLaplace (
-            "alaplace_"    + name ,
-            "ALaplace(%s)" % name ,
+            self.roo_name ( 'alaplace_' ) , 
+            "Asymmetrical Laplace  %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.lambdaL   ,
@@ -2138,6 +2123,16 @@ class AsymmetricLaplace_pdf(MASS) :
         self.__asym.setVal ( value )
 
     @property
+    def kappa ( self ) :
+        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        return self.__asym
+    @kappa.setter
+    def kappa ( self, value ) :
+        value = float ( value ) 
+        assert -1 <= value <=1 , "``asymmetry'' parameter is out of range -1,1"
+        self.__asym.setVal ( value )
+
+    @property
     def lambdaL ( self ) :
         """(left)``lambda''-parameter (exponential slope) for Asymmetric Laplace"""
         return self.__lambdaL
@@ -2174,7 +2169,7 @@ models.append ( AsymmetricLaplace_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-04-025
 class Sech_pdf(MASS) :
-    """Hyperbolic secant distribution or ``inverse-cosh'' distribution
+    r"""Hyperbolic secant distribution or ``inverse-cosh'' distribution
     
     The hyperbolic secant distribution shares many properties with the 
     standard normal distribution: 
@@ -2205,8 +2200,8 @@ class Sech_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Sech (
-            "sech_"    + name ,
-            "SECH(%s)" % name ,
+            self.roo_name ( 'sech_' ) , 
+            "Sech %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ) 
@@ -2238,7 +2233,7 @@ models.append ( Sech_pdf )
 #   @see Ostap::Math::Losev 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2019-11-026
-class Losev_pdf(MASS) :
+class Losev_pdf(MASSMEAN) :
     """ Asymmetric variant of hyperbolic secant distribution
     - Leptokurtic distribution with exponential tails
     see Losev, A., ``A new lineshape for fitting x‐ray photoelectron peaks'', 
@@ -2259,16 +2254,11 @@ class Losev_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , None )
+        MASSMEAN.__init__  ( self , name , xvar , 
+                             mean        = mean  ,
+                             mean_name  = 'mu_%s'   % name ,
+                             mean_title = '#mu(%s)' % name )
 
-        ## rename if possible 
-        if mean is not self.mean :
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'mu_%s' % self.name  )
-            gtitle = stitle.replace ( 'mean' , 'mu'                 )
-            self.mean.SetName  ( gname  ) 
-            self.mean.SetTitle ( gtitle )
 
         ## left tail 
         self.__alpha = self.make_var ( alpha ,
@@ -2285,8 +2275,8 @@ class Losev_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Losev (
-            "losev_"    + name ,
-            "Losev(%s)" % name ,
+            self.roo_name ( 'losev_' ) , 
+            "Losev %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.alpha     ,
@@ -2348,7 +2338,7 @@ models.append ( Losev_pdf )
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2016-06-14
 class Logistic_pdf(MASS) :
-    """ Logistic, aka ``sech-square'' PDF
+    r""" Logistic, aka ``sech-square'' PDF
      \f$ f(x;\mu;s) = \dfrac{1}{4s}sech^2\left(\dfrac{x-\mu}{2s}\right)\f$, 
      where
      \f$  s = \sigma \dfrac{\sqrt{3}}{\pi}\f$
@@ -2372,8 +2362,8 @@ class Logistic_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Logistic (
-            "logistic_"    + name ,
-            "Logistic(%s)" % name ,
+            self.roo_name ( 'logistic_' ) , 
+            "Logistic %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.sigma     ) 
@@ -2417,23 +2407,21 @@ class RaisingCosine_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , scale  )
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mean  ,
+                         sigma       = scale ,
+                         sigma_name  = 'scale_%s'   % name ,
+                         sigma_title = '#scale(%s)' % name )
+
         
         self.__scale = self.sigma
-        if self.__scale != scale : 
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.__scale.SetName  ( gname  ) 
-            self.__scale.SetTitle ( gtitle )
 
         #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.RaisingCosine (
-            "rcos_"    + name ,
-            "RCos(%s)" % name ,
+            self.roo_name ( 'rcos_' ) , 
+            "Raising Cosine %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.scale     ) 
@@ -2495,16 +2483,14 @@ class QGaussian_pdf(MASS) :
         ## initialize the base
         #
         
-        MASS.__init__  ( self , name , xvar , mean , scale  )
+        MASS.__init__  ( self , name , xvar  , 
+                         mean        = mean  ,
+                         sigma       = scale,
+                         sigma_name  = 'scale_%s'  % name ,
+                         sigma_title = 'scale(%s)' % name )
+                 
 
         self.__scale = self.sigma
-        if self.__scale != scale : 
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'scale' )
-            gtitle = stitle.replace ( 'sigma' , 'scale' )
-            self.__scale.SetName  ( gname  ) 
-            self.__scale.SetTitle ( gtitle )
 
         ## Q 
         self.__q = self.make_var ( q               ,
@@ -2515,8 +2501,8 @@ class QGaussian_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.QGaussian (
-            "qgauss_"    + name ,
-            "QGauss(%s)" % name ,
+            self.roo_name ( 'qgauss_' ) , 
+            "q-Gaussian %s" % self.name ,
             self.xvar      ,
             self.mean      ,
             self.q         ,
@@ -2553,6 +2539,813 @@ class QGaussian_pdf(MASS) :
     
 models.append ( QGaussian_pdf )      
 
+
+
+# =============================================================================
+## @class Hyperbolic_pdf 
+#  Hyperbolic disribtion
+#  @see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+#  @see  Barndorff-Nielsen, Ole, 
+#    "Exponentially decreasing distributions for the logarithm of particle size". 
+#     Proceedings of the Royal Society of London. Series A,
+#     Mathematical and Physical Sciences. 
+#     The Royal Society. 353 (1674): 401–409
+#     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+#
+#  \f[  f(x;\mu, \beta, \delta, \gamma) = 
+#  \frac{\gamma}{2\alpha\delta K_1(\delta \gamma)}
+#  \mathrm{e}^{ -\sqrt{ \alpha^2\delta^2 + \alpha^2 (x-\mu)^2 } + \beta ( x - \mu)}
+#  \f]
+#  where 
+#  - \f$ \alpha^2 = \beta^2\f + \gamma^2$
+#  - \f$ K_1\f$ is a modified Bessel function of the second kind 
+#  
+# In the code we adopt parameterisation in terms of
+#  - location parameter \f$\mu\f$
+#  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+#  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+#  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the kurtosis 
+#
+# The parameters are defined as:
+# \f[\begin{array}{lcl}
+#     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_2(\zeta)}{\zetaK_1(zeta)} \\
+#     \kappa   & \equiv & \frac{\beta}{\sigma} \                   \
+#     \zeta\equiv\delta \gamma \end{array} \f]
+# - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+# - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+# - For small \f$ \zeta \f$ distribution shows kurtosis of 3 
+#
+# The inverse transformation is:
+# \f[ \begin{array}{lcl}
+#     \beta    & = & \frac{\kappa}{\sigma}            \\
+#     \delta   & = & \frac{\zeta}{\gamma}             \\
+#     \gamma   & = & \frac{\sqrt{A^*(\zeta)}}{\sigma} \\
+#     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+# where \f$ A^{*}(\zeta) = \frac{\zeta K^*_2(\zeta)}{K^*_1(zeta)} \f$. 
+# It is largely inspired by NIM A764 (2014) 150, arXiv:1312.5000, 
+# but has much better properties when \f$ \zeta \rigtarrow 0 \f$ 
+#  @see D. Martinez Santos and F. Dupertuis,
+#          "Mass distributions marginalized over per-event errors",
+#          NIM A764 (2014) 150, arXiv:1312.5000
+#          DOI: 10.1016/j.nima.2014.06.081",
+#
+#  The final form of the distribution is 
+#  \f[  f(x;\mu,\sigma,\zeta,\kappa) = 
+#      \frac{ A^*(\zeta) } { 2 \sigma \sqrt{\kappa^2+A^*(\zeta)} \zeta K^*_1(\zeta) } 
+#      \mathrm{e}^{\zeta - \sqrt{ (\kappa^2+A(\zeta))  \left( \frac{\zeta^2}{A(\zeta)}  +  
+#      \left( \frac{x-\mu}{\sigma}\right)^2  \right) } } 
+#    \f]
+#  where \f$ K^*_n(x)\f$ is a scaled modified Bessel functon to th eseodn kind 
+#   \f$ K^*_n(x) = \mathrm{e}^{x}K_1(x) \f$ 
+#
+#  In all expressions \f$ \left| \sigma \right|\f$ and 
+#  \f$ \left| \zeta \right|\f$ are used instead of \f$\sigma\f$ and \f$\zeta\f$ 
+# 
+#  @see Ostap::Models::Hyperbolic
+#  @see Ostap::Math::Hyperbolic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class Hyperbolic_pdf(MASS) :
+    r"""Hyperbolic distribution
+    - see  https://en.wikipedia.org/wiki/Hyperbolic_distribution
+    - see  Barndorff-Nielsen, Ole, 
+    #    `Exponentially decreasing distributions for the logarithm of particle size'. 
+    #     Proceedings of the Royal Society of London. Series A,
+    #     Mathematical and Physical Sciences. 
+    #     The Royal Society. 353 (1674): 401–409
+    #     doi:10.1098/rspa.1977.0041. JSTOR 79167.
+    - see Ostap::Math::Hyperbolic
+    - see Ostap::Models::Hyperbolic
+    
+    Parameters are different from ``canonical''
+    - mu     : related to location   (equal to mean/mode for kappa=0) 
+    - sigma  : relates to width      (equal to RMS           for kappa=0)
+    - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
+    - kappa  : related  to asymmetry 
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   sigma     = 1    ,   ## relatd  to width  
+                   zeta      = 0    ,   ## related to kurtosis 
+                   kappa     = 0    ) : ## related to asymmetry
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+                 
+        
+        self.__mu    = self.mean 
+        
+        ## Zeta
+        self.__zeta  = self.make_var ( zeta                ,
+                                       'zeta_%s'    % name ,
+                                       '#zeta(%s)'  % name , zeta  ,  1 , 0  , 100 ) 
+        ## kappa  
+        self.__kappa = self.make_var ( kappa               ,
+                                       'kappa_%s'   % name ,
+                                       '#kappa(%s)' % name , kappa ,  0 , -10 , 10  ) 
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.Hyperbolic (
+            self.roo_name ( 'hyperbolic_' ) , 
+            "Hyperbolic %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.sigma     ,
+            self.zeta      ,
+            self.kappa     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mu'        : self.mu    ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'kappa'     : self.kappa }
+        
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape"""
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mode ( self ) :
+        """``nominal_mode'' : actual mode of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().mode ()
+    
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+
+        
+models.append ( Hyperbolic_pdf )      
+
+
+
+# =============================================================================
+## @class GenHyperbolic_pdf 
+#  Generalized Hyperbolic distribution
+#  @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+#  
+#  \f[ f(x;\lambda, \alpha,\beta,\gamma,\delta,\mu)= 
+#  \frac{  (\gamma/\delta)^{\lambda} }{ \sqrt{2\pi} K_{\lambda}(\delta\gamma) }
+#   \mathrm{e}^{\beta (x-\mu)}
+#   \frac{  K_{\lambda -1/2} ( \alpha \sqrt{ \delta^2 + (x-\mu)^2} ) }
+#   { (  \sqrt{ \delta^2 + (x-\mu)^{2} }  /\alpha)^{1/2-\lambda} } \f]
+# where 
+#  - $\alpha=\sqrt{\beta^2+\gamma^2}$
+#
+#  In the code we adopt parameterisation in terms of
+#  - location parameter      \f$\mu\f$
+#  - shape parameter         \f$\lambda\f$
+#  - parameter               \f$\sigma \gt  0 \f$, related to the width;
+#  - dimensionless parameter \f$\kappa\f$,         related to the asymmetry;
+#  - dimensionless parameter \f$\zeta   \ge 0 \f$, related to the shape 
+#  
+# The parameters are defined as:
+# \f[\begin{array}{lcl}
+#     \sigma^2 & \equiv & \gamma^{-2} \zeta \frac{K_{\lambda+1}(\zeta)}{\zetaK_{\lambda}(zeta)} \\
+#     \kappa   & \equiv & \frac{\beta}{\sigma} \\
+#     \zeta    & \equiv & \delta \gamma \end{array} \f]
+# - For \f$ \beta=0 (\kappa=0)\f$,  \f$\sigma^2\f$ is a variance of the distribution.
+# - Large values of \f$\zeta\f$ distribtionhas small kurtosis 
+# - For small \f$\zeta\f$ distribution shows kurtosis of 3 
+#
+# The inverse transformation is:
+# \f[ \begin{array}{lcl}
+#     \beta    & = & \frac{\kappa}{\sigma}                      \\
+#     \delta   & = & \frac{\zeta}{\gamma}                       \\
+#     \gamma   & = & \frac{\sqrt{A_{\lambda}^*(\zeta)}}{\sigma} \\
+#     \alpha   & = & \sqrt { \beta^2 + \gamma^2} \end{array} \f]
+#
+# In general it has exponential tails for \f$ \lambda >0 \f$ and Gaussian core.
+# For negative \f$ \lambda \f$ tails are more heavy..
+#
+# @see Ostap::Math::Hyperbolic
+#  Usefun subclasses 
+#  - \f$ \lambda=1\f$ : Hyperbolic distributiobn  
+#  - \f$ \lambda=-\frac{n}{2}, \zeta\rightarrow+0\f$ : Stundent's t-distibution 
+#  - \f$ \lambda \rightarrow \pm\infty, \kappa=0\f$ : Gaussian distribution 
+#  - \f$ \zeta \rightarrow +\infty, \kappa=0\f$ : Gaussian distribution 
+# 
+#  @see Ostap::Models::Hyperbolic
+#  @see Ostap::Math::Hyperbolic
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date   2018-02-27
+class GenHyperbolic_pdf(MASS) :
+    R"""Generalised Hyperbolic distribution
+    @see https://en.wikipedia.org/wiki/Generalised_hyperbolic_distribution 
+    
+    - see Ostap::Math::GenHyperbolic
+    - see Ostap::Models::GenHyperbolic
+    
+    Parameters are different from ``canonical''
+    - mu     : related to location   (equal to mean/mode for kappa=0) 
+    - sigma  : relates to width      (equal to RMS           for kappa=0)
+    - zeta   : related to kurtosis   (kurtosis varies from 3 to 0 when zeta varies from 0 to infinity)
+    - kappa  : related  to asymmetry 
+    - lambda : related to shape
+    
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,    ## related to mean
+                   sigma     = 1    ,    ## relatd  to width  
+                   zeta      = 1    ,    ## related to shape 
+                   kappa     = 0    ,    ## related to asymmetry
+                   lambd     = 1    ) :  ## related to shape 
+        
+        #
+        ## initialize the base
+        #
+        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+                 
+        self.__mu     = self.mean 
+        
+        ## Zeta
+        self.__zeta   = self.make_var ( zeta                 ,
+                                        'zeta_%s'     % name ,
+                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
+        ## kappa  
+        self.__kappa  = self.make_var ( kappa                ,
+                                        'kappa_%s'    % name ,
+                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
+        
+        ## lambda 
+        self.__lambda = self.make_var ( lambd               ,
+                                        'lambda_%s'   % name ,
+                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
+        
+        #
+        ## finally build pdf
+        # 
+        self.pdf = Ostap.Models.GenHyperbolic (
+            self.roo_name ( 'genhyperbolic_' ) , 
+            "GenHyperbolic %s" % self.name ,
+            self.xvar      ,
+            self.mu        ,
+            self.sigma     ,
+            self.zeta      ,
+            self.kappa     ,
+            self.lambd     )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mu'        : self.mu    ,
+            'sigma'     : self.sigma ,
+            'zeta'      : self.zeta  ,
+            'kappa'     : self.kappa ,
+            'lambd'     : self.lambd }
+        
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter, same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape """
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def lambd ( self ) :
+        """``lambd'' : dimensionless parameter, related to shape """
+        return self.__lambda
+    @lambd.setter
+    def lambd ( self , value ) :    
+        self.set_value ( self.__lambd , value )
+
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        self.pdf.setPars ()
+        return self.pdf.function().alpha ()
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().beta ()
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        self.pdf.setPars ()
+        return self.pdf.function().gamma ()
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_mean ( self ) :
+        """``nominal_mean'' : actual mean of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().delta ()
+
+    @property
+    def nominal_variance ( self ) :
+        """``nominal_variance'' : actual variance of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().variance ()
+
+    @property
+    def nominal_rms ( self ) :
+        """``nominal_rms'' : actual RMS of distribution"""
+        self.pdf.setPars ()
+        return self.pdf.function().rms ()
+
+        
+models.append ( GenHyperbolic_pdf )      
+
+# =============================================================================
+## @class Hypatia_pdf
+# Variant of Hypatia pdf
+# @see D. Martinez Santos, F. Duipertois,
+#      "Mass distributions marginalized over per-event errors",
+#       Nucl.Instrum.Meth.A 764 (2014) 150,
+#       arXiv:1312.5000 [hep-ex]
+# @see https://doi.org/10.1016/j.nima.2014.06.081
+# @see https://arxiv.org/abs/1312.5000
+# Actually this function corresponds to Hypatia function with
+# \f$ a\rigaharrow +\infty, n=1\f$ 
+#
+# Convolution of Generalized Hyperbolic distrobution with "offset"
+# Gaussian distribution
+# @see GenHyperbolic_pdf
+# @see Ostap::Math::GenHyperbolic
+# @see Ostap::Models::GenHyperbolic
+class Hypatia_pdf(MASS) :
+    r""" Variant of Hypatia pdf
+    Convolution of Generalized Hyperbolic distrobution with ``offset''
+    Gaussian distribution
+    
+    - see D. Martinez Santos, F. Duipertois,
+    ``Mass distributions marginalized over per-event errors'',
+    Nucl.Instrum.Meth.A 764 (2014) 150,
+    arXiv:1312.5000 [hep-ex]
+    - see https://doi.org/10.1016/j.nima.2014.06.081
+    - see https://arxiv.org/abs/1312.5000
+
+    Actually this function corresponds to Hypatia function with
+    a -> +infinity, n=0
+    
+    - see GenHyperbolic_pdf
+    - see Ostap.Math.GenHyperbolic
+    - see Ostap.Models.GenHyperbolic
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   mu        = None ,   ## related to mean
+                   sigma     =  1   ,   ## relatd  to width  
+                   zeta      =  1   ,   ## related to shape 
+                   kappa     =  0   ,   ## related to asymmetry
+                   lambd     = -2   ,   ## related to shape 
+                   sigma0    = None ,   ## width of the ``offset'' Gaussian 
+                   cnvpars   = {}   ) : ## convolution parameters 
+        # 
+        ## initialize the base
+        #        
+        MASS.__init__  ( self , name , xvar               , 
+                         mean        = mu                 ,
+                         sigma       = sigma              ,
+                         mean_name   = 'mu_%s'     % name ,
+                         mean_title  = '#mu(%s)'   % name )
+        
+        self.__mu     = self.mean 
+        
+        ## Zeta
+        self.__zeta   = self.make_var ( zeta                 ,
+                                        'zeta_%s'     % name ,
+                                        '#zeta(%s)'   % name , zeta  ,  1 , 1.e-10 , 1.e+5 ) 
+        ## kappa  
+        self.__kappa  = self.make_var ( kappa                ,
+                                        'kappa_%s'    % name ,
+                                        '#kappa(%s)'  % name , kappa ,  0 ,  -10   ,  10 ) 
+        
+        ## lambda 
+        self.__lambda = self.make_var ( lambd               ,
+                                        'lambda_%s'   % name ,
+                                        '#lambda(%s)' % name , lambd , -2 , -100   , 100 ) 
+        
+        ## create a generalized hyperbolic PDF 
+        hname  = self.generate_name ( prefix = self.name , suffix = 'GHD' ) 
+        self.__genhyp = GenHyperbolic_pdf ( name  = hname      , 
+                                            xvar  = self.xvar  ,
+                                            mu    = self.mu    , 
+                                            sigma = self.sigma ,
+                                            zeta  = self.zeta  ,
+                                            kappa = self.kappa ,
+                                            lambd = self.lambd )
+        
+        ## prepare FFT convolution
+        from ostap.fitting.resolution import ResoGauss 
+        gname = self.generate_name ( prefix = self.name , suffix = 'offset' ) 
+        self.__resolution = ResoGauss     ( name  = gname     , 
+                                            xvar  = self.xvar ,
+                                            sigma = sigma0    )
+        
+        self.__cnvpars = {}
+        self.__cnvpars.update ( cnvpars ) 
+        
+        cname = self.generate_name ( prefix = self.name , suffix = 'cnv' )  
+        from ostap.fitting.convolution import Convolution_pdf 
+        self.__convolved = Convolution_pdf ( name       = cname             , 
+                                             pdf        = self.genhyp       ,
+                                             xvar       = self.xvar         ,
+                                             resolution = self.__resolution ,
+                                             **self.cnvpars                 ) 
+        
+        ## final 
+        self.pdf = self.convolved.pdf
+
+        self.config = {
+            'name'    : self.name    ,
+            'xvar'    : self.xvar    ,
+            'mu'      : self.mu      ,
+            'sigma'   : self.sigma   ,
+            'zeta'    : self.zeta    ,
+            'kappa'   : self.kappa   ,
+            'lambd'   : self.lambd   ,
+            'sigma0'  : self.sigma0  ,
+            'cnvpars' : self.cnvpars }
+        
+    @property
+    def genhyp ( self ) :
+        """``genhyp'': get underlying generalized hyperbilis PDF"""
+        return self.__genhyp
+    
+    @property
+    def convolved ( self ) :
+        """``convolved'' : get PDF as convolution"""
+        return self.__convolved
+    
+    @property
+    def sigma0    ( self ) :
+        """``sigma0'' : width for the ``offset'' Gaussian"""
+        return self.__resolution.sigma
+    @sigma0.setter
+    def sigma0    ( self , value ) :
+        self.__resolution.sigma = value
+        
+    @property
+    def cnvpars ( self ) :
+        """``cnvpars'' : parameters for convolution"""
+        return self.__cnvpars 
+
+    @property
+    def mu ( self ) :
+        """``mu'' : location parameter (same as ``mean'')"""
+        return self.__mu
+    @mu.setter
+    def mu ( self , value ) :    
+        self.set_value ( self.__mu , value )
+
+    @property 
+    def zeta  ( self ) :
+        """``zeta'' : dimensioneless parameter, related to shape """
+        return self.__zeta
+    @zeta.setter  
+    def zeta ( self , value ) :
+        self.set_value ( self.__zeta , value )
+    
+    @property
+    def kappa ( self ) :
+        """``kappa'' : dimensionless parameter, related to asymmetry"""
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :    
+        self.set_value ( self.__kappa , value )
+
+    @property
+    def lambd ( self ) :
+        """``lambd'' : dimensionless parameter, related to shape """
+        return self.__lambda
+    @lambd.setter
+    def lambd ( self , value ) :    
+        self.set_value ( self.__lambd , value )
+
+
+    @property
+    def alpha ( self ) :
+        """``alpha'' : value of canonical parameter ``alpha''"""
+        return self.genhyp.alpha 
+
+    @property
+    def beta ( self ) :
+        """``beta'' : value of canonical parameter ``beta''"""
+        return self.genhyp.beta
+
+    @property
+    def gamma ( self ) :
+        """``gamma'' : value of canonical parameter ``gamma''"""
+        return self.genhyp.gamma
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : value of canonical parameter ``delta''"""
+        return self.genhyp.delta 
+
+
+# =============================================================================
+# @class Das_pdf
+#  Simple gaussian function with exponential tails.
+#  It corresponds to <code>ExpGaussExp</code> function, 
+#  \f[ 
+#   f (x ; \mu, \sigma, k_L, k_R ) = \frac{1}{\sqrt{2\pi}\sigma}
+#   \left\{ \begin{array}[lcl}
+#  \mathrm{e}^{  \frac{k_L^2}{2} + k_L\left(\frac{x-mu}{\sigma}\right) }
+#   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right) < -k_L \\   
+#  \mathrm{e}^{ \frac{1}{s} \left( \frac{x-\mu}{\sigma}\right)^2}
+#   & \mathrm{for}  &  -k_L < \left(\frac{x-\mu}{\sigma}\right) < k_R \\    
+#  \mathrm{e}^{  \frac{k_R^2}{2} - k_R\left(\frac{x-mu}{\sigma}\right) }
+#   & \mathrm{for}  &  \left(\frac{x-\mu}{\sigma}\right)> k_R   
+#  \end{array} \right. \f]
+#  - \f$ k_L \ge 0\f$
+#  - \f$ k_R \ge 0\f$
+#
+#  @see Souvik Das, "A simple alternative to Crystall Ball fnuction"
+#                   arXiv:1603.08591  [hep-ex]
+#  @see https://arxiv.org/abs/1603.08591
+#  @attention - the function is not normalized! 
+#  Function was used in 
+#  @see CMS collaboration, V.Khachatryan, 
+#       "Search for resonant pair production of Higgs bosons decaying 
+#        to two bottom quark\textendash{}antiquark pairs 
+#        in proton-proton collisions at 8 TeV}",
+#        Phys. Lett. B749 (2015) 560 
+# @see https://arxiv.org/abs/1503.04114 
+# @see https://doi.org/10.1016/j.physletb.2015.08.047 
+# - Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$
+#
+# @see Ostap::Math::Das
+# @see Ostap::Models::Das
+class Das_pdf(MASS) :
+    r"""Simple gaussian function with exponential tails.
+    It corresponds to `ExpGaussExp` function from ref below
+    
+    - see Souvik Das, ``A simple alternative to Crystall Ball fnuction''
+    arXiv:1603.08591  [hep-ex]
+    
+    - see https://arxiv.org/abs/1603.08591
+
+    Function was used in 
+    - see CMS collaboration, V.Khachatryan, 
+    ``Search for resonant pair production of Higgs bosons decaying 
+    to two bottom quark\textendash{}antiquark pairs 
+    in proton-proton collisions at 8 TeV'',
+    Phys. Lett. B749 (2015) 560
+    
+    - see https://arxiv.org/abs/1503.04114 
+    - see https://doi.org/10.1016/j.physletb.2015.08.047
+    
+    Gaussian function is restored when \f$k_L,k_R \rigtharrow +\infty\f$
+    
+    - see Ostap.Math.Das
+    - see Ostap.Models.Das
+    """
+    def __init__ ( self         ,
+                   name         ,    ## the name of PDF
+                   xvar         ,    ## observable
+                   mu    = None ,    ## location parameter
+                   sigma = None ,    ## width parameter
+                   kL    = None ,    ## left tail parameter
+                   kR    = None ,    ## right tail parameter
+                   k     = None ,    ## tail parameer  (alternaike)
+                   kappa = None ) :  ## tail asymmetry (alternative) 
+        
+        #
+        ## initialize the base
+        # 
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = mu                ,
+                         sigma       = sigma             ,
+                         mean_name   = 'mu_%s'    % name ,
+                         mean_title  = '#mu_(%s)' % name ) 
+
+        
+        if k is None and kappa is None :
+            
+            self.__kL    = self.make_var ( kL ,
+                                           'kL_%s'    % name ,   
+                                           '#k_L(%s)' % name , kL , 1.e-6 , 1000 )
+            self.__kR    = self.make_var ( kR ,
+                                           'kR_%s'    % name ,   
+                                           '#k_R(%s)' % name , kR , 1.e-6 , 1000 )
+
+            ## name of k-variable 
+            k = Ostap.MoreRooFit.Addition ( self.roo_name ( 'k' , self.name ) ,
+                                            '0.5*(kL+kR)' , 
+                                            self.kL ,
+                                            self.kR ,
+                                            0.5     ,
+                                            0.5     )
+            
+            self.__k     = self.make_var ( k , k.name , k.title , k , 1.e-6 , 1000 )
+            
+            kk = Ostap.MoreRooFit.Asymmetry ( self.roo_name ('kappa' , self.name ) ,
+                                              '0.5*(kL-rR)/(kL+kR)' ,
+                                              self.kL ,
+                                              self.kR ,
+                                              0.5     ) 
+            
+            self.__kappa = self.make_var ( kk , kk.name , kk.title , kk , -1 , 1 )
+ 
+        elif kL is None and kR is None :
+            
+            self.__k     = self.make_var ( k                    ,
+                                           'k_%s'      % name   ,  
+                                           'k(%s)'     % name   ,
+                                           k , 1.e-6 , 1000 )
+            self.__kappa = self.make_var ( kappa                ,
+                                           'kappa_%s'   % name  ,  
+                                           '#kappa(%s)' % name  ,
+                                           kappa , -1 , 1 )
+
+            
+            kl = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kL' , self.name ) ,
+                                                'k*(1+kappa)' , 
+                                                self.k        ,
+                                                self.kappa    ,
+                                                1 , 1 , 1     )
+            kr = Ostap.MoreRooFit.Combination ( self.roo_name ( 'kR' , self.name ) ,
+                                                'k*(1-kappa)' , 
+                                                self.k        ,
+                                                self.kappa    ,
+                                                1 , 1 , -1    )
+            
+            self.__kL     = self.make_var ( kl , kl.name , kl.title , kl , 1.e-6 , 1000 )
+            self.__kR     = self.make_var ( kr , kr.name , kr.title , kr , 1.e-6 , 1000 )
+
+        else :
+            
+            raise TypeError( 'Invalid setting!' )
+
+
+        ## build PDF
+        self.pdf = Ostap.Models.Das (
+            self.roo_name ( 'das_' ) ,
+            'Das %s' % self.name     ,
+            self.xvar                ,
+            self.mu                  ,
+            self.sigma               ,
+            self.kL                  ,
+            self.kR                  )
+
+        ## save configuration
+        self.config = {
+            'name'  : self.name  ,
+            'xvar'  : self.xvar  ,
+            'mu'    : self.mu    ,
+            'sigma' : self.sigma ,
+            'kL'    : self.kL    if ( k  is None and kappa is None ) else None ,
+            'kR'    : self.kR    if ( k  is None and kappa is None ) else None ,
+            'k'     : self.k     if ( kL is None and kR    is None ) else None ,
+            'kappa' : self.kappa if ( kL is None and kR    is None ) else None ,
+            }
+
+    @property
+    def mu ( self ) :
+        """``mu'' : peak location, same as ``mean''
+        """
+        return self.mean
+    @mu.setter 
+    def mu ( self ,value ) :
+        self.mean = value 
+    
+    @property
+    def kL  ( self ) :
+        """``kL'' : left tail parameter
+        """
+        return self.__kL
+    @kL.setter
+    def kL ( self , value ) :
+        self.setValue ( self.__kL , value )
+
+    @property
+    def kR  ( self ) :
+        """``kR'' : left tail parameter
+        """
+        return self.__kR
+    @kR.setter
+    def kR ( self , value ) :
+        self.setValue ( self.__kR , value )
+
+    @property
+    def k   ( self ) :
+        """``k'' : (kL+kR)/2 parameter
+        """
+        return self.__k
+    @k.setter
+    def k ( self , value ) :
+        self.setValue ( self.__k , value )
+
+    @property
+    def kappa ( self ) :
+        """``k'' : 0.5*(kL-kR)/(kL+kR) parameter
+        """
+        return self.__kappa
+    @kappa.setter
+    def kappa ( self , value ) :
+        self.setValue ( self.__kappa , value )
+
+            
 # =============================================================================
 ## @class Voigt_pdf
 #  Voigt-pdf distribution
@@ -2579,14 +3372,18 @@ class Voigt_pdf(MASS) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   mean      = None ,
+                   m0        = None ,
                    sigma     = None ,
                    gamma     = None ) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , mean , sigma ) 
-
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = m0                  ,
+                         sigma       = sigma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ) 
+                         
         limits_gamma = ()
         if  self.xminmax() :
             mn , mx = self.xminmax() 
@@ -2601,10 +3398,10 @@ class Voigt_pdf(MASS) :
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.Voigt (
-            "vgt_"       + name ,
-            "Voigt(%s)" % name ,
+            self.roo_name ( 'voigt_' ) , 
+            "Voigt %s" % self.name ,
             self.xvar   ,
-            self.mean   ,
+            self.m0     ,
             self.gamma  ,
             self.sigma  )
 
@@ -2612,11 +3409,19 @@ class Voigt_pdf(MASS) :
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
+            'm0'        : self.m0    ,
             'sigma'     : self.sigma ,
             'gamma'     : self.gamma ,
             }
     
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
     @property
     def gamma ( self ) :
         """``gamma''-parameter for Voigt function"""
@@ -2661,20 +3466,20 @@ class PseudoVoigt_pdf(Voigt_pdf) :
     def __init__ ( self             ,
                    name             ,
                    xvar             ,
-                   mean      = None ,
+                   m0        = None ,
                    sigma     = None ,
                    gamma     = None ) :
         #
         ## initialize the base
         # 
-        Voigt_pdf.__init__  ( self , name , xvar , mean , sigma , gamma ) 
+        Voigt_pdf.__init__  ( self , name , xvar , m0 , sigma , gamma ) 
 
         #
         ## finally build pdf
         # 
         self.pdf = Ostap.Models.PseudoVoigt (
-            "pvgt_"           + name ,
-            "PseudoVoigt(%s)" % name ,
+            self.roo_name ( 'pvoigt_' ) , 
+            "Pseudo Voigt %s" % self.name ,
             self.xvar   ,
             self.mean   ,
             self.gamma  ,
@@ -2684,7 +3489,7 @@ class PseudoVoigt_pdf(Voigt_pdf) :
         self.config = {
             'name'      : self.name  ,
             'xvar'      : self.xvar  ,
-            'mean'      : self.mean  ,
+            'm0'        : self.mean  ,
             'sigma'     : self.sigma ,
             'gamma'     : self.gamma ,
             }
@@ -2712,11 +3517,11 @@ class BreitWigner_pdf(MASS) :
     >>> breit = Models.BreitWigner_pdf ( 'BW'          ,
     ...                                  bw            ,
     ...                                  xvar  = mass  ,
-    ...                                  mean  = m_X   ,
+    ...                                  m0    = m_X   ,
     ...                                  gamma = g_X   )
     
     Parameters:
-    - mean        : location Breigt-Wigner function
+    - m0          : location Breigt-Wigner function
     - gamma       : width of Breigt-Wigner function
     
     """
@@ -2724,43 +3529,33 @@ class BreitWigner_pdf(MASS) :
                    name               ,
                    breitwigner        , ## Ostap::Math::BreitWeigner object
                    xvar               ,
-                   mean        = None , 
-                   gamma       = None ) : 
-        
+                   m0          = None , 
+                   gamma       = None ) :        
         #
         ## initialize the base
-        # 
-        MASS.__init__  ( self , name, xvar , mean , gamma )
+        #
+        MASS.__init__  ( self  , name  , xvar ,
+                         mean        = m0                  ,
+                         sigma       = gamma               ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,                         
+                         sigma_name  = 'gamma_%s'   % name ,
+                         sigma_title = '#Gamma(%s)' % name )
         
-        if gamma is not self.sigma :
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'Gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.sigma.SetName  ( gname  ) 
-            self.sigma.SetTitle ( gtitle )
-            if  self.xminmax () and self.sigma.minmax() : 
-                mn  , mx  = self.xminmax() 
-                dm = mx - mn
-                smn , smx = self.sigma.minmax()                 
-                self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
-                self.sigma.setMax ( min (  2     * dm , smx ) )
-        
-        bw = breitwigner 
-        assert isinstance ( bw , Ostap.Math.BreitWigner ), \
+        bw = breitwigner
+        assert isinstance ( bw , Ostap.Math.BW ), \
                'Invalid  type of the Breit-Wigner object: %s/%s' % ( bw   , type ( bw ) )
         #
         ## define the actual BW-shape using
         #      Ostap::Math::BreitWeigner object
-        #
         self.__breitwigner = breitwigner  ## Ostap::Math::BreitWeigner object
 
         ## create PDF 
         self.pdf = Ostap.Models.BreitWigner ( 
-            "rbw_"    + name ,
-            "RBW(%s)" % name ,
+            self.roo_name ( 'rbw_' ) , 
+            "Relativistic Breit-Wigner %s" % self.name ,
             self.xvar        ,
-            self.mean        ,
+            self.m0          ,
             self.gamma       ,
             self.breitwigner )
 
@@ -2769,9 +3564,17 @@ class BreitWigner_pdf(MASS) :
             'name'        : self.name          ,
             'breitwigner' : self.breitwigner   ,
             'xvar'        : self.xvar          ,
-            'mean'        : self.mean          ,
+            'm0'          : self.m0            ,
             'gamma'       : self.gamma         ,
             }
+
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
 
     @property
     def gamma ( self ) :
@@ -2784,16 +3587,37 @@ class BreitWigner_pdf(MASS) :
     @property
     def Gamma ( self ) :
         """``Gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
-        return self.gamma 
+        return self.sigma 
     @Gamma.setter
     def Gamma ( self, value ) :
         self.sigma = value 
-
+        
     @property
     def breitwigner ( self ) :
         """The Breit-Wigner function  itself"""
         return self.__breitwigner
 
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
 models.append ( BreitWigner_pdf )
 
 
@@ -2863,7 +3687,7 @@ class BWMC_pdf(MASS) :
                    name               ,
                    breitwigner        , ## Ostap::Math::BreitWignerMC object
                    xvar               ,
-                   mean        = None , 
+                   m0          = None , 
                    gamma       = None ,
                    widths      = []   ,
                    fractions   = []   ) : 
@@ -2906,29 +3730,21 @@ class BWMC_pdf(MASS) :
             ## for g in self.widths[1:] :
 
             ## create gamma 
-            gamma = ROOT.RooFormulaVar ( 'gamma_%s'    % name ,
-                                         '#Gamma_(%s)' % name , formula , self.widths )
+            gamma = Ostap.FormulaVar ( 'gamma_%s'    % name ,
+                                       '#Gamma_(%s)' % name , formula , self.widths )
             self.__trash.append ( gamma )
             
         # =====================================================================
         ## initialize the base 
         # =====================================================================
-        MASS.__init__ ( self , name , xvar , mean , gamma )
-        
-        if gamma is not self.sigma :
-            sname  = self.sigma.GetName  ()
-            stitle = self.sigma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'Gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.sigma.SetName  ( gname  ) 
-            self.sigma.SetTitle ( gtitle )
-            if  self.xminmax () and self.sigma.minmax() : 
-                mn  , mx  = self.xminmax() 
-                dm = mx - mn
-                smn , smx = self.sigma.minmax()                 
-                self.sigma.setMin ( max (  1.e-5 * dm , smn ) )
-                self.sigma.setMax ( min (  2     * dm , smx ) )
-        
+        MASS.__init__ ( self , name , xvar                ,
+                        mean        =  m0                 ,
+                        siga        =  gamma              ,
+                        mean_name   = 'm0_%s'      % name ,
+                        mean_title  = '#m_{0}(%s)' % name ,
+                        sigma_name  = 'gamma_%s'   % name ,
+                        sigma_title = '#Gamma(%s)' % name )
+                
         ## create branching fractions 
         if 1 == case :
             
@@ -2937,11 +3753,14 @@ class BWMC_pdf(MASS) :
                 gi  = self.widths[i]
                 lst = ROOT.RooArgList ( self.gamma ,  gi )
                 self.__formulas_lists.append ( lst ) 
-                br  = ROOT.RooFormulaVar ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
-                                           'Br_{%d}(%s)' % ( i + 1 , name ) ,
-                                           '%s / %s'     % ( gi.GetName() , self.gamma.GetName() ) , lst )
+                ## br  = ROOT.RooFormulaVar ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
+                ##                            'Br_{%d}(%s)' % ( i + 1 , name ) ,
+                ##                            '%s / %s'     % ( gi.GetName() , self.gamma.GetName() ) , lst )
+                br  =  Ostap.MoreRooFit.Division ( 'brfr_%d_%s'  % ( i + 1 , name ) ,
+                                                   'Br_{%d}(%s)' % ( i + 1 , name ) , self.gamma , gi )
                 self.brfrs.add      ( br )
-                self.__trash.append ( br ) 
+                self.__trash.append ( br )
+                
         ##  branching fractions are specified 
         elif 2 == case : 
             
@@ -2957,9 +3776,12 @@ class BWMC_pdf(MASS) :
                 ls = ROOT.RooArgList ( self.gamma ,  br )
                 self.__trash.append  ( ls ) 
 
-                gg  = ROOT.RooFormulaVar ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
-                                           '#Gamma_{%d}(%s)' % ( i + 1 , name ) ,
-                                           '%s * %s'         % ( br.GetName() , self.gamma.GetName() ) , ls )
+                ## gg  = ROOT.RooFormulaVar ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
+                ##                           '#Gamma_{%d}(%s)' % ( i + 1 , name ) ,
+                ##                           '%s * %s'         % ( br.GetName() , self.gamma.GetName() ) , ls )
+                
+                gg  = Ostap.MoreRooFit.Product ( 'gamma_%d_%s'     % ( i + 1 , name ) ,
+                                                 '#Gamma_{%d}(%s)' % ( i + 1 , name ) , self.gamma , br ) 
                 self.widths.add      ( gg )
                 self.__trash.append  ( gg ) 
             
@@ -2975,8 +3797,8 @@ class BWMC_pdf(MASS) :
         
         ## create PDF 
         self.pdf = Ostap.Models.BreitWignerMC ( 
-            "rbwmc_"    + name ,
-            "RBWMC(%s)" % name ,
+            self.roo_name ( 'rbwmc_' ) , 
+            "Multi-channel relativistic Breit-Wigner %s" % self.name ,
             self.xvar        ,
             self.mean        ,
             self.widths      , 
@@ -2994,6 +3816,14 @@ class BWMC_pdf(MASS) :
         elif 2 == case : self.config.update (  { 'fractions' : self.fractions ,
                                                  'gamma'     : self.gamma     ,
                                                  'widths'    : ()             } )
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
     @property
     def gamma ( self ) :
         """``gamma''-parameter for Breit-Wigner function (alias for ``sigma'')"""
@@ -3035,6 +3865,28 @@ class BWMC_pdf(MASS) :
         """``fractions''  : branching fractions for different decay channels"""
         return self.__fractions
 
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
+
 models.append ( BWMC_pdf )
 
 # =============================================================================
@@ -3054,14 +3906,14 @@ class BWI_pdf (BreitWigner_pdf) :
                    name         ,
                    breitwigner  ,
                    xvar         ,
-                   mean  = None ,
+                   m0    = None ,
                    gamma = None ,
                    bkg   = -1   ,   ## background function 
                    a     = None ,   ## background scale 
                    phi   = 0    ) : ## bakcgrouns phase 
         
         ## initialize the base 
-        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , mean , gamma )
+        BreitWigner_pdf.__init__ ( self , name , breitwigner , xvar , m0 , gamma )
 
         self.__bw = self.pdf
 
@@ -3103,23 +3955,34 @@ class BWI_pdf (BreitWigner_pdf) :
 
         
         ## finally create PDF
-        self.pdf = Ostap.Models.BWI ( 'rbwi'     + name , 
-                                      self.bw           ,
-                                      self.b            ,
-                                      self.a            ,
-                                      self.phi          ) 
-            
+        self.pdf = Ostap.Models.BWI (
+            self.roo_name ( 'bwi_' ) ,
+            "Breit-Wigner with interference %s" % self.name  ,
+            self.bw                  ,
+            self.b                   ,
+            self.a                   ,
+            self.phi                 ) 
+
         ## save configuration
         self.config = {
             'name'        : self.name        ,
             'xvar'        : self.xvar        , 
             'breitwigner' : self.breitwigner , 
-            'mean'        : self.mean        ,
+            'm0'          : self.m0          ,
             'gamma'       : self.gamma       ,
             'bkg'         : self.bkg         ,
             'a'           : self.a           , 
             'phi'         : self.phi         } 
                         
+    @property
+    def m0 ( self ) :
+        """``m0'' : m_0 parameter for Breit-Wigner function (alias for ``mean'')"""
+        return self.mean
+    @m0.setter
+    def m0 ( self , value ) :
+        self.mean = value 
+
+
     @property
     def bw          ( self ) :
         """The Breit-Wigner PDF itself"""
@@ -3141,81 +4004,183 @@ class BWI_pdf (BreitWigner_pdf) :
         """The background phase"""
         return self.__phi
 
+# =============================================================================
+## @class BWPS
+#  Breit-Wigner function modulated with extra phase-space and polynomial factors
+#  @see Ostap::Models::BWPS
+#  @see Ostap::Math::BWPS
+class BWPS_pdf(BreitWigner_pdf,Phases) :
+    """Breit-Wigner function modulated with extra phase-space and polynomial factors
+    - see Ostap.Models.BWPS
+    - see Ostap.Math.BWPS
+    """
+    
+    def __init__ ( self             ,
+                   name             ,
+                   breitwigner      , ## Ostap::Math::BWPS object
+                   xvar             ,
+                   m0        = None ,
+                   gamma     = None ,
+                   the_phis  = None ) :
+
+        if   isinstance ( breitwigner , Ostap.Math.BWPS ) : pass
+        elif isinstance ( breitwigner , tuple ) :
+            breitwigner = Ostap.Math.BWPS  ( *breitwigner )
+        else :
+            raise ArgumentError("BWPS_pdf: Invalidd type of breitwigner") 
+        
+        ## initialize the base classes 
+        BreitWigner_pdf.__init__  ( self ,
+                                    name ,
+                                    breitwigner = breitwigner.breit_wigner () , 
+                                    xvar        = xvar   ,
+                                    m0          = m0     ,
+                                    gamma       = gamma  )
+        
+        Phases.__init__ ( self , breitwigner.npars () , the_phis ) 
+
+        ## make "original" BW-pdf 
+        self.__bw_pdf = BreitWigner_pdf ( name        = self.name + '_orig' ,
+                                          breitwigner = self.breitwigner    ,
+                                          xvar        = self.xvar           ,
+                                          m0          = self.m0             ,
+                                          gamma       = self.gamma          )
+        self.__bwps = breitwigner
+        
+        ## finally create PDF        
+        self.pdf = Ostap.Models.BWPS (
+            self.roo_name ( 'bwps_' ) ,
+            "Breit-Wigner with phase space %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.gamma        ,
+            self.phi_list     ,
+            self.bwps         ) 
+            
+        ## save configuration
+        self.config = {
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  , 
+            'breitwigner' : ( self.bwps.breit_wigner () ,
+                              self.bwps.phase_space  () ,
+                              self.bwps.use_rho      () ,
+                              self.bwps.use_N2       () ) ,                               
+            'm0'          : self.mean  ,
+            'gamma'       : self.gamma ,
+            'the_phis'    : self.phis  }
+        
+    @property
+    def bw_pdf  ( self ) :
+        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional phase space  factors)"""
+        return self.__bw_pdf
+    
+    @property
+    def bwps ( self ) :
+        """The Breit-Wigner function (BWPS) itself"""
+        return self.__bwps
+
+    
+models.append ( BWPS_pdf )
+
+
 
 # =============================================================================
-## @class BW23L_pdf
-#  The shape of Breit-Wigner resonace from 2-body decays, e.f.
-#  @see Ostap::Models::BW23L 
-#  @see Ostap::Math::BW23L
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2014-08-25
-class BW23L_pdf(MASS) :
-    """The shape of Breit-Wigner resonance from 3-body decays, e.f. X -> ( A B ) C
-    In this case the phase space factors can be modified by the  orbital momentum
-    between (AB) and C-systems    
-
+## @class BW3L_pdf
+#  Breit-Wigner function modulated with \f$ p^{2L+1}\f$ factor
+#   - it can approximate the mass distrbition from 3-body decays
+# e.g.  \f$ \eta^{\prime)  \rigtharrow \left(\rho^0 
+#               \rigtharrow \pi^+ \pi^-\right)\gamma \f$~decays
+#    or similar  configurations  
+# 
+# \f[ f(x) \equiv F_{\mathrm{BW}}(x) p(x|M_0,m_3)^{2L+1} \f]
+#  - \f$ p(x|M,m_3) \f$ is a momentumm of the 3rd particle, \f$P_3\f$ 
+#       in the \f$ P \rightarrow \left( P_{\mathrm{BW}} \rightharrow 
+#      P_1 P_2 \right) P_3 \f$ decay chain
+#  - \f$ M \f$ is a (fixed) mass of "mother" particle \f$P\f$
+#  - \f$ m_1\f$ is a (fixed) mass of 1st particle \f$P_1\f$
+#  - \f$ m_2\f$ is a (fixed) mass of 2nd particle \f$P_2\f$
+#  - \f$ m_3\f$ is a (fixed) mass of 3rd particle \f$P_3\f$
+#  - \f$ x \equiv m_{23} \f$ is a mass intermediate Breit-Wigner particle \f$P_{\mathrm{BW}}\f$
+#  - \f$ L \f$  is an orbital momentum between \f$ P_{\mathrm{BW}}\f$ and \f$ P_3\f$
+# 
+#  It is assumed that  \f$ m_1\f$  and \f$ m_2\f$ parameters 
+#  are in agreement with the Breit-Wigner definition 
+#  @see Ostap::Models::BW3L
+#  @see Ostap::Math::BW3L
+class BW3L_pdf(BreitWigner_pdf) :
+    """ Breit-Wigner function modulated with  p^{2L+1} factor
+    - it can approximate the mass distrbition from 3-body decays
+    e.g. ( eta'  ->  ( rho0 -> pi+ pi- ) gamma ) decay or similar  configurations
+    
+    - see Ostap.Models.BW3L
+    - see Ostap.Math.BW3L
     """
-    def __init__ ( self               ,
-                   name               ,
-                   breitwigner        , ## Ostap::Math::BW23L object
-                   xvar               ,
-                   mean        = None , 
-                   gamma       = None ) : 
-        
-        #
-        ## initialize the base
-        # 
-        MASS.__init__  ( self , name , xvar , mean , gamma )
-        
-        self.__gamma = self.sigma
-        if  self.gamma  != gamma : 
-            sname  = self.gamma.GetName  ()
-            stitle = self.gamma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma' )
-            self.gamma.SetName  ( gname  ) 
-            self.gamma.SetTitle ( gtitle )
-        
-        #
-        ## define the actual BW-shape using
-        #      Ostap::Math::BW23L object
-        #
-        self.__breitwigner = breitwigner  ## Ostap::Math::BW23L object
-        
-        ## create PDF 
-        self.pdf = Ostap.Models.BW23L ( 
-            "rbw23_"    + name ,
-            "RBW23(%s)" % name ,
-            self.xvar          ,
-            self.mean          ,
-            self.gamma         ,
-            self.breitwigner   )
+    
+    def __init__ ( self             ,
+                   name             ,
+                   breitwigner      , ## Ostap::Math::BW3L object
+                   xvar             ,
+                   m0        = None ,
+                   gamma     = None ) : 
 
-        ## save the configuration
+        if   isinstance ( breitwigner , Ostap.Math.BW3L ) : pass
+        elif isinstance ( breitwigner , tuple ) :
+            breitwigner = Ostap.Math.BW3L  ( *breitwigner )
+        else :
+            raise ArgumentError("BW3L_pdf: Invalidd type of breitwigner") 
+        
+        ## initialize the base classes 
+        BreitWigner_pdf.__init__  ( self ,
+                                    name ,
+                                    breitwigner = breitwigner.breit_wigner () , 
+                                    xvar        = xvar   ,
+                                    m0          = m0     ,
+                                    gamma       = gamma  )
+        
+        ## make "original" BW-pdf 
+        self.__bw_pdf = BreitWigner_pdf ( name        = self.name + '_orig' ,
+                                          breitwigner = self.breitwigner    ,
+                                          xvar        = self.xvar           ,
+                                          m0          = self.m0             ,
+                                          gamma       = self.gamma          )
+        self.__bw3l = breitwigner
+        
+        ## finally create PDF        
+        self.pdf = Ostap.Models.BW3L (
+            self.roo_name ( 'bw3l_' ) ,
+            "Breit-Wigner form 3-body decay  %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.gamma        ,
+            self.bw3l         ) 
+            
+        ## save configuration
         self.config = {
-            'name'        : self.name          ,
-            'breitwigner' : self.breitwigner   ,
-            'xvar'        : self.xvar          ,
-            'mean'        : self.mean          ,
-            'gamma'       : self.gamma         ,
-            }
-
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  , 
+            'breitwigner' : ( self.bw3l.breit_wigner () ,
+                              self.bw3l.M  () ,
+                              self.bw3l.m1 () ,
+                              self.bw3l.m2 () ,
+                              self.bw3l.m3 () ,
+                              self.bw3l.L  () ) , 
+            'm0'          : self.mean  ,
+            'gamma'       : self.gamma }
+        
     @property
-    def gamma ( self ) :
-        """Gamma-parameter for Breit-Wigner ``2-from-3'' function"""
-        return self.__gamma
-    @gamma.setter
-    def gamma ( self, value ) :
-        value = float ( value )
-        assert 0 < gamma , "``gamma'' must be positive"
-        self.__gamma.setVal ( value ) 
-
+    def bw_pdf  ( self ) :
+        """``bw_pdf'' : ``original'' Breit-Wigner pdf (no additional factors)"""
+        return self.__bw_pdf
+    
     @property
-    def breitwigner ( self ) :
-        """The Breit-Wigner function itself"""
-        return self.__breitwigner
+    def bw3l ( self ) :
+        """The Breit-Wigner function (BW3L) itself"""
+        return self.__bw3l
 
-models.append ( BW23L_pdf )                          
+    
+models.append ( BW3L_pdf )
+
+
 # =============================================================================
 ## @class Flatte_pdf
 #  Flatte function
@@ -3229,7 +4194,7 @@ models.append ( BW23L_pdf )
 #  @see Ostap::Math::Flatte2
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-01-18
-class Flatte_pdf(MASS) :
+class Flatte_pdf(MASSMEAN) :
     """Flatte function:
     S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
     and (KbarK) systems near (KbarK) threshold'' 
@@ -3243,107 +4208,78 @@ class Flatte_pdf(MASS) :
                    flatte            ,    ## Ostap::Math::Flatte/Flatte2
                    xvar              ,
                    m0       = None   ,    ## the pole 
-                   m0g1     = None   ,    ## m0*gamma_1 
-                   g2og1    = None   ,    ## gamma2/gamma1 
-                   gamma1   = None   ,    ## gamma1 
-                   gamma2   = None   ,    ## gamma2 
+                   m0g1     = None   ,    ## m0*g1 
+                   g2og1    = None   ,    ## g2/g1 
+                   g1       = None   ,    ## g1 
+                   g2       = None   ,    ## g2 
                    gamma0   = None   ) :  ## gamma0 
-        
-        #
-        ## initialize the base
-        # 
-        MASS.__init__  ( self , name , xvar , m0 , None )
 
+        assert isinstance ( flatte , Ostap.Math.Flatte ), \
+               'Invalid type for flatte %s' %  type ( flatte )
+
+        ## initialize the base
+        with CheckMean ( False ) :
+            # for Flatte-function m0 can be outside the interesting interval 
+            MASSMEAN.__init__  ( self , name , xvar ,
+                                 mean       = m0  ,
+                                 mean_name  = 'm0_%s'      % name ,
+                                 mean_title = '#m_{0}(%s)' % name )
+
+        self.__my_case = 0 
+        if   all_args ( self.mean , m0g1 , g2og1 ) : self.__my_case = 1 
+        elif all_args ( self.mean ,   g1 , g2    ) : self.__my_case = 2
+            
+        assert self.case in  ( 1 , 2 ), 'Invalid combination of (m0g1,g2og1:g1,g2)arguments!'
+        
         self.__flatte = flatte
-            
-        self.__m0 = self.mean
-        if self.m0 != m0 :
-            
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0' )
-            gtitle = stitle.replace ( 'mean' , 'm0' )
-            self.m0.SetName  ( gname  ) 
-            self.m0.SetTitle ( gtitle ) 
             
         self.__gamma0 = self.make_var  ( gamma0                  ,
                                          'gamma0_%s'      % name ,
-                                         '#gamma_{0}(%s)' % name ,
-                                         gamma0 , 0 , 0 , 5 * self.sigma.getVal() )
+                                         '#Gamma_{0}(%s)' % name ,
+                                         gamma0 , gamma0 , 0 , gamma0 )
         
-        if  gamma1 is None and gamma2 is None :
+        if  1 == self.case : 
             
-            vmin = 0.2 * self.mean.getMin () * self.gamma.getMin ()
-            vmax = 2.0 * self.mean.getMax () * self.gamma.getMax ()
-            
-            self.__m0g1 = self.make_var  ( m0g1                          ,
-                                           'm0g1_%s'             % name ,
-                                           'm_{0}#gamma_{1}(%s)' % name ,
-                                           m0g1 , m0g1 , vmin , xmax )
+            self.__m0g1 = self.make_var  ( m0g1                     ,
+                                           'm0g1_%s'          % name ,
+                                           '#m_{0}#g_{1}(%s)' % name ,
+                                           m0g1 , m0g1 )
             
             self.__g2og1 = self.make_var ( g2og1    ,
-                                           'g2og1_%s'                  % name ,
-                                           '#gamma_{2}/#gamma_{1}(%s)' % name ,
-                                           g2og1    ,  1  ,  0.01  , 100  ) 
+                                           'g2og1_%s'          % name ,
+                                           '#g_{2}/#g_{1}(%s)' % name ,
+                                           g2og1    ,  g2og1  , 0.005  , 200  ) 
+
+            self.__g1 = self.vars_divide   ( self.m0g1  , self.m0 , name = 'g1_%s' % name , title = "g_1(%s)" % name )
+            self.__g2 = self.vars_multiply ( self.g2og1 , self.g1 , name = 'g2_%s' % name , title = "g_2(%s)" % name )
             
-            self.__lst1   = ROOT.RooArgList ( self.m0g1  , self.m0     ) 
-            self.__gamma1 = ROOT.RooRealVar ( 
-                'g1_%s'          % name ,
-                '#gamma_{1}(%s)' % name ,
-                '%s / %s '  % ( self.m0g1.GetName() , self.m0.GetName() ) , 
-                self.__lst1  )
-            self.__lst2   = ROOT.RooArgList ( self.g2og1 , self.gamma1 ) 
-            self.__gamma2 = ROOT.RooRealVar ( 
-                'g2_%s'          % name ,
-                '#gamma_{2}(%s)' % name ,
-                '%s * %s '  % ( self.g2og1.GetName() , self.gamma1.GetName() ) , 
-                self.__lst2 )
+        elif 2 == self.case :
             
-        elif gamma1 is None : raise TypeError ( 'Flatte_pdf: gamma1 is not specified!' ) 
-        elif gamma2 is None : raise TypeError ( 'Flatte_pdf: gamma2 is not specified!' ) 
-        else :
+            self.__g1 =  self.make_var  ( g1                 ,
+                                          'g1_%s'     % name ,
+                                          'g_{1}(%s)' % name ,
+                                          g1                 , g1 )
+            self.__g2 =  self.make_var  ( g2                 ,
+                                          'g2_%s'     % name ,
+                                          'g_{2}(%s)' % name ,
+                                          g2                 , g2 )
             
-            self.__gamma1 =  self.make_var  ( gamma1                   ,
-                                              'g1_%s'          % name ,
-                                              '#gamma_{1}(%s)' % name ,
-                                              gamma1               ,
-                                              self.gamma.getVal () ,
-                                              self.gamma.getMin () ,
-                                              self.gamma.getMax () )            
-            self.__gamma2 =  self.make_var  ( gamma2                   ,
-                                              'g2_%s'          % name ,
-                                              '#gamma_{2}(%s)' % name ,
-                                              gamma2   ,
-                                              self.gamma.getVal () ,
-                                              self.gamma.getMin () ,
-                                              self.gamma.getMax () )
-            
-            self.__lst1  = ROOT.RooArgList ( self.m0     , self.gamma1 ) 
-            self.__m0g1  = ROOT.RooFormulaVar (
-                'm0g1_%s'             % name ,
-                'm_{0}#gamma_{1}(%s)' % name ,
-                '%s * %s ' % ( self.m0.GetName() , self.gamma1.GetName() ) ,
-                self.__lst1 )
-            self.__lst2  = ROOT.RooArgList ( self.gamma2 , self.gamma1 ) 
-            self.__g2og1 = ROOT.RooFormulaVar ( 
-                'g2og1_%s'                  % name ,
-                '#gamma_{2}/#gamma_{1}(%s)' % name , g2og1 ,
-                '%s / %s '  % ( self.gamma2.GetName() , self.gamma1.GetName() ) ,
-                self.__lst2 )
+            self.__m0g1  = self.vars_multiply ( self.m0 , self.g1 , name = 'm0g1_%s'  % name , title = "m_0g_1(%s)"  % name )
+            self.__g2og1 = self.vars_divide   ( self.g2 , self.g1 , name = 'g2og1_%s' % name , title = "g_2/g_1(%s)" % name )
                 
         ## create PDF 
-        self.pdf = Ostap.Models.Flatte ( 
-            "flatte_"    + name ,
-            "Flatte(%s)" % name ,
+        self.pdf = Ostap.Models.Flatte (
+            self.roo_name ( 'flatte_' ) ,
+            "Flatte %s" % self.name  ,
             self.xvar    ,
             self.m0      ,
-            self.m0g1    ,
-            self.g2og1   ,
+            self.g1      ,
+            self.g2      ,
             self.gamma0  ,
             self.flatte  )
 
         ## save the configuration
-        self.config = {
+        cnf = {
             'name'        : self.name    ,
             'flatte'      : self.flatte  ,
             'xvar'        : self.xvar    ,
@@ -3351,21 +4287,23 @@ class Flatte_pdf(MASS) :
             'gamma0'      : self.gamma0  ,
             }
         
-        if gamma1 is None and gamma2 is None : 
-            self.config.update ( { 'm0g1'   : self.m0g1   , 
-                                   'g2og1'  : self.g2og1  } )
-        else : 
-            self.config.update ( { 'gamma1' : self.gamma1 ,
-                                   'gamma2' : self.gamma2 } )
-            
+        if   1 == self.case : cnf.update ( { 'm0g1' : self.m0g1 , 'g2og1' : self.g2og1 } )
+        elif 2 == self.case : cnf.update ( { 'g1'   : self.g1   , 'g2'    : self.g2    } )
+
+        self.config = cnf
+        
+    @property
+    def case  (self ) :
+        """``case'' : How the input argument are  specified: 1: (m0g1,g2og1) vs 2: (g1,g2) """
+        return self.__my_case
+    
     @property
     def m0 ( self ) :
         """``m0''-parameter for Flatte-function (same as ``mean'')"""
-        return self.__m0
+        return self.mean 
     @m0.setter
     def m0  ( self, value ) :
-        value = float ( value )
-        self.__m0.setVal ( value ) 
+        self.mean = value
 
     @property
     def m0g1 ( self ) :
@@ -3373,8 +4311,7 @@ class Flatte_pdf(MASS) :
         return self.__m0g1
     @m0g1.setter
     def m0g1 ( self, value ) :
-        assert not isinstance ( self.__m0g1 , ROOT.RooFormulaVar ),\
-               "``m0g1''-parameter can't be set!"
+        assert gasattr ( self.__m0g1 , 'setVal' ),"``m0g1''-parameter can't be set!"
         value = float ( value )
         self.__m0g1.setVal ( value ) 
 
@@ -3384,33 +4321,30 @@ class Flatte_pdf(MASS) :
         return self.__g2og1
     @g2og1.setter
     def g2og1 ( self, value ) :
-        assert not isinstance ( self.__g2og1 , ROOT.RooFormulaVar ),\
-               "``g2og1''-parameter can't be set!"        
+        assert hasattr ( self.__g2og1 , 'setVal'),"``g2og1''-parameter can't be set!"        
         value = float ( value )
         assert 0 < value, "``g2/g1''-parameter for Flatte-function must be positive"
         self.__g2og1.setVal ( value )
 
     @property
-    def gamma1 ( self ) :
-        "``gamma1''-parameter for Flatte-function"
-        return self.__gamma1
-    @gamma1.setter
-    def gamma1 ( self , value ) :
-        assert not isinstance ( self.__gamma1 , ROOT.RooFormulaVar ),\
-               "``gamma1''-parameter can't be set!"
+    def g1 ( self ) :
+        "``g1''-parameter for Flatte-function"
+        return self.__g1
+    @g1.setter
+    def g1 ( self , value ) :
+        assert hasattr ( self.__g1 , 'setVal' ),"``g1''-parameter can't be set!"
         value = float ( value )
-        self.__gamma1.setVal ( value ) 
+        self.__g1.setVal ( value ) 
 
     @property
-    def gamma2 ( self ) :
-        "``gamma2''-parameter for Flatte-function"
-        return self.__gamma2
-    @gamma2.setter
-    def gamma2 ( self , value ) :
-        assert not isinstance ( self.__gamma2 , ROOT.RooFormulaVar ),\
-               "``gamma2''-parameter can't be set!"
+    def g2 ( self ) :
+        "``g2''-parameter for Flatte-function"
+        return self.__g2
+    @g2.setter
+    def g2 ( self , value ) :
+        assert hasattr ( self.__g2 , 'setVal' ),"``g2''-parameter can't be set!"
         value = float ( value )
-        self.__gamma2.setVal ( value ) 
+        self.__g2.setVal ( value ) 
 
     @property
     def gamma0 ( self ) :
@@ -3426,7 +4360,144 @@ class Flatte_pdf(MASS) :
         """The Flatte function itself"""
         return self.__flatte
 
+    # =========================================================================
+    ## prepare Argand plot as <code>TGraph</code>
+    #  @code
+    #  bw = ...
+    #  argand = bw.argand ( npx = 1000 )
+    #  argand.draw ( 'al')  
+    #  @endcode
+    #  @see  TGraph 
+    def argand ( self , x_min =  None , x_max = None , npx = 1000 ) :
+        """ prepare Argand plot as `TGraph`
+        >>> bw = ...
+        >>> argand = bw.argand ( npx = 1000 )
+        >>> argand.draw ( 'al')  
+        """
+        bw    = self.pdf.function()
+        xmnmx = self.xminmax() 
+        if x_min is None and xmnmx : x_min = xmnmx [ 0 ] 
+        if x_max is None and xmnmx : x_max = xmnmx [ 1 ] 
+        ## make Argand plot 
+        return bw.argand ( xmin = x_min , xmax = x_max , npx = npx ) 
+            
+
 models.append ( Flatte_pdf )                          
+
+
+
+# ============================================================================
+class FlattePS_pdf(Flatte_pdf,Phases) :
+    """Flatte function:
+    S.M.Flatte, ``Coupled-channel analysis of the (pi eta)
+    and (KbarK) systems near (KbarK) threshold'' 
+    Phys. Lett. B63, 224 (1976
+    http://www.sciencedirect.com/science/article/pii/0370269376906547
+
+    Typical case:    f0(980) -> pi+ pi- & K+ K- shapes 
+    """
+    def __init__ ( self              ,
+                   name              ,
+                   flatte            ,   ## Ostap::Math::BWPS 
+                   xvar              ,
+                   m0       = None   ,   ## the pole 
+                   m0g1     = None   ,   ## m0*g1 
+                   g2og1    = None   ,   ## g2/g1 
+                   g1       = None   ,   ## g1 
+                   g2       = None   ,   ## g2 
+                   gamma0   = None   ,   ## gamma0 
+                   the_phis = None   ) : ##
+        
+        if   isinstance ( flatte , Ostap.Math.BWPS ) : pass
+        elif isinstance ( flatte , tuple ) :
+            flatte = Ostap.Math.BWPS  ( *flatte )
+        else :
+            raise ArgumentError("FlattePS_pdf: Invalidd type of flatte") 
+        
+
+        assert isinstance ( flatte, Ostap.Math.BWPS ),\
+               'Invalid type for breitwigner %s' %  type ( flatte )
+        
+        ## initialize the base classes 
+        Flatte_pdf.__init__  ( self ,
+                               name ,
+                               flatte = flatte.breit_wigner () ,
+                               xvar   = xvar     , 
+                               m0     = m0       ,
+                               m0g1   = m0g1     ,
+                               g2og1  = g2og1    ,
+                               g1     = g1       ,
+                               g2     = g2       ,
+                               gamma0 = gamma0   )
+        
+        Phases.__init__ ( self , flatte.npars () , the_phis )
+
+        ## store the "original"" Flatte PDF 
+        if  1 ==  self.case : 
+            self.__flatte_pdf = Flatte_pdf ( name   = self.name + "_orig" ,
+                                             flatte = self.flatte ,  
+                                             xvar   = self.xvar   ,
+                                             m0     = self.m0     ,
+                                             m0g1   = self.m0g1   ,
+                                             g2og1  = self.g2og1  ,
+                                             gamma0 = self.gamma0 )
+        elif 2 ==  self.case : 
+            self.__flatte_pdf = Flatte_pdf ( name   = self.name + "_orig" ,
+                                             flatte = self.flatte ,  
+                                             xvar   = self.xvar   ,
+                                             m0     = self.m0     ,
+                                             g1     = self.g1     ,
+                                             g2     = self.g2     ,
+                                             gamma0 = self.gamma0 )
+            
+        self.__bwps   = flatte
+  
+        self.__g_list = ROOT.RooArgList ( self.g1 , self.g2 , self.gamma0 )
+        
+        ## finally create PDF
+        self.pdf = Ostap.Models.BWPS (
+            self.roo_name ( 'flatteps_' ) ,
+            "Flatte with phase space %s" % self.name  ,
+            self.xvar         ,
+            self.m0           ,
+            self.g_list       ,
+            self.phi_list     ,
+            self.bwps         ) 
+        
+        ## save the configuration
+        cnf = {
+            'name'        : self.name    ,
+            'flatte'      : ( self.bwps.breit_wigner () ,
+                              self.bwps.phase_space  () ,
+                              self.bwps.use_rho      () ,
+                              self.bwps.use_N2       () ) ,                               
+            'xvar'        : self.xvar    ,
+            'm0'          : self.m0      ,
+            'gamma0'      : self.gamma0  ,
+            'the_phis'    : self.phis    , 
+            }
+        
+        if   1 == self.case : cnf.update ( { 'm0g1' : self.m0g1 , 'g2og1' : self.g2og1 } )
+        elif 2 == self.case : cnf.update ( { 'g1'   : self.g1   , 'g2'    : self.g2    } )
+
+        self.config = cnf
+
+    @property
+    def flatte_pdf  ( self ) :
+        """``flatte_pdf'' : ``original'' Flatte pdf (no additional phase space  factors)"""
+        return self.__flatte_pdf
+    
+    @property
+    def bwps ( self ) :
+        """The Breit-Wigner function (BWPS) itself"""
+        return self.__bwps
+    
+    @property
+    def g_list ( self ) :
+        """``g_list'' list of gammas for Breit-Wigner"""
+        return self.__g_list
+
+models.append ( FlattePS_pdf )
 
 # =============================================================================
 ## @class LASS_pdf
@@ -3459,25 +4530,17 @@ class LASS_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m0 , g0 )
+        MASS.__init__  ( self , name , xvar , 
+                         mean        = m0 ,
+                         sigma       = g0 ,
+                         mean_name   = 'm0_%s'      % name ,
+                         mean_title  = '#m_{0}(%s)' % name ,
+                         sigma_name  = 'g_%s'       % name ,
+                         sigma_title = 'g_0(%s)'    % name )
+        
         
         self.__g0 = self.sigma
-        if self.__g0 != g0  : 
-            sname  = self.g0.GetName  ()
-            stitle = self.g0.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'g0' )
-            gtitle = stitle.replace ( 'sigma' , 'g0' )
-            self.g0.SetName  ( gname  ) 
-            self.g0.SetTitle ( gtitle )
-            
         self.__m0 = self.mean
-        if self.__m0 !=  m0 : 
-            sname  = self.m0.GetName  ()
-            stitle = self.m0.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm0' )
-            gtitle = stitle.replace ( 'mean' , 'm0' )
-            self.m0.SetName  ( gname  ) 
-            self.m0.SetTitle ( gtitle ) 
             
         self.__a = self.make_var ( a                  ,
                                    'aLASS_%s'  % name ,
@@ -3502,9 +4565,9 @@ class LASS_pdf(MASS) :
         self.__mPion = mPion
         
         ## create PDF 
-        self.pdf = Ostap.Models.LASS ( 
-            "lass_"    + name ,
-            "LASS(%s)" % name ,
+        self.pdf = Ostap.Models.LASS (
+            self.roo_name ( 'lass_' ) ,
+            "LASS/kappa %s" % self.name  ,
             self.xvar    ,
             self.m0      ,
             self.g0      ,
@@ -3598,28 +4661,19 @@ class Bugg_pdf(MASS) :
         #
         ## initialize the base
         # 
-        MASS.__init__  ( self , name , xvar , m , g2 ) 
+        MASS.__init__  ( self , name , xvar ,
+                         mean        = m    ,
+                         sigma       = g2   ,
+                         mean_name   = 'mBugg_%s'        % name ,
+                         mean_title  = '#m_{Bugg}_2(%s)' % name ,
+                         sigma_name  = 'gamma2_%s'       % name ,
+                         sigma_title = '#gamma_2(%s)'    % name )
+
         
         self.__bugg_g2 = self.sigma
         self.__gamma   = self.sigma
         ##
-        if self.gamma != g2 :  
-            sname  = self.gamma.GetName  ()
-            stitle = self.gamma.GetTitle ()
-            gname  = sname .replace ( 'sigma' , 'gamma2_Bugg' )
-            gtitle = stitle.replace ( 'sigma' , 'Gamma2_Bugg' )
-            self.bugg_g2.SetName  ( gname  ) 
-            self.bugg_g2.SetTitle ( gtitle )
-            self.gamma = self.bugg_g2 
-            
         self.__bugg_m = self.mean
-        if self.bugg_m != m :  
-            sname  = self.mean.GetName  ()
-            stitle = self.mean.GetTitle ()
-            gname  = sname .replace ( 'mean' , 'm_Bugg' )
-            gtitle = stitle.replace ( 'mean' , 'm_Bugg' )
-            self.bugg_m.SetName  ( gname  ) 
-            self.bugg_m.SetTitle ( gtitle ) 
 
         self.__bugg_b1 = self.make_var ( b1                  ,
                                          'b1Bugg_%s'  % name ,
@@ -3654,8 +4708,8 @@ class Bugg_pdf(MASS) :
         self.__mPion = mPion 
         ## create PDF 
         self.pdf = Ostap.Models.Bugg ( 
-            "bugg_"    + name ,
-            "Bugg(%s)" % name ,
+            self.roo_name ( 'bugg_' ) ,
+            "Bugg/sigma %s" % self.name  ,
             self.xvar      ,
             self.__bugg_m  ,
             self.__bugg_g2 ,
@@ -3746,92 +4800,93 @@ class Bugg_pdf(MASS) :
         
 models.append ( Bugg_pdf )
 
-# =============================================================================
-## @class Swanson_pdf
-#  S-wave cusp
-#  @see LHCb-PAPER-2016-019, Appendix
-#  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
-#  @see http://arxiv.org/abs/1504.07952
-#  @see Ostap::Models::Swanson
-#  @see Ostap::Math::Swanson
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date 2016-06-12
-class Swanson_pdf(PDF) :
-    """ S-wave cusp
-    - LHCb-PAPER-2016-019, Appendix
-    - E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
-    - http://arxiv.org/abs/1504.07952
-    """
-    def __init__ ( self              ,
-                   name              ,
-                   swanson           , ## Ostap::Math::Swanson objects 
-                   xvar              ,
-                   beta0    = None   ) : 
-        #
-        ## initialize the base
-        #
-        if   isinstance ( xvar , ROOT.TH1   ) :
-            m_title = xvar.GetTitle ()            
-            xvar    = xvar.xminmax  ()
-        elif isinstance ( xvar , ROOT.TAxis ) :
-            xvar    = xvar.GetXmin() , mass.GetXmax()
+## # =============================================================================
+## ## @class Swanson_pdf
+## #  S-wave cusp
+## #  @see LHCb-PAPER-2016-019, Appendix
+## #  @see E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
+## #  @see http://arxiv.org/abs/1504.07952
+## #  @see Ostap::Models::Swanson
+## #  @see Ostap::Math::Swanson
+## #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+## #  @date 2016-06-12
+## class Swanson_pdf(PDF) :
+##     """ S-wave cusp
+##     - LHCb-PAPER-2016-019, Appendix
+##     - E. S. Swanson, Cusps and exotic charmonia, arXiv:1504.07952
+##     - http://arxiv.org/abs/1504.07952
+##     """
+##     def __init__ ( self              ,
+##                    name              ,
+##                    swanson           , ## Ostap::Math::Swanson objects 
+##                    xvar              ,
+##                    beta0    = None   ) : 
+##         #
+##         ## initialize the base
+##         #
+##         if   isinstance ( xvar , ROOT.TH1   ) :
+##             m_title = xvar.GetTitle ()            
+##             xvar    = xvar.xminmax  ()
+##         elif isinstance ( xvar , ROOT.TAxis ) :
+##             xvar    = xvar.GetXmin() , mass.GetXmax()
             
-        ## create the variable 
-        if isinstance ( xvar , tuple ) and 2 == len(mass) :  
-            xvar = self.make_var ( xvar       , ## var 
-                             m_name     , ## name 
-                             m_title    , ## title/comment
-                             *mass      , ## min/max 
-                             fix = None ) ## fix ? 
-        elif isinstance ( xvar , ROOT.RooAbsReal ) :
-            xvar = self.make_var ( xvar       , ## var 
-                             m_name     , ## name 
-                             m_title    , ## title/comment
-                             fix = None ) ## fix ? 
-        else :
-            raise AttributeError("Swanson: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+##         ## create the variable 
+##         if isinstance ( xvar , tuple ) and 2 == len(mass) :  
+##             xvar = self.make_var ( xvar       , ## var 
+##                              m_name     , ## name 
+##                              m_title    , ## title/comment
+##                              *mass      , ## min/max 
+##                              fix = None ) ## fix ? 
+##         elif isinstance ( xvar , ROOT.RooAbsReal ) :
+##             xvar = self.make_var ( xvar       , ## var 
+##                              m_name     , ## name 
+##                              m_title    , ## title/comment
+##                              fix = None ) ## fix ? 
+##         else :
+##             raise AttributeError("Swanson: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
             
-        PDF.__init__  ( self , name , xvar , None , None    ) 
+##         PDF.__init__  ( self , name , xvar , None , None    ) 
         
-        self.__swanson = swanson 
-        beta_max       = max ( swanson.mmin() , swanson.cusp() )
-        self.__beta0   = self.make_var ( beta0 , 
-                                   'b0_swanson_%s'   % name ,
-                                   'b0_swanson(%s)'  % name ,
-                                   beta0 , 
-                                   0 , beta_max )
-        ## create PDF 
-        self.pdf = Ostap.Models.Swanson ( 
-            "Swanson_"    + name ,
-            "Swanson(%s)" % name ,
-            self.xvar    ,
-            self.beta0   ,
-            self.swanson )
+##         self.__swanson = swanson 
+##         beta_max       = max ( swanson.mmin() , swanson.cusp() )
+##         self.__beta0   = self.make_var ( beta0 , 
+##                                    'b0_swanson_%s'   % name ,
+##                                    'b0_swanson(%s)'  % name ,
+##                                    beta0 , 
+##                                    0 , beta_max )
+##         ## create PDF 
+##         self.pdf = Ostap.Models.Swanson ( 
+##             "Swanson_"    + name ,
+##             "Swanson(%s)" % name ,
+##             self.xvar    ,
+##             self.beta0   ,
+##             self.swanson )
         
-        ## save the configuration
-        self.config = {
-            'name'        : self.name      ,
-            'swanson'     : self.swanson   ,
-            'xvar'        : self.xvar      ,
-            'beta0'       : self.beta0     ,
-            }
+##         ## save the configuration
+##         self.config = {
+##             'name'        : self.name      ,
+##             'swanson'     : self.swanson   ,
+##             'xvar'        : self.xvar      ,
+##             'beta0'       : self.beta0     ,
+##             }
     
-    @property
-    def beta0 ( self ) :
-        """``beta0''-parameter for Swanson function"""
-        return self.__beta0
-    @beta0.setter
-    def beta0 ( self, value ) :
-        value = float ( value )
-        self.__beta0.setVal ( value ) 
+##     @property
+##     def beta0 ( self ) :
+##         """``beta0''-parameter for Swanson function"""
+##         return self.__beta0
+##     @beta0.setter
+##     def beta0 ( self, value ) :
+##         value = float ( value )
+##         self.__beta0.setVal ( value ) 
 
-    @property
-    def swanson ( self ) :
-        """``swanson''-function itself for Swanson PDF"""
-        return self.__swanson
+##     @property
+##     def swanson ( self ) :
+##         """``swanson''-function itself for Swanson PDF"""
+##         return self.__swanson
 
-models.append ( Swanson_pdf )
+## models.append ( Swanson_pdf )
+
 
 # =============================================================================
 if '__main__' == __name__ : 
@@ -3840,5 +4895,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger , symbols = models )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

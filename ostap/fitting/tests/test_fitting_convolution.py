@@ -14,9 +14,12 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent 
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent
+from   ostap.utils.timing       import timing
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,6 +38,8 @@ models = set()
 # =============================================================================
 def test_laplace(): 
 
+    logger = getLogger ( 'test_laplace' )
+    
     logger.info ('Test Asymmetric Laplace shape' )
     laplace = Models.AsymmetricLaplace_pdf ( name  = 'AL', 
                                              xvar  = x   ,
@@ -53,12 +58,18 @@ def test_laplace():
     ## resolution as PDF 
     laplace_2 = Convolution_pdf ( name = 'L2' , pdf = laplace, resolution = rAp )
 
-    laplace.draw( silent = True )
+    with use_canvas ( 'test_laplace' ) : 
+        f  = laplace  .draw ( silent = True )        
+        f1 = laplace_1.draw ( silent = True )        
+        f2 = laplace_2.draw()
+        
 
-    laplace_1.draw( silent = True )
-
-    laplace_2.draw()
-
+        with wait ( 2 ) :
+            f .draw()
+            f1.draw('same')
+            f2.draw('same')
+        
+        
     models.add ( laplace  )
     models.add ( laplace_1 )
     models.add ( laplace_2 )
@@ -67,20 +78,27 @@ def test_laplace():
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing('Save everything to DBASE', logger ), DBASE.tmpdb() as db :
+        for  i , m in enumerate ( models ) :
+            db['model/%-2d: %s' % ( i , m.name ) ] = m 
         db['models'   ] = models
         db.ls() 
         
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_laplace        () ## Laplace-function                            + background 
+    ## Laplace-function + background
+    with timing('Laplace'    , logger ) :
+        test_laplace () 
+
     
     ## check finally that everything is serializeable:
-    test_db ()          
+    with timing('Save to DB' , logger ) :
+        test_db ()          
 
 # =============================================================================
 ##                                                                      The END 

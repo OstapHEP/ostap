@@ -35,7 +35,8 @@ else                       : logger = getLogger( __name__ )
 from ostap.plotting.makestyles import ( ostap_font       ,
                                         ostap_label      ,
                                         ostap_line_width ,
-                                        ostap_latex      )
+                                        ostap_latex      ,
+                                        set_style        )
 # =============================================================================
 ## the dictionary of known  styles 
 styles = {}
@@ -52,21 +53,22 @@ def OstapStyle ( name                           ,
                  colz        = False            ) :
     """Create Ostap-style for the plots    
     """
-    obj = ROOT.gROOT.FindObject  ( name )
+    groot = ROOT.ROOT.GetROOT() 
+    obj   = groot.FindObject  ( name )
     if obj and isinstance ( obj , ROOT.TStyle ) and not makeNew : 
         logger.info               ('The style %s is reused' % obj.GetName() )
         if force :
             obj.cd                () 
             logger.info           ('The style %s is forced' % obj.GetName() )
-            ROOT.gROOT.SetStyle   ( obj.GetName()  )
-            ROOT.gROOT.ForceStyle ( )
+            groot.SetStyle   ( obj.GetName()  )
+            groot.ForceStyle ( )
         return obj
 
     nam = name
     i   = 1
     while obj :
         nam  = name + '_%d' % i
-        obj  = ROOT.gROOT.FindObject ( nam )
+        obj  = groot.FindObject ( nam )
         i   += 1
 
     # ================================================================
@@ -97,8 +99,8 @@ def OstapStyle ( name                           ,
     if force : 
         style . cd() 
         logger.debug ('The style %s is forced' % style.GetName() )
-        ROOT.gROOT.SetStyle   ( style.GetName()  )
-        ROOT.gROOT.ForceStyle ()
+        groot.SetStyle   ( style.GetName()  )
+        groot.ForceStyle ()
         
     return style     
 
@@ -156,7 +158,7 @@ class UseStyle(object):
     ...     h1 = ...
     ...     h1.Draw() 
     """
-    def __init__ ( self, style = None ) :
+    def __init__ ( self, style = None , **config ) :
         
         if   isinstance ( style , int ):
             
@@ -177,13 +179,14 @@ class UseStyle(object):
 
         ## use the style by name 
         if isinstance   ( style , str ) :
-            styles = ROOT.gROOT.GetListOfStyles()
+            groot  = ROOT.ROOT.GetROOT()
+            styles = groot.GetListOfStyles()
             for s in styles :
                 if s.GetName() == style :
                     style = s
                     break
                 
-        if   style is None : pass  
+        if   style is None : style = ROOT.gStyle 
         elif not isinstance  ( style , ROOT.TStyle ) :
             logger.warning ( 'No valid style "%s" is found, use default style' % style )
             style = ostapStyle
@@ -191,22 +194,34 @@ class UseStyle(object):
         self.__new_style = style
         self.__old_style = None 
 
+        self.__config    = config 
+        self.__changed   = {}
+        
     ## context  manager: enter 
     def __enter__ ( self )      :
         
-        self.__force_style = ROOT.gROOT.GetForceStyle()
+        groot  = ROOT.ROOT.GetROOT()        
+        self.__force_style = groot.GetForceStyle()
         if self.__new_style : 
             self.__old_style = ROOT.gStyle 
             self.__new_style.cd   ()
-            ROOT.gROOT.ForceStyle ( True )
+
+            if self.__config :
+                self.__changed = set_style ( self.__new_style , self.__config ) 
+            
+            groot.ForceStyle ( True )
             if ROOT.gPad : ROOT.gPad.UseCurrentStyle()
             
     ## context  manager: exit
     def __exit__  ( self , *_ ) :
 
+        if self.__changed :
+            self.__changed = set_style ( self.__new_style , self.__changed ) 
+            
         if self.__old_style: 
             self.__old_style.cd()
-            ROOT.gROOT.ForceStyle ( self.__force_style ) 
+            groot = ROOT.ROOT.GetROOT()        
+            groot.ForceStyle ( self.__force_style ) 
 
         self.__new_style = None
         self.__old_style = None
@@ -221,7 +236,16 @@ class UseStyle(object):
         "``old_style'' : old style"
         return self.__old_style
 
+    @property
+    def config   ( self ) :
+        """``config'' : addtional configuration parameters """
+        return self.__config
 
+    @property
+    def changed   ( self ) :
+        """``changed'' : changed configuration parameters """
+        return self.__changed
+    
 # =============================================================================
 ## Use some (temporary) style   as context manager 
 #  @code
@@ -229,13 +253,13 @@ class UseStyle(object):
 #  ...     h1 = ...
 #  ...     h1.Draw() 
 #  @endcode
-def useStyle ( style = Style ) :
+def useStyle ( style = None , **config  ) :
     """ Use some (temporary) style   as context manager 
     >>> with useStyle ( Style2 ) :
     ...     h1 = ...
     ...     h1.Draw() 
     """
-    return UseStyle (  style )
+    return UseStyle ( style , **config )
 
     
 # =============================================================================
@@ -245,5 +269,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

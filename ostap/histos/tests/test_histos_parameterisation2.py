@@ -14,8 +14,14 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import 
 # ============================================================================= 
-import ROOT, random, ostap.histos.param, ostap.histos.histos, ostap.fitting.funcs
-from   builtins import range
+import ROOT, random, time
+from   builtins              import range
+# =============================================================================
+import ostap.histos.param
+import ostap.histos.histos
+import ostap.fitting.funcs
+from   ostap.plotting.canvas import use_canvas
+from   ostap.utils.utils     import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,12 +43,12 @@ from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
 from ostap.utils.timing import timing
 
-h1   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h1.Sumw2() 
-h2   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h2.Sumw2() 
-h3   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h3.Sumw2() 
-h4   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h4.Sumw2() 
-h5   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h5.Sumw2() 
-h6   = ROOT.TH1F ( hID() , 'histogram' , 100, 0 , 1 ) ; h6.Sumw2() 
+h1   = ROOT.TH1F ( hID () , 'decreasing convex ' , 100 , 0 , 1 ) ; h1.Sumw2 () 
+h2   = ROOT.TH1F ( hID () , 'increasing convex ' , 100 , 0 , 1 ) ; h2.Sumw2 () 
+h3   = ROOT.TH1F ( hID () , 'increasing concave' , 100 , 0 , 1 ) ; h3.Sumw2 () 
+h4   = ROOT.TH1F ( hID () , 'decreasing concave' , 100 , 0 , 1 ) ; h4.Sumw2 () 
+h5   = ROOT.TH1F ( hID () , 'symmetric  convex ' , 100 , 0 , 1 ) ; h5.Sumw2 () 
+h6   = ROOT.TH1F ( hID () , 'symmetric  concave' , 100 , 0 , 1 ) ; h6.Sumw2 () 
 
 f1   = ROOT.TF1  ( fID() , '(x-1)**2'         , 0 , 1 )
 f2   = ROOT.TF1  ( fID() , 'x**2'             , 0 , 1 )
@@ -78,6 +84,8 @@ for i in range ( 0 , entries ) :
 # h5 - non-monotonic convex     (symmetric)
 # h6 - non-monotonic concave    (symmetric)
 
+## all histograms 
+histos = h1 , h2 , h3 , h4 , h5 , h6
 
 ## make a quadratic difference between two functions 
 def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
@@ -96,7 +104,7 @@ def _diff2_ ( fun1 , fun2 , xmin , xmax ) :
         dd = _integral ( _fund_ , xmin , xmax )
         
     import math
-    return math.sqrt(dd/(d1*d2))
+    return "%.4e" % math.sqrt(dd/math.sqrt(d1*d2)) 
 
 ## make a quadratic difference between histogram and function 
 def diff1 ( func , histo ) :
@@ -163,282 +171,242 @@ def diff_3 ( fun1 , fun2 , xmin , xmax , ymin , ymax , zmin , zmax , N = 1000000
     
 # =============================================================================
 def test_bernstein() :
-    
-    with timing ( 'Bernstein[4]' , logger ) :
-        rB1 = h1.bernstein      ( 4 )
-        rB2 = h2.bernstein      ( 4 )
-        rB3 = h3.bernstein      ( 4 )
-        rB4 = h4.bernstein      ( 4 )
-        rB5 = h5.bernstein      ( 4 )
-        rB6 = h6.bernstein      ( 4 )        
-        logger.info ( 'Bernstein[4]: diff   %s ' %  [ diff2(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
 
+    logger =   getLogger("test_bernstein")    
+    with timing ( 'Bernstein [4]' , logger ) :
+        params = [ h.bernstein ( 4 ) for h in  histos ]
+
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_bernstein %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+            
 # =============================================================================
 def test_chebyshev() :
     
-    with timing ( 'Chebyshev[4]' , logger ) : 
-        rC1 = h1.chebyshev  ( 4 )
-        rC2 = h2.chebyshev  ( 4 )
-        rC3 = h3.chebyshev  ( 4 )
-        rC4 = h4.chebyshev  ( 4 )
-        rC5 = h5.chebyshev  ( 4 )
-        rC6 = h6.chebyshev  ( 4 )
-        logger.info ( 'Chebyshev[4]: diff   %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                           (rC2 , h2) ,
-                                                                           (rC3 , h3) ,
-                                                                           (rC4 , h4) ,
-                                                                           (rC5 , h5) ,
-                                                                           (rC6 , h6) ] ] )
+    logger =   getLogger("test_chebyshev")    
+    with timing ( 'Chebyshev [4]' , logger ) :
+        params = [ h.chebyshev ( 4 ) for h in  histos ]
 
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_chebyshev %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+                
 # =============================================================================
 def test_legendre() :
-    
-    with timing ( 'Legendre[4]' , logger ) :
-        rL1 = h1.legendre   ( 4 )
-        rL2 = h2.legendre   ( 4 )
-        rL3 = h3.legendre   ( 4 )
-        rL4 = h4.legendre   ( 4 )
-        rL5 = h5.legendre   ( 4 )
-        rL6 = h6.legendre   ( 4 )        
-        logger.info ( 'Legendre[4]: diff    %s ' %  [ diff2(*p) for p in [ (rL1 , h1) ,
-                                                                           (rL2 , h2) ,
-                                                                           (rL3 , h3) ,
-                                                                           (rL4 , h4) ,
-                                                                           (rL5 , h5) ,
-                                                                           (rL6 , h6) ] ] )
+
+    logger =   getLogger("test_legendre")    
+    with timing ( 'Legendre [4]' , logger ) :
+        params = [ h.legendre ( 4 ) for h in  histos ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_legendre %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
 def test_monomial() :
-    
-    with timing ( 'Monomial[4]' , logger ) : 
-        rP1 = h1.polynomial ( 4 )
-        rP2 = h2.polynomial ( 4 )
-        rP3 = h3.polynomial ( 4 )
-        rP4 = h4.polynomial ( 4 )
-        rP5 = h5.polynomial ( 4 )
-        rP6 = h6.polynomial ( 4 )
-        logger.info ( 'Monomial[4]: diff    %s ' %  [ diff2(*p) for p in [ (rP1 , h1) ,
-                                                                           (rP2 , h2) ,
-                                                                           (rP3 , h3) ,
-                                                                           (rP4 , h4) ,
-                                                                           (rP5 , h5) ,
-                                                                           (rP6 , h6) ] ] )
+
+    logger =   getLogger("test_monomial")
+    with timing ( 'Monomial [4]' , logger ) :
+        params = [ h.polynomial ( 4 ) for h in  histos ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_monomial %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
 def test_positive() :
-    
-    with timing ( 'Positive[4]' , logger ) :
-        rB1 = h1.positive  ( 4 )
-        rB2 = h2.positive  ( 4 )
-        rB3 = h3.positive  ( 4 )
-        rB4 = h4.positive  ( 4 )
-        rB5 = h5.positive  ( 4 )
-        rB6 = h6.positive  ( 4 )        
-        logger.info ( 'Positive[4]:  diff   %s ' %  [ diff2(*p) for p in [ (rB1 , h1) ,
-                                                                           (rB2 , h2) ,
-                                                                           (rB3 , h3) ,
-                                                                           (rB4 , h4) ,
-                                                                           (rB5 , h5) ,
-                                                                           (rB6 , h6) ] ] )
+
+    logger =   getLogger("test_positive")
+    with timing ( 'Positive [4]' , logger ) :
+        params = [ h.positive ( 4 ) for h in  histos ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_positive %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+
 
 # =============================================================================
 def test_monotonic() :
     
-    with timing ( 'Monotonic[4]' , logger ) :
-        rL1 = h1.monotonic ( 4 , increasing = False )
-        rL2 = h2.monotonic ( 4 , increasing = True  )
-        rL3 = h3.monotonic ( 4 , increasing = True  )
-        rL4 = h4.monotonic ( 4 , increasing = False )
-        logger.info ( 'Monotonic[4]: diff    %s ' %  [ diff2(*p) for p in [ (rL1 , h1) ,
-                                                                            (rL2 , h2) ,
-                                                                            (rL3 , h3) ,
-                                                                            (rL4 , h4) ] ] )
-
+    logger =   getLogger("test_monotonic")
+    with timing ( 'Monotonic [4]' , logger ) :
+        params = [ h1.monotonic ( 4 , increasing = False ) , 
+                   h2.monotonic ( 4 , increasing = True  ) , 
+                   h3.monotonic ( 4 , increasing = True  ) , 
+                   h4.monotonic ( 4 , increasing = False ) ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_monotonic %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+            
 # =============================================================================
 def test_convex () :
     
-    with timing ( 'Convex[4]' , logger ) :
-        rL1 = h1.convex ( 4 , increasing = False , convex = True  )
-        rL2 = h2.convex ( 4 , increasing = True  , convex = True  )
-        rL3 = h3.convex ( 4 , increasing = True  , convex = False )
-        rL4 = h4.convex ( 4 , increasing = False , convex = False )
-        logger.info ( 'Convex[4]: diff    %s ' %  [ diff2(*p) for p in [ (rL1 , h1) ,
-                                                                            (rL2 , h2) ,
-                                                                            (rL3 , h3) ,
-                                                                            (rL4 , h4) ] ] )
-
+    logger =   getLogger("test_convex")
+    with timing ( 'Convex [4]' , logger ) :
+        params = [ h1.convex ( 4 , increasing = False , convex = True  ) , 
+                   h2.convex ( 4 , increasing = True  , convex = True  ) , 
+                   h3.convex ( 4 , increasing = True  , convex = False ) , 
+                   h4.convex ( 4 , increasing = False , convex = False ) ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_convex %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+            
 # =============================================================================
 def test_convex_poly () :
-    
-    with timing ( 'Convex/ConcavePoly[4]' , logger ) :
-        rL1 = h1.convexpoly  ( 4 )
-        rL2 = h2.convexpoly  ( 4 )
-        rL3 = h3.concavepoly ( 4 )
-        rL4 = h4.concavepoly ( 4 )
-        rL5 = h5.convexpoly  ( 4 )
-        rL6 = h6.concavepoly ( 4 )
-        logger.info ( 'Convex/ConcavePoly[4]: diff    %s ' %  [ diff2(*p) for p in [ (rL1 , h1) ,
-                                                                                     (rL2 , h2) ,
-                                                                                     (rL3 , h3) ,
-                                                                                     (rL4 , h4) ,
-                                                                                     (rL5 , h5) ,
-                                                                                     (rL6 , h6) ] ] )
+
+    logger =   getLogger("test_convex_poly")
+    with timing ( 'Convex/ConcavePoly [4]' , logger ) :
+        params = [ h1.convexpoly  ( 4 ) , 
+                   h2.convexpoly  ( 4 ) ,
+                   h3.concavepoly ( 4 ) ,
+                   h4.concavepoly ( 4 ) ,
+                   h5.convexpoly  ( 4 ) , 
+                   h6.concavepoly ( 4 ) ]
+        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_convex_poly %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
-def test_fourier () : 
-    with timing ( 'Fourier[4]' , logger ) :
-        # rF1 = h1.fourier    ( 8 )
-        # rF2 = h2.fourier    ( 8 )
-        # rF3 = h3.fourier    ( 8 )
-        # rF4 = h4.fourier    ( 8 )
-        rF5 = h5.fourier    ( 4 )
-        rF6 = h6.fourier    ( 4 )
-        logger.info ( 'Fourier[4] : diff    %s ' %  [ diff2(*p) for p in [ # (rF1 , h1) ,
-                                                                           # (rF2 , h2) ,
-                                                                           # (rF3 , h3) ,
-                                                                           # (rF4 , h4) ,
-                                                                           (rF5 , h5) ,
-                                                                           (rF6 , h6) ] ] )
+def test_fourier () :
+    
+    logger =   getLogger("test_fourier")
+    with timing ( 'Fourier [4]' , logger ) :
+        params = [ h5.fourier ( 4 ) , 
+                   h6.fourier ( 6 ) ] 
+
+    for h , f in zip  ( ( h5 , h6 ) , params ) :
+        with wait ( 2 ) , use_canvas ( 'test_fourier: %s' % h.GetTitle () ) : 
+            h    .draw  ()
+            f.tf1.draw  ('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+
 # =============================================================================
 def test_cosine() :
     
+    logger =   getLogger("test_cosine")
     if not scipy :
         logger.warning("No scipy is avilable, skip 'cosine' test")
         return
     
-    with timing ( 'Cosine[6]' , logger ) :
-        rC1 = h1.cosine     ( 6 )
-        rC2 = h2.cosine     ( 6 )
-        rC3 = h3.cosine     ( 6 )
-        rC4 = h4.cosine     ( 6 ) 
-        rC5 = h5.cosine     ( 6 )
-        rC6 = h6.cosine     ( 6 ) 
-        logger.info ( 'Cosine[6]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                           (rC2 , h2) ,
-                                                                           (rC3 , h3) ,
-                                                                           (rC4 , h4) ,
-                                                                           (rC5 , h5) ,
-                                                                           (rC6 , h6) ] ] )
-# =============================================================================
-def test_generic_spline () :
-    
-    with timing ('B-spline[1,4]' , logger ) :
+    with timing ( 'Cosine [4]' , logger ) :
+        params = [ h.cosine ( 4 ) for h in  histos ]
         
-        rC1 = h1.bSpline ( degree = 1 , knots = 4 ) 
-        rC2 = h2.bSpline ( degree = 1 , knots = 4 ) 
-        rC3 = h3.bSpline ( degree = 1 , knots = 4 ) 
-        rC4 = h4.bSpline ( degree = 1 , knots = 4 ) 
-        rC5 = h5.bSpline ( degree = 1 , knots = 4 ) 
-        rC6 = h6.bSpline ( degree = 1 , knots = 4 )
-        
-        logger.info ( 'B-spline[1,4]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                               (rC2 , h2) ,
-                                                                               (rC3 , h3) ,
-                                                                               (rC4 , h4) ,
-                                                                               (rC5 , h5) ,
-                                                                               (rC6 , h6) ] ] )
-        
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_cosine: %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
+
+
 # =============================================================================
 def test_positive_spline () :
     
-    with timing ('P-spline[2,2]' , logger ) :
-        
-        rC1 = h1.pSpline ( degree = 2 , knots = 2 ) 
-        rC2 = h2.pSpline ( degree = 2 , knots = 2 ) 
-        rC3 = h3.pSpline ( degree = 2 , knots = 2 ) 
-        rC4 = h4.pSpline ( degree = 2 , knots = 2 ) 
-        rC5 = h5.pSpline ( degree = 2 , knots = 2 ) 
-        rC6 = h6.pSpline ( degree = 2 , knots = 2 )
-        
-        logger.info ( 'P-spline[2,2]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                               (rC2 , h2) ,
-                                                                               (rC3 , h3) ,
-                                                                               (rC4 , h4) ,
-                                                                               (rC5 , h5) ,
-                                                                               (rC6 , h6) ] ] )
+    logger =   getLogger("test_positive_spline")
+    with timing ('P-spline [2,3]' , logger ) :
+        params = [ h.pSpline ( degree = 2 , knots = 3 ) for h in  histos ]
+
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_positive_spline: %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
         
 # =============================================================================
 def test_monotonic_spline () :
     
-    with timing ('M-spline[2,2]' , logger ) :
+    logger =   getLogger("test_monotonic_spline")
+    with timing ('M-spline [2,3]' , logger ) :
+        params = [ h1.mSpline ( degree = 2 , knots = 3 , increasing = False ) , 
+                   h2.mSpline ( degree = 2 , knots = 3 , increasing = True  ) ,
+                   h3.mSpline ( degree = 2 , knots = 3 , increasing = True  ) , 
+                   h4.mSpline ( degree = 2 , knots = 3 , increasing = False ) ]
         
-        rC1 = h1.mSpline ( degree = 2 , knots = 2 , increasing = False ) 
-        rC2 = h2.mSpline ( degree = 2 , knots = 2 , increasing = True  ) 
-        rC3 = h3.mSpline ( degree = 2 , knots = 2 , increasing = True  ) 
-        rC4 = h4.mSpline ( degree = 2 , knots = 2 , increasing = False ) 
-        
-        logger.info ( 'M-spline[2,2]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                               (rC2 , h2) ,
-                                                                               (rC3 , h3) ,
-                                                                               (rC4 , h4) ] ] )
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_monotonic_spline %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
 # =============================================================================
 def test_convex_spline () :
     
-    with timing ('C-spline[2,2]' , logger ) :
+    logger =   getLogger("test_convex_spline")
+    with timing ('C-spline [2,3]' , logger ) :
+        params = [ h1.cSpline ( degree = 2 , knots = 3 , increasing = False , convex = True  ) , 
+                   h2.cSpline ( degree = 2 , knots = 3 , increasing = True  , convex = True  ) ,
+                   h3.cSpline ( degree = 2 , knots = 3 , increasing = True  , convex = False ) ,
+                   h4.cSpline ( degree = 2 , knots = 3 , increasing = False , convex = False ) ]
         
-        rC1 = h1.cSpline ( degree = 2 , knots = 2 , increasing = False , convex = True  ) 
-        rC2 = h2.cSpline ( degree = 2 , knots = 2 , increasing = True  , convex = True  ) 
-        rC3 = h3.cSpline ( degree = 2 , knots = 2 , increasing = True  , convex = False ) 
-        rC4 = h4.cSpline ( degree = 2 , knots = 2 , increasing = False , convex = False ) 
-        
-        logger.info ( 'C-spline[2,2]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                               (rC2 , h2) ,
-                                                                               (rC3 , h3) ,
-                                                                               (rC4 , h4) ] ] )
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_convex_spline %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 
 # =============================================================================
 def test_convex_only_spline () :
     
-    with timing ('Convex/Concave-spline[2,2]' , logger ) :
+    logger =   getLogger("test_convex_only_spline")
+    with timing ('Convex/Concave-spline [2,3]' , logger ) :
+        params = [ h1.convexSpline  ( degree = 2 , knots = 3 ) , 
+                   h2.convexSpline  ( degree = 2 , knots = 3 ) , 
+                   h3.concaveSpline ( degree = 2 , knots = 3 ) ,
+                   h4.concaveSpline ( degree = 2 , knots = 3 ) ,
+                   h5.convexSpline  ( degree = 2 , knots = 3 ) ,
+                   h6.concaveSpline ( degree = 2 , knots = 3 ) ]
         
-        rC1 = h1.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC2 = h2.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC3 = h3.concaveSpline ( degree = 2 , knots = 2 ) 
-        rC4 = h4.concaveSpline ( degree = 2 , knots = 2 ) 
-        rC5 = h1.convexSpline  ( degree = 2 , knots = 2 ) 
-        rC6 = h1.concaveSpline ( degree = 2 , knots = 2 ) 
-        
-        logger.info ( 'Convex/Concave-spline[2,2]: diff      %s ' %  [ diff2(*p) for p in [ (rC1 , h1) ,
-                                                                                (rC2 , h2) ,
-                                                                                (rC3 , h3) ,
-                                                                                (rC4 , h4) ,
-                                                                                (rC5 , h5) ,
-                                                                                (rC6 , h6) ] ] )
-
+    for h , f in zip ( histos , params ) :
+        with wait ( 2 ) ,  use_canvas ( 'test_convex_only_spline %s' % h.GetTitle()  ) : 
+            h    .draw()
+            f.tf1.draw('same')
+            logger.info ( "%-25s : difference %s" %  ( h.title , diff2 ( f , h ) ) )
 
 # =============================================================================
 #  Legendre fast
 # =============================================================================
 def test_legendre_fast () :
     
-    with timing ( 'LegendreFast[6]' , logger ) :
+    logger =   getLogger("test_legenedre_fast")
+    with timing ( 'Legendre-fast [6]' , logger ) :
         rL1 = h1.legendre_fast ( 6 )
         rL2 = h2.legendre_fast ( 6 )
         rL3 = h3.legendre_fast ( 6 )
         rL4 = h4.legendre_fast ( 6 )
         rL5 = h5.legendre_fast ( 6 )
         rL6 = h6.legendre_fast ( 6 )        
-        logger.info ( 'LegendreFast[6]: diff %s ' %  [ diff1(*p) for p in [ (rL1 , h1) ,
-                                                                            (rL2 , h2) ,
-                                                                            (rL3 , h3) ,
-                                                                            (rL4 , h4) ,
-                                                                            (rL5 , h5) ,
-                                                                            (rL6 , h6) ] ] )
-        
-
+    logger.info ( 'difference %s ' %  [ diff1(*p) for p in [ (rL1 , h1) ,
+                                                             (rL2 , h2) ,
+                                                             (rL3 , h3) ,
+                                                             (rL4 , h4) ,
+                                                             (rL5 , h5) ,
+                                                             (rL6 , h6) ] ] )
+    
 # =============================================================================
 def test_legendre2_fast () :
     
-    with timing ( 'Legendre2D' , logger ) :
-        
+    logger =   getLogger("test_legendre2_fast")
+    with timing ( 'Legendre-2D' , logger ) :
         r22 = h_2.legendre_fast ( 2 , 2 )
         r32 = h_2.legendre_fast ( 3 , 2 )
         r42 = h_2.legendre_fast ( 4 , 2 )
@@ -449,19 +417,20 @@ def test_legendre2_fast () :
         r53 = h_2.legendre_fast ( 5 , 3 )
         
     limits = h_2.xmin() , h_2.xmax() , h_2.ymin() , h_2.ymax()
-    logger.info ( 'Legendre2D: diff %s ' %  [ diff_2(f,p,*limits) for f,p in [ (r22 , f_2) ,
-                                                                               (r32 , f_2) ,
-                                                                               (r42 , f_2) ,
-                                                                               (r52 , f_2) ,
-                                                                               (r33 , f_2) ,
-                                                                               (r43 , f_2) ,
-                                                                               (r53 , f_2) ] ] )
+    logger.info ( 'difference %s ' %  [ diff_2(f,p,*limits) for f,p in [ (r22 , f_2) ,
+                                                                         (r32 , f_2) ,
+                                                                         (r42 , f_2) ,
+                                                                         (r52 , f_2) ,
+                                                                         (r33 , f_2) ,
+                                                                         (r43 , f_2) ,
+                                                                         (r53 , f_2) ] ] )
     
 
 # =============================================================================
 def test_legendre3_fast () :
     
-    with timing ( 'Legendre3D' , logger ) :
+    logger =   getLogger("test_legendre3_fast")
+    with timing ( 'Legendre-3D' , logger ) :
         
         r222 = h_3.legendre_fast ( 2 , 2 , 2 )  
         r333 = h_3.legendre_fast ( 3 , 3 , 3 )
@@ -469,10 +438,10 @@ def test_legendre3_fast () :
         r535 = h_3.legendre_fast ( 5 , 3 , 5 )
         
     limits = h_3.xmin() , h_3.xmax() , h_3.ymin() , h_3.ymax() , h_3.zmin() , h_3.zmax()
-    logger.info ( 'Legendre3D: diff %s ' %  [ diff_3(f,p,*limits) for f,p in [ ( r222 , f_3) ,
-                                                                               ( r333 , f_3) ,
-                                                                               ( r432 , f_3) ,
-                                                                               ( r535 , f_3) ] ] )
+    logger.info ( 'difference %s ' %  [ diff_3(f,p,*limits) for f,p in [ ( r222 , f_3) ,
+                                                                         ( r333 , f_3) ,
+                                                                         ( r432 , f_3) ,
+                                                                         ( r535 , f_3) ] ] )
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -481,29 +450,29 @@ if '__main__' == __name__ :
     logger.info ( 'Parameterizations techniques using ROOT::TH1::Fit (could be slow)')
     logger.info ( 100*'*')
     
-    test_bernstein           ()
-    test_legendre            ()
-    test_chebyshev           ()
-    test_monomial            ()
+    test_bernstein              ()
+    test_legendre               ()
+    test_chebyshev              ()
+    test_monomial               ()
 
-    test_positive            ()
-    test_monotonic           () 
-    test_convex              () 
-    test_convex_poly         ()
-    
-    test_fourier             ()
-    test_cosine              ()
+    test_positive               ()
+    test_monotonic              () 
+    test_convex                 () 
+    test_convex_poly            ()
 
-    test_generic_spline      () 
-    test_positive_spline     () 
-    test_monotonic_spline    () 
-    test_convex_spline       () 
-    test_convex_only_spline  () 
+    test_fourier                ()
+    test_cosine                 ()
     
-    test_legendre_fast       ()
-    test_legendre2_fast      ()
-    test_legendre3_fast      ()
+    test_positive_spline        ()
+    test_monotonic_spline       ()
+    test_convex_spline          ()
+    test_convex_only_spline     ()
+    
+
+    test_legendre_fast          ()
+    test_legendre2_fast         ()
+    test_legendre3_fast         ()
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

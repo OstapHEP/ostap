@@ -22,9 +22,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy
+from   ostap.math.ve   import Ostap, VE 
 # =============================================================================
-cpp   = cppyy.gbl
-Ostap = cpp.Ostap
 
 # =============================================================================
 SE    = Ostap.StatEntity 
@@ -49,7 +48,6 @@ if not hasattr ( SE , '_orig_mean' ) :
     _orig_mean    = SE.mean
     SE._orig_mean = _orig_mean
 
-from ostap.math.ve import VE 
 
 SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
 SE. minmax  = lambda s :    ( s.min()         , s.max()        ) 

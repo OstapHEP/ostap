@@ -14,7 +14,7 @@
 #include "cubature.h"         // cubature 
 #include "syncedcache.h"      // the cache 
 #include "local_hash.h"       // hash_combine 
-#include "Ostap/StatEntity.h" // hash_combine 
+#include "local_gsl.h"        // hash_combine 
 // ============================================================================
 namespace Ostap
 {
@@ -62,13 +62,23 @@ namespace Ostap
         // ====================================================================
         Result cubature 
         ( const Fun*          fun                  , 
-          const unsigned      maxcalls   = 20000   ,
-          const double        aprecision = 1.e-8   , 
-          const double        rprecision = 1.e-8   ,
+          const unsigned      maxcalls   = 50000   ,
+          const double        aprecision = s_APRECISION , 
+          const double        rprecision = s_RPRECISION ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
-          const unsigned long line       = 0       ) const // line number 
+          const unsigned long line       = 0       ,       // line number 
+          const std::size_t   tag        = 0       ) const // tag/label
         {
+          if ( 0 != tag ) { return cubature ( tag        , 
+                                              fun        , 
+                                              maxcalls   , 
+                                              aprecision , 
+                                              rprecision , 
+                                              reason     , 
+                                              file       , 
+                                              line       ) ; }
+          //
           double result =  1 ;        
           double error  = -1 ;
           const int ierror = hcubature 
@@ -84,12 +94,12 @@ namespace Ostap
           return Result { ierror , result , error } ;
         }
         // ====================================================================
-        Result cubature_with_cache 
+        Result cubature
         ( const std::size_t   tag                  ,
           const Fun*          fun                  , 
-          const unsigned      maxcalls   = 20000   ,
-          const double        aprecision = 1.e-8   , 
-          const double        rprecision = 1.e-8   ,
+          const unsigned      maxcalls   = 50000   ,
+          const double        aprecision = s_APRECISION , 
+          const double        rprecision = s_RPRECISION ,
           const char*         reason     = nullptr ,       // message 
           const char*         file       = nullptr ,       // file name 
           const unsigned long line       = 0       ) const // line number 
@@ -111,7 +121,7 @@ namespace Ostap
           // perform the numerical integration via the cubature method 
           Result result = cubature ( fun      , 
                                      maxcalls , aprecision , rprecision  , 
-                                     reason   ,  file      , line        ) ;
+                                     reason   , file       , line        ) ;
           // ==================================================================
           { // update the cache ===============================================
             CACHE::Lock lock  { s_cache.mutex() } ;
@@ -128,16 +138,20 @@ namespace Ostap
       public:
         // ====================================================================
         /// the actual adapter for cubature 
-        static int adapter2d ( unsigned      ndim  , 
-                               const double* x     , 
-                               void*         fdata ,
-                               unsigned      fdim  , 
-                               double*       fval  )   
+        static int adapter2d 
+        ( unsigned      ndim  , 
+          const double* x     , 
+          void*         fdata ,
+          unsigned      fdim  , 
+          double*       fval  )   
         {
-          if ( 1  != fdim || 2 != ndim || 
-               nullptr == x || nullptr == fdata || nullptr == fval ) { return 1 ; }
+          if ( 1       != fdim  || 
+               2       != ndim  || 
+               nullptr == x     || 
+               nullptr == fdata || 
+               nullptr == fval  ) { return 1 ; }
           const FUNCTION* f = (FUNCTION*) fdata  ; 
-          fval[0] = (*f) ( x[0] , x[1] ) ;
+          fval [ 0 ] = (*f) ( x [ 0 ] , x [ 1 ] ) ;
           return 0 ;
         }
         // ====================================================================
@@ -156,7 +170,7 @@ namespace Ostap
       Integrator2D<FUNCTION>::s_cache = Integrator2D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 1000 ;
+      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 50000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
     // ========================================================================

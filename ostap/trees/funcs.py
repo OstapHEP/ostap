@@ -15,6 +15,7 @@ __all__     = (
     'FuncTree'          , ## helper base class for 'TTree-function'
     'FuncData'          , ## helper base class for 'RooAbsData-function'
     'PyTreeFunction'    , ## 'TTree-function' that uses python function/callable 
+    'PyTreeArray'       , ## 'TTree-function' that uses python function/callable 
     "pyfun_tree"        , ## ditto, but as fnuction 
     'PyDataFunction'    , ## 'Data-function' that uses python function/callable
     "pyfun_data"        , ## ditto, but as fnuction 
@@ -26,7 +27,8 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT
-from   ostap.core.core import Ostap, valid_pointer
+from   ostap.core.core      import Ostap, valid_pointer
+from   ostap.core.meta_info import old_PyROOT 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -41,8 +43,11 @@ class FuncTree(Ostap.Functions.PyFuncTree) :
     """Helper class to implement ``TTree-function'' in python 
     """
     def __init__ ( self , tree = None ) :
-        ## initialize the base class 
-        Ostap.Functions.PyFuncTree.__init__ ( self , self , tree )
+        ## initialize the base class
+        if tree is None : tree = ROOT.nullptr
+        ##
+        if old_PyROOT : super (FuncTree,self).__init__ ( self , tree )
+        else          : super (FuncTree,self).__init__ (        tree )
         
     @property
     def the_tree ( self ) :
@@ -63,8 +68,10 @@ class FuncData(Ostap.Functions.PyFuncData) :
     """Helper class to implement ``TTree-function''
     """
     def __init__ ( self , data = None ) :
-        ## initialize the base class 
-        Ostap.Functions.PyFuncData.__init__ ( self , self , data  ) 
+        ## initialize the base class
+        if  data is None : data = ROOT.nullptr 
+        if old_PyROOT : super (FuncData,self).__init__ ( self , data )
+        else          : super (FuncData,self).__init__ (        data )
         
     @property
     def the_data ( self ) :
@@ -93,9 +100,10 @@ class PyTreeFunction(FuncTree) :
     """
     def __init__ ( self , the_function , tree = None ) :
         """Constructor from the function/callable and (optional) tree"""
-        FuncTree.__init__ ( self , tree  )
+        if tree is None : tree = ROOT.nullptr 
+        super(PyTreeFunction,self).__init__ ( tree  )
         assert callable   ( the_function ), \
-               'PyTreeFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+               'PyTreeFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
         self.__function = the_function
         
     @property
@@ -105,9 +113,58 @@ class PyTreeFunction(FuncTree) :
     
     ## the only one method, delegate to the function  
     def evaluate  ( self ) :
-        tree = self.the_tree
+        tree = self.the_tree   
         return self.__function ( tree )
+
+# =============================================================================
+## @class PyTreeArray
+#  The concrete implementation on of <code>PyFunTree</code>, <code>FuncTree</code>
+#  @see ostap.trees.funcs.FunTree
+#  @see Ostap.Functions.PyFuncTree
+#  @see Ostap.IFuncTree 
+class PyTreeArray(FuncTree) :
+    """The concrete implementation on of PyFunTree, FuncTree,
+    - see ostap.trees.funcs.FunTree
+    - see Ostap.Functions.PyFuncTree
+    - see Ostap.IFuncTree 
+    """
+    def __init__ ( self , array , tree = None , length = None , value = 0.0 ) :
+        """Constructor from the function/callable and (optional) tree"""
+        if tree is None : tree = ROOT.nullptr 
+        super(PyTreeArray,self).__init__ ( tree  )
+        self.__array  = array
+        self.__length = len ( array ) if ( length is None ) else int ( length )
+        self.__value  = float(value)
+        assert 0 <= self.__length, "Invalid ``length'' %s" % length 
+                
+    @property
+    def array ( self ) :
+        """``array'' : the actual array"""
+        return self.__array
     
+    @property
+    def length ( self ) :
+        """``length'': lenth of array """
+        return self.__length 
+
+    @property
+    def value ( self ) :
+        """``value'' : defalt value for invaild entries """
+        return self.__array
+
+    ## the only one method, delegate to the function  
+    def evaluate  ( self ) :
+        tree = self.the_tree
+        if tree.GetReadEvent() < 0 :
+            assert 0 <= tree.GetEntry ( 0 ) , "PyTreeArray: Cannot get entry 0!"
+        index = tree.GetReadEvent()
+        assert 0<= index , "PyTreeArray: invalid event index %s" % index
+        ##
+        result = self.__array[ index ] if index < self.__length else self.__value
+        ##
+        return float ( result )
+    
+
 # =============================================================================
 ## @class PyDataFunction
 #  The concrete implementation on of <code>PyFuncData</code>, <code>FuncData</code>
@@ -123,9 +180,10 @@ class PyDataFunction(FuncData) :
     - see Ostap.IFuncData 
     """
     def __init__ ( self , the_function , data = None ) :        
-        FuncData.__init__ ( self , data  )
+        if data is None : data = ROOT.nullptr 
+        super(PyDataFunction,self).__init__ ( self , data  )
         assert callable   ( the_function ), \
-               'PyDataFunction:Invalid callable %s/%s'  ( the_function , type ( the_function ) )
+               'PyDataFunction:Invalid callable %s/%s' % ( the_function , type ( the_function ) )
         self.__function = the_function
         
     @property
@@ -135,8 +193,8 @@ class PyDataFunction(FuncData) :
     
     ## the only one method, delegate to the function  
     def evaluate  ( self ) :
-        data = self.the_data
-        return self.__function ( tree )
+        data = self.the_data 
+        return self.__function ( data  )
 
 # =================================================================================
 ## create the Ostap.ITreeFunc obejct from python function/callable
@@ -199,5 +257,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

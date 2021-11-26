@@ -4,11 +4,25 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// Forward declarations 
+// ============================================================================
+class TNamed ; // ROOT
+// ============================================================================
 namespace  Ostap
 {
   // ==========================================================================
-  std::string tmp_name ( std::string         prefix , 
-                         const std::string&  name   ) ;
+  std::string tmp_name
+  ( const std::string& prefix        , 
+    const std::string& name          ,
+    const TNamed*      named         ,
+    const bool         random = true ) ;
+  // ==========================================================================
+  inline 
+  std::string tmp_name
+  ( const std::string& prefix        , 
+    const std::string& name          ,
+    const bool         random = true ) 
+  { return tmp_name ( prefix , name , nullptr , random ) ; }
   // ==========================================================================  
 } //                                                 The end of namespace Ostap 
 // ============================================================================

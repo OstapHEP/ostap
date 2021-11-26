@@ -1,6 +1,10 @@
 // ============================================================================
 // Include files
 // ============================================================================
+// STD&STL
+// ============================================================================
+#include <algorithm>
+// ============================================================================
 // GSL
 // ============================================================================
 #include "gsl/gsl_math.h"
@@ -14,6 +18,7 @@
 // ============================================================================
 #include "Ostap/ChebyshevApproximation.h"
 #include "Ostap/PyCallable.h"
+#include "Ostap/Polynomials.h"
 // ============================================================================
 // Local
 // ============================================================================
@@ -29,10 +34,13 @@ namespace
 {
   // ==========================================================================
   const char s_ERROR   [] = "Invalid gsl_cheb_series object!"                 ;
-  const char s_METHOD1 [] = "Ostap::Math::ChebyshevApproximation::evaluiate"  ;
+  const char s_METHOD1 [] = "Ostap::Math::ChebyshevApproximation::evaluate"   ;
   const char s_METHOD2 [] = "Ostap::Math::ChebyshevApproximation::derivative" ;
   const char s_METHOD3 [] = "Ostap::Math::ChebyshevApproximation::integral"   ;
-  const Ostap::StatusCode s_SC =  Ostap::StatusCode::FAILURE              ;
+  const char s_METHOD4 [] = "Ostap::Math::ChebyshevApproximation::operator+"  ;
+  const char s_METHOD5 [] = "Ostap::Math::ChebyshevApproximation::operator*"  ;
+  const char s_METHOD6 [] = "Ostap::Math::ChebyshevApproximation::polynomial" ;
+  const Ostap::StatusCode s_SC =  Ostap::StatusCode::FAILURE                  ;
   // ==========================================================================
 }
 // ============================================================================
@@ -44,10 +52,10 @@ namespace
  */
 // ============================================================================
 Ostap::Math::ChebyshevApproximation::ChebyshevApproximation
-( const std::function<double(double)>& func , 
-  const double                         a    , 
-  const double                         b    , 
-  const unsigned short                 N    ) 
+( std::function<double(double)> func , 
+  const double                  a    , 
+  const double                  b    , 
+  const unsigned short          N    ) 
   : m_a ( std::min ( a , b ) )
   , m_b ( std::max ( a , b ) )
   , m_N ( N )
@@ -152,7 +160,7 @@ double Ostap::Math::ChebyshevApproximation::evaluate
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
-  return gsl_cheb_eval ( cs , x ) ;
+  return x < m_a ? 0.0 : x > m_b ? 0.0 : gsl_cheb_eval ( cs , x ) ;
 }
 // ============================================================================
 /*  the main method: evaluate the approximation sum, 
@@ -166,7 +174,7 @@ double Ostap::Math::ChebyshevApproximation::evaluate
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
-  return gsl_cheb_eval_n ( cs , n , x ) ;
+  return x < m_a ? 0.0 : x > m_b ? 0.0 : gsl_cheb_eval_n ( cs , n , x ) ;
 }
 // ============================================================================
 /*  the main method: evaluate the approximation sum 
@@ -178,6 +186,8 @@ Ostap::Math::ChebyshevApproximation::eval_err
 ( const double         x ) const 
 {
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  if ( x < m_a || x > m_b ) { return 0 ; }
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   //
@@ -200,6 +210,8 @@ Ostap::Math::ChebyshevApproximation::eval_err
   const unsigned short n ) const 
 {
   Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD1 , s_SC ) ;
+  //
+  if ( x < m_a || x > m_b ) { return 0 ; }
   //
   gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
   //
@@ -257,6 +269,51 @@ Ostap::Math::ChebyshevApproximation::integral
   //
   return integ ;
 }
+// ============================================================================
+// shift by a constant 
+// ============================================================================
+Ostap::Math::ChebyshevApproximation&
+Ostap::Math::ChebyshevApproximation::operator+= ( const double a )
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD4 , s_SC ) ;
+  //
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  //
+  cs -> c[0] += 2 * a ;
+  //
+  return *this ;
+}
+// ============================================================================
+// scale by a constant 
+// ============================================================================
+Ostap::Math::ChebyshevApproximation&
+Ostap::Math::ChebyshevApproximation::operator*= ( const double a )
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD5 , s_SC ) ;
+  //
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  std::transform ( cs->c                 ,
+                   cs->c + cs->order + 1 ,
+                   cs->c                 ,
+                   [a]( double v ) -> double { return v * a ; } );
+  //
+  return *this ;
+}
+// ============================================================================
+// convert it to pure chebyshev sum 
+// ============================================================================
+Ostap::Math::ChebyshevSum
+Ostap::Math::ChebyshevApproximation::polynomial() const
+{
+  Ostap::Assert ( m_chebyshev , s_ERROR , s_METHOD6 , s_SC ) ;
+  gsl_cheb_series* cs = (gsl_cheb_series*) m_chebyshev ;
+  Ostap::Math::ChebyshevSum cp { cs->c , cs->c + cs->order + 1 , cs->a , cs->b } ;
+  cp.setPar ( 0 , 0.5 * cp.par(0) ) ;
+  return cp ;
+}
+// ============================================================================
+
+
 
 // ============================================================================
 //                                                                      The END 

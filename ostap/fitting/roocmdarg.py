@@ -13,9 +13,16 @@ __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2011-06-07"
 __all__     = (
+    'match_arg'      , ## check the argument name mathhing 
+    'check_arg'      , ## check the presense of argument in the list
+    'nontrivial_arg' , ## check the presense of nontrivial arguments
+    'command'        , ## merge arguments into single command 
     ) 
 # =============================================================================
 import ROOT
+from   ostap.core.ostap_types       import string_types, integer_types 
+from   ostap.utils.utils            import chunked
+import ostap.fitting.roocollections 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -67,6 +74,7 @@ def _rca_print_ ( self ) :
     
     ## RooAbsPdf::plotOn arguments
     if   'SelectCompSet'        == name : return 'Components({.})'
+    elif 'SelectCompSpec'       == name : return 'Components(%s)'        %    self.getString ( 0 )
     elif 'Normalization'        == name : return 'Normalization(%s,%d)'  % (  self.getDouble ( 0 ) ,
                                                                               self.getInt    ( 0 ) )  
 
@@ -166,10 +174,11 @@ def _rca_print_ ( self ) :
     elif 'Integrate'            == name : return 'Integrate(%s)'       %   self.getBool () 
     elif 'Minimizer'            == name : return "Minimizer('%s','%s')"% ( self.getString ( 0 ) ,
                                                                            self.getString ( 1 ) )                                                                           
-    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'          %   self.getBool () 
-    elif 'BatchMode'            == name : return 'BatchMode(%s)'       %   self.getBool () 
-    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)' %   self.getBool () 
-    
+    elif 'OffsetLikelihood'     == name : return 'Offset(%s)'           %   self.getBool () 
+    elif 'BatchMode'            == name : return 'BatchMode(%s)'        %   self.getBool () 
+    elif 'AsymptoticError'      == name : return 'AsymptoticError(%s)'  %   self.getBool () 
+
+    elif 'IntegrateBins'        == name : return 'IntegrateBins(%.16g)' %   self.getDouble ( 0 ) 
     
     ## RooAbsPdf::paramOn arguments
     if   'Label'                == name : return "Label('%s')"         %    self.getString ( 0 )
@@ -200,7 +209,7 @@ def _rca_print_ ( self ) :
     elif 'ZVar'                 == name : return "ZVar({.})"
     elif 'AxisLabel'            == name : return "AxisLabel('%s')"     % self.getString ( 0 )
     elif 'Scaling'              == name : return "Scaling(%s)"         % self.getBool   (   )
-    
+   
     ## RooAbsReal::createHistogram arguments
     if   'IntrinsicBinning'     == name : return "IntrinsicBinning(%s)" % self.getBool  (   )
     
@@ -288,15 +297,142 @@ def _rca_print_ ( self ) :
 
     ## ? 
     if   'MultiArg'               == name :
-        return "MultiArg(%s)" % [ i for i in self.subArgs() ]
+        return "MultiArg(%s)" % [ i for i in self.subArgs() if i.name ]
     
     return name
 
+# ============================================================================
+## flatten the list of arguments/commands  
+def flat_args ( *args ) :
+    """Flatten the list of arguments/commands
+    """
+    
+    if not args : return ()
+    
+    flat = []
+    for arg in args :
+
+        lst = [ i for i in arg.subArgs () ]
+        if lst : flat += list ( flat_args ( *lst )  )
+        else   : flat.append ( arg )
+
+    return tuple ( flat ) 
+
+
+# =============================================================================
+## check if the argument name matches the pattern
+#  @code
+#  ok =  mathch_arg ( "sumw2" , ... ) 
+#  @endcode
+#  - case-insenstive mathch 
+#  - name starts
+#  - <code>fnmatch</code> matching
+#  - <code>regex</code> matching 
+def match_arg ( pattern , arg ) :
+    """Check if the argument name matches the pattern
+    >>> ok =  mathch_arg ( 'sumw2' , ... ) 
+    - case-insenstive mathhicng 
+    - name starts
+    - fnmatch matching
+    - regex matching 
+    """
+    
+    pl = pattern      .lower ()
+    al = arg.GetName().lower () 
+
+    if al == pl                    : return True ## 
+    elif al.startswith ( pl )      : return True
+
+    import fnmatch
+    if fnmatch.fnmatch ( al , pl ) : return True
+    
+    ## regex
+    import re
+    try :
+        expr = re.compile ( pattern , flags = re.I ) 
+        return expr.match ( arg.GetName() ) 
+    except :
+        pass
+    
+    return False 
+
+# =============================================================================
+## Check the presense of the arg in the list
+#  @code
+#  arg =  check_arg ( "sumw2" , ... ) 
+#  @endcode
+#  - case-insenstive mathch 
+#  - name starts
+#  - <code>fnmatch</code> matching
+#  - <code>regex</code> matching 
+def check_arg  ( pattern , *args ) :
+    """Check the presense of the arg in the list
+    >>> arg =  check_arg ( "sumw2" , ... ) 
+    - case-insenstive mathch 
+    - name starts
+    - <code>fnmatch</code> matching
+    - <code>regex</code> matching 
+    """
+
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+        if  match_arg ( pattern , arg ) : return arg 
+                
+    return None
+
+# =============================================================================
+## check at least one command  different form the trivial commands  
+def nontrivial_arg ( trivia , *args ) :
+    """Check at least one command  different from the trivial commands
+    """
+
+    if not args : return False
+    
+    if isinstance ( trivia , string_types ) :
+        trivia = trivia ,
+
+    flat = flat_args ( *args )
+    
+    for arg in flat :
+
+        for pattern in trivia :
+            
+            if match_arg ( pattern , arg ) : break 
+            
+        else :
+
+            return True
+
+    return False 
 
 # =============================================================================
 def _rca_bool_ ( self ) :
     """Get boolean value"""
     return True if self.getInt ( 0 ) else False
+
+
+# =============================================================================
+## convert a list of <code>RooCmgArg</code> options to <code>RooLinkedList</code>
+#  @code
+#  options = .... 
+#  cmd     = command ( *options )
+#  @endcode 
+def command ( *options ) :
+    """Convert a list of <code>RooCmgArg</code> options to <code>RooLinkedList</code>
+    >>> options = .... 
+    >>> cmd     = command ( *options )
+    - see ROOT.RooArgCmd
+    - see ROOT.RooLinkedList     
+    """
+    
+    lst = ROOT.RooLinkedList()
+    for o in flat_args ( *options ) : lst.Add ( o )
+    lst._keep_args = options
+
+    return lst 
+                              
+
 
 ROOT.RooCmdArg .__str__  = _rca_print_
 ROOT.RooCmdArg .__repr__ = _rca_print_
@@ -322,5 +458,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

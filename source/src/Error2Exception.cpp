@@ -1,5 +1,9 @@
 // Include files
 // ============================================================================
+// Python
+// ============================================================================
+#include "Python.h"
+// ============================================================================
 // ROOT 
 // ============================================================================
 #include "TError.h"
@@ -10,8 +14,6 @@
 #include "Ostap/Error2Exception.h"
 // ============================================================================
 // Python
-// ============================================================================
-// #include "Python.h"
 // ============================================================================
 // local 
 // ============================================================================
@@ -53,11 +55,11 @@ namespace
                               tag               , 
                               Ostap::StatusCode ( 10000 + level ) ) ;
     }
-    // else if ( kWarning <= level ) 
-    // {
-    //  // python warning here 
-    //  PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
-    // }
+    else if ( kWarning <= level ) 
+    {
+      // python warning here 
+      PyErr_WarnExplicit( NULL, (char*)message, (char*)location, 0, (char*)"ROOT", NULL );
+    }
     else if ( nullptr != s_handler ) 
     { (*s_handler) ( level , abort , location , message ) ; }
     else 
@@ -96,5 +98,5 @@ Ostap::Utils::ErrorSentry::~ErrorSentry ()
 { if ( m_previous )  { Ostap::Utils::useErrorHandler ( false ) ; } }
 
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

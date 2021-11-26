@@ -59,7 +59,7 @@ class AddTMVA(Task) :
         return self.__output 
         
     ## merge results/datasets 
-    def merge_results ( self , result) :
+    def merge_results ( self , result , jobid = -1 ) :
         if not  self.__output : self.__output = result
         else :
             s = set()
@@ -95,7 +95,7 @@ def addTMVAResponse ( chain                  ,   ## input chain
                       suffix   = '_response' ,   ## suffix for TMVA-variable
                       options  = ''          ,   ## TMVA-reader options
                       verbose  = True        ,   ## verbosity flag 
-                      aux      = 0.9         ) : ## for Cuts method : efficiency cut-off
+                      aux      = 0.9         , **kwargs ) : ## for Cuts method : efficiency cut-off
     """
     Helper function to add TMVA  response into loong TChain
     >>> tar_file = trainer.tar_file
@@ -126,7 +126,7 @@ def addTMVAResponse ( chain                  ,   ## input chain
                           verbose       = verbose       ,
                           aux           = aux           )
     
-    wmgr  = WorkManager ( silent = False )
+    wmgr  = WorkManager ( silent = False , **kwargs )
     trees = ch.split    ( max_files = 1  )
     
     wmgr.process( task , trees )

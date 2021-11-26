@@ -26,26 +26,6 @@
  *  @date   2017-11-21
  */
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-#include "BatchHelpers.h"
-// ============================================================================
-typedef BatchHelpers::BracketAdapter<double> BA ;
-// ============================================================================
-namespace 
-{
-  // ==========================================================================
-  template<class TX, class TY, class TZ , class FUN>
-  void compute_XYZ ( RooSpan<double> output , FUN& fun , TX x , TY y , TZ z ) 
-  {
-    const int n = output.size();
-    for ( int i = 0 ; i < n ; ++i ) 
-    { output [ i ] = fun ( x [ i ] , y [ i ] , z [ i ] ) ; }
-  }
-  // ==========================================================================
-}
-#endif
-// ============================================================================
 // generic polinomial
 // ============================================================================
 Ostap::Models::Poly3DPositive::Poly3DPositive 
@@ -173,48 +153,6 @@ Double_t Ostap::Models::Poly3DPositive::analyticalIntegral
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
 // ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Poly3DPositive::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  auto z = m_z . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  const bool ez = z.empty()  ;
-  //
-  if ( ex && ey && ez ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
-  else if (  ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
-  else if (  ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
-  else if (  ex && !ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
-  else if ( !ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
-  else if ( !ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
-  else 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
-  //
-  return output ;
-}
-// ============================================================================
-#endif
-// ============================================================================
 
 // ============================================================================
 // symmetric polinomial
@@ -340,48 +278,6 @@ Double_t Ostap::Models::Poly3DSymPositive::analyticalIntegral
     ( m_x , m_y ,  
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
-// ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Poly3DSymPositive::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  auto z = m_z . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  const bool ez = z.empty()  ;
-  //
-  if ( ex && ey && ez ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
-  else if (  ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
-  else if (  ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
-  else if (  ex && !ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
-  else if ( !ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
-  else if ( !ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
-  else 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
-  //
-  return output ;
-}
-// ============================================================================
-#endif
 // ============================================================================
 
 
@@ -511,48 +407,6 @@ Double_t Ostap::Models::Poly3DMixPositive::analyticalIntegral
     ( m_x , m_y ,  
       m_z.min ( rangeName ) , m_z.max ( rangeName ) ) : 0.0 ;
 }
-// ============================================================================
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6,20,0)
-// ============================================================================
-RooSpan<double> 
-Ostap::Models::Poly3DMixPositive::evaluateBatch 
-( std::size_t begin     , 
-  std::size_t batchSize ) const 
-{ 
-  // 
-  auto x = m_x . getValBatch ( begin , batchSize ) ;
-  auto y = m_y . getValBatch ( begin , batchSize ) ;
-  auto z = m_z . getValBatch ( begin , batchSize ) ;
-  //
-  const bool ex = x.empty()  ;
-  const bool ey = y.empty()  ;
-  const bool ez = z.empty()  ;
-  //
-  if ( ex && ey && ez ) { return {} ; }
-  //
-  auto output = _batchData.makeWritableBatchUnInit ( begin , batchSize ) ;
-  //
-  setPars() ;
-  //
-  if      ( !ex &&  ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) , BA ( m_z ) ) ; }
-  else if (  ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   , BA ( m_z ) ) ; }
-  else if (  ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) , BA ( m_y ) ,        z   ) ; }
-  else if (  ex && !ey && !ez ) 
-  { compute_XYZ ( output , m_positive , BA ( m_x ) ,        y   ,        z   ) ; }
-  else if ( !ex &&  ey && !ez ) 
-  { compute_XYZ ( output , m_positive ,        x   , BA ( m_y ) ,        z   ) ; }
-  else if ( !ex && !ey &&  ez ) 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   , BA ( m_z ) ) ; }
-  else 
-  { compute_XYZ ( output , m_positive ,        x   ,        y   ,        z   ) ; }
-  //
-  return output ;
-}
-// ============================================================================
-#endif
 // ============================================================================
 
 // ============================================================================

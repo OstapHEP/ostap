@@ -16,12 +16,12 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
-from ostap.fitting.background import make_bkg 
-
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent
+from   builtins                 import range
+from   ostap.fitting.background import make_bkg 
+from   ostap.plotting.canvas    import use_canvas 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -46,15 +46,15 @@ m1 = VE(3,0.10**2)
 m2 = VE(7,0.20**2)
 
 ## fill it with three gausissians, 5k events each
-N_ss = 5000
-N_sb =  500
-N_bs =  500
-N_bb = 1000
+N_ss = 5000*2
+N_sb =  500*2
+N_bs =  500*2
+N_bb = 1000*2
 
 
 random.seed(0)
 
-## fill it : 5000 events  Gauss * Gauss *Gauss
+## fill it : N_ss events  Gauss * Gauss *Gauss
 for m in (m1,m2) : 
     for i in range(0,N_ss) : 
         m_x.value = m.gauss() 
@@ -62,20 +62,20 @@ for m in (m1,m2) :
         dataset.add ( varset  )
 
 
-## fill it : 500 events  Gauss * const * Gauss  
+## fill it : N_sb  events  Gauss * const * Gauss  
     for i in range(0,N_sb) : 
         m_x.value = m.gauss() 
         m_y.value = random.uniform ( *m_y.minmax() )  
 
         dataset.add ( varset  )
 
-## fill it : 500 events  const * Gauss * Gauss
+## fill it : N_bs  events  const * Gauss * Gauss
     for i in range(0,N_bs) : 
         m_x.value = random.uniform ( *m_x.minmax() ) 
         m_y.value = m.gauss() 
         dataset.add ( varset  )
 
-## fill it : 1000 events  const * const *Gauss
+## fill it : N_bb events  const * const *Gauss
     for i in range(0,N_bb) :
 
         m_x.value  = random.uniform ( *m_x.minmax() )
@@ -84,7 +84,6 @@ for m in (m1,m2) :
 
 
 logger.info ('Dataset: %s' % dataset )  
-
 
 
 ## various fit components
@@ -113,7 +112,9 @@ bb_cmp=bkg_x*bkg_y
 
 # =============================================================================
 ## Test  multi-component  3d fit'
-def test_comp_2dfit () :
+def test_components_2D () :
+
+    logger = getLogger  ('test_components_2D' )
     
     logger.info ('Test  multi-component  3d fit')
     
@@ -128,18 +129,18 @@ def test_comp_2dfit () :
     
     with rooSilent() : 
         ## components
-        model.SS.fix ( 5000 )
-        model.SB.fix ( 500 )
-        model.SB.fix ( 500 )
-        model.BB.fix ( 1000 )
+        model.SS.fix ( N_ss  )
+        model.SB.fix ( N_sb  )
+        model.SB.fix ( N_bs  )
+        model.BB.fix ( N_bb  )
 
         model.C[0].fix ( 5000 )
-        model.C[1].fix ( 500 )
-        model.C[2].fix ( 500 )
+        model.C[1].fix ( 500  )
+        model.C[2].fix ( 500  )
         model.C[3].fix ( 1000 )
     
                 
-        r = model.fitTo ( dataset , ncpu=8 )
+        r = model.fitTo ( dataset)
 
         model.SS.release (  )
         model.SB.release (  )
@@ -152,10 +153,14 @@ def test_comp_2dfit () :
         model.C[2].release (  )
         model.C[3].release (  )
         
-        r = model.fitTo ( dataset , ncpu=8 )
-        
-        model.draw1 ( dataset , ncpu=8 )
-        model.draw2 ( dataset , ncpu=8 )
+        r = model.fitTo ( dataset )
+        r = model.fitTo ( dataset )
+        r = model.fitTo ( dataset )
+
+        with use_canvas ( 'test_components_2D' ) : 
+            
+            model.draw1 ( dataset )
+            model.draw2 ( dataset )
 
     logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
 
@@ -163,8 +168,8 @@ def test_comp_2dfit () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_comp_2dfit    () 
+    test_components_2D    () 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

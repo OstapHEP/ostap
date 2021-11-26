@@ -62,10 +62,12 @@ class Adjust1D(MakeVar) :
         #
         ## final PDF
         # 
-        self.__pdf    = ROOT.RooAddPdf  ( "adjust_"    + name ,
-                                          "Adjust(%s)" % name ,
-                                          self.__alist1 ,
-                                          self.__alist2 )        
+        self.__pdf    = ROOT.RooAddPdf  (
+            self.roo_name ( "adjust_" ) ,            
+            "Adjust %s" % self.name ,
+            self.__alist1 ,
+            self.__alist2 )
+        
     @property
     def fraction( self ) :
         """``fraction''-parameter: the fraction of flat ``background'' added"""
@@ -123,10 +125,12 @@ class Adjust2D(MakeVar) :
         #
         ## final PDF
         # 
-        self.__pdf     = ROOT.RooAddPdf  ( "adjust_"    + name ,
-                                           "Adjust(%s)" % name ,
-                                           self.__alist1 ,
-                                           self.__alist2 )        
+        self.__pdf     = ROOT.RooAddPdf  (
+            self.roo_name ( "adjust2_" ) , 
+            "Adjust 2D %s" % self.name   ,
+            self.__alist1 ,
+            self.__alist2 )
+        
     @property
     def fraction( self ) :
         """``fraction''-parameter: the fraction of flat ``background'' added"""
@@ -186,10 +190,12 @@ class Adjust3D(MakeVar) :
         #
         ## final PDF
         # 
-        self.__pdf    = ROOT.RooAddPdf  ( "adjust_"    + name ,
-                                          "Adjust(%s)" % name ,
-                                          self.__alist1 ,
-                                          self.__alist2 )        
+        self.__pdf    = ROOT.RooAddPdf  (
+            self.roo_name ( "adjust3_" ) , 
+            "Adjust 3D %s" % self.name   ,
+            self.__alist1 ,
+            self.__alist2 )
+        
     @property
     def fraction( self ) :
         """``fraction''-parameter: the fraction of flat ``background'' added"""
@@ -249,7 +255,8 @@ class Adjust1D_pdf(PDF) :
 
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
 
-        name = name if name else 'Adjust_%s' % self.old_pdf.name 
+
+        name = name if name else self.generate_name ( 'Adjust1D_' + self.old_pdf.name  ) 
 
 
         ## initialize the base
@@ -336,7 +343,7 @@ class Adjust2D_pdf(PDF2) :
         assert isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"
 
-        name = name if name else 'Adjust_%s' % pdf.name 
+        name = name if name else self.generate_name ( 'Adjust2D_' + self.old_pdf.name  ) 
 
         ## initialize the base
         PDF2.__init__ ( self , name = name , xvar = xvar , yvar = yvar )
@@ -432,7 +439,7 @@ class Adjust3D_pdf(PDF3) :
         assert isinstance ( yvar , ROOT.RooAbsReal ) , "``yvar'' must be ROOT.RooAbsReal"
         assert isinstance ( zvar , ROOT.RooAbsReal ) , "``zvar'' must be ROOT.RooAbsReal"
 
-        name = name if name else 'Adjust_%s' % pdf.name 
+        name = name if name else self.generate_name ( 'Adjust3D_' + self.old_pdf.name  ) 
 
         ## initialize the base
         PDF3.__init__ ( self , name = name , xvar = xvar , yvar = yvar , zvar = zvar )

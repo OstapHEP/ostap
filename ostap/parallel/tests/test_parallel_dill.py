@@ -16,7 +16,8 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-08"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
-import ROOT, pickle, sys 
+import ROOT, pickle, sys
+from   ostap.utils.utils import rootException 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -36,17 +37,28 @@ except ImportError :
 # =============================================================================
 def test_dill () :
 
+    logger = getLogger ( 'ostap.test_dill' )
+    
     h = ROOT.TH1D()
     
     logger.info ( "Python version: %s.%s.%s" % ( sys.version_info.major ,
                                                  sys.version_info.minor ,
                                                  sys.version_info.micro ) )
     logger.info ( "ROOT   version: %s"       % ROOT.gROOT.GetVersion()  )
+
+    if 62400 <= ROOT.gROOT.GetVersionInt() < 62406 :
+        logger.warning ('Test can fail for %s' % ROOT.gROOT.GetVersion() )
     
-    if dill and dill.__version__ : 
-        logger.info ( "dill   version: %s"       % dill.__version__      )
-        
-    try : 
+    if not dill :
+        logger.error ( 'dill is not available, skip the test!')
+        return 
+
+    if   dill and hasattr ( dill , '__version__' )  and dill.__version__  : 
+        logger.info ( "dill   version: %s"       % dill.__version__  )
+    elif dill and hasattr ( dill ,   'version'   )  and dill.version      : 
+        logger.info ( "dill   version: %s"       % dill.version      )
+                
+    try :
         p = pickle.dumps  ( h )
         logger.info  ("Histogram is successfully serialized using pickle!")
     except :
@@ -58,6 +70,17 @@ def test_dill () :
     except :
         logger.error ("Histogram cannot be serialized using dill!")
 
+    try : 
+        p = pickle.loads ( pickle.dumps  ( h ) ) 
+        logger.info  ("Histogram is successfully serialized/deserialized using pickle!")
+    except :
+        logger.error ("Histogram cannot be serialized/deserialized using pickle!")
+        
+    try : 
+        d = dill.loads ( dill  .dumps  ( h )  ) 
+        logger.info  ("Histogram is successfully serialized/deserialized using dill!")
+    except :
+        logger.error ("Histogram cannot be serialized/deserialized using dill!")
 
 # =============================================================================
 if '__main__' == __name__ :

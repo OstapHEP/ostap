@@ -11,17 +11,19 @@
 - make some fitting toys 
 """
 # ============================================================================= 
-from   __future__        import print_function
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
+from   builtins                     import range
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
+import ostap.fitting.models         as     Models 
+from   ostap.core.core              import cpp, VE, dsID, hID 
+from   ostap.logger.utils           import rooSilent
+import ostap.fitting.models         as     Models
+import ostap.parallel.parallel_toys as     Toys
+from   ostap.plotting.canvas        import use_canvas
+from   ostap.utils.utils            import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -33,8 +35,6 @@ else :
 # =============================================================================
 import ROOT, time 
 from   ostap.core.pyrouts           import hID 
-import ostap.fitting.models         as     Models
-import ostap.parallel.parallel_toys as     Toys
 
 mass      = ROOT.RooRealVar ( 'mass' , '', 0 , 1 )  
 gen_gauss = Models.Gauss_pdf ( 'GG' , xvar = mass )
@@ -59,13 +59,15 @@ def test_parallel_toys ( ) :
     - fill distributions of fit results
     - fill distributions of pulls 
     """
-    
+
+    logger = getLogger ( 'ostap.test_parallel_toys' ) 
+         
     results , stats = Toys.parallel_toys  (
         pdf         = gen_gauss ,
         nToys       = 1000      ,
         nSplit      = 20        ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  } ,
+        gen_config  = { 'nEvents' : 200  , 'sample' : True } ,
         fit_config  = { 'silent'  : True } ,
         init_pars   = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
         silent      = True  , 
@@ -83,10 +85,9 @@ def test_parallel_toys ( ) :
     for r in results [ 'sigma_GG' ] : h_sigma .Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep ( 1 )
+        with wait ( 1 ) , use_canvas ( 'test_parallel_toys: %s' % h.GetTitle() ) : 
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
 # =============================================================================
 ## Perform toy-study for possible fit bias and correct uncertainty evaluation
@@ -101,14 +102,16 @@ def test_parallel_toys2 ( ) :
     - store  fit results
     - fill distributions of fit results
     """    
-            
+
+    logger = getLogger ( 'ostap.test_parallel_toys2' ) 
+
     results , stats = Toys.parallel_toys2 (
         gen_pdf     = gen_gauss ,
         fit_pdf     = fit_gauss ,
         nToys       = 1000      ,
         nSplit      = 20        ,
         data        = [ mass ]  , 
-        gen_config  = { 'nEvents' : 200  } ,
+        gen_config  = { 'nEvents' : 200    , 'sample' : True } ,
         fit_config  = { 'silent'  : True } ,
         gen_pars    = { 'mean_GG' : 0.4 , 'sigma_GG' : 0.1 } ,
         fit_pars    = { 'mean_GF' : 0.4 , 'sigma_GF' : 0.1 } ,
@@ -127,10 +130,9 @@ def test_parallel_toys2 ( ) :
     for r in results ['sigma_FG' ] : h_sigma.Fill ( r )
 
     for h in ( h_mean , h_sigma ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep ( 1 )
+        with wait ( 1 ) , use_canvas ( 'test_parallel_toys2: %s' % h.GetTitle() ) : 
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
 # =============================================================================
 ## Perform toy-study for significance of the signal 
@@ -146,6 +148,8 @@ def test_parallel_significance_toys ( ) :
     - fill distributions for fit results
     """
     
+    logger = getLogger ( 'ostap.test_parallel_significance_toys' ) 
+
     ## only background hypothesis
     bkg_only = Models.Bkg_pdf    ( "BKG" , xvar =  mass , power = 0 , tau = 0      )
 
@@ -178,15 +182,13 @@ def test_parallel_significance_toys ( ) :
     for p in stats :
         logger.info (  "Toys: %-20s : %s" % (  p, stats [ p ] ) )
 
-    h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )
-    
+    h_S      = ROOT.TH1F ( hID() , '#S' , 60 ,  0 , 60 )    
     for r in results ['S'  ] : h_S .Fill ( r )
     
     for h in ( h_S ,  ) :
-        
-        h.draw()
-        logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
-        time.sleep  ( 1 )
+        with wait ( 1 ) , use_canvas ( 'test_parallel_significance_toys: %s' % h.GetTitle() ) :             
+            h.draw()
+            logger.info ( "%s  :\n%s"  % ( h.GetTitle() , h.dump ( 30 , 10 ) ) )
 
     
 # =============================================================================
@@ -195,7 +197,6 @@ if '__main__' == __name__ :
     test_parallel_toys  () 
     test_parallel_toys2 () 
     test_parallel_significance_toys ( ) 
-
 
 # =============================================================================
 ##                                                                      The END 

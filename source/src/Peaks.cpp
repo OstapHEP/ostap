@@ -9,6 +9,7 @@
 // ============================================================================
 #include "gsl/gsl_sf_exp.h"
 #include "gsl/gsl_sf_gamma.h"
+#include "gsl/gsl_sf_gamma.h"
 #include "gsl/gsl_randist.h"
 #include "gsl/gsl_cdf.h"
 // ============================================================================
@@ -19,6 +20,7 @@
 // ============================================================================
 //  Local
 // ============================================================================
+#include "Exception.h"
 #include "local_math.h"
 #include "local_gsl.h"
 #include "local_hash.h"
@@ -34,15 +36,12 @@
 // ============================================================================
 namespace 
 {
-
-
   // ==========================================================================
   /** evaluate the helper function \f[ f = \frac{\sinh (x) }{x} \f]
   *  it allows to calculate Novosibirsk's function in efficient and regular way
   *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
   *  @date 2010-05-23
   */
-
   double x_sinh ( const double x , double precision = s_PRECISION )
   {
     //
@@ -142,15 +141,15 @@ namespace
       (     GSL_LOG_DBL_MAX < y ) ?    s_INFINITY :
       ( -1* GSL_LOG_DBL_MAX > y ) ? -1*s_INFINITY : std::sinh ( y ) ;
   }
-  // ==========================================================================
-  // Studen-t'
-  // ==========================================================================
-  inline double student_cdf (  const double t , const double nu ) 
-  {
-    const double xt    = nu / ( t * t + nu ) ;
-    const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
-    return t >= 0 ? 1 - value : value ;
-  }
+  // // ==========================================================================
+  // // Studen-t'
+  // // ==========================================================================
+  // inline double student_cdf (  const double t , const double nu ) 
+  // {
+  //   const double xt    = nu / ( t * t + nu ) ;
+  //   const double value = 0.5 * gsl_sf_beta_inc ( 0.5 * nu , 0.5 , xt ) ;
+  //   return t >= 0 ? 1 - value : value ;
+  // }
   // ==========================================================================
 }
 // ============================================================================
@@ -250,7 +249,10 @@ double Ostap::Math::BifurcatedGauss::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigmaL , m_sigmaR ) ; }
+{
+  static const std::string s_name = "BiFurcatedGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigmaL , m_sigmaR ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -413,7 +415,10 @@ double Ostap::Math::DoubleGauss::cdf ( const double x )  const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::DoubleGauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_fraction , m_scale ) ; }
+{
+  static const std::string s_name = "DoubleGauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_fraction , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -495,7 +500,10 @@ bool Ostap::Math::Gauss::setPeak ( const double value )
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Gauss::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Gauss" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -627,7 +635,10 @@ double  Ostap::Math::GenGaussV1::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV1::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "GenGaussV1" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -779,7 +790,10 @@ double Ostap::Math::GenGaussV2::kurtosis () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::GenGaussV2::tag () const 
-{ return std::hash_combine ( m_xi , m_alpha , m_kappa ) ; }
+{ 
+  static const std::string s_name = "GenGaussV2" ;
+  return std::hash_combine ( s_name , m_xi , m_alpha , m_kappa ) ; 
+}
 // ============================================================================
 
 
@@ -887,7 +901,10 @@ double Ostap::Math::SkewGauss::sigma  () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SkewGauss::tag () const 
-{ return std::hash_combine ( m_xi , m_omega , m_alpha ) ; }
+{ 
+  static const std::string s_name = "SkewGauss" ;
+  return std::hash_combine ( m_xi , m_omega , m_alpha ) ; 
+}
 // ============================================================================
 
 
@@ -1099,7 +1116,7 @@ double Ostap::Math::Bukin::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     ,  
       low    , high  ,               // low & high edges
@@ -1130,7 +1147,7 @@ double Ostap::Math::Bukin::integral () const
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate_with_cache
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
     ( tag () , 
       &F     , 
       m_x1   ,                       // low edges
@@ -1144,7 +1161,7 @@ double Ostap::Math::Bukin::integral () const
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate_with_cache
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
     ( tag () , 
       &F     , 
       m_x2   ,                       // high edges
@@ -1162,7 +1179,10 @@ double Ostap::Math::Bukin::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Bukin::tag () const 
-{ return std::hash_combine ( m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; }
+{ 
+  static const std::string s_name = "Bukin" ;
+  return std::hash_combine ( s_name , m_peak , m_sigma , m_xi , m_rho_L , m_rho_R ) ; 
+}
 // ============================================================================
 
 
@@ -1308,7 +1328,7 @@ double Ostap::Math::Novosibirsk::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low    , high             ,    // low & high edges
@@ -1358,7 +1378,7 @@ void Ostap::Math::Novosibirsk::integrate()
   int    ierror1  =  0 ;
   double result1  =  1 ;
   double error1   = -1 ;
-  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate_with_cache
+  std::tie ( ierror1 , result1 , error1 ) = s_integrator.gaqil_integrate
     ( tag () , 
       &F     , 
       x_low  ,                       // low edges
@@ -1372,7 +1392,7 @@ void Ostap::Math::Novosibirsk::integrate()
   int    ierror2  =  0 ;
   double result2  =  1 ;
   double error2   = -1 ;
-  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate_with_cache 
+  std::tie ( ierror2 , result2 , error2 ) = s_integrator.gaqiu_integrate
     ( tag () , 
       &F     , 
       x_high ,                       // high edges
@@ -1390,7 +1410,10 @@ void Ostap::Math::Novosibirsk::integrate()
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Novosibirsk::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_tau ) ; }
+{ 
+  static const std::string s_name = "Novosibirsk" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_tau ) ; 
+}
 // ============================================================================
 
 
@@ -1562,7 +1585,10 @@ double Ostap::Math::CrystalBall::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBall::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigma , m_alpha , m_n ) ; }
+{
+  static const std::string s_name = "CrystalBall" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n ) ; 
+}
 // ============================================================================
 
 
@@ -1626,7 +1652,10 @@ double Ostap::Math::Needham::pdf ( const double x ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Needham::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; }
+{
+  static const std::string s_name = "Needham" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  m_a0 , m_a1 , m_a2 ) ; 
+}
 // ============================================================================
 
 
@@ -1673,7 +1702,10 @@ double Ostap::Math::CrystalBallRightSide::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallRightSide::tag () const 
-{ return std::hash_combine ( m_cb.tag() ,  -1 ) ; }
+{  
+  static const std::string s_name = "CrystalBallRightSide" ;
+  return std::hash_combine ( s_name , m_cb.tag() ,  -1 ) ;
+}
 // ============================================================================
 
 
@@ -1931,9 +1963,13 @@ double Ostap::Math::CrystalBallDoubleSided::integral () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::CrystalBallDoubleSided::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
+{ 
+  static const std::string s_name = "CrystalBallDoubleSide" ;
+  return std::hash_combine ( s_name    , 
+                             m_m0      , m_sigma , 
                              m_alpha_L , m_n_L   , 
-                             m_alpha_R , m_n_R   ) ; }
+                             m_alpha_R , m_n_R   ) ; 
+}
 // ============================================================================
 
 
@@ -2095,7 +2131,7 @@ double Ostap::Math::Apollonios::integral
     int    ierror   =  0 ;
     double result   =  1 ;
     double error    = -1 ;
-    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache 
+    std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
       ( tag () , 
         &F     , 
         low    , high  ,               // low & high edges
@@ -2124,8 +2160,10 @@ double Ostap::Math::Apollonios::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios::tag () const 
-{ return std::hash_combine ( m_m0      , m_sigma , 
-                             m_alpha   , m_n     , m_b ) ; }
+{ 
+  static const std::string s_name = "Apollonios" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigma , m_alpha , m_n , m_b ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2250,7 +2288,7 @@ double Ostap::Math::Apollonios2::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low , high  ,                  // low & high edges
@@ -2267,7 +2305,10 @@ double Ostap::Math::Apollonios2::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Apollonios2::tag () const 
-{ return std::hash_combine ( m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; }
+{ 
+  static const std::string s_name = "Apollonios2" ;
+  return std::hash_combine ( s_name , m_m0 , m_sigmaL , m_sigmaR , m_beta ) ; 
+}
 // ============================================================================
 
 
@@ -2353,7 +2394,7 @@ double Ostap::Math::Atlas::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -2374,7 +2415,10 @@ double Ostap::Math::Atlas::integral () const { return 1 ; }
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Atlas::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Atlas" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 
@@ -2456,7 +2500,10 @@ double Ostap::Math::Sech::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Sech::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Sech" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2510,7 +2557,10 @@ double Ostap::Math::Losev::mode () const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Losev::tag () const 
-{ return std::hash_combine ( m_mu , m_alpha , m_beta ) ; }
+{ 
+  static const std::string s_name = "Losev" ;
+  return std::hash_combine ( s_name , m_mu , m_alpha , m_beta ) ; 
+}
 // =============================================================================
 // evaluate the function 
 // =============================================================================
@@ -2560,7 +2610,7 @@ double Ostap::Math::Losev::integral
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -2654,7 +2704,10 @@ double Ostap::Math::Logistic::quantile ( const double p ) const
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Logistic::tag () const 
-{ return std::hash_combine ( m_mean , m_sigma ) ; }
+{ 
+  static const std::string s_name = "Logistic" ;
+  return std::hash_combine ( s_name , m_mean , m_sigma ) ;
+}
 // ============================================================================
 
 
@@ -2753,7 +2806,7 @@ double Ostap::Math::StudentT::cdf ( const double y ) const
 {
   //
   const double  t    = ( y - M () ) / sigma () ;
-  return student_cdf ( t , nu() ) ;
+  return Ostap::Math::student_cdf ( t , nu() ) ;
 }
 // ============================================================================
 // get the integral 
@@ -2775,7 +2828,10 @@ double Ostap::Math::StudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::StudentT::tag () const 
-{ return std::hash_combine ( m_M , m_s , m_n ) ; }
+{ 
+  static const std::string s_name = "StudentT" ;
+  return std::hash_combine ( s_name , m_M , m_s , m_n ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -2921,11 +2977,11 @@ double Ostap::Math::BifurcatedStudentT::cdf ( const double y ) const
   if ( y <= M() ) 
   {
     const double  t    = ( y - M () ) / sigmaL () ;
-    return     2 * n_2 / ( n_1 + n_2 ) * student_cdf (  t , nuL () ) ;  
+    return     2 * n_2 / ( n_1 + n_2 ) * Ostap::Math::student_cdf (  t , nuL () ) ;  
   }
   //
   const   double  t    = ( y - M () ) / sigmaR () ;
-  return   1 - 2 * n_1 / ( n_1 + n_2 ) * student_cdf ( -t , nuR () ) ;  
+  return   1 - 2 * n_1 / ( n_1 + n_2 ) * Ostap::Math::student_cdf ( -t , nuR () ) ;  
 }
 // ============================================================================
 // get the integral 
@@ -2947,7 +3003,10 @@ double Ostap::Math::BifurcatedStudentT::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::BifurcatedStudentT::tag () const 
-{ return std::hash_combine ( m_M , m_sL , m_sR  , m_nL , m_nR ) ; }
+{  
+  static const std::string s_name = "BiFurcatedStudentT" ;
+  return std::hash_combine ( s_name , m_M , m_sL , m_sR  , m_nL , m_nR ) ; 
+}
 // ============================================================================
 
 
@@ -3041,7 +3100,10 @@ double Ostap::Math::SinhAsinh::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::SinhAsinh::tag () const 
-{ return std::hash_combine ( m_mu , m_sigma , m_epsilon , m_delta ) ; }
+{  
+  static const std::string s_name = "SinhAsinh" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_epsilon , m_delta ) ; 
+}
 // ============================================================================
 
 // ============================================================================
@@ -3155,7 +3217,10 @@ double Ostap::Math::JohnsonSU::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::JohnsonSU::tag () const 
-{ return std::hash_combine ( m_xi , m_lambda , m_delta , m_gamma ) ; }
+{ 
+  static const std::string s_name = "JohnsonSU" ;
+  return std::hash_combine ( s_name , m_xi , m_lambda , m_delta , m_gamma ) ; 
+}
 // ============================================================================
 
 
@@ -3245,7 +3310,10 @@ double Ostap::Math::Slash::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::Slash::tag () const 
-{ return std::hash_combine ( m_mu , m_scale ) ; }
+{ 
+  static const std::string s_name = "Slash" ;
+  return std::hash_combine ( s_name , m_mu , m_scale ) ; 
+}
 // ============================================================================
 
 
@@ -3342,11 +3410,11 @@ double Ostap::Math::RaisingCosine::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::RaisingCosine::tag () const 
-{ return std::hash_combine ( m_mu , m_s ) ; }
+{ 
+  static const std::string s_name = "RasisingCosine" ;
+  return std::hash_combine ( s_name , m_mu , m_s ) ; 
+}
 // ============================================================================
-
-
-
 
 
 // ============================================================================
@@ -3424,7 +3492,10 @@ double Ostap::Math::AsymmetricLaplace::integral
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::AsymmetricLaplace::tag () const 
-{ return std::hash_combine ( m_mu , m_lambdaL , m_lambdaR ) ; }
+{ 
+  static const std::string s_name = "AsymmetricLaplace" ;
+  return std::hash_combine ( s_name , m_mu , m_lambdaL , m_lambdaR ) ; 
+}
 // ============================================================================
 
 
@@ -3586,7 +3657,7 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
   int    ierror   =  0 ;
   double result   =  1 ;
   double error    = -1 ;
-  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate_with_cache
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag () , 
       &F     , 
       low    , high  ,               // low & high edges
@@ -3603,9 +3674,697 @@ double Ostap::Math::QGaussian::integral ( const double low  ,
 // get the tag 
 // ============================================================================
 std::size_t Ostap::Math::QGaussian::tag () const 
-{ return std::hash_combine ( m_mean , m_q , m_scale ) ; }
+{ 
+  static const std::string s_name = "QGaussian" ;
+  return std::hash_combine ( s_name , m_mean , m_q , m_scale ) ; 
+}
 // ============================================================================
- 
+
+
+
+namespace 
+{
+  // ==========================================================================
+  const double z_SMALL = 1.e-6 ;
+  // ==========================================================================
+  inline double _knu_ ( const double z , const double nu ) 
+  {
+    const double zh  = 0.5 * z ;
+    const double zh2 = zh  * zh ;
+    const double gn  = std::tgamma ( nu ) ;
+    return gn * std::pow ( zh , -nu ) * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+  }
+  // ==========================================================================
+  ///  evaluate \f$ K_{\nu}(z) \f$ for small values of z 
+  inline double knu  ( const double z , const double nu ) 
+  { 
+    return 
+      z < z_SMALL && !s_zero ( nu ) ?
+          0.5 * ( _knu_( z , nu ) + _knu_  ( z , -nu ) ) 
+          : Ostap::Math::bessel_Knu ( nu , z ) ;
+  }
+  // ===========================================================================
+  /** evaluate \f$ z^{\nu} K^{*}_{\nu}(z)}\f$ for small values of z,
+   *  where \f$ K^*_{\nu}(z)\f$ is a scaled modified Bessel function 
+   */
+  inline double z_knu_scaled ( const double z , 
+                               const double nu ) 
+  {
+    //
+    if ( s_zero ( z ) ) 
+    { return ( nu <= 0 ) ? 0.0 : std::pow ( 2 , nu - 1 ) * std::tgamma ( nu  ) ; }
+    //
+    if      ( z > z_SMALL ) { return std::pow ( z , nu ) * Ostap::Math::bessel_Knu_scaled ( nu , z ) ; }
+    //
+    if      ( nu >  0.2 ) { return 0.5 * std::pow ( 2       ,  nu ) * std::tgamma (  nu ) ; }
+    else if ( nu < -0.2 ) { return 0.5 * std::pow ( 2/(z*z) , -nu ) * std::tgamma ( -nu ) ; }
+    //
+    if ( s_zero ( nu ) ) { return z * ( -M_EULER - std::log ( 0.5 * z ) ) ; }
+    //
+    const double zh  = 0.5 * z ;
+    const double zh2 = zh  * zh ;
+    const double gn1 = std::tgamma (  nu ) ;
+    const double gn2 = std::tgamma ( -nu ) ;
+    //
+    // const double g1  = gn1 * std::pow ( zh , -nu ) * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+    // const double g2  = gn2 * std::pow ( zh ,  nu ) * ( 1 + zh2 /(1+nu) + 0.5 * zh2 * zh2 / ( ( 1 + nu ) * ( 2 + nu ) ) ) ;
+    //
+    const double g1  = gn1 * ( 1 + zh2 /(1-nu) + 0.5 * zh2 * zh2 / ( ( 1 - nu ) * ( 2 - nu ) ) ) ;
+    const double g2  = gn2 * ( 1 + zh2 /(1+nu) + 0.5 * zh2 * zh2 / ( ( 1 + nu ) * ( 2 + nu ) ) ) ;
+    ///
+    return 0 <= nu ? 
+      0.5 * ( g1 + std::pow ( zh,  2 * nu ) * g2 ) :
+      0.5 * ( g2 + std::pow ( zh, -2 * nu ) * g1 ) ;
+  }
+  // ==========================================================================
+  /// calculate \f$ z K_{nu+1}(z)/K_{nu}(z) \f$ 
+  inline double _AL2_ ( const  double nu , const double z ) 
+  {
+    // 
+    // return z * 
+    //   Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+    //   Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    //
+    if ( z_SMALL  <=  z ) 
+    {
+      return z * 
+        Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+        Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    }
+    //
+    if ( s_equal ( nu , -1 ) )
+    {
+      const double zh = 0.5 * z ;
+      const double zlog = std::log ( zh ) ;
+      return z * z * ( -M_EULER - zlog ) / ( 1 + z * zh * zlog ) ;
+    }
+    //
+    else if ( s_equal ( nu , 0 ) )
+    {
+      const double zh = 0.5 * z ;
+      const double zlog = std::log ( zh ) ;
+      return ( 1 + zh * zh * ( 1 + 2 * zlog ) ) / ( -M_EULER + ( 1 - M_EULER ) * zh * zh - zlog ) ;
+    }
+    //
+    else if ( nu < -1.15 ) 
+    { 
+      return 0.5 * z * z / abs ( nu ) ;   
+    }
+    else if ( nu < -1 ) 
+    {
+      return z * 
+        Ostap::Math::bessel_Knu_scaled ( nu + 1 , z ) / 
+        Ostap::Math::bessel_Knu_scaled ( nu     , z ) ;
+    }
+    else if ( nu < -0.2 ) 
+    {
+      const double d  = std::abs  ( nu ) ;
+      const double xh = 0.5 * z ;
+      return 2 * std::tgamma ( 1 - d ) / std::tgamma ( d ) * std::pow ( xh , 2*d ) ;
+    }
+    else if ( std::abs ( nu ) <= 0.2 ) 
+    {
+      return z * knu ( z , nu + 1 ) / knu ( z , nu ) ;
+    }
+    //
+    return 2 * nu ;
+  }
+  // ==========================================================================
+}
+// ============================================================================
+
+
+
+// ============================================================================
+/* constructor from mu, sigma, zeta and kappa 
+ *  @param mu    related to location 
+ *  @param beta  related to asymmetry
+ *  @param sigma related to width 
+ *  @param zeta  related to what ?
+ */
+// ============================================================================
+Ostap::Math::Hyperbolic::Hyperbolic
+( const double mu     ,   // related to location 
+  const double sigma  ,   // related to withs  
+  const double zeta   ,   // shape parameter
+  const double kappa  )   // related to asymmetry 
+  : m_mu    ( mu    ) 
+  , m_sigma ( -1    )
+  , m_zeta  ( -1    )
+  , m_kappa ( kappa )
+  , m_AL    ( -1    )  
+  , m_N     ( -1    )
+{
+  setSigma ( sigma ) ;
+  setZeta  ( zeta  ) ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setZeta ( const double value ) 
+{
+  //
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_zeta ) &&  ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
+  m_zeta = avalue ;
+  //
+  m_AL = std::sqrt ( _AL2_ ( 1 , m_zeta ) ) ;
+  m_N  = 1 / ( z_knu_scaled ( m_zeta , 1 ) ) ; 
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setKappa ( const double value ) 
+{
+  if ( s_equal ( value , m_kappa ) ) { return false ; }
+  m_kappa = value ;
+  return true ;
+}
+// ============================================================================
+/*  set "standard" parameters 
+ *  @param mu     mu-parameter, location 
+ *  @param beta   beta-parameter, asymmetry 
+ *  @param gamma  alpha-parameter, shape 
+ *  @param delta  delta-parameter, scale 
+ *
+ *  \f$ \alpha = \sqrt{\beta^2+\gamma^2} \f$ 
+ */ 
+// ============================================================================
+bool Ostap::Math::Hyperbolic::setStandard
+( const double mu     ,
+  const double beta   , 
+  const double gamma  , 
+  const double delta  )
+{
+  bool modified = !s_equal ( m_mu , mu )  ;
+  //
+  m_mu     = mu    ;
+  //
+  const double _zeta   = std::abs ( delta ) * std::abs ( gamma ) ;
+  if ( !s_equal ( m_zeta , _zeta ) ) { modified = true ; }
+  m_zeta = _zeta ;
+  //
+  if ( modified ) { m_AL = std::sqrt ( _AL2_ ( 1  , m_zeta ) ) ; }
+  //
+  const double _sigma = m_AL / std::abs ( gamma ) ;
+  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  m_sigma = _sigma ;
+  //
+  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , 1 ) ) ; }
+  //
+  const double _kappa = beta / m_sigma ;
+  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  m_kappa = _kappa ;
+  //
+  return modified ;
+}
+// ============================================================================
+// calculate the mean of the distribution  
+// ============================================================================
+double Ostap::Math::Hyperbolic::mean () const 
+{ return m_mu + m_kappa * m_sigma ; }
+// ============================================================================
+// get the actual mode of the distribution
+// ============================================================================
+double Ostap::Math::Hyperbolic::mode () const 
+{ return m_mu + m_kappa * m_sigma * m_zeta / ( m_AL * m_AL ) ; }
+// ============================================================================
+// get the variance/dispersion 
+// ============================================================================
+double Ostap::Math::Hyperbolic::variance () const 
+{
+  //
+  const double s2 = sigma2 () ;
+  const double k2 = kappa2 () ;
+  const double z2 = zeta2  () ;
+  //
+  return s2 + k2 * s2 * ( _AL2_ ( 1 + 1 , m_zeta ) /  ( m_AL * m_AL ) - 1.0 ) ;
+}
+// ============================================================================
+// evaluate  pdf  for the Hyperbolic distribution
+// ============================================================================
+double Ostap::Math::Hyperbolic::pdf ( const double x ) const 
+{
+  //
+  const double dx =  ( x - m_mu ) / m_sigma ;
+  //
+  const double a2 = m_AL * m_AL            ;
+  const double ka = m_kappa * m_kappa + a2 ;
+  //
+  const double q  = 
+    - std::sqrt ( ka * ( m_zeta * m_zeta / a2 + dx * dx ) )  
+    + m_kappa * dx    
+    + m_zeta          ;  // from normalization 
+  //
+  const double aa = 0.5 * a2 / ( m_sigma * std::sqrt ( ka ) ) ;
+  //
+  return m_N * std::exp ( q ) * aa ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// =========================================================================
+double Ostap::Math::Hyperbolic::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  const double m1    = mode () ;
+  const double m2    = mean () ;
+  const double mmin  = std::min ( m1 , m2 ) ;
+  const double mmax  = std::max ( m1 , m2 ) ;
+  const double mlow  = mmin - 5 * m_sigma ;
+  const double mhigh = mmax + 5 * m_sigma ;
+  //
+  const double mc [] = { mmin - 3.0 * m_sigma , 
+                         mmax + 3.0 * m_sigma , 
+                         mlow , mhigh         } ;
+  //
+  for ( const double c : mc ) 
+  { if ( low < c  && c < high ) { return integral ( low , c ) + integral ( c , high ) ; } }
+  //
+  // in tails 
+  const bool in_tail = ( high <= mlow ) || ( low >= mhigh ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Hyperbolic> s_integrator {} ;
+  static char s_message[] = "Integral(Hyperbolic)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size () ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Hyperbolic::tag () const 
+{ 
+  static const std::string s_name = "Hyperbolic" ;
+  return std::hash_combine ( s_name , m_mu , m_sigma , m_zeta , m_kappa  ) ; 
+}
+// ============================================================================
+
+
+
+
+// ============================================================================
+/*  constructor from mu, sigma, zeta and kappa 
+ *  @param mu     related to location 
+ *  @param sigma  related to width 
+ *  @param zeta   related to kurtosis 
+ *  @param kappa  related to asymmetry
+ *  @param lambda shape-related    
+ */
+// ============================================================================
+Ostap::Math::GenHyperbolic::GenHyperbolic
+( const double mu     ,  // related to location 
+  const double sigma  ,  // related to width 
+  const double zeta   ,  // related to kurtosis
+  const double kappa  ,  // related to asymmetry 
+  const double lambda ) 
+  : m_mu     ( mu    ) 
+  , m_sigma  ( std::abs ( sigma ) )
+  , m_zeta   ( zeta  ) 
+  , m_kappa  ( kappa ) 
+  , m_lambda ( lambda ) 
+  , m_AL     ( -1 ) 
+  , m_N      ( -1 ) 
+{
+  setSigma  ( sigma  ) ;  
+  setLambda ( lambda ) ;  
+  setZeta   ( zeta   ) ;  
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setKappa ( const double value ) 
+{
+  if ( s_equal ( value , m_kappa ) ) { return false ; }
+  m_kappa = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setZeta ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_zeta ) &&  ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
+  m_zeta = avalue ;
+  //
+  m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
+  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  //
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setLambda ( const double value ) 
+{
+  if ( s_equal ( value , m_lambda ) && ( 0 < m_AL ) && ( 0 < m_N ) ) { return false ; }
+  m_lambda = value ;
+  //
+  m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ;
+  m_N  = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ;
+  //
+  return true ;
+}
+// ============================================================================
+/*  set "standard" parameters 
+ *  @param mu     mu-parameter, location 
+ *  @param beta   beta-parameter, asymmetry 
+ *  @param gamma  alpha-parameter, shape 
+ *  @param delta  delta-parameter, scale 
+ *  @param lambda lambda-parameter, shape   
+ *
+ *  \f$ \alpha = \sqrt{\beta^2+\gamma^2} \f$ 
+ *  \f[ \begin{array}{ll} 
+ *    \delta \ge 0, left| \beta \right|<  \alpha &  if~\lambda > 0 \\ 
+ *    \delta >   0, left| \beta \right|<  \alpha &  if~\lambda = 0 \\ 
+ *    \delta >   0, left| \beta \right|\le\alpha &  if~\lambda < 0 
+ *  \end{array}\f] 
+ */ 
+// ============================================================================
+bool Ostap::Math::GenHyperbolic::setStandard
+( const double mu     ,
+  const double beta   , 
+  const double gamma  , 
+  const double delta  ,
+  const double lambda ) 
+{
+  bool modified = !s_equal ( m_mu , mu ) || !s_equal ( m_lambda , lambda ) ;
+  //
+  m_mu     = mu     ;
+  m_lambda = lambda ;
+  //
+  const double _zeta   = std::abs ( delta ) * std::abs ( gamma ) ;
+  if ( !s_equal ( m_zeta , _zeta ) ) { modified = true ; }
+  m_zeta = _zeta ;
+  //
+  if ( modified ) { m_AL = std::sqrt ( _AL2_ ( m_lambda , m_zeta ) ) ; }
+  //
+  const double _sigma = m_AL / std::abs ( gamma ) ;
+  if ( s_equal ( m_sigma , _sigma ) ) { modified = true ; }
+  m_sigma = _sigma ;
+  //
+  if ( modified ) { m_N = 1 / ( s_SQRT2PI * z_knu_scaled ( m_zeta , m_lambda ) ) ; }
+  //
+  const double _kappa = beta / m_sigma ;
+  if ( s_equal ( m_kappa , _kappa ) ) { modified = true ; }
+  m_kappa = _kappa ;
+  //
+  return modified ;
+}
+// ============================================================================
+// evaluate  pdf  for Generalised Hyperbolic distribution
+// ============================================================================
+double Ostap::Math::GenHyperbolic::pdf ( const  double x ) const 
+{  
+  const double dx   =  ( x - m_mu ) / m_sigma ;
+  //
+  const double k2   = m_kappa * m_kappa ;
+  const double k2pA = k2 + m_AL * m_AL  ;
+  const double z_A  = m_zeta    / m_AL  ;
+  //
+  const double arg2 =  k2pA * ( dx * dx + z_A * z_A ) ;
+  const double arg  =  std::sqrt ( arg2 ) ;
+  //
+  // NB: we use scaled bessel function here!
+  const double kfun = Ostap::Math::bessel_Knu_scaled ( m_lambda - 0.5 , arg ) ;
+  //
+  const double f   = 
+    + std::log ( kfun )             // scaled bessel function 
+    - arg                           // "unscale" it 
+    + m_zeta                        // from normalzation 
+    + m_kappa * dx                  // asymmetry factor  
+    + ( m_lambda - 0.5 ) * std::log ( arg * m_sigma * m_sigma / k2pA ) ;
+  //
+  return m_N * std::exp ( f ) * std::pow ( gamma2() , m_lambda ) ;
+}
+// ============================================================================
+// get the integral between low and high limits
+// =========================================================================
+double Ostap::Math::GenHyperbolic::integral
+( const double low  ,
+  const double high ) const
+{
+  //
+  if      ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  else if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  const double m1    = mean () ;
+  const double mlow  = m1 - 5 * m_sigma ;
+  const double mhigh = m1 + 5 * m_sigma ;
+  //
+  const double mc [] = { m1 - 3.0 * m_sigma , 
+                         m1 + 3.0 * m_sigma , 
+                         mlow , mhigh       } ;
+  //
+  for ( const double c : mc ) 
+  { if ( low < c  && c < high ) { return integral ( low , c ) + integral ( c , high ) ; } }
+  //
+  // in tails 
+  const bool in_tail = ( high <= mlow ) || ( low >= mhigh ) ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<GenHyperbolic> s_integrator {} ;
+  static char s_message[] = "Integral(GenHyperbolic)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   =  0 ;
+  double result   =  1 ;
+  double error    = -1 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag () , 
+      &F     ,  
+      low    , high  ,               // low & high edges
+      workspace ( m_workspace ) ,    // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size () ,          // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+  //
+}
+// ==============================================================================
+// get mean value 
+// ==============================================================================
+double Ostap::Math::GenHyperbolic::mean        () const 
+{ return m_mu + m_kappa * m_sigma ; }
+// ==============================================================================
+// get variance 
+// ==============================================================================
+double Ostap::Math::GenHyperbolic::variance    () const 
+{
+  //
+  const double s2 = sigma2 () ;
+  const double k2 = kappa2 () ;
+  const double z2 = zeta2  () ;
+  //
+  return s2 + k2 * s2 * ( _AL2_ ( m_lambda + 1 , m_zeta ) /  ( m_AL * m_AL ) - 1.0 ) ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::GenHyperbolic::tag () const 
+{ 
+  static const std::string s_name = "GHD" ;
+  return std::hash_combine ( s_name   , 
+                             m_mu     , 
+                             m_sigma  , 
+                             m_kappa  , 
+                             m_zeta   , 
+                             m_lambda ) ; 
+}
+// ============================================================================
+
+
+
+
+
+
+
+// ============================================================================
+/*  constructor with full parameters 
+ *  @param mu peak location 
+ *  @param sigma sigma for Gaussian Core 
+ *  @param kL    left tail parameter 
+ *  @param kR    right tail parameter 
+ */
+// ============================================================================
+Ostap::Math::Das::Das 
+( const double mu     , // location parameter 
+  const double sigma  , // width parameter 
+  const double kL     , // left tails 
+  const double kR     ) // right tail 
+  : m_mu    ( mu ) 
+  , m_sigma ( std::abs ( sigma ) ) 
+  , m_kL    ( std::abs ( kL    ) ) 
+  , m_kR    ( std::abs ( kR    ) ) 
+{}
+// ============================================================================
+bool Ostap::Math::Das::setMu    ( const double value ) 
+{
+  if ( s_equal ( value , m_mu  ) ) { return false ; }
+  m_mu = value ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Das::setSigma ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_sigma ) ) { return false ; }
+  m_sigma = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Das::setKL ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_kL ) ) { return false ; }
+  m_kL = avalue ;
+  return true ;
+}
+// ============================================================================
+bool Ostap::Math::Das::setKR ( const double value ) 
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( avalue , m_kR ) ) { return false ; }
+  m_kR = avalue ;
+  return true ;
+}
+// ============================================================================
+// evaluate  pdf 
+// ============================================================================
+double Ostap::Math::Das::pdf ( const  double x ) const 
+{
+  const double dx = ( x - m_mu ) / m_sigma ;
+  ///
+  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+  //
+  return 
+    ( dx  <= - m_kL ) ? 
+    s_N * std::exp ( m_kL * ( 0.5 * m_kL + dx ) ) / m_sigma : 
+    ( dx  >=   m_kR ) ? 
+    s_N * std::exp ( m_kR * ( 0.5 * m_kR - dx ) ) / m_sigma : 
+    s_N * std::exp ( -0.5 * dx * dx             ) / m_sigma ;
+}
+// ============================================================================
+// get the integral 
+// ============================================================================
+double Ostap::Math::Das::integral () const 
+{
+  //
+  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+  //
+  return 
+    // gaussian core 
+    Ostap::Math::gauss_int ( -m_kL , m_kR ) 
+    // left  tail
+    + s_N * std::exp ( -0.5 * m_kL * m_kL ) / m_kL 
+    // right tail
+    + s_N * std::exp ( -0.5 * m_kR * m_kR ) / m_kR ;  
+}
+// =============================================================================
+// get the integral 
+// =============================================================================
+double Ostap::Math::Das::integral 
+( const double low  , 
+  const double high ) const 
+{
+  //
+  if      ( s_equal ( low , high ) ) { return 0 ; }
+  else if (           low > high   ) { return - integral ( high , low ) ; }
+  //
+  const double sL = m_mu - m_kL * m_sigma ;
+  if ( low < sL && sL < high ) { return integral ( low , sL ) + integral ( sL , high ) ; }
+  const double sR = m_mu + m_kR * m_sigma ;
+  if ( low < sR && sR < high ) { return integral ( low , sR ) + integral ( sR , high ) ; }
+  //
+  static const double s_N = 1.0 / std::sqrt ( 2.0 * M_PI ) ;
+  //
+  // left tail 
+  if ( std::max ( low , high ) <= sL )
+  {
+    const double k2h = 0.5* m_kL * m_kL ;
+    const double kS  = m_kL / m_sigma   ;
+    return s_N * ( std::exp ( k2h + ( high - m_mu ) * kS ) - 
+                   std::exp ( k2h + ( low  - m_mu ) * kS ) ) / m_kL ;
+  }
+  /// right tail
+  if ( std::min ( low , high ) >= sR )
+  {
+    const double k2h = 0.5* m_kR * m_kR ;
+    const double kS  = m_kR / m_sigma   ;
+    return s_N * ( std::exp ( k2h - ( low  - m_mu ) * kS ) - 
+                   std::exp ( k2h - ( high - m_mu ) * kS ) ) / m_kR ;
+  }
+  // gaussian core 
+  return Ostap::Math::gauss_int ( low ,  high , m_mu , m_sigma );
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Das::tag () const 
+{ 
+  static const std::string s_name = "Das" ;
+  return std::hash_combine ( s_name   , 
+                             m_mu     , 
+                             m_sigma  , 
+                             m_kL     , 
+                             m_kR     ) ;
+}
+// ============================================================================
+
+
+
+
+
+
+
 
 // ============================================================================
 //                                                                      The END 

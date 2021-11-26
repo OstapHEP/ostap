@@ -2,7 +2,7 @@
 #ifndef OSTAP_OSTAP_HH 
 #define OSTAP_OSTAP_HH 1
 // ============================================================================
-#include "Python.h"
+// #include "Python.h"
 // ============================================================================
 // Include files
 // ============================================================================
@@ -25,6 +25,7 @@
 #include "Ostap/Combine.h"
 #include "Ostap/Dalitz.h"
 #include "Ostap/DalitzIntegrator.h"
+#include "Ostap/DataFrameActions.h"
 #include "Ostap/DataFrameUtils.h"
 #include "Ostap/Digit.h"
 #include "Ostap/EigenSystem.h"
@@ -41,12 +42,15 @@
 #include "Ostap/Hesse.h"
 #include "Ostap/HFuncs.h"
 #include "Ostap/HistoDump.h"
+#include "Ostap/HistoHash.h"
 #include "Ostap/HistoInterpolation.h"
 #include "Ostap/HistoInterpolators.h"
 #include "Ostap/HistoMake.h"
 #include "Ostap/HistoProject.h"
 #include "Ostap/HistoStat.h"
+#include "Ostap/KramersKronig.h"
 #include "Ostap/Interpolation.h"
+#include "Ostap/Interpolants.h"
 #include "Ostap/Iterator.h"
 #include "Ostap/Line.h"
 #include "Ostap/LineTypes.h"
@@ -55,9 +59,12 @@
 #include "Ostap/Kinematics.h"
 #include "Ostap/Math.h"
 #include "Ostap/MatrixUtils.h"
+#include "Ostap/MatrixUtils2.h"
+#include "Ostap/MatrixUtilsT.h"
 #include "Ostap/MatrixTransforms.h"
 #include "Ostap/Models.h"
 #include "Ostap/Models2D.h"
+#include "Ostap/Moments.h"
 #include "Ostap/MoreMath.h"
 #include "Ostap/MoreRooFit.h"
 #include "Ostap/MoreVars.h"
@@ -72,11 +79,13 @@
 #include "Ostap/PDFs2D.h"
 #include "Ostap/PDFs3D.h"
 #include "Ostap/PhaseSpace.h"
+#include "Ostap/Piecewise.h"
 #include "Ostap/Plane3DTypes.h"
 #include "Ostap/Point3DTypes.h"
 #include "Ostap/Point3DWithError.h"
 #include "Ostap/Polynomials.h"
 #include "Ostap/Power.h"
+#include "Ostap/Primitives.h"
 #include "Ostap/Printable.h"
 #include "Ostap/PyCallable.h"   
 #include "Ostap/PyFuncs.h"   
@@ -87,6 +96,7 @@
 #include "Ostap/PyVar.h"     
 #include "Ostap/PyBLOB.h"
 #include "Ostap/Polarization.h"
+#include "Ostap/RootID.h"
 #include "Ostap/SFactor.h"
 #include "Ostap/StatEntity.h"
 #include "Ostap/StatVar.h"
@@ -97,6 +107,7 @@
 #include "Ostap/Tee.h"
 #include "Ostap/ToStream.h"
 #include "Ostap/Topics.h"
+#include "Ostap/TreeGetter.h"
 #include "Ostap/TypeWrapper.h"
 #include "Ostap/Tmva.h"
 #include "Ostap/Valid.h"
@@ -104,6 +115,7 @@
 #include "Ostap/Vector3DTypes.h"
 #include "Ostap/Vector3DWithError.h"
 #include "Ostap/Vector4DTypes.h"
+#include "Ostap/Voigt.h"
 #include "Ostap/UStat.h"
 #include "Ostap/WStatEntity.h"
 #include "Ostap/Workspace.h"
@@ -311,6 +323,10 @@ namespace
     Ostap::Math::LessOrEqual<double>     __eq_7 ;
     Ostap::Math::GreaterOrEqual<double>  __eq_8 ;
     //
+    std::function<std::complex<double>(double)>               __ff0 ;
+    std::function<std::complex<double>(double,double)>        __ff1 ;
+    std::function<std::complex<double>(double,double,double)> __ff2 ;
+    
   };
   // ==========================================================================
 } //                                             The end of anonymous namespace 

@@ -17,7 +17,12 @@ __all__     = (
     'H_Nfit' ,
     ) 
 # =============================================================================
-import ROOT
+import ROOT, abc 
+# =============================================================================
+import ostap.histos.histos 
+import ostap.fitting.fitresult 
+from   ostap.core.core        import Ostap, funID
+from   ostap.core.ostap_types import num_types, integer_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -27,45 +32,191 @@ else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( 'Auxillary utilities for Histogram parameterisation')
 # =============================================================================
-import ostap.histos.histos 
-import ostap.fitting.fitresult 
-from   ostap.core.core  import Ostap, funID
-from   ostap.core.ostap_types import num_types
+# @class C1Fun
+# Helper wrapper for callable to TF1 object for fitting 
+class C1Fun(object) :
+    """Helper wrapper for  callable to  TF1 object for fitting
+    """
+    def __init__ ( self , fun , xmin , xmax ) :
+
+        assert callable ( fun ) , "C1Fun: ``fun'' must be callable!"
+        
+        self.__fun  = fun 
+        self.__xmin = min ( xmin , xmax )
+        self.__xmax = max ( xmin , xmax )
+
+        self.__tf1  = ROOT.TF1 ( funID () , self , self.xmin , self.xmax , 3 )
+        self.__tf1.SetParNames (
+            'Norm'  ,
+            'Bias'  ,
+            'Scale' 
+            )
+        self.__tf1.SetParameter ( 0 , 1 )
+        self.__tf1.FixParameter ( 1 , 0 )
+        self.__tf1.FixParameter ( 2 , 1 )
+
+    ## the actual call 
+    def __call__ ( self , x , pars = [ 1 , 0 , 1 ] ) :
+        """Call method"""
+        
+        x0    = x if isinstance ( x , num_types ) else x [ 0 ]
+        #
+        norm  = float ( pars [ 0 ] ) ## NORM 
+        bias  = float ( pars [ 1 ] ) ## BIAS 
+        scale = float ( pars [ 2 ] ) ## SCALE 
+        #
+        xx    = ( x0 - bias ) / scale
+        # 
+        fun = self.__fun 
+        return norm * fun ( xx ) 
+    
+    ## make fit 
+    def Fit ( self , histo , opts = 'S' , gopts = '' , *args ) :
+        """Make a fit
+        >>> obj   = ...
+        >>> histo = ... 
+        >>> obj.Fit  ( histo , 'S0Q' )
+        """
+        assert isinstance ( histo , ROOT.TH1 ) and 1 == histo.dim() , 'Invalid histo-type!'
+        ## make a fit 
+        return histo.Fit ( self.__tf1 , opts , gopts , *args )
+
+
+    ## fix parameter 
+    def fix ( self , index , value ) :
+        """Fix parameter 
+        """
+        assert isinstance ( index , integer_types ) and 0 <= index <= 2  , 'Invalid index %s' % index
+        value = float ( value ) 
+        self.__tf1.FixParameter ( index , value )
+
+    ## set parameter 
+    def set ( self , index , value ) :
+        """Set parameter 
+        """
+        assert isinstance ( index , integer_types ) and 0 <= index <= 2 , 'Invalid index %s' % index
+        value = float ( value ) 
+        self.__tf1.SetParameter ( index , value )
+
+    ## set parameter 
+    def __setitem__  ( self , index , valie ) :
+        if not isinstance ( index , integer_types ) : raise IndexError ("Invalid index %s" % index )
+        if not 0 <= index <= 2                      : raise IndexError ("Invalid index %s" % index )
+        self.__tf1.SetParameter ( index , value )
+
+    ## release parameter
+    def release ( self , index ) :
+        """Release parameter 
+        """
+        assert isinstance ( index , integer_types ) and 0 <= index < 2 , 'Invalid index %s' % index
+        self.__tf1.ReleaseParameter ( index )
+
+    ## 
+    @property   
+    def tf1  ( self ) :
+        """Get corresponding ROOT.TF1 object 
+        """
+        return self.__tf1 
+
+    @property
+    def xmin ( self ) :
+        """``xmin'' : low edge"""
+        return self.__xmin
+    
+    @property    
+    def xmax ( self ) :
+        """``xmax'' : high edge"""
+        return self.__xmax
+    
+    @property
+    def fun  ( self ) :
+        """``fun'' : actual callable to   use"""
+        return self.__fun
+
+    def Draw ( self , *args , **kwargs ) : return self.draw ( *args , **kwargs ) 
+    def draw ( self , *args , **kwargs ) :
+        t = self.tf1()
+        return t.draw( *args , **kwargs )
+
+
+# =============================================================================
+# @class HFit
+class HFIT(object) :
+    __metaclass__ = abc.ABCMeta
+
+    ## constructor from hfit an dTF1 objects 
+    def __init__ ( self , hfit , tf1 ) :
+        
+        assert hfit and callable   ( hfit )              , "HFIT: ``hfit'' must be callable"
+        assert tf1  and isinstance ( tf1   , ROOT.TF1 )  , "HFIT: ``tf1'' must be ROOT.TF1"
+        
+        self.__hfit = hfit
+        self.__fun  = tf1
+        
+    @abc.abstractmethod
+    def norm ( self ) :
+        """Is this object represent normalised function?"""
+        return True 
+    @abc.abstractmethod
+    def npars ( self ) :
+        """number of parameters"""
+        return 0
+    @abc.abstractmethod
+    def __call__ ( self , x , pars = [] ) :
+        """The main call method"""
+        return None
+
+    @property
+    def fun  ( self ) :
+        """``fun'' : actual ROOT.TF1  object"""
+        return self.__fun 
+
+    @property
+    def hfit ( self ) :
+        """``hfin'' : actual ``hfit'' object"""
+        return self.__hfit 
+
+    ## get list of parameters 
+    def pars     ( self ) : return self.hfit.pars  ()
+    
+    def draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs ) 
+    def Draw ( self , *args , **kwargs )           : return self.fun.draw ( *args , **kwargs )    
+    def fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
+    def Fit  ( self , histo , opts = 'S' , *args ) : return h.Fit ( self.fun , opts , *args ) 
+    
+    
 # =============================================================================
 ## @class H_fit
 #  simple function to fit/represent the histogram with bernstein/spline
 #  and other types of function expansion 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
-class H_fit(object) :
+class H_fit(HFIT) :
     """Simple helper function to fit/represent the histogram with sum of
     Bernstein/b-spline/legendre/chebyshev, etc functions 
     """
     def __init__ ( self ,  hfit ) :
-        self._hfit = hfit
-        self.fun = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() )
+
+        ## create the function
+        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() )
+
+        ## initialize the base 
+        super(H_fit,self).__init__ ( hfit , tf1 ) 
     #
     def norm     ( self ) : return False 
-    def npars    ( self ) : return self._hfit.npars () 
-    def pars     ( self ) : return self._hfit.pars  ()
+    def npars    ( self ) : return self.hfit.npars () 
     #
-    def draw     ( self , *args ) : return sef.fun.Draw( *args ) 
-    def Draw     ( self , *args ) : return sef.fun.Draw( *args )
-    
-    def fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
-    def Fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
-    #   
     ## the major method 
     def __call__ ( self , x , pars = [] ) :
         
-        x0 = x if isinstance ( x , num_types ) else x[0]
+        x0 = float( x  ) if isinstance ( x , num_types ) else x [ 0 ]
         
         if pars :
-            np = self._hfit.npars() 
+            np = self.hfit.npars () 
             for i in range ( 0 , np ) :    
-                self._hfit.setPar ( i , pars[i] )
+                self.hfit.setPar ( i , pars[i] )
                 
-        return self._hfit( x0 )
+        return self.hfit( x0 )
     
 # =============================================================================
 ## @class H_Nfit
@@ -76,40 +227,39 @@ class H_fit(object) :
 #  - positive monotonic B-spline expansion, etc...
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2014-05-09
-class H_Nfit (object) :
+class H_Nfit (HFIT) :
     """ Simple helper function to fit/represent the histogram with
     the sum of bernstein positive polynominals
     """
     def __init__ ( self , hfit ) :
-        self._hfit = hfit
-        self.fun   = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() + 1 )
-        self.fun.SetParameter ( 0 , 1 ) 
         
-    def norm     ( self ) : return True  
-    def npars    ( self ) : return self._hfit.npars () + 1  ## NB: normalization!  
-    def pars     ( self ) : return self._hfit.pars  ()
-    
-    def draw     ( self , *args ) : return sef.fun.Draw( *args ) 
-    def Draw     ( self , *args ) : return sef.fun.Draw( *args )
-    
-    def fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
-    def Fit      ( self , h , opts = 'S' , *args ) : return h.Fit( self.fun , opts , *args ) 
+        ## create function 
+        tf1 = ROOT.TF1 ( funID() , self , hfit.xmin() , hfit.xmax() , hfit.npars() + 1 )
+        
+        ## initialize the base 
+        super(H_Nfit,self).__init__ ( hfit , tf1 )
 
+        ## set normalization parameter 
+        self.fun.SetParameter ( 0 , 1 ) 
+
+    def norm     ( self ) : return True  
+    def npars    ( self ) : return self.hfit.npars () + 1  ## NB: normalization!  
+    
     ## the major method 
     def __call__ ( self , x , pars = [] ) :
 
         norm = 1.0
-        x0   = x if isinstance ( x , num_types ) else x[0]
+        x0   = float ( x ) if isinstance ( x , num_types ) else x [ 0 ]
         
         if pars :
 
-            norm = pars[0]
+            norm = float ( pars [ 0 ] ) 
             
-            np   = self._hfit.npars() 
+            np   = self.hfit.npars() 
             for i in range ( 0 , np ) :    
-                self._hfit.setPar ( i , pars[i+1] )
+                self.hfit.setPar ( i , pars[i+1] )
                 
-        return norm * self._hfit( x0 )
+        return norm * self.hfit( x0 )
 
 
 # =============================================================================
@@ -144,44 +294,40 @@ class H1Func(object) :
         self._edges  = edges  
         
     ## evaluate the function 
-    def __call__ ( self , x , par = [ 1 , 0 , 1 ] ) :
+    def __call__ ( self , x , pars = [ 1 , 0 , 1 ] ) :
         """ Evaluate the function 
         """
         #
-        x0 = x if isinstance ( x , num_types ) else x[0]
+        x0 = x if isinstance ( x , num_types ) else x [ 0 ]
         #
-        norm  = float ( par[0] )   ## NORM 
-        bias  = float ( par[1] )   ## BIAS 
-        scale = float ( par[2] )   ## SCALE 
+        norm  = float ( pars [ 0 ] ) ## NORM 
+        bias  = float ( pars [ 1 ] ) ## BIAS 
+        scale = float ( pars [ 2 ] ) ## SCALE 
         #
         x0    = ( x0 - bias ) / scale
         # 
         return norm * self._func ( self._histo ( x0 , interpolate = self._interp , edges = self._edges ) )
 
-    ## get corresponsing ROOT.TF1 object 
+    ## get corresponding ROOT.TF1 object 
     def tf1  ( self ) :
         """Get corresponsing ROOT.TF1 object 
         """
         if not hasattr ( self , '_tf1' ) : 
             
-            mn = self._histo.xmin ()
-            mx = self._histo.xmax ()
-            self._tf1 =  ROOT.TF1 ( funID() , self , mn , mx , 3 )
-            self._tf1.SetParNames (
-                'Normalization' ,
-                'Bias'          ,
-                'Scale'
-                )
+            mn = self._histo.xmin  ()
+            mx = self._histo.xmax  ()
+            self._tf1 =  ROOT.TF1  ( funID() , self , mn , mx , 3 )
+            self._tf1.SetParNames  ( 'Norm'  , 'Bias'  , 'Scale' )
             self._tf1.FixParameter ( 0 , 1 )
             self._tf1.FixParameter ( 1 , 0 )
             self._tf1.FixParameter ( 2 , 1 )
 
         return self._tf1
 
-    def Draw ( self , *args ) : return self.draw ( *args ) 
-    def draw ( self , *args ) :
+    def Draw ( self , *args , **kwargs ) : return self.draw ( *args , **kwargs ) 
+    def draw ( self , *args , **kwargs ) :
         t = self.tf1()
-        return t.Draw( *args )
+        return t.draw( *args , **kwargs )
 
 
 # ==============================================================================
@@ -287,12 +433,16 @@ def _h1_as_tf1_ ( self                           ,
     """
     #
     fun = _h1_as_fun_    ( self , func , *args , **kwargs )
-    #
-    f1 = fun .tf1  ()
-    nb = self.nbins()
+    f1  = fun .tf1  ()
+    nb  = self.nbins()
+    f1._tmp_fun = fun
     
     if f1.GetNpx() <  1.2 * nb :
         f1.SetNpx ( max ( 100 , 10 * nb ) ) 
+    
+    f1._funobj = fun  
+    f1._histo  = fun._histo
+    f1._func   = fun._func
     
     return f1 
 

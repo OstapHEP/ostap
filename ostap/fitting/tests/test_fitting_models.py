@@ -11,17 +11,20 @@
 - It tests various ``signal-like''/``peak-like'' shapes 
 """
 # ============================================================================= 
-from   __future__        import print_function
+from   __future__               import print_function
 # ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import cpp, VE, dsID
-from   ostap.logger.utils   import rooSilent
-from   builtins             import range
+import ostap.fitting.models     as     Models 
+from   ostap.core.core          import cpp, VE, dsID
+from   ostap.logger.utils       import rooSilent
+from   ostap.utils.timing       import timing
+from   builtins                 import range
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,14 +34,16 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================
+
 ## make simple test mass 
 mass     = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 3.0 , 3.2 )
 
 ## book very simple data set
 varset0  = ROOT.RooArgSet  ( mass )
+
 dataset0 = ROOT.RooDataSet ( dsID() , 'Test Data set-0' , varset0 )  
 
-mmin,mmax = mass.minmax()
+mmin , mmax = mass.minmax()
 
 ## fill it 
 m = VE(3.100,0.015**2)
@@ -60,10 +65,22 @@ signal_gauss = Models.Gauss_pdf ( name  = 'Gauss'    , ## the name
                                   mean  = m.value () , ## mean value (fixed)
                                   sigma = m.error () ) ## sigma      (fixed)
 
+background = Models.Bkg_pdf ( 'Bkg' , xvar = mass , power = 0 ) 
+## construct composite model: signal + background 
+model_gauss = Models.Fit1D(
+    signal     = signal_gauss ,
+    background = background   ,
+    )
+
+S = model_gauss.S
+B = model_gauss.B
+
 # =============================================================================
 ## gauss PDF
 # =============================================================================
 def test_gauss() :
+
+    logger = getLogger ( 'test_gauss' )
     
     logger.info ('Test Gauss_pdf:  simple Gaussian signal' )
     
@@ -73,26 +90,18 @@ def test_gauss() :
     ## simple fit with gaussian only 
     result = signal_gauss . fitTo ( dataset0 , silent = True )
     
-    ## construct composite model: signal + background 
-    model_gauss = Models.Fit1D(
-        signal     = signal_gauss ,
-        background = Models.Bkg_pdf ('BkgGauss', xvar = mass , power = 0 ) ,
-        )
     model_gauss.background.tau.fix(0)
     
     with rooSilent() : 
         result, frame = model_gauss . fitTo ( dataset0 )
         result, frame = model_gauss . fitTo ( dataset0 )
-        
+    with wait ( 1 ), use_canvas ( 'test_gauss' ) : 
         model_gauss.draw (  dataset0 )
-        
+
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :     
-        logger.info( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) )
-        logger.info( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info( 'Simple Gaussian model\n%s' % result.table ( prefix = "# " ) )
+
+    logger.info( 'Simple Gaussian model\n%s' % result.table ( prefix = "# " ) )
         
     models.add ( model_gauss )
     signal_gauss.mean.fix ( m.value() )
@@ -102,6 +111,7 @@ def test_gauss() :
 # =============================================================================
 def test_crystalball () :
     
+    logger = getLogger ( 'test_crystalball' )
     logger.info ('Test CrystalBall_pdf: Crystal Ball  function' )
     
     ## composite model: signal + background 
@@ -112,7 +122,8 @@ def test_crystalball () :
                                               n     = (3,1,9)  , ## tail parameter 
                                               sigma = signal_gauss.sigma ,   ## reuse sigma from gauss
                                               mean  = signal_gauss.mean  ) , ## reuse mean  from gauss 
-        background = Models.Bkg_pdf ('BkgCB', xvar = mass , power = 0 ) ,
+        background = background   ,
+        S = S , B = B 
         )
     
     model_cb.signal.n.fix(8) 
@@ -121,17 +132,13 @@ def test_crystalball () :
         model_cb.signal.alpha.release()
         result, frame = model_cb. fitTo ( dataset0 )
         result, frame = model_cb. fitTo ( dataset0 )
-
+    with wait ( 1 ), use_canvas ( 'test_crystalball' ) : 
         model_cb.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Alpha  & n          are: %-28s & %-28s ' % ( result ( model_cb.signal.alpha ) [ 0 ] , result ( model_cb.signal.n ) [ 0 ] ) )
-        logger.info ( 'Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_cb )
                       
@@ -139,7 +146,10 @@ def test_crystalball () :
 # =============================================================================
 ## right side CrystalBall PDF
 # =============================================================================
-def test_crystalball_RS () : 
+def test_crystalball_RS () :
+    
+    logger = getLogger ( 'test_crystalball_RS' )
+
     logger.info ('Test CrystalBallRS_pdf:  right-side Crystal Ball function' )
     model_cbrs = Models.Fit1D (
         signal = Models.CrystalBallRS_pdf ( name  = 'CBRS' , 
@@ -148,7 +158,8 @@ def test_crystalball_RS () :
                                             alpha = (1.5, 0.5 , 3.0)   ,
                                             n     = (5,1,10)           , 
                                             mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBRS', xvar = mass , power = 0 ) , 
+        background = background   ,
+        S = S , B = B 
         )
     
     model_cbrs.S.value  = 5000
@@ -159,16 +170,13 @@ def test_crystalball_RS () :
         model_cbrs.signal.alpha.release()
         result, frame = model_cbrs. fitTo ( dataset0 )
         result, frame = model_cbrs. fitTo ( dataset0 )
-
+    with wait ( 1 ), use_canvas ( 'test_crystalball_RS' ) : 
         model_cbrs.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'right-side Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    logger.info ( 'right-side Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_cbrs  )
 
@@ -177,6 +185,7 @@ def test_crystalball_RS () :
 # =============================================================================
 def test_crystalball_DS () :
     
+    logger = getLogger ( 'test_crystalball_DS' )
     logger.info ('Test CrystalBallDS_pdf: double-sided Crystal Ball function' )
     model_cbds = Models.Fit1D (
         signal = Models.CB2_pdf ( name   = 'CB2'              , 
@@ -187,7 +196,8 @@ def test_crystalball_DS () :
                                   alphaR = (1.4,0.5,3)        , 
                                   sigma  = signal_gauss.sigma ,  
                                   mean   = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 )
+        background = background   ,
+        S = S , B = B 
         )
 
     model_cbds.S.value  = 5000
@@ -201,16 +211,13 @@ def test_crystalball_DS () :
         model_cbds.signal.aL.fix(1.5) 
         model_cbds.signal.aR.fix(1.5)    
         result, frame = model_cbds. fitTo ( dataset0 )
-        
+    with wait ( 1 ), use_canvas ( 'test_crystalball_DS' ) :         
         model_cbds.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'double-sided Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'double-sided Crystal Ball function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_cbds  )
 
@@ -218,14 +225,17 @@ def test_crystalball_DS () :
 ## Needham PDF
 # =============================================================================
 def test_needham() :
-    
+
+    logger = getLogger ( 'test_needham' )
+  
     logger.info ('Test Needham_pdf: Crystal Ball with alpha=f(sigma)' )
     model_matt = Models.Fit1D (
         signal = Models.Needham_pdf ( name  = 'Matt'             , 
                                       xvar  = mass               ,
                                       sigma = signal_gauss.sigma ,  
                                       mean  = signal_gauss.mean  ) ,
-        background = Models.Bkg_pdf ('BkgCBDS', xvar = mass , power = 0 )
+        background = background   ,
+        S = S , B = B 
         )
     
     with rooSilent() : 
@@ -234,14 +244,14 @@ def test_needham() :
         model_matt.signal.sigma.release()
         result, frame = model_matt. fitTo ( dataset0 )
         result, frame = model_matt. fitTo ( dataset0 )
+
+    with wait ( 1 ), use_canvas ( 'test_needham' ) :         
+        model_matt.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Needham function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Needham function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_matt  )
 
@@ -250,7 +260,9 @@ def test_needham() :
 ## Apollonios
 # ==========================================================================
 def test_apollonios () :
-    
+
+    logger = getLogger ( 'test_apollonios' )
+
     logger.info ('Test Apollonios_pdf: Modified gaussian with power-law and exponential tails' ) 
     model_apollonios = Models.Fit1D (
         signal = Models.Apollonios_pdf ( name  = 'APO', 
@@ -260,7 +272,8 @@ def test_apollonios () :
                                         b     =  1 ,
                                         n     = 10 ,
                                         alpha =  3 ) ,
-        background = Models.Bkg_pdf ('BkgAPO', xvar = mass , power = 0 )
+        background = background   ,
+        S = S , B = B 
         )
     
     model_apollonios.S.setVal(5000)
@@ -268,17 +281,14 @@ def test_apollonios () :
     
     with rooSilent() : 
         result, frame = model_apollonios. fitTo ( dataset0 )
-        result, frame = model_apollonios. fitTo ( dataset0 )        
+        result, frame = model_apollonios. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_apollonios' ) :                 
         model_apollonios.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Apollonios function\n%s' % result.table ( prefix = "# " ) ) 
 
+    logger.info ( 'Apollonios function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_apollonios )
 
@@ -287,6 +297,8 @@ def test_apollonios () :
 # ==========================================================================
 def test_apollonios2() :
     
+    logger = getLogger ( 'test_apollonios2' )
+
     logger.info ('Test Apollonios2_pdf: modified Gaussian with exponential tails' ) 
     model_apollonios2 = Models.Fit1D (
         signal = Models.Apollonios2_pdf ( name = 'AP2' , 
@@ -295,7 +307,8 @@ def test_apollonios2() :
                                          sigma     = signal_gauss.sigma ,
                                          beta      =  ( 0.5 , 2 )       ,
                                          asymmetry = 0 ) ,
-        background = Models.Bkg_pdf ('BkgAPO2', xvar = mass , power = 0 )
+        background = background   ,
+        S = S , B = B 
         )
     
     model_apollonios2.signal.mean.fix( m.value() )    
@@ -307,16 +320,13 @@ def test_apollonios2() :
         result, frame = model_apollonios2. fitTo ( dataset0 )
         model_apollonios2.signal.asym.release ()
         result, frame = model_apollonios2. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_apollonios2' ) :                 
         model_apollonios2.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else : 
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) ) 
-        logger.info ( 'Apollonios2 function\n%s' % result.table ( prefix = "# " ) ) 
 
+    logger.info ( 'Apollonios2 function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_apollonios2 )
 
@@ -326,6 +336,7 @@ def test_apollonios2() :
 # =============================================================================
 def test_bifurcated () :
     
+    logger = getLogger ( 'test_bifurcated' )
     logger.info ('Test BifurcatedGauss_pdf: Bifurcated Gaussian' )
     
     signal_bifurcated = Models.BifurcatedGauss_pdf ( name = 'BfGau' ,
@@ -336,22 +347,22 @@ def test_bifurcated () :
     
     model_bifurcated = Models.Fit1D(
         signal     = signal_bifurcated       ,
-        background = Models.Bkg_pdf ('BkgBFG', xvar  = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     model_bifurcated.B.setVal (  500 )
     model_bifurcated.S.setVal ( 6000 )
     with rooSilent() : 
         result, frame = model_bifurcated . fitTo ( dataset0 )
         result, frame = model_bifurcated . fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_bifurcated' ) :                 
         model_bifurcated.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'Bifurcated Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Bifurcated Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bifurcated  )
 
@@ -361,6 +372,7 @@ def test_bifurcated () :
 # =============================================================================
 def test_2gauss () :
     
+    logger = getLogger ( 'test_2gauss' )
     logger.info ('Test DoubleGauss_pdf: Double Gaussian' )
     
     signal_2gauss = Models.DoubleGauss_pdf ( name = 'Gau2' ,
@@ -372,7 +384,9 @@ def test_2gauss () :
     
     model_2gauss = Models.Fit1D(
         signal     = signal_2gauss      ,
-        background = Models.Bkg_pdf ('Bkg22G', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     model_2gauss.B.setVal (  500 )
     model_2gauss.S.setVal ( 6000 )
@@ -380,15 +394,13 @@ def test_2gauss () :
         result, frame = model_2gauss. fitTo ( dataset0 )
         signal_2gauss.fraction.release() 
         result, frame = model_2gauss. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_2gauss' ) :                 
         model_2gauss.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'double Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'double Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_2gauss  )
 
@@ -397,12 +409,17 @@ def test_2gauss () :
 ## GenGaussV1
 # =============================================================================
 def test_gengauss_v1 () :
+    
+    logger = getLogger ( 'test_gengauss_v1' )
+
     logger.info ('Test GenGaussV1_pdf: Generalized Gaussian V1' ) 
     model_gauss_gv1 = Models.Fit1D (
         signal = Models.GenGaussV1_pdf ( name = 'Gv1' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV1', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     model_gauss_gv1.signal.beta .fix(2)
     model_gauss_gv1.signal.mean .fix( m.value() ) 
@@ -415,28 +432,31 @@ def test_gengauss_v1 () :
         result, frame = model_gauss_gv1. fitTo ( dataset0 )
         model_gauss_gv1.signal.mean .release() 
         result, frame = model_gauss_gv1. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_gengauss_v1' ) :                 
         model_gauss_gv1.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'generalized Gaussian(v1) function\n%s' % result.table ( prefix = "# " ) ) 
-        
 
+    logger.info ( 'generalized Gaussian(v1) function\n%s' % result.table ( prefix = "# " ) ) 
+        
     models.add ( model_gauss_gv1  )
 
 # =============================================================================
 ## GenGaussV2
 # =============================================================================
 def test_gengauss_v2 () : 
+
+    logger = getLogger ( 'test_gengauss_v2' )
+    
     logger.info ('Test GenGaussV2_pdf: Generalized Gaussian function V2' ) 
     model_gauss_gv2 = Models.Fit1D (
         signal = Models.GenGaussV2_pdf ( name = 'Gv2' , 
                                          xvar = mass  ,
                                          mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgGGV2', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     model_gauss_gv2.signal.kappa.fix(0)
     
@@ -453,16 +473,14 @@ def test_gengauss_v2 () :
         result, frame = model_gauss_gv2. fitTo ( dataset0 )
         model_gauss_gv2.S.setVal(5000)
         model_gauss_gv2.B.setVal( 500)
-        result, frame = model_gauss_gv2. fitTo ( dataset0 )
-        
+        result, frame = model_gauss_gv2. fitTo ( dataset0 )        
+    with wait ( 1 ), use_canvas ( 'test_gengauss_v2' ) :                 
         model_gauss_gv2.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'generalized Gaussian(v2) function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'generalized Gaussian(v2) function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_gauss_gv2  )
 
@@ -471,11 +489,15 @@ def test_gengauss_v2 () :
 # =============================================================================
 def test_skewgauss() :
     
+    logger = getLogger ( 'test_skewgauss' )
+    
     logger.info ('Test SkewGauss_pdf: Skew Gaussian function' ) 
     model_gauss_skew = Models.Fit1D (
         signal = Models.SkewGauss_pdf ( name = 'GSk' , 
                                         xvar = mass  , mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSkG', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     model_gauss_skew.signal.alpha.fix(0)
     model_gauss_skew.S.setVal(5000)
@@ -484,14 +506,13 @@ def test_skewgauss() :
     with rooSilent() : 
         result, frame = model_gauss_skew. fitTo ( dataset0 )
         result, frame = model_gauss_skew. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_skewgauss' ) :                 
         model_gauss_skew.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'skew Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'skew Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_gauss_skew  )
 
@@ -499,6 +520,9 @@ def test_skewgauss() :
 ## QGauss
 # =============================================================================
 def test_qgauss () :
+    
+    logger = getLogger ( 'test_qgauss' )
+
     logger.info ('Test QGaussian_pdf: q-Gaussian' ) 
     model_qgauss = Models.Fit1D (
         signal = Models.QGaussian_pdf ( name = 'qG'  , 
@@ -506,7 +530,9 @@ def test_qgauss () :
                                         q    = (1,0.7,1.2), 
                                         mean = signal_gauss.mean   ,
                                         scale = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgQG', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     s = model_qgauss.signal
     s.scale = 0.015
@@ -517,14 +543,13 @@ def test_qgauss () :
         result, frame = model_qgauss. fitTo ( dataset0 )
         model_qgauss.signal.q .release() 
         result, frame = model_qgauss. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_wgauss' ) :                 
+        model_qgauss.draw ( dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Scale  & Q          are: %-28s & %-28s ' % ( result ( s.scale     )[0] , result( s.q           )[0] ) ) 
-        
+
+    logger.info ( 'Q-Gaussian function\n%s' % result.table ( prefix = "# " ) ) 
 
     models.add ( model_qgauss )
 
@@ -534,6 +559,8 @@ def test_qgauss () :
 # =============================================================================
 def test_bukin() :
     
+    logger = getLogger ( 'test_bukin' )
+
     logger.info ('Test Bukin_pdf: Bukin function: skew gaussian core + exponenial/gaussian  tails' ) 
     model_bukin = Models.Fit1D (
         signal = Models.Bukin_pdf ( name  = 'Bukin' ,
@@ -543,7 +570,9 @@ def test_bukin() :
                                     rhoR  = 0    , 
                                     mean  = signal_gauss.mean  , 
                                     sigma = signal_gauss.sigma ) ,
-        background = Models.Bkg_pdf ('BkgBK', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     model_bukin.signal.mean .fix  ( m.value() )
     model_bukin.signal.sigma.fix  ( m.error() )
@@ -561,16 +590,13 @@ def test_bukin() :
         model_bukin.signal.mean .release() 
         model_bukin.signal.sigma.release() 
         result, frame = model_bukin. fitTo ( dataset0 )
-
+    with wait ( 1 ), use_canvas ( 'test_bukin' ) :                 
         model_bukin.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean   & Sigma      are: %-28s & %-28s ' % ( result ( 'mean_Gauss')[0] , result( 'sigma_Gauss' )[0] ) )
-        logger.info ( 'Bukin function\n%s' % result.table ( prefix = "# " ) ) 
+
+    logger.info ( 'Bukin function\n%s' % result.table ( prefix = "# " ) ) 
         
     models.add ( model_bukin  )
 
@@ -578,13 +604,17 @@ def test_bukin() :
 ## StudentT
 # =============================================================================
 def test_studentT () :
-    
+
+    logger = getLogger ( 'test_studentT' )
+       
     logger.info ('Test StudentT_pdf: Student-t distribution' ) 
     model_student = Models.Fit1D (
         signal = Models.StudentT_pdf ( name = 'ST' , 
                                        xvar = mass ,
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgST', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     model_student.signal.n    .setVal(20)
     model_student.signal.sigma.setVal(0.013)
@@ -594,21 +624,23 @@ def test_studentT () :
     with rooSilent() : 
         result, frame = model_student. fitTo ( dataset0 )
         result, frame = model_student. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_stundentT' ) :                 
         model_student.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                is : %-28s '         %   result ( 'mean_Gauss')[0]  )
         
+    logger.info ( "Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
+
     models.add ( model_student  )
 
 # =============================================================================
 ## Bifurcated StudentT
 # =============================================================================
-def test_bifstudentT(): 
+def test_bifstudentT():
+
+    logger = getLogger ( 'test_bifstudentT' )
+
     logger.info ('Test bifurcated StudentT_pdf: bifurcated Student-t' ) 
     model = Models.Fit1D (
         signal = Models.BifurcatedStudentT_pdf ( name  = 'BfST' , 
@@ -617,7 +649,9 @@ def test_bifstudentT():
                                                  nR    = 25     ,                                                 
                                                  mean  = signal_gauss.mean   , 
                                                  sigma = signal_gauss.sigma  ) ,
-        background = Models.Bkg_pdf ('BkgST2', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     signal = model.signal 
     model.S.setVal(5000)
@@ -629,20 +663,13 @@ def test_bifstudentT():
         signal.nR   .release()
         signal.sigma.release()
         result, frame = model. fitTo ( dataset0 )
-        
+    with wait ( 1 ), use_canvas ( 'test_bifstundentT' ) :                         
         model.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
-        logger.info ( 'n(L)                 is: %-28s ' %  result ( signal.nL    )[0] )
-        logger.info ( 'n(R)                 is: %-28s ' %  result ( signal.nR    )[0] )
-        logger.info ( "Bifurkated Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "Bifurkated Student's t-function\n%s" % result.table ( prefix = "# " ) ) 
         
     models.add ( model )
 
@@ -650,13 +677,17 @@ def test_bifstudentT():
 ## Test  SinhAsinh-Distribution
 # =============================================================================
 def test_sinhasinh() :
-    
+
+    logger = getLogger ( 'test_sinhasinh' ) 
+
     logger.info("Test  SinhAsinh-Distribution")
     model = Models.Fit1D (
         signal = Models.SinhAsinh_pdf( 'SASH'                   ,
                                        xvar = mass              , 
                                        mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSAS', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     
@@ -675,19 +706,13 @@ def test_sinhasinh() :
         result,f  = model.fitTo ( dataset0 )  
         signal.epsilon.release()
         result,f  = model.fitTo ( dataset0 )  
-
+    with wait ( 1 ), use_canvas (  'test_sinhasinh' ) :                      
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mu                   is: %-28s ' %  result ( signal.mu      )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma   )[0] )
-        logger.info ( 'Epsilon              is: %-28s ' %  result ( signal.epsilon )[0] )
-        logger.info ( 'delta                is: %-28s ' %  result ( signal.delta   )[0] )
-        logger.info ( "SinhAsinh function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "SinhAsinh function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -696,13 +721,17 @@ def test_sinhasinh() :
 ## Test  JohnsonSU-Distribution
 # =============================================================================
 def test_johnsonSU () :
-    
+
+    logger = getLogger ( 'test_johnsonSU' ) 
+     
     logger.info("Test  JohnsonSU-Distribution")
     model = Models.Fit1D (
         signal = Models.JohnsonSU_pdf( 'JSU'                    ,
                                        xvar = mass              , 
                                        xi   = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgJSU', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     
@@ -714,20 +743,14 @@ def test_johnsonSU () :
         result,f  = model.fitTo ( dataset0 )  
         signal.lambd .release()
         signal.delta.release()
-        result,f  = model.fitTo ( dataset0 )  
-        
+        result,f  = model.fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_johnsonSU' ) :
         model.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Xi                   is: %-28s ' %  result ( signal.xi     )[0] )
-        logger.info ( 'Lambda               is: %-28s ' %  result ( signal.lambd  )[0] )
-        logger.info ( 'Delta                is: %-28s ' %  result ( signal.delta  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma  )[0] )
-        logger.info ( "Johnson-SU function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "Johnson-SU function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -736,12 +759,17 @@ def test_johnsonSU () :
 # =============================================================================
 def test_atlas () :
     
+    logger = getLogger ( 'test_atlas' ) 
+        
+
     logger.info("Test  ATLAS: Modified Gaussian, used by ATLAS/Zeus")
     model = Models.Fit1D (
         signal = Models.Atlas_pdf( 'ATLAS'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgATLAS', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -753,17 +781,13 @@ def test_atlas () :
         signal.mean  .release()
         signal.sigma .release()
         result,f  = model.fitTo ( dataset0 )  
-        
+    with wait ( 1 ), use_canvas (  'test_atlas' ) :        
         model.draw ( dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "ATLAS function\n%s" % result.table ( prefix = "# " ) ) 
+
+    logger.info ( "ATLAS function\n%s" % result.table ( prefix = "# " ) ) 
 
     models.add ( model )
 
@@ -772,12 +796,16 @@ def test_atlas () :
 # =============================================================================
 def test_sech() :
     
+    logger = getLogger ( 'test_sech' )
+    
     logger.info("Test  SECH:  Sech(1/cosh) distribution")
     model = Models.Fit1D (
         signal = Models.Sech_pdf( 'SECH'                    ,
                                   xvar = mass              , 
                                   mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgSECH', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -789,17 +817,13 @@ def test_sech() :
         signal.mean  .release()
         signal.sigma .release()
         result,f  = model.fitTo ( dataset0 )  
-        
+    with wait ( 1 ), use_canvas (  'test_sech' ) :                
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "Hyperbolic secant/sech function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Hyperbolic secant/sech function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -808,12 +832,16 @@ def test_sech() :
 # =============================================================================
 def test_losev() :
     
+    logger = getLogger ( 'test_losev' )
+    
     logger.info("Test  Losev: asymmetric hyperbilic secant distribution")
     model = Models.Fit1D (
         signal = Models.Losev_pdf( 'LOSEV'                  ,
                                    xvar = mass              , 
                                    mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOSEV', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        ) 
     
     signal = model.signal
     model.S.setVal(5000)
@@ -826,18 +854,13 @@ def test_losev() :
         signal.alpha .release()
         signal.beta  .release()
         result,f  = model.fitTo ( dataset0 )
-        
+    with wait ( 1 ), use_canvas (  'test_losev' ) :                
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Alpha                is: %-28s ' %  result ( signal.alpha )[0] )
-        logger.info ( 'Beta                 is: %-28s ' %  result ( signal.beta  )[0] )
-        logger.info ( "Asymmetric hyperbolic secant/Losev distribution\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Asymmetric hyperbolic secant/Losev distribution\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -847,12 +870,16 @@ def test_losev() :
 # =============================================================================
 def test_logistic () :
     
+    logger = getLogger ( 'test_logistic' )
+ 
     logger.info("Test  LOGISTIC: Logistic distribution")
     model = Models.Fit1D (
         signal = Models.Logistic_pdf( 'LOGI'                    ,
                                       xvar = mass              , 
                                       mean = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgLOGI', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -864,17 +891,13 @@ def test_logistic () :
         signal.mean  .release()
         signal.sigma .release()
         result,f  = model.fitTo ( dataset0 )
-        
+    with wait ( 1 ), use_canvas (  'test_logistic' ) :                        
         model.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Logistic distribution\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
     
@@ -882,19 +905,23 @@ def test_logistic () :
 ## Voigt
 # =============================================================================
 def test_voigt () :
+        
+    logger = getLogger ( 'test_voigt' )
     
     logger.info ('Test Voigt_pdf: Breit-Wigner convoluted with Gauss' )
     model = Models.Fit1D (
         signal = Models.Voigt_pdf ( 'V' , 
                                     xvar  = mass                ,
-                                    mean  = signal_gauss.mean   , 
+                                    m0    = signal_gauss.mean   , 
                                     sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
-    signal.mean .fix() 
+    signal.m0   .fix() 
     
     model.B.setVal( 500)
     model.S.setVal(5000)
@@ -904,17 +931,13 @@ def test_voigt () :
         result, frame = model. fitTo ( dataset0 )
         signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_voigt' ) :                        
         model.draw (  dataset0 )
     
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Voigt function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -924,16 +947,20 @@ def test_voigt () :
 # =============================================================================
 def test_pvoigt () :
     
+    logger = getLogger ( 'test_pvoigt' )
+ 
     logger.info ('Test PSeudoVoigt_pdf: fast approximation to Voigt profile' )
     model = Models.Fit1D (
         signal = Models.PseudoVoigt_pdf ( 'PV' , 
                                           xvar  = mass                ,
-                                          mean  = signal_gauss.mean   , 
+                                          m0    = signal_gauss.mean   , 
                                           sigma = signal_gauss.sigma  ) , 
-        background = Models.Bkg_pdf ('BkgV', xvar = mass , power = 0 )) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
-    signal.mean .fix() 
+    signal.m0   .fix() 
     signal.sigma.fix ( m.error() )
     signal.gamma.fix ( 0.002     )
     
@@ -945,17 +972,13 @@ def test_pvoigt () :
         result, frame = model. fitTo ( dataset0 )
         model.signal.sigma.release() 
         result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_pvoigt' ) :                        
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Sigma                is: %-28s ' %  result ( signal.sigma )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "pseudo-Voigt function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "pseudo-Voigt function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -965,6 +988,8 @@ def test_pvoigt () :
 # =============================================================================
 def test_bw () :
     
+    logger = getLogger ( 'test_bw' )
+
     logger.info ('Test BreitWigner_pdf' )
     
     ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
@@ -982,8 +1007,10 @@ def test_bw () :
         ( name        = 'BW'              ,
           breitwigner = bw                ,     
           xvar        = mass              ,
-          mean        = signal_gauss.mean ) ,
-        background = Models.Bkg_pdf ('BkgBW', xvar = mass , power = 0 )) 
+          m0          = signal_gauss.mean ) ,
+        background = background   ,
+        S = S , B = B 
+        )
 
     signal = model.signal 
     model.S.setVal(5000)
@@ -993,19 +1020,16 @@ def test_bw () :
     
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
-        signal.mean .release()
+        signal.m0   .release()
         signal.gamma.release()
         result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_bw' ) :                        
         model.draw (  dataset0 )
 
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
@@ -1014,14 +1038,19 @@ def test_bw () :
 # =============================================================================
 ## Slash
 # =============================================================================
-def test_slash(): 
+def test_slash():
+
+    logger = getLogger ( 'test_slash' )
+    
     logger.info ('Test Slash shape' ) 
     model = Models.Fit1D (
         signal = Models.Slash_pdf ( name  = 'Slash' , 
                                     xvar  = mass   ,
                                     mean  = signal_gauss.mean   , 
                                     scale = signal_gauss.sigma  ) ,
-        background = None  )   
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.scale.release() 
@@ -1033,16 +1062,13 @@ def test_slash():
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
         result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_slash' ) :                        
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
-        logger.info ( "Slash function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Slash function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
@@ -1050,14 +1076,19 @@ def test_slash():
 # =============================================================================
 ## Asymmetric Laplace 
 # =============================================================================
-def test_laplace(): 
+def test_laplace():
+    
+    logger = getLogger ( 'test_laplace' )
+
     logger.info ('Test Asymmetric Laplace shape' ) 
     model = Models.Fit1D (
         signal = Models.AsymmetricLaplace_pdf ( name  = 'AL' , 
                                                 xvar  = mass   ,
                                                 mean  = signal_gauss.mean   , 
                                                 slope = signal_gauss.sigma  ) ,
-        background = None  )
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     signal.slope.release() 
@@ -1069,31 +1100,31 @@ def test_laplace():
     with rooSilent() : 
         result, frame = model. fitTo ( dataset0 )
         result, frame = model. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas (  'test_laplace' ) :                        
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
-        print(result)
-    else :     
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Slope                is: %-28s ' %  result ( signal.slope )[0] )
-        logger.info ( 'Asymmetry            is: %-28s ' %  result ( signal.asym  )[0] )
-        logger.info ( "asymmetric Laplace function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "asymmetric Laplace function\n%s" % result.table ( prefix = "# " ) )
         
     models.add ( model )
 
 # =============================================================================
 ## Test Rasing cosine 
 # =============================================================================
-def test_rasingcosine () :
+def test_raisngcosine () :
+    
+    logger = getLogger ( 'test_raisngcosine' )
     
     logger.info("Test RaisingCosine")
     model = Models.Fit1D (
         signal = Models.RaisingCosine_pdf( 'RC'                     ,
                                            xvar = mass              , 
                                            mean = signal_gauss.mean ) ,
-        background = 1 ) 
+        background = background   ,
+        S = S , B = B 
+        )
     
     signal = model.signal
     model.S.setVal(5000)
@@ -1105,82 +1136,291 @@ def test_rasingcosine () :
         signal.mean  .release()
         signal.scale .release()
         result,f  = model.fitTo ( dataset0 )  
+    with wait ( 1 ), use_canvas ( 'test_raisngcosine' ) : 
         model.draw (  dataset0 )
         
     if 0 != result.status() or 3 != result.covQual() :
         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Scale                is: %-28s ' %  result ( signal.scale )[0] )
-        logger.info ( "Raising cosine function\n%s" % result.table ( prefix = "# " ) )
+
+    logger.info ( "Raising cosine function\n%s" % result.table ( prefix = "# " ) )
 
     models.add ( model )
 
 
-# =============================================================================
-## Breit-Wigner with interference
-# =============================================================================
-def test_bwi () :
-## if 1 < 2 :     
-    logger.info ('Test BWI_pdf' )
-    
-    ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
-    bw = cpp.Ostap.Math.BreitWigner (
-    m.value() ,
-    m.error() ,
-    0.150     , ## m1 
-    0.150     , ## m2 
-    1         , ## orbital momentum
-    ff          ## formfactor 
-    )
-    
-    model = Models.Fit1D (
-        signal = Models.BWI_pdf
-        ( name        = 'BWI'             ,
-          breitwigner = bw                ,     
-          xvar        = mass              ,
-          mean        = signal_gauss.mean ,
-          bkg         = -1                ) ,
-        suffix     = '_a' , 
-        background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 )) 
-    
-    signal = model.signal 
-    model.S.setVal(5000)
-    model.B.setVal(500)
-    
-    signal.mean.fix ( m.value() )
-    
-    with rooSilent() : 
-        result, frame = model. fitTo ( dataset0 )
-        signal.mean .release()
-        signal.gamma.release()
-        result, frame = model. fitTo ( dataset0 )
-        model.draw (  dataset0 )
+# ==========================================================================
+## Hyperbolic
+# ==========================================================================
+def test_hyperbolic() :
 
+    logger = getLogger ( 'test_hyperbolic' )
+       
+    
+    logger.info ('Test Hyperbolic_pdf: hyperbolic distribution (exponential tails)' ) 
+    model_hyperbolic = Models.Fit1D (
+        signal = Models.Hyperbolic_pdf ( name = 'HB' , 
+                                         xvar      = mass               ,
+                                         mu        = signal_gauss.mean  ,
+                                         sigma     = signal_gauss.sigma ,
+                                         zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
+                                         kappa     = ( 0   , -1    ,   1 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_hyperbolic.S.value  = 5000
+    model_hyperbolic.B.value  =  500
+    
+    with rooSilent() :
+        model_hyperbolic.signal.kappa.fix ( 0 )    
+        result, frame = model_hyperbolic. fitTo ( dataset0 )
+        model_hyperbolic.signal.kappa.release ()
+        model_hyperbolic.signal.zeta .release ()
+        model_hyperbolic.signal.mean .release ()
+        model_hyperbolic.signal.sigma.release ()
+        result, frame = model_hyperbolic. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_hyperbolic' ) : 
+        model_hyperbolic.draw (  dataset0 )
+        
     if 0 != result.status() or 3 != result.covQual() :
-        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
-        print(result)
-    else :
-        logger.info ( 'Signal & Background are: %-28s & %-28s ' % ( result ( 'S'         )[0] , result( 'B'           )[0] ) ) 
-        logger.info ( 'Mean                 is: %-28s ' %  result ( signal.mean  )[0] )
-        logger.info ( 'Gamma                is: %-28s ' %  result ( signal.gamma )[0] )
-        logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Hyperbolic  function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_hyperbolic )
 
-    models.add ( model )
+# ==========================================================================
+## Generalised Hyperbolic
+# ==========================================================================
+def test_genhyperbolic() :
+
+    logger = getLogger ( 'test_genhyperbolic' )
+       
+    
+    logger.info ('Test GenHyperbolic_pdf: generalised hyperbolic distribution (exponential tails)' ) 
+    model_genhyperbolic = Models.Fit1D (
+        signal = Models.GenHyperbolic_pdf ( name = 'GHB' , 
+                                            xvar      = mass               ,
+                                            mu        = signal_gauss.mean  ,
+                                            sigma     = signal_gauss.sigma ,
+                                            zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
+                                            lambd     = ( -100 , 100       ) , 
+                                            kappa     = ( 0   , -1 ,   1 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+    
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_genhyperbolic.S.value  = 5000
+    model_genhyperbolic.B.value  =  500
+    
+    with rooSilent() :
+        model_genhyperbolic.signal.kappa.fix ( 0 )    
+        result, frame = model_genhyperbolic. fitTo ( dataset0 )
+        model_genhyperbolic.signal.kappa.release ()
+        model_genhyperbolic.signal.zeta .release ()
+        model_genhyperbolic.signal.sigma.release ()
+        model_genhyperbolic.signal.mean .release ()
+        result, frame = model_genhyperbolic. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_hyperbolic' ) : 
+        model_genhyperbolic.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Generalised Hyperbolic  function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_genhyperbolic )
+
+# ==========================================================================
+## Hypatia 
+# ==========================================================================
+def test_hypatia () :
+
+    logger = getLogger ( 'test_hypatia' )
+       
+    
+    logger.info ('Test Hypatia_pdf: Hypatia pdf' ) 
+    model_hypatia = Models.Fit1D (
+        signal = Models.Hypatia_pdf ( name = 'Hypatia' , 
+                                      xvar      = mass               ,
+                                      mu        = signal_gauss.mean  ,
+                                      sigma     = signal_gauss.sigma ,
+                                      zeta      = ( 1   , 1.e-6 , 1e+6  ) ,
+                                      lambd     = ( -2 , -100 , 100     ) , 
+                                      kappa     = ( 0   , -1 ,   1 ) ,
+                                      sigma0    = 0.005     ) , 
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_hypatia.S.value  = 5000
+    model_hypatia.B.value  =  500
+    
+    with rooSilent() :
+        model_hypatia.signal.kappa.fix ( 0 )    
+        result, frame = model_hypatia. fitTo ( dataset0 )
+        model_hypatia.signal.kappa.release ()
+        model_hypatia.signal.zeta .release ()
+        model_hypatia.signal.mean .release ()
+        model_hypatia.signal.sigma.release ()
+        result, frame = model_hypatia. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_hypatia' ) : 
+        model_hypatia.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Hypatia function\n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_hypatia )
+
+# ==========================================================================
+## Das
+# ==========================================================================
+def test_das_1 () :
+    
+    logger = getLogger ( 'test_das_1' )
+       
+    
+    logger.info ('Test Das_pdf: Das pdf with two tails' ) 
+    model_das_1 = Models.Fit1D (
+        signal = Models.Das_pdf ( name = 'Das1' , 
+                                  xvar      = mass               ,
+                                  mu        = signal_gauss.mean  ,
+                                  sigma     = signal_gauss.sigma ,
+                                  kL        = ( 1 , 0.1 , 10.0 ) ,
+                                  kR        = ( 1 , 0.1 , 10.0 ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_das_1.S.value  = 5000
+    model_das_1.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model_das_1. fitTo ( dataset0 )
+        result, frame = model_das_1. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_das1' ) : 
+        model_das_1.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Das/1 models \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_das_1 )
 
 
-import pickle 
+# ==========================================================================
+## Das
+# ==========================================================================
+def test_das_2 () :
+    
+    logger = getLogger ( 'test_das_2' )
+       
+    logger.info ('Test Das_pdf: Das pdf with tail and asymmetry' ) 
+    model_das_2 = Models.Fit1D (
+        signal = Models.Das_pdf ( name = 'Das1' , 
+                                  xvar      = mass               ,
+                                  mu        = signal_gauss.mean  ,
+                                  sigma     = signal_gauss.sigma ,
+                                  k         = ( 1 , 0.1 , 10.0 ) ,
+                                  kappa     = ( 0  , -1 , 1    ) ) ,
+        background = background   ,
+        S = S , B = B ,
+        )
+
+    signal_gauss.mean .fix ( m.value() )
+    signal_gauss.sigma.fix ( m.error() )
+
+    model_das_2.S.value  = 5000
+    model_das_2.B.value  =  500
+    
+    with rooSilent() :
+        result, frame = model_das_2. fitTo ( dataset0 )
+        result, frame = model_das_2. fitTo ( dataset0 )
+    with wait ( 1 ), use_canvas ( 'test_das_2' ) : 
+        model_das_2.draw (  dataset0 )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        
+    logger.info ( 'Das/2 models \n%s' % result.table ( prefix = "# " ) ) 
+        
+    models.add ( model_das_2)
+
+
+
+
+## # =============================================================================
+## ## Breit-Wigner with interference
+## # =============================================================================
+## def test_bwi () :
+## ## if 1 < 2 :     
+##     logger.info ('Test BWI_pdf' )
+    
+##     ff = cpp.Ostap.Math.FormFactors.BlattWeisskopf( 1 , 3.5 ) ## formfactor 
+##     bw = cpp.Ostap.Math.BreitWigner (
+##     m.value() ,
+##     m.error() ,
+##     0.150     , ## m1 
+##     0.150     , ## m2 
+##     1         , ## orbital momentum
+##     ff          ## formfactor 
+##     )
+    
+##     model = Models.Fit1D (
+##         signal = Models.BWI_pdf
+##         ( name        = 'BWI'             ,
+##           breitwigner = bw                ,     
+##           xvar        = mass              ,
+##           mean        = signal_gauss.mean ,
+##           bkg         = -1                ) ,
+##         suffix     = '_a' , 
+##         background = Models.PolyPos_pdf ('BkgBWI', xvar = mass , power = 1 ) ,
+##         )
+    
+##     signal = model.signal 
+##     model.S.setVal(5000)
+##     model.B.setVal(500)
+    
+##     signal.mean.fix ( m.value() )
+    
+##     with rooSilent() : 
+##         result, frame = model. fitTo ( dataset0 )
+##         signal.mean .release()
+##         signal.gamma.release()
+##         result, frame = model. fitTo ( dataset0 )
+##         model.draw (  dataset0 )
+
+##     if 0 != result.status() or 3 != result.covQual() :
+##         logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual()  ) )
+
+##     logger.info ( "Breit-Wigner function\n%s" % result.table ( prefix = "# " ) )
+
+##     models.add ( model )
 
 # =============================================================================
 ## check that everything is serializable
 # =============================================================================
 def test_db() :
-    logger.info('Saving all objects into DBASE')
+
+    logger = getLogger ( 'test_db' ) 
+    logger.info ( 'Saving all objects into DBASE' )
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
-    with timing( name = 'Save everything to DBASE'), DBASE.tmpdb() as db : 
+    with timing( 'Save everything to DBASE', logger ), DBASE.tmpdb() as db : 
         db['mass,vars'] = mass, varset0
         db['dataset'  ] = dataset0
         for m in models : db['model:' + m.name ] = m
@@ -1190,41 +1430,147 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_gauss          () ## simple Gaussian PDF                       + background 
-    test_crystalball    () ## Crystal Ball                              + background
-    test_crystalball_RS () ## right-side Crystal Ball                   + background  
-    test_crystalball_DS () ## double side Crystal Ball                  + background 
-    test_needham        () ## Needham function (CB with alpha=f(sigma)) + background 
-    test_apollonios     () ## Apollonios function                       + background 
-    test_apollonios2    () ## modified Apollonios function              + background 
-    test_bifurcated     () ## bifurcated Gaussian function              + background 
-    test_2gauss         () ## double     Gaussian function              + background 
-    test_gengauss_v1    () ## generalized Gaussian function V1          + background 
-    test_gengauss_v2    () ## generalized Gaussian function V2          + background 
-    test_skewgauss      () ## skew gaussian                             + background 
-    test_qgauss         () ## q-Gaussian function                       + background 
-    test_bukin          () ## Bukin - skew Gaussian core with exponential tails  + background 
-    test_studentT       () ## Student-t shape                           + background 
-    test_bifstudentT    () ## Bifurcated Student-t shape                + background 
-    test_sinhasinh      () ## Sinh-Asinh distribution                   + background 
-    test_johnsonSU      () ## Johnson-SU distribution                   + background 
-    test_atlas          () ## Modified Gaussian used by ATLAS/Zeus      + background 
-    test_sech           () ## Sech (1/cosh)  distribution               + background 
-    test_losev          () ## Asymmetric hyperbilic secant distribution + background 
-    test_logistic       () ## Logistic distribution                     + background 
-    test_voigt          () ## Voigt profile                             + background 
-    test_pvoigt         () ## Pseudo-Voigt(approximation to Voigt)      + background 
-    test_bw             () ## Breit-Wigner(+resolution)                 + background 
-    test_slash          () ## Slash-function                            + background 
-    test_rasingcosine   () ## Raising Cosine                            + background 
-    test_laplace        () ## Laplace-function                            + background 
+    ## simple Gaussian PDF                       + background
+    with timing ('test_gauss'          , logger ) :
+        test_gauss          () 
+        
+    ## Crystal Ball                              + background
+    with timing ('test_crystalball'    , logger ) :
+        test_crystalball    () 
+        
+    ## right-side Crystal Ball                   + background
+    with timing ('test_crystalball_RS' , logger ) :
+        test_crystalball_RS () 
+
+    ## double side Crystal Ball                  + background
+    with timing ('test_crystalball_DS' , logger ) :
+        test_crystalball_DS () 
+
+    ## Needham function (CB with alpha=f(sigma)) + background 
+    with timing ('test_needham'        , logger ) :
+        test_needham        ()
+
+    ## Apollonios function                       + background 
+    with timing ('test_apollonios'     , logger ) :
+        test_apollonios     () 
+
+    ## modified Apollonios function              + background
+    with timing ('test_apolloniois2'   , logger ) :
+        test_apollonios2    () 
+
+    ## bifurcated Gaussian function              + background
+    with timing ('test_bifurcated'     , logger ) :
+        test_bifurcated     () 
+
+    ## double     Gaussian function              + background
+    with timing ('test_2gauss'         , logger ) :
+        test_2gauss         () 
+
+    ## generalized Gaussian function V1          + background
+    with timing ('test_gengauss_v1'    , logger ) :
+        test_gengauss_v1    () 
+        
+    ## generalized Gaussian function V2          + background
+    with timing ('test_gengauss_v2'    , logger ) :
+        test_gengauss_v2    () 
     
+    ## skew gaussian                             + background
+    with timing ('test_skewgauss'      , logger ) :
+        test_skewgauss      () 
+        
+    ## q-Gaussian function                       + background
+    with timing ('test_qgauss'         , logger ) :
+        test_qgauss         () 
+
+    ## Bukin - skew Gaussian core with exponential tails  + background         
+    with timing ('test_bukun'          , logger ) :
+        test_bukin          ()
+        
+    ## Student-t shape                           + background 
+    with timing ('test_studentT'       , logger ) :
+        test_studentT       () 
+    
+    ## Bifurcated Student-t shape                + background
+    with timing ('test_bifstudentT'    , logger ) :
+        test_bifstudentT    ()
+        
+    ## Sinh-Asinh distribution                   + background
+    with timing ('test_sinhasinh'      , logger ) :
+        test_sinhasinh      () 
+    
+    ## Johnson-SU distribution                   + background 
+    with timing ('test_johnsonSU'      , logger ) :
+        test_johnsonSU      () 
+
+    ## Modified Gaussian used by ATLAS/Zeus      + background 
+    with timing ('test_atlas'          , logger ) :
+        test_atlas          () 
+        
+    ## Sech (1/cosh)  distribution               + background    
+    with timing ('test_sech'           , logger )  : 
+        test_sech           ()
+
+    ## Asymmetric hyperbilic secant distribution + background         
+    with timing ('test_losev'          , logger ) :
+        test_losev          () 
+
+    ## Logistic distribution                     + background 
+    with timing ('test_logistic'       , logger ) :
+        test_logistic       () 
+
+    ## Voigt profile                             + background
+    with timing ('test_voigt'          , logger ) :
+        test_voigt          () 
+    
+    ## Pseudo-Voigt(approximation to Voigt)      + background
+    with timing ('test_pvoigt'         , logger ) :
+        test_pvoigt         () 
+        
+    ## Breit-Wigner(+resolution)                 + background 
+    with timing ('test_bw'             , logger ) :
+        test_bw             () 
+
+    ## Slash-function                            + background 
+    with timing ('test_slash'          , logger ) :
+        test_slash          () 
+
+    ## Raising Cosine                            + background 
+    with timing ('test_raisngcosine'   , logger ) :
+        test_raisngcosine   () 
+
+    ## Laplace-function                            + background 
+    with timing ('test_laplace'        , logger ) :
+        test_laplace        () 
+
+    ## Hyperbolic                                 + background 
+    with timing ('test_hyperbolic'     , logger ) :
+        test_hyperbolic        () 
+        
+    ## Generalised Hyperbolic                      + background 
+    with timing ('test_genhyperbolic'     , logger ) :
+        test_genhyperbolic     () 
+        
+    ## Hypatia                                     + background 
+    with timing ('test_hypatia'           , logger ) :
+        test_hypatia           () 
+
+    ## Das/1                                       + background 
+    with timing ('test_das_1'             , logger ) :
+        test_das_1            () 
+
+    ## Das/2                                       + background 
+    with timing ('test_das_2'             , logger ) :
+        test_das_2            () 
+
+        
     ## check finally that everything is serializeable:
-    test_db ()
+    with timing ('test_db'             , logger ) :
+        test_db ()
 
-    ##pass 
+    pass
+
+
          
-
 # =============================================================================
 ##                                                                      The END 
 # ============================================================================= 

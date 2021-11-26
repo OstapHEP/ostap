@@ -14,6 +14,7 @@ __date__    = "2011-07-25"
 __all__     = (
     ##
     'PDF'           , ## useful base class for 1D-models
+    'MASSMEAN'      , ## useful base class to create "signal" PDFs for mass-fits
     'MASS'          , ## useful base class to create "signal" PDFs for mass-fits
     'RESOLUTION'    , ## useful base class to create "resolution" PDFs
     ##
@@ -22,7 +23,10 @@ __all__     = (
     'Flat1D'        , ## trivial 1D-pdf: constant 
     'Generic1D_pdf' , ## wrapper over imported RooFit (1D)-pdf
     'Sum1D'         , ## wrapper for RooAddPdf 
-    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf 
+    'H1D_pdf'       , ## convertor of 1D-histo to RooHistPdf
+    'Shape1D_pdf'   , ## simple PDF from C++ shape 
+    'make_pdf'      , ## helper function to make PDF
+    'all_args'      , ## check that all arguments has correct type 
     ##
     )
 # =============================================================================
@@ -35,16 +39,51 @@ from   ostap.core.core         import cpp , Ostap , VE , hID , dsID , rootID, va
 from   ostap.math.base         import iszero , frexp10 
 from   ostap.core.ostap_types  import ( is_integer     , string_types   , 
                                         integer_types  , num_types      ,
-                                        list_types     , dictlike_types ) 
+                                        list_types     , all_numerics   ) 
 from   ostap.fitting.roofit    import SETVAR, FIXVAR, PDF_fun
 from   ostap.logger.utils      import roo_silent   , rootWarning
-from   ostap.fitting.utils     import ( RangeVar   , MakeVar  , numcpu , 
-                                        fit_status , cov_qual , H1D_dset , get_i  )
-from   ostap.fitting.funbasic  import FUNC 
+from   ostap.fitting.utils     import ( RangeVar   , MakeVar   , numcpu   ,
+                                        Phases     , make_name ,  
+                                        fit_status , cov_qual  , H1D_dset , get_i )
+from   ostap.utils.utils       import make_iterable 
+from   ostap.fitting.funbasic  import FUNC,  SETPARS 
+from   ostap.utils.cidict      import select_keys
+from   ostap.fitting.roocmdarg import check_arg , nontrivial_arg , flat_args , command  
+import ostap.histos.histos 
+from   ostap.core.meta_info    import root_info
 # =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.basic' )
 else                       : logger = getLogger ( __name__              )
+# =============================================================================
+
+# =============================================================================
+## @var arg_types
+#  list of "good" argument  types 
+arg_types = num_types + ( VE , ROOT.RooAbsReal )
+# =============================================================================
+## are all args of "good" type?
+#  - ROOT.RooAbsReal
+#  - numeric type
+#  - VE
+#  - tuple of 1-3 arguments of numeric values 
+def all_args ( *args ) :
+    """Are all arguments of ``good'' type?
+    - ROOT.RooAbsReal
+    - numeric type
+    - VE
+    - tuple of 1-3 arguments of numeric values 
+    """
+    ## try to find 
+    for a in args :
+        if   isinstance ( a , arg_types ) : pass
+        elif isinstance ( a , tuple     ) and \
+             1 <= len ( a ) <= 3          and \
+             all_numerics ( *a )          : pass
+        else                              : return False 
+        
+    return True 
+
 # =============================================================================
 ## @class PDF
 #  The helper base class for implementation of various PDF-wrappers 
@@ -53,9 +92,9 @@ else                       : logger = getLogger ( __name__              )
 class PDF (FUNC) :
     """Useful helper base class for implementation of various PDF-wrappers 
     """
-    def __init__ ( self , name ,  xvar = None , special = False ) :
+    def __init__ ( self , name ,  xvar , special = False , **kwargs ) :
 
-        FUNC.__init__  ( self , name , xvar = xvar ) 
+        FUNC.__init__  ( self , name , xvar = xvar , **kwargs ) 
 
         self.__signals               = ROOT.RooArgList ()
         self.__backgrounds           = ROOT.RooArgList ()
@@ -65,6 +104,7 @@ class PDF (FUNC) :
         self.__combined_signals      = ROOT.RooArgList ()
         self.__combined_backgrounds  = ROOT.RooArgList ()
         self.__combined_components   = ROOT.RooArgList ()
+
         ## take care about sPlots 
         self.__splots          = []
         self.__histo_data      = None
@@ -192,14 +232,15 @@ class PDF (FUNC) :
         - Signal(x)*Signal(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms1
+    
     @property
-    def crossterms2 ( self ) :
+    def crossterms2 ( self ) : 
         """``cross-terms'': cross-components for multidimensional PDFs e.g.
         - Signal(y)*Background(x)               for 2D-fits,
         - Signal(x)*Background(y)*Background(z) for 3D-fits, etc...         
         """        
         return self.__crossterms2
-    
+        
     @property
     def histo_data  ( self ):
         """Histogram representation as DataSet (RooDataSet)"""
@@ -209,7 +250,7 @@ class PDF (FUNC) :
     def  histo_data ( self  , value ) :
         if   value is None :
             self.__histo_data = value 
-        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooDataHist ) :
+        elif hasattr ( value , 'dset' ) and isinstance ( value.dset , ROOT.RooAbsData ) :
             self.__histo_data = value 
         else :
             raise AttributeError("``histo_data'' has invalid type %s/%s" % (   value , type(value) ) )
@@ -281,11 +322,37 @@ class PDF (FUNC) :
         #
         ## treat the arguments properly
         #
-        opts = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
-        opts = self.parse_args ( dataset , *opts , **kwargs )
-        if not silent and opts : self.info ('fitTo options: %s ' % list ( opts ) )
+        opts     = self.fit_options + ( ROOT.RooFit.Save () , ) + args 
+        opts     = self.parse_args ( dataset , *opts , **kwargs )
+        
+        if silent :
+            pl = check_arg ('PrintLevel'      , *opts ) 
+            if not pl : opts = opts + ( ROOT.RooFit.PrintLevel      ( -1    ) , )
+            vl = check_arg ('Verbose'         , *opts )
+            if not vl : opts = opts + ( ROOT.RooFit.Verbose         ( False ) , )
+            pe = check_arg ('PrintEvalErrors' , *opts )
+            if not pe : opts = opts + ( ROOT.RooFit.PrintEvalErrors ( 0     ) , )
+                
+        weighted = dataset.isWeighted() if dataset else False
+        if weighted :
+            sw2 = check_arg ( 'SumW2Error'      , *opts )
+            aer = check_arg ( 'AsymptoticError' , *opts )
+            if not sw2 and not aer :
+                self.warning ( "fitTo: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset!" )
 
-        ## play a bit with the binning cache for convolutions 
+        if 1 < len ( self.vars ) :
+            rng = check_arg ( 'Range' , *opts ) 
+            if rng : self.warning ( 'fitTo: %s is specified for >1D function - it is ambuguous!' % rng )
+
+        ## check fit ranges 
+        rng = check_arg ( 'RangeByName' , *opts )
+        ok  = self.check_ranges ( dataset , rng.getString(0) if rng else '' )
+        if not ok : self.warning ( 'fitTo: ranges are not OK' ) 
+
+        if not silent and opts and nontrivial_arg ( ( 'Save' , 'NumCPU' ) , *opts ) :
+            self.info ('fitTo options: %s ' % list ( flat_args ( *opts ) ) ) 
+
+        ## play a bit with the binning cache for 1D-convolutions 
         if self.xvar.hasBinning ( 'cache' ) :
             nb1 = self.xvar.getBins( 'cache' ) 
             xv  = getattr ( dataset , self.xvar.name , None )
@@ -293,16 +360,17 @@ class PDF (FUNC) :
                 nb2 = xv.getBins('cache')
                 if  nb1 != nb2 :
                     xv.setBins ( max (  nb1 , nb2 ) , 'cache' )
-                    self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
+                    if not silent :
+                        self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , xv.name ) )
             elif xv :
                 xv.setBins (        nb1         , 'cache' )
-                self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
-                
-        #
+                if not silent : 
+                    self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , xv.name )  )
+
         ## define silent context
         with roo_silent ( silent ) :
-            self.fit_result = None
-            result          = self.pdf.fitTo ( dataset , *opts ) 
+            self.fit_result = None            
+            result          = self.fit_to ( self.pdf , dataset , *opts ) 
             self.fit_result = result 
             if hasattr ( self.pdf , 'setPars' ) : self.pdf.setPars() 
 
@@ -333,7 +401,7 @@ class PDF (FUNC) :
             self.warning ( 'fitTo: covQual    is %s ' % cov_qual ( qual ) )
 
         #
-        ## check the integrals (when possible)
+        ## check the integrals (if/when possible)
         #
         if hasattr ( self , 'yields' ) and self.yields  :
             
@@ -355,13 +423,14 @@ class PDF (FUNC) :
                         self.debug   ( "fitTo: variable ``%s'' == %s [very close (< 1%%) to minimum %s]"
                                        % ( i.GetName() , i.value , imn ) )
                         
-            if not dataset.isWeighted () :
+            if hasattr ( self , 'natural' ) and self.natural and not dataset.isWeighted () :
 
                 sums = [ nsum ]
+                    
                 if 2 <= len ( self.yields ) : sums.append ( result.sum ( *self.yields ) )
 
                 for ss in sums :
-                    if 0 >= ss.cov2() : continue 
+                    if 0 >= ss.cov2() : continue
                     nl = ss.value() - 0.50 * ss.error() 
                     nr = ss.value() + 0.50 * ss.error()
                     if not nl <= len ( dataset ) <= nr :
@@ -380,6 +449,15 @@ class PDF (FUNC) :
                                  silent = silent ,
                                  refit  = refit  ,
                                  args   = args   , **kwargs ) 
+
+        cov2_good = ( qual == 3 ) or ( dataset.isWeighted() and qual == -1 )
+        
+        if   result and 0 == result.status() and not silent :
+            logger.info     ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and ( not cov2_good ) and not silent : 
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) ) 
+        elif result and not silent :
+            logger.warning  ( "Fit result is\n%s" % result.table ( prefix = "# " ) )
 
         frame = None
         
@@ -400,7 +478,8 @@ class PDF (FUNC) :
         for s in self.signals     : 
             if hasattr ( s , 'setPars' ) : s.setPars() 
 
-        ## 
+        ## ##
+                         
         return result, frame 
 
     ## helper method to draw set of components 
@@ -417,32 +496,16 @@ class PDF (FUNC) :
         elif isinstance ( style , Style      ) : style = Styles ( [ style ] )
         elif isinstance ( style , list_types ) : style = Styles (   style   )   
 
-        if args :
-            self.error ( "___DRAW: " + str ( args ) )
-        
         for i , cmp in enumerate ( what ) :
 
             st         = style  ( i ) if style and callable  ( style ) else ()
+            
+            component  = ROOT.RooFit.Components ( cmp.name )
 
-            cmps       = ROOT.RooArgSet         ( cmp  )             
-            components = ROOT.RooFit.Components ( cmps )
+            atup = args + tuple ( options ) + tuple ( st ) 
+            self.debug   ( 'drawing component %s with options %s' % ( cmp.name , ( component, ) + atup ) )             
+            self.plot_on ( self.pdf , frame , component , *atup  )
             
-            command    = ROOT.RooLinkedList()
-            command.add ( components )
-            
-            for s in st         : command.add ( s )
-            for o in options    : command.add ( o ) 
-            for a in args       : command.add ( a )
- 
-            self.pdf .plotOn ( frame , command )
-            
-            ncmps = [ c.GetName() for c in cmps ]
-            if 1 == len ( ncmps )  :  ncmps = ncmps[0]
-            self.debug ("draw ``%s'' with %s" % ( ncmps , st + options ) )
-            
-            del command
-
-                                            
     # ================================================================================
     ## draw fit results
     #  @code
@@ -486,6 +549,7 @@ class PDF (FUNC) :
                nbins                 = 100  ,   ## Frame binning
                silent                = True ,   ## silent mode ?
                style                 = None ,   ## use another style ?
+               drawvar               = None ,   ## drawvar 
                args                  = ()   , 
                **kwargs                     ) :
         """  Visualize the fits results
@@ -542,10 +606,12 @@ class PDF (FUNC) :
 
         #
         ## again the context
-        # 
+        #
+        used_options = set() 
+        
         with roo_silent ( silent ) , useStyle ( style ) :
 
-            drawvar = self.draw_var if self.draw_var else self.xvar  
+            drawvar = drawvar if drawvar else ( self.draw_var if self.draw_var else self.xvar )  
 
             binned = dataset and isinstance ( dataset , ROOT.RooDataHist )
 
@@ -556,7 +622,7 @@ class PDF (FUNC) :
             ## draw invizible data (for normalzation of fitting curves)
             #
             data_options = self.draw_option ( 'data_options' , **kwargs )
-            kwargs.pop ( 'data_options' , () )
+            used_options.add ( 'data_options' ) 
             if dataset and dataset.isWeighted() and dataset.isNonPoissonWeighted() : 
                 data_options = data_options + ( ROOT.RooFit.DataError( ROOT.RooAbsData.SumW2 ) , )
                 
@@ -564,71 +630,78 @@ class PDF (FUNC) :
                 data_options = data_options + ( ROOT.RooFit.Binning ( nbins ) , )
 
             if dataset :
-                command  = ROOT.RooLinkedList()
-                for o in data_options : command.add ( o )
-                for a in args         : command.add ( o )
-                invisible = ROOT.RooFit.Invisible()  
-                command.add ( invisible ) 
-                dataset .plotOn ( frame , command )
+
+                commands = data_options 
+                commands = data_options + args +  ( ROOT.RooFit.Invisible() , ) 
+                self.plot_on ( dataset , frame , *commands ) 
                 
             ## draw various ``background'' terms
             boptions     = self.draw_option ( 'background_options' , **kwargs ) 
             bbstyle      = self.draw_option (   'background_style' , **kwargs )
             self._draw( self.backgrounds , frame , boptions , bbstyle )
-            kwargs.pop ( 'background_options' , () )
-            kwargs.pop ( 'background_style'   , () )
+            used_options.add ( 'background_options' ) 
+            used_options.add ( 'background_style'   ) 
 
             ## draw combined ``background'' components 
             if self.combined_backgrounds :
+                
                 drawit   = self.draw_option ( 'draw_combined_background'    , **kwargs )
                 doptions = self.draw_option ( 'combined_background_options' , **kwargs ) 
                 dstyle   = self.draw_option ( 'combined_background_style'   , **kwargs )
+                
                 if drawit : self._draw ( self.combined_backgrounds , frame , doptions , dstyle , args )
                 
-            kwargs.pop ( 'combined_background_options' , ()   )
-            kwargs.pop ( 'combined_background_style'   , ()   )
-            kwargs.pop ( 'draw_combined_backgrounds'   , True )
-            
+            used_options.add ( 'draw_combined_background'    ) 
+            used_options.add ( 'combined_background_options' ) 
+            used_options.add ( 'combined_background_style  ' )
+                
             ## ugly :-(
             ct1options   = self.draw_option ( 'crossterm1_options' , **kwargs )
             ct1bstyle    = self.draw_option ( 'crossterm1_style'   , **kwargs ) 
             if hasattr ( self , 'crossterms1' ) and self.crossterms1 : 
                 self._draw( self.crossterms1 , frame , ct1options , ct1bstyle , args )
-            kwargs.pop ( 'crossterm1_options' , () )
-            kwargs.pop ( 'crossterm1_style' , () )
+                
+            used_options.add ( 'crossterm1_options' ) 
+            used_options.add ( 'crossterm1_style'   ) 
 
             ## ugly :-(
             ct2options   = self.draw_option ( 'crossterm2_options' , **kwargs )
-            ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs ) 
+            ct2bstyle    = self.draw_option ( 'crossterm2_style'   , **kwargs )
+            
             if hasattr ( self , 'crossterms2' ) and self.crossterms2 :
                 self._draw( self.crossterms2 , frame , ct2options , ct2bstyle , args )
-            kwargs.pop ( 'crossterm2_options' , () )
-            kwargs.pop ( 'crossterm2_style'   , () )
+                
+            used_options.add ( 'crossterm2_options' ) 
+            used_options.add ( 'crossterm2_style'   ) 
 
             ## draw ``other'' components
             coptions     = self.draw_option ( 'component_options' , **kwargs )
             cbstyle      = self.draw_option ( 'component_style'   , **kwargs )
             self._draw( self.components , frame , coptions , cbstyle , args )
-            kwargs.pop ( 'component_options' , () )
-            kwargs.pop ( 'component_style'   , () )
+
+            used_options.add ( 'component_options' ) 
+            used_options.add ( 'component_style'   ) 
 
             ## draw combined ``other'' components 
             if self.combined_components :
+                
                 drawit   = self.draw_option ( 'draw_combined_component'    , **kwargs )
                 doptions = self.draw_option ( 'combined_component_options' , **kwargs ) 
                 dstyle   = self.draw_option ( 'combined_component_style'   , **kwargs )
+                
                 if drawit : self._draw ( self.combined_components , frame , doptions , dstyle , args )
                 
-            kwargs.pop ( 'combined_component_options' , ()   )
-            kwargs.pop ( 'combined_component_style'   , ()   )
-            kwargs.pop ( 'draw_combined_component'    , True )
-                    
+            used_options.add ( 'draw_combined_component'    ) 
+            used_options.add ( 'combined_component_options' ) 
+            used_options.add ( 'combined_componnet_style  ' )
+            
             ## draw ``signal'' components
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
             sbstyle      = self.draw_option (      'signal_style'  , **kwargs ) 
             self._draw( self.signals , frame , soptions , sbstyle , args )
-            kwargs.pop ( 'signal_options' , () )
-            kwargs.pop ( 'signal_style'   , () )
+
+            used_options.add ( 'signal_options' ) 
+            used_options.add ( 'signal_style  ' )
 
             ## draw combined ``signals'' components 
             if self.combined_signals :
@@ -637,25 +710,23 @@ class PDF (FUNC) :
                 dstyle    = self.draw_option (   'combined_signal_style'  , **kwargs )
                 if drawit : self._draw ( self.combined_signals , frame , doptions , dstyle , args )
                 
-            kwargs.pop ( 'combined_signal_options' , ()   )
-            kwargs.pop ( 'combined_signal_style'   , ()   )
-            kwargs.pop ( 'draw_combined_signal'    , True )
+            used_options.add ( 'draw_combined_signal'    ) 
+            used_options.add ( 'combined_signal_options' ) 
+            used_options.add ( 'combined_combined_style' )
             
             #
             ## the total fit curve
             #
             totoptions   = self.draw_option (  'total_fit_options' , **kwargs )
-            self.pdf .plotOn ( frame , *totoptions )
-            kwargs.pop ( 'total_fit_options' , () )            
+            self.plot_on ( self.pdf , frame , *totoptions ) 
+            used_options.add ( 'total_fit_options'    ) 
+
             #
             ## draw data once more
             #
             if dataset :
-                command    = ROOT.RooLinkedList()
-                for o in data_options : command.add ( o )
-                for a in args         : command.add ( a ) 
-                dataset .plotOn ( frame , command )
-                del command
+                commands = data_options + args
+                self.plot_on ( dataset , frame , *commands )
 
             #
             ## suppress ugly axis labels
@@ -668,7 +739,8 @@ class PDF (FUNC) :
             #
             ## Draw the frame!
             #
-            if not ROOT.gROOT.IsBatch() :
+            groot = ROOT.ROOT.GetROOT()
+            if not groot.IsBatch() :
                 with rootWarning (): frame.draw( kwargs.pop ( 'draw_options','' ) )
             
             residual =  kwargs.pop ( 'residual' , False )
@@ -682,20 +754,27 @@ class PDF (FUNC) :
                 residual = False
 
             if kwargs :
-                self.warning("draw: ignored unknown options: %s" % list( kwargs.keys() ) ) 
+                used = set() 
+                from ostap.plotting.fit_draw import key_compare as draw_key_compare 
+                for k in kwargs :
+                    for key in used_options :
+                        if draw_key_compare ( k , key ) :
+                            used.add ( k ) 
+                extra = list ( sorted ( set ( kwargs.keys() ) - used ) )
+                if extra : self.warning ( "draw: ignored unknown options: %s" % extra ) 
 
             ## calculate chi2/ndf
             frame.chi2dnf = None 
             if dataset and not silent :             
-                pars          = self.pdf.getParameters ( dataset )
+                pars          = self.params ( dataset )
                 frame.chi2ndf = frame.chiSquare ( len ( pars ) )
                 binw          = -1 
                 if nbins and isinstance ( nbins , integer_types ) and 1 < nbins :
                     if hasattr ( drawvar , 'xminmax' ) and drawvar.xminmax () :
                         xmn , xmx =  drawvar.xminmax()
                         binw = ( xmx - xmn ) / float ( nbins )
-                if 0 < binw : self.info ( 'chi2/ndf: %s, binwidth: %s' %  ( frame.chi2ndf , binw ) )
-                else        : self.info ( 'chi2/ndf: %s' %                  frame.chi2ndf          )
+                if 0 < binw : self.info ( 'chi2/ndf: %.3f, binwidth: %s' %  ( frame.chi2ndf , binw ) )
+                else        : self.info ( 'chi2/ndf: %.3f' %                  frame.chi2ndf          )
                 
             if not residual and not pull:
                 return frame
@@ -759,7 +838,7 @@ class PDF (FUNC) :
             else :                
                 ## convert it! 
                 self.debug ('Create new H1D_dset'        ) 
-                self.histo_data = H1D_dset ( histo , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = histo , xaxis = self.xvar , density = density , silent = silent )
                 data            = self.histo_data.dset
 
             if  self.xminmax() :
@@ -810,7 +889,7 @@ class PDF (FUNC) :
             # if histogram, convert it to RooDataHist object:
             xminmax = dataset.xminmax() 
             with RangeVar( self.xvar , *xminmax ) :                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset 
                 histo           = dataset 
                 
@@ -878,7 +957,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data   = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data   = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset          = self.histo_data.dset
                 kwargs [ 'ncpu' ] = 2   
                 return self.draw_nll ( var     = var      ,
@@ -892,7 +971,7 @@ class PDF (FUNC) :
             dataset = dataset.dset
             
         ## get all parametrs
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset )
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
@@ -909,7 +988,6 @@ class PDF (FUNC) :
         ##
         largs = [ i for i in  args ]
         ## 
-        from ostap.utils.cidict import select_keys
         dopts = select_keys ( kwargs , ( 'line_color' , 'line_width' , 'line_style' , 
                                          'color'      , 'width'      , 'style'      ) , 
                               transform = lambda s : s.lower().replace('_','') )
@@ -939,7 +1017,7 @@ class PDF (FUNC) :
 
         from ostap.fitting.variables import KeepBinning
         
-        with KeepBinning ( var ) :
+        with SETPARS ( self , dataset ) , KeepBinning ( var ) :
 
             if bins :
                 var.bins = bins
@@ -949,7 +1027,7 @@ class PDF (FUNC) :
             frame = var.frame ( *fargs )
             
             self.debug ( 'draw_nll: plotOn args: %s'% list ( largs ) )
-            result.plotOn ( frame , *largs  )
+            self.plot_on ( result , frame , *largs )
             
             import ostap.histos.graphs
             
@@ -962,7 +1040,7 @@ class PDF (FUNC) :
                                         
             ## scale it if needed
             if 1 != sf :
-                logger.info ('draw_nll: apply scale factor of %s due to dataset weights' % sf )
+                logger.info ('draw_nll: apply scale factor of %.4g due to dataset weights' % sf )
                 graph  = frame.getObject ( 0 )
                 graph *= sf 
                 
@@ -982,10 +1060,9 @@ class PDF (FUNC) :
                 frame.SetYTitle  ( '' )
                 frame.SetZTitle  ( '' )
                 
-        
-
-        ## draw it! 
-        if not ROOT.gROOT.IsBatch() :
+        ## draw it!
+        groot = ROOT.ROOT.GetROOT()        
+        if not groot.IsBatch() :
             with rootWarning ():
                 if draw : frame.draw ( kwargs.get('draw_options', '' ) )
 
@@ -1036,28 +1113,34 @@ class PDF (FUNC) :
         ## get s-Factor 
         sf   = dataset.sFactor() 
 
-        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )            
-        return self.pdf.createNLL ( dataset , *opts ) , sf 
+        self.debug ( 'nll: createNLL args: %s'% list ( opts ) )
+        if len ( opts ) < 8 : 
+            return self.pdf.createNLL ( dataset , *opts             ) , sf
+        else :
+            return self.pdf.createNLL ( dataset , command ( *opts ) ) , sf
+            
 
     # =========================================================================
-    ## get NLL/profile-graph for the variable, using the specified bscissas
+    ## get NLL/profile-graph for the variable, using the specified abscissas
     #  @code
     #  pdf   = ...
-    #  graph = pdf.graph_nll ( 'S'               ,
-    #                          range ( 0 , 100 ) ,
-    #                          dataset           )
+    #  graph = pdf.graph_nll ( 'S'                      ,
+    #                          vrange ( 0 , 100 , 100 ) ,
+    #                          dataset                  )
     #  @endcode
-    def graph_nll ( self            ,
-                    variable        , 
-                    values          ,
-                    dataset         ,
-                    silent  = True  ,
-                    args    = ()    , **kwargs ) :
+    def graph_nll ( self             ,
+                    variable         , 
+                    values           ,
+                    dataset          ,
+                    silent   = True  ,
+                    draw     = False ,
+                    subtract = True  , 
+                    args     = ()    , **kwargs ) :
         """Get NLL/profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
-        >>> graph = pdf.graph_nll ( 'S'               ,
-        ...                          range ( 0 , 100 ) ,
-        ...                          dataset           )
+        >>> graph = pdf.graph_nll ( 'S'                     ,
+        ...                          vrange ( 0 , 100 , 100 ) ,
+        ...                          dataset                )
         """
 
         ## 1) create NLL 
@@ -1065,37 +1148,51 @@ class PDF (FUNC) :
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars 
 
-        ## 2) collect NLL values 
-        results = []
-        vmin    = None 
-        with SETVAR  ( var ) :
+        import ostap.histos.graphs
+        ## 2) create graph if drawing reqested 
+        graph = ROOT.TGraph () if draw else None 
+            
+        ## 3) collect NLL values 
+        results   = []
+        vmin      = None
+        with SETPARS ( self , dataset ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
             for v in progress_bar  ( values , silent = silent ) :
                 var.setVal ( v )
                 n   = nLL.getVal() 
                 res = v , n
                 results.append ( res )
-                vmin = n if vmin is None else min ( vmin , n ) 
-        
+                vmin = n if vmin is None else min ( vmin , n )
+                if draw :
+                    graph.SetPoint ( len ( graph ) , v , n ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ( "ap" )  
+
         ## 3) create graph
-        import ostap.histos.graphs
         graph = ROOT.TGraph ( len ( results ) )
-        results.sort () 
+        results.sort ()
+        ymin   = None 
         for i , point in enumerate ( results ) :
             x , y = point 
-            if vmin is None : graph [ i ] = x , y
-            else            : graph [ i ] = x , y - vmin 
+            graph [ i ]  = x , y 
+            ymin = y if ymin is None else min ( ymin , y )
             
+       ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_nll: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_nll: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_nll: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
             
+        if draw : graph.draw ('ap')
+
         return graph 
 
     # =========================================================================
@@ -1106,28 +1203,40 @@ class PDF (FUNC) :
     #                              vrange ( 0 , 12.5 , 10  ) ,
     #                              dataset                   )
     #  @endcode
-    def graph_profile ( self            ,
-                        variable        , 
-                        values          ,
-                        dataset         ,
-                        fix     = []    ,
-                        silent  = True  ,
-                        args    = ()    , **kwargs ) :
+    def graph_profile ( self             ,
+                        variable         , 
+                        values           ,
+                        dataset          ,
+                        fix      = []    ,
+                        silent   = True  ,
+                        draw     = False ,
+                        subtract = True  , 
+                        args     = ()    , **kwargs ) :
         """Get profile-graph for the variable, using the specified abscissas
         >>> pdf   = ...
-        >>> graph = pdf.graph_profile ( 'S'                     ,
-        ...                             range ( 0 , 12.5 , 20 ) ,
-        ...                             dataset                 )
+        >>> graph = pdf.graph_profile ( 'S'                      ,
+        ...                             vrange ( 0 , 12.5 , 20 ) ,
+        ...                             dataset                  )
         """
+        
+        vals = [ v for v in values ]
+        assert vals, 'graph_profile: no points are specified!'
+                
+        vmin = min ( vals )
+        vmax = max ( vals )
 
         ## 1) create NLL 
         nLL , sf = self.nll ( dataset , silent = silent ,  args = args , **kwargs )
 
         ## get the parametrs
         var  = variable 
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
+
+        if var.minmax () :            
+            minv = min ( var.getMin () , vmin )
+            maxv = max ( var.getMax () , vmax )
 
         vars = ROOT.RooArgSet ( var )
         for f in fix :
@@ -1140,32 +1249,45 @@ class PDF (FUNC) :
                                   'LL-profile(%s,%s)' % ( var.name , self.name ) ,
                                   nLL , vars )
 
-        ## 2) collect pLL values 
+        ## 2) create graph if requested 
+        import ostap.histos.graphs
+        graph = ROOT.TGraph () if draw else None 
+                        
+
+        ## 3) collect pLL values 
         results = [] 
-        vmin    = None 
-        with SETVAR  ( var ) :
+        with SETPARS ( self , dataset ) , RangeVar ( var , minv , maxv ) , SETVAR  ( var ) :
             from ostap.utils.progress_bar import progress_bar 
-            for  v in progress_bar ( values , silent = silent )  :
+            for i , v in enumerate ( progress_bar ( vals , silent = silent )  ) :
                 var.setVal ( v )
                 p   = pLL.getVal() 
                 res = v , p 
                 results.append ( res )
-                vmin = p if vmin is None else min ( vmin , p ) 
-             
-        ## 3) create graph 
-        import ostap.histos.graphs
-        graph = ROOT.TGraph ( len ( results ) )
+                if draw :
+                    graph.SetPoint ( len ( graph ) , v , p ) ## add the point 
+                    if 1 == len ( graph ) : graph.draw ("ap")  
+                    
+        ## 4) re-create the graph
+        graph   = ROOT.TGraph ( len ( results ) )
         results.sort ()
+        ymin    = None 
         for i , point  in enumerate ( results ) :
-            x , y = point 
-            if vmin is None : graph [ i ] = x , y
-            else            : graph [ i ] = x , y - vmin 
-            
+            x , y = point
+            graph [ i ]  = x , y 
+            ymin = y if ymin is None else min ( ymin , y )
+                    
+        ## subtract the minimum
+        if subtract :
+            logger.info ( "graph_profile: minimal value of %.5g is subtracted" % ymin ) 
+            graph -= ymin 
+
         ## scale it if needed
         if 1 != sf :
-            logger.info ('graph_profile: apply scale factor of %s due to dataset weights' % sf )
+            logger.info ('graph_profile: apply scale factor of %.5g due to dataset weights' % sf )
             graph *= sf 
-            
+
+        if draw : graph.draw ('ap')
+        
         return graph 
         
     # ========================================================================
@@ -1195,7 +1317,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silent = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks ( var     = var      ,
@@ -1208,7 +1330,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset ) 
+        pars = self.params ( dataset ) 
         assert var in pars , "Variable %s is not a parameter"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
         del pars
@@ -1222,7 +1344,7 @@ class PDF (FUNC) :
             if 0 < maxv.cov2 () : error = maxv.error() 
             maxv = maxv.value ()
             
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
             
             nll , sf = self.nll ( dataset         ,
                                   silent = silent ,
@@ -1257,7 +1379,7 @@ class PDF (FUNC) :
                     dnll = VE ( dnll , 0.25 * (val_maxvp - val_maxvm )**2 )
                     
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
                 
             ## convert the difference in likelihoods into sigmas 
@@ -1296,7 +1418,7 @@ class PDF (FUNC) :
             with RangeVar( self.xvar , *xminmax ) :
                 density = kwargs.pop ( 'density' , False )
                 silent  = kwargs.pop ( 'silent'  , True  )                
-                self.histo_data = H1D_dset ( dataset , self.xvar , density , silent )
+                self.histo_data = H1D_dset ( histo = dataset , xaxis = self.xvar , density = density , silnet = silent )
                 hdataset        = self.histo_data.dset
                 kwargs['ncpu']  = 1 
                 return self.wilks2 ( var            = var             ,
@@ -1310,7 +1432,7 @@ class PDF (FUNC) :
             dataset = dataset.dset 
                           
         ## get all parameters
-        pars = self.pdf.getParameters ( dataset )
+        pars = self.params ( dataset ) 
         
         assert var in pars , "Variable %s is not a parameter/1"   % var
         if not isinstance ( var , ROOT.RooAbsReal ) : var = pars[ var ]
@@ -1337,7 +1459,7 @@ class PDF (FUNC) :
             maxv = maxv.value ()
 
         vname = var.GetName() 
-        with roo_silent ( silent ) :
+        with SETPARS ( self , dataset ) , roo_silent ( silent ) :
 
             ## fix "fixed" variables and redefine range for main variable
             mn = min ( minv , maxv - error )
@@ -1379,7 +1501,7 @@ class PDF (FUNC) :
             dnll = nll_min - nll_max
 
             ## apply scale factor
-            if 1 != sf :  logger.info ('Scale factor of %s is applied' % sf )
+            if 1 != sf :  logger.info ('Scale factor of %.4g is applied' % sf )
             dnll *= sf            
         
             ## convert the difference in likelihoods into sigmas/significance
@@ -1401,14 +1523,18 @@ class PDF (FUNC) :
     #  m.minos ( param )
     #  @endcode
     #  @see RooMinimizer
-    def minuit ( self                   ,
-                 dataset         = None ,
-                 max_calls       = -1   ,
-                 max_iterations  = -1   , 
-                 opt_const       = True , ## optimize const 
-                 strategy        = None ,
-                 nLL             = None , ## nLL  
-                 args            =   () , **kwargs  ):
+    def minuit ( self                    ,
+                 dataset         = None  ,
+                 max_calls       = -1    ,
+                 max_iterations  = -1    , 
+                 opt_const       = True  , ## optimize const 
+                 strategy        = None  ,
+                 silent          = False ,
+                 print_level     = 0     , 
+                 nLL             = None  , ## nLL
+                 scale           = True  , ## scale weighted dataset ?
+                 offset          = True  , ## offset the FCN values? 
+                 args            =   ()  , **kwargs  ):
         """Get the actual minimizer for the explicit manipulations
         >>> data = ...
         >>> pdf  = ...
@@ -1425,11 +1551,21 @@ class PDF (FUNC) :
         ##                            ROOT.RooFit.CloneData ( False ) , *args , **kwargs )
         ## nll  = self.pdf.createNLL ( dataset , *opts )
 
-        assert nLL or dataset , "minuit: nLL or dataset *must* be specified!" 
-        if not nLL : 
-            nLL , _ = self.nll ( dataset , args = args , **kwargs )
-        
+        assert nLL or dataset , "minuit: nLL or dataset *must* be specified!"
+
+        scale_errdef = 1 
+        if not nLL :
+            nLL , sf = self.nll ( dataset , args = args , **kwargs )
+            if dataset.isWeighted() and 1 != sf :
+                if scale : scale_errdef = sf
+                else     : self.warning("minuit: no FCN scaling for the weighted dataset is defined!")
+            self.aux_keep.append ( nLL )
+            
         m    = ROOT.RooMinimizer ( nLL )
+
+        if  silent : m.setPrintLevel ( -1 ) 
+        else       : m.setPrintLevel ( print_level )   
+        
         if isinstance  ( opt_const  , bool ) : m.optimizeConst ( opt_const ) 
         if isinstance  ( max_calls      , integer_types ) and 1 < max_calls :
             m.setMaxFunctionCalls ( max_calls )
@@ -1437,7 +1573,17 @@ class PDF (FUNC) :
             m.setMaxIterations    ( max_iterations  )
         if isinstance  ( strategy , integer_types       ) and 0 <= strategy <= 2 :
             m.setStrategy ( strategy )
-            
+
+        ## offset ? 
+        m.setOffsetting ( offset )
+        
+        if 1 != scale_errdef :
+            old_errdef = nLL.defaultErrorLevel ()
+            new_errdef = old_errdef / scale_errdef
+            logger.info ("minuit: Error Level is redefined from %.1f to %.4g" %  ( old_errdef ,
+                                                                                   new_errdef ) )
+            m.setErrorLevel ( new_errdef ) 
+
         return m  
 
     # =========================================================================
@@ -1469,25 +1615,27 @@ class PDF (FUNC) :
     ## generate toy-sample according to PDF
     #  @code
     #  model  = ....
-    #  data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+    #  data   = model.generate ( 10000 ) ## generate dataset
     #  varset = ....
-    #  data   = model.generate ( 100000 , varset )
-    #  data   = model.generate ( 100000 , varset , sample = True )     
+    #  data   = model.generate ( 100000 , varset , sample = False )
+    #  data   = model.generate ( 100000 , varset , sample = True  )     
     #  @endcode
     def generate ( self             ,
                    nEvents          ,
                    varset   = None  ,
                    binning  = None  ,
-                   sample   = False , 
+                   sample   = True  , ##  sample number of events ?  
                    args     = ()    ) :
         """Generate toy-sample according to PDF
         >>> model  = ....
-        >>> data   = model.generate ( 10000 ) ## generate dataset with 10000 events
+        >>> data   = model.generate ( 10000 ) ## generate dataset 
         
         >>> varset = ....
-        >>> data   = model.generate ( 100000 , varset )
-        >>> data   = model.generate ( 100000 , varset , sample = True )
+        >>> data   = model.generate ( 100000 , varset , sample = False )
+        >>> data   = model.generate ( 100000 , varset , sample = True  )
         """
+        
+        ## sample number of events in dataset ?
         nEvents = self.gen_sample ( nEvents ) if sample else nEvents 
         assert 0 <= nEvents , 'Invalid number of Events %s' % nEvents  
 
@@ -1511,7 +1659,6 @@ class PDF (FUNC) :
             varset = vs  
 
         from ostap.fitting.variables import KeepBinning
-
             
         with KeepBinning ( self.xvar ) : 
 
@@ -1658,7 +1805,7 @@ class PDF (FUNC) :
         >>>  print 'MEDIAN: %s ' % pdf.median()
         """
         from ostap.stats.moments import median as _median
-        return self._gets_stat_ ( _median , **kwargs )
+        return self._get_stat_ ( _median , **kwargs )
 
     # =========================================================================
     ## get the effective mean
@@ -1857,7 +2004,7 @@ class PDF (FUNC) :
                 integral = True  ,
                 errors   = False ) :
         """Convert PDF to the 1D-histogram in correct way
-        - Unlike  <code>PDF.roo_histo</code> method, PDF is integrated within the bin
+        - Unlike  `PDF.roo_histo` method, PDF is integrated within the bin
         >>> pdf = ...
         >>> h1  = pdf.histo ( 100 , 0. , 10. ) ## specify histogram parameters
         >>> histo_template = ...
@@ -2073,6 +2220,32 @@ class PDF (FUNC) :
         dataset.project ( hdata , self.xvar.name )
         return self.pull_histo ( hdata ) 
         
+    # ==========================================================================
+    ## make 2D-cpontours
+    # ==========================================================================
+    def contours ( self              ,
+                   var1              ,
+                   var2              ,
+                   dataset           ,
+                   levels  = ( 1 , ) ,
+                   npoints = 100     ,
+                   **kwargs          ) :
+        
+        ## create the minuit 
+        mn = self.minuit ( dataset , **kwargs )
+        
+        ## get the parametrs
+        pars = self.params ( dataset ) 
+        assert var1 in pars , "Variable %s is not a parameter"   % var1
+        if not isinstance ( var1 , ROOT.RooAbsReal ) : var1 = pars [ var1 ]
+        assert var2 in pars , "Variable %s is not a parameter"   % var2
+        if not isinstance ( var2 , ROOT.RooAbsReal ) : var2 = pars [ var2 ]
+        del pars 
+
+        import ostap.fitting.roofitresult
+        status = mn.migrad( tag = 'contours' )
+
+        return mn.contour ( var1 , var2 , npoints , *levels ) 
 
         
     # ==========================================================================
@@ -2155,6 +2328,91 @@ class PDF (FUNC) :
         return ufracs
     
     # =============================================================================
+    ## Create list of variables that can be used as ``fractions'' for N-component fit
+    #  @code
+    #  MV = ...
+    #  fractions = MV.make_fractions ( 5 )
+    #  fractions = MV.make_fractions ( 5 , name = 'F%d_A' , suffix = 'D' )
+    #  fractions = MV.make_fractions ( 5 , name = 'F%d_B' , recursive = False )    
+    #  fractions = MV.make_fractions ( 5 , name = 'F%d_C' , fractions = (0.4, 0.1 , 0.3 , 0.1 ) )   
+    #  @endcode 
+    def make_fractions ( self              ,
+                         N                 ,
+                         name      = 'f%d' , ## pattern to contruct the fraction name from index 
+                         title     = ''    , 
+                         recursive = True  ,
+                         fractions = ()    ) :
+        
+        assert is_integer ( N ) and 2 <= N ,\
+               "make_fractions: there must be at least two components!"
+
+        my_fractions = make_iterable ( fractions , None )
+            
+        fracs = []
+        value = 1.0
+        prod  = 1.0
+
+
+        for i , ff in zip ( range ( N - 1  ) , my_fractions ) :
+
+            value = 1.0 / N
+            
+            if recursive :
+                
+                value /= prod
+                prod  *= ( 1.0 - value ) 
+                
+            if   isinstance  ( ff , num_types       ) and not 0 <= ff <= 1 :
+                self.error   ("make_fractions: fraction %s is outside [0,1] interval, ignore it!" %  ff )
+                ff = value
+                
+            elif isinstance  ( ff , ROOT.RooAbsReal ) and not 0 <= float ( ff ) <= 1 :
+                self.warning ("make_fractions: fraction %s is outside [0,1] interval" %  ff )
+                
+            if ff is None : ff = value
+
+            fname = name if ( 2 == N and  '%s' not in name and '%d' not in name ) else name % i  
+            
+            tit   =  title if title else 'Fraction #%d: %s %s' % ( i , fname , self.name )                 
+            fvar  = self.make_var ( ff   , fname  , tit , None , value , 0 , 1 )
+            
+            fracs.append ( fvar  )
+            
+        return tuple ( fracs )
+
+    # =============================================================================
+    ## create a list of variables that can be used as ``yields'' for N-component fit
+    #  @code
+    #  M = ...
+    #  nums = M.make_yields ( 5 , name = 'S_%d_A' , minmax = (0, 1000) )
+    #  nums = M.make_yields ( 5 , name = 'S_%d_B' , minmax = (0, 1000) ,  yields =  ( 1 , 100 , 50 , 10 , 10 ) )
+    #  @endcode     
+    def make_yields ( self                   ,
+                      N                      ,
+                      name  = 'N%d'          , ## pattern to construct yield names from index
+                      title = ''             ,
+                      minmax = ( 0 , 1.e+6 ) , 
+                      yields = ()            ) :
+        """create a list of variables that can be used as ``yields'' for N-component fit
+        >>> M = ...
+        >>> nums = M.make_yields ( 5 , name = 'S_%d_A' , minmax = (0, 1000) )
+        >>> nums = M.make_yields ( 5 , name = 'S_%d_B' , minmax = (0, 1000) ,  yields =  ( 1 , 100 , 50 , 10 , 10 ) )
+        """
+        my_yields = make_iterable ( yields , None )
+
+        nums = []        
+        for i , n in zip ( range ( N ) , my_yields ) : 
+
+            fname = ( name  % i )  if 1 != N else name           ## ATTENTION!  
+            tit   = title if title else 'Yield #%d: %s %s' % ( i , fname , self.name )                 
+            if not n is None : nvar  = self.make_var ( n    , fname  , tit , None , n , *minmax )
+            else             : nvar  = self.make_var ( n    , fname  , tit , None ,     *minmax )
+            
+            nums.append ( nvar )
+
+        return tuple ( nums ) 
+            
+    # =============================================================================
     ## helper function to build composite (non-extended) PDF from components 
     def add_pdf ( self             ,
                   pdflist          ,
@@ -2177,7 +2435,7 @@ class PDF (FUNC) :
                                    fracs     = fractions )
         fracs  = ROOT.RooArgList()
         for f in fs : fracs.add ( f ) 
-        pdf    = ROOT.RooAddPdf ( name , title , pdfs , fracs , recursive )
+        pdf    = ROOT.RooAddPdf ( self.roo_name ( name ) , title , pdfs , fracs , recursive )
         ##
         self.aux_keep.append ( pdf   )
         self.aux_keep.append ( pdfs  )
@@ -2241,165 +2499,6 @@ class PDF (FUNC) :
                           xvar   = xvar        ,
                           logger = self.logger , **kwargs ) 
 
-    # =========================================================================
-    ## Load parameters from:
-    #    - external dictionary <code>{ name : value }</code>
-    #    - sequence of <code>RooAbsReal</code> object
-    #    - <code>ROOT.RooFitResult</code> object 
-    #  @code
-    #  pdf     = ...
-    #  dataset = ...
-    #  params  = { 'A' : 10 , 'B' : ... }
-    #  pdf.load_params ( dataset , params ) 
-    #  params  = ( A , B , C , ... )
-    #  pdf.load_params ( dataset , params )  
-    #  @endcode 
-    def load_params ( self , dataset = None , params = {} , silent = False  ) :
-        """Load parameters from
-        - external dictionary `{ name : value }`
-        - sequence of `RooAbsReal` objects
-        - `RooFitResult` object
-        
-        >>> pdf      = ...
-        >>> dataset = ... 
-        >>> params = { 'A' : 10 , 'B' : ... }
-        >>> pdf.load_params ( dataset , params ) 
-        >>> params = ( A , B , C , ... )
-        >>> pdf.load_params ( dataset , params )  
-        """
-        ## nothing to load 
-        if not params : return 
-
-        if isinstance ( params , ROOT.RooFitResult ) :
-            params = params.dct_params () 
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        table = [] 
-        if isinstance ( params , dictlike_types ) :
-            keys   = set () 
-            for key in params :
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' ) : continue
-                    if p.name != key                 : continue
-                    
-                    v  = params[key]
-                    vv = float ( v  )
-                    pv = p.getVal ()   
-                    if vv != pv : 
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add ( key )
-
-            not_used = set ( params.keys() ) - keys 
-
-        ## list of objects 
-        else :
-            
-            keys = set()        
-            for i , pp in enumerate ( params ) :  
-                if not isinstance ( pp , ROOT.RooAbsReal ) : continue
-                for p in pars :
-                    if not hasattr ( p  , 'setVal' )       : continue
-                    if p.name != pp.name                   : continue
-                    
-                    vv = float ( pp )
-                    pv = p.getVal () 
-                    if vv != pv :
-                        p.setVal   ( vv )
-                        item = p.name , "%-14.6g" % pv , "%-+14.6g" % vv 
-                        table.append ( item ) 
-                    keys.add  ( i )
-
-            not_used = []
-            for i , pp in enumerate ( params ) :  
-                if i in keys : continue
-                not_used.append ( pp )
-
-        if not silent :
-            
-            table.sort()
-            npars = len ( table )
-            
-            if npars :            
-                title = 'Parameters loaded: %s' % npars 
-                table = [ ('Parameter' ,'old value' , 'new value' ) ] + table
-                import ostap.logger.table
-                table = ostap.logger.table.table ( table , title , prefix = "# " )
-                
-            self.info ( "%s parameters loaded:\n%s" % ( npars , table ) ) 
-            
-            not_used = list ( not_used )
-            not_used.sort() 
-            if not_used :
-                self.warning ("Following keys are unused %s" % not_used ) 
-        
-        return 
-
-    # =========================================================================
-    ## get all parameters/variables in form of dictionary
-    #  @code
-    #  pdf    = ...
-    #  params = pdf.parameters ( dataset ) 
-    #  @endcode
-    def parameters ( self , dataset = None ) :
-        """ Get all parameters/variables in form of dictionary
-        >>> pdf    = ...
-        >>> params = pdf.parameters ( dataset ) 
-        """
-        
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        tmp    = {}
-        for p in pars :
-            if not isinstance ( p, ROOT.RooAbsCategory ) :
-                tmp [ p.name ] = p.value
-                
-        keys   = tmp.keys()
-        result = {} 
-        for key in sorted ( keys ) : result [ key ] = tmp [ key ] 
-            
-        return result 
-
-    # ========================================================================
-    ## get the parameter value by name
-    #  @code
-    #  pdf = ...
-    #  p   = pdf.parameter  ( 'A' )
-    #  @endcode
-    def parameter ( self , param , dataset = None ) :
-        """Get the parameter value by name
-        >>> pdf = ...
-        >>> p   = pdf.parameter  ( 'A' )
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( dataset )
-
-        for p in pars :
-            if p.name == param : return p
-            
-        self.error ( "No parameter %s defined" % param )
-        raise KeyError ( "No parameter %s defined" % param )
-
-    # ==========================================================================
-    ## get parameter by name 
-    #  @code
-    #  pdf = ...
-    #  a   = pdf['A']
-    #  @endcode
-    def __getitem__ ( self , param ) :
-        """Get parameter by name 
-        >>> pdf = ...
-        >>> a   = pdf['A']
-        """
-        ## get the list of the actual parameters 
-        pars = self.pdf.getParameters ( None )
-        for p in pars :
-            if p.name == param : return p
-        raise KeyError ( "No parameter %s defined" % param )
         
 # =============================================================================
 ##  helper utilities to imlement resolution models.
@@ -2408,29 +2507,45 @@ class _CHECKMEAN(object) :
     check = True
 def checkMean() :
     return True if  _CHECKMEAN.check else False
-class Resolution(object) :    
-    def __init__  ( self , resolution = True ) :
-        self.check = False if resolution else True 
-    def __enter__ ( self ) :
-        self.old         = _CHECKMEAN.check 
-        _CHECKMEAN.check =  self.check
-    def __exit__  ( self , *_ ) :
-        _CHECKMEAN.check =  self.old 
 # =============================================================================
-## helper base class for implementation  of various helper pdfs 
+## @class CheckMean 
+#  Helper contex manager to enable/disable check for the mean/location-values
+class CheckMean(object) :
+    """Helper contex manager to enable/disable check for the mean/location-values
+    """
+    def __init__  ( self , check ) :
+        self.__check = True if check else False 
+    def __enter__ ( self ) :
+        self.__old       = _CHECKMEAN.check 
+        _CHECKMEAN.check =  self.__check
+    def __exit__  ( self , *_ ) :
+        _CHECKMEAN.check =  self.__old
+    @property
+    def check ( self ) :
+        """``check''  : check the mean/location?"""
+        return self.__check
+    
+# =============================================================================
+## helper base class for implementation  of various helper pdfs
+#  - it defines alias <code>mass</code> for <code>xvar</code>
+#  - it defiens a variable <code>mean</code> alias <code>location</code>
+#  - optionally it checks that this variable is withing the specified range  
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
-class MASS(PDF) :
+class MASSMEAN(PDF) :
     """Helper base class for implementation of various pdfs
     It is useful for ``peak-like'' distributions, where one can talk about
     - ``mean/location''
-    - ``sigma/width/scale'' 
+    - it defines alias `mass` for `xvar`
+    - it defiens a variable `mean` (alias `location`)
+    - optionally it checks that this variable is withing the specified range  
     """
-    def __init__ ( self            ,
-                   name            ,
-                   xvar            ,
-                   mean     = None ,
-                   sigma    = None ) : 
+    def __init__ ( self              ,
+                   name              ,
+                   xvar              ,
+                   mean      = None  ,
+                   mean_name  = ''   , 
+                   mean_title = ''   ) : 
         
         m_name  = "m_%s"     % name
         m_title = "mass(%s)" % name
@@ -2454,54 +2569,46 @@ class MASS(PDF) :
                                    m_title    , ## title/comment
                                    fix = None ) ## fix ? 
         else :
-            raise AttributeError("MASS: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
+            raise AttributeError("MASSMEAN: Unknown type of ``xvar'' parameter %s/%s" % ( type ( xvar ) , xvar ) )
 
         ## intialize the base 
         PDF.__init__ ( self , name , xvar = xvar )
-        
 
-        limits_mean  = ()
-        limits_sigma = ()
+        ## check mean/location values ? 
+        self.__check_mean = self.xminmax () and checkMean () 
         
-        if   self.xminmax() :            
+        self.__limits_mean  = ()
+        if  self.check_mean and self.xminmax () and not isinstance ( mean , ROOT.RooAbsReal ) :      
             mn , mx = self.xminmax()
             dm      =  mx - mn
-            limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
-            sigma_max    =  2 * dm / math.sqrt(12)  
-            limits_sigma = 1.e-3 * sigma_max , sigma_max 
-        #
+            self.__limits_mean  = mn - 0.2 * dm , mx + 0.2 * dm
+
         ## mean-value
-        #
-        self.__mean = self.make_var ( mean              ,
-                                      "mean_%s"  % name ,
-                                      "mean(%s)" % name , mean , *limits_mean )
-        ## 
-        if checkMean () and self.xminmax() : 
-            mn , mx = self.xminmax() 
+        m_name  = mean_name  if mean_name  else "mean_%s"  % name
+        m_title = mean_title if mean_title else "mean(%s)" % name
+        self.__mean = self.make_var ( mean , m_name , m_title , mean , *self.limits_mean )
+        
+        ##
+        if self.limits_mean :  
+            mn , mx = self.limits_mean  
             dm      =  mx - mn
             if   self.mean.isConstant() :
                 if not mn <= self.mean.getVal() <= mx : 
-                    raise AttributeError ( 'MASS(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
+                    self.error ( 'MASSMEAN(%s): Fixed mass %s is not in mass-range (%s,%s)' % ( name , self.mean.getVal() , mn , mx  ) )
             elif self.mean.minmax() :
                 mmn , mmx = self.mean.minmax()
-                self.mean.setMin ( max ( mmn , mn - 0.1 * dm ) )
-                self.mean.setMax ( min ( mmx , mx + 0.1 * dm ) )
-                self.debug ( 'mean range is redefined to be %s' % list( self.mean.minmax() ) )
-        #
-        ## sigma
-        #
-        self.__sigma = self.make_var ( sigma               ,
-                                       "sigma_%s"   % name ,
-                                       "#sigma(%s)" % name , sigma , *limits_sigma )
-        
+                self.mean.setMin ( max ( mmn , mn ) )
+                self.mean.setMax ( min ( mmx , mx ) )
+                self.debug ( 'mean range is adjusted  to be %s' % list ( self.mean.minmax() ) )
+
         ## save the configuration
         self.config = {
-            'name'  : self.name  ,
-            'xvar'  : self.xvar  ,
-            'mean'  : self.mean  ,
-            'sigma' : self.sigma
+            'name'        : self.name  ,
+            'xvar'        : self.xvar  ,
+            'mean'        : self.mean  ,
+            'mean_name'   : mean_name  ,
+            'mean_title'  : mean_title ,
             }
-            
 
     @property 
     def mass ( self ) :
@@ -2515,13 +2622,13 @@ class MASS(PDF) :
     @mean.setter
     def mean ( self , value ) :
         value =  float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            m1 = mn - 1.0 * dm
-            m2 = mx + 1.0 * dm
-            if not m1 <= value <= m2 :
-                self.warning ("``mean'' %s is outside the interval  %s,%s"  % ( value , m1 , m2 ) )                
+        mn , mx = self.mean.minmax()
+        if not mn <= value <= mx :
+            self.warning( "``%s'': %s is outside the interval (%s,%s)/1" % ( self.mean.name , value , mn , mx ) )
+        if self.check_mean and self.limits_mean  :  
+            mn , mx = self.limits_mean 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval (%s,%s)/2"  % ( self.mean.name , value , mn , mx ) )                
         self.mean.setVal ( value )
         
     @property
@@ -2530,24 +2637,106 @@ class MASS(PDF) :
         return self.mean
     @location.setter
     def location ( self , value ) :
-        self.mean =  value 
+        self.mean =  value
+
+    @property
+    def check_mean ( self ) :
+        """``check_mean'' : Is mean-value to be checked?"""
+        return self.__check_mean
+    @check_mean.setter
+    def check_mean ( self, value ) :
+        self.__check_mean = True if  value else False
+        
+    @property
+    def limits_mean ( self ) :
+        """``limits_mean'' : reasonable limits for mean/location"""
+        return self.__limits_mean
     
+# =============================================================================
+## @class MASS
+#  helper base class for implementation  of various helper pdfs 
+#  - mean/location
+#  - sigma/width/scale
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+class MASS(MASSMEAN) :
+    """Helper base class for implementation of various pdfs
+    It is useful for ``peak-like'' distributions, where one can talk about
+    - ``mean/location''
+    - ``sigma/width/scale'' 
+    """
+    def __init__ ( self               ,
+                   name               ,
+                   xvar               ,
+                   mean        = None ,
+                   sigma       = None , 
+                   mean_name   = ''   , 
+                   mean_title  = ''   ,
+                   sigma_name  = ''   , 
+                   sigma_title = ''   ) : 
+            
+        ## base class 
+        MASSMEAN.__init__ ( self                    ,
+                            name       = name       ,
+                            xvar       = xvar       , 
+                            mean       = mean       ,
+                            mean_name  = mean_name  ,
+                            mean_title = mean_title )
+        
+        self.__limits_sigma = ()        
+        if  self.xminmax() and not isinstance ( sigma , ROOT.RooAbsReal ) :            
+            mn , mx   = self.xminmax()
+            dm        =  mx - mn
+            sigma_max =  2 * dm / math.sqrt(12)  
+            self.__limits_sigma = 1.e-4 * sigma_max , sigma_max 
+
+        ## sigma
+        s_name  = sigma_name  if sigma_name  else "sigma_%s"   % name
+        s_title = sigma_title if sigma_title else "#sigma(%s)" % name
+        #
+        self.__check_sigma = True 
+        self.__sigma = self.make_var ( sigma  , s_name , s_title , sigma , *self.limits_sigma )
+        
+        ## save the configuration
+        self.config = {
+            'name'        : self.name   ,
+            'xvar'        : self.xvar   ,
+            'mean'        : self.mean   ,
+            'sigma'       : self.sigma  ,
+            'mean_name'   : mean_name   ,
+            'mean_title'  : mean_title  ,
+            'sigma_name'  : sigma_name  ,
+            'sigma_title' : sigma_title ,
+            }
+            
     @property
     def sigma ( self ):
-        """``sigma/width/scale''-variable"""
+        """``sigma/width/scale/spread''-variable"""
         return self.__sigma
     @sigma.setter
     def sigma ( self , value ) :
         value =   float ( value )
-        if self.xminmax() : 
-            mn , mx = self.xminmax()
-            dm = mx - mn
-            smax = 2 * dm / math.sqrt ( 12 ) 
-            smin = 2.e-5 * smax  
-            if not smin <= value <= smax :
-                self.warning ("``sigma'' %s is outside the interval (%s,%s)" % ( value , smin , smax ) )
+        mn , mx = self.sigma.minmax()
+        if not mn <= value <= mx :
+            self.warning ("``%s'': %s is outside the interval (%s,%s)/1" % ( self.sigma.name , value , mn , mx ) )
+        if self.limits_sigma and self.check_sigma  : 
+            mn , mx = self.limits_sigma 
+            if not mn <= value <= mx :
+                self.error ("``%s'': %s is outside the interval (%s,%s)/2" % ( self.sigma.name , value , mn , mx ) )
         self.sigma.setVal ( value )
 
+    @property
+    def check_sigma ( self ) :
+        """``check_mean'' : Is mean-value to be checked?"""
+        return self.__check_sigma 
+    @check_sigma.setter
+    def check_sigma ( self, value ) :
+        self.__check_sigma = True if  value else False 
+    
+    @property
+    def limits_sigma ( self ) :
+        """``limits_sigma'' : reasonable limits for sigma/width"""
+        return self.__limits_sigma
 
 # =============================================================================
 ## @class RESOLUTION
@@ -2560,7 +2749,7 @@ class MASS(PDF) :
 class RESOLUTION(MASS) :
     """Helper base class  to parameterize the resolution
     - It allows setting of the ``mean'' to zero,
-    - It containg ``fudge-factor'' for the resolution parameter ``sigma''
+    - It contains ``fudge-factor'' for the resolution parameter ``sigma''
     - It simplify creation of the soft/gaussian constraint for the ``fudge-factor''    
     """
     ## constructor
@@ -2569,22 +2758,34 @@ class RESOLUTION(MASS) :
     #  @param sigma  sigma/resoltuion parameter 
     #  @param mean   "mean"-variable
     #  @param fudge  "fudge-factor" to be aplied to sigma
-    def __init__ ( self            ,
-                   name            ,
-                   xvar     = None ,
-                   sigma    = None , 
-                   mean     = None ,
-                   fudge    = 1.0  ) :
+    def __init__ ( self               ,
+                   name               ,
+                   xvar        = None ,
+                   sigma       = None , 
+                   mean        = None ,
+                   fudge       = 1.0  ,
+                   mean_name   = ''   ,
+                   mean_title  = ''   ,
+                   sigma_name  = ''   ,
+                   sigma_title = ''   ) :
         
-        with Resolution() :
-            super(RESOLUTION,self).__init__ ( name  = name  ,
-                                              xvar  = xvar  ,
-                                              sigma = sigma ,
-                                              mean  = mean  )
+        ## mean-value
+        if mean is None :
+            mean = ROOT.RooRealConstant.value ( 0 ) 
             
-        self.__fudge            = fudge
-        
+        with CheckMean ( False ) :
+            super(RESOLUTION,self).__init__ ( name        = name        ,
+                                              xvar        = xvar        ,
+                                              sigma       = sigma       ,
+                                              mean        = mean        ,
+                                              mean_name   = mean_name   ,
+                                              mean_title  = mean_title  ,
+                                              sigma_name  = sigma_name  ,
+                                              sigma_title = sigma_title )
+            
+        self.__fudge            = fudge        
         self.__fudge_constraint = None
+        self.__sigma_corr       = None
         
         if isinstance ( fudge , VE ) :
             
@@ -2593,8 +2794,8 @@ class RESOLUTION(MASS) :
             
             value  = fudge.value()
             error  = fudge.error()
-            vmin   = max ( 0 , value - 5 * error )
-            vmax   =           value + 5 * error
+            vmin   = max ( 1.e-6 , value - 10 * error )
+            vmax   =               value + 10 * error
             
             ## make fudge-factor to be a variable 
             self.__fudge = self.make_var ( value ,
@@ -2602,19 +2803,45 @@ class RESOLUTION(MASS) :
                                            'fudge_factor(%s)' % self.name ,
                                            None                           ,
                                            value , vmin , vmax            )
-            
+
             ## create soft/gaussian constraint for fudge-factor
             self.__fudge_constraint = self.soft_constraint (
                 self.fudge ,
                 fudge      ,
                 name  = 'Fudge_constraint_%s'  % self.name ,
                 title = 'Fudge_constraint(%s)' % self.name )
+            
+        elif isinstance ( fudge , ROOT.RooAbsReal ) :
+            
+            ## make fudge-factor to be a variable 
+            self.__fudge = self.make_var ( fudge  ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name , None )
+            
+        elif isinstance ( fudge , num_types ) and 1 == fudge :
 
-        if isinstance ( self.fudge , num_types ) and 1 == fudge : 
+            ## fudge is trivial 
+            self.__fudge = ROOT.RooFit.RooConst ( fudge )
+
             ## corrected sigma is trivial 
             self.__sigma_corr   =    self.sigma
-        else : 
-            ## create the corrected sigma 
+            
+        elif isinstance ( fudge , num_types ) :
+            
+            ## fudge is trivial 
+            self.__fudge = ROOT.RooFit.RooConst ( fudge )
+
+        else :
+                
+            ## make fudge-factor to be a variable 
+            self.__fudge = self.make_var ( fudge  ,
+                                           'fudge_factor_%s'  % self.name ,
+                                           'fudge_factor(%s)' % self.name ,
+                                           None                           , fudge )
+            
+        ## create corrected sigma 
+        if self.__sigma_corr is None :            
+            ## corrected sigma 
             self.__sigma_corr = self.vars_multiply ( self.sigma ,
                                                      self.fudge ,
                                                      'Corrected_%s' % self.sigma.name )
@@ -2653,12 +2880,14 @@ class Flat1D(PDF) :
     """The most trival 1D-model - constant
     >>> pdf = Flat1D ( 'flat' , xvar = ... )
     """
-    def __init__ ( self , xvar , name = 'Flat1D' , title = '' ) :
+    def __init__ ( self , xvar , name = '' , title = '' ) :
         
+        name = name if name else self.generate_name ( prefix = 'flat1D_')
         PDF.__init__ ( self  , name , xvar ) 
         
-        if not title : title = 'flat1(%s)' % name 
-        self.pdf = Ostap.Models.Uniform ( name , title , self.xvar )
+        if not title : title = 'flat1(%s)' % name
+        
+        self.pdf = Ostap.Models.Uniform ( self.roo_name ( 'flat_' ) , title , self.xvar )
         assert 1 == self.pdf.dim() , 'Flat1D: wrong dimensionality!'
         
         ## save configuration
@@ -2700,18 +2929,23 @@ class Generic1D_pdf(PDF) :
         """
         assert xvar and isinstance ( xvar , ROOT.RooAbsReal ) , "``xvar'' must be ROOT.RooAbsReal"
         assert pdf  and isinstance ( pdf  , ROOT.RooAbsReal ) , "``pdf'' must be ROOT.RooAbsReal"
+
+        name = name if name else self.generate_name ( prefix = prefix + '%s_' % pdf.GetName() , suffix = suffix )
         
-        name = name if name else prefix + pdf.GetName () + suffix 
         ## initialize the base 
         PDF . __init__ ( self , name , xvar , special = special )
         ##
         if not self.special :
             assert isinstance ( pdf  , ROOT.RooAbsPdf ) , "``pdf'' must be ROOT.RooAbsPdf"
 
+        ## Does PDF depends on XVAR ?
+        if not pdf.depends_on ( xvar ) :
+            self.warning ( "PDF/%s does not depend on %s!" % ( pdf.name , xvar.name ) ) 
+
         ## PDF itself 
         self.pdf  = pdf
 
-        if not self.xvar in self.pdf.getParameters ( 0 ) : 
+        if not self.xvar in self.params () : 
             self.warning ("Function/PDF does not depend on xvar=%s" % self.xvar.name )
             
         ## add it to the list of signal components ?
@@ -2730,29 +2964,155 @@ class Generic1D_pdf(PDF) :
             'prefix'         : prefix              ,
             'suffix'         : suffix              ,            
             }
-            
+
+        self.checked_keys.add  ( 'pdf'     )
+        self.checked_keys.add  ( 'xvar'    )
+        self.checked_keys.add  ( 'special' )
+        
     @property
     def add_to_signals ( self ) :
         """``add_to_signals'' : should PDF be added into list of signal components?"""
         return self.__add_to_signals 
         
-    ## redefine the clone method, allowing only the name to be changed
-    #  @attention redefinition of parameters and variables is disabled,
-    #             since it can't be done in a safe way                  
-    def clone ( self , pdf = None , xvar = None , **kwargs ) :
-        """Redefine the clone method, allowing only the name to be changed
-         - redefinition of parameters and variables is disabled,
-         since it can't be done in a safe way          
-        """
-        if pdf  and not  pdf is self.pdf  :
-            raise AttributeError("Generic1D_pdf can not be cloned with different `pdf''" )
-        if xvar and not xvar is self.xvar :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``xvar''")
-        if 'special' in kwargs and self.special != kwargs['special'] :
-            raise AttributeError("Generic1D_pdf can not be cloned with different ``special''")
-            
-        return PDF.clone ( self , **kwargs )
     
+# =============================================================================
+## @class Combine1D
+#  Non-extended sum of several PDFs
+#  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+#  @see RooAddPdf 
+class Combine1D (PDF) :
+    """Non-extended sum of several PDFs:
+    
+    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
+    - see RooAddPdf 
+    
+    >>> sum  = Combine1D ( [ pdf1 , pdf2 , pdf3 ]  ) 
+    
+    """
+    def __init__ ( self             ,
+                   pdfs             , ## input list of PDFs  
+                   xvar      = None , 
+                   name      = ''   ,
+                   recursive = True ,
+                   prefix    = 'f'  , ## prefix for fraction names 
+                   suffix    = ''   , ## suffix for fraction names 
+                   fractions = None ) :
+
+        assert 2 <= len ( pdfs ) , 'Combine1D: at least two PDFs are needed!'
+
+        pdf_list = []        
+        for i , p in enumerate ( pdfs ) :
+
+            if isinstance ( p , PDF ) :
+                
+                assert ( not xvar ) or xvar is p.xvar, "Invalid xvar/pdf%d.xvar: %s/%s" % ( i , xvar , p.xvar ) 
+                xvar = p.xvar
+                pdf_list.append ( p )
+                
+            elif isinstance ( p  , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
+                
+                pdf_list.append ( Generic1D_pdf ( p , xvar ) )
+                
+            else :
+                raise TypeError ( "Invalid type: pdf%d xvar %s/%s xvar=%s" % ( i , p , type(p) , xvar ) )
+
+
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum1' )
+        
+        ## ininialize the base class
+        PDF.__init__ ( self , name , xvar ) 
+
+        for i , p in enumerate ( pdf_list )  :
+            if p.pdf.canBeExtended() : self.warning ("``pdf%f'' can be extended!" % i ) 
+                
+        while prefix.endswith  ('_') : prefix = prefix[:-1]
+        while suffix.startswith('_') : suffix = suffix[1:]
+        
+        self.__prefix    = prefix if prefix else 'f'
+        self.__suffix    = suffix
+        self.__recursive = True if recursive else False 
+
+        N = len ( pdf_list )
+
+        if 2 < len ( pdf_list ) : 
+            if self.prefix and self.suffix : fr_name = '%s_%%d_%s' % ( self.prefix , self.suffix )
+            else                           : fr_name = '%s_%%d'    %   self.prefix
+        else :
+            if self.prefix and self.suffix : fr_name = '%s_%s'     % ( self.prefix , self.suffix )
+            else                           : fr_name =                 self.prefix
+    
+        ## make list of fractions
+        fraction_list = self.make_fractions  ( N                          ,
+                                               name      = fr_name        , 
+                                               recursive = self.recursive ,
+                                               fractions = fractions      )
+
+        ## keep them
+        self.__pdfs      = tuple ( pdf_list )
+        self.__fractions = tuple ( fraction_list ) 
+        
+        for p in self.__pdfs      : self.alist1.add ( p.pdf )
+        for f in self.__fractions : self.alist2.add ( f     )
+        
+        ## finally build PDF 
+        self.pdf = ROOT.RooAddPdf ( self.roo_name ( 'combine1' ) ,
+                                    ' + '.join ( '(%s)' % p.name for p in self.pdfs  ) ,
+                                    self.alist1    ,
+                                    self.alist2    ,
+                                    self.recursive )
+        
+        self.config = {
+            'pdfs'      : self.pdfs      ,
+            'xvar'      : self.xvar      ,
+            'name'      : self.name      , 
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    ,
+            'fractions' : self.fractions ,
+            'recursive' : self.recursive        
+            }
+        
+    @property
+    def prefix ( self ) :
+        """``prefix'' : prefix for fraction names"""
+        return self.__prefix
+
+    @property
+    def suffix ( self ) :
+        """``suffix'' : suffix for fraction names"""
+        return self.__suffix
+
+    @property
+    def recursive ( self ) :
+        """``recursive'' : recursive fractions?"""
+        return self.__recursive
+    
+    @property
+    def pdfs ( self ) :
+        """``pdfs'' : get list/tuple of involved PDFs (same as ``components'')"""
+        return self.__pdfs
+    @property
+    def components ( self ) :
+        """``components'' : get list/tuple of involved PDFs (same as ``pdfs'')"""
+        return self.pdfs
+        
+    @property
+    def fractions ( self ) :
+        """``fractions'' : get involved fractions (same as ``F'')"""
+        return self.component_getter ( self.__fractions )
+    @fractions.setter
+    def fractions ( self , values ) :
+        self.component_setter ( self.__fractions , values )
+
+    @property
+    def F         ( self ) :
+        """``F'' : get involved fractions (same as ``fractions'')"""
+        return self.component_getter ( self.__fractions )
+    @F.setter
+    def F         ( self , values ) :
+        self.fractions = values 
+
+        
 # =============================================================================
 ## @class Sum1D
 #  Non-extended sum of two PDFs
@@ -2763,101 +3123,146 @@ class Generic1D_pdf(PDF) :
 #  @endcode
 #  It is just a small wrapper for <code>ROOT.RooAddPdf</code>
 #  @see RooAddPdf 
-class Sum1D(PDF) :
-    """Non-extended sum of two PDFs:
-    
-    It is just a small wrapper for <code>ROOT.RooAddPdf</code>
-    - see RooAddPdf 
-    
-    pdf1 = ...
-    pdf2 = ...
-    sum  = Sum1D ( pdf1 , pdf2 ) 
-
+class Sum1D(Combine1D) :
+    """Non-extended sum of two PDFs:    
+    It is just a small wrapper for `ROOT.RooAddPdf`    
+    >>> pdf1 = ...
+    >>> pdf2 = ...
+    >>> sum  = Sum1D ( pdf1 , pdf2 ) 
+    - see `ROOT.RooAddPdf` 
     """
-    def __init__ ( self            ,
-                   pdf1            ,
-                   pdf2            ,  
-                   xvar     = None , 
-                   name     = ''   , 
-                   fraction = None ) :
-
-        if   isinstance ( pdf1 , PDF ) :
-            assert ( not xvar ) or xvar is pdf1.xvar, "Invalid xvar/pdf1.xvar: %s/%s" %( xvar , pdf1.xvar )             
-            xvar = pdf1.xvar        
-        elif isinstance ( pdf1 , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
-            pdf1 = Generic1D_pdf ( pdf1 , xvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf1, type(pdf1) , xvar , type(xvar) ) )
-
-        if   isinstance ( pdf2 , PDF ) and xvar in pdf2.vars : pass 
-        elif isinstance ( pdf2 , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :            
-            pdf2 = Generic1D_pdf ( pdf2 , xvar )
-        else :
-            raise TypeError ( "Invalid type: pdf1, xvar %s/%s , %s,%s" % ( pdf2, type(pdf2) , xvar , type(xvar) ) )
-
-        name = name if name else 'Sum_%s_%s' % (  pdf1.name , pdf2.name ) 
-
-        ## initialize the base class
-        PDF.__init__ ( self , name , xvar )
-
-        self.__pdf1     = pdf1
-        self.__pdf2     = pdf2
+    def __init__ ( self             ,
+                   pdf1             ,
+                   pdf2             ,  
+                   xvar      = None ,                   
+                   name      = ''   , 
+                   prefix    = 'f'  ,
+                   suffix    = ''   ,
+                   fraction  = None ,
+                   others    = []   ,
+                   recursive = True ) :                    
         
-        self.__fraction = self.make_var ( fraction ,
-                                          'f_%s_%s'            % ( pdf1.name , pdf2.name ) ,
-                                          'Fraction:(%s)+(%s)' % ( pdf1.name , pdf2.name ) ,
-                                          fraction , 0 , 1 )
+        ## check the name 
+        name = name if name else self.generate_name ( prefix = 'sum1' )
         
-        self.alist1     = ROOT.RooArgList ( self.pdf1.pdf ,
-                                            self.pdf2.pdf )
-        self.alist2     = ROOT.RooArgList ( self.fraction )
-        ## self.alist3     = self.__pdf1 , self.__pdf2 ## ??? 
-        
-        self.pdf = ROOT.RooAddPdf ( name , '(%s)+(%s)' % (  pdf1.name , pdf2.name ) ,
-                                    self.pdf1.pdf ,
-                                    self.pdf2.pdf ,
-                                    self.fraction )
-        ## self.alist1 ,
-        ## self.alist2 )
-        
-        if self.pdf1.pdf.canBeExtended() : self.error ("``pdf1'' can be extended!") 
-        if self.pdf2.pdf.canBeExtended() : self.error ("``pdf2'' can be extended!") 
+        ## initialize the base class 
+        Combine1D.__init__ ( self                  ,
+                             name      = name      , 
+                             pdfs      = [ pdf1 , pdf2 ] + others ,
+                             xvar      = xvar      ,
+                             recursive = recursive ,         
+                             prefix    = prefix    ,                             
+                             suffix    = suffix    ,
+                             fractions = fraction  )
 
         self.config = {
-            'pdf1'     : self.pdf1 ,
-            'pdf2'     : self.pdf2 ,
-            'xvar'     : self.xvar ,
-            'fraction' : self.fraction 
+            'pdf1'      : self.pdf1      ,
+            'pdf2'      : self.pdf2      ,
+            'xvar'      : self.xvar      ,
+            'name'      : self.name      ,
+            'prefix'    : self.prefix    ,
+            'suffix'    : self.suffix    , 
+            'fraction'  : self.fraction  ,
+            'others'    : self.others    ,            
+            'recursive' : self.recursive ,
             }
-
+        
     @property
     def pdf1 ( self ) :
         """``pdf1'' : the first PDF"""
-        return self.__pdf1
+        return self.pdfs[0]
     
     @property
     def pdf2 ( self ) :
         """``pdf2'' : the second PDF"""
-        return self.__pdf2
-
+        return self.pdfs[1]
+    
+    @property 
+    def others ( self ) :
+        """``others'' : other PDFs (if any)"""
+        return self.pdfs[2:]
+    
     @property
     def fraction ( self ) :
-        """``fraction'' : the fraction of the first PDF in the sum"""
-        return self.__fraction
+        """``fraction'' : the fraction of the first PDF in the sum (same as ``fractions'')"""
+        return self.fractions 
     @fraction.setter
     def fraction ( self , value ) :
-        val = float ( value )
-        self.__fraction.setVal ( val )
+        self.fractions = value 
 
-    @property
-    def F  ( self ) :
-        """``F'' : the fratcion of the first PDF in the sum (the same  as ``fraction'')"""
-        return self.__fraction
-    @F.setter
-    def F ( self , value ) :
-        self.fraction = value 
+# =============================================================================
+    
+# =============================================================================
+## Helper function to create the PDF/PDF2/PDF3
+#  @param pdf   input pdf of funcntion   <code>RooAbsReal</code> or <code>RooAbsPdf</code>
+#  pa
+def make_pdf ( pdf , args , name = '' ) :
+    """Helper function to create the PDF/PDF2/PDF3
+    """
+    
+    assert pdf and isinstance ( pdf , ROOT.RooAbsReal ), \
+           'make_pdf: Invalid type %s' % type ( pdf )
+    
+    name = name if name else "PDF_from_%s" % pdf.name
+    
+    if not isinstance ( pdf , ROOT.RooAbsPdf ) :
+        if (6,20) <= root_info : 
+            pdf = ROOT.RooWrapperPdf  ( name , 'PDF from %s' % pdf.name , pdf )
+        else :
+            raise TypeError("make_pdf: RooWrapperPdf is not available for ROOT %s" % root_version_int )
         
+    num = len ( args )
+    if   1 == num :
+        return Generic1D_pdf ( pdf , name = name , *args )
+    elif 2 == num :
+        from ostap.fitting.fit2d import Generic2D_pdf 
+        return Generic2D_pdf ( fun , name = name , *args )
+    elif 3 == num :
+        from ostap.fitting.fit3d import Generic3D_pdf 
+        return Generic3D_pdf ( fun , name = name , *args )
+    
+    raise TypeError ( "Invalid length of arguments %s " % num ) 
 
+# =============================================================================
+## Generic 1D-shape from C++ callable
+#  @see Ostap::Models:Shape1D
+#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+#  @date 2020-07-20
+class Shape1D_pdf(PDF) :
+    """ Generic 1D-shape from C++ callable
+    - see Ostap::Models:Shape1D
+    """
+    
+    def __init__ ( self , name , shape , xvar ) :
+
+        ##  iniialize the base 
+        PDF.__init__ ( self , name , xvar ) 
+        
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
+            self.histo = shape
+            shape      = Ostap.Math.Histo1D ( shape )
+
+        self.__shape = shape
+        
+        ## create the actual pdf
+        self.pdf = Ostap.Models.Shape1D.create  (
+            self.roo_name ( 'shape1_' ) , 
+            "Shape-1D %s" % self.name ,
+            self.xvar                 ,
+            self.shape                ) 
+
+        ## save the configuration
+        self.config = {
+            'name'    : self.name    , 
+            'shape'   : self.shape   , 
+            'xvar'    : self.xvar    , 
+            }
+        
+    @property
+    def shape  ( self ) :
+        """``shape'': the actual C++ callable shape"""
+        return self.__shape 
+            
 # =============================================================================
 ## simple convertor of 1D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
@@ -2870,49 +3275,77 @@ class H1D_pdf(H1D_dset,PDF) :
                    histo           ,
                    xvar    = None  ,
                    density = False ,
+                   order   = 0     , ## interpolation order 
                    silent  = False ) :
         
-        H1D_dset.__init__ ( self , histo , xvar , density , silent )
+        H1D_dset.__init__ ( self , histo = histo , xaxis = xvar , density = density , silent = silent )
         PDF     .__init__ ( self , name  , self.xaxis ) 
-        
+
+        assert isinstance ( order, integer_types ) and 0 <= order ,\
+               'Invalid interpolation order: %s/%s' % ( order , type ( order ) )
+
         with roo_silent ( silent ) : 
             #
             ## finally create PDF :
             self.__vset = ROOT.RooArgSet  ( self.xvar )        
             self.pdf    = ROOT.RooHistPdf (
-                'hpdf_%s'             % name ,
-                'Histo1PDF(%s/%s/%s)' % ( name , histo.GetName() , histo.GetTitle() ) , 
+                self.roo_name ( 'histo1_' ) ,
+                'Histo-1D PDF: %s/%s' % ( histo.GetName() , histo.GetTitle() ) , 
                 self.__vset , 
-                self.dset   )
+                self.dset   ,
+                order       )
             
         ## and declare it be be a "signal"
         self.signals.add ( self.pdf ) 
-
+        
         ## save the configuration
         self.config = {
             'name'    : self.name    , 
             'histo'   : self.histo   , 
             'xvar'    : self.xvar    , 
             'density' : self.density , 
-            'silent'  : self.silent  ,             
+            'silent'  : self.silent  ,
+            'order'   : self.order   ,
             }
+        
+    @property
+    def order  ( self ) :
+        """``order'': interpolation order"""
+        return self.pdf.getInterpolationOrder () 
+    @order.setter
+    def order  ( self , value ) :
+        assert isinstance ( value , integer_types ) and 0 <= value,\
+               'Invalid interpolation order %s/%s' % ( value , type ( value ) )
+        self.pdf.setInterpolationOrder ( value )
         
 # =============================================================================
 ## @class Fit1D
 #  The actual model for 1D-mass fits
-#  @param signal              PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
-#  @param background          PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
-#  @param othersignals        list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
-#  @param otherbackgrouds     list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
-#  @param others              list of 'other' components                     (Ostap/PDF or RooAbsPdf)
-#  @param name                the name of compound PDF 
-#  @param suffix              ... add this  suffix for the PDF name
-#  @param extended            build 'extended' PDF
-#  @param combine_signals     combine all signal components into single SIGNAL?
-#  @param combine_backgrounds combine all background components into single BACKGROUND?
-#  @param combine_others      combine all other components into single COMPONENT?
-#  @param recirsive           use recursive fractions for compound PDF
-#  @param xvar                the fitting variable, must be specified if components are given as RooAbsPdf
+#  @param signal                PDF for 'signal'     component                 (Ostap/PDF or RooAbsPdf)
+#  @param background            PDF for 'background' component                 (Ostap/PDF or RooAbsPdf)
+#  @param othersignals          list of PDFs for other 'signal' components     (Ostap/PDF or RooAbsPdf)
+#  @param otherbackgrouds       list of PDFs for other 'background' components (Ostap/PDF or RooAbsPdf)
+#  @param others                list of 'other' components                     (Ostap/PDF or RooAbsPdf)
+#  @param signals               list 'signal'     components
+#  @param backgrounds           list of 'background' component               
+#  @param suffix                ... add this  suffix for the PDF name
+#  @param name                  the name of compound PDF 
+#  @param xvar                  the fitting variable, must be specified if components are given as RooAbsPdf
+#  @param extended              build 'extended' PDF
+#  @param combine_signals       combine all signal components into single SIGNAL?
+#  @param combine_backgrounds   combine all background components into single BACKGROUND?
+#  @param combine_others        combine all other components into single COMPONENT?
+#  @param recursive             use recursive fractions for compound PDF
+#  @param recursive_signals     use recursive fractions for compound signal
+#  @param recursive_backgriunds use recursive fractions for compound background
+#  @param recursive_others      use recursive fractions for compound others
+#  @param S                     yields of signal components 
+#  @param B                     yields of background components 
+#  @param C                     yields of others components
+#  @param F                     component fractions for non-extended fit
+#  @param fS                    fractions for compound signal
+#  @param fB                    fractions for compound background
+#  @param fC                    fractions for compound others 
 #  @code 
 #  gauss = Gauss_pdf( ... ) 
 #  pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background
@@ -2940,328 +3373,311 @@ class Fit1D (PDF) :
     >>> pdf   = Fit1D ( signal = gauss , background = 0 ) ## Gauss as signal and exponent as background 
     """
     def __init__ ( self                          , 
-                   signal              = None    ,    ## the main signal 
-                   background          = None    ,    ## the main background 
-                   othersignals        = []      ,    ## additional signal         components
-                   otherbackgrounds    = []      ,    ## additional background     components
-                   others              = []      ,    ## additional non-classified components
-                   signals             = []      ,    ## alternative : all signals 
-                   backgrounds         = []      ,    ## alternative : all backgrounds  
-                   suffix              = ''      ,    ## the suffix 
-                   name                = ''      ,    ## the name 
-                   extended            = True    ,    ## extended fits ?
-                   combine_signals     = False   ,    ## combine signal PDFs into single "SIGNAL"     ? 
-                   combine_backgrounds = False   ,    ## combine signal PDFs into single "BACKGROUND" ?            
-                   combine_others      = False   ,    ## combine signal PDFs into single "COMPONENT"  ?             
-                   recursive           = True    ,    ## recursive fractions for NON-extended models?
-                   xvar                = None    ,
-                   S                   = []      ,    ## yields for ``signals''
-                   B                   = []      ,    ## yields for ``background''
-                   C                   = []      ,    ## yields for ``components''
-                   F                   = []      ,    ## fractions for noin-extended fit 
-                   fS                  = []      ,    ## fraction for combined signal
-                   fB                  = []      ,    ## fraction for combined background
-                   fC                  = []      ) :  ## fraction for combined components
+                   signal                = None    ,    ## the main signal 
+                   background            = None    ,    ## the main background 
+                   othersignals          = ()      ,    ## additional signal         components
+                   otherbackgrounds      = ()      ,    ## additional background     components
+                   others                = ()      ,    ## additional non-classified components
+                   signals               = ()      ,    ## alternative : all signals 
+                   backgrounds           = ()      ,    ## alternative : all backgrounds  
+                   suffix                = ''      ,    ## the suffix 
+                   name                  = ''      ,    ## the name
+                   xvar                  = None    ,    ## x-variable 
+                   extended              = True    ,    ## extended fits ?
+                   combine_signals       = False   ,    ## combine signal     components into single "SIGNAL"     ? 
+                   combine_backgrounds   = False   ,    ## combine background components into single "BACKGROUND" ?            
+                   combine_others        = False   ,    ## combine other      components into single "COMPONENT"  ?             
+                   recursive             = True    ,    ## recursive fractions for NON-extended models?
+                   recursive_signals     = True    ,    ## recursive fractions for combined signal?
+                   recursive_backgrounds = True    ,    ## recursive fractions for combined background?
+                   recursive_others      = True    ,    ## recursive fractions for combined other components?
+                   S                     = ()      ,    ## yields for ``signals''
+                   B                     = ()      ,    ## yields for ``background''
+                   C                     = ()      ,    ## yields for ``components''
+                   F                     = ()      ,    ## fractions for noin-extended fit 
+                   fS                    = ()      ,    ## fraction for combined signal
+                   fB                    = ()      ,    ## fraction for combined background
+                   fC                    = ()      ,    ## fraction for combined components
+                   **kwargs                        ) :  ## other arguments (e.g. drawing)
         
-        ##  save all arguments 
-        self.__args = {
-            'signal'              : signal           ,
-            'othersignals'        : othersignals     ,
-            'signals'             : signals          ,
-            'background'          : background       ,
-            'otherbackgrounds'    : otherbackgrounds ,
-            'backgrounds'         : backgrounds      ,
-            'others'              : others           ,
-            'extended'            : extended         ,
-            ##
-            'suffix'              : suffix           ,
-            'name'                : name             , 
-            ##
-            'combine_signals'     : combine_signals     ,
-            'combine_backgrounds' : combine_backgrounds ,
-            'combine_others'      : combine_others      ,
-            'recursive'           : recursive           ,
-            ##
-            'xvar'                : xvar  ,
-            ## 
-            'S'                   : S  , ## signal     yields 
-            'B'                   : B  , ## background yields       
-            'C'                   : C  , ## component  yields 
-            'F'                   : F  , ## fractions ( for non-extended fits)
-            'fS'                  : fS , ## fractions for combined signal
-            'fB'                  : fB , ## fractions for combined background
-            'fC'                  : fC , ## fractions for combined component
-            }
-        
-        self.__suffix              = suffix
-        self.__recursive           = recursive
-        self.__extended            = True if extended            else False
-        self.__combine_signals     = True if combine_signals     else False
-        self.__combine_backgrounds = True if combine_backgrounds else False
-        self.__combine_others      = True if combine_others      else False
 
-        self.__args_S = S
-        self.__args_B = B
-        self.__args_C = C
-        self.__args_F = F
+        self.__suffix                = suffix
+        self.__extended              = True if extended              else False
         
-        assert signal or signals , "Fit1D:``signal'' or ``signals'' must be specified!"
+        self.__combine_signals       = True if combine_signals       else False
+        self.__combine_backgrounds   = True if combine_backgrounds   else False
+        self.__combine_others        = True if combine_others        else False
+
+        self.__recursive             = True if recursive             else False
+        self.__recursive_signals     = True if recursive_signals     else False
+        self.__recursive_backgrounds = True if recursive_backgrounds else False
+        self.__recursive_others      = True if recursive_others      else False
+
+        self.__signal_components     = ()
+        self.__background_components = () 
+        self.__other_components      = ()
         
-        if signals :
-            if signal       : raise AttributeError ( "Fit1D: ``signal''       specified for valid ``signals''!" )
-            if othersignals : raise AttributeError ( "Fit1D: ``othersignals'' specified for valid ``signals''!" )
-            signal       = signals [ 0   ]
-            othersignals = signals [ 1 : ]
-            self.debug ( 'Split signals %s into %s and %s' % ( signals , signal , othersignals  ) )                                                                   
-            signals     = [] 
-            
-        if backgrounds :
-            if background       : raise AttributeError ( "Fit1D: ``background''       specified for valid ``backgrounds''!")
-            if otherbackgrounds : raise AttributeError ( "Fit1D: ``otherbackgrounds'' specified for valid ``backgrounds''!")
-            background       = backgrounds [ 0   ]
-            otherbackgrounds = backgrounds [ 1 : ]
-            self.debug ( 'Split backgrounds %s into %s and %s' % ( backgrounds , background , otherbackgrounds ) )                                                                   
-            backgrounds      = [] 
-            
-        ## wrap signal if needed 
-        if   isinstance ( signal , PDF )                     : self.__signal = signal ## .clone() 
-        ## if bare RooFit pdf,  fit variable must be specified
-        elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar :
-            self.__signal = Generic1D_pdf ( signal , xvar , prefix = 'S_' , suffix = suffix )
-        else :
-            raise AttributeError ( "Fit1D:Invalid type for ``signal'': %s/%s"  % (  signal , type( signal ) ) )
-        
-        if not name :
-            name = '%s' % self.__signal.name 
-            if suffix : name += '_' + suffix 
-
-        ## Init base class
-        PDF.__init__ ( self , name , self.__signal.xvar )             
-        
-        ## create the background component 
-        self.__background = self.make_bkg ( background , 'Bkg_' + self.name , self.xvar )
-
-        ##  keep the lists of signals and backgrounds 
-        self.signals     .add ( self.__signal     .pdf )
-        self.backgrounds .add ( self.__background .pdf )
-
-        #
-        ## treat additional signals
-        #        
-        self.__more_signals       = [] 
-        for i , c in enumerate ( othersignals ) :
-            if   isinstance ( c , PDF            ) : cc = c 
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( c ,  self.xvar , prefix = 'S%d_' % i , suffix = suffix ) 
-            else :
-                self.error ('unknown signal component %s/%s, skip it!' % ( c , type ( c ) ) )
-                continue  
-            self.__more_signals.append ( cc     )
-            self.signals.add           ( cc.pdf ) 
-        #
-        ## treat additional backgounds 
-        #
-        self.__more_backgrounds   = [] 
-        for i, c in enumerate ( otherbackgrounds ) :
-            if   isinstance ( c , PDF            ) : cc = c  
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar , prefix = 'B%d_' % i , suffix = suffix ) 
-            else :
-                self.error ('unknown background component %s/%s, skip it!' % ( c , type ( c ) ) )
-                continue  
-            self.__more_backgrounds.append ( cc     )
-            self.backgrounds.add           ( cc.pdf ) 
-        #
-        ## treat additional components
-        #
-        self.__more_components    = []
-        for i , c in enumerate ( others ) : 
-            if   isinstance ( c , PDF            ) : cc = c  
-            elif isinstance ( c , ROOT.RooAbsPdf ) : cc = Generic1D_pdf ( cs ,  self.xvar , prefix = 'C%d_' % i , suffix = suffix ) 
-            else :
-                self.error ("unknown ``other''component %s/%s, skip it!" % ( c , type ( c ) ) )
-                continue  
-            self.__more_components.append ( cc     )
-            self.components.add           ( cc.pdf ) 
-
         # =====================================================================
-        ## build PDF
+        ## Signals
         # =====================================================================
         
-        self.__all_signals     = self.signals     
-        self.__all_backgrounds = self.backgrounds 
-        self.__all_components  = self.components  
+        assert       signals   or       signal         , "Fit1D:``signals'' or ``signal'' must be specified!"        
+        assert ( not signals ) or ( not signal       ) , "Fit1D:``signals'' and ``signal'' are mutually exclusive!"        
+        assert ( not signals ) or ( not othersignals ) , "Fit1D:``signals'' and ``othersignals'' are mutually exclusive!"  
         
-        self.__save_signal     = self.__signal
-        self.__save_background = self.__background
-        
-        ## combine signal components into single signal  (if needed)
-        self.__signal_fractions = ()  
-        if combine_signals and 1 < len( self.signals ) :            
-            sig , fracs , sigs = self.add_pdf ( self.signals          ,
-                                                'signal_'    + suffix ,
-                                                'signal(%s)' % suffix ,
-                                                'fS%s_%%d'   % suffix ,
-                                                'fS%s_%%d'   % suffix ,
-                                                recursive = True      ,
-                                                fractions = fS        )
-            ## new signal
-            self.__signal      = Generic1D_pdf   ( sig , self.xvar , prefix = 'SIGNAL_' , suffix = suffix )
-            self.__all_signals = ROOT.RooArgList ( sig )
-            self.__sigs        = sigs 
-            self.__signal_fractions = fracs
-            self.verbose('%2d signals     are combined into single SIGNAL'     % len ( sigs ) )
-            self.combined_signals.add ( sig ) 
+        sig_lst = list ( othersignals ) + list ( signals ) 
+        if signal : sig_lst.insert ( 0 , signal )
 
-        ## combine background components into single backhround (if needed ) 
-        self.__background_fractions = () 
-        if combine_backgrounds and 1 < len( self.backgrounds ) :            
-            bkg , fracs , bkgs = self.add_pdf ( self.backgrounds          ,
-                                                'background_'    + suffix ,
-                                                'background(%s)' % suffix ,
-                                                'fB%s_%%d'       % suffix ,
-                                                'fB%s_%%d'       % suffix ,
-                                                recursive = True          ,
-                                                fractions = fB            )
-            ## new background
-            self.__background      = Generic1D_pdf   ( bkg , self.xvar , prefix = 'BACKGROUND_' , suffix =  suffix )
-            self.__all_backgrounds = ROOT.RooArgList ( bkg )
-            self.__bkgs            = bkgs 
-            self.__background_fractions = fracs 
-            self.verbose ('%2d backgrounds are combined into single BACKGROUND' % len ( bkgs ) ) 
-            self.combined_backgrounds.add ( bkg ) 
+        pdfs = [] 
+        for i , signal  in enumerate ( sig_lst ) :
 
-        ## combine other components into single component (if needed ) 
-        self.__components_fractions = () 
-        if combine_others and 1 < len( self.components ) :
-            
-            cmp , fracs , cmps = self.add_pdf ( self.components      ,
-                                                'other_'    + suffix ,
-                                                'other(%s)' % suffix ,
-                                                'fC%s_%%d'  % suffix ,
-                                                'fC%s_%%d'  % suffix ,
-                                                recursive = True     ,
-                                                fractions = fC       ) 
-            ## save old background
-            self.__other          = Generic1D_pdf   ( cmp , self.xvar , prefix = 'COMPONENT_' , suffix = suffix )
-            self.__all_components = ROOT.RooArgList ( cmp )
-            self.__components_fractions = fracs 
-            self.verbose('%2d components  are combined into single COMPONENT'    % len ( cmps ) )
-            self.combined_components.add ( cmp ) 
-
-
-        self.__nums_signals     = [] 
-        self.__nums_backgrounds = [] 
-        self.__nums_components  = []
-        self.__nums_fractions   = []
-        
-        ## build models 
-        if self.extended :
-
-            if F : self.warning("Non empty list of ``fractions'' is specified: %s, ignore" % F ) 
-
-            ns = len ( self.__all_signals )
-            if 1 == ns :
-                sf = self.make_var  ( get_i ( S , 0 ) , "S"+suffix , "Signal"     + suffix , None , 1 , 0 , 1.e+7 )
-                self.alist1    .add ( self.__all_signals[0]  )
-                self.__nums_signals.append ( sf ) 
-            elif 2 <= ns : 
-                fis = self.make_fracs ( ns , 'S%s_%%d' % suffix ,  'S%s_%%d'  % suffix , fractions  = False , fracs = S )
-                for s in self.__all_signals : self.alist1.add ( s )
-                for f in fis                : self.__nums_signals.append ( f ) 
-
-            nb = len ( self.__all_backgrounds )
-            if 1 == nb :
-                bf = self.make_var ( get_i ( B , 0 ) , "B"+suffix , "Background" + suffix , None , 1 , 0 , 1.e+7 )
-                self.alist1.add ( self.__all_backgrounds[0]  )
-                self.__nums_backgrounds.append ( bf ) 
-            elif 2 <= nb :
-                fib = self.make_fracs ( nb , 'B%s_%%d' % suffix ,  'B%s_%%d'  % suffix , fractions  = False , fracs = B )
-                for b in self.__all_backgrounds : self.alist1.add ( b )
-                for f in fib                    : self.__nums_backgrounds.append ( f ) 
-
-            nc = len ( self.__all_components )
-            if 1 == nc :
-                cf = self.make_var ( get_i ( C , 0 )  , "C"+suffix , "Component" + suffix , None , 1 , 0 , 1.e+7 )
-                self.alist1.add  ( self.__all_components[0]  )
-                self.__nums_components.append ( cf ) 
-            elif 2 <= nc : 
-                fic = self.make_fracs ( nc , 'C%s_%%d' % suffix ,  'C%s_%%d'  % suffix , fractions  = False , fracs = C )
-                for c in self.__all_components : self.alist1.add ( c )
-                for f in fic                   : self.__nums_components.append ( f )
-
-            for s in self.__nums_signals     : self.alist2.add ( s ) 
-            for b in self.__nums_backgrounds : self.alist2.add ( b ) 
-            for c in self.__nums_components  : self.alist2.add ( c ) 
-                    
-        else :
-
-            if S : self.warning("Non empty list of ``signals''     is specified: %s, ignore" % S ) 
-            if C : self.warning("Non empty list of ``components''  is specified: %s, ignore" % C ) 
-            if B : self.warning("Non empty list of ``backgrounds'' is specified: %s, ignore" % B ) 
-
-            ns = len ( self.__all_signals     )
-            nb = len ( self.__all_backgrounds )
-            nc = len ( self.__all_components  )
-            
-            for s in self.__all_signals     : self.alist1.add ( s )
-            for b in self.__all_backgrounds : self.alist1.add ( b )
-            for c in self.__all_components  : self.alist1.add ( c )
-
-            fic = self.make_fracs ( ns + nb + nc ,
-                                    'f%s_%%d' % suffix          ,
-                                    'f%s_%%d' % suffix          ,
-                                    fractions  = True           ,
-                                    recursive  = self.recursive ,
-                                    fracs      = F              )
+            if isinstance ( signal , PDF ) :
                 
-            for f in fic                    : self.__nums_fractions.append ( f )   
-            for f in self.__nums_fractions  : self.alist2.add ( f ) 
+                assert ( not xvar ) or xvar is signal.xvar, \
+                       "Invalid ``signal'' component #%d/xvar/xvar %s/%s" % ( i , xvar , signal.xvar )
+                
+                pdfs.append ( signal )
+                
+                xvar = signal.xvar
+                
+            elif isinstance ( signal , ROOT.RooAbsPdf ) and xvar and isinstance ( xvar , ROOT.RooAbsReal ) :
 
+                pdfs.append ( Generic1D_pdf ( signal , xvar = xvar , prefix = "Sig%d_" % i , suffix = self.suffix ) )
+                
+            else :
+                
+                raise AttributeError ( "Fit1D:Invalid ``signal'' #%d/xvar: %s/%s %s"  % ( i , sig , type( signal ) , xvar ) )
 
-        self.__nums_signals     = tuple ( self.__nums_signals     )
-        self.__nums_backgrounds = tuple ( self.__nums_backgrounds ) 
-        self.__nums_components  = tuple ( self.__nums_components  ) 
-        self.__nums_fractions   = tuple ( self.__nums_fractions   ) 
-
-        #
-        ## The final PDF
-        #       
-
-        pdfname  = "Fit1D_"    + self.name
-        pdftitle = "Fit1D(%s)" % self.name
-        pdfargs  = pdfname , pdftitle , self.alist1 , self.alist2
+        ## sinal components 
+        self.__signal_components  = tuple ( pdfs )
         
+        # =====================================================================
+        ## initialize the base class
+        # =====================================================================
+        name = name if name else self.generate_name ( prefix = 'Fit%s' % self.signal_components[0].name , suffix = self.suffix ) 
+        PDF.__init__ ( self , name , xvar , **kwargs ) 
+                            
+        # =====================================================================
+        ## Backgrounds
+        # =====================================================================
+
+        assert ( not backgrounds ) or ( not otherbackgrounds ) ,\
+               "Fit1D:``backgrounds'' and ``otherbackgrounds'' are mutually exclusive!"        
+        assert ( not backgrounds ) or ( not background ) ,\
+               "Fit1D:``backgrounds'' and ``backgrounds'' are mutually exclusive!"        
+        
+        if not backgrounds :
+            ## create background
+            background = self.make_bkg ( background , name = 'Background' , xvar = self.xvar ) 
+            
+        bkg_lst  = list ( otherbackgrounds ) + list ( backgrounds )
+        if background : bkg_lst.insert ( 0 , background ) 
+
+        pdfs = []
+        for i , bkg in enumerate ( bkg_lst ) :
+
+            if isinstance ( bkg , PDF ) :
+                
+                assert self.xvar is bkg.xvar, \
+                       "Invalid ``background'' component #%d/xvar/xvar %s/%s" % ( i , self.xvar , bkg.xvar )
+                
+                pdfs.append ( bkg )
+                
+            elif isinstance ( bkg  , ROOT.RooAbsPdf ) :
+                
+                pdfs.append ( Generic1D_pdf ( bkg , xvar = xvar , prefix = "Bkg%d_" % i , suffix = self.suffix ) )
+                
+            else :
+                
+                raise AttributeError ( "Fit1D:Invalid ``background''#%d: %s/%s"  % ( i , bkg , type( bkg )  ) )
+
+        ## background components 
+        self.__background_components = tuple ( pdfs ) 
+        
+        # =====================================================================
+        ## Other fit components
+        # =====================================================================
+        
+        pdfs = [] 
+        for i, cmp in enumerate ( others ) :
+            
+            if isinstance ( cmp , PDF ) :
+                
+                assert self.xvar is cmp.xvar, \
+                       "Invalid ``other'' component #%d/xvar/xvar %s/%s" % ( i , self.xvar , cmp.xvar )
+                
+                pdfs.append ( cmp )
+                
+            elif isinstance ( cmp  , ROOT.RooAbsPdf ) :
+                
+                cmp_pdfs.append ( Generic1D_pdf ( cmp , xvar = xvar , prefix = "Cmp%d_" % i , suffix = self.suffix ) )
+                
+            else :
+                
+                raise AttributeError ( "Fit1D:Invalid ``other''#%d: %s/%s"  % ( i , cmp , type( cmp ) ) )
+
+        ## all other componnets 
+        self.__other_components = tuple ( pdfs ) 
+        
+        # =====================================================================
+        ## Merge them if requested 
+        # =====================================================================
+        self.__combined_signal     = None
+        self.__combined_background = None
+        self.__combined_others     = None
+
+        sigs = list ( self.signal_components     )
+        bkgs = list ( self.background_components ) 
+        cmps = list ( self.other_components      ) 
+        
+        if combine_signals     and 1 < len ( self.signal_components     ) :
+            
+            combined = Combine1D ( self.signal_components    ,
+                                   prefix    = 'fS'          ,
+                                   suffix    = suffix        ,
+                                   recursive = recursive     ,                                              
+                                   fractions = fS            ) ## read  fS from arguments
+            
+            self.__combined_signal = combined 
+            sigs = [ combined ] 
+            
+        if combine_backgrounds and 1 < len ( self.background_components ) :
+                
+            combined = Combine1D ( self.background_components ,
+                                   prefix    = 'fB'           ,
+                                   suffix    = suffix         ,
+                                   recursive = recursive      ,                                             
+                                   fractions = fB             ) ## read fB from arguments 
+            
+            self.__combined_background = combined
+            bkgs = [ combined ]  
+            
+        if combine_others      and 1 < len ( self.other_components           ) :            
+
+            combined = Combine1D ( self.other_components     ,
+                                   prefix    = 'fC'          ,
+                                   suffix    = suffix        ,
+                                   recursive = recursive     ,                                              
+                                   fractions = fC            ) ## read fC from arguments 
+            
+            self.__combined_others = combined
+            cmps = [ combined ] 
+
+        self.__fit_signals     = tuple ( sigs )
+        self.__fit_backgrounds = tuple ( bkgs )
+        self.__fit_others      = tuple ( cmps )
+        
+        ## final list of fit components 
+        self.__fit_components  = self.fit_signals + self.fit_backgrounds + self.fit_others 
+        for p in self.fit_components  : self.alist1.add ( p.pdf )  
+
+        ## Yields/fractions 
+        
+        self.__S = () 
+        self.__B = () 
+        self.__C = ()
+        self.__F = ()
+        
+        if self.extended :
+            
+            ns        = len  ( self.fit_signals ) 
+            fname     = make_name ( 'S' , '%d' if 1 != ns else '' , suffix )
+            title     = "Yield(s) for ``signal'' component(s)/%s" % self.name
+            title     = title if 1 != ns else title.replace ( '(s)', '' )
+
+            self.__S  = self.make_yields ( ns , fname , title , yields = S ) ## read S from arguments
+            
+            nb        = len ( self.fit_backgrounds ) 
+            fname     = make_name ( 'B' , '%d' if 1 != nb else '' , suffix )
+            title     = "Yield(s) for ``background'' component(s)/%s" % self.name
+            title     = title if 1 != nb else title.replace ( '(s)', '' )             
+            self.__B  = self.make_yields ( nb , fname , title , yields = B ) ## read S from arguments
+
+            nc        = len ( self.fit_others  ) 
+            fname     = make_name ( 'C' , '%d' if 1 != nc else '' , suffix )
+            title     = "Yield(s) for ``other'' component(s)/%s" % self.name
+            title     = title if 1 != nc else title.replace ( '(s)', '' )             
+            self.__C  =  self.make_yields ( nc , fname , title , yields = C ) ## read S from arguments
+
+            for y in self.yields : self.alist2.add ( y )   
+
+            assert len ( self.alist2 ) == len ( self.alist1 ) ,\
+                   'Fit1D: inconsistent parameters for ROOT.RooAddPdf' 
+
+        else :
+            
+            assert 1 < len ( self.fit_components ) ,\
+                   'Fot1D: At least two components are required to build proper non-extended PDF!'
+
+            nt       = len ( self.fit_components )
+            nf       = nt - 1 
+            fname    = make_name ( 'F' , '%d' if 1 != nf else '' , suffix )
+            title    = "Fraction(s) for various component(s)/%s" % self.name
+            title    = title if 1 != nf else title.replace ( '(s)', '' )                         
+            self.__F = self.make_fractions ( nt , fname ,  title , fractions = F ) ## read F from arguments
+                        
+            for f in self.__F : self.alist2.add ( f )
+
+            assert len ( self.alist2 ) + 1 == len ( self.alist1 ) ,\
+                   'Fit1D: inconsistent parameters for ROOT.RooAddPdf' 
+
+        
+            
+        ## now we finally can create PDF
+            
+        pdf_name  = self.roo_name ( 'fit1d_' ) 
+        pdf_title = "Fit1D %s" % self.name
+        pdf_args  = pdf_name , pdf_title , self.alist1 , self.alist2
+
         if not self.extended :
-            pdfargs = pdfargs + ( True if recursive else False , ) ## RECURSIVE ? 
-        self.pdf = ROOT.RooAddPdf ( *pdfargs )
-        
-        if self.extended : 
-            self.debug ( "extended     model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
-        else : 
-            self.debug ( "non-extended model ``%s'' with %s/%s components"  % ( self.pdf.GetName() , len( self.alist1) , len(self.alist2) ) )
+            pdf_args = pdf_args + ( True if recursive else False , ) ## RECURSIVE ?
+            
+        self.pdf = ROOT.RooAddPdf ( *pdf_args )
+
+        ## sanity checks
+
+        ## drawing stuff
+        if self.combined_background         : self.combined_backgrounds.add ( self.combined_background.pdf ) ## for drawing 
+        if self.combined_signal             : self.combined_signals    .add ( self.combined_signal    .pdf ) ## for drawing 
+        if self.combined_others             : self.combined_components .add ( self.combined_others    .pdf ) ## for drawing 
+
+        for p in self.signal_components     : self.signals    .add ( p.pdf ) 
+        for p in self.background_components : self.backgrounds.add ( p.pdf ) 
+        for p in self.other_components      : self.components .add ( p.pdf ) 
 
         ## save the configuration
         self.config = {
-            'signal'              : self.save_signal         ,
-            'background'          : self.save_background     ,
-            'othersignals'        : self.more_signals        ,
-            'otherbackgrounds'    : self.more_backgrounds    ,
-            'others'              : self.more_components     ,
-            'suffix'              : self.suffix              ,
-            'name'                : self.name                ,
-            'extended'            : self.extended            ,
-            'combine_signals'     : self.combine_signals     ,
-            'combine_backgrounds' : self.combine_backgrounds ,
-            'combine_others'      : self.combine_others      ,
-            'recursive'           : self.recursive           ,
-            'xvar'                : self.xvar                ,
-            'S'                   : self.S                   ,
-            'B'                   : self.B                   ,
-            'C'                   : self.C                   ,
-            'F'                   : self.F                   ,            
-            'fS'                  : self.fS                  ,
-            'fB'                  : self.fB                  ,
-            'fC'                  : self.fC                  ,
+            ## 
+            'signals'               : self.signal_components     ,
+            'backgrounds'           : self.background_components ,
+            'others'                : self.other_components      ,
+            ##
+            'suffix'                : self.suffix                ,
+            'name'                  : self.name                  ,            
+            'extended'              : self.extended              ,
+            'xvar'                  : self.xvar                  ,
+            ## 
+            'combine_signals'       : self.combine_signals       ,
+            'combine_backgrounds'   : self.combine_backgrounds   ,
+            'combine_others'        : self.combine_others        ,
+            ## 
+            'recursive'             : self.recursive             ,
+            'recursive_signals'     : self.recursive_signals     ,
+            'recursive_backgrounds' : self.recursive_backgrounds ,
+            'recursive_others'      : self.recursive_others      ,
+            ##
+            'fS'                    : self.fS                    ,
+            'fB'                    : self.fB                    ,
+            'fC'                    : self.fC                    ,
+            ##                      
+            'S'                     : self.S                     ,
+            'B'                     : self.B                     ,
+            'C'                     : self.C                     ,
+            'F'                     : self.F                     ,
+            ##
             }
+
+        self.checked_keys.add  ( 'xvar' )
         
     @property
     def extended ( self ) :
@@ -3271,10 +3687,7 @@ class Fit1D (PDF) :
     def suffix   ( self ) :
         """``suffix'' : append the names  with the specified suffix"""
         return self.__suffix
-    @property
-    def recursive ( self ) :
-        """``recursive'':  use recursive fitfractions?"""
-        return  self.__recursive
+
     @property
     def combine_signals ( self ) :
         """Combine all ``signal''-components into single ``signal'' componet?"""
@@ -3287,102 +3700,110 @@ class Fit1D (PDF) :
     def combine_others ( self ) :
         """Combine all ``others''-components into single ``other'' componet?"""
         return self.__combine_others 
-                
     @property
-    def signal (  self ) :
-        """The main ``signal'' component (possible compound)"""
-        return self.__signal
-    
+    def recursive ( self ) :
+        """``recursive'':  use recursive fit fractions fro non-extended fit?"""
+        return  self.__recursive
     @property
-    def background (  self ) :
-        """The main ``background'' component (possible compound)"""
-        return self.__background
+    def recursive_signals ( self ) :
+        """``recursive_signals'':  use recursive fractions for combined signal?"""
+        return  self.__recursive_signals
+    @property
+    def recursive_backgrounds ( self ) :
+        """``recursive_backgrounds'':  use recursive fractions for combined background?"""
+        return  self.__recursive_backgrounds
+    @property
+    def recursive_others      ( self ) :
+        """``recursive_backgrounds'':  use recursive fractions for combined other components?"""
+        return  self.__recursive_others
 
     @property
-    def save_signal (  self ) :
-        """The original ``signal'' component (possible compound)"""
-        return self.__save_signal
-    
+    def signal_components ( self )  :
+        """``signal_components'' : all ``signal'' components"""
+        return self.__signal_components         
     @property
-    def save_background (  self ) :
-        """The original ``background'' component (possible compound)"""
-        return self.__save_background
+    def background_components ( self )  :
+        """``background_components'' : all ``background'' components"""
+        return self.__background_components 
+    @property
+    def other_components ( self )  :
+        """``other_components'' : all ``other'' components"""
+        return self.__other_components 
 
     @property
-    def more_signals     ( self ) :
-        """Additional ``signal'' components"""
-        return tuple( self.__more_signals )
+    def combined_signal     ( self ) :
+        """``combined_signal'' : PDF for combined ``signal'' component"""
+        return self.__combined_signal
+    @property
+    def combined_background ( self ) :
+        """``combined_background'' : PDF for combined ``background'' component"""
+        return self.__combined_background
+    @property
+    def combined_others    ( self ) :
+        """``combined_background'' : PDF for combined ``others'' component"""
+        return self.__combined_others
     
     @property
-    def more_backgrounds ( self ) :
-        """additional ``background'' components"""
-        return tuple( self.__more_backgrounds  )
-    
-    @property
-    def more_components ( self ) :
-        """additional ``other'' components"""
-        return tuple( self.__more_components  )
-    
-    @property
-    def fS ( self  ) :
-        """(Recursive) fractions for the compound signal components (empty for simple signal) """
-        lst = [ i for i in self.__signal_fractions ]
-        return tuple ( lst )
+    def fS ( self ) :
+        """``fS'' : fractions (possible recursive) of components in combined signal"""
+        return () if not self.combined_signal else self.combined_signal.F
     @fS.setter
     def fS ( self , value ) :
+        assert  self.combined_signal, "``fS'': no combined signal is defined!"
+        self.combined_signal.F = value
 
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for f , v in zip ( self.__signal_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
-            f.setVal   ( vv ) 
-            
     @property
-    def fB ( self  ) :
-        """(Recursive) fractions for the compound background components (empty for simple background)"""
-        lst = [ i for i in self.__background_fractions ]
-        return tuple ( lst )
+    def fB ( self ) :
+        """``fB'' : fractions (possible recursive) of components in combined background"""
+        return () if not self.combined_background else self.combined_background.F
     @fB.setter
     def fB ( self , value ) :
+        assert  self.combined_background, "``fB'': no combined background is defined!"
+        self.combined_background.F = value
 
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for f , v in zip ( self.__background_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
-            f.setVal   ( vv ) 
-                
     @property
-    def fC ( self  ) :
-        """(Recursive) fractions for the compound ``other'' components (empty for no additional commponents case)"""
-        lst = [ i for i in self.__components_fractions ]
-        return tuple ( lst )
+    def fC ( self ) :
+        """``fC'' : fractions (possible recursive) of components in combined ``others''"""
+        return () if not self.combined_others else self.combined_others.F
     @fC.setter
     def fC ( self , value ) :
+        assert  self.combined_others, "``fC'': no combined ``others'' is defined!"
+        self.combined_others.F = value
 
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
+    @property
+    def fit_components  ( self ) :
+        """``fit_components'' : list of fit components"""
+        return self.__fit_components
+    @property
+    def fit_signals      ( self ) :
+        """``fit_signals'': list of (the 1st order) ``signal'' components in the model"""
+        return self.__fit_signals 
+    @property
+    def fit_backgrounds  ( self ) :
+        """``fit_backgrounds'': list of (the 1st order) ``background'' components in the model"""
+        return self.__fit_backgrounds
+    @property
+    def fit_others       ( self ) :
+        """``fit_others'': list of (the 1st order) ``others'' components in the model"""
+        return self.__fit_others 
 
-        for f , v in zip ( self.__components_fractions , value ) :
-            vv = float ( v )
-            if f.minmax() and not vv in f :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , f.minmax() ) ) 
-            f.setVal   ( vv ) 
-            
+    @property
+    def signal ( self ) :
+        """``signal'' : get ``signal'' PDF (``combined_signal'' or the 1st from ``signal_components'')"""
+        if self.__combined_signal : return self.__combined_signal
+        assert self.signal_components, "signal: empty lst of ``signal'' components!"    
+        if 1 != len ( self.signal_components ) :
+            logger.warning ("signal: get the 1st ``signal'' component")
+        return self.signal_components[0]
+    @property
+    def background ( self ) :
+        """``background'' : get ``background'' PDF (``combined_background'' or the 1st from ``background_components'')"""
+        if self.combined_background : return selfcombined_background
+        assert self.background_components, "background: empty lst of ``background'' components!"    
+        if 1 != len ( self.background_components ) :
+            logger.warning ("background: get the 1st ``background'' component")
+        return self.background_components[0]
+        
     @property
     def S ( self ) :
         """Get the  yields of signal component(s) (empty for non-extended fits)
@@ -3396,32 +3817,12 @@ class Fit1D (PDF) :
         >>> print pdf.S[4]       ## read the 4th signal component 
         >>> pdf.S[4].value = 100 ## assign to it         
         """
-        lst = [ i for i in self.__nums_signals ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple signal?
-        return tuple ( lst )
+        return () if not self.extended else self.component_getter ( self.__S )    
     @S.setter
     def S (  self , value ) :
-        
-        ns = len ( self.__nums_signals )
-        assert 1 <= ns , "No signals are defined, assignement is impossible"
-        
-        ##
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
+        assert self.extended, "``S'' cannot be set for non-exteded model!"
+        self.component_setter ( self.__S , value )
 
-        ss = [ self.S ] if 1 == ns else self.S
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
-            s.setVal   ( vv ) 
-    
     @property
     def B ( self ) :
         """Get the  yields of background  component(s) (empty for non-extended fits)
@@ -3435,30 +3836,11 @@ class Fit1D (PDF) :
         >>> print pdf.B[4]       ## read the 4th background component 
         >>> pdf.B[4].value = 100 ## assign to it 
         """
-        lst = [ i for i in self.__nums_backgrounds ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple background?
-        return tuple ( lst )
+        return () if not self.extended else self.component_getter ( self.__B ) 
     @B.setter
     def B (  self , value ) :
-        
-        nb = len ( self.__nums_backgrounds )
-        assert 1 <= nb , "No backgrounds are defined, assignement is impossible"
-
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        ss = [ self.B ] if 1 == nb else self.B
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv  , s.minmax() ) ) 
-            s.setVal   ( vv ) 
+        assert self.extended, "``B'' cannot be set for non-extended model!"
+        self.component_setter ( self.__B , value )
 
     @property
     def C ( self ) :
@@ -3473,30 +3855,16 @@ class Fit1D (PDF) :
         >>> print pdf.C[4]        ## read the 4th ``other'' component 
         >>> pdf.C[4].value 100    ## assign to it         
         """
-        lst = [ i for i in self.__nums_components ]
-        if not lst          : return ()     ## extended fit? no other components?
-        elif  1 == len(lst) : return lst[0] ## single component?
-        return tuple ( lst )
+        return () if not self.extended else self.component_getter ( self.__C )     
     @C.setter
-    def C (  self , value ) :
-        
-        nc = len ( self.__nums_components )
-        assert 1 <= nc , "No ``other'' components are defined, assignement is impossible"
+    def C (  self , value ) : 
+        assert self.extended, "``C'' cannot be set for non-extended model!"
+        self.component_setter ( self.__C , value )
 
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        ss = [ self.C ] if 1 == nc else self.C
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                logger.error("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
-            s.setVal   ( vv ) 
+    @property
+    def yields ( self ) :
+        """``yields'' : yields for ``all'' components, same as ``S+B+C'', emtpy for non-extended fits"""
+        return () if not self.extended else self.__S + self.__B + self.__C 
 
     @property 
     def F ( self ) :
@@ -3511,49 +3879,31 @@ class Fit1D (PDF) :
         >>> print pdf.F[4]        ## read the 4th fraction
         >>> pdf.F[4].value = 0.1  ## assign to it         
         """
-        lst = [ i for i in self.__nums_fractions ]
-        if not lst          : return ()     ## extended fit? 
-        elif  1 == len(lst) : return lst[0] ## simple two component fit ?
-        return tuple ( lst )
+        return () if self.extended else self.component_getter ( self.__F )     
     @F.setter
     def F (  self , value ) :
-        nf = len ( self.__nums_fractions )
-        assert 1 <= nf , "No fractions are defined, assignement is impossible"
-
-        ss = [ self.F ] if 1 == nf else self.F
-        if   isinstance ( value , num_types          ) : value = [ value           ]
-        elif isinstance ( value , VE                 ) : value = [ value.value()   ]
-        elif isinstance ( value , ROOT.RooAbsReal    ) : value = [ float ( value ) ] 
-        elif isinstance ( value , list_types         ) : pass
-        elif isinstance ( value , ROOT.RooArgList    ) : pass
-
-        for s , v in zip ( ss , value ) :
-
-            vv = float ( v  )
-            if s.minmax() and not vv in s :
-                logger.error ("Value %s is outside the allowed region %s"  % ( vv , s.minmax() ) ) 
-            s.setVal   ( vv ) 
+        assert not self.extended, "``F'' cannot be set for extended model!"        
+        self.component_setter ( self.__F , value )
 
     @property
-    def  yields    ( self ) :
-        """The list/tuple of the yields of all numeric components (empty for non-extended fit)"""
-        return tuple ( [ i for i in  self.alist2 ] ) if     self.extended else ()
-    
+    def natural ( self ) :
+        """Are all yields natural? """
+        if not self.yeilds : return False
+        for y in self.yields :
+            if not isinstance  ( y , ROOT.RooRealVar ) : return False 
+        return True 
+        
     def total_yield ( self ) :
-        """``total_yield''' : get the total yield"""
-        if not self.extended    : return None 
+        """``total_yield''' : get the total yield if/when possible"""
+        if not self.extended                                   : return None 
         if not self.fit_result                                 : return None
         if not valid_pointer ( self.fit_result )               : return None
         yields = self.yields
         if not yields                                          : return None
+        if not self.natural                                    : return None 
         if 1 ==  len ( yields )                                : return yields[0].value  
         return self.fit_result.sum ( *yields ) 
  
-    @property
-    def  fractions ( self ) :
-        """The list/tuple of fit fractions of all numeric components (empty for extended fit)"""
-        return tuple ( [ i for i in  self.alist2 ] ) if not self.extended else () 
-
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -3562,5 +3912,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

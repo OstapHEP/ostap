@@ -65,6 +65,7 @@ __date__    = "2011-12-01"
 __all__     = (
     ## 
     'findroot'           , ## find roots for given function in the interval
+    'solve'              , ## solev f(x)=C equation 
     ## homemade stuff 
     'find_root'          , ## local homemade rootfinder
     'RootFinder'         , ## the actual root-finder 
@@ -1255,16 +1256,24 @@ except ImportError :
 ## solve equation \f$ f(x)=C \f$
 #  @code
 #  fun = ...
-#  x = solve ( fun ,  0.0 , 1.0 ) 
+#  C   = 
+#  x   = solve ( fun ,  0.0 , 1.0 , C ) 
 #  @endcode 
 def sp_solve ( fun , xmin ,  xmax , C = 0 , args = () ) :
     """Solve equation fun(x)=C
     >>> fun = ...
-    >>> x   = solve ( fun , 0.0 ) 
+    >>> C   = ... 
+    >>> x   = solve ( fun , 0 , 1 , C  ) 
     """
+    ##
+    if iszero ( C ) :
+        return findroot ( fun , xmin ,  xmax , args = args )
+    ##
     func = lambda x , *a : fun(x,*a)-C
     return findroot ( func , xmin ,  xmax , args = args )
 
+##
+solve = sp_solve 
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -1273,5 +1282,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

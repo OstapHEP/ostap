@@ -96,15 +96,13 @@ class Files(object):
         #
         #
         
-        self.description  = description
-        self.maxfiles     = maxfiles
-        self.__silent     = silent 
+        self.__description  = description
+        self.__silent       = silent 
 
         from copy import deepcopy
-        self.__patterns   = list ( set ( deepcopy ( files ) ) )
-        self.__patterns.sort()
+        self.__patterns     = tuple ( sorted ( set ( files ) ) ) 
         
-        self.__files      = []        
+        self.__files        = []        
 
         # =====================================================================
         # convert list of patterns into the list of files 
@@ -115,22 +113,22 @@ class Files(object):
         if not self.silent :
             logger.info ('Loading: %s  #patterns/files: %s/%d' % ( self.description   ,
                                                                    len(self.patterns) , 
-                                                                   len( _files )    ) )        
-        self.add_files ( _files )
-
+                                                                   len( _files )    ) )            
+        self.add_files ( _files , maxfiles )
+        
         if not self.silent :
             logger.info ('Loaded: %s' % self )
 
-    ## append the file to the list of the files 
-    def _append_to_files (  self , f ) :
-        """Append the file to the list of the files"""
-        self.__files.append ( f )
-        
     @property 
     def files     ( self ) :
         """``files'' : the list of files"""
-        return tuple ( self.__files    )
+        return tuple ( self.__files )
 
+    @property
+    def description ( self ) :
+        """``description'': description of this collection"""
+        return self.__description
+    
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
@@ -143,154 +141,100 @@ class Files(object):
     @silent.setter
     def silent    ( self , value ) :
         self.__silent = True if value else  False
+
+    # =========================================================================
+    ## check if the file is a part of collection
+    #  @code
+    #  files = ...
+    #  if the_file in files : ....
+    #  @endcode 
+    def __contains__ ( self , the_file ) :
+        """Check if the file is a part of collection
+        >>> files = ...
+        >>> if the_file in files : ....
+        """
+        return the_file in self.__files 
         
     # =========================================================================
-    ## Get the list of files form the patterns 
+    ## Get the list of files from the patterns 
     def the_files ( self ) :
         """Get the list of files form the patterns"""
         
         _files = set ()
         
-        _prots = 0 
-        _norms = 0 
         for pattern in  self.patterns :
             
             _added = False  
             for p in protocols :
-                if pattern.startswith ( p ) or p in pattern : 
-                    if not pattern in _files :
-                        _files.add  ( pattern )
-                        _prots +=1 
-                    _added = True
+                if pattern.startswith ( p ) :
+                    _files.add ( pattern )
+                    _added = True 
                     break
                 
             if not _added : 
                 for f in glob.iglob ( pattern ) :
                     f = os.path.abspath  ( f )
                     f = os.path.normpath ( f )                    
-                    if not f in _files :
-                        _norms += 1 
-                        _files.add ( f )
+                    _files.add ( f )
 
-        ## final sort 
-        _files = list ( _files )
-        _files.sort   ()
-        
-        return tuple ( _files )
-        
-    # =========================================================================
-    ## set files 
-    def set_files ( self , files ) :
-        """Set files"""
-        assert isinstance ( files , ( list , tuple , set ) ),\
-               'Invalid list of files %s' % files
-        self.__files = list ( set ( files ) ) 
-        self.__files.sort()
+        return tuple ( sorted ( _files ) ) 
 
     # =========================================================================
-    ## set patterns
-    def set_patterns ( self , patterns ) :
-        """Set files"""
-        assert isinstance ( patterns , ( list , tuple , set ) ),\
-               'Invalid list of patterns %s' % patterns
-        self.__patterns = list ( set ( patterns ) ) 
-        self.__patterns.sort()
-
-    def __getstate__ ( self ) :
-
-        return {
-            'files'       : self.files       ,
-            'patterns'    : self.patterns    ,
-            'description' : self.description ,
-            'maxfiles'    : self.maxfiles    ,
-            'silent'      : self.silent      ,            
-            }
-    
-    def __setstate__ ( self , state ) :
-        self.__files     = state.get ( 'files'      , []    ) 
-        self.__patterns  = state.get ( 'patterns'   , []    )
-        self.description = state.get ( 'description', ''    )
-        self.maxfiles    = state.get ( 'maxfiles'   , -1    )
-        self.silent      = state.get ( 'silent'     , False )
-
     ## add files 
-    def add_files ( self , files ) :
+    def add_files ( self , files , max_files = -1 ) :
         """ Add files/patterns to data collector
         """
         
         if isinstance ( files  , str ) : files  = [ files  ]
 
         ## eliminate duplicates and sort 
-        files = list  ( set ( files ) )
-        files.sort ()
-        nf    = len ( files )
-        max_value = nf if 0 >= self.maxfiles else min ( nf , self.maxfiles )
-        from ostap.utils.progress_bar import ProgressBar 
-        with ProgressBar ( max_value = max_value , silent = self.silent ) as bar :
-            self.progress = bar 
-            for f in files :
-                if   0 >= self.maxfiles                 : self.treatFile ( f ) 
-                elif len ( self.files ) < self.maxfiles : self.treatFile ( f )
-                else :
-                    logger.debug ('Maxfiles limit is reached %s ' % self.maxfiles )
-                    break
-                
+        files = tuple ( sorted ( set ( files ) ) )
+        
+        nfiles    = len ( files )
+        max_files = max_files if 0 <= max_files <= nfiles else nfiles 
+        
+        from ostap.utils.progress_bar import progress_bar
+        for f in progress_bar ( files , silent = self.silent ) :
+            
+            if max_files <= len ( self.files ) :
+                logger.debug ('Max-files limit is reached %s ' % max_files )
+                break
+
+            ## treat the file 
+            self.treatFile ( f )
+            
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
-        self.__files.append ( the_file )
-        self.progress += 1
- 
-     ## merge two sets together
-    def add_data ( self , other ) :
-        """ Merge two datasets
-        """
-        #
-        f1 = set ( self .files    )
-        f2 = set ( other.files    )
-        p1 = set ( self .patterns )
-        p2 = set ( other.patterns )
+        if not the_file in self.__files : self.__files.append ( the_file )
         
-        self.set_files    ( f1 | f2 )
-        self.set_patterns ( p1 | p2 )
-        
-        return self
-    
     ## clone it! 
     def  clone ( self ) :
         """ Clone the object
         """
-        from copy import deepcopy
-        return deepcopy ( self )
-    
-    ## merge two sets together
-    def __iadd__ ( self , other ) :
-        """ Merge two datasets
-        >>> ds   = ...
-        >>> ds1  = ...
-        >>> ds  += ds1
-        >>> ds  |= ds1 ## ditto 
+        import copy
+        return copy.copy ( self )
+
+    # =========================================================================
+    ## check operations
+    def check_ops ( self , other ):
+        """Check operations
         """
-        if not isinstance ( other , Files ) :
-            return NotImplemented
-        return self.add_data ( other )    
-    
+        return isinstance ( other , Files ) 
+
     ## merge two sets together
-    def __add__ ( self , other ) :
+    def __or__ ( self , other ) :
         """ Merge two sets together
         >>> ds1 = ...
         >>> ds2 = ...
         >>> ds  = ds1 + ds2 
         >>> ds  = ds1 | ds2 ## ditto
         """
-        if not isinstance ( other , Files ) :
-            return NotImplemented
-        result  = self.clone() 
-        result += other 
+        if not self.check_ops ( other ) : return NotImplemenbted
+        
+        result = self.clone()
+        clone.__files      = self.files + tuple ( f for f in other.files if not f in self.files ) 
+        result.description = "|".join ( "(%s)" for s in ( self.description , other.description ) ) , 
         return result
-    
-    __or__  = __add__
-    __ror__ = __add__
-    __ior__ = __iadd__
 
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
@@ -300,51 +244,40 @@ class Files(object):
         >>> ds  = ds1 & ds2 ## get intersection 
         >>> ds  = ds1 * ds2 ## ditto
         """
-        if  not isinstance  ( other , Files ) : return NotImplemented
+        if not self.check_ops ( other ) : return NotImplemenbted
 
-        result = Files( files        = []               ,
-                        description  = self.description ,
-                        maxfiles     = self.maxfiles    ,
-                        silent       = True             )
-        
-        f1 = set ( self .files    )
-        f2 = set ( other.files    )
-        p1 = set ( self .patterns )
-        p2 = set ( other.patterns )
-        
-        result.files    = list ( f1 & f2 )
-        result.patterns = list ( p1 | p2 )
-        result.silent   = self.silent
-        
+        result = self.clone()
+        clone.__files      = tuple ( f for f in self.files if f in other.files )
+        result.description = "&".join ( "(%s)" for s in ( self.description , other.description ) ) , 
+        return result
+
+    __add__  = __or__    
+    __mul__  = __and__
+
+    ## subtraction for datasets 
+    def __sub__ (  self , other ) :
+        """ get subtraction of two sets
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  = ds1 - ds2 ## get subtraction 
+        """
+        if not isinstance ( other , Files ) : return NotImplemented
+
+        result = self.clone()
+        clone.__files      = tuple ( f for f in self.files if not f in other.files )
+        result.description = "-".join ( "(%s)" for s in ( self.description , other.description ) ) , 
         return result
     
-    __rand__ = __and__
-    __mul__  = __and__
-    __rmul__ = __and__
-    
-    ## clone !
-    def clone  ( self ) :
-        """ Clone the  object
-        """
-        result = Files( files        = []               ,
-                        description  = self.description ,
-                        maxfiles     = self.maxfiles    ,
-                        silent       = True             )
-        
-        from copy import deepcopy
-        result.set_files    ( deepcopy ( self.files    ) ) 
-        result.set_patterns ( deepcopy ( self.patterns ) )
-        result.silent     = self.silent 
-                                     
-        return result 
-
+    # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
     def sample_files ( self ,  n , sort ) :
+        """get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
+        """
         
-        if   isinstance ( n , int   ) and 1 <= n <= len  ( self.files ) :
+        if   isinstance ( n , int   ) and 1 <= n <= len ( self.files ) :
             files = random.sample ( self.files , n )
             if sort : files.sort()
-            return files 
+            return tuple ( files ) 
         elif isinstance ( n , float ) and 0 < n < 1 :
             n = int ( math.floor ( len ( self.files ) * n ) )
             return self.sample_files ( n , sort ) 
@@ -364,23 +297,10 @@ class Files(object):
         >>> f1 = files.sample ( 5   ) ##  5     files
         >>> f2 = files.sample ( 0.1 ) ## 10% of files 
         """
-        files = self.sample_files ( n , sort )
-        return Files ( files       = files ,
-                       description = kwargs.get( 'description' , self.description ) ,
-                       maxfiles    = kwargs.get( 'maxfiles'    , self.maxfiles    ) ,
-                       silent      = kwargs.get( 'silent'      , self.silent      ) )
+        result = self.clone ()
+        result.__files = self.sample_files ( n , sort )
+        return result
     
-    ##  reload!
-    def reload ( self , silent = True ) :
-        
-        prev_silent   = self.silent
-        self.__silent = silent
-        
-        self.__files  = []
-        self.add_files ( self.the_files ()  )
-        
-        self.__silent = prev_silent
-        
     # =========================================================================
     ##  Get an element or slice 
     #   @code
@@ -394,11 +314,10 @@ class Files(object):
         >>> f1 = files[5] 
         >>> f2 = files[4:10]
         """
-        files = self.files[ item ]
-        return Files ( files       = files            ,
-                       description = self.description ,
-                       maxfiles    = self.maxfiles    ,
-                       silent      = self.silent      )
+        result = self.clone ()
+        result.__files = self.files [item ] 
+        return result
+        
     ## printout 
     def __str__(self):
         """The specific printout
@@ -407,9 +326,10 @@ class Files(object):
     
     def __repr__    ( self ) : return self.__str__()
     def __nonzero__ ( self ) : return bool ( self.files )
+    def __bool__    ( self ) : return bool ( self.files )
     def __len__     ( self ) : return len  ( self.files )
 
-
+    # =========================================================================
     ## merge all files using <code>hadd</code> script from ROOT
     #  @param output  name of the output merged file, if None,
     #                 the temporary name will be generated,
@@ -469,9 +389,8 @@ class Files(object):
         """
         if not output :
             import ostap.utils.cleanup as CU
-            output = CU.CleanUp.tempfile ( suffix = '.root' )
+            output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
             
-
         import subprocess
         
         args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]
@@ -495,93 +414,67 @@ class Data(Files):
     >>> chain = data.chain
     >>> flist = data.files 
     """
-    def __init__( self                  ,
-                  chain                 ,
-                  files       = []      ,
-                  description = ''      , 
-                  maxfiles    = -1      ,
-                  silent      = False   ,
-                  quick       = False   ) :  
+    def __init__( self                 ,
+                  chain                ,
+                  files        = []    ,
+                  description  = ''    , 
+                  maxfiles     = -1    ,
+                  check        = True  , 
+                  silent       = False ) : 
 
         ## we will need Ostap machinery for trees&chains here
         import ostap.trees.trees 
 
-        self.__quick = True if quick else False
-        
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
 
-        if quick and 0 < maxfiles :
-            logger.warning("``Quick'' and ``maxfiles>0'' are not compatible, switch to ``quick=False''")
-            quick = False 
-            
-        if quick :
-            quick = self._use_quick_(  files )
-            if not quick :
-                logger.warning("Patterns are not compatible with quick search, switch to ``quick=False''")
+        self.__check = True if check else False
         
-        self.e_list1    = set()        
-        self.chain      = ROOT.TChain ( chain ) if isinstance ( chain , str ) else chain 
-        if not description : description = self.chain.GetName()
-        ##
-        if not quick : 
-            Files.__init__( self , files , description  , maxfiles , silent = silent )
-        else :
-            Files.__init__( self , []    , description  , maxfiles , silent = True   )
-            self.silent = silent
-            self.files  = self._quick_add_ ( self.chain ,  files )
-            if not self.silent : logger.info ('Loaded: %s' % self )
+        ## chain name 
+        self.__chain_name = chain if isinstance ( chain , str ) else chain.name 
+
+        ## list of problematic files 
+        self.__bad_files  = set()
+
+        ## update description
+        if not description : description = "ROOT.TChain(%s)" % self.chain_name 
+        
+        ## initialize the  base class 
+        Files.__init__( self , files , description  , maxfiles , silent = silent )
 
     @property
-    def  quick ( self ) :
-        """``quick'' :  quick processing?"""
-        return self.__quick
+    def validate ( self ) :
+        """``check'' : make check for `TTree`/`TChain` structures
+        """
+        return self.__check
     
-    ## can ``quick-add'' be applied for certain patterns?
-    def _use_quick_ ( self , files ) :
-        """Can ``quick-add'' be applied for certain patterns?
+    @property
+    def chain_name ( self ) :
+        """``chain_name'' : the name of TTree/TChain object
         """
-        for f in files :
-            _d,_f = os.path.split ( f )
-            if _d :
-                if 0 <= _d.find ( '*' )                         : return False
-                if 0 <= _d.find ( '[' ) or 0 <= _d.find ( ']' ) : return False
-        return True
-
-
-    ## quick add  files to the chain 
-    def _quick_add_ ( self , chain , files ) :
-        """Quick add  files to the chain 
+        return self.__chain_name
+    
+    @property
+    def chain ( self ) :
+        """``chain'' : (re)built and return `TChain` object"""
+        ch = ROOT.TChain( self.chain_name )
+        for f in self.files : ch.Add ( f )
+        return ch
+    
+    @property
+    def bad_files ( self ) :
+        """``bad_files'' : list of bad files"""
+        return self.__bad_files 
+    
+    @property
+    def check ( self ) :
+        """``check'' : make check for `TTree`/`TChain` structures
         """
-        if isinstance ( files , str ) :  files = [  files ]
-        _files = set ( files )
-        _used  = set ( chain.files () ) 
-        for f in _files :
-            if f in _used : continue 
-            n = chain.Add ( f ) 
-            if n <= 0 : logger.info ( 'Quick-add: no files for ``%s'' pattern are found!' )
-        return chain.files()[:] 
-            
-    ## picking 
-    def __getstate__ ( self ) :
-
-        state = Files.__getstate__( self )
-        state [ 'e_list1' ] = self.e_list1
-        state [ 'chain'   ] = self.chain.GetName()
-        state [ 'quick'   ] = self.quick 
-        return state
-
-    ## unpickling 
-    def __setstate__ ( self , state ) :
-
-        Files.__setstate__ ( self , state )
-        self.__quick     = state.get('quick'      , False )
-        self.e_list1     = state.get('e_list1'    , set() )
-        self.chain       = ROOT.TChain( state['chain'] )
-        for f in  self.files :   self.chain.Add ( f ) 
-
-    ## check the content of the two trees 
-    def check_trees ( self , tree1 , tree2 , the_file = '' ) :
+        return self.__check
+    
+    ## check the content of the two trees
+    @staticmethod 
+    def check_trees ( tree1 , tree2 , the_file = '' ) :
 
         if tree1 and tree2 :
             
@@ -592,17 +485,13 @@ class Data(Files):
             leaves2   = set ( tree2.leaves   () )
 
             if branches1 != branches2 :
-                missing = list ( branches1 - branches2 )
-                missing . sort ()
-                extra   = list ( branches2 - branches1 )
-                extra   . sort ()                    
+                missing = list ( sorted ( branches1 - branches2 ) ) 
+                extra   = list ( sorted ( branches2 - branches1 ) ) 
                 logger.warning ( "Tree('%s'): missing/extra branches %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
                 
             if ( ( branches1 != leaves1 ) or ( branches2 != leaves2 ) ) and leaves1 != leaves2 :
-                missing = list ( leaves1 - leaves2 )
-                missing . sort ()
-                extra   = list ( leaves2 - leaves1 )
-                extra   . sort ()                    
+                missing = list ( sorted ( leaves1 - leaves2 ) )
+                extra   = list ( sorted ( leaves2 - leaves1 ) ) 
                 logger.warning ( "Tree('%s'): missing/extra leaves   %s/%s in %s" %  ( tree1.GetName() , missing , extra , the_file ) )
 
                 
@@ -610,183 +499,64 @@ class Data(Files):
     def treatFile ( self, the_file ) :
         """Add the file to TChain
         """
+
         ## suppress Warning/Error messages from ROOT 
         from ostap.logger.utils import rootError
         with rootError() :
-            
-            tmp1 = ROOT.TChain ( self.chain .GetName() )
-            tmp1.Add ( the_file )
-            
-            if  tmp1 :                
-                self.check_trees ( tmp1 , self.chain , the_file )                
-                Files.treatFile ( self     , the_file ) 
-                self.chain .Add ( the_file )
-            else : 
-                self.e_list1.add ( the_file )
-                if not self.silent : 
-                    logger.warning ( "No/empty chain  '%s' in file '%s'" % ( self.chain .GetName() ,
-                                                                             the_file )            ) 
+
+            ## new temporary chani/tree 
+            tree  = ROOT.TChain ( self.chain_name )
+            tree.Add ( the_file )
+
+            ok = len ( tree ) 
+            if  ok :
+                
+                if self.check and self.files :
+                    chain = self.chain 
+                    self.check_trees ( chain , tree , the_file )
+                    del chain
                     
+                Files.treatFile  ( self  ,        the_file )
+                
+            else : 
+                self.__bad_files.add ( the_file )
+                if not self.silent : 
+                    logger.warning ( "No/empty chain  '%s' in file '%s'" % ( self.chain_name , the_file ) )
+                    
+            del tree
+
+            
     ## printout 
     def __str__(self):
         from ostap.logger.utils import rootWarning
         with rootWarning() :
-            nf = len ( self.files   )
-            nc = len ( self.chain   )
-            ne = len ( self.e_list1 )
-        return "<#files: {}; Entries: {}>"              .format ( nf , nc ) if not self.e_list1 else \
-               "<#files: {}; Entries: {}; No/empty: {}>".format ( nf , nc  ,  ne ) 
-
-
-    ## conversion to boolean
-    def __nonzero__ ( self )  :
-        return bool(self.files) and bool(self.chain)
-
-    ## merge two sets together
-    def __iadd__ ( self , other ) :
-        """ Merge two datasets
-        >>> ds   = ...
-        >>> ds1  = ...
-        >>> ds  += ds1
-        >>> ds  |= ds1 ## ditto 
-        """
-        if not isinstance ( other , Data ) : return NotImplemented
-        return self.add_data ( other )    
-
-    ## merge two sets together
-    def add_data ( self , other ) :
-        """ Merge two datasets
-        """
-        if self.chain.GetName() != other.chain.GetName() :
-            raise NotImplementedError("Can't merge different chains %s and %s" % (
-                self .chain.GetName() , 
-                other.chain.GetName() , 
-                ) )
-
-        self.set_patterns ( self.patterns + other.patterns )
-        for f in other.e_list1 : self.e_list1.add ( f ) 
-        for f in other.files :
-            if not f in self.files : 
-                self.chain. Add ( f )
-                
-        return self
-    
-    ## get an intersection of two datasets 
-    def __and__ (  self , other ) :
-        """ get intersection of two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 & ds2 ## get intsersecion
-        >>> ds  = ds1 * ds2 
-        """
-        if not isinstance ( other , Data ) : return NotImplemented
-        
-        if self.chain.GetName() != other.chain.GetName() :
-            raise NotImplementedError("Can't intersect different chains %s and %s" % (
-                self .chain.GetName() , 
-                other.chain.GetName() , 
-                ) )
-        
-        result         = Data ( chain       = self.chain.GetName() ,
-                                files       = []                   ,
-                                description = self.description     , 
-                                maxfiles    = self.maxfiles        ,
-                                silent      = True                 )
-
-
-        f1 = set ( self .files    )
-        f2 = set ( other.files    )
-        p1 = set ( self .patterns )
-        p2 = set ( other.patterns )
-        
-        result.files    = list ( f1 & f2 )
-        result.patterns = list ( p1 | p2 )
-        result.e_list1  = self.e_list1 | other.e_list1
-        result.silent   = self.silent
-        
-        for f in result.files : result.chain.Add ( f )
-            
-        return result
-    
-    ## clone !
-    def clone  ( self ) :
-        """ Clone the  object
-        """
-        result         = Data ( chain       = self.chain.GetName() ,
-                                files       = []                   ,
-                                description = self.description     , 
-                                maxfiles    = self.maxfiles        ,
-                                silent      = True                 )
-        
-        result.chain   = ROOT.TChain ( self.chain.GetName() )
-        for f in self.files : result.chain.Add ( f ) 
-        
-        from copy import deepcopy
-        result.set_files    ( deepcopy ( self.files    ) )
-        result.set_patterns ( deepcopy ( self.patterns ) )
-        result.e_list1      = deepcopy ( self.e_list1  ) 
-        
-        return result 
-    
-    ##  reload!
-    def reload ( self , silent = True ) :
-        self.chain   = ROOT.TChain ( self.chain.GetName() )
-        self.e_list1 = set() 
-        ##
-        Files.reload ( self , silent ) 
-
-    # =========================================================================
-    ##  Get a sub-sample
-    #   @code
-    #   files = ...
-    #   f1 = files.sample ( 5   ) ##  5     files
-    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
-    #   @endcode
-    def sample ( self , n , sort = True , **kwargs ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files.sample ( 5   ) ##  5     files
-        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
-        """
-        files = self.sample_files ( n , sort )
-        return Data ( files       = files ,
-                      chain       = kwargs.get ( 'chain'       , self.chain.GetName() ) , 
-                      description = kwargs.get ( 'description' , self.description     ) ,
-                      maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles        ) ,
-                      silent      = kwargs.get ( 'silent'      , self.silent          ) ,
-                      quick       = kwargs.get ( 'quick'       , self.quick           ) )
+            nf = len ( self.files     )
+            nc = '??'
+            if not self.silent :
+                chain = self.chain
+                nc    = len ( chain )
+                del chain 
+            ne = len ( self.bad_files )
+        return "<#files: {}; Entries: {}>"              .format ( nf , nc ) if not self.bad_files else \
+               "<#files: {}; Entries: {}; No/empty: {}>".format ( nf , nc  ,  ne )
     
     # =========================================================================
-    ##  Get an element or slice 
-    #   @code
-    #   files = ...
-    #   f1 = files[5] 
-    #   f2 = files[4:10]
-    #   @endcode
-    def __getitem__ ( self , item ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files[5] 
-        >>> f2 = files[4:10]
+    ## check operations
+    def check_ops ( self , other ):
+        """Check operations
         """
-        files = self.files[ item ]
-        return Data ( files       = files                 ,
-                      chain       = self.chain.GetName () , 
-                      description = self.description      ,
-                      maxfiles    = self.maxfiles         ,
-                      silent      = self.silent           ,
-                      quick       = self.quick            )
-
+        return isinstance ( other , Data ) and self.chain_name == other.chain_name
+    
     # =========================================================================
     ## get DataFrame for the chain
     #  @see ROOT::RDataFrame
     @property
     def frame ( self ) :
         """Get the DataFrame for the chain"""
-        from   ostap.frames.frames import DataFrame
+        from   ostap.frames.frames import DataFrame, frame_progress 
         f = DataFrame ( self.chain )
         if not self.filent:
-            pb = f.ProgressBar ( len ( self.chain ) )
+            pb = frame_progress ( f , len ( self.chain ) ) 
         return f 
     
 # =============================================================================
@@ -802,350 +572,207 @@ class Data2(Data):
     >>> flist = data.files 
     """
     
-    def __init__( self                  ,
-                  chain1                ,
-                  chain2                , 
-                  files       = []      ,
-                  description = ''      ,
-                  maxfiles    = -1      ,
-                  silent      = False   ,
-                  quick       = False   ,
-                  missing1st  = True    ,   ##  allow 1st missing chain 
-                  missing2nd  = True    ) : ##  allow 2nd missing chain
+    def __init__( self                ,
+                  chain1              ,
+                  chain2              , 
+                  files       = []    ,
+                  description = ''    ,
+                  maxfiles    = -1    ,
+                  check       = True  , 
+                  silent      = False ) :
 
         ## decorate files 
         if isinstance ( files , str ) : files = [ files ]
 
-        if quick and 0 < maxfiles :
-            logger.warning("``Quick'' and ``maxfiles>0'' are not compatible, switch to ``quick=False''")
-            quick = False 
-            
-        if quick :
-            quick = self._use_quick_(  files )
-            if not quick :
-                logger.warning("Patterns are not compatible with quick search, switch to ``quick=False''")
 
-        self.e_list2 = set()
-        self.chain2  = ROOT.TChain ( chain2 ) if isinstance ( chain2 , str ) else chain2 
+        ## chain name 
+        self.__chain2_name = chain2 if isinstance ( chain2 , str ) else chain2.name 
+
+        ## list of problematic files 
+        self.__bad_files2  = set()
+
         if not description :
             description = chain1.GetName() if hasattr ( chain1 , 'GetName' ) else str(chain1)
             description = "%s&%s" % ( description , self.chain2.GetName() )
 
-        if quick and ( not missing1st or not missing2nd ) : 
-            logger.warning ("Data2: Can't combine ``quick'' and ``missing''  options, set ``quick=False''") 
-            quick = False
-
-        self.missing1st = missing1st
-        self.missing2nd = missing2nd
+        Data.__init__( self                      ,
+                       chain        = chain1      ,
+                       files       = files       ,
+                       description = description ,
+                       maxfiles    = maxfiles    ,
+                       check       = check       ,
+                       silent      = silent      )
         
-        self.__files2 = []
-        if not quick : 
-            Data.__init__( self , chain1 , files , description , maxfiles , silent , quick = False )
-            self.chain1  = self.chain 
-            self.set_files  ( self.chain .files()[:] ) 
-            self.set_files2 ( self.chain2.files()[:] )
-        else :
-            Data.__init__( self , chain1 , []    , description , maxfiles , silent =  True , quick = True )
-            self.chain1  = self.chain 
-            self.silent  = silent
-            self.set_files  ( self._quick_add_ ( self.chain  ,  files ) ) 
-            self.set_files2 ( self._quick_add_ ( self.chain2 ,  files ) ) 
-            self.set_files  ( self.chain .files()[:] ) 
-            self.set_files2 ( self.chain2.files()[:] ) 
-            if not self.silent :
-                logger.info ('Loaded: %s' % self )
+    @property 
+    def files1    ( self ) :
+        """``files1'' : the list of files fore the first chain (same as ``files'') """
+        return self.files 
 
     @property 
     def files2    ( self ) :
-        """``files2'' : the list of files"""
-        return tuple ( self.__files2   ) 
+        """``files2'' : the list of files for the second chain (the same)"""
+        return self.files1
 
-    # =========================================================================
-    ## set files 
-    def set_files2 ( self , files ) :
-        """Set files2"""
-        assert isinstance ( files , ( list , tuple , set ) ),\
-               'Invalid list of files %s' % files
-        self.__files2 = list ( set ( files ) ) 
-        self.__files2.sort()
-        
-    def __getstate__ ( self ) :
+    @property
+    def chain1_name ( self ) :
+        """``chain1_name'' : the name of the first TTree/TChain object (same as ``chain_name'')
+        """
+        return self.chain_name
 
-        state = Data.__getstate__( self )
-        state [ 'e_list2'    ] = self.e_list2
-        state [ 'chain2'     ] = self.chain2.GetName()
-        state [ 'files2'     ] = self.__files2 
-        state [ 'missing1st' ] = self.missing1st
-        state [ 'missing2nd' ] = self.missing2nd
-        
-        return state
+    @property
+    def chain2_name ( self ) :
+        """``chain2_name'' : the name of the second TTree/TChain object
+        """
+        return self.__chain2_name
 
-    def __setstate__ ( self , state ) :
-
-        Data.__setstate__ ( self , state )
-        
-        self.e_list2     = state.get   ( 'e_list2'    , set() )
-        self.chain2      = ROOT.TChain (  state['chain2'] )
-        self.__files2    = state.get   ( 'files2'     , []    )
-        self.missing1st  = state.get   ( 'missing1st' , True  )
-        self.missing2nd  = state.get   ( 'missing2nd' , True  )
-        
-        for f in  self.files2 : self.chain2.Add ( f ) 
-        
-        self.chain1  = self.chain 
-
+    @property
+    def chain1 ( self ) :
+        """``chain1'' : (re)built and return the first `TChain` object (same as ``chain'')
+        """
+        return self.chain
+    
+        ch = ROOT.TChain( self.chain_name )
+        for f in self.files : ch.Add ( f )
+        return ch
+    
+    @property
+    def chain2 ( self ) :
+        """``chain2'' : (re)built and return the second `TChain` object (same as ``chain'')
+        """
+        ch = ROOT.TChain( self.chain2_name )
+        for f in self.files2 : ch.Add ( f )
+        return ch
+    
+    @property
+    def bad_files1 ( self ) :
+        """``bad_files1'' : list of bad files for the frist chain (same as ``bad_files'')
+        """
+        return self.bad_files
+    
+    @property
+    def bad_files2 ( self ) :
+        """``bad_files2'' : list of bad files fro the second chain
+        """
+        return self.__bad_files2
+    
+    
     ## the specific action for each file 
     def treatFile ( self, the_file ) :
         """Add the file to TChain
         """
+        
         ## suppress Warning/Error messages from ROOT 
         from ostap.logger.utils import rootError
         with rootError() :
-            tmp1 = ROOT.TChain ( self.chain .GetName() )
-            tmp1.Add ( the_file )            
-            tmp2 = ROOT.TChain ( self.chain2.GetName() )
-            tmp2.Add ( the_file )
+            
+            tree1 = ROOT.TChain ( self.chain1_name  )
+            tree1.Add ( the_file )
+            
+            tree2 = ROOT.TChain ( self.chain2_name  )
+            tree2.Add ( the_file )
 
-            if tmp1 : self.check_trees ( tmp1 , self.chain  , the_file )
-            if tmp2 : self.check_trees ( tmp2 , self.chain2 , the_file )
-  
-            if  tmp1 and tmp2      : 
-                Files.treatFile ( self     , the_file ) 
-                self.chain .Add      ( the_file )
-                self.chain2.Add      ( the_file )
-                self.__files2.append ( the_file ) 
-            elif tmp2 and not tmp1 and self.missing1st :
-                self.e_list1.add ( the_file  )
+            ok1 = len ( tree1 )
+            if self.check and self.files1 and ok1 :
+                chain1 = self.chain1 
+                self.check_trees ( tree1 , chain1 , the_file )
+                del chain1
+                
+            ok2 = len ( tree2 )            
+            if self.check and self.files2 and ok2 :
+                chain2 = self.chain2 
+                self.check_trees ( tree2 , chain2 , the_file )
+                del chain2
+                
+            if  ok1 and ok2      :
+                
+                Files.treatFile ( self , the_file ) 
+                
+            elif ok2 :
+                
+                self.bad_files1.add ( the_file  )
                 if not self.silent : 
-                    logger.warning ( "No/empty chain1 '%s'      in file '%s'" % ( self.chain .GetName() ,
-                                                                                  the_file )            )
-                self.chain2.Add ( the_file )
-                self.__files2.append ( the_file ) 
-            elif tmp1 and not tmp2 and self.missing2nd :  
-                self.e_list2.add ( the_file )
+                    logger.warning ( "No/empty chain1 '%s'      in file '%s'" % ( self.chain1_name , the_file ) )
+
+            elif ok1 :
+                
+                self.bad_files2.add ( the_file )
                 if not self.silent : 
-                    logger.warning ( "No/empty chain2 '%s'      in file '%s'" % ( self.chain2.GetName() ,
-                                                                                  the_file )            ) 
-                self.chain .Add ( the_file )            
-                self.set_files  ( self.files + ( the_file , ) )  
+                    logger.warning ( "No/empty chain2 '%s'      in file '%s'" % ( self.chain2_name , the_file ) ) 
+
             else :
-                self.e_list1.add ( the_file )
-                self.e_list2.add ( the_file )
+                
+                self.bad_files1.add ( the_file )
+                self.bad_files2.add ( the_file )
                 if not self.silent :                 
-                    logger.warning ( "No/empty chains '%s'/'%s' in file '%s'" % ( self.chain .GetName() ,
-                                                                                  self.chain2.GetName() ,
-                                                                                  the_file )            )
+                    logger.warning ( "No/empty chains '%s'/'%s' in file '%s'" % ( self.chain1_name ,
+                                                                                  self.chain2_name , the_file ) )
+            del tree1
+            del tree2
+            
     ## printout 
     def __str__(self):
 
         from ostap.logger.utils import rootWarning
         with rootWarning() :
-            nf  = len( self.files   )
-            nf2 = len( self.files2  )
-            nc  = len( self.chain   )
-            nc2 = len( self.chain2  )
-            ne  = len( self.e_list1 )
-            ne2 = len( self.e_list2 )
+            nf  = len ( self.files      )
+            nf2 = len ( self.files2     )
+            
+            nc   = '??'
+            nc2  = '??'
+            
+            if not self.silent :
+                chain1 = self.chain1
+                nc     = len ( chain1 )
+                del  chain1
+                chain2 = self.chain2
+                nc     = len ( chain2 )
+                del  chain2
+                
+            ne  = len ( self.bad_files1 )
+            ne2 = len ( self.bad_files2 )
             
         sf  =  set(self.files) == set(self.files2)
         
-        if not self.e_list1 and not self.e_list2 :
+        if not self.bad_files1 and not self.bad_files2 :
             return "<#files: {}; Entries: {}/{}>"   .format ( nf, nc , nc2 ) if sf else \
                    "<#files: {}/{}; Entries: {}/{}>".format ( nf , nf2 , nc , nc2 )
         else :
             return "<#files: {}; Entries: {}/{}; No/empty :{}/{}>"   .format ( nf , nc , nc2 , ne , ne2 ) if sf else \
                    "<#files: {}/{}; Entries: {}/{}; No/empty :{}/{}>".format ( nf , nf2 , nc , nc2 , ne , ne2 )
         
+
     def __nonzero__ ( self )  :
-        return bool(self.files) and bool(self.files2) and bool(self.chain) and bool(self.chain2)
+        return bool ( self.files ) and bool ( self.files2 )
 
-    ## merge two sets together
-    def __iadd__ ( self , other ) :
-        """ Merge two datasets
-        >>> ds   = ...
-        >>> ds1  = ...
-        >>> ds  += ds1
-        >>> ds  |= ds1 ## ditto 
-        """
-        if not isinstance ( other , Data2 ) : return NotImplemented        
-        return self.add_data ( other )    
-
-    ## merge two sets together
-    def add_data ( self , other ) :
-        """ Merge two datasets
-        """
-        if self.chain1.GetName() != other.chain1.GetName() :
-            raise NotImplementedError("Can't merge different chains %s and %s" % (
-                self .chain1.GetName() , 
-                other.chain1.GetName() , 
-                ) )
-        
-        if self.chain2.GetName() != other.chain2.GetName() :
-            raise NotImplementedError("Can't merge different chains %s and %s" % (
-                self .chain2.GetName() , 
-                other.chain2.GetName() , 
-                ) )
-
-        self.set_patterns ( self.patterns + other.patterns )
-        for f in other.e_list1 :self.e_list1.add ( f ) 
-        for f in other.e_list2 :self.e_list2.add ( f )
-        #
-        for f in other.files :
-            if not f in self.files : 
-                self.chain1. Add   ( f )
-                self._append_to_files ( f ) 
-        for f in other.files2 :
-            if not f in self.files2 : 
-                self.chain2. Add   ( f )
-                self.__files2.append ( f ) 
-        return self 
-
-    ## get an intersection of two datasets 
-    def __and__ (  self , other ) :
-        """ get intersection of two sets
-        >>> ds1 = ...
-        >>> ds2 = ...
-        >>> ds  = ds1 & ds2 ## get intersection
-        >>> ds  = ds1 * ds2 ## ditto
-        """
-        if not isinstance ( other , Data2 ) : return NotImplemented
-        
-        if self.chain1.GetName() != other.chain1.GetName() :
-            raise NotImplementedError("Can't intersect different chains %s and %s" % (
-                self .chain1.GetName() , 
-                other.chain1.GetName() , 
-                ) )
-        
-        if self.chain2.GetName() != other.chain2.GetName() :
-            raise NotImplementedError("Can't intersect different chains %s and %s" % (
-                self .chain2.GetName() , 
-                other.chain2.GetName() , 
-                ) )
-
-        result         = Data2 ( chain1      = self.chain .GetName() ,
-                                 chain2      = self.chain2.GetName() ,
-                                 files       = []                    ,
-                                 description = self.description      , 
-                                 maxfiles    = self.maxfiles         ,
-                                 silent      = True                  )
-        
-        f1  = set ( self .files    )
-        f1o = set ( other.files    )
-        f2  = set ( self .files2   )
-        f2o = set ( other.files2   )
-        p1  = set ( self .patterns )
-        p2  = set ( other.patterns )
-        
-        result.set_files    ( f1 & f1o )
-        result.set_files2   ( f2 & f2o )        
-        result.set_patterns ( p1 | p2  )
-        result.e_list1  = self.e_list1 | other.e_list1
-        result.e_list2  = self.e_list2 | other.e_list2
-        result.silent   = self.silent
-        
-        for f in result.files  : result.chain .Add ( f ) 
-        for f in result.files2 : result.chain2 .Add ( f ) 
-            
-        return result
-
-    ## clone !
-    def clone  ( self ) :
-        """ Clone the  object
-        """
-        result         = Data2 ( chain1      = self.chain .GetName() ,
-                                 chain2      = self.chain2.GetName() ,
-                                 files       = []                    ,
-                                 description = self.description      , 
-                                 maxfiles    = self.maxfiles         ,
-                                 silent      = True                  )
-        
-        result.chain   = ROOT.TChain ( self.chain .GetName() )
-        result.chain2  = ROOT.TChain ( self.chain2.GetName() )
-        for f in self.files  : result.chain .Add ( f ) 
-        for f in self.files2 : result.chain2.Add ( f ) 
-            
-        result.chain1  = result.chain
-
-        from copy import deepcopy
-        result.set_files    ( self.files    ) 
-        result.set_files2   ( self.files2   ) 
-        result.set_patterns ( self.patterns ) 
-        result.e_list1      = deepcopy ( self.e_list1    ) 
-        result.e_list2      = deepcopy ( self.e_list2    ) 
-        result.missing1st   = deepcopy ( self.missing1st ) 
-        result.missing2nd   = deepcopy ( self.missing2nd ) 
-        
-        return result 
-
-    ##  reload!
-    def reload ( self , silent = True ) :
-        self.__files2  = []
-        ##
-        self.chain2    = ROOT.TChain ( self.chain2.GetName() )
-        self.e_list2   = set ()
-        ##
-        Data.reload ( self , silent ) 
-        ##
-        self.chain1  = self.chain 
 
     # =========================================================================
-    ##  Get a sub-sample
-    #   @code
-    #   files = ...
-    #   f1 = files.sample ( 5   ) ##  5     files
-    #   f2 = files.samlpe ( 0.1 ) ## 10% of files 
-    #   @endcode
-    def sample ( self , n , sort = True , **kwargs ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files.sample ( 5   ) ##  5     files
-        >>> f2 = files.sample ( 0.1 ) ## 10% of files 
+    ## check operations
+    def check_ops ( self , other ):
+        """Check operations
         """
-        files = self.sample_files ( n , sort )
-        return Data2 ( files       = files ,
-                       chain1      = kwargs.get ( 'chain1'      , self.chain1.GetName() ) , 
-                       chain2      = kwargs.get ( 'chain2'      , self.chain2.GetName() ) , 
-                       description = kwargs.get ( 'description' , self.description      ) ,
-                       maxfiles    = kwargs.get ( 'maxfiles'    , self.maxfiles         ) ,
-                       silent      = kwargs.get ( 'silent'      , self.silent           ) ,
-                       quick       = kwargs.get ( 'quick'       , self.quick            ) ,
-                       missing1st  = kwargs.get ( 'missing1st'  , self.missing1st       ) ,
-                       missing2nd  = kwargs.get ( 'missing2nd'  , self.missing2nd       ) )
+        return isinstance ( other , Data2 )          and \
+               self.chain1_name == other.chain1_name and \
+               self.chain1_name == other.chain2_name
+
+    # =========================================================================
+    ## get DataFrame for the first chain
+    #  @see ROOT::RDataFrame
+    @property
+    def frame1 ( self ) :
+        """``frame1'': Get the DataFrame for the chain (same as ``frame'')
+        """
+        return self.frame
     
-    # =========================================================================
-    ##  Get an element or slice 
-    #   @code
-    #   files = ...
-    #   f1 = files[5] 
-    #   f2 = files[4:10]
-    #   @endcode
-    def __getitem__ ( self , item ) :
-        """Get a sub-sample
-        >>> files = ...
-        >>> f1 = files[5] 
-        >>> f2 = files[4:10]
-        """
-        files = self.files[ item ]
-        return Data2 ( files       = files                  ,
-                       chain1      = self.chain1.GetName () , 
-                       chain2      = self.chain2.GetName () , 
-                       description = self.description       ,
-                       maxfiles    = self.maxfiles          ,
-                       silent      = self.silent            ,
-                       quick       = self.quick             ,
-                       missing1st  = self.missing1st        ,
-                       missing2nd  = self.missing2nd        )
- 
     # =========================================================================
     ## get DataFrame for the chain
     #  @see ROOT::RDataFrame
     @property
     def frame2 ( self ) :
-        """Get the DataFrame for the chain"""
-        from   ostap.frames.frames import DataFrame
-        f = DataFrame ( self.chain2 )
+        """``frame2'': Get the DataFrame for the second chain"""
+        from   ostap.frames.frames import DataFrame, frame_progress 
+        f = DataFrame ( self.chain2  )
         if not self.silent :
-            pb = f.ProgressBar ( len ( self.chain2 ) ) 
+            pb = frame_progres ( f , len ( self.chain2 ) ) 
         return f
     
 # =============================================================================
@@ -1158,5 +785,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

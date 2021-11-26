@@ -7,6 +7,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/IFuncs.h"
+#include "Ostap/Funcs.h"
 #include "Ostap/HistoInterpolation.h"
 #include "Ostap/HistoInterpolators.h"
 // ============================================================================
@@ -33,16 +34,16 @@ namespace Ostap
     /** @class FuncTH1
      *  simple implementation of Tree-function based on TH1
      */
-    class FuncTH1 : public TObject , public Ostap::IFuncTree
+    class FuncTH1 : public Func1D 
     {
     public:
       // ======================================================================
-      ClassDef(Ostap::Functions::FuncTH1,1) ;
+      ClassDefOverride(Ostap::Functions::FuncTH1,1) ;
       // ======================================================================
     public :
       // ======================================================================
       /** constructor from the histogram 
-       *  @param histo         (INPUT) the historgam 
+       *  @param histo         (INPUT) the histogram 
        *  @param xvar          (INPUT) the expression/variable 
        *  @param tree          (INPUT) the tree 
        *  @param tx            (INPUT) interpolation type 
@@ -78,48 +79,16 @@ namespace Ostap
       // ======================================================================
       FuncTH1* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  TTree
-      double operator () ( const TTree* tree ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo1D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH1D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      Bool_t Notify () override  ; 
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo1D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_xvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const TTree*                    m_tree { nullptr } ; //!
-      // ======================================================================
     } ;
     // ========================================================================
     /** @class FuncTH2
      *  simple implementation of Tree-function based on TH2
      */
-    class FuncTH2 : public TObject , public Ostap::IFuncTree
+    class FuncTH2 : public Func2D 
     {
     public:
       // ======================================================================
-      ClassDef(Ostap::Functions::FuncTH2,1) ;
+      ClassDefOverride(Ostap::Functions::FuncTH2,1) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -167,54 +136,16 @@ namespace Ostap
       // ======================================================================
       FuncTH2* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo2D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH2D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      Bool_t Notify () override ;
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      /// make y-var 
-      bool make_yvar   () const ;
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo2D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// expression for y-axis 
-      std::string           m_yvar_exp ; /// expression for y-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_xvar { nullptr } ; //!
-      /// the actual function for y-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_yvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const TTree*                    m_tree { nullptr } ; //!
-      // ======================================================================
     } ;
     // ========================================================================
     /** @class FuncTH3
      *  simple implementation of Tree-function based on TH3
      */
-    class FuncTH3 : public TObject , public Ostap::IFuncTree
+    class FuncTH3 : public Func3D 
     {
     public:
       // ======================================================================
-      ClassDef(Ostap::Functions::FuncTH3,1) ;
+      ClassDefOverride(Ostap::Functions::FuncTH3,1) ;
       // ======================================================================
     public :
       // ======================================================================
@@ -270,50 +201,6 @@ namespace Ostap
       // ======================================================================
       FuncTH3* Clone ( const char* newname = "" ) const override ;
       // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  TTree
-      double operator() ( const TTree* tree ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo3D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH3D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      Bool_t Notify () override ; 
-      // ======================================================================
-    protected:
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      /// make y-var 
-      bool make_yvar   () const ;
-      /// make z-var 
-      bool make_zvar   () const ;
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo3D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// expression for y-axis 
-      std::string           m_yvar_exp ; /// expression for y-axis 
-      /// expression for z-axis 
-      std::string           m_zvar_exp ; /// expression for z-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_xvar { nullptr } ; //!
-      /// the actual function for y-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_yvar { nullptr } ; //!
-      /// the actual function for z-axis 
-      mutable std::unique_ptr<Ostap::Formula> m_zvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const TTree*                    m_tree { nullptr } ; //!
-      // ======================================================================
     } ; 
     // ========================================================================
     // 'RooAbsData'-functions
@@ -321,7 +208,7 @@ namespace Ostap
     /** @class FuncRooTH1
      *  simple implementation of 'RooAbsData'-function based on TH1
      */
-    class FuncRooTH1 : public Ostap::IFuncData
+    class FuncRooTH1 : public FuncRoo1D 
     {
     public :
       // ======================================================================
@@ -352,46 +239,15 @@ namespace Ostap
                    const std::string&          xvar             , 
                    const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
-      // copy constructor
-      FuncRooTH1 ( const FuncRooTH1& right ) ;
-      // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH1 () = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  data
-      double operator () ( const RooAbsData* data ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo1D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH1D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo1D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_xvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const RooAbsData*               m_data { nullptr } ; //!
       // ======================================================================
     } ;
     // ========================================================================
     /** @class FuncRooTH2
      *  simple implementation of 'RooAbsData'-function based on TH1
      */
-    class FuncRooTH2 : public Ostap::IFuncData
+    class FuncRooTH2 : public FuncRoo2D 
     {
     public :
       // ======================================================================
@@ -429,52 +285,15 @@ namespace Ostap
                    const std::string&          yvar             , 
                    const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
-      // copy constructor
-      FuncRooTH2 ( const FuncRooTH2& right ) ;
-      // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH2 () = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  data
-      double operator () ( const RooAbsData* data ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo2D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH2D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      /// make y-var 
-      bool make_yvar   () const ;
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo2D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// expression for y-axis 
-      std::string           m_yvar_exp ; /// expression for y-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_xvar { nullptr } ; //!
-      /// the actual function for y-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_yvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const RooAbsData*               m_data { nullptr } ; //!
       // ======================================================================
     } ;
     // ========================================================================
     /** @class FuncRooTH3
      *  simple implementation of 'RooAbsData'-function based on TH3
      */
-    class FuncRooTH3 : public Ostap::IFuncData
+    class FuncRooTH3 : public FuncRoo3D 
     {
     public :
       // ======================================================================
@@ -519,51 +338,8 @@ namespace Ostap
                    const std::string&          zvar             , 
                    const RooAbsData*           data  =  nullptr ) ;
       // ======================================================================
-      // copy constructor
-      FuncRooTH3 ( const FuncRooTH3& right ) ;
-      // ======================================================================
       /// default constructor, needed for serialization 
       FuncRooTH3 () = default ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      ///  evaluate the formula for  data
-      double operator () ( const RooAbsData* data ) const override ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the histogram 
-      const Ostap::Math::Histo3D& histo () const { return m_histo     ; }
-      /// get the histogram 
-      const TH3D&                 h     () const { return m_histo.h() ; }
-      // ======================================================================
-    private: 
-      // ======================================================================
-      /// make x-var 
-      bool make_xvar   () const ;
-      /// make y-var 
-      bool make_yvar   () const ;
-      /// make y-var 
-      bool make_zvar   () const ;
-      // ======================================================================
-    private :
-      // ======================================================================
-      /// the histogram object 
-      Ostap::Math::Histo3D  m_histo    ; /// the histogram object 
-      /// expression for x-axis 
-      std::string           m_xvar_exp ; /// expression for x-axis 
-      /// expression for y-axis 
-      std::string           m_yvar_exp ; /// expression for y-axis 
-      /// expression for z-axis 
-      std::string           m_zvar_exp ; /// expression for z-axis 
-      /// the actual function for x-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_xvar { nullptr } ; //!
-      /// the actual function for y-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_yvar { nullptr } ; //!
-      /// the actual function for z-axis 
-      mutable std::unique_ptr<RooFormulaVar>  m_zvar { nullptr } ; //!
-      /// the tree itself 
-      mutable const RooAbsData*               m_data { nullptr } ; //!
       // ======================================================================
     } ;
     // ========================================================================

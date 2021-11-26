@@ -225,12 +225,12 @@ std::string Ostap::StatEntity::toString () const
 std::ostream& Ostap::StatEntity::fillStream ( std::ostream& o ) const
 {
   return
-    o << Ostap::format ( "#=%-14.8g sum=%-14.8g" , n () , sum() )
-      << Ostap::format ( " mean=%10.4g +- %-10.5g min/max=%10.4g/%-10.4g" ,
-                         mean() , rms () , min() , max() ) ;
+    o << Ostap::format ( "#=%-10.5g sum=%+-10.5g" , n () , sum() )
+      << Ostap::format ( " mean/rms=%+10.5g/%-10.5g min/max=%+10.5g/%+-10.5g" ,
+                         mean () , rms () , min () , max () ) ;
 }
 // ============================================================================
 
 // ============================================================================
-// The END
+//                                                                      The END
 // ============================================================================

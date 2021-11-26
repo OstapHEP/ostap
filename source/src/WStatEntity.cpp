@@ -55,7 +55,7 @@ Ostap::WStatEntity::add
     return *this ;
   }
   //
-  const long double wA    =       sumw ()     ;
+  const long double wA    = sumw ()           ;
   const long double wB    = weight            ;
   const long double W     = wA + wB           ;
   const long double fA    = wA / W            ;
@@ -125,9 +125,9 @@ void Ostap::WStatEntity::reset ()
 std::ostream& Ostap::WStatEntity::fillStream ( std::ostream& o ) const 
 {
   return 
-    o << Ostap::format ( "#=%-14.8g sum=%-14.8g " , nEff() , sum () ) 
-      << Ostap::format ( " mean=%10.4g +- %-10.5g min/max=%10.4g/%-10.4g" ,
-                         mean() ,  rms() ,  m_values.min() ,  m_values.max() ) ;
+    o << Ostap::format ( "#=%+-10.5g sum=%+-10.5g " , nEff() , sum () ) 
+      << Ostap::format ( " mean/rms=%+10.5g/%-10.5g min/max=%+10.5g/%+-10.5g" ,
+                         mean () , rms () , m_values.min() , m_values.max () ) ;
 }
 // ============================================================================
 // convert to string 
@@ -193,5 +193,5 @@ bool Ostap::WStatEntity::operator==( const Ostap::WStatEntity& right ) const
     std::tie ( right.m_mu , right.m_mu2 , right.m_values, right.m_weights ) ;
 }
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

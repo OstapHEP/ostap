@@ -113,14 +113,9 @@ __all__ = (
     'tmpdb'         , ## helper function to create TEMPORARY  RootShelve database 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
-else                      : logger = getLogger ( __name__              )
-# =============================================================================
 import ROOT, shelve, zlib, os 
-import ostap.io.root_file  
+import ostap.io.root_file
 from   sys import version_info as python_version 
-logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
 try : 
     from cPickle import Pickler, Unpickler, HIGHEST_PROTOCOL
@@ -131,6 +126,13 @@ try :
     from io     import             BytesIO 
 except ImportError : 
     from shelve import StringIO as BytesIO
+# =============================================================================
+from   ostap.io.dbase import TmpDB 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.rootshelve' )
+else                      : logger = getLogger ( __name__              )
+logger.debug ( "Simple generic ROOT-based shelve-like-database" )
 # =============================================================================
 PROTOCOL = 2
 # =============================================================================
@@ -176,7 +178,9 @@ class RootOnlyShelf(shelve.Shelf):
         with ROOTCWD() : ## NB: preserve current directory in ROOT!
             rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
             shelve.Shelf.__init__ ( self , rfile , writeback )
-
+            
+        self.nominal_dbname = filename
+        
     # =========================================================================
     ## clone the database into new one
     #  @code
@@ -202,11 +206,17 @@ class RootOnlyShelf(shelve.Shelf):
         return new_db 
 
     # =========================================================================
-    ## iterator over good keys 
-    def ikeys ( self , pattern = '' ) :
+    ##  Iterator over avilable keys (patterns included).
+    #   Pattern matching is performed accoriding to
+    #   fnmatch/glob/shell rules (default) or regex 
+    #   @code  
+    #   db = ...
+    #   for k in db.ikeys('*MC*') : print(k)
+    #   @endcode  
+    def ikeys ( self , pattern = '' , regex = False ) :
         """Iterator over avilable keys (patterns included).
-        Pattern matching is performed accoriding to
-        fnmatch/glob/shell rules [it is not regex!] 
+        Pattern matching is performed according to
+        fnmatch/glob/shell rules (default) or regex 
         
         >>> db = ...
         >>> for k in db.ikeys('*MC*') : print(k)
@@ -215,13 +225,18 @@ class RootOnlyShelf(shelve.Shelf):
         keys_ = self.keys()
         
         if not pattern :
-            good = lambda s,p : True
+            good = lambda k : True
+        elif regex : 
+            import re
+            re_cmp = re.compile ( pattern ) 
+            good = lambda k  : re_cmp.match ( k )
         else :
             import fnmatch
-            good = lambda s,p : fnmatch.fnmatchcase ( k , p )
+            good = lambda s : fnmatch.fnmatchcase ( k , pattern  )
         
+        keys_ = self.keys()
         for k in sorted ( keys_ ) :
-            if good ( k , pattern ) : yield k
+            if good ( k ) : yield k
 
     @property
     def filename    ( self       ) :
@@ -264,6 +279,12 @@ class RootOnlyShelf(shelve.Shelf):
         if self.writeback : self.cache [ key ] = value
         self.dict [ key ] = value 
 
+    ## close the database 
+    def close ( self ) :
+        """Close the database
+        """
+        shelve.Shelf.close ( self )
+        
 # =============================================================================
 ## need to disable endcode/decode for the keys 
 if python_version.major > 2 :
@@ -370,11 +391,15 @@ class RootShelf(RootOnlyShelf):
         """ Get object (unpickle if needed)  from dbase
         >>> obj = db['A/B/C']
         """
+
         try:    
             value = self.cache [ key ]
         except KeyError:
-            value = self.dict [ key ]
-            self.__sizes [ key ] = len ( value ) 
+
+            ## value = self.dict [ key ]
+            tkey , value = self.dict.get_key_object ( key )
+            self.__sizes [ key ] = tkey.GetNbytes()
+            
             ## blob ?
             from  ostap.core.core import  Ostap
             if isinstance ( value , Ostap.BLOB ) :
@@ -464,7 +489,7 @@ class RootShelf(RootOnlyShelf):
         for k in keys :
             size = '' 
             ss   =   self.__sizes.get ( k , -1 )
-            if    ss < 0    : size = '' 
+            if    ss < 0    : size = ''  
             elif  ss < 1024 : size = '%7d   ' % ss 
             elif  ss < 1024 * 1024 :
                 size = '%7.2f kB' %  ( float ( ss ) / 1024 )
@@ -493,6 +518,12 @@ class RootShelf(RootOnlyShelf):
         line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
 
+    ## close the database 
+    def close ( self ) :
+        """Close the database
+        """
+        RootOnlyShelf.close ( self )
+        
 # =============================================================================
 ## helper function to open RootShelve data base
 #  @code
@@ -527,40 +558,35 @@ def open ( filename              ,
 #  @see RootShelf 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-07-31 
-class TmpRootShelf(RootShelf):
+class TmpRootShelf(RootShelf,TmpDB):
     """The actual class for TEMPORARY ROOT-based shelve-like data base
     it implement shelve-intergase with underlyinog ROOT-fiel storage
     - ROOT-object are stored directly in the ROOT-file,
     - other objects are pickled and stored via  ROOT.TObjString
     see RootShelf
     """
-    def __init__( self, *args ):
+    def __init__( self,
+                  protocol  = HIGHEST_PROTOCOL           ,
+                  compress  = zlib.Z_DEFAULT_COMPRESSION ,
+                  remove    = True                       , ## immediate remove 
+                  keep      = False                      , ## keep it 
+                  *args                                  ):
         
-        ## create temporary file name 
-        import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.root' )
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.root' , remove = remove , keep = keep ) 
         
-        RootShelf.__init__ ( self                                   ,
-                             filename                               ,
-                             mode      = 'n'                        ,
-                             writeback = False                      ,
-                             protocol  = HIGHEST_PROTOCOL           ,
-                             compress  = zlib.Z_DEFAULT_COMPRESSION ,
-                             args      = args                       )
+        RootShelf.__init__ ( self                 ,
+                             self.tmp_name        ,
+                             mode      = 'n'      ,
+                             writeback = False    ,
+                             protocol  = protocol ,
+                             compress  = compress ,
+                             args      = args     )
         
     ## close and delete the file 
     def close ( self )  :
-        ## close the shelve file
-        fname = self.filename 
-        ## super(TmpRootShelf,self).close ()
-        shelve.Shelf.close ( self )
-        ## delete the file
-        import os
-        if os.path.exists ( fname ) :
-            try :
-                os.unlink ( fname )
-            except :
-                pass
+        RootShelf.close ( self )
+        TmpDB.clean     ( self ) 
             
 # =============================================================================
 ## helper function to open RootShelve data base
@@ -570,12 +596,20 @@ class TmpRootShelf(RootShelf):
 #  @endcode 
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2010-04-30
-def tmpdb ( *args ) : 
+def tmpdb ( protocol  = HIGHEST_PROTOCOL           ,
+            compress  = zlib.Z_DEFAULT_COMPRESSION ,
+            remove    = True                       ,            ## immediate remove 
+            keep      = False                      ,
+            *args                                  ) : ## keep it 
     """ Helper function to open TEMPPORARY RootShelve data base
     >>> import RootShelve as DBASE
     >>> db = DBASE.tmpdb()
     """    
-    return TmpRootShelf ( *args )
+    return TmpRootShelf ( protocol = protocol , 
+                          compress = compress ,
+                          remove   = remove   ,
+                          keep     = keep     , *args ) 
+
 
 
 # =============================================================================

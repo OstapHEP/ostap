@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 LCG=$1
 CMTCONFIG=$2
-source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh 
+source /cvmfs/sft.cern.ch/lcg/views/${LCG}/${CMTCONFIG}/setup.sh
+
 mkdir build
 cd build
-cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
+## cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ && make -j12 && make install
+cmake .. -DCMAKE_INSTALL_PREFIX=./INSTALL/ -GNinja && ninja && ninja install

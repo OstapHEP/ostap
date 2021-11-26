@@ -29,6 +29,9 @@
  */
 // ============================================================================
 ClassImp(Ostap::Functions::FuncFormula)
+ClassImp(Ostap::Functions::Func1D)
+ClassImp(Ostap::Functions::Func2D)
+ClassImp(Ostap::Functions::Func3D)
 ClassImp(Ostap::Functions::FuncTH1)
 ClassImp(Ostap::Functions::FuncTH2)
 ClassImp(Ostap::Functions::FuncTH3)
@@ -208,7 +211,316 @@ double Ostap::Functions::FuncRooFormula::operator() ( const RooAbsData* data ) c
   return m_formula->getVal() ;
 }
 // ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::Func1D::Func1D
+( const Ostap::Functions::Func1D&  right ) 
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_fun            ( right.m_fun      )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::Func1D* 
+Ostap::Functions::Func1D::Clone ( const char* /* newname */ ) const
+{ return new Func1D ( *this ) ; }
+// ===========================================================================
+// notify 
+// ============================================================================
+Bool_t Ostap::Functions::Func1D::Notify () 
+{  
+  /// attention! here  we delete the variable instead of notify/reset 
+  m_xvar.reset ( nullptr ) ;
+  return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; 
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func1D::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_xvar   = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
+  if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
+  return m_xvar && m_xvar->ok () ;
+}
+// ============================================================================
+//  evaluate the function for  TTree
+// ============================================================================
+double Ostap::Functions::Func1D::operator() ( const TTree* tree ) const
+{
+  //
+  // the tree 
+  if ( tree != m_tree )
+  { 
+    m_tree = tree  ;
+    m_xvar.reset ( nullptr ) ;
+  }
+  //
+  Ostap::Assert ( nullptr != m_tree , 
+                  "Invalid Tree"    , 
+                  "Ostap::Function::Func1D" ) ;
+  //
+  // check consistency
+  if ( m_xvar && ( m_xvar -> GetTree() != m_tree ) ) { m_xvar.reset ( nullptr ) ; }
+  //
+  // the  axis 
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
+  Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
+                  "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Ostap::Function::Func1D"             ) ;
+  //
+  // agree? 
+  Ostap::Assert ( m_tree == m_xvar->GetTree()            , 
+                  "mismatch in tree"                     ,
+                  "Ostap::Function::Func1D"             ) ;
+  //
+  const double xvar = m_xvar->evaluate() ;
+  //
+  return m_fun ( xvar ) ;
+}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::Func2D::Func2D
+( const Ostap::Functions::Func2D&  right ) 
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_fun            ( right.m_fun      )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::Func2D* 
+Ostap::Functions::Func2D::Clone ( const char* /* newname */ ) const
+{ return new Func2D ( *this ) ; }
+// ===========================================================================
+// notify 
+// ============================================================================
+Bool_t Ostap::Functions::Func2D::Notify () 
+{  
+  m_xvar.reset ( nullptr ) ;
+  m_yvar.reset ( nullptr ) ;
+  //
+  const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
+  const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
+  //
+  return b1 && b2 ;
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func2D::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_xvar   = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
+  if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
+  return m_xvar && m_xvar->ok () ;
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func2D::make_yvar() const
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_yvar   = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
+  if ( m_tree && m_yvar && m_yvar->ok() ) { m_yvar->Notify() ; }
+  return m_yvar && m_yvar->ok () ;
+}
+// ============================================================================
+//  evaluate the function for  TTree
+// ============================================================================
+double Ostap::Functions::Func2D::operator() ( const TTree* tree ) const
+{
+  //
+  // the tree 
+  if ( tree != m_tree )
+  { 
+    m_tree = tree  ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+  }
+  //
+  Ostap::Assert ( nullptr != m_tree , 
+                  "Invalid Tree"    , 
+                  "Ostap::Function::Func2D" ) ;
+  //
+  // check consistency
+  if ( m_xvar && ( m_xvar -> GetTree() != m_tree ) ) { m_xvar.reset ( nullptr ) ; }
+  if ( m_yvar && ( m_yvar -> GetTree() != m_tree ) ) { m_yvar.reset ( nullptr ) ; }
+  //
+  // the  axis 
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
+  Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
+                  "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Ostap::Function::Func2D"             ) ;
+  // the  axis 
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
+  Ostap::Assert ( m_yvar && m_yvar->ok()                 , 
+                  "Invalid Formula '" + m_yvar_exp + "'" , 
+                  "Ostap::Function::Func2D"             ) ;
+  //
+  // agree? 
+  Ostap::Assert ( m_tree == m_xvar->GetTree() && 
+                  m_tree == m_yvar->GetTree() ,
+                  "mismatch in tree"                     ,
+                  "Ostap::Function::Func2D"             ) ;
+  //
+  const double xvar = m_xvar->evaluate() ;
+  const double yvar = m_yvar->evaluate() ;
+  //
+  return m_fun ( xvar , yvar ) ;
+}
+// ============================================================================
 
+// ============================================================================
+// Func3D 
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Functions::Func3D::Func3D
+( const Ostap::Functions::Func3D&  right ) 
+  : Ostap::IFuncTree ( right            ) 
+  , TObject          ( right            ) 
+  , m_fun            ( right.m_fun      )
+  , m_xvar_exp       ( right.m_xvar_exp ) 
+  , m_yvar_exp       ( right.m_yvar_exp ) 
+  , m_zvar_exp       ( right.m_zvar_exp ) 
+  , m_xvar           ( nullptr )
+  , m_yvar           ( nullptr )
+  , m_zvar           ( nullptr )
+  , m_tree           ( nullptr ) 
+{}
+// ===========================================================================
+// clone :
+// ===========================================================================
+Ostap::Functions::Func3D* 
+Ostap::Functions::Func3D::Clone ( const char* /* newname */ ) const
+{ return new Func3D ( *this ) ; }
+// ===========================================================================
+// notify 
+// ============================================================================
+Bool_t Ostap::Functions::Func3D::Notify () 
+{  
+  m_xvar.reset ( nullptr ) ;
+  m_yvar.reset ( nullptr ) ;
+  m_zvar.reset ( nullptr ) ;
+  //
+  const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
+  const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
+  const bool b3 = ( m_zvar && m_zvar->ok() ) ? m_zvar->Notify() : false ; 
+  //
+  return b1 && b2 && b3 ;
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func3D::make_xvar() const
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_xvar   = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
+  if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
+  return m_xvar && m_xvar->ok () ;
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func3D::make_yvar() const
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_yvar   = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
+  if ( m_tree && m_yvar && m_yvar->ok() ) { m_yvar->Notify() ; }
+  return m_yvar && m_yvar->ok () ;
+}
+// ============================================================================
+// make the formula
+// ============================================================================
+bool Ostap::Functions::Func3D::make_zvar() const
+{
+  m_zvar.reset ( nullptr ) ;
+  if ( nullptr == m_tree ) { return false ; }
+  m_zvar.reset ( nullptr ) ;
+  TTree* t = const_cast<TTree*> ( m_tree ) ; 
+  m_zvar   = std::make_unique<Ostap::Formula> ( m_zvar_exp , t ) ;
+  if ( m_tree && m_zvar && m_zvar->ok() ) { m_zvar->Notify() ; }
+  return m_zvar && m_zvar->ok () ;
+}
+// ============================================================================
+//  evaluate the function for  TTree
+// ============================================================================
+double Ostap::Functions::Func3D::operator() ( const TTree* tree ) const
+{
+  //
+  // the tree 
+  if ( tree != m_tree )
+  { 
+    m_tree = tree  ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+    m_zvar.reset ( nullptr ) ;
+  }
+  //
+  Ostap::Assert ( nullptr != m_tree , 
+                  "Invalid Tree"    , 
+                  "Ostap::Function::Func3D" ) ;
+  //
+  // check consistency
+  if ( m_xvar && ( m_xvar -> GetTree() != m_tree ) ) { m_xvar.reset ( nullptr ) ; }
+  if ( m_yvar && ( m_yvar -> GetTree() != m_tree ) ) { m_yvar.reset ( nullptr ) ; }
+  if ( m_zvar && ( m_zvar -> GetTree() != m_tree ) ) { m_zvar.reset ( nullptr ) ; }
+  //
+  // the  axis 
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
+  Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
+                  "Invalid Formula '" + m_xvar_exp + "'" , 
+                  "Ostap::Function::Func2D"             ) ;
+  // the  axis 
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
+  Ostap::Assert ( m_yvar && m_yvar->ok()                 , 
+                  "Invalid Formula '" + m_yvar_exp + "'" , 
+                  "Ostap::Function::Func2D"             ) ;
+  // the  axis 
+  if ( !m_zvar || !m_zvar->ok() ) { make_zvar()  ; }
+  Ostap::Assert ( m_zvar && m_zvar->ok()                 , 
+                  "Invalid Formula '" + m_zvar_exp + "'" , 
+                  "Ostap::Function::Func3D"             ) ;
+  //
+  // agree? 
+  Ostap::Assert ( m_tree == m_xvar->GetTree() && 
+                  m_tree == m_yvar->GetTree() && 
+                  m_tree == m_zvar->GetTree()  , 
+                  "mismatch in tree"                     ,
+                  "Ostap::Function::Func2D"             ) ;
+  //
+  const double xvar = m_xvar->evaluate() ;
+  const double yvar = m_yvar->evaluate() ;
+  const double zvar = m_zvar->evaluate() ;
+  //
+  return m_fun ( xvar , yvar , zvar ) ;
+}
 
 
 
@@ -231,12 +543,9 @@ Ostap::Functions::FuncTH1::FuncTH1
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo , tx , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_xvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func1D ( Ostap::Math::Histo1D ( histo , tx , edges , extrapolate , density ) , 
+             xvar , 
+             tree ) 
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -249,24 +558,14 @@ Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Math::Histo1D& histo , 
   const std::string&          xvar  , 
   const TTree*                tree  ) 
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo   )
-  , m_xvar_exp       ( xvar    ) 
-  , m_xvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func1D ( histo , xvar , tree ) 
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH1::FuncTH1
 ( const Ostap::Functions::FuncTH1&  right ) 
-  : Ostap::IFuncTree ( right            ) 
-  , TObject          ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_tree           ( nullptr ) 
+  : Func1D ( right )
 {}
 // ===========================================================================
 // clone :
@@ -275,62 +574,7 @@ Ostap::Functions::FuncTH1*
 Ostap::Functions::FuncTH1::Clone ( const char* /* newname */ ) const
 { return new FuncTH1 ( *this ) ; }
 // ============================================================================
-// notify 
-// ============================================================================
-Bool_t Ostap::Functions::FuncTH1::Notify () 
-{  
-  /// attention! here  we delete the variable instead of notify/reset 
-  m_xvar.reset ( nullptr ) ;
-  return ( m_xvar &&  m_xvar->ok() ) ? m_xvar->Notify() : false ; 
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH1::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar   = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
-  if ( m_tree && m_xvar && m_xvar->ok() ) { m_xvar->Notify() ; }
-  return m_xvar && m_xvar->ok () ;
-}
-// ============================================================================
-//  evaluate the formula for  TTree
-// ============================================================================
-double Ostap::Functions::FuncTH1::operator() ( const TTree* tree ) const
-{
-  //
-  // the tree 
-  if ( tree != m_tree )
-  { 
-    m_tree = tree  ;
-    m_xvar.reset ( nullptr ) ;
-  }
-  //
-  Ostap::Assert ( nullptr != m_tree , 
-                  "Invalid Tree"    , 
-                  "Ostap::Function::FuncTH1" ) ;
-  //
-  // check consistency
-  if ( m_xvar && ( m_xvar -> GetTree() != m_tree ) ) { m_xvar.reset ( nullptr ) ; }
-  //
-  // the  axis 
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
-  Ostap::Assert ( m_xvar && m_xvar->ok()                 , 
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
-                  "Ostap::Function::FuncTH1"             ) ;
-  //
-  // agree? 
-  Ostap::Assert ( m_tree == m_xvar->GetTree()            , 
-                  "mismatch in tree"                     ,
-                  "Ostap::Function::FuncTH1"             ) ;
-  //
-  const double xvar = m_xvar->evaluate() ;
-  //
-  return m_histo ( xvar ) ;
-} 
+
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the historgam 
@@ -352,14 +596,10 @@ Ostap::Functions::FuncTH2::FuncTH2
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo , tx , ty , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func2D ( Ostap::Math::Histo2D ( histo , tx , ty , edges , extrapolate , density ) , 
+             xvar ,   
+             yvar , 
+             tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -373,28 +613,14 @@ Ostap::Functions::FuncTH2::FuncTH2
   const std::string&          xvar  , 
   const std::string&          yvar  , 
   const TTree*                tree  ) 
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo   )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func2D ( histo , xvar , yvar , tree )
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH2::FuncTH2
 ( const Ostap::Functions::FuncTH2&  right ) 
-  : Ostap::IFuncTree ( right            ) 
-  , TObject          ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_yvar_exp       ( right.m_yvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_tree           ( nullptr ) 
+  : Func2D ( right ) 
 {}
 // ===========================================================================
 // clone :
@@ -403,74 +629,8 @@ Ostap::Functions::FuncTH2*
 Ostap::Functions::FuncTH2::Clone ( const char* /* newname */ ) const
 { return new FuncTH2 ( *this ) ; }
 // ===========================================================================
-// notify 
-// ============================================================================
-Bool_t Ostap::Functions::FuncTH2::Notify () 
-{  
-  //
-  m_xvar.reset ( nullptr ) ;
-  m_yvar.reset ( nullptr ) ;
-  //
-  const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
-  const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
-  return b1 && b2 ;
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH2::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
-  return m_xvar && m_xvar->ok () ;
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH2::make_yvar() const
-{
-  m_yvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_yvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_yvar = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
-  return m_yvar && m_yvar->ok () ;
-}
-// ============================================================================
-//  evaluate the formula for  TTree
-// ============================================================================
-double Ostap::Functions::FuncTH2::operator() ( const TTree* tree ) const
-{
-  //
-  if ( nullptr != tree  && tree != m_tree )
-  { 
-    m_tree = tree  ;
-    m_xvar.reset ( nullptr ) ;
-    m_yvar.reset ( nullptr ) ;
-  }
-  //
-  Ostap::Assert ( nullptr != m_tree          , 
-                  "Invalid Tree"             , 
-                  "Ostap::Function::FuncTH2" ) ;
-  //
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
-  if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
-  //
-  Ostap::Assert ( m_xvar && m_xvar->ok()  ,
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
-                  "Ostap::Function::FuncTH2"             ) ;
-  Ostap::Assert ( m_yvar && m_yvar->ok()  ,
-                  "Invalid Formula '" + m_yvar_exp + "'" , 
-                  "Ostap::Function::FuncTH2"             ) ;
-  //
-  const double xvar = m_xvar->evaluate() ;
-  const double yvar = m_yvar->evaluate() ;
-  //
-  return m_histo ( xvar , yvar ) ;
-}
+
+
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the historgam 
@@ -494,16 +654,11 @@ Ostap::Functions::FuncTH3::FuncTH3
   const bool           edges                     ,
   const bool           extrapolate               , 
   const bool           density                   )
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo , tx , ty , tz , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_zvar_exp       ( zvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func3D ( Ostap::Math::Histo3D ( histo , tx , ty , tz , edges , extrapolate , density ) , 
+             xvar , 
+             yvar , 
+             zvar , 
+             tree )
 {}
 // ======================================================================
 /*  constructor from the histogram 
@@ -518,32 +673,14 @@ Ostap::Functions::FuncTH3::FuncTH3
   const std::string&          yvar  , 
   const std::string&          zvar  , 
   const TTree*                tree  )
-  : Ostap::IFuncTree () 
-  , TObject          () 
-  , m_histo          ( histo   )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_zvar_exp       ( zvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_tree           ( tree    ) 
+  : Func3D ( histo , xvar , yvar , zvar , tree )
 {}
 // ============================================================================
 // copy constructor 
 // ============================================================================
 Ostap::Functions::FuncTH3::FuncTH3
 ( const Ostap::Functions::FuncTH3&  right ) 
-  : Ostap::IFuncTree ( right            ) 
-  , TObject          ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_yvar_exp       ( right.m_yvar_exp ) 
-  , m_zvar_exp       ( right.m_zvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_tree           ( nullptr ) 
+  : Func3D ( right  )
 {}
 // ===========================================================================
 // clone :
@@ -552,98 +689,315 @@ Ostap::Functions::FuncTH3*
 Ostap::Functions::FuncTH3::Clone ( const char* /* newname */ ) const
 { return new FuncTH3 ( *this ) ; }
 // ============================================================================
-// notify 
-// ============================================================================
-Bool_t Ostap::Functions::FuncTH3::Notify () 
-{  
-  //
-  m_xvar.reset ( nullptr ) ;
-  m_yvar.reset ( nullptr ) ;
-  m_zvar.reset ( nullptr ) ;
-  //
-  const bool b1 = ( m_xvar && m_xvar->ok() ) ? m_xvar->Notify() : false ; 
-  const bool b2 = ( m_yvar && m_yvar->ok() ) ? m_yvar->Notify() : false ; 
-  const bool b3 = ( m_zvar && m_zvar->ok() ) ? m_zvar->Notify() : false ; 
-  return b1 && b2 && b3 ;
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH3::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_xvar = std::make_unique<Ostap::Formula> ( m_xvar_exp , t ) ;
-  return m_xvar && m_xvar->ok () ;
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH3::make_yvar() const
-{
-  m_yvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_yvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_yvar = std::make_unique<Ostap::Formula> ( m_yvar_exp , t ) ;
-  return m_yvar && m_yvar->ok () ;
-}
-// ============================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncTH3::make_zvar() const
-{
-  m_zvar.reset ( nullptr ) ;
-  if ( nullptr == m_tree ) { return false ; }
-  m_zvar.reset ( nullptr ) ;
-  TTree* t = const_cast<TTree*> ( m_tree ) ; 
-  m_zvar = std::make_unique<Ostap::Formula> ( m_zvar_exp , t ) ;
-  return m_zvar && m_zvar->ok () ;
-}
-// ============================================================================
-//  evaluate the formula for  TTree
-// ============================================================================
-double Ostap::Functions::FuncTH3::operator() ( const TTree* tree ) const
-{
-  //
-  if ( nullptr != tree  && tree != m_tree )
-  { 
-    m_tree = tree  ;
-    m_xvar.reset ( nullptr ) ;
-    m_yvar.reset ( nullptr ) ;
-    m_zvar.reset ( nullptr ) ;
-  }
-  //
-  Ostap::Assert ( nullptr != m_tree          , 
-                  "Invalid Tree"             , 
-                  "Ostap::Function::FuncTH3" ) ;
-  //
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar()  ; }
-  if ( !m_yvar || !m_yvar->ok() ) { make_yvar()  ; }
-  if ( !m_zvar || !m_zvar->ok() ) { make_zvar()  ; }
-  //
-  Ostap::Assert ( m_xvar && m_xvar->ok()  ,
-                  "Invalid Formula '" + m_xvar_exp + "'" , 
-                  "Ostap::Function::FuncTH3"             ) ;
-  Ostap::Assert ( m_yvar && m_yvar->ok()  ,
-                  "Invalid Formula '" + m_yvar_exp + "'" , 
-                  "Ostap::Function::FuncTH3"             ) ;
-  Ostap::Assert ( m_zvar && m_zvar->ok()  ,
-                  "Invalid Formula '" + m_zvar_exp + "'" , 
-                  "Ostap::Function::FuncTH3"             ) ;
-  //
-  const double xvar = m_xvar->evaluate() ;
-  const double yvar = m_yvar->evaluate() ;
-  const double zvar = m_yvar->evaluate() ;
-  //
-  return m_histo ( xvar , yvar , zvar ) ;
-}
+
+
+
+
+
+
 
 // ======================================================================
 // RooAbsData functions
 // ======================================================================
+
+
+// ======================================================================
+// copy constructor
+// ======================================================================
+Ostap::Functions::FuncRoo1D::FuncRoo1D 
+( const Ostap::Functions::FuncRoo1D& right ) 
+  : Ostap::IFuncData (  right ) 
+  , m_fun      ( right.m_fun      ) 
+  , m_xvar_exp ( right.m_xvar_exp )
+  , m_xvar     ( nullptr )   
+  , m_data     ( nullptr ) 
+{}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo1D::make_xvar () const 
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo1D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
+}
+// ============================================================================
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRoo1D::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRoo1D"   , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  //
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo1D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  //
+  return m_fun ( x ) ;
+}
+// ======================================================================
+
+// ======================================================================
+// copy constructor
+// ======================================================================
+Ostap::Functions::FuncRoo2D::FuncRoo2D 
+( const Ostap::Functions::FuncRoo2D& right ) 
+  : Ostap::IFuncData (  right ) 
+  , m_fun      ( right.m_fun      ) 
+  , m_xvar_exp ( right.m_xvar_exp )
+  , m_yvar_exp ( right.m_yvar_exp )
+  , m_xvar     ( nullptr )   
+  , m_yvar     ( nullptr )   
+  , m_data     ( nullptr ) 
+{}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo2D::make_xvar () const 
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo2D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
+}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo2D::make_yvar () const 
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo2D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
+  //
+  return m_yvar && m_yvar -> ok () ;
+}
+// ============================================================================
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRoo2D::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRoo2D"   , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo2D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
+  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo2D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  const double y = m_yvar->getVal() ;
+  //
+  return m_fun ( x , y ) ;
+}
+
+
+
+// ======================================================================
+// copy constructor
+// ======================================================================
+Ostap::Functions::FuncRoo3D::FuncRoo3D 
+( const Ostap::Functions::FuncRoo3D& right ) 
+  : Ostap::IFuncData (  right ) 
+  , m_fun      ( right.m_fun      ) 
+  , m_xvar_exp ( right.m_xvar_exp )
+  , m_yvar_exp ( right.m_yvar_exp )
+  , m_zvar_exp ( right.m_zvar_exp )
+  , m_xvar     ( nullptr )   
+  , m_yvar     ( nullptr )   
+  , m_zvar     ( nullptr )   
+  , m_data     ( nullptr ) 
+{}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo3D::make_xvar () const 
+{
+  m_xvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_xvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo3D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
+  //
+  return m_xvar && m_xvar -> ok () ;
+}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo3D::make_yvar () const 
+{
+  m_yvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_yvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo3D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
+  //
+  return m_yvar && m_yvar -> ok () ;
+}
+// ============================================================================
+// make formula 
+// ============================================================================
+bool Ostap::Functions::FuncRoo3D::make_zvar () const 
+{
+  m_zvar.reset ( nullptr ) ;
+  if ( nullptr == m_data ) { return false ; }
+  m_zvar.reset ( nullptr ) ;
+  // 
+  const RooArgSet* varset  = m_data->get() ;
+  if (  nullptr == varset ) 
+  { throw Ostap::Exception ( "Invalid RooArgSet", 
+                             "Ostap::Function::FuncRoo3D"  , 
+                             Ostap::StatusCode(705)        ) ; }
+  //
+  RooArgList varlst ;
+  Ostap::Utils::Iterator iter ( *varset ) ;
+  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
+  //
+  m_zvar = std::make_unique<Ostap::FormulaVar> ( m_zvar_exp , varlst , false ) ;
+  //
+  return m_zvar && m_zvar -> ok () ;
+}
+// ============================================================================
+//  evaluate the formula for RooAbsData
+// ============================================================================
+double Ostap::Functions::FuncRoo3D::operator() 
+  ( const RooAbsData* data ) const
+{
+  //
+  if ( nullptr != data  && data != m_data )
+  { 
+    m_data   = data ;
+    m_xvar.reset ( nullptr ) ;
+    m_yvar.reset ( nullptr ) ;
+    m_zvar.reset ( nullptr ) ;
+  }  
+  //
+  Ostap::Assert ( nullptr != m_data              ,  
+                  "Invalid RooAbsData"           , 
+                  "Ostap::Function::FuncRoo2D"   , 
+                  Ostap::StatusCode(709)         ) ; 
+  //
+  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
+  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo2D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
+  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo2D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  if ( !m_zvar || !m_zvar->ok() ) { make_zvar () ; }
+  Ostap::Assert  ( m_zvar && m_zvar->ok()        , 
+                   "Invalid RooFormula"          , 
+                   "Ostap::Function::FuncRoo2D"  , 
+                   Ostap::StatusCode(708)        ) ; 
+  //
+  const double x = m_xvar->getVal() ;
+  const double y = m_yvar->getVal() ;
+  const double z = m_zvar->getVal() ;
+  //
+  return m_fun ( x , y , z ) ;
+}
+
+
+
+ 
+
+
 
 // ======================================================================
 /*  constructor from the histogram 
@@ -664,11 +1018,9 @@ Ostap::Functions::FuncRooTH1::FuncRooTH1
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo , tx , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_xvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo1D ( Ostap::Math::Histo1D ( histo , tx , edges , extrapolate , density ) , 
+                xvar , 
+                data )
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -681,76 +1033,9 @@ Ostap::Functions::FuncRooTH1::FuncRooTH1
 ( const Ostap::Math::Histo1D& histo , 
   const std::string&          xvar  , 
   const RooAbsData*           data  )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo   )
-  , m_xvar_exp       ( xvar    ) 
-  , m_xvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo1D ( histo , xvar , data )
 {}
 // ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Functions::FuncRooTH1::FuncRooTH1
-( const Ostap::Functions::FuncRooTH1&  right ) 
-  : Ostap::IFuncData ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_data           ( nullptr ) 
-{}
-// ===========================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncRooTH1::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH1"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
-  //
-  return m_xvar && m_xvar -> ok () ;
-}
-// ============================================================================
-//  evaluate the formula for RooAbsData
-// ============================================================================
-double Ostap::Functions::FuncRooTH1::operator() 
-  ( const RooAbsData* data ) const
-{
-  //
-  if ( nullptr != data  && data != m_data )
-  { 
-    m_data   = data ;
-    m_xvar.reset ( nullptr ) ;
-  }  
-  //
-  Ostap::Assert ( nullptr != m_data              ,  
-                  "Invalid RooAbsData"           , 
-                  "Ostap::Function::FuncRooTH1"  , 
-                  Ostap::StatusCode(709)         ) ; 
-  //
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
-  //
-  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH1" , 
-                   Ostap::StatusCode(708)        ) ; 
-  //
-  const double x = m_xvar->getVal() ;
-  //
-  return m_histo ( x ) ;
-}
-// ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the histogram 
  *  @param xvar          (INPUT) the expression/variable 
@@ -772,13 +1057,10 @@ Ostap::Functions::FuncRooTH2::FuncRooTH2
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo , tx , ty , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo2D ( Ostap::Math::Histo2D ( histo , tx , ty , edges , extrapolate , density ) , 
+                xvar , 
+                yvar , 
+                data ) 
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -792,107 +1074,8 @@ Ostap::Functions::FuncRooTH2::FuncRooTH2
   const std::string&          xvar  , 
   const std::string&          yvar  , 
   const RooAbsData*           data  )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo   ) 
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo2D ( histo , xvar , yvar , data )
 {}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Functions::FuncRooTH2::FuncRooTH2
-( const Ostap::Functions::FuncRooTH2&  right ) 
-  : Ostap::IFuncData ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_yvar_exp       ( right.m_yvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_data           ( nullptr ) 
-{}
-// ===========================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncRooTH2::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH2"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
-  //
-  return m_xvar && m_xvar -> ok () ;
-}
-// ============================================================================
-bool Ostap::Functions::FuncRooTH2::make_yvar() const
-{
-  m_yvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_yvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH2"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_yvar = std::make_unique<Ostap::FormulaVar>( m_yvar_exp , varlst , false ) ;
-  //
-  return m_yvar && m_yvar -> ok () ;
-}
-// ============================================================================
-//  evaluate the formula for RooAbsData
-// ============================================================================
-double Ostap::Functions::FuncRooTH2::operator() 
-  ( const RooAbsData* data ) const
-{
-  //
-  if ( nullptr != data  && data != m_data )
-  { 
-    m_data   = data ;
-    m_xvar.reset ( nullptr ) ;
-    m_yvar.reset ( nullptr ) ;
-  }  
-  //
-  Ostap::Assert ( nullptr != m_data              ,  
-                  "Invalid RooAbsData"           , 
-                  "Ostap::Function::FuncRooTH1"  , 
-                  Ostap::StatusCode(709)         ) ; 
-  //
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
-  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
-  //
-  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH2" , 
-                   Ostap::StatusCode(708)        ) ; 
-  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH2" , 
-                   Ostap::StatusCode(708)        ) ; 
-  //
-  const double x = m_xvar->getVal() ;
-  const double y = m_yvar->getVal() ;
-  //
-  return m_histo ( x , y ) ;
-}
 // ======================================================================
 /*  constructor from the histogram 
  *  @param histo         (INPUT) the histogram 
@@ -918,15 +1101,11 @@ Ostap::Functions::FuncRooTH3::FuncRooTH3
   const bool           edges         ,
   const bool           extrapolate   , 
   const bool           density       )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo , tx , ty , tz , edges , extrapolate , density )
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_zvar_exp       ( zvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo3D (  Ostap::Math::Histo3D ( histo , tx , ty , tz , edges , extrapolate , density ) , 
+                 xvar , 
+                 yvar , 
+                 zvar , 
+                 data ) 
 {}
 // ============================================================================
 /*  constructor from the histogram 
@@ -941,139 +1120,8 @@ Ostap::Functions::FuncRooTH3::FuncRooTH3
   const std::string&          yvar  , 
   const std::string&          zvar  , 
   const RooAbsData*           data  )
-  : Ostap::IFuncData () 
-  , m_histo          ( histo   ) 
-  , m_xvar_exp       ( xvar    ) 
-  , m_yvar_exp       ( yvar    ) 
-  , m_zvar_exp       ( zvar    ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_data           ( data    ) 
+  : FuncRoo3D ( histo , xvar , yvar , zvar , data )
 {}
-// ============================================================================
-// copy constructor 
-// ============================================================================
-Ostap::Functions::FuncRooTH3::FuncRooTH3
-( const Ostap::Functions::FuncRooTH3&  right ) 
-  : Ostap::IFuncData ( right            ) 
-  , m_histo          ( right.m_histo    )
-  , m_xvar_exp       ( right.m_xvar_exp ) 
-  , m_yvar_exp       ( right.m_yvar_exp ) 
-  , m_zvar_exp       ( right.m_zvar_exp ) 
-  , m_xvar           ( nullptr )
-  , m_yvar           ( nullptr )
-  , m_zvar           ( nullptr )
-  , m_data           ( nullptr ) 
-{}
-// ===========================================================================
-// make the formula
-// ============================================================================
-bool Ostap::Functions::FuncRooTH3::make_xvar() const
-{
-  m_xvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_xvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH3"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_xvar = std::make_unique<Ostap::FormulaVar> ( m_xvar_exp , varlst , false ) ;
-  //
-  return m_xvar && m_xvar -> ok () ;
-}
-// ============================================================================
-bool Ostap::Functions::FuncRooTH3::make_yvar() const
-{
-  m_yvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_yvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH3"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_yvar = std::make_unique<Ostap::FormulaVar> ( m_yvar_exp , varlst , false ) ;
-  //
-  return m_yvar && m_yvar -> ok () ;
-}
-// ============================================================================
-bool Ostap::Functions::FuncRooTH3::make_zvar() const
-{
-  m_zvar.reset ( nullptr ) ;
-  if ( nullptr == m_data ) { return false ; }
-  m_zvar.reset ( nullptr ) ;
-  // 
-  const RooArgSet* varset  = m_data->get() ;
-  if (  nullptr == varset ) 
-  { throw Ostap::Exception ( "Invalid RooArgSet", 
-                             "Ostap::Function::FuncRooTH3"  , 
-                             Ostap::StatusCode(705)         ) ; }
-  //
-  RooArgList varlst ;
-  Ostap::Utils::Iterator iter ( *varset ) ;
-  while ( RooAbsArg* a = iter.static_next<RooAbsArg>() ) { varlst.add ( *a ) ; }
-  //
-  m_zvar = std::make_unique<Ostap::FormulaVar> ( m_zvar_exp , varlst , false ) ;
-  //
-  return m_zvar && m_zvar -> ok () ;
-}
-// ============================================================================
-//  evaluate the formula for RooAbsData
-// ============================================================================
-double Ostap::Functions::FuncRooTH3::operator() 
-  ( const RooAbsData* data ) const
-{
-  //
-  if ( nullptr != data  && data != m_data )
-  { 
-    m_data   = data ;
-    m_xvar.reset ( nullptr ) ;
-    m_yvar.reset ( nullptr ) ;
-    m_zvar.reset ( nullptr ) ;
-  }  
-  //
-  Ostap::Assert ( nullptr != m_data              ,  
-                  "Invalid RooAbsData"           , 
-                  "Ostap::Function::FuncRooTH1"  , 
-                  Ostap::StatusCode(709)         ) ; 
-  //
-  if ( !m_xvar || !m_xvar->ok() ) { make_xvar () ; }
-  if ( !m_yvar || !m_yvar->ok() ) { make_yvar () ; }
-  if ( !m_zvar || !m_zvar->ok() ) { make_zvar () ; }
-  //
-  Ostap::Assert  ( m_xvar && m_xvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH2" , 
-                   Ostap::StatusCode(708)        ) ; 
-  Ostap::Assert  ( m_yvar && m_yvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH2" , 
-                   Ostap::StatusCode(708)        ) ; 
-  Ostap::Assert  ( m_zvar && m_zvar->ok()        , 
-                   "Invalid RooFormula"          , 
-                   "Ostap::Function::FuncRooTH2" , 
-                   Ostap::StatusCode(708)        ) ; 
-  //
-  const double x = m_xvar->getVal() ;
-  const double y = m_yvar->getVal() ;
-  const double z = m_zvar->getVal() ;
-  //
-  return m_histo ( x , y , z ) ;
-}
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

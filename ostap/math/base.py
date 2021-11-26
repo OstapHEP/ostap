@@ -59,8 +59,6 @@
   >>> dir( Ostap      )
 """
 # =============================================================================
-from __future__ import print_function
-# =============================================================================
 __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2009-09-12"
 __version__ = "Version: $Revision$"
@@ -71,7 +69,9 @@ __all__     = (
     'isint'          , ## Is equal  to int ? 
     'islong'         , ## Is equal  to long?
     'signum'         , ## sign of the number 
-    'samesign'       , ## two number of the same sign 
+    'samesign'       , ## two number of the same sign
+    'isfinite'       , ## `isfinite` for float values 
+    'isclose'        , ## `isclose`  for float values 
     ##
     'inrange'        , ## is double number in certain range?
     ## 
@@ -92,10 +92,16 @@ __all__     = (
     'vInts'          , ## std::vector<int>
     'vLongs'         , ## std::vector<long>
     ##
-    'frexp10'        , ## similar to math.frexp but woith radix=10
+    'frexp10'        , ## similar to math.frexp but with radix=10,
+    ## 
+    'cpp'            , ## C++ global  namespace 
+    'Ostap'          , ## C++ namespace Ostap 
+    'std'            , ## C++ namespace Ostap
+    'axis_range'     , ## suitable axis range 
     ) 
 # =============================================================================
-import ROOT, cppyy, sys 
+import ROOT, cppyy, sys, math 
+from   ostap.core.meta_info    import root_version_int 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -103,26 +109,62 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.base' )
 else                       : logger = getLogger ( __name__          )
 # =============================================================================
+if ( 3 , 3 ) <= sys.version_info  : from collections.abc import Iterable
+else                              : from collections     import Iterable
+# =============================================================================
+
+if ( 3 , 5 ) > sys.version_info  :
+    import math
+    math.inf = float('inf' )
+    math.nan = float('nan' )
+    
+    
 ## get global C++ namespace
 cpp = cppyy.gbl
-
 ## C++ namespace Gaudi
 std = cpp.std
-
 ## C++ namespace Ostap
-Ostap = cpp.Ostap
+Ostap = cpp.Ostap 
 
-iszero   = Ostap.Math.Zero     ('double')()
-isequal  = Ostap.Math.Equal_To ('double')()
-isint    = Ostap.Math.isint 
-islong   = Ostap.Math.islong
 
+from ostap.logger.utils import ROOTIgnore
+from ostap.logger.mute  import mute
+logger.debug ("Suppress error/warnings from ROOT")
+with ROOTIgnore ( ROOT.kWarning + 1 ) : 
+    with mute ( True  , True ) : _ = ROOT.RooRealVar() 
+    iszero   = Ostap.Math.Zero     ('double')()
+    isequal  = Ostap.Math.Equal_To ('double')()
+    isint    = Ostap.Math.isint 
+    islong   = Ostap.Math.islong
+    
 vDoubles = std.vector ( 'double' )
 vFloats  = std.vector ( 'float'  )
 vInts    = std.vector ( 'int'    )
 vLongs   = std.vector ( 'long'   )
 
-
+# =============================================================================
+if (3,2) <= sys.version_info :
+    ## local version of <code>isfinite</code>
+    isfinite = math.isfinite 
+else :
+    # =========================================================================
+    ## local version of <code>isfinite</code>
+    def isfinite ( x ) :
+        """Local version of `isfinite`"""        
+        y = float ( x ) 
+        return ( not math.isinf ( y ) ) and ( not math.isnan ( y ) )
+    
+# =============================================================================
+if (3,5) <= sys.version_info :
+    ## local version of <code>isfinite</code>
+    isclose = math.isclose 
+else :
+    # =========================================================================
+    ## local version of <code>isfinite</code>
+    def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
+        """Local version of `isclose`"""
+        return abs ( a - b ) <= max ( rel_tol * max ( abs ( a ) , abs ( b ) ) , abs_tol )
+            
 # =============================================================================
 ##  get the sign of the number 
 def signum ( x ) :
@@ -191,9 +233,45 @@ for t in ( 'int'                  ,
             _l = len(v)
             for i in  range(_l) :
                 yield v[i]
-        v.__iter__ = _v_iter_ 
-    
+        v.__iter__ = _v_iter_
 
+# =============================================================================
+## Convert vector of floating types to string 
+def float_vct_str ( vct , format = '%.5g' ) :
+    """Convert vector of floating types to string"""
+    try :
+        return '[ ' + ', '.join ( [ format % v for v in vct ] ) + ' ]'  
+    except TypeError :
+        pass
+    return float_vct_str ( vct , format = '%.5g' )
+
+# =============================================================================
+## Convert vector of complex types to string 
+def complex_vct_str ( vct , format = '%.5g%-+.5gj' ) :
+    """Convert vector of complex types to string"""
+    try :
+        lst = [] 
+        for c in vct :
+            cc   = complex ( c )
+            item = format % ( cc.real , cc.imag )
+            lst.append ( cc )        
+        return '[ ' + ', '.join ( lst ) + ' ]'  
+    except TypeError :
+        pass
+    return complex_vct_str ( vct , format = '%.5g%-+.5gj' )
+
+for t in ( 'float' , 'double' ):
+    
+    v = std.vector ( t )
+    v.__repr__ = float_vct_str 
+    v.__str__  = float_vct_str 
+
+for t in ( 'std::complex<double>' , 'std::complex<float>'  ) :
+
+    v = std.vector( t )
+    v.__repr__ = complex_vct_str    
+    v.__str__  = complex_vct_str    
+    
 # =============================================================================
 ## self-printout of TMaxtrix 
 def _tmg_str_ ( self , fmt = ' %+11.4g') :
@@ -214,18 +292,15 @@ def _tmg_str_ ( self , fmt = ' %+11.4g') :
 ROOT.TMatrix.__repr__  = _tmg_str_
 ROOT.TMatrix.__str__   = _tmg_str_
 
-
     
 # =============================================================================
 ## add something to std::vector 
 def _add_to ( vct , cnv , arg1 , *args ) :
     """Add something to std::vector 
     """
-    from types       import GeneratorType as GT
-    from collections import Iterable      as IT
-
+    from ostap.core.ostap_types import sequence_types
+    
     VT = type(vct)
-
     VS = std.vector('std::string')
     
     ## the special treatment of vector of  strings 
@@ -237,7 +312,7 @@ def _add_to ( vct , cnv , arg1 , *args ) :
     ## the first argument: iterable or generator?
     elif isinstance ( arg1 , VT ) :
         for a in arg1 : vct.push_back ( a )
-    elif isinstance ( arg1 , ( GT , IT ) ) :
+    elif isinstance ( arg1 , sequence_types ) :      ## SEQUENCE
         for a in arg1 : vct.push_back ( cnv ( a ) )                
     else :        
         try :
@@ -274,6 +349,9 @@ def make_vector ( TYPE , cnv , *args ) :
     ## create new vector 
     VT  = std.vector( TYPE ) ## vector type
     vct = VT ( )             ## vector instance
+    
+    vct.reserve ( len ( args ) )
+    
     if not  args : return vct 
     ## add arguments to the vector
     return _add_to ( vct , cnv , args[0] , *args[1:] )
@@ -372,13 +450,29 @@ SPD.__setitem__ = _spd_setitem_
 # =============================================================================
 # Improve operations with std.complex 
 # =============================================================================
-COMPLEX  = cpp.std.complex('double'      )
-COMPLEXf = cpp.std.complex('float'       )
-COMPLEXl = cpp.std.complex('long double' )
+COMPLEX  = cpp.std.complex ( 'double'      )
+COMPLEXf = cpp.std.complex ( 'float'       )
+COMPLEXl = cpp.std.complex ( 'long double' )
+
+VCOMPLEX   = cpp.std.vector ( COMPLEX )
+VDOUBLE    = cpp.std.vector ('double' )
+VCT_TYPES  = VDOUBLE, VCOMPLEX 
 # =============================================================================
-def _cmplx_to_complex_ ( s ) :
-    """Convert C++ complex to Python's complex"""
-    return  complex    ( s.real() , s.imag() )
+if root_version_int < 62200 : 
+    def _real_ ( s ) : return s.real ()
+    def _imag_ ( s ) : return s.imag ()
+    def _cmplx_to_complex_ ( s ) :
+        """Convert C++ complex to Python's complex"""
+        return  complex    ( s.real () , s.imag () )
+else : 
+    def _real_ ( s ) : return s.real 
+    def _imag_ ( s ) : return s.imag 
+    def _cmplx_to_complex_ ( s ) :
+        """Convert C++ complex to Python's complex"""
+        return  complex    ( s.real , s.imag  )
+
+# =============================================================================
+
 
 # =============================================================================
 def _cmplx_negate_     ( s ) :
@@ -386,25 +480,23 @@ def _cmplx_negate_     ( s ) :
     >>> v  = ...
     >>> v1 = -v
     """
-    return -complex    ( s.real() , s.imag() )
+    return -complex    ( s )
 
 # =============================================================================
 def _cmplx_abs_        ( s ) :
     """Absolute value
     >>> print abs(v) 
     """
-    import math
-    sr = s.real()
-    si = s.imag()
-    return math.sqrt( sr * sr + si * si ) 
+    import math 
+    return math.sqrt ( s.norm () )
 
 # =============================================================================
 def _cmplx_norm_       ( s ) :
     """Norm (squared absolute value)
     >>> print v.norm()
     """
-    sr = s.real()
-    si = s.imag()
+    sr = _real_ ( s ) 
+    si = _imag_ ( s ) 
     return sr * sr + si * si
 
 # =============================================================================
@@ -412,65 +504,64 @@ def _cmplx_conjugate_  ( s ) :
     """Get complex conjugated
     >>> vc = v.conjugate() 
     """
-    return complex     ( s.real() , -s.imag() )
+    return complex ( _real_ ( s )  , - _imag_  ( s )  )
     
 # =============================================================================
 def _cmplx_add_        ( s , o ) :
     """add complex values 
     >>> r = v + other  
     """
-    return o + complex ( s.real() , s.imag() )
+    return o + complex ( s )
 
 # =============================================================================
 def _cmplx_mul_        ( s , o ) :
     """multiply  complex values 
     >>> r = v * other  
     """
-    return o * complex ( s.real() , s.imag() )
+    return o * complex ( s  )
 
 # =============================================================================
 def _cmplx_div_        ( s , o ) :
     """divide complex values 
     >>> r = v / other  
     """
-    return (1.0/o) * complex ( s.real() , s.imag() )
+    return ( 1.0 / o ) * complex ( s )
 
 # =============================================================================
 def _cmplx_rdiv_       ( s , o ) :
     """divide complex values 
     >>> r = other / v 
     """
-    return o       * ( 1.0 / complex ( s.real() , s.imag() ) )
+    return o           * ( 1.0 / complex ( s ) )
 
 # =============================================================================
 def _cmplx_sub_        ( s , o ) :
     """subtract complex values 
     >>> r = v - other 
     """
-    return (-o   ) + complex ( s.real() , s.imag() )
+    return (-o   ) + complex ( s )
 
 # =============================================================================
 def _cmplx_rsub_       ( s , o ) :
     """subtract complex values 
     >>> r = other - v 
     """
-    return   o     - complex ( s.real() , s.imag() )
+    return   o     - complex ( s )
 
 # =============================================================================
 def _cmplx_pow_  ( s , o ) :
     """power function 
     >>> r = v ** other  
     """
-    if isinstance ( o , COMPLEX ) :
-        o = complex ( o.real() , o.imag() ) 
-    return complex ( s.real() , s.imag() ) ** o
+    if isinstance ( o , COMPLEX ) : o = complex ( o ) 
+    return complex ( s ) ** o
 
 # =============================================================================
 def _cmplx_rpow_  ( s , o ) :
     """power function 
     >>> r = other **v  
     """
-    return o ** complex ( s.real() , s.imag() )
+    return o ** complex ( s )
 
 
 # =============================================================================
@@ -479,8 +570,8 @@ def _cmplx_eq_    ( s , o ) :
     >>> r = v == other  
     """
     if isinstance ( o, COMPLEX ) :
-        return s.real() == o.real() and s.imag() == o.imag()
-    return complex( s.real() , s.imag() ) == o
+        return _real_ ( s ) == _real_ ( o ) and _imag_ ( s ) == _imag_ ( o )
+    return complex ( s ) == o
 
 # =============================================================================
 def _cmplx_ne_    ( s , o ) :
@@ -488,34 +579,69 @@ def _cmplx_ne_    ( s , o ) :
     >>> r = v != other  
     """
     if isinstance ( o, COMPLEX ) :
-        return s.real() != o.real() or  s.imag() != o.imag()
-    return complex( s.real() , s.imag() ) != o 
+        return _real_ ( s ) != _real_ ( o ) or _imag_ ( s ) != _imag_ ( o )
+    return complex ( s ) != o 
 
 # =============================================================================
-def _cmplx_iadd_ ( s , o ) :
-    x = s + o
-    s.real(x.real)
-    s.imag(x.imag)
-    
-# =============================================================================
-def _cmplx_isub_ ( s , o ) :
-    x = s - o
-    s.real(x.real)
-    s.imag(x.imag)
+if root_version_int < 62200  :
+    # =========================================================================
+    def _cmplx_iadd_ ( s , o ) :
+        x = s + o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s    
+    # =========================================================================
+    def _cmplx_isub_ ( s , o ) :
+        x = s - o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+    def _cmplx_imul_ ( s , o ) :
+        x = s * o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+    def _cmplx_idiv_ ( s , o ) :
+        x = s / o
+        s.real ( x.real ) 
+        s.imag ( x.imag )
+        return s
+    # =========================================================================
+else :
+    # =========================================================================
+    def _cmplx_iadd_ ( s , o ) :
+        x = s + o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_isub_ ( s , o ) :
+        x = s - o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_imul_ ( s , o ) :
+        x = s * o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t )         
+        return s
+    # =========================================================================
+    def _cmplx_idiv_ ( s , o ) :
+        x = s / o
+        T = type ( s )
+        t = T ( x.real , x.imag )
+        s.__assign__ ( t ) 
+        return s
+    # =========================================================================
 
+        
 # =============================================================================
-def _cmplx_imul_ ( s , o ) :
-    x = s * o
-    s.real(x.real)
-    s.imag(x.imag)
-
-# =============================================================================
-def _cmplx_idiv_ ( s , o ) :
-    x = s / o
-    s.real(x.real)
-    s.imag(x.imag)
-
-# =============================================================
 for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     
     if not hasattr ( CMPLX , '_old_init_' ) : 
@@ -536,26 +662,28 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
                 
         CMPLX.__init__    = _cmplx_new_init_
         
-    CMPLX.__complex__ = _cmplx_to_complex_
+    CMPLX.__complex__  = _cmplx_to_complex_
     
-    CMPLX.__add__     = _cmplx_add_
-    CMPLX.__mul__     = _cmplx_mul_
-    CMPLX.__div__     = _cmplx_div_
-    CMPLX.__sub__     = _cmplx_sub_
+    CMPLX.__add__      = _cmplx_add_
+    CMPLX.__mul__      = _cmplx_mul_
+    CMPLX.__div__      = _cmplx_div_
+    CMPLX.__sub__      = _cmplx_sub_
+    CMPLX.__truediv__  = _cmplx_div_
     
-    CMPLX.__radd__    = _cmplx_add_
-    CMPLX.__rmul__    = _cmplx_mul_
-    CMPLX.__rdiv__    = _cmplx_rdiv_
-    CMPLX.__rsub__    = _cmplx_rsub_
+    CMPLX.__radd__     = _cmplx_add_
+    CMPLX.__rmul__     = _cmplx_mul_
+    CMPLX.__rdiv__     = _cmplx_rdiv_
+    CMPLX.__rsub__     = _cmplx_rsub_
+    CMPLX.__rtruediv__ = _cmplx_rdiv_
     
-    CMPLX.__iadd__    = _cmplx_iadd_
-    CMPLX.__imul__    = _cmplx_imul_
-    CMPLX.__idiv__    = _cmplx_idiv_
-    CMPLX.__isub__    = _cmplx_isub_
+    CMPLX.__iadd__     = _cmplx_iadd_
+    CMPLX.__imul__     = _cmplx_imul_
+    CMPLX.__idiv__     = _cmplx_idiv_
+    CMPLX.__isub__     = _cmplx_isub_
+    CMPLX.__itruediv__ = _cmplx_idiv_
 
-    
-    CMPLX.__repr__    = lambda s : "%s" % complex ( s.real(), s.imag() )
-    CMPLX.__str__     = lambda s : "%s" % complex ( s.real(), s.imag() )
+    CMPLX.__repr__    = lambda s : "%s" % complex ( s )
+    CMPLX.__str__     = lambda s : "%s" % complex ( s )
     CMPLX.__abs__     = _cmplx_abs_
     CMPLX.__pow__     = _cmplx_pow_
     CMPLX.__rpow__    = _cmplx_rpow_
@@ -565,7 +693,7 @@ for CMPLX in ( COMPLEX , COMPLEXf , COMPLEXl ) :
     CMPLX.__ne__      =  _cmplx_ne_
     
     if not hasattr ( CMPLX , 'cpp_conj' ) :
-        CMPLX.cpp_conj = lambda s : CMPLX ( s.real() , -s.imag() )
+        CMPLX.cpp_conj = lambda s : CMPLX ( _real_ ( s ) , -_imag_ ( s ) )
     
     CMPLX.norm        = _cmplx_norm_
     CMPLX.conjugate   = _cmplx_conjugate_
@@ -606,7 +734,7 @@ _decorated_classes_  = (
     )
 
 # =============================================================================
-## C++ version of frexp woith radix 10 
+## C++ version of frexp with radix 10 
 cpp_frexp10 = Ostap.Math.frexp10 
 # =============================================================================
 ## get mantissa (0.1<=m<1) and exponent for radix10
@@ -622,10 +750,81 @@ def frexp10 ( value ) :
     
     >>> a,b = frexp10 ( value ) 
     """
-    #
-    p = cpp_frexp10 ( value )
-    return p.first, p.second
+    
+    ## p = cpp_frexp10 ( value )
+    ## return p.first, p.second
 
+
+    xv = abs ( value )
+    if iszero ( xv )  : return  ( 0 , 0 ) 
+
+    q  = math.floor ( math.log10 ( float ( xv ) ) )
+
+    if    0 < q : xv /= 10**q 
+    elif  0 > q : xv *= 10**abs(q) 
+    
+    if 1 <= xv :
+        xv /= 10
+        q  += 1
+        
+    return ( xv , q ) if ( 0 <= value ) else ( -xv , q ) 
+
+
+# =============================================================================
+## Find suitable range for histogram axis 
+def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
+    """Find suitable range for histogram axis
+    """
+    xmn = min ( xmin , xmax )
+    xmx = max ( xmin , xmax )
+    
+    import math
+    
+    ## 1) special case
+    if isequal ( xmn , xmx ) :
+        return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
+
+    ## 2) special case
+    if islong ( xmn - 0.5 ) and islong ( xmn + 0.5 ) :
+        return math.floor ( xmn - 0.1 ) , math.ceil ( xmx + 0.1 ) 
+
+    d = xmx - xmn
+    
+    if 0 <= xmn < xmx :
+        
+        xmin = max ( 0 , xmn - delta * d )
+        xmax =           xmx + delta * d 
+        
+    elif xmn < xmx <= 0 :
+        
+        xmin =           xmn - delta * d 
+        xmax = max ( 0 , xmx + delta * d )
+        
+    elif xmn < 0 < xmx  :
+        
+        xmin = ( 1 + delta ) * xmn  
+        xmax = ( 1 + delta ) * xmx
+        
+    else : 
+    
+        xmin = xmn - delta * d 
+        xmax = xmx + delta * d 
+
+    N = 3
+    
+    a1 , b1 = frexp10 ( xmin )
+    a2 , b2 = frexp10 ( xmax )
+
+    b1  -= N 
+    b2  -= N 
+    
+    xmin = math.floor ( a1 * ( 10**N ) ) * ( 10 ** b1 )
+    xmax = math.ceil  ( a2 * ( 10**N ) ) * ( 10 ** b2 )
+    
+    return xmin , xmax
+
+
+import ostap.math.polynomials 
 # =============================================================================
 if '__main__' == __name__ :
     
@@ -633,15 +832,16 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
     _v = [ l for l in dir(Ostap     ) if 0 != l.find('__') ]
-    print(' dir(Ostap)      : ')
+    logger.info (' dir(Ostap)      : ')
     _v.sort()
-    for v in _v : print(v)
+    for v in _v : logger.info ( v )
+    
     _v = [ l for l in dir(Ostap.Math) if 0 != l.find('__') ]
-    print(' dir(Ostap.Math) : ')
+    logger.info (' dir(Ostap.Math) : ')
     _v.sort()
-    for v in _v : print(v)
+    for v in _v : logger.info ( v )
 
 
 # =============================================================================
-# The  END
+##                                                                     The  END
 # =============================================================================

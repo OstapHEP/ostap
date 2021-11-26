@@ -32,7 +32,7 @@ namespace Ostap
     class Bernstein : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Bernstein , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Bernstein , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -58,10 +58,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -97,7 +97,7 @@ namespace Ostap
     class Monotonic : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Monotonic , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Monotonic , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -110,6 +110,15 @@ namespace Ostap
                   const double       xmax       ,
                   RooAbsReal&        a          ,
                   RooAbsReal&        b          ,
+                  const RooArgList&  pars       ) ;
+      // ======================================================================
+      /// constructor from the variable, range and list of coefficients
+      Monotonic ( const std::string& name       ,
+                  const std::string& title      ,
+                  RooAbsReal&        xvar       ,
+                  const bool         increasing , 
+                  const double       xmin       , 
+                  const double       xmax       ,
                   const RooArgList&  pars       ) ;
       // ======================================================================
       /// copy constructor 
@@ -126,10 +135,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -168,7 +177,7 @@ namespace Ostap
     class Convex : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::Convex  , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::Convex  , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -198,10 +207,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================
@@ -239,7 +248,7 @@ namespace Ostap
     class ConvexOnly : public RooAbsReal 
     {
       // ======================================================================
-      ClassDef ( Ostap::MoreRooFit::ConvexOnly  , 1 ) ;
+      ClassDefOverride ( Ostap::MoreRooFit::ConvexOnly  , 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -268,10 +277,10 @@ namespace Ostap
       Int_t    getAnalyticalIntegral
       ( RooArgSet&  allVars             , 
         RooArgSet&  analVars            , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       Double_t    analyticalIntegral
       ( Int_t code , 
-        const char* rangeName = nullptr ) const ;
+        const char* rangeName = nullptr ) const override ;
       // ======================================================================
     public:
       // ======================================================================

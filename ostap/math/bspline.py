@@ -46,10 +46,13 @@ __all__     = (
     )
 # =============================================================================
 import  ROOT, math  
-from    ostap.core.core      import cpp, Ostap, funID
-from    ostap.core.ostap_types     import is_integer
-from    ostap.math.base      import iszero, isequal, signum, doubles
+from    ostap.core.core        import Ostap, funID
+from    ostap.core.ostap_types import is_integer
+from    ostap.math.base        import iszero, isequal, signum, doubles
+from    ostap.core.meta_info   import root_info
 import  ostap.math.bernstein 
+import  ostap.math.polynomials
+
 # =============================================================================
 # logging 
 # =============================================================================
@@ -58,7 +61,7 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.bspline' )
 else                       : logger = getLogger ( __name__             )
 # =============================================================================
 ## short name 
-BSpline = cpp.Ostap.Math.BSpline
+BSpline = Ostap.Math.BSpline
 # =============================================================================
 ## get control polygon for BSpline
 def control_polygon ( bs )  :
@@ -257,6 +260,12 @@ def interpolate ( func , abscissas , spline , *args ) :
 
     from ostap.math.interpolation import points 
     table = points ( func , abscissas )
+
+    ## print ( "Table", type ( table ) , table.size () ) 
+
+    if root_info < (6 , 24 ) and 16 < len ( table ) and table.atype() < 0  : 
+        logger.warning ('interpoalte: segmentation fault can occur for large number of points')
+        
     sc    = Ostap.Math.Interpolation.bspline ( table , bs )
     if sc.isFailure () : raise TypeError("Ostap.Math.Bspline/2: Can't iterpolate!%s" %  sc )
     
@@ -544,7 +553,7 @@ def _new_init_ ( t ,  *args )  :
         
     targs = tuple(largs)
     ## use old constructor 
-    t._old_init_ ( *targs ) 
+    return t._old_init_ ( *targs ) 
 
 # =============================================================================
 ## set, get & iterator

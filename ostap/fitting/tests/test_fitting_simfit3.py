@@ -15,16 +15,18 @@
 Simultaneous fit of 1D and 2D-distributions 
 """
 # ============================================================================= 
-from builtins    import range 
-# ============================================================================= 
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random
 import ostap.fitting.roofit 
-import ostap.fitting.models as     Models 
-from   ostap.core.core      import dsID
-from   ostap.logger.utils   import rooSilent
+import ostap.fitting.models     as     Models 
+from   builtins    import range 
+from   ostap.core.core          import dsID
+from   ostap.utils.timing       import timing 
+from   ostap.logger.utils       import rooSilent
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -106,6 +108,7 @@ for i in range (NC2) :
 # =============================================================================
 def test_simfit3() : 
 
+    logger = getLogger ( 'test_simfit3' ) 
     ## low statistic, high-background "signal channel"
     signal2  = Models.Gauss_pdf ( 'G2'                  ,
                                   xvar  = mass2         ,
@@ -131,11 +134,13 @@ def test_simfit3() :
     ## fit 2
     rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
     rS , fx = model_S.fitTo ( dataset2 , draw = None , nbins = 50 , silent = True )
-    rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
-    rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
+
+    title = 'Results of fit to signal sample only'
+    logger.info ( '%s\n%s' % ( title , rS.table ( title = title , prefix = '# ' ) ) )
     
-    
-    logger.info ( 'Fit results for signal sample only: %s' % rS )
+    with use_canvas ( 'test_simfit3' ) : 
+        with wait ( 1 ) : rS , fx = model_S.fitTo ( dataset2 , draw = 'X'  , nbins = 50 , silent = True )
+        with wait ( 1 ) : rS , fy = model_S.fitTo ( dataset2 , draw = 'Y'  , nbins = 50 , silent = True )
     
     # =========================================================================
     ## high statistic, low-background "control/normalization channel"
@@ -153,10 +158,11 @@ def test_simfit3() :
     
     ## fit 1 
     rN , fN = model_N.fitTo ( dataset1 , draw = False , nbins = 50 , silent = True )
-    rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
-    
-    logger.info ( 'Fit results for normalization sample only: %s' % rN )
-    
+    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
+        rN , fN = model_N.fitTo ( dataset1 , draw = True  , nbins = 50 , silent = True )
+        title = 'Results of fit to normalization sample only'
+        logger.info ( '%s\n%s' % ( title , rN.table ( title = title , prefix = '# ' ) ) )
+  
     # =========================================================================
     ## combine data
     
@@ -176,12 +182,14 @@ def test_simfit3() :
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     rC , fC = model_sim.fitTo ( dataset , silent = True )
     
-    fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
-    fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
-    fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
-    
-    logger.info ( 'Combined fit  results are: %s ' % rC )
-    
+    title = 'Results of simultaneous fit'
+    logger.info ( '%s\n%s' % ( title , rC.table ( title = title , prefix = '# ' ) ) )
+
+    with use_canvas ( 'test_simfit3' ) , wait ( 1 ) :
+        with wait ( 1 ) : fN  = model_sim.draw ( 'N'   , dataset , nbins = 50 )
+        with wait ( 1 ) : fSx = model_sim.draw ( 'S/x' , dataset , nbins = 50 )
+        with wait ( 1 ) : fSy = model_sim.draw ( 'S/y' , dataset , nbins = 50 )
+        
     logger.info ( ' Value |        Simple fit         |    Combined fit ' )
     logger.info ( ' #N    | %25s | %-25s '  % ( rS.SSM2     * 1 , rC.SSM2     * 1 ) )
     logger.info ( ' mean  | %25s | %-25s '  % ( rS.mean_G2  * 1 , rC.mean_G2  * 1 ) )
@@ -191,7 +199,8 @@ def test_simfit3() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_simfit3 () 
+    with timing ("simfit-3", logger ) :
+        test_simfit3 () 
 
 
 # =============================================================================

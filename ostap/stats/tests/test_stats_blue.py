@@ -18,29 +18,31 @@ else                       : logger = getLogger ( __name__           )
 from   ostap.stats.combine import Combine, Ostap, VE 
 
 def test_stats_blue1 () :
-    
+
+    COV2 = Ostap.Math.SymMatrix(2)
+
     m1 =  VE( 5366.779, 0.069 **2 )
     m2 =  VE( 5367.122, 0.089 **2 ) 
     
     ## fit model systematics, assumed to be uncorrelated 
-    syst1 = Ostap.Math.SymMatrix2x2()
+    syst1 = COV2 ()
     syst1 [0,0] = 0.134**2
     syst1 [1,1] = 0.091**2 + 0.01**2 ## add also psi' mass 
     
     ## momentum scaling, 100% correlated  
-    syst2 = Ostap.Math.SymMatrix2x2()
+    syst2 = COV2 ()
     syst2 [0,0] = 0.315**2
     syst2 [1,1] = 0.132**2
     syst2 [0,1] = 0.132*0.315
     
     ## energy loss, 100% correlated  
-    syst3 = Ostap.Math.SymMatrix2x2()
+    syst3 = COV2 ()
     syst3 [0,0] = 0.030**2
     syst3 [1,1] = 0.015**2
     syst3 [0,1] = 0.030*0.015
     
     ## kaon mass, 100% correlated  
-    syst4 = Ostap.Math.SymMatrix2x2()
+    syst4 = COV2 ()
     syst4 [0,0] = 0.029**2
     syst4 [1,1] = 0.029**2
     syst4 [0,1] = 0.029*0.029
@@ -65,7 +67,7 @@ def test_stats_blue2 () :
     m4 =  VE ( 5366.90  , 0.22 **2 ) ## Bs -> J/psi phi
     m5 =  VE ( 5366.85  , 0.19 **2 ) ## Bs -> J/psi p pbar
     
-    COV2 = Ostap.Math.SymMatrix6x6
+    COV2 = Ostap.Math.SymMatrix(6)
     
     ## charmonuium masses 
     syst   = COV2()

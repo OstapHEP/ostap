@@ -36,11 +36,11 @@ __all__     = (
     ##
     ) 
 # =============================================================================
-import ROOT, cppyy              ## attention here!!
-from   ostap.core.core        import cpp, VE, grID
-from   ostap.core.ostap_types import num_types 
-from   builtins               import range
-# 
+import ROOT, ctypes        
+from   ostap.core.core                import cpp, VE, grID
+from   ostap.core.ostap_types         import num_types, integer_types  
+from   builtins                       import range
+from   ostap.plotting.draw_attributes import copy_graph_attributes  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -50,54 +50,8 @@ else                       : logger = getLogger( __name__              )
 # =============================================================================
 logger.debug ( '(T)Graph-related decorations')
 # =============================================================================
-## copy graph attributes
-#  - LineColor
-#  - LineWidth
-#  - LineStyle
-#  - MarkerColor 
-#  - MarkerSize
-#  - MarkerStyle 
-#  - FillColor
-#  - FillStyle  
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07  
-def copy_graph_attributes ( o_from , o_to ) :
-    """Copy graph attributes
-    - LineColor
-    - LineWidth
-    - LineStyle
-    - MarkerColor 
-    - MarkerSize
-    - MarkerStyle 
-    - FillColor
-    - FillStyle  
-    """
-    ##
-    ## line attributes:
-    ## 
-    if hasattr ( o_from , 'GetLineColor' ) and hasattr ( o_to , 'SetLineColor' ) :
-        o_to.SetLineColor   ( o_from.GetLineColor () ) 
-    if hasattr ( o_from , 'GetLineWidth' ) and hasattr ( o_to , 'SetLineWidth' ) :
-        o_to.SetLineWidth   ( o_from.GetLineWidth () ) 
-    if hasattr ( o_from , 'GetLineStyle' ) and hasattr ( o_to , 'SetLineStyle' ) :
-        o_to.SetLineStyle   ( o_from.GetLineStyle () ) 
-    ##
-    ## marker attributes:
-    ## 
-    if hasattr ( o_from , 'GetMarkerColor' ) and hasattr ( o_to , 'SetMarkerColor' ) :
-        o_to.SetMarkerColor ( o_from.GetMarkerColor () ) 
-    if hasattr ( o_from , 'GetMarkerSize'  ) and hasattr ( o_to , 'SetMarkerSize'  ) :
-        o_to.SetMarkerSize  ( o_from.GetMarkerSize  () ) 
-    if hasattr ( o_from , 'GetMarkerStyle' ) and hasattr ( o_to , 'SetMarkerStyle' ) :
-        o_to.SetMarkerStyle ( o_from.GetMarkerStyle () ) 
-    ##
-    ## Fill attributes:
-    ##
-    if hasattr ( o_from , 'GetFillColor' ) and hasattr ( o_to , 'SetFillColor' ) :
-        o_to.SetFillColor   ( o_from.GetFillColor () ) 
-    if hasattr ( o_from , 'GetFillStyle' ) and hasattr ( o_to , 'SetFillStyle' ) :
-        o_to.SetFillStyle   ( o_from.GetFillStyle () ) 
-    
+pos_infinity = float('+inf')
+neg_infinity = float('-inf')
 # =============================================================================
 ## make graph from data 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -142,7 +96,6 @@ def makeGraph ( x , y = []  , ex = [] , ey = [] ) :
         gr .SetPointError ( i , _ex , _ey )
         
     return gr
-
 
 # =============================================================================
 ## create TGraph from the plain text two-column format with optional comments.
@@ -241,7 +194,7 @@ def makeGraph2 ( text ) :
 #  # quark = charm
 #  # final state = quark
 #  # ebeam1 = 3500, ebeam2 = 3500
-#  # PDF set = CTEQ6.6
+  # PDF set = CTEQ6.6
 #  # ptmin = 5
 #  # ptmax = 20
 #  # ymin  = -1
@@ -603,7 +556,12 @@ def _hToGraph_ ( h1 , funcx , funcy ) :
     return graph
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph2 ( 0.1 ) ## shift for 10% of bin width
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph2 ( h1 , bias ) :
@@ -621,14 +579,19 @@ def hToGraph2 ( h1 , bias ) :
     return _hToGraph_ ( h1 , funcx , funcy ) 
 
 # =============================================================================
-## convert histogram to graph
+## Convert  1D-histogram into graph with small shift in x
+#  Useful for overlay of very similar plots
+#  @code 
+#  h1 = ....
+#  g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute) 
+#  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
 def hToGraph3 ( h1 , bias ) :
     """ Convert  1D-histogram into graph with small shift in x
     Useful for overlay of very similar plots
     >>> h1 = ....
-    >>> g2 = h1.asGraph2 ( 0.1 ) ## shift for 0.1 (absolute)    
+    >>> g2 = h1.asGraph3 ( 0.1 ) ## shift for 0.1 (absolute)    
     """
     for p in h1.items() :
         x = p[1]
@@ -655,6 +618,38 @@ ROOT.TH1F.toGraph3 = hToGraph3
 ROOT.TH1D.toGraph3 = hToGraph3
 
 # =============================================================================
+##  get point
+#   @code
+#   graph = ...
+#   x, y = graph.point ( 3  ) 
+#   @endcode
+def _gr_point_ ( graph , point ) :
+    """Get the point from the graph :
+    >>> graph = ...
+    >>> x, y = graph.point ( 3  )
+    >>> x, y = graph.get_point ( 3  ) ## ditto 
+    """
+    assert isinstance ( point , integer_types ) , 'invalid index type'
+
+    ## allow negative indices  
+    if point < 0 : point += len ( graph ) 
+    
+    if 0 <= point < len ( graph ) :
+        
+        x = ctypes.c_double ( 0.0 )
+        y = ctypes.c_double ( 1.0 )
+        
+        graph.GetPoint ( point , x , y )
+
+        return float ( x.value ) , float ( y.value )
+    
+    raise IndexError ( "Invalid index %s" % point ) 
+    
+
+ROOT.TGraph.    point = _gr_point_
+ROOT.TGraph.get_point = _gr_point_
+
+# =============================================================================
 ## use graph as function 
 #  @code
 #  graph = ...
@@ -664,12 +659,22 @@ ROOT.TH1D.toGraph3 = hToGraph3
 #  @see TGraph::Eval
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
-def _gr_call_ ( graph , x , spline = None , opts = '' ) :
-    """ Use graph as function
+def _gr_call_ ( graph , x , spline = None , opts = 'b1e1' , *args ) :
+    """ Use graph as a function
     >>> graph = ...
     >>> y     = graph ( 0.2 ) 
     """
-    ## if not spline : spline = ROOT.MakeNullPointer(ROOT.TSpline)
+    N = len ( graph )
+    
+    assert 0 < N , 'Empty graph cannot be used as a function!'
+    if   1 == N : return graph.point ( 0 ) [1] 
+                
+    if not spline :
+        spline = ROOT.nullptr
+        if 3 < len( graph ) :
+            if 's' in opts or 'S' in opts :
+                spline = self.spline3  ( opts , *args )
+            
     return graph.Eval ( float( x ) , spline , opts )
 
 # =============================================================================
@@ -682,7 +687,7 @@ def _gr_call_ ( graph , x , spline = None , opts = '' ) :
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2015-08-31
 def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
-    """Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
+    r"""Calculate an integral over the range \f$x_{low} \le x \le x_{high}\f$
     It is not very efficient, but OK 
     >>> graph = ...
     >>> i     = graph.integral ( 0 , 1 )
@@ -694,7 +699,7 @@ def _gr_integral_ ( graph , xlow , xhigh , numerical = True ) :
     tf1 = graph.asTF1()
     return tf1.Integral( xlow , xhigh ) 
         
-# =============================================================================
+# ============================================================================
 ## iterate over points in TGraphErrors
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2011-06-07
@@ -724,13 +729,7 @@ def _gr_getitem_ ( graph , ipoint )  :
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
-    
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
-    
-    return x_,v_
+    return graph.point ( ipoint )
 
 # =============================================================================
 ## set the point in TGraph
@@ -826,11 +825,8 @@ def _gre_getitem_ ( graph , ipoint )  :
     if ipoint < 0 : ipoint += len(graph) 
     if not ipoint in graph : raise IndexError 
     #
-    
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
+
+    x_, v_ = graph.get_point ( ipoint ) 
     
     x = VE ( x_ , graph.GetErrorX ( ipoint )**2 )
     v = VE ( v_ , graph.GetErrorY ( ipoint )**2 )
@@ -851,6 +847,9 @@ def _gre_setitem_ ( graph , ipoint , point )  :
     >>> graph[4] = x,y 
     """
     #
+    
+    if ipoint < 0 : ipoint += len ( graph )
+    
     if not ipoint in graph    : raise IndexError
     if not 2 == len ( point ) :
         raise AttributeError("Invalid dimension of 'point'")
@@ -917,10 +916,7 @@ def _grae_getitem_ ( graph , ipoint ) :
     if not ipoint in graph : raise IndexError 
     #
     
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)
-    
-    graph.GetPoint ( ipoint , x_ , v_ )
+    x_ , v_ = graph.get_point ( ipoint )
     
     exl = graph.GetErrorXlow  ( ipoint )
     exh = graph.GetErrorXhigh ( ipoint )
@@ -982,13 +978,8 @@ def _gr_xmin_ ( graph ) :
     """Get minimal x for the points
     >>> graph = ...
     >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
+    """
+    return graph.bb() [ 0 ] 
 
 # =============================================================================
 ## get maximal-x 
@@ -1003,12 +994,7 @@ def _gr_xmax_ ( graph ) :
     >>> graph = ...
     >>> xmax  = graph.xmax () 
     """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
+    return graph.bb() [ 1 ] 
 
 # =============================================================================
 ## get minimal-y
@@ -1022,13 +1008,8 @@ def _gr_ymin_ ( graph ) :
     """ Get minimal y for the points
     >>> graph = ...
     >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
+    """
+    return graph.bb() [ 2 ] 
 
 # =============================================================================
 ## get maximal-y
@@ -1043,182 +1024,7 @@ def _gr_ymax_ ( graph ) :
     >>> graph = ...
     >>> ymax  = graph.ymax () 
     """    
-    ymx  = None
-    np   = len ( graph ) 
-    for ip in range ( np ) :
-        x , y = graph[ip] 
-        if None == ymx or y >= ymx : ymx = y
-    return ymx
-
-# =============================================================================
-## get minimal-x 
-#  @code
-#  graph = ...
-#  xmin  = graph.xmin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_xmin_ ( graph ) :
-    """Get minimal x for the points
-    >>> graph = ...
-    >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip]
-        x = x.value() - x.error() 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
-
-# =============================================================================
-## get maximal-x 
-#  @code
-#  graph = ...
-#  xmax  = graph.xmax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_xmax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> xmax  = graph.xmax () 
-    """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        x = x.value() + x.error() 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
-
-# =============================================================================
-## get minimal-y
-#  @code
-#  graph = ...
-#  ymin  = graph.ymin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_ymin_ ( graph ) :
-    """Get minimal y for the points
-    >>> graph = ...
-    >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        y = y.value() - y.error() 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
-
-# =============================================================================
-## get maximal-y
-#  @code
-#  graph = ...
-#  ymax  = graph.ymax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _gre_ymax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> ymax  = graph.ymax () 
-    """    
-    ymx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , y = graph[ip] 
-        y = y.value() + abs ( y.error() ) 
-        if None == ymx or y >= ymx : ymx = y
-    return xmx
-
-
-# =============================================================================
-## get minimal-x 
-#  @code
-#  graph = ...
-#  xmin  = graph.xmin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_xmin_ ( graph ) :
-    """Get minimal x for the points
-    >>> graph = ...
-    >>> xmin  = graph.xmin () 
-    """    
-    xmn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        x = x - abs( exl ) 
-        if None == xmn or x <= xmn : xmn = x
-    return xmn
-
-# =============================================================================
-## get maximal-x 
-#  @code
-#  graph = ...
-#  xmax  = graph.xmax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_xmax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> xmax  = graph.xmax () 
-    """    
-    xmx  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        x = x + abs( exh ) 
-        if None == xmx or x >= xmx : xmx = x
-    return xmx
-
-# =============================================================================
-## get minimal-y
-#  @code
-#  graph = ...
-#  ymin  = graph.ymin () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_ymin_ ( graph ) :
-    """Get minimal y for the points
-    >>> graph = ...
-    >>> ymin  = graph.ymin () 
-    """    
-    ymn  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        y = y - abs( eyl ) 
-        if None == ymn or y <= ymn : ymn = y
-    return ymn
-
-# =============================================================================
-## get maximal-y
-#  @code
-#  graph = ...
-#  ymax  = graph.ymax () 
-#  @endcode
-#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-#  @date   2011-06-07
-def _grae_ymax_ ( graph ) :
-    """Get maximal x for the points
-    >>> graph = ...
-    >>> ymax  = graph.ymax () 
-    """    
-    yxm  = None
-    np   = len(graph) 
-    for ip in range( np ) :
-        x , exl , exh , y , eyl , eyh = graph[ip] 
-        y = y + abs( eyh ) 
-        if None == ymx or y >= ymx : ymx = y
-    return xmx
-
+    return graph.bb() [ 3 ] 
 
 # =============================================================================
 ## get minimal and maximal x for the points
@@ -1233,9 +1039,8 @@ def _gr_xminmax_ ( graph ) :
     >>> graph = ...
     >>> xmin,xmax = graph.xminmax() 
     """
-    xmn  = graph.xmin()
-    xmx  = graph.xmax()
-    return xmn , xmx 
+    xmin , xmax ,  _ , _ = graph.bb()
+    return xmin , xmax
 
 # =============================================================================
 ## get minimal and maximal value for the points
@@ -1250,11 +1055,150 @@ def _gr_yminmax_ ( graph ) :
     Get minimal and maximal  for the points
     >>> graph = ...
     >>> mn,mx = graph.yminmax() 
-    """    
-    ymn  = graph.ymin()
-    ymx  = graph.ymax()
-    return ymn , ymx 
+    """
+    _ , _ , ymin , ymax = graph.bb()
+    return ymin , ymax
 
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _gr_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    for i , x , y in graph.iteritems() :
+        
+        xmin = min ( xmin , x )  
+        xmax = max ( xmax , x )
+        ymin = min ( ymin , y )  
+        ymax = max ( ymax , y )
+
+    if more : 
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+        
+    return xmin , xmax , ymin , ymax
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _gre_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    for i , x , y in graph.iteritems() :
+        
+        xv = x.value ()
+        ex = x.error ()
+        
+        yv = y.value ()
+        ey = y.error ()
+
+        xmin = min ( xmin , xv , xv + ex , xv - ex )  
+        xmax = max ( xmax , xv , xv + ex , xv - ex )
+        ymin = min ( ymin , yv , yv + ey , yv - ey )  
+        ymax = max ( ymax , yv , yv + ey , yv - ey )
+        
+    if more :
+        
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+
+    return xmin , xmax , ymin , ymax
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _grae_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    for i , xv, enx , epx , yv , eny , epy in graph.iteritems() :
+
+        xmin = min ( xmin , xv , xv + abs ( epx ) , xv - abs ( enx ) )
+        xmax = max ( xmax , xv , xv + abs ( epx ) , xv - abs ( enx ) )
+        ymin = min ( ymin , yv , yv + abs ( epy ) , xv - abs ( eny ) )
+        ymax = max ( ymax , yv , yv + abs ( epy ) , xv - abs ( eny ) )
+
+    if more :
+        
+        xmn  = min ( xmin , xmin - more * ( xmax - xmin ) )
+        xmx  = max ( xmax , xmax + more * ( xmax - xmin ) )
+        ymn  = min ( ymin , ymin - more * ( ymax - ymin ) )
+        ymx  = max ( ymax , ymax + more * ( ymax - ymin ) )
+        xmin = xmn
+        xmax = xmx
+        ymin = ymn
+        ymax = ymx
+
+    return xmin , xmax , ymin , ymax
+
+# =============================================================================
+## Get a "bounding box" for the graph
+#  @code
+#  xmin, xmax , ymin , ymax = graph.bb() 
+#  @endcode 
+def _mg_bb_ ( graph , more = 0.0 ) :
+    """ Get a ``bounding box'' for the graph
+    >>> xmin, xmax , ymin , ymax = graph.bb() 
+    """
+    xmin = pos_infinity
+    xmax = neg_infinity
+    ymin = pos_infinity
+    ymax = neg_infinity
+
+    _gs = graph.GetListOfGraps()
+    for gr in _gs :
+        
+        xmn , xmx , ymn , ymx = gr.bb ( more )
+        
+        xmin = min ( xmin , xmn )
+        xmax = max ( xmax , xmx )
+        ymin = min ( ymin , ymn )
+        ymax = max ( ymax , ymx )
+
+    return xmin , xmax , ymin , ymax
+
+
+ROOT.TGraph.bb            =   _gr_bb_ 
+ROOT.TGraphErrors.bb      =  _gre_bb_ 
+ROOT.TGraphAsymmErrors.bb = _grae_bb_ 
+ROOT.TMultiGraph.bb       =   _mg_bb_ 
+    
 # =============================================================================
 ## get "slice" for graph 
 #  @code     
@@ -1359,73 +1303,21 @@ def _gr2_getslice_ ( graph , i , j ) :
 #  s     = graph.sorted() 
 #  @endcode
 #  @date   2016-03-28 
-def _gr0_sorted_ ( graph , reverse = False ) :
+def _gr_sorted_ ( graph , reverse = False ) :
     """Make sorted graph
     >>> graph = ...
     >>> s     = graph.sorted() 
     """
     
+    ## make new graph 
+    new_graph = graph.Clone() 
+
     oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraph ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
+    sitems = sorted ( oitems , key = lambda s : s [ 1 ] , reverse = reverse )
 
     ip = 0 
     for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr1_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1].value() , reverse = reverse )
-    
-    new_graph = ROOT.TGraphErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
-        ip += 1
-
-    return new_graph 
-
-# ============================================================================
-## make sorted graph
-#  @code
-#  graph = ...
-#  s     = graph.sorted() 
-#  @endcode
-#  @date   2016-03-28 
-def _gr2_sorted_ ( graph , reverse = False ) :
-    """Make sorted graph
-    >>> graph = ...
-    >>> s     = graph.sorted() 
-    """
-    
-    oitems =        ( i for i in graph.items() ) 
-    sitems = sorted ( oitems , key = lambda s :s[1] , reverse = reverse )
-    
-    new_graph = ROOT.TGraphAsymmErrors ( len( graph ) )
-    copy_graph_attributes ( graph , new_graph )
-
-    ip = 0 
-    for item in sitems :
-        new_graph[ip] = item[1:]
+        new_graph [ ip ] = item [ 1 : ]
         ip += 1
 
     return new_graph 
@@ -1557,7 +1449,6 @@ ROOT.TGraph       . ymin          = _gr_ymin_
 ROOT.TGraph       . xmax          = _gr_xmax_ 
 ROOT.TGraph       . ymax          = _gr_ymax_ 
 
-
 ROOT.TGraph       . xminmax       = _gr_xminmax_ 
 ROOT.TGraph       . yminmax       = _gr_yminmax_ 
 ROOT.TGraph       .  minmax       = _gr_yminmax_ 
@@ -1575,13 +1466,6 @@ ROOT.TGraphErrors . __setitem__   = _gre_setitem_
 ROOT.TGraphErrors .     items     = _gre_iteritems_ 
 ROOT.TGraphErrors . iteritems     = _gre_iteritems_ 
 
-
-ROOT.TGraphErrors . xmin          = _gre_xmin_ 
-ROOT.TGraphErrors . ymin          = _gre_ymin_ 
-ROOT.TGraphErrors . xmax          = _gre_xmax_ 
-ROOT.TGraphErrors . ymax          = _gre_ymax_ 
-
-
 ROOT.TH1F.asGraph = hToGraph
 ROOT.TH1D.asGraph = hToGraph
 ROOT.TH1F.toGraph = hToGraph
@@ -1590,15 +1474,12 @@ ROOT.TH1D.toGraph = hToGraph
 ROOT.TGraphAsymmErrors.__len__       = ROOT.TGraphAsymmErrors . GetN 
 ROOT.TGraphAsymmErrors.__contains__  = lambda s,i : i in range(0,len(s))
 ROOT.TGraphAsymmErrors.__iter__      = _gr_iter_ 
-ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_ 
+ROOT.TGraphAsymmErrors.     items    = _grae_iteritems_
 ROOT.TGraphAsymmErrors. iteritems    = _grae_iteritems_ 
 ROOT.TGraphAsymmErrors.__getitem__   = _grae_getitem_ 
 ROOT.TGraphAsymmErrors.__setitem__   = _grae_setitem_ 
 
-ROOT.TGraphAsymmErrors . xmin        = _grae_xmin_ 
-ROOT.TGraphAsymmErrors . ymin        = _grae_ymin_ 
-ROOT.TGraphAsymmErrors . xmax        = _grae_xmax_ 
-ROOT.TGraphAsymmErrors . ymax        = _grae_ymax_ 
+
 
 ROOT.TGraphAsymmErrors . transform   = _grae_transform_
 
@@ -1610,14 +1491,10 @@ ROOT.TGraph            .__getslice__  = _gr0_getslice_
 ROOT.TGraphErrors      .__getslice__  = _gr1_getslice_
 ROOT.TGraphAsymmErrors .__getslice__  = _gr2_getslice_
 
-ROOT.TGraph            .sorted        = _gr0_sorted_
-ROOT.TGraphErrors      .sorted        = _gr1_sorted_
-ROOT.TGraphAsymmErrors .sorted        = _gr2_sorted_ 
-
+ROOT.TGraph            .sorted        = _gr_sorted_
 
 ROOT.TGraph            .filter        = _gr_filter_
 ROOT.TGraph            .remove        = _gr_remove_
-
 
 # ==========================================================================
 import ostap.math.math_ve as mve
@@ -1727,12 +1604,11 @@ def _gr_xmax_ ( graph ) :
     """
     #
     _size = len ( graph )
-    if 0 == _sise : return 1
+    if 0 == _size : return 1
     #
     _last = _size - 1
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)    
-    g.GetPoint ( _last , x_ , v_ )
+    #
+    x_ , y_ = graph.get_point ( _last )
     #
     return x_
 # =============================================================================
@@ -1743,11 +1619,9 @@ def _gr_xmin_ ( graph ) :
     """
     #
     _size = len ( graph )
-    if 0 == _sise : return 0
+    if 0 == _size : return 0
     #
-    x_ = ROOT.Double(0)
-    v_ = ROOT.Double(0)    
-    graph.GetPoint ( 0 , x_ , v_ )
+    x_ , y_ = graph.get_point ( 0 )
     #
     return x_
 
@@ -2485,6 +2359,80 @@ ROOT.TGraphAsymmErrors.__irshift__   = _grae_irshift_
 
 
 # =============================================================================
+## append the graph with new point
+#  @code
+#  point = x , y
+#  graph.append ( *point ) 
+#  @endcode
+def _gr_append_ ( graph , *point ) :
+    """ append the graph with new point
+    >>> point = x , y
+    >>> graph.append ( *point ) 
+    """
+    last = len ( graph )
+    graph.SetPoint ( last , 0 , 0 )
+    graph [ last ] = point
+    ##
+    return len ( graph )
+
+# =============================================================================
+## pop the point from the graph
+#  @code
+#  graph = ...
+#  graph.pop ( 3 ) ## pop the point #3
+#  graph.pop (   ) ## pop th elast point 
+#  @endcode
+def _gr_pop_  ( graph , i = None ) :
+    """Pop the point fro mthe graph
+    >>> graph = ...
+    >>> graph.pop ( 3 ) ## pop the point #3
+    >>> graph.pop (   ) ## pop th elast point 
+    """
+
+    if i is None :
+        
+        last  = len ( graph )
+        if 1 <= last : 
+            point = graph [ -1 ] 
+            graph.RemovePoint ( last - 1 )
+            return point
+        
+        return None
+    
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+
+    point = graph [ i ]
+    graph.RemovePoint ( i )
+    return point
+
+# =============================================================================
+## swap two points in the graph
+#  @code
+#  graph = ...
+#  graph.swap ( 1 , 6 ) 
+#  @endcode 
+def _gr_swap_ ( grap , i , j ) :
+
+    if i < 0 : i += len ( graph )
+    if not i in graph : raise IndexError ( "Point #%s is not in graph!" % i )
+    
+    if j < 0 : j += len ( graph )
+    if not j in graph : raise IndexError ( "Point #%s is not in graph!" % j )
+
+    pi = graph [ i ]
+    pj = graph [ j ]
+    
+    graph [ i ] = pj 
+    graph [ j ] = pi
+    
+    return graph
+
+ROOT.TGraph.append    =  _gr_append_
+ROOT.TGraph.swap      =  _gr_swap_ 
+ROOT.TGraph.pop       =  _gr_pop_ 
+
+# =============================================================================
 ## Transpose the graphs
 # =============================================================================
 
@@ -2503,7 +2451,9 @@ def _gr_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraph( len ( self ) )
     for i , x , y in self.iteritems() :
-        new_graph[i] = y , x 
+        new_graph[i] = y , x
+
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2521,7 +2471,9 @@ def _gre_transpose_ ( self ) :
     """
     new_graph = ROOT.TGraphErrors ( len ( self ) )
     for i , x , y in self.iteritems() :
-        new_graph[i] = y , x 
+        new_graph[i] = y , x
+        
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
 
 # =============================================================================
@@ -2540,8 +2492,11 @@ def _grae_transpose_ ( self ) :
     new_graph = ROOT.TGraphAsymmErrors ( len ( self ) )
     for item in self.iteritems() :
         ip, x , exl , exh , y , eyl , eyh =  item 
-        new_graph [ ip ] = y , eyl , eyh , x , exl , exh         
+        new_graph [ ip ] = y , eyl , eyh , x , exl , exh
+        
+    copy_graph_attributes ( self , new_graph ) 
     return new_graph 
+
 
 ROOT.TGraph.transpose            =   _gr_transpose_ 
 ROOT.TGraph.T                    =   _gr_transpose_ 
@@ -2549,6 +2504,9 @@ ROOT.TGraphErrors.transpose      =  _gre_transpose_
 ROOT.TGraphErrors.T              =  _gre_transpose_ 
 ROOT.TGraphAsymmErrors.transpose = _grae_transpose_ 
 ROOT.TGraphAsymmErrors.T         = _grae_transpose_ 
+
+
+# ===============================================================================
 
 # =============================================================================
 ## propagate the color for each graph in multigraph 
@@ -2583,13 +2541,42 @@ ROOT.TMultiGraph.yellow   = _mg_yellow_
 
 
 # =============================================================================
+##  get graph  with certaoniono index
+#   @code
+#    mg = ....
+#    g0 = mg[0] 
+#   @endcode  
+def _mg_getitem_ ( mgraph , item ) :
+    """Get graph with certain index
+    >>> mg = ....
+    >>> g0 = mg[0] 
+    """
+
+    for i , g in enumerate  ( mgraph ) :
+        if i == item  : return g
+        
+    raise IndexError("Invalid index for multigraph %s" % item )
+
+ROOT.TMultiGraph.__getitem__ = _mg_getitem_             
+
+# ==============================================================================
+## length  of the multigraph
+def _mg_len_  ( mgraph ) :
+    """ Len of multigraph
+    """
+    _graphs = mgraph.GetListOfGraphs()
+    return 0 if not _graphs else len ( _graphs ) 
+
+ROOT.TMultiGraph.__len__ = _mg_len_             
+
+# =============================================================================
 ## transpose the graph
 #  @code
 #  graph   = ...
 #  graph_T = graph.transpose ()  
 #  graph_T = graph.T() ## ditto 
 #  @endcode
-def _mt_transpose_ ( self ) :
+def _mg_transpose_ ( graph ) :
     """Transpose the graph:
     >>> graph   = ...
     >>> graph_T = graph.transpose ()  
@@ -2598,16 +2585,184 @@ def _mt_transpose_ ( self ) :
     new_graph         = ROOT.TMultiGraph()
     new_graph._graphs = [] 
     
-    _graphs = mgraph.GetListOfGraps()
+    _graphs = graph.GetListOfGraphs()
     for g in _graphs :
         tg =  g.T() 
-        new_graph.Add            ( tg )
+        opt = graph.GetGraphDrawOption( g )
+        new_graph.Add            ( tg , opt )
         new_graph._graphs.append ( tg )
         
     return new_graph 
 
-ROOT.TMultiGraph.transpose = _grae_transpose_ 
-ROOT.TMultiGraph.T         = _grae_transpose_ 
+ROOT.TMultiGraph.transpose = _mg_transpose_ 
+ROOT.TMultiGraph.T         = _mg_transpose_ 
+
+
+ROOT.TMultiGraph.xminmax = _gr_xminmax_
+ROOT.TMultiGraph.yminmax = _gr_yminmax_
+ROOT.TMultiGraph. minmax = _gr_yminmax_
+
+ROOT.TMultiGraph.xmin    = _gr_xmin_ 
+ROOT.TMultiGraph.ymin    = _gr_ymin_  
+ROOT.TMultiGraph.xmax    = _gr_xmax_ 
+ROOT.TMultiGraph.ymax    = _gr_ymax_ 
+
+# ==============================================================================
+## merge two graphs into a common graph
+#  @code
+#  gr1 = ...
+#  gr2 = ...
+#  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+#  @endcode
+#  The method relies on <code>TGraph::Merge</code>, and the type of result is inherited fron the first argument 
+#  @see TGraph::Merge 
+def _gr_merge_ ( graph , graph2 , sort = False ) :
+    """Merge two graphs into a common graph
+    >>> gr1 = ...
+    >>> gr2 = ...
+    >>>  gr3 = g1.merge  ( gr2 )  ## return new merged graph 
+    The method relies on `ROOT.TGraph.Merge`, and the type of result is inherited from the first argument 
+    - see ROOT.TGraph.Merge 
+    """
+
+    ## clone the first argument 
+    result = graph.Clone()
+
+    lst = ROOT.TList()
+    lst.Add ( graph2  )
+    result.Merge( lst )
+    
+    del lst
+    
+    ## SORT if required 
+    if sort : result = result.sort()
+    
+    return result 
+    
+# ==============================================================================
+ROOT.TGraph            .merge         = _gr_merge_
+
+
+
+# ===============================================================================
+## get hash-value for the graph
+#  @code
+#  graph = ...
+#  hash ( graph ) 
+#  @endcode
+#  @see Ostap::Utils::hash_graph 
+def _gr_hash_ ( graph ) :
+    """Get hash value for the graph
+    >>> graph = ...
+    >>> hash ( graph ) 
+    - see Ostap.Utils.hash_graph 
+    """
+    from   ostap.core.core import Ostap    
+    h = Ostap.Utils.hash_graph ( graph )
+    #
+    return hash ( h ) 
+
+ROOT.TGraph            .__hash__         = _gr_hash_
+
+# ==============================================================================
+## get 3-spline for the given graph
+#  @code
+#  graph  = ...
+#  spline = graph.spline3() 
+#  @endcode
+#  @see TSpline3 
+def _gr_spline3_ ( graph , opts = 'b1e1', *args ) :
+    """Get 3-spline for the given graph
+    >>> graph  = ...
+    >>> spline = graph.spline3()
+    - see ROOT.TSpline3 
+    """
+    
+    prev_hash , spline3 = 0 , None 
+
+    attr = '__hash_spline3'
+    
+    if hasattr ( graph , attr ) :
+        prev_hash , spline3 = getattr ( graph , attr ) 
+
+    status    = hash ( graph   ) , opts.lower() , args
+
+    curr_hash = hash ( status  )
+        
+    if curr_hash != prev_hash or not spline3 :
+        spline3 = ROOT.TSpline3 ( 'spline' , graph , opts , *args )
+        
+    setattr ( graph , attr , ( curr_hash , spline3 ) ) 
+    
+    return spline3
+
+
+ROOT.TGraph            .spline3      =   _gr_spline3_
+
+# =============================================================================
+## get possible boundary  conditions for  graphs
+#  @code
+#  graph = ...
+#  b1   = graph.cond  ( 'b1' ) ## 1st derivative at start point
+#  b2   = graph.cond  ( 'b2' ) ## 2nd derivative at the begin
+#  e1   = graph.cond  ( 'e1' ) ## 1st derivative at start point 
+#  e2   = graph.cond  ( 'e2' ) ## 2nd derivative at the end 
+#  @endcode
+def _gr_bcond_  ( graph , opts )  :
+    """ Get possible boundary  conditions for  graphs
+    >>> graph = ...
+    >>> b1   = graph.bcond  ( 'b1' ) ## 1st derivative at start point
+    >>> b2   = graph.bcond  ( 'b2' ) ## 2nd derivative at the begin
+    >>> e1   = graph.bcond  ( 'e1' ) ## 1st derivative at start point 
+    >>> e2   = graph.bcond  ( 'e2' ) ## 2nd derivative at the end 
+    """
+    assert  2<= len ( graph ), 'At least two points are required for get a boundary condditions!'
+    
+    opts = opts.lower()
+    
+    assert opts in ( 'b1' , 'e1' , 'b2' , 'e2' ), 'Invalid boundary condition %s is requested' % opts
+
+    gr = graph.sorted()
+    
+    if   opts == 'b1' :
+        
+        x0 , y0 = gr.point (  0 )
+        x1 , y1 = gr.point (  1 )
+        
+        return ( y1 - y0 ) / ( x1 - x0 )
+    
+    elif opts == 'e1' :
+        
+        x0 , y0 = gr.point ( -2 )
+        x1 , y1 = gr.point ( -1 )
+        
+        return ( y1 - y0 ) / ( x1 - x0 )
+
+    assert  3<= len ( graph ), 'At least three points are required for get a boundary condditions!'
+
+    if opts == 'b2' :
+        
+        x0 , y0 = gr.point (  0 )
+        x1 , y1 = gr.point (  1 )
+        x2 , y2 = gr.point (  2 )
+        
+    elif opts == 'e2' : 
+    
+        x0 , y0 = gr.point ( -3 )
+        x1 , y1 = gr.point ( -2 )
+        x2 , y2 = gr.point ( -1 )
+        
+    dx01 = x0 - x1
+    dx02 = x0 - x2
+    dx12 = x1 - x2
+        
+    return 2 * ( y0 * dx12 - y1 * dx02 + y2 * dx01 ) / ( dx01 * dx02 * dx12 )
+
+    
+        
+ROOT.TGraph            .bcond  =   _gr_bcond_
+    
+
 
 # =============================================================================
 ## Convert the histogram to into "Laffery-Wyatt" graph
@@ -2764,8 +2919,6 @@ def lw_graph ( histo , func ) :
     return _lw_graph_ ( histo , func ) 
 
 
-pos_infinity = float('+inf')
-neg_infinity = float('-inf')
 # =============================================================================
 ## Create a graph, that represents the area between two curves/functions:
 #  @code
@@ -2883,6 +3036,135 @@ def fill_area ( fun1                     ,
     graph.SetFillStyle(3013) 
     return graph 
 
+# ==============================================================================
+##  transpose the arrow
+#   @code
+#   a = ROOT.TArrow ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _ar_transpose_ (  arrow ) :
+    """Transpose the arrow
+    >>>  = ROOT.TArrow ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TArrow()
+    arrow.Copy ( na )
+
+    na.SetX1 ( arrow.GetY1 () )  
+    na.SetY1 ( arrow.GetX1 () )  
+    na.SetX2 ( arrow.GetY2 () )  
+    na.SetY2 ( arrow.GetX2 () )  
+
+    return na
+
+ROOT.TArrow.transpose = _ar_transpose_
+ROOT.TArrow.T         = _ar_transpose_
+
+# ==============================================================================
+##  transpose the box
+#   @code
+#   a = ROOT.TBox ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _box_transpose_ ( box  ) :
+    """Transpose the box
+    >>>  = ROOT.TBox ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TBox()
+    box.Copy ( na )
+
+    na.SetX1 ( box.GetY1 () )  
+    na.SetY1 ( box.GetX1 () )  
+    na.SetX2 ( box.GetY2 () )  
+    na.SetY2 ( box.GetX2 () )  
+
+    return na
+
+ROOT.TBox.transpose = _box_transpose_
+ROOT.TBox.T         = _box_transpose_
+
+# ==============================================================================
+##  transpose the line 
+#   @code
+#   a = ROOT.TLine ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _line_transpose_ ( line  ) :
+    """Transpose the line
+    >>>  = ROOT.TBox ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    na = ROOT.TLine()
+    line.Copy ( na )
+
+    na.SetX1 ( line.GetY1 () )  
+    na.SetY1 ( line.GetX1 () )  
+    na.SetX2 ( line.GetY2 () )  
+    na.SetY2 ( line.GetX2 () )  
+
+    return na
+
+ROOT.TLine.transpose = _line_transpose_
+ROOT.TLine.T         = _line_transpose_
+
+# ==============================================================================
+##  transpose the text
+#   @code
+#   a = ROOT.TText ( ... )
+#   aT1 = a.transpose ()
+#   aT2 = a.T()   ## ditto
+#   @endcode 
+def _text_transpose_ ( text ) :
+    """Transpose the line
+    >>>  = ROOT.TText ( ... )
+    >>> aT1 = a.transpose ()
+    >>> aT2 = a.T()   ## ditto
+    """
+    TEXT = type ( text ) 
+    na   = TEXT ( text )
+    ##
+    na.SetX ( text.GetY () )
+    na.SetY ( text.GetX () )
+    na.SetTextAngle ( 90 - text.GetTextAngle () )
+    
+    ## al = text.GetTextAlign ()
+    ## a1 , a2  = divmod ( al , 10 )
+    ## na.SetTextAlign ( 10 * ( 4 - a1 ) + 4 - a2  )
+
+    return na 
+    
+ROOT.TText.transpose = _text_transpose_
+ROOT.TText.T         = _text_transpose_
+
+
+# =============================================================================
+## Use <code>TSpline</code> as a function
+#  @code
+#  spline = ...
+#  value = spline ( 10  ) 
+#  @endcode
+#  See TSpline
+#  See TSpline3
+#  See TSpline5
+def _spl_call_ ( spline , x ) :
+    """ Use `TSpline`as a function
+    >>> spline = ...
+    >>> value = spline ( 10  ) 
+    - see ROOT.TSpline
+    - see ROOT.TSpline3
+    - see ROOT.TSpline5
+    """
+    return spline.Eval ( x )
+
+ROOT.TSpline. __call__  = _spl_call_
+
 
 # =============================================================================
 _decorated_classes_ = (
@@ -2890,8 +3172,14 @@ _decorated_classes_ = (
     ROOT.TH1D              ,
     ROOT.TGraph            , 
     ROOT.TGraphErrors      ,
-    ROOT.TGraphAsymmErrors 
+    ROOT.TGraphAsymmErrors ,
+    ROOT.TArrow            ,  
+    ROOT.TBox              ,
+    ROOT.TLine             , 
+    ROOT.TText             ,
+    ROOT.TSpline 
     )
+
 
 _new_methods_      = (
     #
@@ -2905,9 +3193,27 @@ _new_methods_      = (
     ROOT.TGraph       . xmax          ,
     ROOT.TGraph       . ymax          ,
     #
+    ROOT.TMultiGraph  . xmin          , 
+    ROOT.TMultiGraph  . ymin          ,
+    ROOT.TMultiGraph  . xmax          , 
+    ROOT.TMultiGraph  . ymax          ,
+    #
+    ROOT.TMultiGraph  . xminmax       , 
+    ROOT.TMultiGraph  . yminmax       ,
+    ROOT.TMultiGraph  .  minmax       ,
+    #
     ROOT.TGraph       . xminmax       ,
     ROOT.TGraph       . yminmax       ,
     ROOT.TGraph       .  minmax       ,
+    ROOT.TGraph       .  bb           ,
+    #
+    ROOT.TGraphErrors . xminmax       ,
+    ROOT.TGraphErrors . yminmax       ,
+    ROOT.TGraphErrors .  minmax       ,
+    #
+    ROOT.TGraphAsymmErrors . xminmax       ,
+    ROOT.TGraphAsymmErrors . yminmax       ,
+    ROOT.TGraphAsymmErrors .  minmax       ,
     #
     ROOT.TGraph       . __getitem__   ,
     ROOT.TGraph       . __setitem__   ,
@@ -2971,6 +3277,9 @@ _new_methods_      = (
     ROOT.TGraph . __probit__ ,
     ROOT.TGraph . __pow__    ,
     #
+    ROOT.TGraph . append     ,
+    ROOT.TGraph . swap       ,    
+    #
     ROOT.TGraphErrors . __getitem__   ,
     ROOT.TGraphErrors . __setitem__   ,
     ROOT.TGraphErrors .     items     ,
@@ -2980,6 +3289,7 @@ _new_methods_      = (
     ROOT.TGraphErrors . ymin          ,
     ROOT.TGraphErrors . xmax          ,
     ROOT.TGraphErrors . ymax          , 
+    ROOT.TGraphErrors .  bb           ,
     #
     ROOT.TGraphErrors .  __mul__      , 
     ROOT.TGraphErrors . __rmul__      , 
@@ -3017,6 +3327,7 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors . ymin        ,
     ROOT.TGraphAsymmErrors . xmax        ,
     ROOT.TGraphAsymmErrors . ymax        ,
+    ROOT.TGraphAsymmErrors . bb          ,
     #
     ROOT.TGraphAsymmErrors .  __mul__      , 
     ROOT.TGraphAsymmErrors . __rmul__      , 
@@ -3050,11 +3361,13 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors .__getslice__  ,
     #
     ROOT.TGraph            .sorted        ,
-    ROOT.TGraphErrors      .sorted        ,
-    ROOT.TGraphAsymmErrors .sorted        ,
     #
     ROOT.TGraph            .filter        ,
     ROOT.TGraph            .remove        ,
+    ROOT.TGraph            .merge         ,
+    ROOT.TGraph            .spline3       ,
+    ROOT.TGraph            .bcond         ,
+    ROOT.TGraph            .__hash__      ,
     ##
     ROOT.TGraph.transpose                 ,
     ROOT.TGraph.T                         ,     
@@ -3063,6 +3376,8 @@ _new_methods_      = (
     ROOT.TGraphAsymmErrors.transpose      ,
     ROOT.TGraphAsymmErrors.T              ,
     ##
+    ROOT.TSpline          . __call__      , 
+    ## 
     _color_   ,
     _red_     ,
     _blue_    ,
@@ -3088,6 +3403,15 @@ _new_methods_      = (
     #
     ROOT.TH1D.lw_graph         , 
     ROOT.TH1F.lw_graph         ,
+    ##
+    ROOT.TArrow.transpose      ,
+    ROOT.TArrow.T              ,
+    ROOT.TBox.transpose        ,
+    ROOT.TBox.T                ,
+    ROOT.TLine.transpose       ,
+    ROOT.TLine.T               ,
+    ROOT.TText.transpose       ,
+    ROOT.TText.T               ,
     )
 
 # =============================================================================
@@ -3097,5 +3421,5 @@ if '__main__' == __name__ :
     docme ( __name__ , logger = logger )
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

@@ -20,6 +20,7 @@ import ostap.fitting.models as     Models
 from   ostap.core.core      import cpp, VE, dsID
 from   ostap.logger.utils   import rooSilent
 from   builtins             import range
+from   ostap.utils.timing   import timing 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -31,7 +32,7 @@ else :
 # =============================================================================
 
 ## make simple test mass 
-mass    = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 10 )
+mass    = ROOT.RooRealVar ( 'test_mass' , 'Some test mass' , 0 , 15 )
 
 ## book very simple data set
 varset  = ROOT.RooArgSet  ( mass )
@@ -39,50 +40,54 @@ dataset = ROOT.RooDataSet ( dsID() , 'Test Data set' , varset )
 
 mmin, mmax = mass.minmax()
 
-m1 = VE(3,0.500**2)
-m2 = VE(5,0.250**2)
-m3 = VE(7,0.125**2)
+m1 = VE(  4   , 0.125**2)
+m2 = VE(  7.5 , 0.200**2)
+m3 = VE( 11   , 0.125**2)
+
+N1 = 5000
+N2 = 1000
+N3 = 1000
 
 ## fill it with three gausissians, 5k events each
-for i in range(0,5000) :
+for i in range ( N1 ) :
     for m in (m1,m2,m3) : 
         mass.value = m.gauss () 
         dataset.add ( varset     )
 
 
 ## add 5k events of uniform background
-for i in range(0,5000) :
+for i in range ( N2 ) :
     mass.value = random.uniform ( *mass.minmax() )
     dataset.add ( varset   )
 
 ## make background less trivial:
-w1 = VE(4.0, 4**2 )
-w2 = VE(6.0, 4**2 )
-n1 = VE(2.0, 1**2 )
-n2 = VE(4.0, 1**2 )
+w1 = VE ( 6.0, 3**2 )
+w2 = VE ( 9.0, 3**2 )
+n1 = VE ( 3.0, 1**2 )
+n2 = VE (12.0, 1**2 )
 
-for i in range(1000) :
+for i in range ( N3 ) :
     for w in ( w1 , w2 , n1 , n2 ) :
         v = w.gauss()
         if v in mass :
             mass.value =  v 
             dataset.add(varset)            
 
-logger.info ('Dataset: %s' % dataset )  
+logger.info ('Dataset:\n%s' % dataset.table ( prefix = '# ' ) )   
 
-
+NT = 3.0 * N1 + N2 + 4 * N3 
 
 ## various fit components
 
-signal_1 = Models.Gauss_pdf ( 'G1'  , xvar = mass  , mean = m1.value() , sigma = m1.error() )  
-signal_2 = Models.Gauss_pdf ( 'G2'  , xvar = mass  , mean = m2.value() , sigma = m2.error() ) 
-signal_3 = Models.Gauss_pdf ( 'G3'  , xvar = mass  , mean = m3.value() , sigma = m3.error() )
+signal_1 = Models.Gauss_pdf ( 'G1'  , xvar = mass , mean = m1.value() , sigma = m1.error() )  
+signal_2 = Models.Gauss_pdf ( 'G2'  , xvar = mass , mean = m2.value() , sigma = m2.error() ) 
+signal_3 = Models.Gauss_pdf ( 'G3'  , xvar = mass , mean = m3.value() , sigma = m3.error() )
 
-wide_1   = Models.Gauss_pdf ( 'GW1' , xvar = mass  , mean = 4.0  , sigma = 4 )
-wide_2   = Models.Gauss_pdf ( 'GW2' , xvar = mass  , mean = 6.0  , sigma = 4 )
+wide_1   = Models.Gauss_pdf ( 'GW1' , xvar = mass , mean = w1.value() , sigma = w1.error() )
+wide_2   = Models.Gauss_pdf ( 'GW2' , xvar = mass , mean = w2.value() , sigma = w2.error() )
 
-narrow_1 = Models.Gauss_pdf ( 'GN1' , xvar = mass , mean = 2.0  , sigma =  1 )
-narrow_2 = Models.Gauss_pdf ( 'GN2' , xvar = mass , mean = 4.0  , sigma =  1 )
+narrow_1 = Models.Gauss_pdf ( 'GN1' , xvar = mass , mean = n1.value() , sigma = n1.error() )
+narrow_2 = Models.Gauss_pdf ( 'GN2' , xvar = mass , mean = n2.value() , sigma = n2.error() )
 
 
 # =============================================================================
@@ -100,39 +105,20 @@ def test_extended1 () :
         others           = [ narrow_1 , narrow_2 ] , 
         suffix           = '_a'
         )
- 
-    with rooSilent() :
-        
-        ## signals
-        model.S[0].fix ( 5000 )
-        model.S[1].fix ( 5000 )
-        model.S[2].fix ( 5000 )
+
+    ## signals
+    model.S = N1 , N1 , N1 
     
-        ## backgrounds 
-        model.B[0].value = 5000 
-        model.B[1].value = 1000 
-        model.B[2].value = 1000 
-        
-        ## "components"
-        model.C[0].value = 1000
-        model.C[1].value =  500
-        
-        r, f = model.fitTo ( dataset , draw = False )
-
-        model.S[0].release() 
-        model.S[1].release()
-        model.S[2].release()
-        
-        model.B[0].release()
-
-        r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-        model.B[1].release()
-        model.C[0].release() 
-        
-    r, f = model.fitTo ( dataset , draw = True, silent = True )
-
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    ## backgrounds 
+    model.B = N2 , N3 , N3 
+    
+    ## "components"
+    model.C = N3 , N3 
+    
+    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True  , silent = True )
+    
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ') ) ) 
 
 
 # =============================================================================
@@ -153,20 +139,19 @@ def test_extended2 () :
         combine_backgrounds =  True  , ## ATTENTION!
         suffix              = '_b'
         )
-    
 
-    with rooSilent() :
-        model.S.fix ( 15000 )
-        model.B.fix (  7000 )
-        model.C.fix (  2000 )
-        r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-    model.S.release() 
-    model.B.release() 
-    model.C.release() 
-    r, f = model.fitTo ( dataset , draw = True , silent = True )
+    model.S  = N1 + N1 + N1 
+    model.B  = N2 + N3 + N3 
+    model.C  = N3 + N3
+
+    model.fS = N1 * 1.0 / ( N1 + N1 + N1 ) , N1 * 1.0 / ( N1 + N1 )
+    model.fB = N2 * 1.0 / ( N2 + N3 + N3 ) , N3 * 1.0 / ( N3 + N3 )
+    model.fC = N3 * 1.0 / ( N3 + N3 ) 
     
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    r, f = model.fitTo ( dataset , draw = False , silent = True )        
+    r, f = model.fitTo ( dataset , draw = True  , silent = True )
+    
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended multi-component fit'
@@ -185,17 +170,12 @@ def test_nonextended1 () :
         suffix              = '_c'
         )
 
-    model.F[0].setVal ( 0.20 )
-    model.F[1].setVal ( 0.25 )
-    model.F[2].setVal ( 0.36 )
+    model.F = 0.2 , 0.25 , 0.36 , 0.65 , 0.05 , 0.25 , 0.50 
 
-    model.F[3].setVal ( 0.65 )
-    model.F[4].setVal ( 0.05 )
-    model.F[5].setVal ( 0.25 )
-    model.F[6].setVal ( 0.50 )
+    r, f = model.fitTo ( dataset , draw = False , silent = True )
+    r, f = model.fitTo ( dataset , draw = True  , silent = True )
     
-    r, f = model.fitTo ( dataset , draw = True , silent = True )
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended combined multi-component fit
@@ -216,35 +196,17 @@ def test_nonextended2 () :
         extended            = False  , ## ATTENTION!
         suffix              = '_d'
         )
-                  ## fB_1    3.3333e-01    9.4219e-01 +/-  7.64e-02  <none>
-                  ## fB_2    3.3333e-01    4.6419e-04 +/-  6.25e-01  <none>
-                  ## fC_1    5.0000e-01    4.9921e-01 +/-  3.95e-02  <none>
-                  ## fS_1    3.3333e-01    3.3002e-01 +/-  5.35e-03  <none>
-                  ## fS_2    3.3333e-01    4.9896e-01 +/-  5.60e-03  <none>
-                  ##  f_1    3.3333e-01    6.3647e-01 +/-  6.05e-03  <none>
-                  ##  f_2    3.3333e-01    7.3854e-01 +/-  1.71e-02  <none>
 
-    with rooSilent() :
-        model.F[0] .fix( 0.63 ) 
-        model.F[1] .fix( 0.74 )
+    model.F = N1 * 3.0 / ( 3 * N1 + N2 + 4 * N3 ) , ( N2 + N3 + N3 ) * 1.0/ ( N2 + 4 * N3 )
+    
+    model.fS = N1 * 1.0 / ( N1 + N1 + N1 ) , N1 * 1.0 / ( N1 + N1 )
+    model.fB = N2 * 1.0 / ( N2 + N3 + N3 ) , N3 * 1.0 / ( N3 + N3 )
+    model.fC = N3 * 1.0 / ( N3 + N3 ) 
+
+    r, f = model.fitTo ( dataset , draw = False , silent = True )        
+    r, f = model.fitTo ( dataset , draw = True  , silent = True )        
         
-        model.fB[0].setVal( 0.95 )
-        model.fB[1].setVal( 0.01 )
-        model.fC[0].fix   ( 0.50 )
-        model.fS[0].fix   ( 0.33 )
-        model.fS[1].fix   ( 0.50 )
-        r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-        model.F[0]. release() 
-        model.F[1] .release() 
-        
-        model.fC[0].release() 
-        model.fS[0].release() 
-        model.fS[1].release()
-        
-        r, f = model.fitTo ( dataset , draw = True , silent = True )        
-        
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
 
 # ==============================================================================
 ## Test non-extended multi-component non-recursive fit'
@@ -260,43 +222,39 @@ def test_nonextended3 () :
         otherbackgrounds    = [ wide_1 , wide_2 ] ,
         others              = [ narrow_1 , narrow_2  ] , 
         extended            = False , ## ATTENTION!
-        recursive           = False ,  ## ATTENTION!
+        recursive           = False , ## ATTENTION!
         suffix              = "_e"
         )
     
 
     with rooSilent() :
         
-        model.F[0].fix    ( 0.20 )
-        model.F[1].fix    ( 0.20 )
-        model.F[2].fix    ( 0.20 )
-        model.F[3].fix    ( 0.25 )
-        
-        model.F[4].setVal ( 0.01  )
-        model.F[5].setVal ( 0.02  )
-        model.F[6].setVal ( 0.02  )
+        model.F = N1 / NT , N1 / NT , N1 / NT , \
+                  N2 / NT , N3 / NT , N3 / NT , \
+                  N3 / NT , N3 / NT 
         
         r, f = model.fitTo ( dataset , draw = False , silent = True )
-        
-        model.F[0].release() 
-        model.F[1].release() 
-        model.F[2].release()
-        model.F[3].release()  
-        
         r, f = model.fitTo ( dataset , draw = True , silent = True )
         
-    logger.info ( 'Model %s Fit result \n#%s ' % ( model.name , r ) ) 
-    
+    logger.info ( 'Model %s Fit result\n%s' % ( model.name , r.table ( prefix = '# ' ) ) ) 
+
 # =============================================================================
 if '__main__' == __name__ :
 
-    pass
-
-    test_extended1    () 
-    test_extended2    () 
-    test_nonextended1 () 
-    test_nonextended2 () 
-    test_nonextended3 () 
+    with timing ( "Extended1"     , logger ) : 
+        test_extended1    ()
+        
+    with timing ( "Extended2"     , logger ) : 
+        test_extended2    ()
+        
+    with timing ( "non-Extendd1" , logger ) : 
+        test_nonextended1 ()
+        
+    with timing ( "non-Extended2" , logger ) : 
+        test_nonextended2 () 
+        
+    with timing ( "non-Extended3" , logger ) : 
+        test_nonextended3 () 
     
 # =============================================================================
 ##                                                                      The END 

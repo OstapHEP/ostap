@@ -44,23 +44,68 @@ namespace Ostap
     public:
       // ======================================================================
       /// evaluate 2-body phase space
-      double operator () ( const double x ) const ;
+      inline double operator () ( const double m ) const 
+      { return phasespace ( m , m_m1 , m_m2 ) ; }
       /// integral
       double integral    ( const double xmin , const double xmax ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      /// get the momentum at center of mass
-      double                q_  ( const double x ) const ;
-      /// ditto but as complex
-      std::complex<double>  q1_ ( const double x ) const ;
+      /// get a phase space 
+      inline double        rho  ( const double m ) const 
+      { return phasespace ( m , m_m1 , m_m2 ) ;}
+      // ======================================================================
+      /** get (a complex) phase space 
+       *  real for x >= threshold , imaginary for x< threshold 
+       */
+      std::complex<double> rho1 ( const double m ) const { return rho1_s (  m * m ) ; }
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// get a phase space as function of s 
+      inline double        rho_s  ( const double s ) const 
+      { return phasespace_s ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ;}
+      // ======================================================================
+      /** get (a complex) phase space 
+       *  real for x >= threshold , imaginary for x< threshold 
+       */
+      std::complex<double> rho1_s ( const double s ) const ;
       // ======================================================================
     public:
       // ======================================================================
-      double m1        () const { return m_m1 ; }
-      double m2        () const { return m_m2 ; }
-      double lowEdge   () const { return m1 () + m2 () ; }
-      double threshold () const { return m1 () + m2 () ; }
+      /// get the momentum at center of mass
+      inline double                q    ( const double m ) const
+      { return q    ( m , m_m1 , m_m2 ) ; }
+      /// ditto but as complex
+      inline std::complex<double>  q1   ( const double m ) const 
+      { return q1   ( m , m_m1 , m_m2 ) ; }
+      /// get the momentum at given s 
+      inline double                q_s  ( const double s ) const 
+      { return q_s  ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ; }
+      /// ditto but as complex 
+      inline std::complex<double>  q1_s ( const double s ) const 
+      { return q1_s ( s , m_m1 * m_m1 , m_m2 * m_m2 ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** get the mass for the given momentum
+       *  \f$ m = \sqrt{m_1^2+q^2} + \sqrt{m_2^2+q^2}\f$
+       */
+      double q2m ( const double q ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the first mass 
+      inline double m1        () const { return m_m1          ; }
+      /// the second mass 
+      inline double m2        () const { return m_m2          ; }
+      /// threshold 
+      inline double lowEdge   () const { return m1 () + m2 () ; }
+      /// threshold 
+      inline double threshold () const { return m1 () + m2 () ; }
+      ///  threshols for s 
+      inline double s_threshold () const 
+      { const double a = threshold() ; return a * a ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -109,6 +154,32 @@ namespace Ostap
         const double m1 ,
         const double m2 ) ;
       // ======================================================================
+      /** calculate the particle momentum in the rest frame
+       *  \f[ q = \frac{1}{2}\frac{ \lambda^{\frac{1}{2}}
+       *        \left( m^2 , m_1^2, m_2^2 \right) }{ m }\f],
+       *  @param s    the squared mass
+       *  @param m2_1 the squared mass of the first particle
+       *  @param m2_2 the srqured mass of the second particle
+       *  @return the momentum in rest frame (physical values only)
+       */
+      static double  q_s
+      ( const double s    ,
+        const double m2_1 ,
+        const double m2_2 ) ;
+      // ======================================================================
+      /** calculate the particle momentum in rest frame
+       *  - real for physical case 
+       *  - imaginary for non-physical case (below the threshold)
+       *  @param s    the squared mass
+       *  @param m2_1 the squared  mass of the first particle
+       *  @param m2_2 the squared mass of the second particle
+       *  @return the momentum in rest frame  (imaginary for non-physical branch)
+       */
+      static std::complex<double> q1_s
+      ( const double s    ,
+        const double m2_1 ,
+        const double m2_2 ) ;
+      // ======================================================================
       /** calculate the phase space for   m -> m1 + m2
        *  \f[ \Phi = \frac{1}{8\pi} \left( \frac{ \lambda^{\frac{1}{2}}
        *       \left( m^2 , m_1^2, m_2^2 \right) }{ m^2 }\right)^{2L+1}\f],
@@ -116,14 +187,29 @@ namespace Ostap
        *  @param m the mass
        *  @param m1 the mass of the first particle
        *  @param m2 the mass of the second particle
-       *  @param L  the orbital momentum 
        *  @return two-body phase space
        */
       static double phasespace
-      ( const double         m      ,
-        const double         m1     ,
-        const double         m2     ,
-        const unsigned short L  = 0 ) ;
+      ( const double         m        ,
+        const double         m1       ,
+        const double         m2       ,  
+        const unsigned short L    = 0 ) 
+      { return phasespace_s ( m * m , m1 * m1 , m2 * m2 , L ) ; }
+      // ======================================================================
+      /** calculate the phase space for   m -> m1 + m2
+       *  \f[ \Phi = \frac{1}{8\pi} \left( \frac{ \lambda^{\frac{1}{2}}
+       *       \left( m^2 , m_1^2, m_2^2 \right) }{ m^2 }\right)^{2L+1}\f],
+       *  where \f$\lambda\f$ is a triangle function
+       *  @param s    the squared mass
+       *  @param m2_1 the squared mass of the first particle
+       *  @param m2_1 the squared mass of the second particle
+       *  @return two-body phase space
+       */
+      static double phasespace_s
+      ( const double         s        ,
+        const double         m2_1     ,
+        const double         m2_2     , 
+        const unsigned short L    = 0 ) ;
       // ======================================================================
     private:
       // ======================================================================
@@ -131,6 +217,34 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;  
+    // ========================================================================
+    /** @class sPhaseSpace2
+     *  Two-body phase space as function of s 
+     *  @see Ostap::Math::PhaseSpace2
+     *  @see Ostap::Math::PhaseSpace2::phasespace_s
+     *  @see Ostap::Math::PhaseSpace2::phasespace_s
+     */
+    class sPhaseSpace2 
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor from two masses
+      sPhaseSpace2 ( const double m1 = 0 , 
+                     const double m2 = 1 ) ;
+      // ======================================================================
+      /// Two-body phase space as function of s
+      inline double operator () ( const double s ) const 
+      { return PhaseSpace2::phasespace_s ( s , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// the first mass squared
+      double m_m2_1 ; // the first mass squared
+      /// the second mass squared
+      double m_m2_2 ; // the second mass squared
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class PhaseSpace3s
      *  Symmetric form of 3-body phase space 
@@ -140,13 +254,21 @@ namespace Ostap
      *         Physics Sydney, Australia, July 8-11, 2002}",
      *  @see http://arxiv.org/abs/hep-th/0209233
      *
-     * three-body phase space, analytic symmetric expression via 
+     *  Three-body phase space, analytic symmetric expression via 
      *  elliptic  integrals 
      *  @see https://indico.cern.ch/event/368497/contributions/1786992/attachments/1134067/1621999/davydychev.PDF
      *  @see http://cds.cern.ch/record/583358/files/0209233.pdf
      *  @see https://www.researchgate.net/publication/2054534_Three-body_phase_space_symmetrical_treatments
+     *
+     *  @see A.Davydychev and R.Delbourgo,
+     *       "Explicitly symmetrical treatment of three body phase space",
+     *        J.Phys. A37 (2004) 4871, arXiv:hep-th/0311075",
+     *        doi = 10.1088/0305-4470/37/17/016
+     *  @see https://arxiv.org/abs/hep-th/0311075
+     *  @see https://iopscience.iop.org/article/10.1088/0305-4470/37/17/016
+     *
      *  @see Ostap::Kinematics::phasespace3     
-     *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2019-10-31
      */
     class PhaseSpace3s
@@ -160,8 +282,8 @@ namespace Ostap
        *  @param m3 the mass of the third  particle
        */
       PhaseSpace3s ( const double         m1 = 0 ,
-                     const double         m2 = 1 ,
-                     const double         m3 = 2 ) ;
+                     const double         m2 = 0 ,
+                     const double         m3 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================      
@@ -176,7 +298,10 @@ namespace Ostap
       double m2 () const { return m_m2 ; }
       double m3 () const { return m_m3 ; }
       // ======================================================================
-      double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
+      /// low edge 
+      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
+      /// threshold == lowEdge 
+      double threshold () const { return lowEdge() ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -200,17 +325,26 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second mass 
+      ///  set the third mass 
+      bool setM3  ( const double value ) ; // set the  third mass 
+     // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag 
       std::size_t tag ()  const ;
       // ======================================================================
     private:
       // ======================================================================
       /// the mass of the first particle
-      double         m_m1 ; // the mass of the first particle
+      double         m_m1 { 0 } ; // the mass of the first particle
       /// the mass of the second particle
-      double         m_m2 ; // the mass of the second particle
+      double         m_m2 { 0 } ; // the mass of the second particle
       /// the mass of the third particle
-      double         m_m3 ; // the mass of the third  particle
+      double         m_m3 { 0 } ; // the mass of the third  particle
       // ======================================================================
     private:
       // ======================================================================
@@ -237,10 +371,11 @@ namespace Ostap
        *  @param l2 the angular momentum between the pair and 3rd particle
        */
       PhaseSpace3 ( const double         m1 = 0 ,
-                    const double         m2 = 1 ,
-                    const double         m3 = 2 ,
+                    const double         m2 = 0 ,
+                    const double         m3 = 0 ,
                     const unsigned short l1 = 0 ,
                     const unsigned short l2 = 0 ) ;
+      // ======================================================================
       /** constructor from three masses
        *  @param l1 the angular momentum between 1st and 2nd particle
        *  @param l2 the angular momentum between the pair and 3rd particle
@@ -277,7 +412,15 @@ namespace Ostap
       double m2 () const { return m_m2 ; }
       double m3 () const { return m_m3 ; }
       // ======================================================================
-      double lowEdge () const { return m_m1 + m_m2 + m_m3 ; }
+      /// low edge 
+      double lowEdge   () const { return m_m1 + m_m2 + m_m3 ; }
+      /// threshold == lowEdge 
+      double threshold () const { return lowEdge() ; }
+      // ======================================================================
+      /// get l1 
+      unsigned short l1 () const { return m_l1 ; } // get l1 
+      /// get l2
+      unsigned short l2 () const { return m_l2 ; } // get l2
       // ======================================================================
     public:
       // ======================================================================
@@ -289,21 +432,30 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      ///  set the first mass 
+      bool setM1  ( const double value ) ; // set the  first mass 
+      ///  set the second mass 
+      bool setM2  ( const double value ) ; // set the second mass 
+      ///  set the third mass 
+      bool setM3  ( const double value ) ; // set the  third mass 
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag 
       std::size_t tag ()  const ;
       // ======================================================================
     public:
       // ======================================================================
       /// the mass of the first particle
-      double         m_m1 ; // the mass of the first particle
+      double         m_m1 { 0 } ; // the mass of the first particle
       /// the mass of the second particle
-      double         m_m2 ; // the mass of the second particle
+      double         m_m2 { 0 } ; // the mass of the second particle
       /// the mass of the third particle
-      double         m_m3 ; // the mass of the third  particle
+      double         m_m3 { 0 } ; // the mass of the third  particle
       /// the orbital momentum of the first pair
-      unsigned short m_l1 ; // the orbital momentum of the first pair
+      unsigned short m_l1 { 0 } ; // the orbital momentum of the first pair
       /// the orbital momentum between the pair and the third particle
-      unsigned short m_l2 ; // the orbital momentum between the pair and the third particle
+      unsigned short m_l2 { 0 } ; // the orbital momentum between the pair and the third particle
       // ======================================================================      
     private:
       // ======================================================================
@@ -318,14 +470,125 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace2 ;    // integration workspace
       // ======================================================================
     } ;
+
+    // ========================================================================
+    /** @class PhaseSpaceNL
+     *  Function epresenting the approximation for
+     *  the mass distribution of \f$l\f$-particles from \f$n\f$-body
+     *  phase space decay:
+     *  for  \f$ 2\le l < n \$ it is defined as  
+     *  \f[ \Phi_{l,n}(x;x_{low},x_{high}) \equiv  
+     *       C y^{\frac{3l-5}{2}}\left(1-y\right)^{\frac{3(n-l)-2}{2}}\f]
+     *  where 
+     *  - \f$ y\equiv \frac{x-x_{low}}{x_{high}-x_{low}}\f$ 
+     *  - \f$ C\f$ is a normalization constant, such as 
+     *        \f$ \int_{x_{low}}^{x_{high}} \Phi_{l,n}(x) d x = 1\f$ 
+     *  - \f$x_{low}= \sum_{i}^{l}m_i\f$ - is a lower threshodl for mass 
+     *     of \f$l\f$-particles 
+     *  - \f$x_{high}= M - \sum{i=l+1}{n}m_i\f$, is an upper threshold for 
+     *     mass of \f$l\f$-particles from \f$n\f$-body decay of the particle
+     *     with mass \f$M\f$
+     * 
+     *  It also includes two specific cases 
+     *  - \f$ 0 == l \f$, \f$ 1 \le n \f$
+     *  \f[ \Phi_{0,n}(x;x_{low},x_{high}) \propto   
+     *     \left(1-y\right)^{ \frac{3n-2}{2} } \f]
+     *  - \f$ 2 \le \f$, \f$ n = 0  \f$
+     *  \f[ \Phi_{l,0}(x;x_{low},x_{high}) \propto   
+     *     \left(y\right)^{ \frac{3l-5}{2} } \f]
+     *
+     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+     *  @date 2011-11-30
+     */
+    class PhaseSpaceNL
+    {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** constructor from thresholds and number of particles
+       *  @param low  the low-mass  threshold
+       *  @param high the high-mass threshold
+       *  @param l    how many particles we consider
+       *  @param n    total number of particles ( N>L!)
+       */
+      PhaseSpaceNL ( const double         low  =  0 ,
+                     const double         high = 10 ,
+                     const unsigned short l    =  2 ,
+                     const unsigned short n    =  3 ) ;
+      /// destructor
+      ~PhaseSpaceNL () ;                                     // destructor
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate N/L-body phase space
+      double operator () ( const double x ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      double          lowEdge () const { return m_threshold1 ; }
+      double         highEdge () const { return m_threshold2 ; }
+      unsigned short       L  () const { return m_L          ; }
+      unsigned short       N  () const { return m_N          ; }
+      // ======================================================================
+      double xmin () const { return  lowEdge () ; }
+      double xmax () const { return highEdge () ; }      
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set the thresholds
+      bool setThresholds
+      ( const double mn ,
+        const double mx ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral
+      double integral () const ;
+      /// get the integral between low and high limits
+      double integral ( const double low  ,
+                        const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag  
+      std::size_t tag () const ; // get the hash 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the threshold
+      double         m_threshold1 ; // the threshold
+      double         m_threshold2 ; // the threshold
+      /// number of particles
+      unsigned short m_N          ; // number of particles
+      /// number of particles
+      unsigned short m_L          ; // number of particles
+      /// normalization
+      double         m_norm       ; // normalization
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// integration workspace
+      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
+      // ======================================================================
+    } ;
     // ========================================================================
     /** @class PhaseSpaceLeft
-     *  Function to represent N-body phase space near left-threshold
+     *  Function to represent N-body phase space near the left-threshold
      *  @author Vanya BELYAEV Ivan.BElyaev@itep.ru
      *  @date 2011-11-30
      */
     class  PhaseSpaceLeft
     {
+      // ======================================================================
+    public:
+      // ======================================================================
+      /** @enum Case
+       *  The actual case of the phase space 
+       */
+      enum Case { Generic    , 
+                  TwoBody    , 
+                  ThreeBody  , 
+                  ThreeBodyS } ;
       // ======================================================================
     public:
       // ======================================================================
@@ -337,8 +600,21 @@ namespace Ostap
       PhaseSpaceLeft ( const std::vector<double>&      masses        , 
                        const double                    scale     = 1 ) ;      
       /// special case: true 2-body phasespace 
-      PhaseSpaceLeft ( const PhaseSpace2& ps2        , 
-                       const double       scale =  1 ) ;
+      PhaseSpaceLeft ( const PhaseSpace2&  ps2        , 
+                       const double        scale =  1 ) ;
+      /// special case: true 3-body phases pace 
+      PhaseSpaceLeft ( const PhaseSpace3&  ps2        , 
+                       const double        scale =  1 ) ;
+      /// special case: true 3-body phasespace 
+      PhaseSpaceLeft ( const PhaseSpace3s& ps3        , 
+                       const double        scale =  1 ) ;
+      /// special case: L from N phasespace 
+      PhaseSpaceLeft ( const PhaseSpaceNL& ps         , 
+                       const double        scale =  1 ) ;
+      /// copy contructor 
+      PhaseSpaceLeft ( const PhaseSpaceLeft&  right ) ;
+      /// move contructor 
+      PhaseSpaceLeft (       PhaseSpaceLeft&& right ) = default ;
       /// destructor
       ~PhaseSpaceLeft () ;                                       // destructor
       // ======================================================================
@@ -351,12 +627,10 @@ namespace Ostap
       // ======================================================================
       /// get the threshold 
       double         threshold  () const { return m_threshold ; }
-      /// get the number of particles : 0 means true 2-body! 
+      /// get the number of particles 
       unsigned short N          () const { return m_num       ; }
       /// get the scale 
       double         scale      () const { return m_scale     ; }
-      // ======================================================================
-      const PhaseSpace2& ps2    () const { return m_ps2       ; }
       // ======================================================================
     public: // integrals
       // ======================================================================
@@ -369,8 +643,28 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      /// specific case? 
+      Case ps_case () const 
+      {
+        return 
+          m_ps3  ? ThreeBody  :
+          m_ps3s ? ThreeBodyS :
+          m_ps2  ? TwoBody    : Generic ;
+      }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the tag  
       std::size_t tag   () const ; // get the hash 
+      // ======================================================================
+    public: // get specific phase space object (if defined) 
+      // ======================================================================
+      /// get true two-body   phase space (if defined) 
+      const PhaseSpace2*  ps2 () const { return m_ps2.get () ; }      
+      /// get true three-body phase space (if defined) 
+      const PhaseSpace3*  ps3 () const { return m_ps3.get () ; }
+      /// get true three-body phase space (if defined) 
+      const PhaseSpace3s* ps3s() const { return m_ps3s.get() ; }
       // ======================================================================
     private:
       // ======================================================================
@@ -380,8 +674,15 @@ namespace Ostap
       unsigned short m_num       { 0   } ; // number of particles
       /// the scale  factor 
       double         m_scale     { 1.0 } ; // the scale factor
+      // ======================================================================
+    private:
+      // ======================================================================
       /// true 2-body phase-space 
-      PhaseSpace2    m_ps2       {}      ;
+      std::unique_ptr<PhaseSpace2>   m_ps2  { nullptr } ;
+      /// true 3-body phase-space 
+      std::unique_ptr<PhaseSpace3>   m_ps3  { nullptr } ;
+      /// true 3-body phase-space 
+      std::unique_ptr<PhaseSpace3s>  m_ps3s { nullptr } ;
       // ======================================================================
     private:
       // ======================================================================
@@ -435,93 +736,6 @@ namespace Ostap
       unsigned short m_L         ; // number of particles
       // ======================================================================
     } ;  
-    // ========================================================================
-    /** @class PhaseSpaceNL
-     *  Function epresenting the approximation for
-     *  the mass distribution of \f$l\f$-particles from \f$n\f$-body
-     *  phase space decay:
-     *  \f[ \Phi_{l,n}(x;x_{low},x_{high}) \equiv  
-     *       C y^{\frac{3l-5}{2}}\left(1-y\right)^{\frac{3(n-l)-2}{2}}\f]
-     *  where 
-     *  - \f$ y\equiv \frac{x-x_{low}}{x_{high}-x_{low}}\f$ 
-     *  - \f$ C\f$ is a normalization constant, such as 
-     *        \f$ \int_{x_{low}}^{x_{high}} \Phi_{l,n}(x) d x = 1\f$ 
-     *  - \f$x_{low}= \sum_{i}^{l}m_i\f$ - is a lower threshodl for mass 
-     *     of \f$l\f$-particles 
-     *  - \f$x_{high}= M - \sum{i=l+1}{n}m_i\f$, is an upper threshold for 
-     *     mass of \f$l\f$-particles from \f$n\f$-body decay of the particle
-     *     with mass \f$M\f$
-     *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
-     *  @date 2011-11-30
-     */
-    class PhaseSpaceNL
-    {
-      // ======================================================================
-    public:
-      // ======================================================================
-      /** constructor from thresholds and number of particles
-       *  @param low  the low-mass  threshold
-       *  @param high the high-mass threshold
-       *  @param l    how many particles we consider
-       *  @param n    total number of particles ( N>L!)
-       */
-      PhaseSpaceNL ( const double         low  =  0 ,
-                     const double         high = 10 ,
-                     const unsigned short l    =  2 ,
-                     const unsigned short n    =  3 ) ;
-      /// destructor
-      ~PhaseSpaceNL () ;                                     // deststructor
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// evaluate N/L-body phase space
-      double operator () ( const double x ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      double          lowEdge () const { return m_threshold1 ; }
-      double         highEdge () const { return m_threshold2 ; }
-      unsigned short       L  () const { return m_L ; }
-      unsigned short       N  () const { return m_N ; }
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// set the thresholds
-      bool setThresholds
-      ( const double mn ,
-        const double mx ) ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the integral
-      double integral () const ;
-      /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
-      // ======================================================================
-    public:
-      // ======================================================================
-      /// get the tag  
-      std::size_t tag () const ; // get the hash 
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// the threshold
-      double         m_threshold1 ; // the threshold
-      double         m_threshold2 ; // the threshold
-      /// number of particles
-      unsigned short m_N          ; // number of particles
-      /// number of particles
-      unsigned short m_L          ; // number of particles
-      /// normalization
-      double         m_norm       ; // normalization
-      // ======================================================================
-    private:
-      // ======================================================================
-      /// integration workspace
-      Ostap::Math::WorkSpace m_workspace ;    // integration workspace
-      // ======================================================================
-    } ;
     // ========================================================================
     /** @class PSDalitz 
      *  @see Ostap::Kinematics::Dalitz
@@ -700,6 +914,108 @@ namespace Ostap
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
       // ======================================================================
     } ;
+    // ========================================================================
+    /** @class M2Q 
+     *  \f$ m \rightarrow q \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     *  @see Ostap::Math::PhaseSpace2::q_q
+     */
+    class M2Q  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      M2Q ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double m ) const 
+      { return Ostap::Math::PhaseSpace2::q_s ( m * m , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class S2Q 
+     *  \f$ s \rightarrow q \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q_s
+     */
+    class S2Q  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      S2Q ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double s ) const 
+      { return Ostap::Math::PhaseSpace2::q_s ( s , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Q2M 
+     *  \f$ q \rightarrow m \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     */
+    class Q2M  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      Q2M ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double q ) const 
+      { 
+        const double q2 = q <= 0 ? 0.0 : q * q ;
+        return std::sqrt ( m_m2_1 + q2 )  + std::sqrt ( m_m2_2 + q2 ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
+    // ========================================================================
+    /** @class Q2S 
+     *  \f$ q \rightarrow s \f$ transformation
+     *  @see Ostap::Math::PhaseSpace2::q
+     */
+    class Q2S  
+    {
+    public :
+      // ======================================================================
+      /// constructor from two masses 
+      Q2S ( const double m1 = 0 , const double m2 = 0 ) ;
+      /// the only one important method 
+      inline double operator () ( const double q ) const 
+      { 
+        const double q2   = q <= 0 ? 0.0 : q * q ;
+        const double e2_1 = m_m2_1 + q2 ;
+        const double e2_2 = m_m2_2 + q2 ;
+        //
+        return e2_1 + e2_2 + 2 * std::sqrt ( e2_1 * e2_2 ) ;
+      }
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the first mass squared 
+      double m_m2_1 { 0 } ;
+      /// the second mass squared 
+      double m_m2_2 { 0 } ;
+      // ======================================================================
+    };
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

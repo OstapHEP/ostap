@@ -22,13 +22,12 @@ __all__     = (
     'GenericTask' , ## very generic "template"  tasl 
     )
 # =============================================================================
+import sys, os
 from ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.parallel')
 else                      : logger = getLogger ( __name__         ) 
 # =============================================================================
 from ostap.parallel.task import  Task, GenericTask
-
-import os
 
 workers = 'PATHOS' , 'GAUDIMP'
 
@@ -47,28 +46,38 @@ if not worker :
         if not  worker in workers : worker = ''
 
 # ===============================================================================
-from sys import version_info  as python_version
-if 3 == python_version.major and 7 >= python_version.minor :
-    ## for python 3.6 dill fails to serialize ROOT objects
-    worker = 'GAUDIMP'
-    
+try : 
+    import dill 
+except ImportError :
+    dill = None    
+
+if ( 3 , 6 ) <= sys.version_info and dill :
+    dill_version   =  getattr ( dill , '__version__' , '' )
+    if not dill_version :  dill_version =  getattr ( dill , 'version' , '' )
+    DILL_PY3_issue = dill_version < '0.3'
+    if not DILL_PY3_issue :
+        from ostap.core.meta_info import root_info
+        ## DILL_PY3_issue = root_info < ( 6 , 23 )
+        DILL_PY3_issue = root_info < ( 6 , 24 , 6 )
+        
+    if DILL_PY3_issue : worker = 'GAUDIMP'
+
 # ===============================================================================
 
 if  'GAUDIMP' != worker :
     
     try :
-        from ostap.parallel.mp_pathos import WorkManager 
+        from ostap.parallel.parallel_pathos import WorkManager 
         logger.debug ('Use TaskManager from ostap.parallel.pathos')
     except ImportError :
-        from ostap.parallel.mp_gaudi  import WorkManager 
+        from ostap.parallel.parallel_gaudi  import WorkManager 
         logger.info  ('Use TaskManager from GaudiMP.Parallel'     )
 
 else :
     
-    from ostap.parallel.mp_gaudi  import WorkManager 
+    from ostap.parallel.parallel_gaudi  import WorkManager 
     logger.debug ('Use TaskManager from GaudiMP.Parallel'         )
 
-    
     
 # =============================================================================
 if '__main__' == __name__ :
@@ -86,5 +95,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

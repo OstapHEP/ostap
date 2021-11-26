@@ -143,12 +143,6 @@ __all__ = (
     'tmpdb'    ,   ## create TEMPORARY data base 
     )
 # =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' == __name__ : logger = getLogger ( 'ostap.io.bz2shelve' )
-else                      : logger = getLogger ( __name__             )
-# =============================================================================
-logger.debug ( "Simple generic (c)Pickle-based ``bzip2''-database"    )
-# =============================================================================
 from sys import version_info as python_version 
 # =============================================================================
 try:
@@ -172,7 +166,14 @@ import os, sys
 import bz2         ## use bz2 to compress DB-content 
 import shelve      ## 
 import shutil
-from ostap.io.compress_shelve import CompressShelf
+from   ostap.io.compress_shelve import CompressShelf
+from   ostap.io.dbase           import TmpDB 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__ : logger = getLogger ( 'ostap.io.bz2shelve' )
+else                      : logger = getLogger ( __name__             )
+# =============================================================================
+logger.debug ( "Simple generic (c)Pickle-based ``bzip2''-database"    )
 # =============================================================================
 ## @class Bz2Shelf
 #  ``Bzip2''-version of ``shelve''-database
@@ -192,7 +193,7 @@ class Bz2Shelf(CompressShelf):
     - 'n'  Always create a new, empty database, open for reading and writing
     """ 
     ## the known "standard" extensions: 
-    extensions = '.bz2' , 
+    extensions = '.tbz' , '.tbz2' , '.bz2' 
     ## 
     def __init__(
         self                                   ,
@@ -240,28 +241,44 @@ class Bz2Shelf(CompressShelf):
     
     # =========================================================================
     ## compress (bz2) the file into temporary location, keep original
-    def compress_file   ( self , filein ) :
+    def compress_files   ( self , files ) :
         """Compress (bz2) the file into temporary location, keep original
         """
-        import tempfile , io 
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db.bz2' )
-        with io.open ( filein , 'rb' ) as fin :
-            with bz2.open ( fileout , 'wb') as fout : 
-                shutil.copyfileobj ( fin , fout )            
-                return fileout 
-    
+        output = self.tempfile()
+        
+        import tarfile
+        with tarfile.open ( output , 'w:bz2' ) as tfile :
+            for file in files  :
+                _ , name = os.path.split ( file )
+                tfile.add ( file , name  )
+        ##
+        return output 
+
     # =========================================================================
     ## uncompress (bz2) the file into temporary location, keep original
     def uncompress_file ( self , filein ) :
         """Uncompress (bz2) the file into temporary location, keep original
         """
+        items  = []
+        tmpdir = self.tempdir ()
+        
+        ## 2) try compressed-tarfile 
+        import tarfile
+        if tarfile.is_tarfile ( filein ) : 
+            with tarfile.open ( filein  , 'r:*' ) as tfile :
+                for item in tfile  :
+                    tfile.extract ( item , path = tmpdir )
+                    items.append  ( os.path.join ( tmpdir , item.name ) )
+                items.sort() 
+                return tuple ( items )
+            
         import tempfile , io   
-        fd , fileout = tempfile.mkstemp ( prefix = 'tmp-' , suffix = '-db' )
+        fd , fileout = tempfile.mkstemp ( prefix = 'ostap-tmp-' , suffix = '-db' )
         with bz2.open ( filein  , 'rb' ) as fin : 
             with io.open ( fileout , 'wb' ) as fout : 
                 shutil.copyfileobj ( fin , fout )                
-                return fileout
-    
+                return fileout , 
+            
     # ==========================================================================
     ## compress (bzip2)  the item  using <code>bz2.compress</code>
     def compress_item ( self , value ) :
@@ -348,41 +365,37 @@ def open ( filename                  ,
 #  TEMPORARY bzip2-version of ``shelve''-database
 #  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
 #  @date   2015-10-31
-class TmpBz2Shelf(Bz2Shelf):
+class TmpBz2Shelf(Bz2Shelf,TmpDB):
     """
     TEMPORARY ``bzip2''-version of ``shelve''-database     
     """    
-    def __init__(
-        self                           ,
-        protocol    = HIGHEST_PROTOCOL , 
-        compress    = 9                ,
-        silent      = False            ,
-        keyencoding = ENCODING         ) :
+    def __init__( self                           ,
+                  protocol    = HIGHEST_PROTOCOL , 
+                  compress    = 9                ,
+                  silent      = False            ,
+                  keyencoding = ENCODING         ,
+                  remove      = True             ,
+                  keep        = False            ) :
 
-        ## create temporary file name 
-        import ostap.utils.cleanup as CU 
-        filename = CU.CleanUp.tempfile ( prefix = 'tmpdb-' , suffix = '.bz2db' )
+        ## initialize the base: generate the name 
+        TmpDB.__init__ ( self , suffix = '.bz2db' , remove = remove , keep = keep ) 
         
-        Bz2Shelf.__init__ ( self        ,  
-                            filename    ,
-                            'c'         ,
-                            protocol    ,
-                            compress    , 
-                            False       , ## writeback 
-                            silent      ,
-                            keyencoding ) 
+        ## open DB 
+        Bz2Shelf.__init__ ( self          ,  
+                            self.tmp_name ,
+                            'c'           ,
+                            protocol      ,
+                            compress      , 
+                            False         , ## writeback 
+                            silent        ,
+                            keyencoding   ) 
         
     ## close and delete the file 
     def close ( self )  :
         ## close the shelve file
-        fname = self.filename 
         Bz2Shelf.close ( self )
-        ## delete the file 
-        if os.path.exists ( fname ) :
-            try :
-                os.unlink ( fname )
-            except : 
-                pass
+        ## delete the file
+        TmpDB.clean    ( self )
             
 # =============================================================================
 ## helper function to open TEMPORARY ZipShelve data base#
@@ -391,7 +404,9 @@ class TmpBz2Shelf(Bz2Shelf):
 def tmpdb ( protocol      = HIGHEST_PROTOCOL ,
             compresslevel = 9                , 
             silent        = True             ,
-            keyencoding   = ENCODING         ) :
+            keyencoding   = ENCODING         ,
+            remove        = True             ,   ## immediate remove 
+            keep          = False            ) : ## keep it 
     """Open a TEMPORARY persistent dictionary for reading and writing.
     
     The optional protocol parameter specifies the
@@ -402,14 +417,16 @@ def tmpdb ( protocol      = HIGHEST_PROTOCOL ,
     return TmpBz2Shelf ( protocol      ,
                          compresslevel ,
                          silent        ,
-                         keyencoding   ) 
-    
+                         keyencoding   ,
+                         remove        ,
+                         keep          ) 
     
 # =============================================================================
 if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+    
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
