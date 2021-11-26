@@ -8,10 +8,11 @@
  1. add more constructors for `Ostap::Math::Interpolation::Table`
 
 
-
 ## Backward incompatible  
 
+
 ## Bug fixes:
+
  1. fix the bug  in `ostap.plotting.fit_draw` for parsing of drawing styles/options 
  1. fix minor bug with ordering 
 
