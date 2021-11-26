@@ -7,9 +7,7 @@
  1. add more printout for the `ostap.utils.cleanup` module 
  1. add more constructors for `Ostap::Math::Interpolation::Table`
 
-
 ## Backward incompatible  
-
 
 ## Bug fixes:
 
@@ -29,7 +27,6 @@
 
 ## Backward incompatible 
  
-
 ## Bug fixes:
 
  1. fix bugs in `tree.py`  (Thanks to Daria Savrina)
