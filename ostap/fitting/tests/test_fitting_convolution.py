@@ -19,7 +19,8 @@ from   ostap.core.core          import cpp, VE, dsID
 from   ostap.logger.utils       import rooSilent
 from   ostap.utils.timing       import timing
 from   ostap.plotting.canvas    import use_canvas
-from   ostap.utils.utils        import wait 
+from   ostap.utils.utils        import wait
+from   ostap.core.meta_info     import root_info, python_info
 # =============================================================================
 # logging 
 # =============================================================================
@@ -79,6 +80,12 @@ def test_laplace():
 # =============================================================================
 def test_db() :
 
+    logger = getLogger ( 'test_laplace' )
+
+    if root_info < (6,20) and (3,0)<= python_info < (3,7) :
+        logger.warning ( "Test is disabled for this version of ROOT+python" )
+        return 
+
     logger.info('Saving all objects into DBASE')
     import ostap.io.zipshelve   as     DBASE
     from ostap.utils.timing     import timing 
@@ -87,7 +94,8 @@ def test_db() :
             db['model/%-2d: %s' % ( i , m.name ) ] = m 
         db['models'   ] = models
         db.ls() 
-        
+
+
 # =============================================================================
 if '__main__' == __name__ :
 

@@ -8,7 +8,7 @@
  1. add keys `remove` (default is `True`) and `keep` (defautl is `False`) for temporary databases. The first one forces immediate rmoeval of the file (instead of the end-of-the-task action), the second forces temproary file to be non-deleted  
  1. add more printout for the `ostap.utils.cleanup` module 
  1. add more constructors for `Ostap::Math::Interpolation::Table`
-
+ 1. disable some serialisaton tests for ROOT<6 and python3 < 3.7 (seg fault)
 ## Backward incompatible  
 
 ## Bug fixes:
