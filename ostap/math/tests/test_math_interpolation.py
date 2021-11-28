@@ -56,6 +56,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
                   ) 
     
     tables       = [ ( a[0] , points ( fun , a[1] ) )  for a in abscissas ]
+
     
     interpolants = []
 
@@ -90,7 +91,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
             
-
+    graphs = []         
     with wait ( 3 ) , use_canvas ( name ) :
         ff = lambda x : fun  ( x )
         f1_draw ( ff , xmin = low , xmax = high , linecolor = 2 , linewidth = 2 )
@@ -102,6 +103,12 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             
             color = i + 3 
             f.draw ( 'same' , linecolor = color )
+            
+            if hasattr ( f , 'graph' ) :
+                g = f.graph ()
+                g.draw ( 'p', markercolor = color , markersize = 2 )
+                graphs.append ( g )
+
             if   1 == color : color = 'Black'
             elif 2 == color : color = 'Red'
             elif 3 == color : color = 'Green'
@@ -110,9 +117,13 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             elif 6 == color : color = 'Magenta'
             elif 7 == color : color = 'Cyan'
             elif 8 == color : color = 'DarkGreen'
-            
+
+                
             logger.info ( 'Color %10s for %s:%s' % ( color , n1 , n2  ) ) 
 
+    graphs  = [ t[1].graph() for t in tables ]
+    for i,g  in enumerate ( graphs , start = 3 ) : g.draw ('p' , markercolor = i )
+    
     xx = []
     NP = 50000
     for i in range ( NP ) : xx.append ( random.uniform ( low , high ) ) 
@@ -215,6 +226,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     for n,t in interpolants :
         functions.add ( ( name , t ) ) 
 
+    graphs = [] 
     with wait ( 1 ) , use_canvas ( name ) :
         
         ff = lambda x : tfunc  ( x )
@@ -226,6 +238,12 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
 
             color = i + 2 
             f.draw ( 'same' , linecolor = color )
+            if hasattr ( f , 'graph' ) :
+                g = f.graph ()
+                g.draw ( 'p', markercolor = color , markersize = 2 )
+                graphs.append ( g )
+                
+
             if   1 == color : color = 'Black'
             elif 2 == color : color = 'Red'
             elif 3 == color : color = 'Green'
@@ -236,6 +254,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
             elif 8 == color : color = 'DarkGreen'
             
             logger.info ( 'Color %10s for %s' % ( color , n ) ) 
+
 
     xx = []
     NP = 50000

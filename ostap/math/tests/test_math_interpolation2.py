@@ -3,7 +3,7 @@
 # ============================================================================= 
 # Copyright (c) Ostap developpers.
 # =============================================================================
-## @file ostap/math/tests/test_math_interpolation.py
+## @file ostap/math/tests/test_math_interpolation3.py
 #  Test module for the file ostap/math/interpolation.py
 # ============================================================================= 
 """ Test module for ostap/math/interpolation.py
@@ -64,11 +64,10 @@ def test_matrices0 () :
          
     xs = [ random.uniform ( 0 , 1  ) for i in range ( 3 ) ]
     xs.sort()
-    
+     
     for x in xs : 
         for n, i in interpolants :            
             logger.info ( 'Interpolant %15s x=%.4g \n%s' % ( n , x , i ( x ) ) ) 
-
     
 # =============================================================================
 def test_matrices1 () :

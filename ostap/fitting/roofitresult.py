@@ -178,6 +178,7 @@ def _rfr_cov_matrix_  ( self , var1 , var2 , *vars ) :
     >>> cov = results.cov_matrix('Signal', 'Background')
     >>> print corr
     """
+
     if isinstance ( var1 , str ) : var1 = self.param (   var1 ) [1] 
     if isinstance ( var2 , str ) : var2 = self.param (   var2 ) [1]
     
@@ -230,17 +231,29 @@ def _rfr_covmatrix_  ( self ) :
 #  print res, res.cov2() 
 #  @endcode
 #  @see Ostap::Math::SVectorWithError
-def _rfr_results_( self , var1 , var2 , *vars ) :
+def _rfr_results_( self , *vars ) :
     """Get the required results in form of SVectorWithError object
     >>> fit_resuts = ...
     >>> res   = fit_results.results( 'A', 'B' , 'C' )
     >>> print res, res.cov2() 
     """
+
+
+    if not vars :
+        pars = self.floatParsFinal()
+        vars = [ p.name  for p in pars ]
+        logger.info ( 'Use parameters %s' % vars )
+
+    if not vars :
+        return None
     
-    if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1] 
-    if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
+    elif 1 == len ( vars ) :
+        return self.param ( vars [0]) [0] 
+        
+    ## if isinstance ( var1 , str ) : var1 = self.param ( var1 ) [1] 
+    ## if isinstance ( var2 , str ) : var2 = self.param ( var2 ) [1]
     
-    args = ROOT.RooArgList ( var1 , var2 )
+    args = ROOT.RooArgList ()
     for v in vars :
         if isinstance ( v , str ) : v = self.param ( v ) [1] 
         args.add ( v ) 
@@ -258,8 +271,8 @@ def _rfr_results_( self , var1 , var2 , *vars ) :
     v  = S()
     c2 = v.cov2()
     
-    for i in range ( N ) :
-        v [ i ] = float ( self.param( var1 ) [ 0 ] )
+    for i , a  in enumerate ( args ) :
+        v [ i ] = float ( a )
         for j in range ( i , N ) :
             c2 [ i , j ] = cm ( i , j )
 

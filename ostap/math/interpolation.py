@@ -128,6 +128,10 @@ __all__     = (
     # for completeness  
     'interpolate_bernstein' , ## Newton-Bernstein interpolation 
     'interpolate_bspline'   , ## Basic spline interpolation
+    # interpoaltion abscissas
+    'uniform_abscissas'     , ## generator for uniform absicssas (non-optimal!)
+    'chebysjev_abscissas'   , ## generator for Chebyshev absicssas 
+    'lobatto_abscissas'     , ## generator for Lobatto absicssas
     # python interpolators
     'Berrut1st'             , ## rational Berrut's 1st interpolant 
     'Berrut2nd'             , ## rational Berrut's 2nd interpolant 
@@ -142,6 +146,7 @@ from    ostap.core.core        import cpp, Ostap
 from    ostap.core.ostap_types import ( is_integer, sequence_types,
                                         integer_types , dictlike_types )  
 from    ostap.math.base        import iszero, isequal, doubles 
+from    ostap.utils.utils      import vrange 
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
@@ -399,6 +404,20 @@ def _p_getitem_ ( self , i ) :
     
 ##     raise TypeError ('Invalid key/value %s' % i )
 
+
+# =============================================================================
+## convert interpolation table to Graph
+def _p_graph_ ( self ) :
+    """Convert interpolation table to Graph
+    """
+    N  = len ( self ) 
+    gr = ROOT.TGraph ( N )
+    for i in range ( N ) :
+        gr.SetPoint ( i , self.x(i) , self.y(i) )
+    return gr 
+    
+    
+
 Ostap.Math.Interpolation.Table.__str__      = _p_str_
 Ostap.Math.Interpolation.Table.__repr__     = _p_str_
 Ostap.Math.Interpolation.Table.__iter__     = _p_iter_
@@ -408,7 +427,57 @@ Ostap.Math.Interpolation.Table.items        = _p_iteritems_
 Ostap.Math.Interpolation.Table.__getitem__  = _p_getitem_  
 ## Ostap.Math.Interpolation.Table.__delitem__  = _p_delitem_  
 
+Ostap.Math.Interpolation.Table.graph        = _p_graph_
 
+
+# ==================================================================================
+## Uniform interpolation abscissas
+#  @code
+#  for a in uniform_abscissas ( 0, 1 , 10 ) :
+#  ... print ( a ) 
+#  @endcode 
+def uniform_abscissas ( low , high , N ) :
+    """Uniform interpoaltion abscissas
+    for a in uniform_abscissas ( 0, 1 , 10 ) :
+    ... print ( a ) 
+    """
+    return vrange ( low , high , max ( N , 2 ) - 1 )
+
+# ==================================================================================
+## Chebyshev interpolation abscissas - optimal for polynoimial interpolation 
+#  @code
+#  for a in chebyshev_abscissas ( 0, 1 , 10 ) :
+#  ... print ( a ) 
+#  @endcode 
+def chebyshev_abscissas ( low , high , N ) : 
+    """Chebyshev interpolation abscissas - optimal for polynoimial interpolation 
+    >>> for a in chebyshev_abscissas ( 0, 1 , 10 ) :
+    >>> ... print ( a ) 
+    """
+    N = max ( N , 1 ) 
+    for i in range ( N ) :
+        a = 1.0 * ( 2 * ( N - i ) - 1 ) * math.pi / ( 2 * N ) 
+        x = math.cos ( a )
+        yield 0.5 * (  ( 1 - x ) * low + ( 1 + x ) * high )
+
+
+# ==================================================================================
+## Lobatto interpolation abscissas - optimal for polynoimial interpolation 
+#  @code
+#  for a in lobatto_abscissas ( 0, 1 , 10 ) :
+#  ... print ( a ) 
+#  @endcode 
+def lobatto_abscissas ( low , high , N ) : 
+    """Lobatto interpolation abscissas - optimal for polynoimial interpolation 
+    >>> for a in Lobatto_abscissas ( 0, 1 , 10 ) :
+    >>> ... print ( a ) 
+    """
+    N = max ( N , 2 ) 
+    for i in range ( N ) :
+        a = 1.0 * ( N - i - 1 ) * math.pi / ( N - 1  ) 
+        x = math.cos ( a )
+        yield 0.5 * (  ( 1 - x ) * low + ( 1 + x ) * high )
+        
 # ==================================================================================
 ## Print interpolation table as table
 #  @code
@@ -782,6 +851,9 @@ class BaseInterpolant(object) :
         self.__adder  = adder
         self.__scaler = scaler 
 
+        self.__xmin   = self.__table[ 0][0]
+        self.__xmax   = self.__table[-1][0]
+        
     ## make the actual interpolation 
     def __call__ ( self , x ) :
         """Make the actual interpolation""" 
@@ -806,7 +878,7 @@ class BaseInterpolant(object) :
                 s1 = self.__adder  ( s1 , self.__scaler ( yi , wi ) )
                 
             s2 += wi 
-        
+
         return self.__scaler ( s1 , 1.0/s2 )
 
     @property
@@ -819,7 +891,6 @@ class BaseInterpolant(object) :
         """``adder'' : operation  ( obj , obj ) -> obj"""
         return self.adder 
         
-
     # =========================================================================
     @abc.abstractmethod
     def weight ( self , index ) :
@@ -840,6 +911,17 @@ class BaseInterpolant(object) :
         - number of interpolation points
         """
         return len ( self.__table )
+
+    ## get the minimal value in the interpolaiton table 
+    def xmin ( self ) : return self.__xmin
+    ## get the maximal minimal value in the interpolaiton table 
+    def xmax ( self ) : return self.__xmax
+
+    def __str__  ( self ) :
+        return "%s(%d,%.3g,%.3g)" % ( self.__class__.__name__ ,
+                                      len ( self ) ,
+                                      self.xmin () ,
+                                      self.xmax () )
     
 # =============================================================================
 ## Berrut's 1st barycentric rational interpolant
@@ -849,7 +931,8 @@ class Berrut1st(BaseInterpolant) :
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
         return 1.0 if ( index % 2 ) else -1.0 
-
+    def __str__  ( self ) : return "Berrut1st"
+    
 # =============================================================================
 ## Berrut's 2nd barycentric rational interpolant
 class Berrut2nd(BaseInterpolant) :
@@ -864,6 +947,7 @@ class Berrut2nd(BaseInterpolant) :
             return 1.0 if ( N % 2 ) else -1.0 
 
         return 2.0 if ( index  % 2 ) else -2.0 
+
 
 # =============================================================================
 ## true Barycentric polymnomial interpolant
@@ -892,7 +976,7 @@ class Barycentric(BaseInterpolant) :
                     
             ws.append ( 1.0 / ww )
             
-        self.__weigths = tuple ( ws ) 
+        self.__weigths = array ( 'd' , ws ) 
         
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
@@ -903,7 +987,6 @@ class Barycentric(BaseInterpolant) :
     def weights ( self ) :
         """Get list of weights"""
         return self.__weights
-
 
 # =============================================================================
 ## FloaterHormann rational interpolant
@@ -924,7 +1007,7 @@ class FloaterHormann(BaseInterpolant) :
         N = len ( self )
         n = max ( 0  , N - 1 ) 
 
-        self.__degree = min ( degree , N )
+        self.__degree = min ( degree , n )
         
         d = self.__degree
             
@@ -952,12 +1035,12 @@ class FloaterHormann(BaseInterpolant) :
             wi =  ib * ( 1 if i % 2 else -1 ) 
             ws.append ( wi )
 
-        self.__weigths = tuple ( ws ) 
-        
+        self.__weights = array( 'd',  ws ) 
+
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
 
-        return self.__weigths[index]
+        return self.__weights[index]
     
     @property
     def weights ( self ) :
@@ -968,6 +1051,14 @@ class FloaterHormann(BaseInterpolant) :
     def degree ( self ) :
         """``degree'' : degree for FloaterHormann rational interpolant"""
         return self.__degree
+
+    def __str__  ( self ) :
+        return "%s%s(%d,%.3g,%.3g)" % ( self.__class__.__name__ ,
+                                        self.degree , 
+                                        len ( self ) ,
+                                        self.xmin () ,
+                                        self.xmax () )
+    
 
 # =============================================================================
 if '__main__' == __name__ :
