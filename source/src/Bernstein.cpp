@@ -190,11 +190,11 @@ Ostap::Math::Bernstein::Bernstein
 ( const Ostap::Math::Interpolation::Table&  p    , 
   const double                              xmin ,
   const double                              xmax ) 
-  : Bernstein  ( p.begin() , p.end  () ,  
-                 p.begin() ,    
-                 xmin      , xmax      , 
-                 []( const auto& t ) { return t.first  ; } , 
-                 []( const auto& t ) { return t.second ; } ) 
+  : Bernstein  ( p.x_begin() , p.x_end  () ,  
+                 p.y_begin() ,    
+                 xmin        , xmax      , 
+                 []( const double x ) -> double { return x ; } , 
+                 []( const double y ) -> double { return y ; } ) 
 {}
 // ============================================================================
 /*  constructor from interpolation points or Neville/Lagrange interpolant
@@ -209,7 +209,8 @@ Ostap::Math::Bernstein::Bernstein
 // ============================================================================
 Ostap::Math::Bernstein::Bernstein 
 ( const Ostap::Math::Interpolation::Table&  p    )
-  : Bernstein  ( p , p.xmin() , p.xmax () ) {}
+  : Bernstein  ( p , p.xmin () , p.xmax () ) 
+{}
 // ============================================================================
 /* construct Bernstein polynomial from its roots
  *  Polinomial has a form
@@ -2116,7 +2117,7 @@ Ostap::Math::Interpolation::bernstein
   const std::vector<double>&    x    ,
   const double                  xmin , 
   const double                  xmax ) 
-{ return bernstein ( Table ( func , x.begin () , x.end () ) , xmin , xmax ) ; }
+{ return bernstein ( Table ( x.begin () , x.end () , func ) , xmin , xmax ) ; }
 // ============================================================================
 /*  construct interpolation polynomial (in Bernstein form) using Gauss-Lobatto grid, 
  *  that minimises Runge's effect.
@@ -2151,5 +2152,5 @@ Ostap::Math::Interpolation::bernstein
 // ============================================================================
  
 // ============================================================================
-// The END 
+//                                                                      The END 
 // ============================================================================

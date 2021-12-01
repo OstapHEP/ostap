@@ -2987,7 +2987,7 @@ Ostap::Math::Interpolation::bspline
   { 
     for ( unsigned short j = 0 ; j < N ; ++j ) 
     {
-      double xj =   ( xy.begin() + j ) -> first ;
+      double xj = xy.x ( j ) ; 
       //
       if      ( s_equal ( xj , xmin ) ) 
       { xj = Ostap::Math::next_double ( xmin , +s_ulps ) ; }
@@ -3004,8 +3004,7 @@ Ostap::Math::Interpolation::bspline
   Ostap::GSL_Vector x { N } ;
   if ( !x.vector()       ) { return 142 ; }
   //
-  for ( unsigned short i = 0 ; i < N ; ++i ) 
-  { x.set ( i , ( xy.begin() + i ) -> second ) ;  }
+  for ( unsigned short i = 0 ; i < N ; ++i ) { x.set ( i , xy.y ( i ) ) ;  }
   //
   Ostap::GSL_Permutation p { N };
   if ( !p.permutation () ) { return 143 ; }

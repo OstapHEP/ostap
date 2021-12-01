@@ -130,7 +130,7 @@ __all__     = (
     'interpolate_bspline'   , ## Basic spline interpolation
     # interpoaltion abscissas
     'uniform_abscissas'     , ## generator for uniform absicssas (non-optimal!)
-    'chebysjev_abscissas'   , ## generator for Chebyshev absicssas 
+    'chebyshev_abscissas'   , ## generator for Chebyshev absicssas 
     'lobatto_abscissas'     , ## generator for Lobatto absicssas
     # python interpolators
     'Berrut1st'             , ## rational Berrut's 1st interpolant 
@@ -183,7 +183,7 @@ def _a_str_ ( self , nmax = 8 ) :
             return 'Abscissas(%d,%s)'    % ( n , self.x () ) 
             
     ##
-    n2 = nmax//2
+    n2 = max ( 1 , nmax//4 ) 
     s1 = ', '.join( ( '%.3g' % x  for x in self.x() [    : n2 ] ) ) 
     s2 = ', '.join( ( '%.3g' % x  for x in self.x() [ -1 :    ] ) )
     
@@ -325,7 +325,7 @@ def _p_str_ ( self , nmax = 7 ) :
         s = ', '.join ( ( "%.3g: %.3g" %  (x,y)  for x,y in self ) ) 
         return 'Table({%s})' % s 
     ##
-    n2 = nmax//2
+    n2 = nmax // 3 
 
     s1 = ', '.join ( ( '%.3g: %.3g' % self[i] for i in  range ( n2 ) ) ) 
     s2 =               '%.3g: %.3g' % self[ n - 1 ]
@@ -515,7 +515,15 @@ def print_interpolant ( self , name , nmax = 7 ) :
     """Printout for Neville interpolant
     >>> print a  
     """
-    n =  len ( self ) 
+    n = len ( self )
+    a = self.atype()
+    if   Ostap.Math.Interpolation.Abscissas.Uniform    == a : 
+        return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Uniform'   , n , self.xmin () , self.xmax() )
+    elif Ostap.Math.Interpolation.Abscissas.Chebyshev  == a : 
+        return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Chebyshev' , n , self.xmin () , self.xmax() )
+    elif Ostap.Math.Interpolation.Abscissas.Chebyshev2 == a : 
+        return '%s(%s[%d,%+.4g,%+.4g])' % ( name , 'Lobatto'   , n , self.xmin () , self.xmax() )
+        
     if n <= nmax :
         s = ', '.join ( ( "%.3g: %.3g" %  (x,y)  for x,y in self ) ) 
         return '%s({%s})' % ( name , s )  
@@ -526,13 +534,13 @@ def print_interpolant ( self , name , nmax = 7 ) :
     
     return '%s(n=%d,{%s, ... , %s})' % ( name , n , s1 , s2 )
 
-Ostap.Math.Neville         .__str__   = lambda s : print_interpolant ( s , 'Neville'        , 7 )
-Ostap.Math.Lagrange        .__str__   = lambda s : print_interpolant ( s , 'Lagrange'       , 7 )
-Ostap.Math.Newton          .__str__   = lambda s : print_interpolant ( s , 'Newton'         , 7 )
-Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berrut1st'      , 7 )
-Ostap.Math.Berrut2nd       .__str__   = lambda s : print_interpolant ( s , 'Berrut2nd'      , 7 )
-Ostap.Math.FloaterHormann  .__str__   = lambda s : print_interpolant ( s , 'FloaterHormann' , 7 )
-Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'    , 7 )
+Ostap.Math.Neville         .__str__   = lambda s : print_interpolant ( s , 'Neville'                       , 7 )
+Ostap.Math.Lagrange        .__str__   = lambda s : print_interpolant ( s , 'Lagrange'                      , 7 )
+Ostap.Math.Newton          .__str__   = lambda s : print_interpolant ( s , 'Newton'                        , 7 )
+Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berrut1st'                     , 7 )
+Ostap.Math.Berrut2nd       .__str__   = lambda s : print_interpolant ( s , 'Berrut2nd'                , 7 )
+Ostap.Math.FloaterHormann  .__str__   = lambda s : print_interpolant ( s , 'FloaterHormann%d' % s.d() , 7 )
+Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'                   , 7 )
 
 # ==================================================================================
 ## Barycentric Lagrange interpolant 
@@ -725,14 +733,14 @@ def points ( func , abscissas  = None ) :
 
 # ============================================================================
 ## factory for deserialisation of interpolation abscissas 
-def abs_factory ( klass , arg , *args ) :
+def abs_factory ( arg , *args ) :
     """Factory for deserialisation of interpolation abscissas
     """
     if isinstance ( arg , sequence_types ) :
         vals = doubles ( arg )
-        return klass ( vals , *args )
+        return Ostap.Math.Interpolation.Abscissas ( vals , *args  )
     
-    return klass ( arg , *args ) 
+    return Ostap.Math.Interpolation.Abscissas ( arg , *args ) 
 
 # =============================================================================
 ## Reduce interpolation abscissas 
@@ -743,22 +751,21 @@ def abs_reduce ( a ) :
     if at in ( Ostap.Math.interpolation.Abscissas.Uniform    ,
                Ostap.Math.interpolation.Abscissas.Chebyshev  ,
                Ostap.Math.interpolation.Abscissas.Chebyshev2 ) :
-        return abs_factory, ( type(a) , a.xmin() , a.xmax () , int ( at ) )
+        return abs_factory, ( a.xmin() , a.xmax () , int ( at ) )
 
-    return abs_factory, ( type(a) , array ('d' , a.x() ) ) 
+    return abs_factory, ( array ('d' , a.x() ) , ) 
 
 # ============================================================================
 ## the factory for serialisation of the interpolation table 
-def tab_factory ( klass , abscissas , values ) :
+def tab_factory ( abscissas , values ) :
     """The factory for serialisation of the interpolation table
     """
-    return klass ( abscissas , doubles ( values ) ) 
+    return Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) ) 
 ## ===========================================================================
 ## Reduce the interpolation table 
 def tab_reduce ( table ) :
     """Reduce the interpolation table"""
-    return tab_factory , ( type ( table )                  ,
-                           table.abscissas ()              ,
+    return tab_factory , ( table.abscissas ()              ,
                            array ( 'd' , table.values () ) )
 
 Ostap.Math.Interpolation.Table. __reduce__ = tab_reduce
@@ -798,6 +805,65 @@ for t in ( Ostap.Math.Neville     ,
     t.__reduce__ = int_reduce 
 
 Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
+
+
+# =============================================================================
+## get all weigths from Berrut1st and Berrut2nd interpolants
+#  @code
+#  interpolant = ....
+#  interpolant.weights()
+#  @endcode 
+def _b12_weights_ ( self ) :
+    """Get all weigths from Berrut1st and Berrut2nd interpolants
+    >>> interpolant = ....
+    >>> interpolant.weights()
+    """
+    N = len ( self ) 
+    return array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
+
+for t in ( Ostap.Math.Berrut1st   , 
+           Ostap.Math.Berrut2nd   ) :
+    
+    t.weights = _b12_weights_ 
+
+# =============================================================================
+## Get sum of weights for barycentric interpolation is muts be zero
+#  @code
+#  interpolant = ...
+#  interpolant.sumw() 
+#  @encode
+def _bi_sumw_ ( self ) :
+    """Get sum of weights for barycentric interpolation is muts be zero
+    >>> interpolant = ...
+    >>> interpolant.sumw() 
+    """
+    N = len ( self )
+    if  0 == N : return 0 
+    return sum ( self.weights ()  ) 
+
+# =============================================================================
+## Does barycentric interpolant has poles ?
+#  @code
+#  interpolant = ...
+#  interpolant.poles() 
+#  @encode
+def _bi_poles_ ( self ) :
+    """Does barycentric interpolant has poles ?
+    >>> interpolant = ...
+    >>> interpolant.poles() 
+    """
+    N = len ( self )
+    for i in range ( N -1 ) :
+        if 0 < self.weight ( i ) * self.weight ( i + 1 ) : return True 
+    return False 
+
+for t in ( Ostap.Math.Berrut1st      , 
+           Ostap.Math.Berrut2nd      ,
+           Ostap.Math.Barycentric    , 
+           Ostap.Math.FloaterHormann ) : 
+    
+    t.sumw  = _bi_sumw_ 
+    t.poles = _bi_poles_ 
 
 
 # =============================================================================
@@ -912,6 +978,42 @@ class BaseInterpolant(object) :
         """
         return len ( self.__table )
 
+    # ==========================================================================
+    ## array of weigths
+    def weights ( self ) :
+        """Get array of weights
+        """
+        N = len ( self ) 
+        return array ( 'd' , ( self.weight ( i ) for i in range ( N ) ) )  
+
+    # ==========================================================================
+    ## sum of all weights
+    #  - it must be zero for barycentric weights 
+    def sumw ( self )  :
+        """sum of all weights
+        _ it must be zero for barycentric weights 
+        """
+        N = len ( self )
+        if  0 == N : return 0 
+        g = ( self.weight ( i ) for i in range ( N ) ) 
+        return sum ( g )
+
+    # =========================================================================
+    ## Does barycentric interpolant has poles ?
+    #  @code
+    #  interpolant = ...
+    #  interpolant.poles() 
+    #  @encode
+    def poles ( self ) :
+        """Does barycentric interpolant has poles ?
+        >>> interpolant = ...
+        >>> interpolant.poles() 
+        """
+        N = len ( self )
+        for i in range ( N -1 ) :
+            if 0 < self.weight ( i ) * self.weight ( i + 1 ) : return True 
+        return False 
+    
     ## get the minimal value in the interpolaiton table 
     def xmin ( self ) : return self.__xmin
     ## get the maximal minimal value in the interpolaiton table 
@@ -931,7 +1033,6 @@ class Berrut1st(BaseInterpolant) :
     def weight ( self , index ) :
         """Get the weigth for the given interpolation node"""
         return 1.0 if ( index % 2 ) else -1.0 
-    def __str__  ( self ) : return "Berrut1st"
     
 # =============================================================================
 ## Berrut's 2nd barycentric rational interpolant

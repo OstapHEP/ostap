@@ -241,6 +241,107 @@ namespace Ostap
     template <class SCALAR>
     class SVectorWithError<0,SCALAR> {} ;
     // ========================================================================
+    /** Get element of the vector as ValueWithError Object 
+     *  @code
+     *  SVectorWithError<5> vct = ... ;
+     *  get<1> ( vct ) ;
+     *  @endcode 
+     *  @see Ostap::Math::ValueWithError 
+     */
+    template <unsigned int I  ,  
+              unsigned int N  , 
+              typename SCALAR ,
+              typename = std::enable_if<(I<N)> > 
+    inline 
+    ValueWithError
+    get
+    ( const SVectorWithError<N,SCALAR>& v ) 
+    { return ValueWithError ( v.value ( I ) , v.cov2 ( I , I ) ) ; }
+    // ===============================================================
+    /** Get element of the vector as ValueWithError Object 
+     *  @code
+     *  SVectorWithError<5> vct = ... ;
+     *  get ( vct , 1 ) ;
+     *  @endcode 
+     *  @see Ostap::Math::ValueWithError 
+     */
+     template <unsigned int N  , typename SCALAR >
+     inline 
+     ValueWithError
+     get
+     ( const SVectorWithError<N,SCALAR>& v , 
+       const unsigned short              i )
+     { return i < N ? ValueWithError ( v.value ( i ) , v.cov2 ( i , i ) ) : ValueWithError()  ; }
+    // ========================================================================
+    /** Get element of the vector as ValueWithError Object 
+     *  @code
+     *  SVectorWithError<5> vct = ... ;
+     *  get ( 1 , vct ) ;
+     *  @endcode 
+     *  @see Ostap::Math::ValueWithError 
+     */
+     template <unsigned int N  , typename SCALAR >
+     inline 
+     ValueWithError
+     get
+     ( const unsigned short              i , 
+       const SVectorWithError<N,SCALAR>& v )
+     { return i < N ? ValueWithError ( v.value ( i ) , v.cov2 ( i , i ) ) : ValueWithError()  ; }
+    // ========================================================================
+    // /// specific case for N=1 
+    // template <> 
+    // class SVectorWithError<1,double> : public Ostap::Math::ValueWithError
+    // {
+    // public:
+    //   // =======================================================================
+    //   /// the actual type of data
+    //   typedef ROOT::Math::SVector<double,1>                                    Value       ;
+    //   /// the actual type of covarinace matrix
+    //   typedef ROOT::Math::SMatrix<double,1,1,ROOT::Math::MatRepSym<double,1> > Covariance ;
+    //   // ======================================================================
+    //   enum {
+    //     /// vector size
+    //     kSize = 1 // vector size 
+    //   } ;  
+    //   // ======================================================================
+    // public:
+    //   // ======================================================================
+    //   SVectorWithError 
+    //   ( const double value = 0 , 
+    //     const double cov2  = 0 ) 
+    //     : ValueWithError ( value , cov2 ) 
+    //   {}
+    //   // ======================================================================
+    //   SVectorWithError
+    //   ( const Value&      value , 
+    //     const Covariance& cov2  )
+    //     : SVectorWithError ( value [ 0 ] , cov2 ( 0 , 0 ) ) 
+    //   {}
+    //   // ======================================================================
+    //   /// constructor from expressions 
+    //   template <class B>
+    //   SVectorWithError 
+    //   ( const ROOT::Math::VecExpr<B,double,1>& value , 
+    //     const Covariance&                      cov2  ) 
+    //     : SVectorWithError ( Value ( value ) , cov2  ) 
+    //   {}
+    //   /// constructor from expressions
+    //   template <class B, class R>
+    //   SVectorWithError 
+    //   ( const Value&                            value , 
+    //     const ROOT::Math::Expr<B,double,1,1,R>& cov2  ) 
+    //     : SVectorWithError ( value , Covariance ( cov2 ) ) 
+    //   {}
+    //   /// constructor from expressions
+    //   template <class B1, class B2, class R>
+    //   SVectorWithError 
+    //   ( const ROOT::Math::VecExpr<B1,double,1>&  value , 
+    //     const ROOT::Math::Expr<B2,double,1,1,R>& cov2  ) 
+    //     : SVectorWithError ( Value ( value ) , cov2  ) 
+    //   {}
+    //   // ======================================================================      
+    // } ;  
+    // ========================================================================
     /// printout 
     template <unsigned int N, class SCALAR> 
     inline std::ostream& operator<<

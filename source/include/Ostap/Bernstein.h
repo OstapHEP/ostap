@@ -1086,7 +1086,7 @@ namespace Ostap
         XITERATOR    xend   ,  
         const double xmin   , 
         const double xmax   )
-      { return bernstein ( Table ( func , xbegin , xend ) , xmin , xmax ) ; }
+      { return bernstein ( Table ( xbegin , xend , func ) , xmin , xmax ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func     the function 
@@ -1114,7 +1114,7 @@ namespace Ostap
       ( FUNCTION     func   , 
         XITERATOR    xbegin ,  
         XITERATOR    xend   ) 
-      { return bernstein ( Table ( func , xbegin , xend ) ) ; }
+      { return bernstein ( Table ( xbegin , xend , func ) ) ; }
       // ======================================================================
       /** construct interpolation polynomial (in Bernstein form)
        *  @param func the function 

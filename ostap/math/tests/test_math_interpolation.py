@@ -90,6 +90,9 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         for d in range ( 1 , 5 ) :
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
+
+    for n , t in interpolants :
+        functions.add ( ( n , t ) ) 
             
     graphs = []         
     with wait ( 3 ) , use_canvas ( name ) :
@@ -181,6 +184,11 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
     
     logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+    for n, i in interpolants :
+        if hasattr ( i , 'table' ) :
+            title = str ( i ) 
+            logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
+            break 
 
 # ==========================================================================================================
 ## interpolate the grid 
@@ -223,8 +231,8 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     for d in range ( 1 , 5 ) : 
         interpolants.append ( ( 'BSpline/%s' % d , interpolate_bspline  ( data , None , d ) ) ) 
     
-    for n,t in interpolants :
-        functions.add ( ( name , t ) ) 
+    for n , t in interpolants :
+        functions.add ( ( n , t ) ) 
 
     graphs = [] 
     with wait ( 1 ) , use_canvas ( name ) :
@@ -309,13 +317,18 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     
     logger.info ( '%s:\n%s' % ( title , table ) ) 
 
+    for n, i in interpolants :
+        if hasattr ( i , 'table' ) :
+            title = str ( i ) 
+            logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
+            break 
     
 # =============================================================================
 ## interpolate cos function 
 def test_cos () :
 
     logger = getLogger ( 'test_cos' ) 
-    fun , N , low , high = math.cos , 10 , 0 , 2 * math.pi
+    fun , N , low , high = math.cos , 10 , 0 , 1.9 * math.pi
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'cos' , N , low , high )  ) 
     
     return run_func_interpolation ( fun , N , low , high , logger = logger , name = 'cos(x)') 
@@ -329,25 +342,25 @@ def test_abssin () :
 
     fun = lambda x : abs( math.sin ( x ) )
 
-    N , low , high = 16 , -0.1 , 0.1
+    N , low , high = 15 , -0.1 , 0.2
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin|' , N , low , high )  ) 
     
     return run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = logger , name = '|sin(x)|' ) 
 
 # =============================================================================
-## interpolate |sin(2x)| function 
-def test_abs2sin () :
+## interpolate |PW| function 
+def test_PW () :
     
-    logger = getLogger ( 'test_abs2sin' ) 
+    logger = getLogger ( 'test_piecewise' ) 
 
-    fun = lambda x : abs( math.sin ( 2*x ) )
+    def fun ( x ) :        
+        return x**2 if 0 <= x else abs(x)**3 
 
-    N , low , high = 16 , 0 , math.pi  
-    logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( '|sin(2x)|' , N , low , high )  ) 
+    N , low , high = 15 , -2 , 3 
+    logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'PW' , N , low , high )  ) 
     
     random.seed ( 50948524584 )
-    return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = '|sin(2x)|') 
-
+    return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = 'PW') 
 
 
 # =============================================================================
@@ -359,7 +372,7 @@ def test_random_grid_sin () :
 
     tfun = math.sin 
     
-    N , low , high = 14 , 0 , 3 * math.pi  
+    N , low , high = 14 , 0 , 2.5 * math.pi  
 
     dct = {} 
     mid = 0.5  * ( low + high ) 
@@ -438,7 +451,7 @@ def test_random_grid_gauss () :
 
     tfun = lambda x : Ostap.Math.gauss_pdf ( x ) 
     
-    N , low , high = 14 , -4 , 4
+    N , low , high = 14 , -4 , 5
 
     dct = {} 
     mid = 0.5  * ( low + high ) 
@@ -472,6 +485,8 @@ def test_pickle () :
             s += abs ( fs ( x ) - ff ( x ) )
         
         row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , '%-+.5g' % s.mean() , '%-+.5g' % s.rms() 
+        ## row = '%d' % i , '%s' % ff  , '%s' % fs , '%-+.5g' % s.mean() , '%-+.5g' % s.rms()
+        
         rows.append ( row )
 
     import ostap.logger.table as T
@@ -501,7 +516,7 @@ if '__main__' == __name__ :
     
     test_cos                () 
     test_abssin             ()
-    test_abs2sin            ()
+    test_PW                 ()
     test_random_grid_sin    ()
     test_random_grid_abssin ()
     test_random_grid_sin2   ()

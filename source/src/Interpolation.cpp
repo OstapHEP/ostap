@@ -44,9 +44,8 @@ namespace
 Ostap::Math::Interpolation::Abscissas::Abscissas 
 ( const Ostap::Math::Interpolation::Abscissas::Data& x      , 
   const bool                                         sorted ) 
-  : m_x     ( x )
-  , m_atype ( Ostap::Math::Interpolation::Abscissas::Generic ) 
-{ if  ( !sorted ) { sort() ; } }
+  : Ostap::Math::Interpolation::Abscissas  ( x.begin() , x.end() , sorted )
+{}
 // ============================================================================
 /* sort abscissas and eliminate the duplicates  
  * @return number of removed duplicates  
@@ -97,10 +96,13 @@ Ostap::Math::Interpolation::Abscissas::Abscissas
   const double                                       low  , 
   const double                                       high  , 
   const Ostap::Math::Interpolation::Abscissas::AType t    ) 
-  : m_x ( n , 0.0 )
+  : m_x     ( n , 0.0 )
+  , m_atype ( Generic ) 
+  , m_xmin  ( std::min ( low , high ) )
+  , m_xmax  ( std::max ( low , high ) )
 {  
-  const long double mn = std::min ( low , high ) ;
-  const long double mx = std::max ( low , high ) ;
+  const long double mn = m_xmin ;
+  const long double mx = m_xmax ;
   //
   if ( 0 == n ) { return ; }                               // QUIT 
   if ( 1 == n ) { m_x [0] = 0.5 * ( mn + mx ) ; return ; } // QUIT 
@@ -163,6 +165,8 @@ int Ostap::Math::Interpolation::Abscissas::add ( const double xnew )
   if  ( m_x.end() == ifound ) 
   { 
     m_x.push_back ( xnew ) ;
+    m_xmin  = m_x.front () ;
+    m_xmax  = m_x.back  () ;
     m_atype = Generic ;                           // ATTENTION 
     return m_x.size() - 1 ;                       // RETURN
   } 
@@ -173,6 +177,8 @@ int Ostap::Math::Interpolation::Abscissas::add ( const double xnew )
   m_x.insert ( ifound , xnew ) ;
   //
   m_atype = Generic ;                           // ATTENTION! 
+  m_xmin = m_x.front () ;
+  m_xmax = m_x.back  () ;
   return index ;
 }
 // ============================================================================
@@ -184,8 +190,20 @@ int Ostap::Math::Interpolation::Abscissas::add ( const double xnew )
 bool  Ostap::Math::Interpolation::Abscissas::remove ( const unsigned short index ) 
 {
   if ( index >= m_x.size() ) { return false ; }
+  //
   m_atype = Generic ;                             // ATTENTION!
   m_x.erase ( m_x.begin() + index ) ;
+  if ( !empty() ) 
+  {
+    m_xmin = m_x.front () ;
+    m_xmax = m_x.back  () ;
+  }
+  else 
+  {
+    m_xmin = 0 ;
+    m_xmax = 0 ;
+  }
+  //
   return true ;
 }
 // ============================================================================
@@ -193,108 +211,75 @@ bool  Ostap::Math::Interpolation::Abscissas::remove ( const unsigned short index
 // ============================================================================
 // Interpolation table 
 // ============================================================================
-// sort internal data and remove duplicated abscissas 
-// ============================================================================
-void Ostap::Math::Interpolation::Table::get_sorted ( const bool sorted ) 
-{ 
-  // =========================================================================
-  if ( !sorted ) 
-  {
-    std::sort ( m_table.begin () , 
-                m_table.end   () , 
-                [] ( auto a , auto b ) 
-                { return s_num_less ( a.first , b.first ) ; } ) ;
-  }
-  /// remove duplicates if any 
-  m_table.erase ( std::unique ( m_table.begin () , 
-                                m_table.end   () , 
-                                [] ( auto a , auto b ) 
-                                { return s_num_equal ( a.first , b.first ) ; } ) , 
-                  m_table.end ()  ) ;
-}
-// ====================================================================
-/* the simplest constructor 
- * @param data   input data 
- * @param sorted indicate if data already sorted 
- */
-// ============================================================================
-Ostap::Math::Interpolation::Table::Table
-( const Ostap::Math::Interpolation::TABLE& data   , 
-  const bool                               sorted ) 
-  : m_table ( data )
-  , m_atype  ( Ostap::Math::Interpolation::Abscissas::Generic )
-{ if ( !sorted ) { get_sorted() ; } }
-// ====================================================================
-/* the simplest constructor 
- * @param data   input data 
- * @param sorted indicate if data already sorted 
- */
-// ============================================================================
-Ostap::Math::Interpolation::Table::Table
-( Ostap::Math::Interpolation::TABLE&& data   , 
-  const bool                          sorted ) 
-  : m_table ( std::move ( data )  )
-  , m_atype ( Ostap::Math::Interpolation::Abscissas::Generic )
-{ if  ( !sorted ) { get_sorted() ; } }
-// ============================================================================
-/*  simple constructor from abscissas and y-list 
- *  @param x input vector of abscissas  
- *  @param y input vector of y 
- *  - if vector of y is longer  than vector x, extra values are ignored 
- *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
- */
-// ============================================================================
-Ostap::Math::Interpolation::Table::Table
-( const Ostap::Math::Interpolation::Abscissas&       x , 
-  const Ostap::Math::Interpolation::Abscissas::Data& y ) 
-  : m_table ( x.size  () ) 
-  , m_atype ( x.atype () ) 
-{ 
-  // ==================================================================
-  /// 1) copy x into the table 
-  std::transform 
-    ( x.begin ()         , 
-      x.end   ()         , 
-      m_table.begin()    , 
-      [] ( double v ) { return std::make_pair ( v , 0.0 ) ; } );
-  /// 2) copy y into the table 
-  const unsigned int nx = x.size() ;
-  const unsigned int ny = y.size() ;
-  const unsigned int N  = std::min ( nx , ny ) ;
-  std::transform
-    ( m_table.begin () , m_table.begin () + N , 
-      y.begin ()       , 
-      m_table.begin () , 
-      [] ( const auto& p , const double v ) 
-      { return std::make_pair ( p.first , v ) ; } );
-}
-// ============================================================================
-/*  simple constructor from abscissas and y-list 
- *  @param x input vector of abscissas  
- *  @param y input vector of y 
- *  - if vector of y is longer  than vector x, extra values are ignored 
- *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
- */
-// ============================================================================
-Ostap::Math::Interpolation::Table::Table
-( const Ostap::Math::Interpolation::Abscissas::Data& y , 
-  const Ostap::Math::Interpolation::Abscissas&       x ) 
-  : Table ( x , y ) 
-{}
-// ============================================================================
-/*  simple contructor from x&y-lists 
+/* simple constructor from x&y-lists 
  *  @param x input vector of x 
  *  @param y input vector of y 
+ *  @param sorted  indicate that x-list is already sorted 
  *  - if vector of y is longer  than vector x, extra values are ignored 
  *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
  *  @attention duplicated abscissas will be removed 
  */
 // ============================================================================
 Ostap::Math::Interpolation::Table::Table
-( const Ostap::Math::Interpolation::Abscissas::Data& x , 
-  const Ostap::Math::Interpolation::Abscissas::Data& y ) 
-  : Table ( x.begin() , x.end() , y.begin() , y.end() ) 
+( const Ostap::Math::Interpolation::Abscissas::Data& x      , 
+  const Ostap::Math::Interpolation::Abscissas::Data& y      , 
+  const bool                                         sorted ) 
+  : Ostap::Math::Interpolation::Table ( x.begin () , 
+                                        x.end   () , 
+                                        y.begin () , 
+                                        y.end   () , 
+                                        sorted     )
 {}
+// ======================================================================
+/*  the simplest constructor 
+ *  @param table  input data 
+ *  @param sorted indicate if data already  sorted and duplicates removed  
+ */
+// ============================================================================
+Ostap::Math::Interpolation::Table::Table
+( Ostap::Math::Interpolation::TABLE table  , 
+  const bool                        sorted ) 
+  : m_abscissas () 
+  , m_values    () 
+{
+  /// sort the table and eliminate duplicates (if needed) 
+  get_sorted ( sorted , table ) ;
+  /// 4) fill abscissas 
+  m_abscissas = Abscissas 
+    ( table.begin () , 
+      table.end   () ,  
+      []( const auto& p )-> double { return p.first ; } , true ) ;
+  /// 5) fill values 
+  m_values.resize( table.size () ) ;
+  std::transform 
+    ( table.begin    () ,
+      table.end      () , 
+      m_values.begin () ,
+      []( const auto& p )-> double { return p.second ; }       ) ; 
+}
+// ============================================================================
+// sort table and remove duplicated abscissas 
+// ============================================================================
+void Ostap::Math::Interpolation::Table::get_sorted 
+( const bool                         sorted , 
+  Ostap::Math::Interpolation::TABLE& table  )
+{ 
+  // =========================================================================
+  if ( !sorted ) 
+  {
+    std::sort ( table.begin () , 
+                table.end   () , 
+                [] ( auto a , auto b ) 
+                { return s_num_less ( a.first , b.first ) ; } ) ;
+  }
+  /// remove duplicates if any 
+  table.erase ( std::unique ( table.begin () , 
+                              table.end   () , 
+                              [] ( auto a , auto b ) 
+                              { return s_num_equal ( a.first , b.first ) ; } ) , 
+                table.end ()  ) ;
+  // =========================================================================
+}
 // ============================================================================
 /*  add the point (x,y) into interpolation table 
  *  @param x abscissas of the point to be added 
@@ -306,31 +291,10 @@ int Ostap::Math::Interpolation::Table::add
 ( const double x , 
   const double y ) 
 {
-  /// comparison criteria: compare only abscissas 
-  auto cmp_x = [] ( const auto& p1 , const auto&p2 ) 
-    { return s_num_less ( p1.first , p2.first ) ; } ;
-  
-  // where to insert new element?
-  const TABLE::value_type pnew { std::make_pair ( x , y ) } ;
-  TABLE::iterator ifound = std::lower_bound 
-    ( m_table.begin () , 
-      m_table.end   () , 
-      pnew             , cmp_x ) ;
-  
-  // 1) all elements are less than new element
-  if  ( m_table.end() == ifound ) 
-  { 
-    m_table.push_back ( pnew ) ;
-    m_atype  = Ostap::Math::Interpolation::Abscissas::Generic ; // ATTENTION!
-    return m_table.size() - 1 ; // RETURN          
-  } 
-  // 2) there exists element with the same value 
-  else if ( !cmp_x ( pnew , *ifound ) ) { return                - 1 ; } // RETURN
-  // 3) insert new element at the given position
-  const int index = ifound - m_table.begin() ;
-  m_table.insert ( ifound , pnew ) ;
+  const int index = m_abscissas.add ( x ) ;
+  if ( index < 0 ) { return -1 ; }
   //
-  m_atype  = Ostap::Math::Interpolation::Abscissas::Generic ; // ATTENTION!
+  m_values.insert ( m_values.begin() + index , y ) ;                 
   return index ;
 }
 // ============================================================================
@@ -341,10 +305,13 @@ int Ostap::Math::Interpolation::Table::add
 // ============================================================================
 bool  Ostap::Math::Interpolation::Table::remove ( const unsigned short index ) 
 {
-  if ( index >= m_table.size() ) { return false ; }
-  m_table.erase ( m_table.begin() + index ) ;
-  m_atype  = Ostap::Math::Interpolation::Abscissas::Generic ; // ATTENTION!
-  return true ;
+  if ( index < size () ) 
+  {
+    m_abscissas.remove ( index ) ;
+    m_values.erase ( m_values.begin() + index ) ;
+    return true ;  
+  }
+  return false ;
 }
 // ============================================================================
 /*  Interpolation using the straightforward Lagrange interpolant 
@@ -356,14 +323,14 @@ double Ostap::Math::Interpolation::Table::lagrange
 ( const double x ) const 
 {
   return Ostap::Math::Interpolation::lagrange 
-    ( m_table.begin () , 
-      m_table.end   () , 
-      m_table.begin () , 
-      m_table.end   () , 
-      x                , 
-      0.0L             , 
-      [] ( const auto& p ) { return p.first  ; } , 
-      [] ( const auto& p ) { return p.second ; } ) ;
+    ( m_abscissas.begin () , 
+      m_abscissas.end   () , 
+      m_values   .begin () , 
+      m_values   .end   () , 
+      x                    , 
+      0.0L                 , 
+      [] ( const double x ) -> double { return x ; } , 
+      [] ( const double y ) -> double { return y ; } ) ;
 }
 // ============================================================================
 /* interpolation using Neville's algorithm
@@ -375,13 +342,13 @@ double Ostap::Math::Interpolation::Table::neville
 ( const double x ) const 
 {
   return Ostap::Math::Interpolation::neville 
-    ( m_table.begin () , 
-      m_table.end   () , 
-      m_table.begin () , 
-      m_table.end   () , 
+    ( m_abscissas.begin () , 
+      m_abscissas.end   () , 
+      m_values   .begin () , 
+      m_values   .end   () , 
       x                , 
-      [] ( const auto& p ) { return p.first  ; } , 
-      [] ( const auto& p ) { return p.second ; } ) ;
+      [] ( const double x ) -> double { return x ; } , 
+      [] ( const double y ) -> double { return y ; } ) ;
 }
 // ============================================================================
 /*  Interpolation using Neville's algorithm
@@ -395,13 +362,13 @@ Ostap::Math::Interpolation::Table::neville2
 ( const double       x ) const 
 {
   return Ostap::Math::Interpolation::neville2
-    ( m_table.begin () , 
-      m_table.end   () , 
-      m_table.begin () , 
-      m_table.end   () , 
+    ( m_abscissas.begin () , 
+      m_abscissas.end   () , 
+      m_values   .begin () , 
+      m_values   .end   () , 
       x            , 
-      [] ( const auto& p ) { return p.first  ; } , 
-      [] ( const auto& p ) { return p.second ; } ) ;
+      [] ( const double x ) -> double { return x ; } , 
+      [] ( const double y ) -> double { return y ; } ) ;
 }
 // ============================================================================
 /*  Very simple lagrange interpolation 
@@ -416,7 +383,9 @@ std::pair<double,double>
 Ostap::Math::Interpolation::Table::lagrange2 
 ( const double       x  , 
   const unsigned int iy ) const 
-{ return Ostap::Math::Interpolation::lagrange2 ( m_table , x , iy ) ; }
+{ return Ostap::Math::Interpolation::lagrange2 ( m_abscissas.x () , 
+                                                 m_values         ,
+                                                 x , iy ) ; }
 // ============================================================================
 // interpolation using the 1st Berrut interpolant 
 // ============================================================================
@@ -429,10 +398,11 @@ double Ostap::Math::Interpolation::Table::berrut1st ( const double x ) const
   long double s2 = 0 ;
   int         bi = 1 ;
   //
-  for ( TABLE::const_iterator ip = m_table.begin() ; m_table.end() != ip ; ++ip ) 
+  const unsigned int N = size() ;
+  for ( unsigned int i = 0 ; i < N ; ++ i ) 
   {
-    const long double xv = ip->first  ;
-    const long double yv = ip->second ;
+    const long double xv = m_abscissas [ i ] ;
+    const long double yv = m_values    [ i ] ;
     //
     if ( s_equal ( x , xv ) ) { return yv ; } // RETURN 
     //
@@ -456,13 +426,12 @@ double Ostap::Math::Interpolation::Table::berrut2nd ( const double x ) const
   long double        s1 = 0 ;
   long double        s2 = 0 ;
   int                bi = 1 ;
-  unsigned int       i  = 0 ;
-  const unsigned int N  = m_table.size() ;
   //
-  for ( TABLE::const_iterator ip = m_table.begin() ; m_table.end() != ip ; ++ip ) 
+  const unsigned int N  = size() ;
+  for ( unsigned int i = 0 ; i < N ; ++i ) 
   {
-    const long double xv = ip->first  ;
-    const long double yv = ip->second ;
+    const long double xv = m_abscissas [ i ] ;
+    const long double yv = m_values    [ i ] ;
     //
     if ( s_equal ( x , xv ) ) { return yv ; } // RETURN 
     //
@@ -472,7 +441,6 @@ double Ostap::Math::Interpolation::Table::berrut2nd ( const double x ) const
     s2 += w      ;
     //
     bi *= -1 ;
-    i  +=  1 ;
   }
   return s1 / s2 ;
 }
@@ -492,51 +460,11 @@ Ostap::Math::Interpolation::Table::slice
   //
   if ( ii <  0 || jj < 0 || jj <= ii ) { return Table () ; } // RETURN 
   if ( ii == 0 && jj + 1 == size ()  ) { return *this    ; } // RETURN
-  
-  Table newt {} ;
-  newt.m_table.resize ( jj - ii ) ;
-  std::copy ( m_table      .begin () + ii , 
-              m_table      .begin () + jj ,
-              newt.m_table .begin ()      ) ;
-  return newt  ; 
-}
-// ============================================================================
-// get abscissas       (by value!)  
-// ============================================================================
-Ostap::Math::Interpolation::Abscissas
-Ostap::Math::Interpolation::Table::abscissas () const 
-{
-  switch ( m_atype ) 
-  {
-  case Ostap::Math::Interpolation::Abscissas::Uniform          : ;
-  case Ostap::Math::Interpolation::Abscissas::Chebyshev        : ;
-  case Ostap::Math::Interpolation::Abscissas::Chebyshev2       : 
-    { return Abscissas ( size() , xmin() , xmax() , m_atype ) ; }
-  defaut:
-    break ;
-  }
   //
-  std::vector<double> values ( size () , 0.0 ) ;
-  std::transform ( begin        () ,
-                   end          () , 
-                   values.begin () , 
-                   [] ( const TABLE::value_type& p ) -> double 
-                   { return p.first ; } ) ;
-  return values ;  
-}
-// ============================================================================
-// get abscissas       (by value!)  
-// ============================================================================
-Ostap::Math::Interpolation::Abscissas::Data
-Ostap::Math::Interpolation::Table::values () const 
-{
-  std::vector<double> vals ( size () , 0.0 ) ;
-  std::transform ( begin      () ,
-                   end        () , 
-                   vals.begin () , 
-                   [] ( const TABLE::value_type& p ) -> double 
-                   { return p.second ; } ) ;
-  return vals ; 
+  return Table ( m_abscissas .begin () + ii , 
+                 m_abscissas .begin () + jj , 
+                 m_values    .begin () + ii , 
+                 m_values    .begin () + jj , true ) ;
 }
 // ============================================================================
 /*  simple constructor from the interpolation points  
@@ -657,7 +585,7 @@ void Ostap::Math::FloaterHormann::get_weights()
   //
   for ( unsigned int i = 0 ; i <= n ; ++i )
   {    
-    const long double xi = ( begin () + i ) ->first ;
+    const long double xi = x ( i ) ;
     //
     long double ib = 0 ;
     const unsigned int jmin = i       <= m_d ? 0 : i - m_d ;
@@ -671,7 +599,7 @@ void Ostap::Math::FloaterHormann::get_weights()
       long double bb = 1  ;
       for ( unsigned int k = kmin ; k <= kmax ; ++k ) 
       {
-        const long double xk = ( begin() + k ) -> first ;
+        const long double xk = x ( k ) ;
         if ( k != i ) { bb *= 1 / std::abs ( xi - xk ) ; }
       }
       ib += bb ;
@@ -691,11 +619,11 @@ double Ostap::Math::FloaterHormann::evaluate
   long double s1 = 0 ;
   long double s2 = 0 ;
   //
-  unsigned int i = 0 ;
-  for ( iterator it = begin() ; it != end() ; ++it , ++i )
+  unsigned int N = size() ;
+  for ( unsigned int i = 0  ; i < N  ;  ++i )
   {
-    const long double xi = it->first  ;
-    const long double yi = it->second ;
+    const long double xi = this -> x ( i ) ;
+    const long double yi = this -> y ( i ) ;
     //
     if ( s_equal ( x , xi ) ) { return yi ; }  // RETURN
     //
@@ -747,11 +675,11 @@ void Ostap::Math::Newton::get_differences () // get the divided differences
   for ( unsigned short i = 0 ; i < N ; ++i ) 
   {
     m_diffs [i] = Ostap::Math::Differences::divided 
-      ( begin ()             , 
-        begin () + ( i + 1 ) , 
-        begin ()             , 
-        [] ( const auto& p )->double { return p.first  ; } , 
-        [] ( const auto& p )->double { return p.second ; } ) ;  
+      ( x_begin ()             , 
+        x_begin () + ( i + 1 ) , 
+        y_begin ()             , 
+        [] ( const double x ) -> double { return x ; } , 
+        [] ( const double y ) -> double { return y ; } ) ;  
   } 
 }
 // ============================================================================
@@ -768,7 +696,7 @@ double Ostap::Math::Newton::evaluate ( const double x ) const
   for ( unsigned short i = 0 ; i < N ; ++i )
   {
     result  += m_diffs [ i ] * product ;
-    const long double xi =  ( begin() + i ) -> first ;
+    const long double xi =  this->x ( i ) ;
     product *= ( x - xi ) ;
   }
   return result ;  
@@ -852,14 +780,14 @@ void Ostap::Math::Barycentric::get_weights()
   for   ( unsigned short i = 0 ;  i < N ; ++i ) 
   {
     //
-    const long double xi  =  ( begin() + i ) -> first ;
+    const long double xi  = x ( i ) ;
     //
     long double ww = 1 ;
     for  ( unsigned short j = 0 ; j < N ; ++j  )
     { 
       if ( i != j ) 
       { 
-        const long double xj  =  ( begin() + j ) -> first ;
+        const long double xj  = x( j ) ; 
         ww *= ( xi - xj ) ; 
       } 
     }
@@ -878,11 +806,11 @@ double Ostap::Math::Barycentric::evaluate
   long double s1 = 0 ;
   long double s2 = 0 ;
   //
-  unsigned int i = 0 ;
-  for ( iterator it = begin() ; it != end() ; ++it , ++i )
+  const unsigned int N = size () ;
+  for ( unsigned int i = 0  ; i < N ; ++i )
   {
-    const long double xi = it->first  ;
-    const long double yi = it->second ;
+    const long double xi =  this-> x ( i ) ;
+    const long double yi =  this-> y ( i ) ;
     //
     if ( s_equal ( x , xi ) ) { return yi ; }  // RETURN
     //

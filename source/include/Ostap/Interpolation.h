@@ -76,7 +76,9 @@ namespace Ostap
       public:
         // ====================================================================
         /// the actual vector of data 
-        typedef std::vector<double>  Data ; // the actual vector of data 
+        typedef std::vector<double>  Data           ; // the actual vector of data 
+        typedef Data::const_iterator const_iterator ; // iterator type 
+        typedef Data::const_iterator iterator       ; // iterator type
         // ====================================================================
         enum AType 
           { Generic          = -1          , 
@@ -115,7 +117,14 @@ namespace Ostap
           const bool sorted = false ) 
           :  m_x     ( begin , end ) 
           ,  m_atype ( Generic     )  
-        { if ( !sorted ) { this->sort () ; } }
+        { 
+          if ( !sorted ) { this->sort () ; } 
+          if ( !empty () )
+          {
+            m_xmin = m_x.front () ;
+            m_xmax = m_x.back  () ;            
+          } 
+        }
         // =================================================================
         /** templated constructor from the arbitrary sequence
          *  @param begin start of the sequnce 
@@ -131,10 +140,15 @@ namespace Ostap
           FUNCTION   fun            , 
           const bool sorted = false ) 
           : m_x     ( std::distance ( begin, end ) , 0.0 )  
-          , m_atype ( Generic     )  
+          , m_atype ( Generic     )
         {
           std::transform ( begin , end , m_x.begin() , fun );
-          if ( !sorted ) { this->sort () ; } 
+          if ( !sorted   ) { this->sort () ; } 
+          if ( !empty () )
+          {
+            m_xmin = m_x.front () ;
+            m_xmax = m_x.back  () ;            
+          }
         }
         // ====================================================================
         /** special constructor for the given interpolation type 
@@ -168,32 +182,33 @@ namespace Ostap
       public:
         // ====================================================================
         /// get all abscissas 
-        const Data&  x       () const { return m_x ; }
+        const Data&    x     () const { return m_x ; }
         /// get all abscissas (as cast-operator)
         operator const Data& () const { return m_x ; }
         // ====================================================================
         ///  get the absissas for the given index 
         double x    ( const unsigned short index ) const 
-        { return m_x.empty() ? 0.0 : index < m_x.size() ? m_x [ index ] : m_x.back() ; }
+        { 
+          static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+          return m_x.empty() ? s_nan : index < m_x.size() ? m_x [ index ] : m_x.back()   ; 
+        }
+        // ====================================================================
+        /// get abscissa for the given index 
+        double operator[] ( const unsigned short index ) const 
+        { return x ( index ) ; }
         // ====================================================================
       public:
         // ====================================================================
         /// minimal  abscissa 
-        double xmin () const 
-        {
-          static const double s_xmin = - std::numeric_limits<double>::max () ;
-          return m_x.empty () ? s_xmin : m_x.front () ; 
-        }
+        double xmin () const { return m_xmin ; }
         /// maximal abscissas 
-        double xmax () const 
-        { 
-          static const double s_xmax =   std::numeric_limits<double>::max () ;
-          return m_x.empty () ? s_xmax : m_x.back  () ; 
-        }
+        double xmax () const { return m_xmax ; }
         // ====================================================================
       public: // expose (const) iterators 
         // ====================================================================
+        /// begin-iterator 
         Data::const_iterator begin () const { return  m_x.begin () ; }
+        /// end-iterator 
         Data::const_iterator end   () const { return  m_x.end   () ; }        
         // ====================================================================
       public: // add & remove the point 
@@ -201,14 +216,14 @@ namespace Ostap
         /** add one more abscissa in the list 
          *  @param xnew value to be added 
          *  @return -1 if point is NOT added or new index for added points  
-         *  @attention it can change teh type of abscissas! 
+         *  @attention it can change the type of abscissas! 
          */
         int add  
         ( const double         xnew ) ;
         /** remove the point with the given index 
          *  @param index poitn with the index 
          *  @return true if point is really removed 
-         *  @attention it can change teh type of abscissas! 
+         *  @attention it can change the type of abscissas! 
          */
         bool remove 
         ( const unsigned short index ) ;
@@ -225,14 +240,16 @@ namespace Ostap
         { 
           swap ( m_x     , right.m_x     ) ; 
           std::swap ( m_atype , right.m_atype ) ;
+          std::swap ( m_xmin  , right.m_xmin  ) ;
+          std::swap ( m_xmax  , right.m_xmax  ) ;
         }
         // ====================================================================
       private:
         // ====================================================================
-        /** sort abscissas and eliminate the duplicates  
-         *  @return number of removed duplicates  
+        /* sort abscissas and eliminate the duplicates  
+         * @return number of removed duplicates  
          */
-        unsigned int sort ( ) ;
+        unsigned int sort()  ;
         // ====================================================================
       private:
         // ====================================================================
@@ -240,6 +257,10 @@ namespace Ostap
         Data   m_x     {}          ; // (sorted) vector of abscissas 
         /// type of abscissas 
         AType  m_atype { Generic } ; // type of abscissas
+        /// minimal abssissa
+        double m_xmin  { 0 }       ; // minimal abssissa
+        /// maximal abssissa
+        double m_xmax  { 0 }       ; // maximal abssissa
         //  ====================================================================
       };
       // ======================================================================
@@ -255,30 +276,31 @@ namespace Ostap
       {
       public:
         // ====================================================================
-        /// actutal iterator ove ethe interpolation table 
-        typedef TABLE::const_iterator       iterator ;
-        /// actutal iterator ove ethe interpolation table (ditto)
-        typedef TABLE::const_iterator const_iterator ;
-        // ====================================================================
-      public:
-        // ====================================================================
-        /** the simplest constructor 
-         *  @param data   input data 
-         *  @param sorted indicate if data already  sorted and duplicates removed  
+        /** simple and efficient constructor from abscissas and y-list 
+         *  @param x input vector of abscissas  
+         *  @param ybegin start-iterator for sequence of function values 
+         *  @param yend   end-iterator for sequence of function values 
+         *  - if vector of y is longer  than vector x, extra values are ignored 
+         *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
          */
+        template <class ITERATOR , 
+                  typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
+                  typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
         Table 
-        ( const TABLE& data           , 
-          const bool   sorted = false ) ;
+        ( const Abscissas& x      , 
+          ITERATOR         ybegin , 
+          ITERATOR         yend   ) 
+          : m_abscissas ( x ) 
+          , m_values    ( x.size() , 0.0 ) 
+        {
+          const std::size_t nx = x.size() ;
+          const std::size_t ny = std::distance ( ybegin , yend ) ;
+          const std::size_t N  = std::min ( nx , ny ) ;
+          //
+          std::copy ( ybegin , ybegin + N , m_values.begin () ) ;
+        }
         // ====================================================================
-        /** the simplest constructor 
-         *  @param data   input data 
-         *  @param sorted indicate if data already  sorted and duplicates removed  
-         */
-        Table 
-        ( TABLE&&     data           , 
-          const bool  sorted = false ) ;
-        // ====================================================================
-        /** simple (efficient) constructor from abscissas and y-list 
+        /** simple & efficient constructor from abscissas and y-list 
          *  @param x input vector of abscissas  
          *  @param y input vector of y 
          *  - if vector of y is longer  than vector x, extra values are ignored 
@@ -286,46 +308,23 @@ namespace Ostap
          */
         Table
         ( const Abscissas&       x , 
-          const Abscissas::Data& y ) ;
-        // ====================================================================
-        /** simple (efficient) constructor from abscissas and y-list 
-         *  @param y input vector of y 
-         *  @param x input vector of abscissas  
-         *  - if vector of y is longer  than vector x, extra values are ignored 
-         *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-         */
-        Table
-        ( const Abscissas::Data& y , 
-          const Abscissas&       x ) ;
-        // ====================================================================
+          const Abscissas::Data& y ) 
+          : Table ( x , y.begin() , y.end() )
+        {}
+        // ==================================================================== 
         /** simple constructor from x&y-lists 
          *  @param x input vector of x 
          *  @param y input vector of y 
+         *  @param sorted  indicate that x-list is already sorted 
          *  - if vector of y is longer  than vector x, extra values are ignored 
          *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-         *  @attention duplicated abscissas will be removed 
+         *  @attention It is not very efficient: 
+         *   - there is sorting and duplicates removal 
          */
         Table
-        ( const Abscissas::Data& x , 
-          const Abscissas::Data& y ) ;
-        // ====================================================================
-        /** simple constructor from map/dictionary { x : f(x) }
-         *  @param data map/dictionary with data  { x : f(x) }
-         *  It is elatively efficient: no sorting
-         *  - "numerical" duplicates are removed
-         */
-        template <class KEY, class VALUE>
-        Table
-        ( const std::map<KEY,VALUE>& data ) 
-          : m_table ( data.size()         )  
-          , m_atype ( Abscissas::Generic  )
-        {
-          TABLE::iterator i = m_table.begin() ;
-          for ( const auto& item : data ) 
-          { *i = std::make_pair ( item.first , item.second ) ; ++i ; }
-          /// eliminate duplicates, no need to sort it  
-          this->get_sorted ( true ) ;
-        }
+        ( const Abscissas::Data& x              , 
+          const Abscissas::Data& y              , 
+          const bool             sorted = false ) ;
         // ====================================================================
         /** simple contructor from x&y-lists 
          *  @param xbegin start  of sequence of abscissas 
@@ -335,7 +334,8 @@ namespace Ostap
          *  @param sorted indicate if data already sorted and duplicates removed  
          *  - if vector of y is longer  than vector x, extra values are ignored 
          *  - if vector of y is shorter than vector x, missing entries are assumed to be zero  
-         *  @attention duplicated abscissas will be removed 
+         *  @attention It is not very efficient: 
+         *   - there is sorting and duplicates removal 
          */
         template <class XITERATOR, 
                   class YITERATOR,
@@ -349,27 +349,88 @@ namespace Ostap
           YITERATOR  ybegin         ,
           YITERATOR  yend           ,
           const bool sorted = false )
-          : m_table ( std::distance ( xbegin , xend ) ) 
-          , m_atype ( Abscissas::Generic ) 
+          : m_abscissas () 
+          , m_values    () 
         {  
-          // ==================================================================
+          // =================================================================
+          /// helper intermediate table 
+          const int NNN = std::distance ( xbegin , xend ) ;
+          const unsigned int NN = std::max ( 0 , NNN ) ;
+          TABLE table { NN } ;
           /// 1) copy x into the table 
           std::transform 
-            ( xbegin          , 
-              xend            , 
-              m_table.begin() , 
+            ( xbegin        , 
+              xend          , 
+              table.begin() , 
               [] ( double v ) { return std::make_pair ( v , 0.0 ) ; } );
           /// 2) copy y into the table 
-          const unsigned int N = std::min ( std::distance ( xbegin , xend ) , 
-                                            std::distance ( ybegin , yend ) ) ;
+          const unsigned int N = std::min
+            ( std::distance ( xbegin , xend ) , 
+              std::distance ( ybegin , yend ) ) ;
           std::transform
-            ( m_table.begin () , m_table.begin () + N , 
-              ybegin           , 
-              m_table.begin () , 
+            ( table.begin ()     , 
+              table.begin () + N , 
+              ybegin             , 
+              table.begin ()     , 
               [] ( const auto& p , const double v ) 
               { return std::make_pair ( p.first , v ) ; } );
-          /// 3) sort it & eliminate  duplicates 
-          this->get_sorted ( sorted ) ;  
+          /// 3) sort it & eliminate duplicates 
+          this->get_sorted ( sorted , table ) ;  
+          /// 4) fill abscissas 
+          m_abscissas = Abscissas 
+            ( table.begin () , 
+              table.end   () ,  
+              []( const auto& p )-> double { return p.first ; } , true ) ;
+          /// 5) fill values 
+          m_values.resize( table.size () ) ;
+          std::transform 
+            ( table    .begin () ,
+              table    .end   () , 
+              m_values .begin () , 
+              []( const auto& p )-> double { return p.second ; }       ) ;
+          // ==================================================================
+        }
+        // ======================================================================
+        /** the simplest constructor 
+         *  @param data   input data 
+         *  @param sorted indicate if data already  sorted
+         *  @attention It is not very efficient: 
+         *   - there is data copy, sorting and duplicates removal 
+         */
+        Table 
+        ( TABLE        data           , 
+          const bool   sorted = false ) ;
+        // ====================================================================
+        /** simple constructor from map/dictionary { x : f(x) }
+         *  @param data map/dictionary with data  { x : f(x) }
+         *  It is relatively efficient: no sorting
+         *  - "numerical" duplicates are removed
+         */
+        template <class KEY, class VALUE>
+        Table
+        ( const std::map<KEY,VALUE>& data ) 
+          : m_abscissas () 
+          , m_values    () 
+        {
+          /// 1) create helper intermediate table 
+          TABLE table { data.size() } ;
+          TABLE::iterator i = table.begin() ;
+          for ( const auto& item : data ) 
+          { *i = std::make_pair ( item.first , item.second ) ; ++i ; }
+          /// 2) eliminate duplicates, no need to sort it  
+          this->get_sorted ( true , table ) ;
+          /// 3) fill abscissas 
+          m_abscissas = Abscissas 
+            ( table.begin () , 
+              table.end   () ,  
+              []( const auto& p )-> double { return p.first ; } , true ) ;
+          /// 4) fill values 
+          m_values.resize( table.size () ) ;
+          std::transform 
+            ( table.begin    () ,
+              table.end      () , 
+              m_values.begin () ,
+              []( const auto& p )-> double { return p.second ; }       ) ;
           // ==================================================================
         }
         // ====================================================================
@@ -382,17 +443,12 @@ namespace Ostap
         Table 
         ( const Abscissas& a     , 
           FUNCTION         fun   )                
-          : m_table ( a.size  () ) 
-          , m_atype ( a.atype () ) 
-        {
-          // ==================================================================
-          std::transform 
-            ( a.begin () , a.end () ,  
-              m_table.begin ()      , 
-              [&fun]  ( const double x ) 
-              { return std::make_pair ( x , fun ( x ) ) ; } ) ;
-          // ==================================================================
-        }     
+          : m_abscissas ( a              )  
+          , m_values    ( a.size() , 0.0 )
+        { 
+          std::transform ( a.begin () , a.end   () , m_values.begin () , 
+                           [&fun] ( const double x ) -> double { return fun ( x ) ; } ) ; 
+        }
         // ====================================================================
         /** templated constructor 
          *  (very efficient: no sorting, no removal of duplicate...)
@@ -403,7 +459,12 @@ namespace Ostap
         Table 
         ( FUNCTION         fun   ,
           const Abscissas& a     )
-          : Table ( a , fun ) {}
+          : m_abscissas ( a              )  
+          , m_values    ( a.size() , 0.0 )
+        { 
+          std::transform ( a.begin () , a.end   () , m_values.begin () , 
+                           [&fun] ( const double x ) -> double { return fun ( x ) ; } ) ; 
+        }
         // ====================================================================
         /** templated constructor 
          *  @param begin start  of x-sequence 
@@ -416,22 +477,10 @@ namespace Ostap
                   typename value_type = typename std::iterator_traits<ITERATOR>::value_type,
                   typename = std::enable_if<std::is_convertible<value_type,long double>::value> >
         Table 
-        ( FUNCTION fun   , 
-          ITERATOR begin , 
-          ITERATOR end   ) 
+        ( ITERATOR begin , 
+          ITERATOR end   ,
+          FUNCTION fun   )  
           : Table ( Abscissas ( begin, end ) , fun ) 
-        {}
-        // ====================================================================
-        /** templated constructor 
-         *  (very efficient: no sorting, no removal of duplicate...)
-         *  @param fun       function object 
-         *  @param abscissas interpolation abscissas 
-         */
-        template <class FUNCTION>
-        Table 
-        ( FUNCTION               fun   ,
-          const Abscissas::Data& a     )
-          : Table ( fun , a.begin() , a.end () ) 
         {}
         // ====================================================================
         /** templated constructor 
@@ -461,68 +510,54 @@ namespace Ostap
       public:
         // ====================================================================
         /// number of interpolation points 
-        unsigned int size    () const { return m_table.size  () ; }
+        unsigned int size    () const { return m_abscissas.size  () ; }
         /// no interpolation points 
-        bool         empty   () const { return m_table.empty () ; }
+        bool         empty   () const { return m_abscissas.empty () ; }
         // ====================================================================
       public : // 
         // ====================================================================
-        /// get abscissas type 
-        Abscissas::AType atype     () const { return m_atype ; }
+        /// get the entry for given index 
+        std::pair<double,double> operator[] ( const unsigned short index ) const 
+        { return std::make_pair ( x ( index ) , y ( index ) ) ;  }
         // ====================================================================
       public:
         // ====================================================================
         ///  get the abscissas for the given index 
         double x    ( const unsigned short index ) const 
-        { 
-          static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
-          return 
-            m_table.empty()        ? s_nan :
-            index < m_table.size() ? m_table[ index ].first : m_table.back().first  ;
-        }
+        { return m_abscissas.x ( index ) ; }
         ///  get the value    for the given index 
         double y    ( const unsigned short index ) const 
         { 
           static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
           return 
-            m_table.empty()        ? s_nan :
-            index < m_table.size() ? m_table[ index ].second : m_table.back().second ;
+            m_values.empty()        ? s_nan :
+            index < m_values.size() ? m_values[ index ] : m_values.back()  ;
         }
         // =====================================================================
       public: // get abscissas & data 
         // ====================================================================
-        /// get abscissas       (by value!)  
-        Abscissas       abscissas () const ;
-        /// get function values (by value!) 
-        Abscissas::Data values    () const ;
+        /// get abscissas      
+        const Abscissas&       abscissas () const { return m_abscissas ; }
+        /// get function values 
+        const Abscissas::Data& values    () const { return m_values    ; }
         // =====================================================================
+        /// get abscissas type 
+        Abscissas::AType       atype     () const { return m_abscissas.atype()  ; }
+        // ====================================================================
       public:
         // ====================================================================
         /// minimal  abscissa 
-        double xmin () const 
-        {
-          static const double s_xmin = - std::numeric_limits<double>::max () ;
-          return m_table.empty () ? s_xmin : m_table.front ().first ; 
-        }
+        double xmin () const { return m_abscissas.xmin () ; }
         /// maximal abscissas 
-        double xmax () const 
-        { 
-          static const double s_xmax =   std::numeric_limits<double>::max () ;
-          return m_table.empty () ? s_xmax : m_table.back  ().first ; 
-        }
+        double xmax () const { return m_abscissas.xmin () ; }
         // ====================================================================
-      public: // expose begin/end (const) iterators 
+      public: // iterators 
         // ====================================================================
-        /// begin of the table 
-        iterator begin () const { return m_table.begin () ; }
-        /// end of the table 
-        iterator end   () const { return m_table.end   () ; }
-        // =====================================================================
-      public: // show internal data 
-        // =====================================================================
-        /// get internal data
-        const TABLE& data  () const { return m_table ; }
-        // =====================================================================
+        Abscissas::const_iterator       x_begin () const { return m_abscissas.begin () ; }
+        Abscissas::const_iterator       x_end   () const { return m_abscissas.end   () ; }
+        Abscissas::Data::const_iterator y_begin () const { return m_values   .begin () ; }
+        Abscissas::Data::const_iterator y_end   () const { return m_values   .end   () ; }        
+        // ====================================================================
       public:
         // ====================================================================
         /** add the point (x,y) into interpolation table 
@@ -596,21 +631,21 @@ namespace Ostap
         /// swap two interpolation tables 
         void exchange ( Table& right ) 
         { 
-          swap      ( m_table , right.m_table ) ;
-          std::swap ( m_atype , right.m_atype ) ;
+          swap ( m_abscissas , right.m_abscissas ) ;
+          swap ( m_values    , right.m_values    ) ;
         }
         // ====================================================================
-      private:
+      public:
         // ====================================================================
-        ///  sort internal data and remove duplicated abscissas 
-        void get_sorted ( bool sorted = false ) ;
+        ///  sort table and remove duplicated abscissas 
+        void get_sorted ( bool sorted , TABLE& table  ) ;
         // ====================================================================
       private :
         // ====================================================================
-        /// the actual table with data
-        TABLE            m_table {} ;             // the actual table with data
-        /// type of abscissas 
-        Abscissas::AType m_atype { Abscissas::Generic } ;  // type of abscissas
+        /// interpolation absciccas 
+        Abscissas       m_abscissas {} ; // interpolation absciccas 
+        /// function values 
+        Abscissas::Data m_values    {} ; // interpolation absciccas 
         // ====================================================================
       } ;
       // ======================================================================

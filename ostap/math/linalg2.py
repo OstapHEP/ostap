@@ -22,7 +22,8 @@ __all__     = (
 # =============================================================================
 import ROOT, re, ctypes 
 from   sys       import version_info as python_version
-from   builtins  import range 
+from   builtins  import range
+from   array     import array 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -107,6 +108,7 @@ def correlation ( mtrx , i , j ):
     elif 0 > v and isequal ( v  , -1 ) :  return -1  
     
     return TypeError("Can't get corr(%d,%d) for m=%s" % ( i , j , mtrx ) )
+
 
 # =============================================================================
 ## @class Method
@@ -1426,7 +1428,6 @@ class LinAlg(object) :
         for i in range  ( kcols ) :
             yield mtrx.column ( i ) 
             
-
     # =========================================================================
     ## get the eigenvalues for symmetric matrix
     #  @code
@@ -1482,7 +1483,42 @@ class LinAlg(object) :
 
         return values, vectors  
 
+    # =========================================================================
+    ## reduce SVector
+    @staticmethod
+    def V_REDUCE ( vct ) :
+        """REduce SVector"""
+        return svct_factory, ( array ( 'd' , vct ) , )
 
+    # =========================================================================
+    ## reduce SMatrix 
+    @staticmethod
+    def M_REDUCE ( mtrx ) :
+        """Reduce SMatrix"""
+        
+        NR = mtrx.rep_size
+        a  = mtrx.Array() 
+        data = array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
+        return smtrx_factory, ( mtrx.kRows, mtrx.kCols , data ) 
+
+    # =========================================================================
+    ## reduce symmetric SMatrix 
+    @staticmethod
+    def MS_REDUCE ( mtrx ) :
+        """Reduce symmetric SMatrix"""
+        
+        NR   = mtrx.rep_size 
+        a    = mtrx.Array() 
+        data = array ( 'd' , ( a[i] for i in range ( NR ) ) ) 
+        return  symmm_factory, ( mtrx.kRows , data ) 
+
+    # =========================================================================
+    ## reduce SVectorWithErrors 
+    @staticmethod
+    def VE_REDUCE ( vct ) :
+        """reduce SVectorWithErrors"""
+        return svcte_factory , ( vct.value() , vct.cov2() ) 
+        
     # =========================================================================
     ## Convert matrix to TMatrix, vector to TVector 
     #  @code
@@ -1577,6 +1613,8 @@ class LinAlg(object) :
 
         t.shape         = property ( LinAlg.V_SHAPE , None , None )
 
+        t.__reduce__    = LinAlg.V_REDUCE 
+        
         s = revct.search ( t.__name__ )
         if s :
             stype = s.group('TYPE')
@@ -1603,6 +1641,8 @@ class LinAlg(object) :
         ##  save 'old method'
         LinAlg.backup ( m )
         
+        R = m.rep_type
+
         m. __add__      = lambda a , b : LinAlg. ADD ( a , b ) 
         m.__radd__      = lambda a , b : LinAlg.RADD ( a , b ) 
         m.__iadd__      = lambda a , b : LinAlg.IADD ( a , b )
@@ -1656,6 +1696,10 @@ class LinAlg(object) :
         m.asym          = LinAlg.M_ASYM 
         m.skew          = LinAlg.M_ASYM 
 
+
+        m.__reduce__    = LinAlg.M_REDUCE 
+        m.rep_size      = classgetter ( lambda cls : cls.rep_type.kSize ) 
+
         s = remtx.search ( m.__name__ )
         if s :
             stype = s.group('TYPE')
@@ -1679,6 +1723,8 @@ class LinAlg(object) :
 
         LinAlg.deco_matrix ( m )
         
+        R = m.rep_type
+        
         m.__str__        = LinAlg.MS_STR
         m.__repr__       = LinAlg.MS_STR
         m.correlations   = LinAlg.MS_CORR
@@ -1693,6 +1739,9 @@ class LinAlg(object) :
         m.eigen_values   = LinAlg.MS_EIGENVALUES 
         m.eigen_vectors  = LinAlg.MS_EIGENVECTORS
 
+        m.__reduce__     = LinAlg.MS_REDUCE 
+        m.rep_size       = classgetter ( lambda cls : cls.rep_type.kSize ) 
+        
         return m
 
     # =========================================================================
@@ -1716,7 +1765,9 @@ class LinAlg(object) :
 
         t. __iter__     = LinAlg.V_ITER      
         t.transform     = LinAlg.VE_TRANSFORM
-        
+
+        t.__reduce__    = LinAlg.VE_REDUCE 
+                
         return t
 
 
@@ -1987,8 +2038,55 @@ if np :
     Ostap.Math.toSMatrix  = staticmethod ( LinAlg.toSMatrix ) 
     Ostap.Math.toSVector  = staticmethod ( LinAlg.toSVector )
     Ostap.Math.toSObject  = staticmethod ( LinAlg.toSObject )
-    
 
+
+
+# =============================================================================
+## factory for vectors
+def svct_factory ( data ) :
+    """Factory for vectors
+    """
+    N  = len ( data ) 
+    VN = LinAlg.Vector( N )
+    v  = VN()
+    v.SetElements ( data , N )
+    return v
+
+# =============================================================================
+## Factory for matrices
+def smtrx_factory ( N , K , data ) :
+    """ Factory for matrices
+    """
+    
+    MNK = LinAlg.Matrix ( N , K )
+    m   = MNK()
+    a   = m.Array()
+    for i , d in enumerate ( data ) :
+        a [ i ] = d
+    return m
+
+# =============================================================================
+## factory for symmetric matrices
+def symmm_factory ( N , data ) :
+    """Factory for symmetric matrices
+    """    
+    SNN = LinAlg.SymMatrix ( N )
+    m   = SNN ()
+    a   = m.Array()
+    for i , d in enumerate ( data ) :
+        a [ i ] = d
+    return m
+
+# =============================================================================
+## factory for vectors with errors
+def svcte_factory ( vals , cov2 ) :
+    """factory for vectors with errors
+    """
+    N    = len ( vals )
+    SVEN = LinAlg.VectorE ( N )
+    return SVEN ( vals , cov2 ) 
+
+ 
 # =============================================================================
 _decorated_classes_ = (
     )

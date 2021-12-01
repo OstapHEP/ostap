@@ -602,7 +602,7 @@ namespace Ostap
       inline 
       Ostap::Math::Barycentric
       lagrange 
-      ( const std::map<KEY,VALUE>& data )   
+      ( const  std::map<KEY,VALUE>& data )   
       { return Ostap::Math::Barycentric ( Table ( data ) ) ; }
       // ======================================================================
       /** Efficient (true) Barycentric Lagrange Interpolation: 
@@ -629,7 +629,7 @@ namespace Ostap
       inline   
       Ostap::Math::Barycentric
       lagrange
-      ( const Abscissas&                                    x , 
+      ( const  Abscissas&                                   x , 
         const  Ostap::Math::Interpolation::Abscissas::Data& y )
       { return Ostap::Math::Barycentric ( Table ( x , y ) ) ; }
       // ======================================================================      

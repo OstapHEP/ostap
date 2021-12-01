@@ -9,6 +9,9 @@
  1. add more printout for the `ostap.utils.cleanup` module 
  1. add more constructors for `Ostap::Math::Interpolation::Table`
  1. disable some serialisaton tests for ROOT<6 and python3 < 3.7 (seg fault)
+ 1. implement serialization/deserialisation for matrtices&vectors 
+ 1. improve interpoaltion stuff, maknig it more efficient + extend tests  
+
 ## Backward incompatible  
 
 ## Bug fixes:
