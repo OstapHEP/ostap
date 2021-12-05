@@ -472,6 +472,39 @@ Ostap::Kinematics::Dalitz0::transpose
   return Dalitz0 ( m1 () , m2 () , m3 () ) ;
 }
 // ============================================================================
+// momentum of the 1st particle 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::P1 
+( const double    s      , 
+  const double /* s1  */ , 
+  const double    s2     ) const 
+{
+  const double v = Ostap::Kinematics::triangle ( s , m1sq () , s2 ) ;
+  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v  ) / ( 2 * std::sqrt ( s ) ) ;
+}
+// ============================================================================
+// momentum of the 2nd particle 
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::P2 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double v = Ostap::Kinematics::triangle ( s , m2sq () , s3 ( s , s1 , s2 ) ) ;
+  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v ) / ( 2 * std::sqrt ( s ) ) ;
+}
+// =============================================================================
+/// momentum of the 3rd particle 
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P3 
+( const double    s     , 
+  const double    s1    , 
+  const double /* s2 */ ) const 
+{
+  const double v = Ostap::Kinematics::triangle ( s  , m3sq () , s1 ) ;
+  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v ) / ( 2 * std::sqrt ( s ) ) ;
+}
+// ============================================================================
 // Dalitz 
 // ============================================================================
 Ostap::Kinematics::Dalitz::Dalitz

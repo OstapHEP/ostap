@@ -390,6 +390,40 @@ namespace Ostap
       ( const double s  ,
         const double s1 ) const ;
       // ======================================================================
+    public: // some frequent functions 
+      // ======================================================================
+      /**  get the energies/momenta of particles in the rest-frame 
+       *   @see Eq. (V.1.3) in E.Byckling, K.Kajantie, "Particle kinematics", 
+       */
+      // ======================================================================
+      /// Energy of the 1st particle 
+      inline double E1 
+      ( const double    s      , 
+        const double /* s1 */  ,
+        const double    s2     ) const 
+      { return  ( s  + m1sq () - s2                 ) / ( 2 * std::sqrt ( s )  ) ; }
+      // ============-=========================================================
+      /// Energy of the 2nd particle 
+      inline double E2
+      ( const double    s      ,    
+        const double    s1     , 
+        const double    s2     ) const 
+      { return  ( s  + m2sq () - s3 ( s , s1 , s2 ) ) / ( 2 * std::sqrt ( s ) ) ; }
+      // ======================================================================
+      /// Energy of the 3rd particle 
+      inline double E3 
+      ( const double    s      , 
+        const double    s1     ,
+        const double /* s2 */  ) const 
+      { return  ( s + m3sq () - s1                  ) / ( 2 * std::sqrt ( s ) ) ; }
+      // ======================================================================
+      /// momentum of the 1st particle 
+      double P1 ( const double s , const double s1  , const double s2 ) const ;
+      /// momentum of the 2nd particle 
+      double P2 ( const double s , const double s1  , const double s2 ) const ;
+      /// momentum of the 3rd particle 
+      double P3 ( const double s , const double s1  , const double s2 ) const ;
+      // ======================================================================
     public:
       // ======================================================================
       /** "transpose it", such that \f$ s_{i1} \f$ and \f$ s_{i2}\f$ 
