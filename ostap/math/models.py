@@ -69,7 +69,7 @@ def tf1  ( self                 ,
     >>> fun = obj.tf1 ( 3.0 , 3.2 )
     >>> fun.Draw() 
     """
-
+    
     npars    = kwargs.pop ( 'npars'    , 0    )
     args     = kwargs.pop ( 'args'     , ()   )
     npx      = kwargs.pop ( 'npx'      , 250  )
@@ -83,12 +83,15 @@ def tf1  ( self                 ,
     if not hasattr ( self , '_wo1' ) : self._wo1 = _WO1_ ( callme )
     if not self._wo1                 : self._wo1 = _WO1_ ( callme )
     #
+    xmin = float ( xmin )
+    xmax = float ( xmax )
+    #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
-        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
+        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
@@ -132,18 +135,23 @@ def tf2 ( self ,
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
     if not self._wo2                 : self._wo2 = _WO2_ ( callme )
     ##
+    xmin = float ( xmin )
+    xmax = float ( xmax )
+    ymin = float ( ymin )
+    ymax = float ( ymax )
+    #
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
-        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
+        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
     if hasattr ( self , 'ymin'  ) :
         ymn   = self.ymin
-        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+        ymin  = max ( float ( ymin ) , float ( ymn () ) if callable ( ymn ) else float ( ymn  ) )
     if hasattr ( self , 'ymax'  ) :
         ymx   = self.ymax
-        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+        ymax  = min ( float ( ymax ) , float ( ymx () ) if callable ( ymx ) else float ( ymx  ) )
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
@@ -194,25 +202,31 @@ def tf3 ( self ,
     if not hasattr ( self , '_wo3' ) : self._wo3 = _WO3_ ( callme )
     if not self._wo3                 : self._wo3 = _WO3_ ( callme )
     ##
-
+    xmin = float ( xmin )
+    xmax = float ( xmax )
+    ymin = float ( ymin )
+    ymax = float ( ymax )
+    zmin = float ( zmin )
+    zmax = float ( zmax )
+    ##
     if hasattr ( self , 'xmin'  ) :
         xmn   = self.xmin
-        xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
+        xmin  = max ( float ( xmin ) , float ( xmn () ) if callable ( xmn ) else float ( xmn  ) )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
+        xmax  = min ( float ( xmax ) , float ( xmx () ) if callable ( xmx ) else float ( xmx ) ) 
     if hasattr ( self , 'ymin'  ) :
         ymn   = self.ymin
-        ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
+        ymin  = max ( float ( ymin ) , float ( ymn () ) if callable ( ymn ) else float ( ymn  ) )
     if hasattr ( self , 'ymax'  ) :
         ymx   = self.ymax
-        ymax  = min ( ymax  , ymx () if callable ( ymx ) else ymx )
+        ymax  = min ( float ( ymax ) , float ( ymx () ) if callable ( ymx ) else float ( ymx  ) )
     if hasattr ( self , 'zmin'  ) :
         zmn   = self.zmin
-        zmin  = max ( zmin  , zmn () if callable ( zmn ) else zmn )
+        zmin  = max ( float ( zmin ) , float ( zmn () ) if callable ( zmn ) else float ( zmn  ) )
     if hasattr ( self , 'zmax'  ) :
         zmx   = self.zmax
-        zmax  = min ( zmax  , zmx () if callable ( zmx ) else zmx )
+        zmax  = min ( float ( zmax ) , float ( zmx () ) if callable ( zmx ) else float ( zmx  ) )
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
@@ -259,19 +273,25 @@ def f1_draw ( self , opts ='' , **kwargs ) :
     >>> fun = ...
     >>> fun.draw()    
     """
+
+    if hasattr ( self , '_tf1' ) and 'callable' in kwargs : del self._tf1
     
-    if hasattr ( self , '_tf1' ) :
-        
+    if hasattr ( self , '_tf1' ) and 'xmin'     in kwargs :        
         xmin    = kwargs.get ( 'xmin'    , None )
+        if isinstance ( xmin    , num_types     ) and float ( xmin ) != self._tf1.GetXmin () : del self._tf1 
+
+    if hasattr ( self , '_tf1' ) and 'xmax'     in kwargs :        
         xmax    = kwargs.get ( 'xmax'    , None )
-        npx     = kwargs.get ( 'npx'     , None )
-        npoints = kwargs.get ( 'npoints' , None )
+        if isinstance ( xmax    , num_types     ) and float ( xmax ) != self._tf1.GetXmax () : del self._tf1 
         
-        if 'callable' in kwargs                                                                         : del self._tf1
-        elif isinstance ( xmin    , num_types     )                 and xmin    != self._tf1.GetXmin () : del self._tf1 
-        elif isinstance ( xmax    , num_types     )                 and xmax    != self._tf1.GetXmax () : del self._tf1 
-        elif isinstance ( npx     , integer_types ) and 1 < npx     and npx     != self._tf1.GetNpx  () : del self._tf1 
-        elif isinstance ( npoints , integer_types ) and 1 < npoints and npoints != self._tf1.GetNpx  () : del self._tf1 
+    if hasattr ( self , '_tf1' ) and 'npx'       in kwargs :        
+        npx    = kwargs.get ( 'npx'    , None )
+        if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1
+        
+    if hasattr ( self , '_tf1' ) and 'npoints'    in kwargs :        
+        npx    = kwargs.get ( 'npoints'    , None )
+        if isinstance ( npx     , integer_types ) and 1 < npx and npx != self._tf1.GetNpx () : del self._tf1 
+        
         
     if not hasattr ( self , '_tf1'  ) :
         

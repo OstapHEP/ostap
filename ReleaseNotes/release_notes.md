@@ -9,7 +9,7 @@
 ## Bug fixes:
 
    1. Fix `Ostap::Kinematics::phasepace3` for cases with some arguments are zero
- 
+   1. Fix treatment  of `xmin/xmax/...` for `f1_draw` and related methods  
  
 # v1.6.6.0
 
