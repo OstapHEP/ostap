@@ -600,6 +600,10 @@ namespace Ostap
        *   @see Eq. (V.1.3) in E.Byckling, K.Kajantie, "Particle kinematics", 
        */
       // ======================================================================
+      using Dalitz0::E1 ;
+      using Dalitz0::E2 ;
+      using Dalitz0::E3 ;
+      // ======================================================================
       /// Energy of the 1st particle 
       inline double E1 ( const double /* s1 */ , const double s2        ) const 
       { return  ( s () + m1sq () - s2             ) / ( 2 *  sqs () ) ; }
@@ -611,6 +615,10 @@ namespace Ostap
       /// Energy of the 3rd particle 
       inline double E3 ( const double s1       , const double /* s2 */  ) const 
       { return  ( s () + m3sq () - s1             ) / ( 2 *  sqs () ) ; }
+      // ======================================================================
+      using Dalitz0::P1 ;
+      using Dalitz0::P2 ;
+      using Dalitz0::P3 ;
       // ======================================================================
       /// momentum of the 1st particle 
       double P1 ( const double s1  , const double s2 ) const ;
@@ -860,17 +868,17 @@ namespace Ostap
       /// Dalitz density as function of \f$ m_12 = \sqrt{s_1}\f$ 
       inline double dRdm12 ( const double m12 ) const
       { return
-          m12 < ( m1 () + m2 () ) ? 0 : m12 > ( m_M  - m3 () ) ? 0 : 
+          m12 <= ( m1 () + m2 () ) ? 0 : m12 >= ( m_M  - m3 () ) ? 0 : 
           2 * m12 * dRds1 ( m12 * m12 ) ; }
       /// Dalitz density as function of \f$ m_23 = \sqrt{s_2}\f$ 
       inline double dRdm23 ( const double m23 ) const
       { return 
-          m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 :
+          m23 <= ( m2 () + m3 () ) ? 0 : m23 >= ( m_M  - m1 () ) ? 0 :
           2 * m23 * dRds2 ( m23 * m23 ) ; }
       /// Dalitz density as function of \f$ m_31 = \sqrt{s_3}\f$ 
       inline double dRdm31 ( const double m31 ) const
       { return 
-          m31 < ( m3 () + m1 () ) ? 0 : m31 > ( m_M  - m2 () ) ? 0 : 
+          m31 <= ( m3 () + m1 () ) ? 0 : m31 >= ( m_M  - m2 () ) ? 0 : 
           2 * m31 * dRds3 ( m31 * m31 ) ; }      
       // ======================================================================
     public :  // geometry of Dalitz plot 

@@ -1186,18 +1186,18 @@ Ostap::Math::PSDalitz::PSDalitz
   const double m1 , 
   const double m2 , 
   const double m3 ) 
-  : PSDalitz (  Ostap::Kinematics::Dalitz ( M , m1 , m2 , m3 ) )
+  : PSDalitz ( Ostap::Kinematics::Dalitz ( M , m1 , m2 , m3 ) )
 {}
 // ============================================================================
-// constructor from Dalizt plot 
+// constructor from Dalitz plot 
 // ============================================================================
 Ostap::Math::PSDalitz::PSDalitz
 ( const Ostap::Kinematics::Dalitz& dalitz )
   : m_dalitz     ( dalitz ) 
   , m_norm       ( -1     )
-  , m_workspace  (        )
+  , m_workspace  () 
 {
-  m_norm = 1.0 / integral() ;
+  m_norm = 1 / Ostap::Kinematics::phasespace3 ( M ()  , m1 () , m2 () , m3 () ) ;
 }
 // ============================================================================
 /*  get the value of PDF 
@@ -1205,7 +1205,7 @@ Ostap::Math::PSDalitz::PSDalitz
  */
 // ============================================================================
 double Ostap::Math::PSDalitz::operator () ( const double x ) const 
-{ return ( 0 < m_norm ? m_norm : 1.0 ) * m_dalitz.dRdm12 ( x ) ; }
+{ return ( m_norm <= 0 ? 1 : m_norm ) * m_dalitz.dRdm12 ( x )  ; }
 // ============================================================================
 // get the integral between low and high limits
 // ============================================================================
@@ -1213,16 +1213,20 @@ double  Ostap::Math::PSDalitz::integral
 ( const double low  ,
   const double high ) const
 {
-  if ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
-  if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
+  //
+  if      ( s_equal ( low, high ) ) { return 0 ; }
+  else if ( high < low            ) { return - integral ( high    , low     ) ; }
   //
   const double x_min = xmin () ;
   const double x_max = xmax () ;
   //
-  if ( low >= x_max || high <= x_min ) { return 0 ; }
+  if      ( x_max   <= low    ) { return 0 ; }
+  else if ( x_min   >= high   ) { return 0 ; }
+  else if ( low     <  x_min  ) { return integral ( x_min , high  ) ; }
+  else if ( high    >  x_max  ) { return integral ( low   , x_max ) ; }
   //
-  const double xlow  = std::max ( low  , x_min ) ;
-  const double xhigh = std::min ( high , x_max ) ;
+  if ( 0 < m_norm && s_equal ( low , x_min ) && s_equal ( high , x_max ) )
+  { return 1.0 / m_norm ; }
   //
   // use GSL to evaluate the integral
   //
@@ -1236,7 +1240,7 @@ double  Ostap::Math::PSDalitz::integral
   std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
     ( tag ()        ,
       &F            , 
-      xlow          , xhigh     ,    // low & high edges
+      low           ,  high     ,    // low & high edges
       workspace ( m_workspace ) ,    // workspace
       s_PRECISION         ,          // absolute precision
       s_PRECISION         ,          // relative precision
@@ -1250,7 +1254,7 @@ double  Ostap::Math::PSDalitz::integral
 // get the integral
 // ============================================================================
 double  Ostap::Math::PSDalitz::integral() const
-{ return 0 < m_norm ? 1.0 / m_norm : integral ( m1() + m2() , M() - m3 () ) ; }
+{ return m_norm <= 0 ? Ostap::Kinematics::phasespace3 ( M ()  , m1 () , m2 () , m3 () ) : 1.0 ; }
 // ============================================================================
 // get the tag  
 // ============================================================================
@@ -1277,19 +1281,30 @@ Ostap::Math::PhaseSpace23L::PhaseSpace23L
   const double         m  ,
   const unsigned short L  ,
   const unsigned short l  )
-  : m_m1   ( std::abs ( m1 ) )
-  , m_m2   ( std::abs ( m2 ) )
-  , m_m3   ( std::abs ( m3 ) )
-  , m_m    ( std::abs ( m  ) )
-  , m_l    (            l    )
-  , m_L    (            L    )
-//
-  , m_norm ( -1 )
-//
+  : Ostap::Math::PhaseSpace23L ( Ostap::Kinematics::Dalitz ( m , m1 , m2  , m3 ) , L , l )
+{}
+// ============================================================================
+/** constructor from Dalitz and angular momenta
+ *  @param dalitz Dalit's configurtaion 
+ *  @param L  the angular momentum between the first pair and
+ *  the third particle
+ *  @param l  the angular momentum between the first and the second particle
+ */
+// ============================================================================
+Ostap::Math::PhaseSpace23L::PhaseSpace23L
+( const Ostap::Kinematics::Dalitz& dalitz , 
+  const unsigned short             L      ,
+  const unsigned short             l      ) 
+  : m_dalitz ( dalitz ) 
+  , m_l      (  l     )
+  , m_L      (  L     )
+    //
+  , m_norm   ( -1     )
+    //
   , m_workspace  ()
-//
+    //
 {
-  m_norm = integral() ;
+  m_norm = 1 / integral() ;
 }
 // ============================================================================
 // destructor
@@ -1298,12 +1313,12 @@ Ostap::Math::PhaseSpace23L::~PhaseSpace23L() {}
 // get the momentum of 1st particle in rest frame of (1,2)
 // ============================================================================
 double Ostap::Math::PhaseSpace23L::q ( const double x ) const
-{ return Ostap::Math::PhaseSpace2::q ( x , m_m1 , m_m2 ) ; }
+{ return Ostap::Math::PhaseSpace2::q ( x , m1 ()  , m2 () ) ; }
 // ============================================================================
 // get the momentum of 3rd particle in rest frame of mother
 // ============================================================================
 double Ostap::Math::PhaseSpace23L::p ( const double x ) const
-{ return Ostap::Math::PhaseSpace2::q ( m_m , x , m_m3 ) ; }
+{ return Ostap::Math::PhaseSpace2::q ( M ()  , x , m3 () ) ; }
 // ============================================================================
 // calculate the phase space
 // ============================================================================
@@ -1319,10 +1334,10 @@ double Ostap::Math::PhaseSpace23L::ps23L ( const double x ) const
   //
   // represent 3-body phase space as extention of 2-body phase space
   double ps =  x / M_PI *
-    Ostap::Math::PhaseSpace2::phasespace ( x   , m_m1 , m_m2 , m_l  ) *
-    Ostap::Math::PhaseSpace2::phasespace ( m_m ,    x , m_m3 , m_L  ) ;
+    Ostap::Math::PhaseSpace2::phasespace ( x    , m1 () , m2 () , m_l  ) *
+    Ostap::Math::PhaseSpace2::phasespace ( M () ,    x  , m3 () , m_L  ) ;
   //
-  return 0 < m_norm ? ps / m_norm : ps ;
+  return 0 < m_norm ? ps * m_norm : ps ;
 }
 // ============================================================================
 // get the integral between low and high limits
@@ -1331,15 +1346,20 @@ double  Ostap::Math::PhaseSpace23L::integral
 ( const double low  ,
   const double high ) const
 {
-  if ( s_equal ( low , high ) ) { return                 0.0 ; } // RETURN
-  if (           low > high   ) { return - integral ( high ,
-                                                      low  ) ; } // RETURN
+  if ( s_equal ( low , high ) ) { return                 0.0        ; } // RETURN
+  if (           low > high   ) { return - integral ( high , low  ) ; } // RETURN
   //
-  if ( high <= lowEdge  () ) { return 0 ; }
-  if ( low  >= highEdge () ) { return 0 ; }
+  const double x_min = xmin () ;
+  const double x_max = xmax () ;
   //
-  if ( low  <  lowEdge  () ) { return integral ( lowEdge() , high        ) ; }
-  if ( high >  highEdge () ) { return integral ( low       , highEdge () ) ; }
+  if      ( high <= x_min ) { return 0 ; }
+  else if ( low  >= x_max ) { return 0 ; }
+  //
+  if      ( low  <  x_min ) { return integral ( x_min , high  ) ; }
+  else if ( high >  x_max ) { return integral ( low   , x_max ) ; }
+  //
+  if ( 0 < m_norm && s_equal ( x_min , low ) && s_equal ( x_max , high ) ) 
+  { return 1.0 / m_norm ; }
   //
   // use GSL to evaluate the integral
   //
@@ -1367,15 +1387,13 @@ double  Ostap::Math::PhaseSpace23L::integral
 // get the integral
 // ============================================================================
 double  Ostap::Math::PhaseSpace23L::integral () const
-{ return integral ( lowEdge () , highEdge() ) ; }
+{ return 0 < m_norm ? 1.0 : integral ( lowEdge () , highEdge() ) ; }
 // ============================================================================
 // get the tag  
 // ============================================================================
 std::size_t Ostap::Math::PhaseSpace23L::tag () const  // get the tag
-{ return std::hash_combine ( m_m1 , m_m2 , m_m3 , m_m , m_l , m_L ) ; }
+{ return std::hash_combine ( m_dalitz.tag () , m_l , m_L ) ; }
 // ============================================================================
-
-
 
 // ============================================================================
 /*  Get a full integrated phase space over Dalitz plot 

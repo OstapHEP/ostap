@@ -748,10 +748,11 @@ namespace Ostap
       /// constructor from Dalizt plot          
       PSDalitz ( const Ostap::Kinematics::Dalitz& dalitz ) ;
       /// constructor from all masses  
-      PSDalitz ( const double M  = 1 , 
-                 const double m1 = 0 , 
-                 const double m2 = 0 , 
-                 const double m3 = 0 ) ;
+      PSDalitz
+      ( const double M  = 1 , 
+        const double m1 = 0 , 
+        const double m2 = 0 , 
+        const double m3 = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -783,8 +784,9 @@ namespace Ostap
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -804,12 +806,10 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// Dalitz plot istself 
+      /// Dalitz plot itself 
       Ostap::Kinematics::Dalitz m_dalitz ; // Dalitz plot istself 
       /// normalization constant
       double                    m_norm   ; // normalization constant
-      // ======================================================================
-    private:
       // ======================================================================
       /// integration workspace
       Ostap::Math::WorkSpace m_workspace ;    // integration workspace
@@ -842,12 +842,24 @@ namespace Ostap
        *  the third particle
        *  @param l  the angular momentum between the first and the second particle
        */
-      PhaseSpace23L ( const double         m1 = 0.5 ,
-                      const double         m2 = 0.5 ,
-                      const double         m3 = 3   ,
-                      const double         m  = 5   ,
-                      const unsigned short L  = 1   ,
-                      const unsigned short l  = 0   ) ;
+      PhaseSpace23L
+      ( const double                     m1 = 0.5 ,
+        const double                     m2 = 0.5 ,
+        const double                     m3 = 3   ,
+        const double                     m  = 5   ,
+        const unsigned short             L  = 0   ,
+        const unsigned short             l  = 0   ) ;
+      // ======================================================================
+      /** constructor from Dalitz and angular momenta
+       *  @param dalitz Dalit's configurtaion 
+       *  @param L  the angular momentum between the first pair and
+       *  the third particle
+       *  @param l  the angular momentum between the first and the second particle
+       */
+      PhaseSpace23L 
+      ( const Ostap::Kinematics::Dalitz& dalitz   , 
+        const unsigned short             L  = 0   ,
+        const unsigned short             l  = 0   ) ;
       /// deststructor
       ~PhaseSpace23L () ;                                     // deststructor
       // ======================================================================
@@ -861,17 +873,23 @@ namespace Ostap
       /// calculate the phase space
       double ps23L ( const double x ) const ;
       // ======================================================================
+    public : 
+      // ======================================================================
+      /// get the underlaying Dalitz plot 
+      const Ostap::Kinematics::Dalitz& dalitz() const { return m_dalitz ; }
+      // ======================================================================      
     public:
       // ======================================================================
-      double m1        () const { return m_m1 ; }
-      double m2        () const { return m_m2 ; }
-      double m3        () const { return m_m3 ; }
-      double m         () const { return m_m  ; }
+      double m1        () const { return m_dalitz.m1 () ; }
+      double m2        () const { return m_dalitz.m2 () ; }
+      double m3        () const { return m_dalitz.m3 () ; }
+      double m         () const { return m_dalitz.M  () ; }
+      double M         () const { return m_dalitz.M  () ; }
       unsigned short l () const { return m_l  ; }
       unsigned short L () const { return m_L  ; }
       // ======================================================================
-      double lowEdge   () const { return m1 () + m2 () ; }
-      double highEdge  () const { return m  () - m3 () ; }
+      double lowEdge   () const { return m1()  + m2 () ; }
+      double highEdge  () const { return M ()  - m3 () ; }
       /// get the momentum of 1st particle in rest frame of (1,2)
       double         q ( const double x ) const ;
       /// get the momentum of 3rd particle in rest frame of mother
@@ -879,11 +897,17 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
+      double xmin () const { return m1()  + m2 () ; }
+      double xmax () const { return M ()  - m3 () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// get the integral
       double integral () const ;
       /// get the integral between low and high limits
-      double integral ( const double low  ,
-                        const double high ) const ;
+      double integral 
+      ( const double low  ,
+        const double high ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -892,14 +916,8 @@ namespace Ostap
       // ======================================================================
     private:
       // ======================================================================
-      /// the first mass
-      double m_m1 ;            // the first mass
-      /// the second mass
-      double m_m2 ;            // the second mass
-      /// the third  mass
-      double m_m3 ;            // the third mass
-      /// the mass of mother particle
-      double m_m  ;            // the mass of mother particle
+      /// Dalitz calculator 
+      Ostap::Kinematics::Dalitz m_dalitz {} ; // Dalitz calculator 
       /// the orbital momentum between the first and the second particle
       unsigned short m_l ; // the orbital momentum between the 1st and 2nd
       /// the orbital momentum between the pair an dthe third particle

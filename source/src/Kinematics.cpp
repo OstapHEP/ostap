@@ -959,6 +959,7 @@ double Ostap::Kinematics::phasespace3
  *  @param m1 the mass of the 1st particle 
  */
 // ========================================================================
+#include <iostream>
 double Ostap::Kinematics::phasespace3 
 ( const double x  , 
   const double m1 ) 
@@ -975,18 +976,30 @@ double Ostap::Kinematics::phasespace3
     if ( am1 < xmax   ) { return phasespace3 ( x ) ; }
   }
   //
-  const double p2   = x   * x   ;
-  const double m1sq = am1 * am1 ;
+  
+  const double s      = x   * x   ;
+  const double m1sq   = am1 * am1 ;
+  const double m2sq   = 0  ;
   //
-  const double sqQ  = p2 - m1sq ;
+  const double lambda = Ostap::Kinematics::triangle ( s , m1sq , m2sq ) ;
+  if ( lambda <= 0    ) { return 0 ; }
   //
-  const double a    = p2 + m1sq ;
-  const double c    = p2 + m1sq ;
+  const double sqlam = std::sqrt ( lambda ) ;
   //
-  const double lc   = std::log ( ( c + sqQ ) / ( c - sqQ ) ) ;
+  const double s2    = s * s ;  
+  const double sm1m2 = s + m1sq + m2sq ;
+  const double dm    = m1sq - m2sq ;
+  //
+  const double A     = sm1m2 * sqlam                   / s2 ;
+  const double B     = 2 * std::abs ( dm )             / s  ;
+  const double C     = 2 * ( sm1m2 - 2 * m1sq * m2sq ) / s2 ;
+  //
+  const double D     =  ( sm1m2 - dm * dm + std::abs ( dm ) * sqlam ) / ( 2 * am1 * s ) ; // no m2! 
+  const double E     =  ( s - m1sq - m2sq + sqlam ) / ( 2 * am1 ) ;                       // no m2! 
   //
   static const double s_norm = 0.125 * M_PI * M_PI ;
-  return ( sqQ * a - 0.5 * c * c * lc ) * s_norm / p2 ;
+  //
+  return s_norm * s * ( A + B * std::log ( D ) - C * std::log ( E ) ) ;
 }
 // ========================================================================
 /** three-body phase space, with 3rd particle being massless 
@@ -1021,30 +1034,29 @@ double Ostap::Kinematics::phasespace3
     //
   }
   //
-  const double p2   = x   * x   ;
-  const double m1sq = am1 * am1 ;
-  const double m2sq = am2 * am2 ;
+  const double s      = x   * x   ;
+  const double m1sq   = am1 * am1 ;
+  const double m2sq   = am2 * am2 ;
   //
-  const double Qp = Ostap::Kinematics::triangle ( p2 , m1sq , m2sq ) ;
-  if ( Qp <= 0         ) { return 0 ; }
+  const double lambda = Ostap::Kinematics::triangle ( s , m1sq , m2sq ) ;
+  if ( lambda <= 0    ) { return 0 ; }
   //
-  const double sqQ = std::sqrt ( Qp ) ;
+  const double sqlam = std::sqrt ( lambda ) ;
   //
-  const double a   = p2 + m1sq + m2sq ;
-  const double b   = p2 - m1sq - m2sq ;
-  const double c   = p2 + m1sq - m2sq ;
-  const double d   = p2 - m1sq + m2sq ;
+  const double s2    = s * s ;  
+  const double sm1m2 = s + m1sq + m2sq ;
+  const double dm    = m1sq - m2sq ;
   //
-  const double lb  = std::log ( ( b + sqQ ) / ( b - sqQ ) ) ;
-  const double lc  = std::log ( ( c + sqQ ) / ( c - sqQ ) ) ;
-  const double ld  = std::log ( ( d + sqQ ) / ( d - sqQ ) ) ;
+  const double A     = sm1m2 * sqlam                   / s2 ;
+  const double B     = 2 * std::abs ( dm )             / s  ;
+  const double C     = 2 * ( sm1m2 - 2 * m1sq * m2sq ) / s2 ;
+  //
+  const double D     =  ( sm1m2 - dm * dm + std::abs ( dm ) * sqlam ) / ( 2 * am1 * am2 * s ) ;
+  const double E     =  ( s - m1sq - m2sq + sqlam ) / ( 2 * am1 * am2  ) ;
   //
   static const double s_norm = 0.125 * M_PI * M_PI ;
   //
-  return ( sqQ * a 
-           + 0.5 * b * b * lb 
-           - 0.5 * c * c * lc 
-           - 0.5 * d * d * ld ) * s_norm / p2 ;
+  return s_norm * s * ( A + B * std::log ( D ) - C * std::log ( E ) ) ;
 }
 // ============================================================================
 /// three-body phase space 

@@ -2551,15 +2551,16 @@ namespace Ostap
        *  @param L  the angular momentum between the first pair and the third particle
        *  @param l  the angular momentum between the first and the second particle
        */
-      PhaseSpace23L ( const char*          name      ,
-                      const char*          title     ,
-                      RooAbsReal&          x         ,
-                      const double         m1        ,
-                      const double         m2        ,
-                      const double         m3        ,
-                      const double         m         ,
-                      const unsigned short L         ,
-                      const unsigned short l     = 0 ) ;
+      PhaseSpace23L 
+      ( const char*          name      ,
+        const char*          title     ,
+        RooAbsReal&          x         ,
+        const double         m1        ,
+        const double         m2        ,
+        const double         m3        ,
+        const double         m         ,
+        const unsigned short L         ,
+        const unsigned short l     = 0 ) ;
       /// "copy constructor"
       PhaseSpace23L ( const PhaseSpace23L& right , const char* name = 0 )  ;
       /// destructor

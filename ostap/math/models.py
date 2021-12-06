@@ -88,7 +88,7 @@ def tf1  ( self                 ,
         xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
     if hasattr ( self , 'npars' ) :
         nps   = self.npars
         npars = max ( npars , nps () if callable ( nps ) else nps )
@@ -137,7 +137,7 @@ def tf2 ( self ,
         xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
     if hasattr ( self , 'ymin'  ) :
         ymn   = self.ymin
         ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
@@ -200,7 +200,7 @@ def tf3 ( self ,
         xmin  = max ( xmin  , xmn () if callable ( xmn ) else xmn )
     if hasattr ( self , 'xmax'  ) :
         xmx   = self.xmax
-        xmax  = min ( xmax  , xmx () if callable ( xmn ) else xmx )
+        xmax  = min ( xmax  , xmx () if callable ( xmx ) else xmx )
     if hasattr ( self , 'ymin'  ) :
         ymn   = self.ymin
         ymin  = max ( ymin  , ymn () if callable ( ymn ) else ymn )
