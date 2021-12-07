@@ -473,24 +473,31 @@ namespace Ostap
        *  - m2 : the mass of the second particle  \f$ m_2 \f$;
        *  - m3 : the mass of the third particle  \f$ m_3 \f$;
        */
-      Dalitz ( const double M  = 1 , 
-               const double m1 = 0 , 
-               const double m2 = 0 , 
-               const double m3 = 0 ) : Dalitz ( M , Dalitz0 ( m1 , m2 , m3 ) ) {}
+      Dalitz 
+      ( const double M  = 1 , 
+        const double m1 = 0 , 
+        const double m2 = 0 , 
+        const double m3 = 0 ) 
+        : Dalitz ( M , Dalitz0 ( m1 , m2 , m3 ) ) 
+      {}
       // ======================================================================
       /** constructor from all masses 
        *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
        *  @param b individual masses 
        */
-      Dalitz ( const double   M ,
-               const Dalitz0& b ) ;
+      Dalitz 
+      ( const double   M ,
+        const Dalitz0& b ) ;
       // ======================================================================
       /** constructor from all masses 
        *  @param b individual masses 
        *  @param m overlal mass of the system, \f$\sqrt{s}\f$;
        */
-      Dalitz ( const Dalitz0& b , 
-               const double   M ) : Dalitz ( M , b ) {}
+      Dalitz 
+      ( const Dalitz0& b , 
+        const double   M ) 
+        : Dalitz ( M , b ) 
+      {}
       // ======================================================================
     public:  // trivial getters 
       // ====================================================================== 

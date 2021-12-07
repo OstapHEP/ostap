@@ -1,8 +1,11 @@
+# v1.6.7.0 
+
 ## New features:
   1. add `Ostap::Kinematics::Dalitz0::E1,E2,E3` and `Ostap::Kinematics::Dalitz0::P1,P2,P3` three-argument methods, They are less efficient than corresponding two-argument methods of class `Ostap:Kinematics::Dalitz`
   1. Fix `Ostap::Math::PSDalitz`
   1. Upgrade `Ostap::Math::PhaseSpace23L`
-
+  1. small tweaks for `Ostap::Kinematics::Dalitz` objects 
+  1. add serisalization for `Ostap::Kinematics::Dalitz` objects 
 
 ## Backward incompatible  
 

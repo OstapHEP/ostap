@@ -25,6 +25,10 @@ __all__     = (
 # =============================================================================
 import ROOT, math
 from   builtins             import range
+import ostap.math.kinematic
+from   ostap.core.core      import Ostap, fID 
+import ostap.math.base
+import ostap.histos.graphs  
 # =============================================================================
 # logging 
 # =============================================================================
@@ -32,10 +36,6 @@ from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.dalitz' )
 else                       : logger = getLogger ( __name__            )
 # =============================================================================
-import ostap.math.kinematic
-from   ostap.core.core      import Ostap, fID 
-import ostap.math.base
-import ostap.histos.graphs  
 
 # =============================================================================
 ## make a graph of Dalitz plot
@@ -721,23 +721,151 @@ class DPlotRM(DPlotR) :
         self.__gr =  gr
         return gr
 
+# =============================================================================
+## nice print for <code>Ostap::Kinematcis::Dalitz0</code> objects
+#  @code
+#  dalitz0 = ...
+#  str ( dalitz0 ) 
+#  @endcode 
+#  @see Ostap::Kinematics::Dalitz0
+def _d0_str_ ( dalitz ) :
+    """Nice print for `Ostap.Kinematcis.Dalitz0` objects
+    >>> dalitz0 = ...
+    >>> str ( dalitz0 ) 
+    - see `Ostap.Kinematics.Dalitz0`
+    """
+    return 'Dalitz0(%.5g,%.5g,%.5g)' % ( dalitz.m1 () ,
+                                         dalitz.m2 () ,
+                                         dalitz.m3 () )
+
+# =============================================================================
+## nice print for <code>Ostap::Kinematics::Dalitz</code> objects
+#  @code
+#  dalitz = ...
+#  str ( dalitz ) 
+#  @endcode 
+#  @see Ostap::Kinematics.Dalitz
+def _dm_str_ ( dalitz ) :
+    """Nice print for `Ostap.Kinematics.Dalitz` objects
+    >>> dalitz = ...
+    >>> str ( dalitz ) 
+    - see `Ostap.Kinematics.Dalitz`
+    """
+    return 'Dalitz(%.5g;%.5g,%.5g,%.5g)' % ( dalitz.M  () ,
+                                             dalitz.m1 () ,
+                                             dalitz.m2 () ,
+                                             dalitz.m3 () )
+
+Ostap.Kinematics.Dalitz0.__str__  = _d0_str_
+Ostap.Kinematics.Dalitz0.__repr__ = _d0_str_
+Ostap.Kinematics.Dalitz .__str__  = _dm_str_
+Ostap.Kinematics.Dalitz .__repr__ = _dm_str_
+
+# =============================================================================
+## equality of Dalitz0 objects 
+def _d0_eq_ ( a , b ) :
+    """Equality of Dalitz0 objects"""
+    if isinstance ( b , Ostap.Kinematics.Dalitz0 ) :
+        return a.m1() == b.m1() and a.m2() == b.m2() and a.m3() == b.m3()
+    return NotImplemented
+
+# =============================================================================
+## equality of Dalitz0 objects 
+def _dm_eq_ ( a , b ) :
+    """Equality of Dalitz objects"""
+    if isinstance ( b , Ostap.Kinematics.Dalitz ) :
+        return a.M() == b.M() and a.m1() == b.m1() and a.m2() == b.m2() and a.m3() == b.m3()
+    return NotImplemented
+
+Ostap.Kinematics.Dalitz0.__eq__  = _d0_eq_
+Ostap.Kinematics.Dalitz .__eq__  = _dm_eq_
+
+
+# =============================================================================
+## non-equality of Dalitz0 objects 
+def _d0_ne_ ( a , b ) :
+    """Non-equality of Dalitz0 objects"""
+    if isinstance ( b , Ostap.Kinematics.Dalitz0 ) :
+        return a.m1() != b.m1() or a.m2() != b.m2() or a.m3() != b.m3()
+    return NotImplemented
+
+# =============================================================================
+## non-equality of Dalitz0 objects 
+def _dm_ne_ ( a , b ) :
+    """Non-equality of Dalitz objects"""
+    if isinstance ( b , Ostap.Kinematics.Dalitz ) :
+        return a.M() != b.M() or a.m1() != b.m1() or a.m2() != b.m2() or a.m3() != b.m3()
+    return NotImplemented
+
+Ostap.Kinematics.Dalitz0.__ne__  = _d0_ne_
+Ostap.Kinematics.Dalitz .__ne__  = _dm_ne_
+
+# =============================================================================   
+## Factory for deserialization of Dalitz' objects
+def dalitz_factory ( klass , *params ) :
+    """Factory for deserialization of `Dalitz` objects
+    """
+    return klass ( *params )
+
+# ============================================================================
+## Serialise class <code>Ostap::Kinematics::Dalitz0</code>
+#  @see Ostap::Kinematcis.Dalitz0
+def _dalitz0_reduce_ ( dalitz ) :
+    """Serialise class `Ostap.Kinematics.Dalitz0`
+    - see Ostap.Kinematics.Dalitz0
+    """
+    return dalitz_factory , ( type ( dalitz ) ,
+                              dalitz.m1 () ,
+                              dalitz.m2 () ,
+                              dalitz.m3 () ) 
+
+# ============================================================================
+## Serialise class <code>Ostap::Kinematics::Dalitz</code>
+#  @see Ostap::Kinematcis.Dalitz
+def _dalitzm_reduce_ ( dalitz ) :
+    """Serialise class `Ostap.Kinematics.Dalitz`
+    - see Ostap.Kinematics.Dalitz
+    """
+    return dalitz_factory , ( type ( dalitz ) ,
+                              dalitz.M  () , 
+                              dalitz.m1 () ,
+                              dalitz.m2 () ,
+                              dalitz.m3 () ) 
+
+
+Ostap.Kinematics.Dalitz0. __reduce__ = _dalitz0_reduce_ 
+Ostap.Kinematics.Dalitz . __reduce__ = _dalitzm_reduce_   
+
+
 # =============================================================================   
 ## decorated classes 
 _decorated_classes_  = (
     Ostap.Kinematics.Dalitz  , 
     Ostap.Kinematics.Dalitz0 , 
     )
+
 ## new methdods 
 _new_methods_       = (
     # 
-    Ostap.Kinematics.Dalitz0.graph   , 
-    Ostap.Kinematics.Dalitz0.graph21 , 
-    Ostap.Kinematics.Dalitz0.graph31 , 
-    Ostap.Kinematics.Dalitz0.graph32 ,
-    Ostap.Kinematics.Dalitz .graph   , 
-    Ostap.Kinematics.Dalitz .graph21 , 
-    Ostap.Kinematics.Dalitz .graph31 , 
-    Ostap.Kinematics.Dalitz .graph32 ,
+    Ostap.Kinematics.Dalitz0.graph      , 
+    Ostap.Kinematics.Dalitz0.graph21    , 
+    Ostap.Kinematics.Dalitz0.graph31    , 
+    Ostap.Kinematics.Dalitz0.graph32    ,
+    Ostap.Kinematics.Dalitz .graph      , 
+    Ostap.Kinematics.Dalitz .graph21    , 
+    Ostap.Kinematics.Dalitz .graph31    , 
+    Ostap.Kinematics.Dalitz .graph32    ,
+    ##
+    Ostap.Kinematics.Dalitz0.__reduce__ ,
+    Ostap.Kinematics.Dalitz .__reduce__ ,
+    Ostap.Kinematics.Dalitz0.__str__    ,
+    Ostap.Kinematics.Dalitz .__str__    ,
+    Ostap.Kinematics.Dalitz0.__repr__   ,
+    Ostap.Kinematics.Dalitz .__repr__   ,
+    Ostap.Kinematics.Dalitz0.__eq__     ,
+    Ostap.Kinematics.Dalitz .__eq__     ,
+    Ostap.Kinematics.Dalitz0.__ne__     ,
+    Ostap.Kinematics.Dalitz .__ne__     ,
     )
 
 # =============================================================================

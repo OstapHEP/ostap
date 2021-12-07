@@ -125,13 +125,14 @@ __all__ = (
 # =============================================================================
 import ROOT, math
 # =============================================================================
+from   ostap.core.core        import cpp , Ostap, VE  
+from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args
+from   ostap.fitting.utils    import Phases
+import ostap.math.dalitz 
+# =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.models_signal' )
 else                       : logger = getLogger ( __name__                )
-# =============================================================================
-from   ostap.core.core        import cpp , Ostap, VE  
-from   ostap.fitting.basic    import MASS, PDF, MASSMEAN, CheckMean, all_args
-from   ostap.fitting.utils    import Phases 
 # =============================================================================
 models = [] 
 # =============================================================================

@@ -24,6 +24,7 @@ import  ROOT
 from    ostap.core.core        import cpp, Ostap, funID
 from    ostap.core.ostap_types import num_types, integer_types
 import  ostap.math.polynomials 
+import  ostap.math.dalitz     
 import  ostap.math.derivative  as     D  
 # =============================================================================
 # logging 

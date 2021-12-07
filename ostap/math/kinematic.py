@@ -35,6 +35,8 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, math
+from   ostap.math.base        import Ostap , COMPLEX 
+from   ostap.core.ostap_types import num_types
 # =============================================================================
 # logging 
 # =============================================================================
@@ -42,8 +44,6 @@ from ostap.logger.logger    import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.kinematic' )
 else                       : logger = getLogger ( __name__               )
 # =============================================================================
-from ostap.math.base        import Ostap , COMPLEX 
-from ostap.core.ostap_types import num_types
 
 ## ROOT::Math namespace
 _RM = ROOT.ROOT.Math
