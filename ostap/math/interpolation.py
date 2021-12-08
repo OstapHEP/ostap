@@ -146,7 +146,8 @@ from    ostap.core.core        import cpp, Ostap
 from    ostap.core.ostap_types import ( is_integer, sequence_types,
                                         integer_types , dictlike_types )  
 from    ostap.math.base        import iszero, isequal, doubles 
-from    ostap.utils.utils      import vrange 
+from    ostap.utils.utils      import vrange
+import  ostap.math.reduce      
 # =============================================================================
 from   ostap.logger.logger     import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.interpolation' )
@@ -731,80 +732,6 @@ def points ( func , abscissas  = None ) :
     ##
     return Ostap.Math.Interpolation.Table ( doubles ( abscissas ) , doubles ( func ) )
 
-# ============================================================================
-## factory for deserialisation of interpolation abscissas 
-def abs_factory ( arg , *args ) :
-    """Factory for deserialisation of interpolation abscissas
-    """
-    if isinstance ( arg , sequence_types ) :
-        vals = doubles ( arg )
-        return Ostap.Math.Interpolation.Abscissas ( vals , *args  )
-    
-    return Ostap.Math.Interpolation.Abscissas ( arg , *args ) 
-
-# =============================================================================
-## Reduce interpolation abscissas 
-def abs_reduce ( a ) :
-    """Reduce interpolation abscissas 
-    """
-    at = a.atype()
-    if at in ( Ostap.Math.interpolation.Abscissas.Uniform    ,
-               Ostap.Math.interpolation.Abscissas.Chebyshev  ,
-               Ostap.Math.interpolation.Abscissas.Chebyshev2 ) :
-        return abs_factory, ( a.xmin() , a.xmax () , int ( at ) )
-
-    return abs_factory, ( array ('d' , a.x() ) , ) 
-
-# ============================================================================
-## the factory for serialisation of the interpolation table 
-def tab_factory ( abscissas , values ) :
-    """The factory for serialisation of the interpolation table
-    """
-    return Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) ) 
-## ===========================================================================
-## Reduce the interpolation table 
-def tab_reduce ( table ) :
-    """Reduce the interpolation table"""
-    return tab_factory , ( table.abscissas ()              ,
-                           array ( 'd' , table.values () ) )
-
-Ostap.Math.Interpolation.Table. __reduce__ = tab_reduce
-
-# ============================================================================
-## the factory for serialisation of the interpolation objects 
-def int_factory ( klass , abscissas , values , *args ) :
-    """The factory for serialisation of the interpolation table
-    """
-    the_table = Ostap.Math.Interpolation.Table ( abscissas , doubles ( values ) )
-    return klass ( the_table , *args )
-
-## ===========================================================================
-## Reduce the interpolation object 
-def int_reduce ( table ) :
-    """Reduce the interpolation object"""
-    return int_factory , ( type ( table )                  ,
-                           table.abscissas ()              ,
-                           array ( 'd' , table.values () ) ) 
-
-## ===========================================================================
-## Reduce the interpolation Floater-Hormann interpolant 
-def intfh_reduce ( table ) :
-    """Reduce the Floater-Hormann interpolant"""
-    return int_factory , ( type ( table )                  ,
-                           table.abscissas ()              ,
-                           array ( 'd' , table.values () ) , 
-                           table.d ()                      ) 
-
-for t in ( Ostap.Math.Neville     ,
-           Ostap.Math.Lagrange    , 
-           Ostap.Math.Newton      , 
-           Ostap.Math.Barycentric , 
-           Ostap.Math.Berrut1st   , 
-           Ostap.Math.Berrut2nd   ) :
-    
-    t.__reduce__ = int_reduce 
-
-Ostap.Math.FloaterHormann. __reduce__ = intfh_reduce 
 
 
 # =============================================================================

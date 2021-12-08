@@ -473,6 +473,7 @@ def test_pickle () :
     logger = getLogger ( 'test_pickle'        ) 
     logger.info ( 'Check pickling/unpickling' )
 
+    bad = False 
     import pickle
     rows = [ ( '#', 'before' , 'after' , 'mean' , 'rms' ) ]
     for i, f in enumerate ( progress_bar ( functions ) , start = 1 ) :
@@ -483,17 +484,24 @@ def test_pickle () :
         for j in range ( 1000 ) :
             x = random.uniform ( ff.xmin() , ff.xmax() )
             s += abs ( fs ( x ) - ff ( x ) )
+
+        mean = '%-+.6g' % s.mean ()
+        rms  = '%-+.6g' % s.rms  ()
         
-        row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , '%-+.5g' % s.mean() , '%-+.5g' % s.rms() 
+        if 1.e-7 < s.mean () : mean = attention  ( mean )
+        if 1.e-7 < s.rms  () : rms  = attention  ( rms  )
+            
+        row = '%d' % i , ff.__class__.__name__ , fs.__class__.__name__ , mean , rms 
         ## row = '%d' % i , '%s' % ff  , '%s' % fs , '%-+.5g' % s.mean() , '%-+.5g' % s.rms()
         
         rows.append ( row )
 
     import ostap.logger.table as T
     title = "Compare before/after serialisation"
-    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' ) 
-    logger.info ( '%s\n%s' % ( title , table ) ) 
-
+    table = T.table ( rows , title = title , prefix = '# ' , alignment = 'rllll' )
+    if bad : logger.warning  ( '%s\n%s' % ( title , table ) ) 
+    else   : logger.info     ( '%s\n%s' % ( title , table ) ) 
+    
 
 # =============================================================================
 ## check that everything is serializable

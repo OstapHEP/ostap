@@ -824,7 +824,13 @@ def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
     return xmin , xmax
 
 
+# =============================================================================
+## imports at the end of the module to avoid ciurcular dependency 
+# =============================================================================
+
+import ostap.math.reduce  
 import ostap.math.polynomials 
+
 # =============================================================================
 if '__main__' == __name__ :
     
