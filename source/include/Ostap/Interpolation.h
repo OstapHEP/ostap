@@ -507,6 +507,14 @@ namespace Ostap
         /// move constructor 
         Table (       Table&& ) = default ;
         // ====================================================================
+      public: // creator for interpolation table 
+        // ====================================================================
+        /// creator for the interpolation table 
+        template <class FUNCTION, typename ...Args>
+        static Table 
+        create ( FUNCTION fun  , 
+                 Args ... args ) { return Table ( fun , args... ) ; } 
+        // ====================================================================
       public:
         // ====================================================================
         /// number of interpolation points 
@@ -549,7 +557,7 @@ namespace Ostap
         /// minimal  abscissa 
         double xmin () const { return m_abscissas.xmin () ; }
         /// maximal abscissas 
-        double xmax () const { return m_abscissas.xmin () ; }
+        double xmax () const { return m_abscissas.xmax () ; }
         // ====================================================================
       public: // iterators 
         // ====================================================================

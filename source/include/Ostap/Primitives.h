@@ -36,6 +36,18 @@ namespace  Ostap
       //  =====================================================================      
     } ;
     // ========================================================================
+    /** @class Id
+     *  \f$ f(x) \equiv  x \f$ 
+     */
+    class Id 
+    {
+    public :
+      // ======================================================================
+      /// the main method
+      inline  double operator() ( const double  x ) const { return x ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Linear
      *  Linear combination of two functions 
      *   \f[ f(x) =  c_1 f_1(x) + c_2 * f_2 ( x  ) \f] 
@@ -419,8 +431,8 @@ namespace  Ostap
       // ======================================================================
       /** constructor from two functions and two scale factors 
        *   \f[ f(x) =  max  ( f_1(x) , f_2(x) )\f] 
-       *  @param f1  the first function 
-       *  @param f1  the secons function 
+       *  @param f1  the first  function 
+       *  @param f2  the second function 
        */
       template <class FUNCTION1, class FUNCTION2>
       Max ( FUNCTION1    f1 , 
@@ -512,6 +524,38 @@ namespace  Ostap
       std::function<double(double)> m_fun2 {   } ; // the second  fuction
       //  =====================================================================      
     } ;
+    // ========================================================================
+    class Abs 
+    {
+    public:
+      // ======================================================================
+      /// constructor  from the function 
+      template <class FUNCTION>
+      Abs ( FUNCTION f ) 
+        : m_fun ( f ) 
+      {}
+      // ======================================================================
+      Abs ( const Abs&  right ) = default ;
+      Abs (       Abs&& right ) = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      static inline Abs 
+      create ( FUNCTION f ) { return Abs ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the only one important method 
+      inline double operator() ( const double x ) const 
+      { return std::abs ( m_fun ( x ) ) ; }
+      // ======================================================================
+    private :
+      // ======================================================================     
+      /// the function 
+      std::function<double(double)>  m_fun ; // the function
+      // ======================================================================
+    } ;    
     // ========================================================================
     /** @class Apply
      *  keep and apply arbitrary function
