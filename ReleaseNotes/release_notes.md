@@ -1,3 +1,15 @@
+# v1.6.7.1
+
+## New features:
+
+ 1. Change signature of `PS23_pdf` - nor it required valid Dalitz  configuration 
+
+## Backward incompatible  
+
+## Bug fixes:
+  
+ 1. Fix bug in `PhaseSpace23L::integral` and `PSDalitz::integral` methods 
+
 # v1.6.7.0 
 
 ## New features:

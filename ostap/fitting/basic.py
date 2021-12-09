@@ -2794,7 +2794,7 @@ class RESOLUTION(MASS) :
             
             value  = fudge.value()
             error  = fudge.error()
-            vmin   = max ( 1.e-6 , value - 10 * error )
+            vmin   = max ( 1.e-3 , value - 10 * error )
             vmax   =               value + 10 * error
             
             ## make fudge-factor to be a variable 
@@ -2837,7 +2837,7 @@ class RESOLUTION(MASS) :
             self.__fudge = self.make_var ( fudge  ,
                                            'fudge_factor_%s'  % self.name ,
                                            'fudge_factor(%s)' % self.name ,
-                                           None                           , fudge )
+                                           None                           , fudge , 0.01 , 10 ) 
             
         ## create corrected sigma 
         if self.__sigma_corr is None :            

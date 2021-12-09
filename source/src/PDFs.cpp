@@ -2790,18 +2790,15 @@ Double_t Ostap::Models::PhaseSpaceNL::analyticalIntegral
 // Two-body phase space from 3-body decays 
 // ============================================================================
 Ostap::Models::PhaseSpace23L::PhaseSpace23L
-( const char*          name      , 
-  const char*          title     ,
-  RooAbsReal&          x         ,
-  const double         m1        , 
-  const double         m2        ,
-  const double         m3        ,
-  const double         m         ,
-  const unsigned short L         , 
-  const unsigned short l         ) 
+( const char*                       name      , 
+  const char*                       title     ,
+  RooAbsReal&                       x         ,
+  const Ostap::Kinematics::Dalitz&  dalitz    ,  
+  const unsigned short              L         , 
+  const unsigned short              l         ) 
   : RooAbsPdf ( name , title ) 
   , m_x       ( "x" , "Observable" , this , x ) 
-  , m_ps23L   ( m1 , m2 , m3 , m , L , l ) 
+  , m_ps23L   ( dalitz , L , l ) 
 {}
 // ============================================================================
 // "copy constructor"

@@ -745,7 +745,7 @@ namespace Ostap
       // ======================================================================
     public:
       // ======================================================================
-      /// constructor from Dalizt plot          
+      /// constructor from Dalitz configuration 
       PSDalitz ( const Ostap::Kinematics::Dalitz& dalitz ) ;
       /// constructor from all masses  
       PSDalitz
@@ -851,7 +851,7 @@ namespace Ostap
         const unsigned short             l  = 0   ) ;
       // ======================================================================
       /** constructor from Dalitz and angular momenta
-       *  @param dalitz Dalit's configurtaion 
+       *  @param dalitz Dalitz's configurtaion 
        *  @param L  the angular momentum between the first pair and
        *  the third particle
        *  @param l  the angular momentum between the first and the second particle

@@ -1226,7 +1226,7 @@ double  Ostap::Math::PSDalitz::integral
   else if ( high    >  x_max  ) { return integral ( low   , x_max ) ; }
   //
   if ( 0 < m_norm && s_equal ( low , x_min ) && s_equal ( high , x_max ) )
-  { return 1.0 / m_norm ; }
+  { return 1.0 ; }
   //
   // use GSL to evaluate the integral
   //
@@ -1359,7 +1359,7 @@ double  Ostap::Math::PhaseSpace23L::integral
   else if ( high >  x_max ) { return integral ( low   , x_max ) ; }
   //
   if ( 0 < m_norm && s_equal ( x_min , low ) && s_equal ( x_max , high ) ) 
-  { return 1.0 / m_norm ; }
+  { return 1.0 ; }
   //
   // use GSL to evaluate the integral
   //

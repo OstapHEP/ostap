@@ -1681,12 +1681,13 @@ models.append ( PSNL_pdf )
 #  2-body phase space from 3-body decay with orbital momenta 
 #  e.g. m(2pi) from Bs -> J/psi pi pi decay
 #  @code 
-#  mass  = ... # mass variable for 2 pions 
+#  mass  = ... # mass variable for 2 pions
 #  m_pi  = 139
 #  m_psi = 3096
 #  m_Bs  = 5366
+#  dalitz = Ostap.Kinematics.Dalitz ( m_Bs , m_psi , m_pi , m_pi ) 
 #  ## S-wave 
-#  model = PS23L_pdf ( 'S' , mass , m_pi , m_pi , m_psi , m_Bs , 1 , 0 )
+#  model = PS23L_pdf ( 'S' , mass , dalitz , 1 , 0 )
 #  @endcode
 #  @see Ostap::Models::PhaseSpace23L
 #  @see Ostap::Math::PhaseSpace23L
@@ -1699,63 +1700,47 @@ class PS23L_pdf(PDF) :
     >>> m_pi  = 139
     >>> m_psi = 3096
     >>> m_Bs  = 5366
+    >>> dalitz = Ostap.Kinematics.Dalitz ( m_Bs , m_psi , m_pi , m_pi )     
     ## S-wave 
-    >>> model = PS23L_pdf ( 'S' , mass , m_pi , m_pi , m_psi , m_Bs , 1 , 0 ) 
+    >>> model = PS23L_pdf ( 'S' , mass , dalitz , 1 , 0 ) 
     """
     ## constructor
     def __init__ ( self             ,
                    name             ,   ## the name 
                    xvar             ,   ## the variable
-                   m1               ,   ## mass the first particle  (const)
-                   m2               ,   ## mass the second particle (const)
-                   m3               ,   ## mass the third particle  (const)
-                   mm               ,   ## mass of the whole system (const)
-                   L                ,   ## orbital momenutm between (1,2) and 3
+                   dalitz           ,   ## Dalizt configurtaion 
+                   L                ,   ## orbital momentum between (1,2) and 3
                    l  = 0           ) : ## orbital momentum between 1 and 2
         #
         ## initialize the base 
         PDF.__init__ ( self , name , xvar )
         #
-        am1 = float ( m1 )
-        am2 = float ( m2 )
-        am3 = float ( m3 )
-        amm = float ( mm )
-        
-        assert 0 <= am1          , "The first mass ``m1'' must be non-negative"
-        assert 0 <= am2          , "The second mass ``m2'' must be non-negative"
-        assert 0 <= am3          , "The third mass ``m3'' must be non-negative"
-        assert am1+am2+am3 < amm , "The total mass ``mm'' is too low"
+        assert isinstance ( dalitz , Ostap.Kinematics.Dalitz ), \
+               "Invalid type of ``dalitz''!"
+        self.__dalitz = dalitz 
 
         assert  isinstance ( L , integer_types ) and 0 <= L < 10 , "Invalid ``L'' for the phase space function"
         assert  isinstance ( l , integer_types ) and 0 <= l < 10 , "Invalid ``l'' for the phase space function"
-        self.__m1 = am1
-        self.__m2 = am2
-        self.__m3 = am3
-        self.__mm = amm
+
         self.__L  = L
         self.__l  = l
-        
+
+
         self.pdf  = Ostap.Models.PhaseSpace23L (
             self.roo_name ( "ps23_"  )   ,
             "Phase space 2 from 3 %s" % self.name  , 
-            self.xvar  ,
-            self.m1    ,
-            self.m2    ,
-            self.m3    ,
-            self.mm    ,
+            self.xvar   ,
+            self.dalitz , 
             self.L     ,
             self.l     )
         
         ## save configuration 
         self.config = {
-            'name'       : self.name  ,
-            'xvar'       : self.xvar  ,
-            'm1'         : self.m1    ,
-            'm2'         : self.m2    ,
-            'm3'         : self.m3    ,
-            'mm'         : self.mm    ,            
-            'L'          : self.L     ,            
-            'l'          : self.l     ,            
+            'name'       : self.name   ,
+            'xvar'       : self.xvar   ,
+            'dalitz'     : self.dalitz ,
+            'L'          : self.L      ,            
+            'l'          : self.l      ,            
             }
 
     @property 
@@ -1764,24 +1749,9 @@ class PS23L_pdf(PDF) :
         return self.xvar
 
     @property
-    def m1 ( self ) :
-        """``m1''-parameter, the mass of the first particle ``(1)'' """
-        return self.__m1
-
-    @property
-    def m2 ( self ) :
-        """``m2''-parameter, the mass of the second particle ``(2)''"""
-        return self.__m2
-
-    @property
-    def m3 ( self ) :
-        """``m3''-parameter, the mass of the third particle ``(3)''"""
-        return self.__m3
-
-    @property
-    def mm ( self ) :
-        """``mm''-parameter, the mass of the mother particle"""
-        return self.__mm
+    def dalitz ( self ) :
+        """``dalitz'' : Dalitz's plot configurartion """
+        return self.__dalitz
 
     @property
     def l  ( self ) :

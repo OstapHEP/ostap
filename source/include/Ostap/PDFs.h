@@ -2544,23 +2544,17 @@ namespace Ostap
     public:
       // ======================================================================
       /** constructor from all parameters
-       *  @param m1 the mass of the first  particle
-       *  @param m2 the mass of the second particle
-       *  @param m3 the mass of the third  particle
-       *  @param m  the mass of the mother particle (m>m1+m2+m3)
+       *  @param dalitz Dalizt plot configuration 
        *  @param L  the angular momentum between the first pair and the third particle
        *  @param l  the angular momentum between the first and the second particle
        */
       PhaseSpace23L 
-      ( const char*          name      ,
-        const char*          title     ,
-        RooAbsReal&          x         ,
-        const double         m1        ,
-        const double         m2        ,
-        const double         m3        ,
-        const double         m         ,
-        const unsigned short L         ,
-        const unsigned short l     = 0 ) ;
+      ( const char*                       name      ,
+        const char*                       title     ,
+        RooAbsReal&                       x         ,
+        const Ostap::Kinematics::Dalitz&  dalitz    ,  
+        const unsigned short              L     = 0 ,
+        const unsigned short              l     = 0 ) ;
       /// "copy constructor"
       PhaseSpace23L ( const PhaseSpace23L& right , const char* name = 0 )  ;
       /// destructor
