@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 import  ROOT, math  
 from    ostap.core.core        import Ostap, funID
-from    ostap.core.ostap_types import is_integer
+from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.math.base        import iszero, isequal, signum, doubles
 from    ostap.core.meta_info   import root_info
 import  ostap.math.bernstein 
@@ -291,7 +291,41 @@ def approximate ( func , spline , *args ) :
     N  =  bs.npars()
     for i in  range(N) : bs.setPar ( i , func ( xv[i] ) )
     return bs
-    
+
+
+try :
+    import scipy
+except ImportError :
+    scipy = None
+
+if scipy :
+
+    # =========================================================================
+    ## create interpolation spline using scopy machinery
+    #  @code
+    #  table  = ... ## interpolation table
+    #  spline = intepolation ( table , degree = 3 ) 
+    #  @endcode 
+    def interpolation ( table , degree , bc_type = None ) :
+        """Create interpolation spline using scopy machinery
+        >>> table = ... ## interpolation table
+        >>>  spline  = intepolation ( table , degree = 3 ) 
+        """
+        
+        assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
+               "Inavalid interpolaiton type "
+        assert isinstance ( degree  , integer_types ) and 0 <= degree < len ( table ) , \
+               "Invalid ``degree'' parameter!"
+        
+        import scipy.interpolate as SPI
+        N   = len ( table )
+        K   = degree        
+        spl = SPI.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
+                                      table.values() , k = K , bc_type = bc_type )
+        
+        return Ostap.Math.BSpline ( spl.t[K:-K], spl.c )
+    __all__ = __all__ + ( 'interpolation', )
+
 # =============================================================================
 ## merge duplicated roots together 
 def _merge_ ( roots , dx ) :

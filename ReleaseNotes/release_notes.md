@@ -1,5 +1,7 @@
 ## New features:
 
+  1. `interpolate.py` add `bspline_interpolate` based on `scipy`
+  
 ## Backward incompatible  
 
 ## Bug fixes:

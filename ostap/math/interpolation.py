@@ -797,7 +797,13 @@ for t in ( Ostap.Math.Berrut1st      ,
 ## Bernstein & BSpline interpolation
 # =============================================================================
 from ostap.math.bernstein import interpolate as interpolate_bernstein
-from ostap.math.bspline   import interpolate as interpolate_bspline  
+from ostap.math.bspline   import interpolate as interpolate_bspline
+try :
+    from ostap.math.bspline import interpolation as bspline_interpolate
+    __all__ =  __all__ + ( 'bspline_interpolate', ) 
+except ImportError:
+    
+    pass
 # =============================================================================
 
 

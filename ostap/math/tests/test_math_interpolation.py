@@ -31,6 +31,11 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 functions = set () 
 
+try :
+    from   ostap.math.interpolation import bspline_interpolate
+except ImportError :
+    bspline_interpolate = None
+    
 ## calculate "distance" between two functions 
 def distance ( fun1 , fun2 , low , high ) :
     """calculate ``distance'' between two functions"""
@@ -89,6 +94,10 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         
         for d in range ( 1 , 5 ) :
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
+            interpolants.append ( item )
+
+        for d in ( 1 , 3 , 5 ) :
+            item = ( 'BSpline%dSP' % d , t[0] ) , bspline_interpolate ( t[1], d )
             interpolants.append ( item )
 
     for n , t in interpolants :
