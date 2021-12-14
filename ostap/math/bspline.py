@@ -317,13 +317,15 @@ if scipy :
         assert isinstance ( degree  , integer_types ) and 0 <= degree < len ( table ) , \
                "Invalid ``degree'' parameter!"
         
-        import scipy.interpolate as SPI
         N   = len ( table )
         K   = degree        
-        spl = SPI.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
+        spl = scipy.interpolate.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
                                       table.values() , k = K , bc_type = bc_type )
+
+        knots  = doubles ( spl.t[K:-K] ) 
+        pars   = doubles ( spl.c       )
         
-        return Ostap.Math.BSpline ( spl.t[K:-K], spl.c )
+        return Ostap.Math.BSpline ( knots , pars  )
     __all__ = __all__ + ( 'interpolation', )
 
 # =============================================================================
