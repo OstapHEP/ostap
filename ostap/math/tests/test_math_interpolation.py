@@ -96,7 +96,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
 
-        for d in ( 1 , 3 , 5 ) :
+        for d in ( 1 , 3 , 5 , 7  ) :
             item = ( 'BSpline%dSP' % d , t[0] ) , bspline_interpolate ( t[1], d )
             interpolants.append ( item )
 
