@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright Ostap developers
 # =============================================================================
-#                                   1.5.99.0 (Sep 13, 2020, 13:46 [UTC])
+#                                   1.6.8.1 (Dec 18, 2021, 09:43 [UTC])
 #     .oooooo.                .                        
 #    d8P'  `Y8b             .o8                        
 #   888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.  
@@ -32,8 +32,8 @@ __all__ = (
     )
 # =============================================================================
 ## the  actual version of Ostap 
-__version__ = "1.5.99.0"
-__date__    = "Sep 13, 2020, 13:46 [UTC]"
+__version__ = "1.6.8.1"
+__date__    = "Dec 18, 2021, 09:43 [UTC]"
 # =============================================================================
 import datetime 
 from   collections import namedtuple
@@ -41,11 +41,11 @@ from   collections import namedtuple
 version      = __version__
 VersionInfo  = namedtuple("VersionInfo", ('major','minor','patch','tweak' ) )
 version_info = VersionInfo ( 1 ,
-                             5 ,
-                             99 ,
-                             0 )
+                             6 ,
+                             8 ,
+                             1 )
 build_date   = __date__
-build_time   = datetime.datetime.utcfromtimestamp ( 1600004784 )
+build_time   = datetime.datetime.utcfromtimestamp ( 1639820633 )
 version_int  = version_info.tweak                   +\
                version_info.patch             * 100 +\
                version_info.minor       * 100 * 100 +\
@@ -57,7 +57,7 @@ import ostap.fixes.fixes
 # =============================================================================
 ## Banner
 banner = r"""
-                                        1.5.99.0 (Sep 13, 2020, 13:46 [UTC])
+                                        1.6.8.1 (Dec 18, 2021, 09:43 [UTC])
      .oooooo.                .
     d8P'  `Y8b             .o8
    888      888  .oooo.o .o888oo  .oooo.   oo.ooooo.

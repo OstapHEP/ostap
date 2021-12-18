@@ -1,3 +1,5 @@
+# v1.6.8.2
+
 ## New features:
 
   1. `ROOT.TH1.smear` add argument `silent = True` 
