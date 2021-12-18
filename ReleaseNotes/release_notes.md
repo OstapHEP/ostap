@@ -1,3 +1,13 @@
+## New features:
+
+  1. `ROOT.TH1.smear` add argument `silent = True` 
+  1. `parse_args` improve logging (use local loggers instead of the global  one)
+  
+## Backward incompatible  
+
+## Bug fixes:
+
+
 # v1.6.8.0
 
 ## New features:
@@ -13,7 +23,7 @@
 
 ## New features:
 
- 1. Change signature of `PS23_pdf` - nor it required valid Dalitz  configuration 
+ 1. Change signature of `PS23_pdf` - now it requires a valid Dalitz  configuration 
 
 ## Backward incompatible  
 

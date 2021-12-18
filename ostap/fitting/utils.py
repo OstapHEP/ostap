@@ -585,22 +585,22 @@ class MakeVar ( object ) :
                 
                 if not verbose is None :
                     if a != verbose : 
-                        logger.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
+                        self.warning ( 'parse_args: Redefine VERBOSE to %s' %  a ) 
                         verbose = a                        
                 if not silent is None :
                     if a == silent :
-                        logger.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
+                        self.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
                         silent = not a 
                 _args.append ( ROOT.RooFit.Verbose (     a ) )
             elif kup in ( 'SILENT'           ,
                           'SILENCE'          ) and isinstance ( a , bool ) :
                 if not silent is None :
                     if a != silent : 
-                        logger.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
+                        self.warning ( 'parse_args: Redefine SILENT to %s' %  a ) 
                         verbose = a                        
                 if not verbose is None :
                     if a == verbose :
-                        logger.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
+                        self.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
                         verbose = not a
                 _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
             elif kup in ( 'STRATEGY'         , 
@@ -766,27 +766,28 @@ class MakeVar ( object ) :
         if dataset :
             
             weighted = dataset.isWeighted ()            
-            sw2      = check_arg ( 'SumW2Error'      , *_args )
-            aer      = check_arg ( 'AsymptoticError' , *_args )
-
-            if 62500 <= root_version_int                 and \
-               isinstance ( dataset , ROOT.RooDataHist ) and ( not sw2 ) and ( not aer ) :
+            sw2      = check_arg  ( 'SumW2Error'      , *_args  )
+            aer      = check_arg  ( 'AsymptoticError' , *_args  )
+            binned   = isinstance ( dataset  , ROOT.RooDataHist )
+            
+            if 62500 <= root_version_int and binned and ( not sw2 ) and ( not aer ) :
                 _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif sw2 and aer :
-                logger.warning ( "parse_args: Both ``SumW2Error'' and ``AsymptoticError'' are specified" )                
+                self.warning ( "parse_args: Both ``SumW2Error'' and ``AsymptoticError'' are specified" )                
             elif weighted   and sw2 :
                 value = bool ( sw2.getInt( 0 ) )
-                if not value : logger.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
+                if not value : self.warning ("parse_args: 'SumW2=False' is specified for the weighted  dataset!")
             elif weighted and aer : 
                 value = bool ( aer.getInt( 0 ) )
-                if not value : logger.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
+                if not value : self.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
             elif weighted :                
-                logger.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
+                if binned : self.debug   ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted/binned dataset! ``SumW2=True'' is added" )
+                else      : self.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
                 _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif not weighted and sw2 :
-                logger.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
+                self.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
             elif not weighted and aer :
-                logger.warning ( "parse_args:``AsymptoticError'' is specified for non-weighted dataset" )
+                self.warning ( "parse_args:``AsymptoticError'' is specified for non-weighted dataset" )
 
         keys = [ str ( a ) for a in _args ]
         keys.sort ()
