@@ -230,19 +230,32 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from two masses
-      sPhaseSpace2 ( const double m1 = 0 , 
-                     const double m2 = 1 ) ;
+      sPhaseSpace2
+      ( const double m1 = 0 , 
+        const double m2 = 1 ) ;
       // ======================================================================
       /// Two-body phase space as function of s
       inline double operator () ( const double s ) const 
-      { return PhaseSpace2::phasespace_s ( s , m_m2_1 , m_m2_2 ) ; }
+      { return s <= m_threshold ? 0.0 :
+          PhaseSpace2::phasespace_s ( s , m_m2_1 , m_m2_2 ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// first   mass squared 
+      double m1sq      () const { return m_m2_1      ; }
+      /// second  mass squared 
+      double m2sq      () const { return m_m2_2      ; }
+      /// threshold 
+      double threshold () const { return m_threshold ; }
       // ======================================================================
     private: 
       // ======================================================================
       /// the first mass squared
-      double m_m2_1 ; // the first mass squared
+      double m_m2_1      ; // the first mass squared
       /// the second mass squared
-      double m_m2_2 ; // the second mass squared
+      double m_m2_2      ; // the second mass squared
+      /// the threhsold
+      double m_threshold ; // the threhsold
       // ======================================================================
     } ;
     // ========================================================================
