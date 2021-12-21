@@ -690,19 +690,19 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
 
         groot = ROOT.ROOT.GetROOT() 
         obj   = groot     .FindObject    ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
+        if isinstance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
         obj   = groot     .FindObjectAny ( histo )
-        if instance ( obj  , ROOT.TH1 ) :
+        if isinstance ( obj  , ROOT.TH1 ) :
             return ds_project ( dataset , obj , what , cuts , *args )
 
         gdir = ROOT.directory.CurrentDirectory()
         if gdir : 
             obj  = gdir.FindObject    ( histo )
-            if instance ( obj  , ROOT.TH1 ) :
+            if isinstance ( obj  , ROOT.TH1 ) :
                 return ds_project ( dataset , obj , what , cuts , *args )
             obj  = gdir.FindObjectAny ( histo )
-            if instance ( obj  , ROOT.TH1 ) :
+            if isinstance ( obj  , ROOT.TH1 ) :
                 return ds_project ( dataset , obj , what , cuts , *args )
 
     ## what it is ????

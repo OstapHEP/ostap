@@ -301,31 +301,37 @@ except ImportError :
 if scipy :
 
     # =========================================================================
-    ## create interpolation spline using scopy machinery
+    ## create interpolation spline using scipy machinery
     #  @code
     #  table  = ... ## interpolation table
     #  spline = intepolation ( table , degree = 3 ) 
-    #  @endcode 
+    #  @endcode
+    #  @see scipy.interpolation.make_innterp_spline 
     def interpolation ( table , degree , bc_type = None ) :
-        """Create interpolation spline using scopy machinery
+        """Create interpolation spline using scipy machinery
         >>> table = ... ## interpolation table
         >>>  spline  = intepolation ( table , degree = 3 ) 
+        - see `scipy.interpolation.make_innterp_spline` 
         """
         
         assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
-               "Inavalid interpolaiton type "
-        assert isinstance ( degree  , integer_types ) and 0 <= degree < len ( table ) , \
-               "Invalid ``degree'' parameter!"
+               "Inavalid interpolation type "
+        assert isinstance ( degree  , integer_types )  \
+               and 0 <= degree < len ( table )         \
+               and ( 0 == degree or 1 == degree %2 ) , \
+               "Invalid ``degree'' parameter %s" % degree 
         
         N   = len ( table )
         K   = degree        
         spl = scipy.interpolate.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
                                       table.values() , k = K , bc_type = bc_type )
 
-        knots  = doubles ( spl.t[K:-K] ) 
-        pars   = doubles ( spl.c       )
+        if 0 < K : knots = doubles ( spl.t[K:-K] )
+        else     : knots = doubles ( spl.t       )
         
-        return Ostap.Math.BSpline ( knots , pars  )
+        pars = doubles ( spl.c )
+        
+        return Ostap.Math.BSpline ( knots , pars )
     __all__ = __all__ + ( 'interpolation', )
 
 # =============================================================================
