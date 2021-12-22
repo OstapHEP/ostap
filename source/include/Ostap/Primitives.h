@@ -324,9 +324,17 @@ namespace  Ostap
       // ======================================================================
       template <class FUNCTION1, class FUNCTION2>
       Divide
-      ( FUNCTION1    f1     ,
-        FUNCTION2    f2     ) 
-        : F2  ( f1 , f2 ) 
+      ( FUNCTION1 f1 ,
+        FUNCTION2 f2 ) 
+        : F2 ( f1 , f2 ) 
+      {}
+      /// Constructor with several functions
+      template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
+      Divide
+      ( FUNCTION1 f1   ,
+        FUNCTION2 f2   , 
+        ARGS ...  args ) 
+        : Divide ( f1  , Multiply ( f2  , args ... ) )
       {}
       // ======================================================================
       /// the main method
@@ -604,6 +612,24 @@ namespace  Ostap
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::sqrt ( m_fun ( x ) ) ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Cbrt
+     *  \f$  F(x) = \sqrt[3] { f(x) } \f$ 
+     */
+    class Cbrt : public F1 
+    {
+    public:
+      // ======================================================================
+      template <class FUNCTION>
+      Cbrt ( FUNCTION f )
+        : F1 ( f  )
+      {}
+      // ======================================================================
+      /// the only one important method 
+      inline double operator() ( const double x ) const
+      { return std::cbrt ( m_fun ( x ) ) ; }
       // ======================================================================
     } ;
     // ========================================================================
