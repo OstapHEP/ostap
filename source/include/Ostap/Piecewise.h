@@ -34,17 +34,19 @@ namespace Ostap
        *  @param s1 the scale factor
        */
       template <class FUNCTION> 
-      Piecewise ( FUNCTION     f1     ,
-                  const double s1 = 1 ) 
+      Piecewise
+      ( FUNCTION     f1     ,
+        const double s1 = 1 ) 
         : m_edges () 
         , m_funcs ( 1 , FPAIR ( f1 , s1 ) )
       {}
       // =======================================================================
       /// constructor with several functions 
       template <class FUNCTION, typename... ARGS> 
-      Piecewise ( FUNCTION     f1   ,
-                  const double s1   , 
-                  ARGS...      args ) 
+      Piecewise
+      ( FUNCTION     f1   ,
+        const double s1   , 
+        ARGS...      args ) 
         : m_edges () 
         , m_funcs ( 1 , FPAIR ( f1 , s1 ) )
       {
@@ -69,7 +71,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get all edges 
-      const std::vector<double>&                        edges    () const 
+      const std::vector<double>& edges    () const 
       { return m_edges ; }
       /// get all (function,scale) pairs 
       const std::vector<FPAIR> functions() const { return m_funcs ; }
@@ -85,18 +87,20 @@ namespace Ostap
       /** add (function,scale) pair into the list into the list 
        *  - check that x is larger than all previous values
        */
-      void add_ ( const double                  x     ,  
-                  std::function<double(double)> f     , 
-                  const double                  s = 1 ) ;
+      void add_
+      ( const double                  x     ,  
+        std::function<double(double)> f     , 
+        const double                  s = 1 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// template creator 
       template <class FUNCTION, typename... ARGS>
       static inline Piecewise
-      create ( FUNCTION     f1   ,
-               const double s1   , 
-               ARGS...      args ) { return Piecewise ( f1 , s1 , args... ) ; }  
+      create
+      ( FUNCTION     f1   ,
+        const double s1   , 
+        ARGS...      args ) { return Piecewise ( f1 , s1 , args... ) ; }  
       // ======================================================================
     public:
       // ======================================================================
@@ -107,9 +111,10 @@ namespace Ostap
        *  @param si scale factor to be used 
        */
       template <class FUNCTION> 
-      void add ( const double  xi       , 
-                 FUNCTION      fi       , 
-                 const double  si = 1.0 ) { this->add_ ( xi , fi , si ) ; }
+      void add
+      ( const double  xi       , 
+        FUNCTION      fi       , 
+        const double  si = 1.0 ) { this->add_ ( xi , fi , si ) ; }
       // ======================================================================
       /** add new function, defined for  \f$ x\ge x_i\$ 
        *  @attention xi must be larger than any previosly added ranges!
@@ -118,10 +123,11 @@ namespace Ostap
        *  @param si scale efactor to be used 
        */
       template <class FUNCTION, typename... ARGS>
-      void add ( const double xi   , 
-                 FUNCTION     fi   ,
-                 const double si   , 
-                 ARGS...      args )
+      void add
+      ( const double xi   , 
+        FUNCTION     fi   ,
+        const double si   , 
+        ARGS...      args )
       {
         this->add_ ( xi , fi , si ) ;
         this->add  ( args...      ) ;

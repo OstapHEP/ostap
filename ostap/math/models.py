@@ -1096,6 +1096,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ASinh                  ,
                Ostap.Math.ACosh                  ,
                Ostap.Math.ATanh                  ,
+               Ostap.Math.Pow                    ,
                ##
                Ostap.Math.CutOffGauss            ,
                Ostap.Math.CutOffStudent          ,
@@ -1740,6 +1741,383 @@ Ostap.Math.BreitWignerMC.__repr__ = _bwmc_str_
 
 ## trick ...
 Ostap.Math.GammaBW3.xmin =  lambda s : s.dalitz().s_min() 
+
+
+# =============================================================================
+## more opreations for primitives 
+# =============================================================================
+## absolute value for primitive functions
+#  \f$  g(x)  = \left|  f(x) \right| \f$
+# @see Ostap::Magth::Abs 
+def _prims_abs_ ( f ) :
+    """Absolute value for primitive functions: g(x)  = |f(x)||
+    - see `Ostap.Magth.Abs`
+    """
+    return Ostap.Math.Abs.create ( f ) 
+
+# =============================================================================
+## add two primitive functions
+#  @see Ostap::Math::Sum 
+def  _prims_add_ ( f1  , f2  ) :
+    """Add two primitive functions
+    - see `Ostap.Math.Sum`
+    """
+    return Ostap.Math.Sum.create ( f1 , f2 )
+
+# =============================================================================
+## add two primitive functions
+#  @see Ostap::Math::Sum 
+def  _prims_radd_ ( f1  , f2  ) :
+    """Add two primitive functions
+    - see `Ostap.Math.Sum``
+    """
+    return Ostap.Math.Sum.create ( f2 , f1 )
+
+# =============================================================================
+## multiply two primitive functions
+#  @see Ostap::Math::Multiply 
+def  _prims_mul_ ( f1  , f2  ) :
+    """Multiply two primitive functions
+    - see `Ostap.Math.Multiply`
+    """
+    return Ostap.Math.Multiply.create ( f1 , f2 )
+
+# =============================================================================
+## multiply two primitive functions
+#  @see Ostap::Math::Multiply 
+def  _prims_rmul_ ( f1  , f2  ) :
+    """Multiply two primitive functions
+    - see `Ostap.Math.Multiply`
+    """
+    return Ostap.Math.Multiply.create ( f2 , f1 )
+
+
+# =============================================================================
+## subtract two primitive functions
+#  @see Ostap::Math::Subtract 
+def  _prims_sub_ ( f1  , f2  ) :
+    """Subtract two primitive functions
+    - see `Ostap.Math.Subtract`
+    """
+    return Ostap.Math.Subtract.create ( f1 , f2 )
+
+# =============================================================================
+## subtract two primitive functions
+#  @see Ostap::Math::Subtract 
+def  _prims_rsub_ ( f1  , f2  ) :
+    """Subtract two primitive functions
+    - see `Ostap.Math.Subtract``
+    """
+    return Ostap.Math.Subtract.create ( f2 , f1 )
+
+# =============================================================================
+## division two primitive functions
+#  @see Ostap::Math::Divide 
+def  _prims_div_ ( f1  , f2  ) :
+    """Division for two primitive functions
+    - see `Ostap.Math.Divide`
+    """
+    return Ostap.Math.Divide.create ( f1 , f2 )
+
+# =============================================================================
+## division two primitive functions
+#  @see Ostap::Math::Divide 
+def  _prims_rdiv_ ( f1  , f2  ) :
+    """Division for two primitive functions
+    - see `Ostap.Math.Divide`
+    """
+    return Ostap.Math.Divide.create ( f2 , f1 )
+
+# =============================================================================
+## pow for two primitive functions
+#  @see Ostap::Math::Pow 
+def  _prims_pow_ ( f1  , f2  ) :
+    """Pow for two primitive functions
+    - see `Ostap.Math.Pow`
+    """
+    return Ostap.Math.Pow.create ( f1 , f2 )
+
+# =============================================================================
+## pow for two primitive functions
+#  @see Ostap::Math::Pow 
+def  _prims_rpow_ ( f1  , f2  ) :
+    """Pow for two primitive functions
+    - see `Ostap.Math.Pow`
+    """
+    return Ostap.Math.Pow.create ( f2 , f1 )
+
+
+# =============================================================================
+## exp for primitive functions
+#  @see Ostap::Math::Exp
+def _prims_exp_ ( f ):
+    """Exp for primitive functions
+    - see `Ostap.Math.Exp`
+    """
+    return Ostap.Math.Exp.create ( f )  
+
+# =============================================================================
+## log for primitive functions
+#  @see Ostap::Math::Log
+def _prims_log_ ( f ):
+    """Exp for primitive functions
+    - see `Ostap.Math.Log`
+    """
+    return Ostap.Math.Log.create ( f )  
+
+# =============================================================================
+## log10 for primitive functions
+#  @see Ostap::Math::Log10
+def _prims_log10_ ( f ):
+    """Exp for primitive functions
+    - see `Ostap.Math.Log10`
+    """
+    return Ostap.Math.Log10.create ( f )  
+
+# =============================================================================
+## sqrt for primitive functions
+#  @see Ostap::Math::Sqrt
+def _prims_sqrt_ ( f ):
+    """Sqrt for primitive functions
+    - see `Ostap.Math.Sqrt`
+    """
+    return Ostap.Math.Sqrt.create ( f )  
+
+# =============================================================================
+## Cbrt for primitive functions
+#  @see Ostap::Math::Cbrt
+def _prims_cbrt_ ( f ):
+    """Cbrt for primitive functions
+    - see `Ostap.Math.Cbrt`
+    """
+    return Ostap.Math.Cbrt.create ( f )  
+
+
+# =============================================================================
+## Erf for primitive functions
+#  @see Ostap::Math::Erf
+def _prims_erf_ ( f ):
+    """Erf for primitive functions
+    - see `Ostap.Math.Erf`
+    """
+    return Ostap.Math.Erf.create ( f )  
+
+# =============================================================================
+## Erfc for primitive functions
+#  @see Ostap::Math::Erfc
+def _prims_erfc_ ( f ):
+    """Erfc for primitive functions
+    - see `Ostap.Math.Erfc`
+    """
+    return Ostap.Math.Erfc.create ( f )  
+
+# =============================================================================
+## Gamma function for primitive functions
+#  @see Ostap::Math::TGamma
+def _prims_tgamma_ ( f ):
+    """Gamma function for primitive functions
+    - see `Ostap.Math.TGamma`
+    """
+    return Ostap.Math.TGamma.create ( f )  
+
+# =============================================================================
+## log Gamma function for primitive functions
+#  @see Ostap::Math::LGamma
+def _prims_lgamma_ ( f ):
+    """log-Gamma function for primitive functions
+    - see `Ostap.Math.LGamma`
+    """
+    return Ostap.Math.LGamma.create ( f )  
+
+# =============================================================================
+## Sin function for primitive functions
+#  @see Ostap::Math::Sin
+def _prims_sin_ ( f ):
+    """sin function for primitive functions
+    - see `Ostap.Math.Sin`
+    """
+    return Ostap.Math.Sin.create ( f )  
+
+# =============================================================================
+## Cos function for primitive functions
+#  @see Ostap::Math::Cos
+def _prims_cos_ ( f ):
+    """cos function for primitive functions
+    - see `Ostap.Math.Cos`
+    """
+    return Ostap.Math.Cos.create ( f )  
+
+# =============================================================================
+## Tan function for primitive functions
+#  @see Ostap::Math::Tan
+def _prims_tan_ ( f ):
+    """tan function for primitive functions
+    - see `Ostap.Math.Tan`
+    """
+    return Ostap.Math.Tan.create ( f )  
+
+# =============================================================================
+## ASin function for primitive functions
+#  @see Ostap::Math::ASin
+def _prims_asin_ ( f ):
+    """asin function for primitive functions
+    - see `Ostap.Math.ASin`
+    """
+    return Ostap.Math.ASin.create ( f )  
+
+# =============================================================================
+## ACos function for primitive functions
+#  @see Ostap::Math::ACos
+def _prims_acos_ ( f ):
+    """acos function for primitive functions
+    - see `Ostap.Math.ACos`
+    """
+    return Ostap.Math.ACos.create ( f )  
+
+# =============================================================================
+## ATan function for primitive functions
+#  @see Ostap::Math::ATan
+def _prims_atan_ ( f ):
+    """atan function for primitive functions
+    - see `Ostap.Math.ATan`
+    """
+    return Ostap.Math.ATan.create ( f )  
+
+# =============================================================================
+## Sinh function for primitive functions
+#  @see Ostap::Math::Sinh
+def _prims_sinh_ ( f ):
+    """sinh function for primitive functions
+    - see `Ostap.Math.Sinh`
+    """
+    return Ostap.Math.Sinh.create ( f )  
+
+# =============================================================================
+## Cosh function for primitive functions
+#  @see Ostap::Math::Cosh
+def _prims_cosh_ ( f ):
+    """cosh function for primitive functions
+    - see `Ostap.Math.Cosh`
+    """
+    return Ostap.Math.Cosh.create ( f )  
+
+# =============================================================================
+## Tanh function for primitive functions
+#  @see Ostap::Math::Tanh
+def _prims_tanh_ ( f ):
+    """tanh function for primitive functions
+    - see `Ostap.Math.Tanh`
+    """
+    return Ostap.Math.Tanh.create ( f )  
+
+# =============================================================================
+## ASinh function for primitive functions
+#  @see Ostap::Math::ASinh
+def _prims_asinh_ ( f ):
+    """asinh function for primitive functions
+    - see `Ostap.Math.ASinh`
+    """
+    return Ostap.Math.ASinh.create ( f )  
+
+# =============================================================================
+## ACosh function for primitive functions
+#  @see Ostap::Math::ACosh
+def _prims_acosh_ ( f ):
+    """acosh function for primitive functions
+    - see `Ostap.Math.ACosh`
+    """
+    return Ostap.Math.ACosh.create ( f )  
+
+# =============================================================================
+## ATanh function for primitive functions
+#  @see Ostap::Math::ATanh
+def _prims_atanh_ ( f ):
+    """atan function for primitive functions
+    - see `Ostap.Math.ATan`
+    """
+    return Ostap.Math.ATanh.create ( f )  
+
+
+for p in ( Ostap.Math.Const    ,
+           Ostap.Math.Id       ,
+           Ostap.Math.Linear   ,
+           Ostap.Math.Compose  ,
+           Ostap.Math.Multiply ,
+           Ostap.Math.Divide   ,
+           Ostap.Math.Sum      ,
+           Ostap.Math.Subtract ,
+           Ostap.Math.Moebius  ,
+           Ostap.Math.Step     ,
+           Ostap.Math.Max      ,
+           Ostap.Math.Min      ,
+           Ostap.Math.Apply    ,
+           Ostap.Math.Abs      ,
+           Ostap.Math.Sqrt     ,
+           Ostap.Math.Cbrt     ,
+           Ostap.Math.Exp      ,
+           Ostap.Math.Log      ,
+           Ostap.Math.Log10    ,
+           Ostap.Math.Erf      ,
+           Ostap.Math.Erfc     ,
+           Ostap.Math.TGamma   ,
+           Ostap.Math.LGamma   ,
+           Ostap.Math.Sin      ,
+           Ostap.Math.Cos      ,
+           Ostap.Math.Tan      ,
+           Ostap.Math.ASin     ,
+           Ostap.Math.ACos     ,
+           Ostap.Math.ATan     ,
+           Ostap.Math.Sinh     ,
+           Ostap.Math.Cosh     ,
+           Ostap.Math.Tanh     ,
+           Ostap.Math.ASinh    ,
+           Ostap.Math.ACosh    ,
+           Ostap.Math.ATanh    ,
+           Ostap.Math.Pow      ) :
+
+           p. __abs__      = _prims_abs_
+           
+           p. __add__      = _prims_add_
+           p. __radd__     = _prims_radd_
+
+           p. __sub__      = _prims_sub_
+           p. __rsub__     = _prims_rsub_
+
+           p. __mul__      = _prims_mul_
+           p. __rmul__     = _prims_rmul_
+
+           p. __div__      = _prims_div_
+           p. __rdiv__     = _prims_rdiv_
+
+           p. __truediv__  = _prims_div_
+           p. __rtruediv__ = _prims_rdiv_
+
+           p. __pow__      = _prims_pow_
+           p. __rpow__     = _prims_rpow_
+
+           p. __exp__       = _prims_exp_
+           p. __log__       = _prims_log_
+           p. __log10__     = _prims_log10_
+           p. __sqrt__      = _prims_sqrt_
+           p. __cbrt__      = _prims_cbrt_
+           p. __erf__       = _prims_erf_
+           p. __erfc__      = _prims_erfc_
+           p. __tgamma__    = _prims_tgamma_
+           p. __gamma__     = _prims_tgamma_
+           p. __lgamma__    = _prims_lgamma_           
+           p. __sin__       = _prims_sin_
+           p. __cos__       = _prims_cos_
+           p. __tan__       = _prims_tan_
+           p. __asin__      = _prims_asin_
+           p. __acos__      = _prims_acos_
+           p. __atan__      = _prims_atan_
+           p. __sinh__      = _prims_sinh_
+           p. __cosh__      = _prims_cosh_
+           p. __tanh__      = _prims_tanh_
+           p. __asinh__     = _prims_asinh_
+           p. __acosh__     = _prims_acosh_
+           p. __atanh__     = _prims_atanh_
+
     
 # =============================================================================
 _decorated_classes_ = set( [

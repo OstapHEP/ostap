@@ -392,6 +392,50 @@ namespace  Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Subtract
+     *  Subtract two or more functions 
+     *  \f[ f(x) = f_1 (x) - f_2(x) \f] 
+     *  \f[ f(x) = f_1 (x) - \sum_{i=2}} f_i(x) \f] 
+     */
+    class Subtract: public F2 
+    {
+    public :
+      // ======================================================================
+      /** constructor from two functions
+       *   \f[ f(x) =  f_1(x) - f_2 ( x  ) \f] 
+       *  @param f1 the first  function 
+       *  @param f1 the second function 
+       */
+      template <class FUNCTION1, class FUNCTION2>
+      Subtract
+      ( FUNCTION1    f1 ,
+        FUNCTION2    f2 ) 
+        : F2 ( f1 , f2 ) 
+      {}
+      // ====================================================================== 
+      /// Constructor with several functions
+      template <class FUNCTION1, class FUNCTION2, typename ... ARGS >
+      Subtract
+      ( FUNCTION1 f1   ,
+        FUNCTION2 f2   , 
+        ARGS ...  args ) 
+        : Subtract ( f1 , Sum ( f2 , args ... ) ) 
+      {}
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// the main method
+      inline  double operator() ( const double x ) const
+      { return m_fun1 ( x ) - m_fun2 ( x ) ; }
+      // ======================================================================
+    public:
+      //  =====================================================================
+      template <typename ...  ARGS>
+      inline static Subtract
+      create ( ARGS... args ) { return Subtract ( args ... ) ; }
+      // ======================================================================
+    } ;
+    // ========================================================================
     /** @class Moebius
      *  Moebius tranformation  \f$ f(x) = \frac{ax+b}{cx+d}\f$,
      *  with \f$ ad - bc \neq 0\f$  
@@ -591,6 +635,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Abs () : Abs ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Abs
+      create ( FUNCTION f ) { return Abs ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::abs ( m_fun ( x ) ) ; }
@@ -609,6 +664,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Sqrt () : Sqrt ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Sqrt
+      create ( FUNCTION f ) { return Sqrt ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::sqrt ( m_fun ( x ) ) ; }
@@ -627,6 +692,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Cbrt () : Cbrt ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Cbrt
+      create ( FUNCTION f ) { return Cbrt ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::cbrt ( m_fun ( x ) ) ; }
@@ -645,6 +720,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Exp () : Exp ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Exp
+      create ( FUNCTION f ) { return Exp ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::exp ( m_fun ( x ) ) ; }
@@ -663,6 +748,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Log () : Log ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Log
+      create ( FUNCTION f ) { return Log ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::log ( m_fun ( x ) ) ; }
@@ -681,6 +776,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Log10 () : Log10 ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Log10
+      create ( FUNCTION f ) { return Log10 ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::log10 ( m_fun ( x ) ) ; }
@@ -699,6 +804,16 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Erf () : Erf ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Erf
+      create ( FUNCTION f ) { return Erf ( f ) ; }
+      // ======================================================================
+    public:
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::erf ( m_fun ( x ) ) ; }
@@ -716,6 +831,17 @@ namespace  Ostap
       Erfc ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      Erfc () : Erfc ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Erfc
+      create ( FUNCTION f ) { return Erfc ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -735,6 +861,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      TGamma () : TGamma ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline TGamma
+      create ( FUNCTION f ) { return TGamma ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::tgamma ( m_fun ( x ) ) ; }
@@ -752,6 +889,17 @@ namespace  Ostap
       LGamma ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      LGamma () : LGamma ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline LGamma
+      create ( FUNCTION f ) { return LGamma ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -772,6 +920,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Sin () : Sin ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Sin
+      create ( FUNCTION f ) { return Sin ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::sin ( m_fun ( x ) ) ; }
@@ -789,6 +948,17 @@ namespace  Ostap
       Cos ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      Cos () : Cos ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Cos
+      create ( FUNCTION f ) { return Cos ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -808,6 +978,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Tan () : Tan ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Tan
+      create ( FUNCTION f ) { return Tan ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::tan ( m_fun ( x ) ) ; }
@@ -825,6 +1006,17 @@ namespace  Ostap
       ASin ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      ASin () : ASin ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ASin
+      create ( FUNCTION f ) { return ASin ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -844,6 +1036,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      ACos () : ACos ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ACos
+      create ( FUNCTION f ) { return ACos ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::acos ( m_fun ( x ) ) ; }
@@ -861,6 +1064,17 @@ namespace  Ostap
       ATan ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      ATan () : ATan ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ATan
+      create ( FUNCTION f ) { return ATan ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -881,6 +1095,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Sinh () : Sinh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Sinh
+      create ( FUNCTION f ) { return Sinh ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::sinh ( m_fun ( x ) ) ; }
@@ -898,6 +1123,17 @@ namespace  Ostap
       Cosh ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      Cosh () : Cosh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Cosh
+      create ( FUNCTION f ) { return Cosh ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -917,6 +1153,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      Tanh () : Tanh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline Tanh
+      create ( FUNCTION f ) { return Tanh ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::tanh ( m_fun ( x ) ) ; }
@@ -934,6 +1181,17 @@ namespace  Ostap
       ASinh ( FUNCTION f )
         : F1 ( f  )
       {}
+      // ======================================================================
+      /// default contsructor 
+      ASinh () : ASinh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ASinh
+      create ( FUNCTION f ) { return ASinh ( f ) ; }
+      // ======================================================================
+    public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
@@ -953,6 +1211,17 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      ACosh () : ACosh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ACosh
+      create ( FUNCTION f ) { return ACosh ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::acosh ( m_fun ( x ) ) ; }
@@ -971,23 +1240,34 @@ namespace  Ostap
         : F1 ( f  )
       {}
       // ======================================================================
+      /// default contsructor 
+      ATanh () : ATanh ( Id () ) {}
+      // ======================================================================
+    public:
+      // ======================================================================      
+      template <class FUNCTION>
+      static inline ATanh
+      create ( FUNCTION f ) { return ATanh ( f ) ; }
+      // ======================================================================
+    public:
+      // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       { return std::atanh ( m_fun ( x ) ) ; }
       // ======================================================================
     } ;
-    
     // ========================================================================
     /** @class Pow 
      *  pow for the function 
      */
-    class Pow : public F1 
+    class Pow : public F2 
     {
     public:
       // ======================================================================
       /// the type 
       enum Type { Integer = 0 ,
-                  Double      } ;
+                  Double      ,
+                  Function    } ;
       // ======================================================================        
     public:
       // ======================================================================
@@ -995,7 +1275,7 @@ namespace  Ostap
       template <class FUNCTION>
       Pow ( FUNCTION     f     ,
             const double order ) 
-        : F1 ( f ) 
+        : F2 ( f , Const ( order ) ) 
         , m_iorder ( 0      )
         , m_dorder ( order  )
         , m_type   ( Double ) 
@@ -1004,10 +1284,28 @@ namespace  Ostap
       template <class FUNCTION>
       Pow ( FUNCTION     f     ,
             const int    order ) 
-        : F1 ( f ) 
+        : F2 ( f , Const ( 1.0 * order ) ) 
         , m_iorder ( order   )
         , m_dorder ( order   )
         , m_type   ( Integer ) 
+      {}
+      /// constructor  from two functions
+      template <class FUNCTION1,
+                class FUNCTION2>
+      Pow ( FUNCTION1    f1    ,
+            FUNCTION2    f2    ) 
+        : F2 ( f1 , f2   ) 
+        , m_iorder ( 0        )
+        , m_dorder ( 0        )
+        , m_type   ( Function ) 
+      {}
+      /// constructor  from degree 
+      Pow ( const double order ) 
+        : Pow ( Id () ,  order )
+      {}
+      /// constructor  from degree 
+      Pow ( const int    order ) 
+        : Pow ( Id () ,  order )
       {}
       /// copy constructor 
       Pow ( const Pow&  ) = default ;
@@ -1018,22 +1316,32 @@ namespace  Ostap
       // ======================================================================
       template <class FUNCTION>
       static inline Pow 
-      create ( FUNCTION     f ,
-               const double o ) { return Pow ( f , o ) ; }
+      create
+      ( FUNCTION     f ,
+        const double o ) { return Pow ( f , o ) ; }
       // ======================================================================
       template <class FUNCTION>
       static inline Pow 
-      create ( FUNCTION     f ,
-               const int    o ) { return Pow ( f , o ) ; }
+      create
+      ( FUNCTION     f ,
+        const int    o ) { return Pow ( f , o ) ; }
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2>
+      static inline Pow 
+      create
+      ( FUNCTION1    f1 ,
+        FUNCTION2    f2 ) { return Pow ( f1 , f2 ) ; }
       // ======================================================================
     public:
       // ======================================================================
       /// the only one important method 
       inline double operator() ( const double x ) const
       {
-        return m_type == Integer ?
-          std::pow (            m_fun ( x )   , m_iorder ) :
-          std::pow ( std::abs ( m_fun ( x ) ) , m_dorder ) ;
+        return
+          m_type == Integer ? std::pow ( m_fun1 ( x ) , m_iorder ) :
+          m_type == Double  ? std::pow ( m_fun1 ( x ) , m_dorder ) :
+          std::pow  ( m_fun1 ( x  ) , m_fun2  ( x ) ) ;
       }
       // ======================================================================        
     private :

@@ -767,7 +767,7 @@ class PSLeftExpoPol_pdf(PolyBase) :
         self.__scale = self.make_var ( scale             ,
                                       "scale_%s"  % name ,
                                       "scale(%s)" % name , scale , 1 , 1.e-3 , 1.e+6 )
-        
+
         self.pdf  = Ostap.Models.PhaseSpaceLeftExpoPol (
             self.roo_name ( "psepol_"  ) ,
             "Phase space and exponent modulated by polynomial %s" % self.name  , 

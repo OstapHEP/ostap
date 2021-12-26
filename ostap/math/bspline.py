@@ -306,12 +306,19 @@ if scipy :
     #  table  = ... ## interpolation table
     #  spline = intepolation ( table , degree = 3 ) 
     #  @endcode
-    #  @see scipy.interpolation.make_innterp_spline 
-    def interpolation ( table , degree , bc_type = None ) :
+    #  @see scipy.interpolation.make_innterp_spline
+    #  @param table interpolaiton table
+    #  @param degree order of b-spline
+    #  @param bc_type bodundary conditions
+    #  @see Ostap:;Math::Interpolaiton::Table 
+    def interpolation ( table          ,
+                        degree  = 3    ,
+                        bc_type = None ) :
         """Create interpolation spline using scipy machinery
         >>> table = ... ## interpolation table
         >>>  spline  = intepolation ( table , degree = 3 ) 
         - see `scipy.interpolation.make_innterp_spline` 
+        - see `Ostap.Math.Interpolaiton.Table` 
         """
         
         assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
