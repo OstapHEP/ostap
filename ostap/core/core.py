@@ -351,15 +351,28 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             obj.SetFillStyle   ( kw.pop('FillStyle' ) )
 
         ## Min/max values  
-            
+
         if   'Minimum'     in kw and hasattr ( obj , 'SetMinimum' ) :
-            obj.SetMinimum     ( kw.pop ( 'Minimum' ) )
+            obj.SetMinimum     ( kw.pop ( 'Minimum'  ) )
+        elif 'Minimal'     in kw and hasattr ( obj , 'SetMinimum' ) :
+            obj.SetMinimum     ( kw.pop ( 'Minimal'  ) )
         elif 'Min'         in kw and hasattr ( obj , 'SetMinimum' ) :
-            obj.SetMinimum     ( kw.pop ( 'Min'     ) )
+            obj.SetMinimum     ( kw.pop ( 'Min'      ) )
+        elif 'MinVal'      in kw and hasattr ( obj , 'SetMinimum' ) :
+            obj.SetMinimum     ( kw.pop ( 'MinVal'   ) )
+        elif 'MinValue'    in kw and hasattr ( obj , 'SetMinimum' ) :
+            obj.SetMinimum     ( kw.pop ( 'MinValue' ) )
+            
         if   'Maximum'     in kw and hasattr ( obj , 'SetMaximum' ) :
-            obj.SetMaximum     ( kw.pop ( 'Maximum' ) )
+            obj.SetMaximum     ( kw.pop ( 'Maximum'  ) )
+        elif 'Maximal'     in kw and hasattr ( obj , 'SetMaximum' ) :
+            obj.SetMaximum     ( kw.pop ( 'Maximal'  ) )
         elif 'Max'         in kw and hasattr ( obj , 'SetMaximum' ) :
-            obj.SetMaximum     ( kw.pop ( 'Max'     ) )
+            obj.SetMaximum     ( kw.pop ( 'Max'      ) )
+        elif 'MaxVal'      in kw and hasattr ( obj , 'SetMaximum' ) :
+            obj.SetMaximum     ( kw.pop ( 'MaxVal'   ) )
+        elif 'MaxValue'    in kw and hasattr ( obj , 'SetMaximum' ) :
+            obj.SetMaximum     ( kw.pop ( 'MaxValue' ) )
 
 
         if 'LabelSize' in kw or 'LabelFont' in kw or 'LabelScale' in kw  :

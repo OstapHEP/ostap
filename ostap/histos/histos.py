@@ -30,6 +30,21 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, sys, math, ctypes, array 
+from   ostap.core.core import ( cpp      , Ostap     , 
+                                ROOTCWD  , rootID    , 
+                                funcID   , funID     , fID             ,
+                                histoID  , hID       , dsID            ,
+                                VE       , SE        , WSE             ,
+                                binomEff , binomEff2 ,
+                                zechEff  , wilsonEff , agrestiCoullEff , 
+                                iszero   , isequal   , inrange         , 
+                                isint    , islong    , is_sorted       , 
+                                natural_entry        ,
+                                natural_number       )
+from   ostap.math.base          import frexp10 
+from   ostap.core.ostap_types   import integer_types, num_types , long_type, sequence_types
+from   ostap.utils.progress_bar import progress_bar 
+import ostap.plotting.draw_attributes 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -38,21 +53,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.histos' )
 else                       : logger = getLogger( __name__          )
 # =============================================================================
 logger.debug ( 'Decoration of historams')
-# =============================================================================
-from ostap.core.core import ( cpp      , Ostap     , 
-                              ROOTCWD  , rootID    , 
-                              funcID   , funID     , fID             ,
-                              histoID  , hID       , dsID            ,
-                              VE       , SE        , WSE             ,
-                              binomEff , binomEff2 ,
-                              zechEff  , wilsonEff , agrestiCoullEff , 
-                              iszero   , isequal   , inrange         , 
-                              isint    , islong    , is_sorted       , 
-                              natural_entry        ,
-                              natural_number       )
-from   ostap.math.base        import frexp10 
-from   ostap.core.ostap_types import integer_types, num_types , long_type, sequence_types 
-import ostap.plotting.draw_attributes 
 # =============================================================================
 
 
@@ -4014,10 +4014,10 @@ def _cnv_ ( x , x0 , dx , sigma ) :
 # =============================================================================
 ## "Smear" : make a convolution of the histogram with gaussian function
 #  @param sigma     the gaussian resolutuon
-#  @param addsigmas the parameter to treat the bounary conditions 
+#  @param addsigmas the parameter to treat the boundary conditions 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2012-09-20
-def _smear_ ( h1 , sigma , addsigmas = 5 ) :
+def _smear_ ( h1 , sigma , addsigmas = 5 , silent = True ) :
     """Smear the histogram through the convolution with the gaussian function:
     >>> histo    = ...
     >>> smeared1 = h.smear ( sigma = 0.01 )  ## smear using 'constant' sigma
@@ -4093,7 +4093,7 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
         
         xmax  = bin[0].value()+bin[0].error()
     
-    for ibin1 in bins :
+    for ibin1 in progress_bar ( bins , silent = silent  ) :
 
         x1c  =     ibin1 [0].value () 
         x1w  = 2 * ibin1 [0].error () 
@@ -4106,7 +4106,8 @@ def _smear_ ( h1 , sigma , addsigmas = 5 ) :
         sig  = abs  ( float ( sigma ( x1c ) ) )
         
         ## if very narrow, skip it...
-        if sig < 0.02 * x1w  :
+        if sig < 0.01 * x1w  :
+            
             i2      = h2.findBin  ( x1c )
             h2[i2] += val1 
             continue 

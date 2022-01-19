@@ -4,12 +4,47 @@
 
 ## Bug fixes:
 
+# v1.6.9.0
+
+## New features:
+  1. add  `Ostap::Math::CnannelNRL` for non-relativistic Breit-Wigner channels 
+  1. more imporvements for the math primitives
+  1. even more imporvements for the math primitives
+  1. add python operators for primitives
+  
+## Backward incompatible  
+  1. rename `Ostap::Math::ChannelNR` to `Ostap::Math::ChannrlNR3`
+
+## Bug fixes:
+
+# v1.6.8.2
+
+## New features:
+
+  1. `ROOT.TH1.smear` add argument `silent = True` 
+  1. `parse_args` improve logging (use local loggers instead of the global  one)
+  
+## Backward incompatible  
+
+## Bug fixes:
+
+
+# v1.6.8.0
+
+## New features:
+
+  1. `interpolate.py` add `bspline_interpolate` based on `scipy`
+  
+## Backward incompatible  
+
+## Bug fixes:
+
 
 # v1.6.7.1
 
 ## New features:
 
- 1. Change signature of `PS23_pdf` - nor it required valid Dalitz  configuration 
+ 1. Change signature of `PS23_pdf` - now it requires a valid Dalitz  configuration 
 
 ## Backward incompatible  
 

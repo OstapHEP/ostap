@@ -253,8 +253,9 @@ Ostap::Math::PhaseSpace2::q1_s
 Ostap::Math::sPhaseSpace2::sPhaseSpace2
 ( const double m1 ,
   const double m2 )
-  : m_m2_1 ( m1 * m1 )
-  , m_m2_2 ( m2 * m2 )
+  : m_m2_1      ( m1 <= 0 ? 0.0 : m1 * m1 )
+  , m_m2_2      ( m2 <= 0 ? 0.0 : m2 * m2 )
+  , m_threshold ( std::pow ( std::max ( m1 , 0.0 ) + std::max ( m2  , 0.0 ) , 2 ) )  
 {
   if ( s_zero ( m_m2_1 ) || s_zero ( m1 ) ) { m_m2_1 = 0 ; }
   if ( s_zero ( m_m2_2 ) || s_zero ( m2 ) ) { m_m2_2 = 0 ; }

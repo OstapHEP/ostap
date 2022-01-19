@@ -99,8 +99,8 @@ ARRAY   = lambda x : array.array ( 'd' , x )
 # ARRAY   = lambda x     : numpy.array ( x , dtype=float)
 # from math import fsum 
 # dot_fma = lambda n,x,y : fsum ( ( (i*j) for i,j in zip(x,y) ) )
-
-
+# =============================================================================
+    
 # ======================================================================================
 ## calculate  1st (and optionally Nth) derivative with the given step
 #  - f'      is calcualted as O(h^(N-1))

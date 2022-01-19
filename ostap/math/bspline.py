@@ -47,7 +47,7 @@ __all__     = (
 # =============================================================================
 import  ROOT, math  
 from    ostap.core.core        import Ostap, funID
-from    ostap.core.ostap_types import is_integer
+from    ostap.core.ostap_types import is_integer, integer_types
 from    ostap.math.base        import iszero, isequal, signum, doubles
 from    ostap.core.meta_info   import root_info
 import  ostap.math.bernstein 
@@ -291,7 +291,56 @@ def approximate ( func , spline , *args ) :
     N  =  bs.npars()
     for i in  range(N) : bs.setPar ( i , func ( xv[i] ) )
     return bs
-    
+
+
+try :
+    import scipy
+except ImportError :
+    scipy = None
+
+if scipy :
+
+    # =========================================================================
+    ## create interpolation spline using scipy machinery
+    #  @code
+    #  table  = ... ## interpolation table
+    #  spline = intepolation ( table , degree = 3 ) 
+    #  @endcode
+    #  @see scipy.interpolation.make_innterp_spline
+    #  @param table interpolaiton table
+    #  @param degree order of b-spline
+    #  @param bc_type bodundary conditions
+    #  @see Ostap:;Math::Interpolaiton::Table 
+    def interpolation ( table          ,
+                        degree  = 3    ,
+                        bc_type = None ) :
+        """Create interpolation spline using scipy machinery
+        >>> table = ... ## interpolation table
+        >>>  spline  = intepolation ( table , degree = 3 ) 
+        - see `scipy.interpolation.make_innterp_spline` 
+        - see `Ostap.Math.Interpolaiton.Table` 
+        """
+        
+        assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
+               "Inavalid interpolation type "
+        assert isinstance ( degree  , integer_types )  \
+               and 0 <= degree < len ( table )         \
+               and ( 0 == degree or 1 == degree %2 ) , \
+               "Invalid ``degree'' parameter %s" % degree 
+        
+        N   = len ( table )
+        K   = degree        
+        spl = scipy.interpolate.make_interp_spline( [ table.x ( i ) for i in range ( N ) ] ,
+                                      table.values() , k = K , bc_type = bc_type )
+
+        if 0 < K : knots = doubles ( spl.t[K:-K] )
+        else     : knots = doubles ( spl.t       )
+        
+        pars = doubles ( spl.c )
+        
+        return Ostap.Math.BSpline ( knots , pars )
+    __all__ = __all__ + ( 'interpolation', )
+
 # =============================================================================
 ## merge duplicated roots together 
 def _merge_ ( roots , dx ) :

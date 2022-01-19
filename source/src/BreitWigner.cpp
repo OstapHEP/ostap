@@ -2189,7 +2189,7 @@ double Ostap::Math::Channel23L::rho_s
 // ============================================================================
 // constructor from (partial) width and three masses 
 // ============================================================================
-Ostap::Math::ChannelNR::ChannelNR
+Ostap::Math::ChannelNR3::ChannelNR3
 ( const double gamma ,  
   const double m1 , 
   const double m2 , 
@@ -2206,15 +2206,15 @@ Ostap::Math::ChannelNR::ChannelNR
 // ============================================================================
 // clone method
 // ============================================================================
-Ostap::Math::ChannelNR*
-Ostap::Math::ChannelNR::clone () const 
-{ return new Ostap::Math::ChannelNR ( *this ) ; }
+Ostap::Math::ChannelNR3*
+Ostap::Math::ChannelNR3::clone () const 
+{ return new Ostap::Math::ChannelNR3 ( *this ) ; }
 // ============================================================================ 
 /*  squared  numerator for the amplitude 
  * \f$ N^2(s,m_0) =  m_0 \Gamma_0 \frac{\varrho_3(s)}{\varrho_3(m_0^2)} \f$ 
  */
 // ============================================================================ 
-double Ostap::Math::ChannelNR::N2
+double Ostap::Math::ChannelNR3::N2
 ( const double s  , 
   const double m0 ) const 
 {
@@ -2230,7 +2230,7 @@ double Ostap::Math::ChannelNR::N2
  */
 // ============================================================================
 std::complex<double> 
-Ostap::Math::ChannelNR::D    
+Ostap::Math::ChannelNR3::D    
 ( const double s  , 
   const double m0 ) const
 {
@@ -2243,7 +2243,7 @@ Ostap::Math::ChannelNR::D
 // ============================================================================
 // unique tag for this lineshape 
 // ============================================================================
-std::size_t Ostap::Math::ChannelNR::tag () const
+std::size_t Ostap::Math::ChannelNR3::tag () const
 { 
   static const std::string s_name = "ChannelNR" ;
   return std::hash_combine ( s_name , gamma0 () , m_m1 , m_m2 , m_m3 ) ; 
@@ -2251,13 +2251,13 @@ std::size_t Ostap::Math::ChannelNR::tag () const
 // ============================================================================
 // describe the channel 
 // ============================================================================
-std::string Ostap::Math::ChannelNR::describe() const 
+std::string Ostap::Math::ChannelNR3::describe() const 
 {
   return 
-    "ChannelNR(" + std::to_string ( gamma0 () ) + 
-    ","          + std::to_string ( m_m1       ) + 
-    ","          + std::to_string ( m_m2       ) + 
-    ","          + std::to_string ( m_m3       ) + ")" ;
+    "ChannelNR3(" + std::to_string ( gamma0 () ) + 
+    ","           + std::to_string ( m_m1       ) + 
+    ","           + std::to_string ( m_m2       ) + 
+    ","           + std::to_string ( m_m3       ) + ")" ;
 }
 // ============================================================================
 
@@ -2560,7 +2560,27 @@ std::size_t Ostap::Math::ChannelGLR::tag () const
 
 
 
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Math::ChannelNRL*
+Ostap::Math::ChannelNRL::clone() const
+{ return new Ostap::Math::ChannelNRL ( *this ) ; }
 
+// ============================================================================
+// unique tag for this lineshape 
+// ============================================================================
+std::size_t Ostap::Math::ChannelNRL::tag () const
+{
+  static const std::string s_name = "ChannelNRL" ;
+  return std::hash_combine ( s_name         ,
+                             m_tag          ,
+                             m_sthreshold   , 
+                             m_description  ,
+                             gamma0    () ) ; 
+}
+// ============================================================================
+    
 
 
 

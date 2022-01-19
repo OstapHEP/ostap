@@ -323,9 +323,10 @@ namespace Ostap
        *  @param m1    the mass of the 1st daughter
        *  @param m2    the mass of the 2nd daughter
        */
-      ChannelCW ( const double                  gamma = 0.150 , 
-                  const double                  m1    = 0.139 , 
-                  const double                  m2    = 0.139 ) ;
+      ChannelCW
+      ( const double                  gamma = 0.150 , 
+        const double                  m1    = 0.139 , 
+        const double                  m2    = 0.139 ) ;
       // ======================================================================
       /// clone the channel 
       ChannelCW* clone () const override ;
@@ -399,11 +400,12 @@ namespace Ostap
     public : 
       // ======================================================================
       /// full constructor with all functions specified 
-      ChannelWidth ( const double       gamma                        ,
-                     Width              width                        ,  
-                     const double       sthreshold                   , 
-                     const std::size_t  tag                          ,
-                     const std::string& description = "ChannelWidth" ) ;
+      ChannelWidth
+      ( const double       gamma                        ,
+        Width              width                        ,  
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelWidth" ) ;
       // =======================================================================
       /// templated constructor
       template <class WIDTH>
@@ -426,11 +428,12 @@ namespace Ostap
       // =======================================================================
       template <class WIDTH>
       static inline ChannelWidth 
-      create ( const double       gamma                        , 
-               WIDTH              width                        , 
-               const double       sthreshold                   , 
-               const std::size_t  tag                          ,
-               const std::string& description = "ChannelWidth" ) 
+      create
+      ( const double       gamma                        , 
+        WIDTH              width                        , 
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelWidth" ) 
       { return ChannelWidth ( gamma , width , sthreshold , tag , description ) ; }
       // ======================================================================
     public:
@@ -503,11 +506,12 @@ namespace Ostap
     public : 
       // ======================================================================
       /// full constructor with all functions specified 
-      ChannelGamma ( const double       gamma                        ,
-                     Width              width                        ,  
-                     const double       sthreshold                   , 
-                     const std::size_t  tag                          ,
-                     const std::string& description = "ChannelGamma" ) ;
+      ChannelGamma
+      ( const double       gamma                        ,
+        Width              width                        ,  
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelGamma" ) ;
       // =======================================================================
       /// templated constructor
       template <class WIDTH>
@@ -530,11 +534,12 @@ namespace Ostap
       // =======================================================================
       template <class WIDTH>
       static inline ChannelGamma 
-      create ( const double       gamma                        , 
-               WIDTH              width                        , 
-               const double       sthreshold                   , 
-               const std::size_t  tag                          ,
-               const std::string& description = "ChannelGamma" ) 
+      create
+      ( const double       gamma                        , 
+        WIDTH              width                        , 
+        const double       sthreshold                   , 
+        const std::size_t  tag                          ,
+        const std::string& description = "ChannelGamma" ) 
       { return ChannelGamma ( gamma , width , sthreshold , tag , description ) ; }
       // ======================================================================
     public:
@@ -614,9 +619,10 @@ namespace Ostap
     public : 
       // ======================================================================
       /// full constructor with all functions specified 
-      ChannelQ ( const double gamma ,
-                 const double m1    , 
-                 const double m2    ) ;
+      ChannelQ
+      ( const double gamma ,
+        const double m1    , 
+        const double m2    ) ;
       // =======================================================================
       /// clone the channel 
       ChannelQ* clone () const override ;
@@ -699,10 +705,11 @@ namespace Ostap
        *  @param m2    the mass of the 2nd daughter
        *  @param L     the oribital momentum
        */
-      Channel ( const double                  gamma = 0.150 , 
-                const double                  m1    = 0.139 , 
-                const double                  m2    = 0.139 , 
-                const unsigned short          L     = 0     ) ;
+      Channel
+      ( const double                  gamma = 0.150 , 
+        const double                  m1    = 0.139 , 
+        const double                  m2    = 0.139 , 
+        const unsigned short          L     = 0     ) ;
       // ======================================================================
       /** constructor from all parameters and Jackson's formfactor 
        *  @param gamma the width 
@@ -711,11 +718,12 @@ namespace Ostap
        *  @param L     the oribital momentum
        *  @param r     the Jackson's formfactor 
        */
-      Channel ( const double                  gamma         , 
-                const double                  m1            , 
-                const double                  m2            , 
-                const unsigned short          L             ,
-                const FormFactors::JacksonRho r             ) ;
+      Channel
+      ( const double                  gamma         , 
+        const double                  m1            , 
+        const double                  m2            , 
+        const unsigned short          L             ,
+        const FormFactors::JacksonRho r             ) ;
       // ======================================================================
       /** constructor from all parameters and generic formfactor 
        *  @param gamma the width 
@@ -724,11 +732,12 @@ namespace Ostap
        *  @param L     the oribital momentum
        *  @param f     the formfactor 
        */
-      Channel ( const double                  gamma , 
-                const double                  m1    , 
-                const double                  m2    , 
-                const unsigned short          L     ,
-                const FormFactor&             f     ) ;
+      Channel
+      ( const double                  gamma , 
+        const double                  m1    , 
+        const double                  m2    , 
+        const unsigned short          L     ,
+        const FormFactor&             f     ) ;
       /// copy constructor 
       Channel ( const Channel&  right )           ;
       /// move constructor 
@@ -821,11 +830,12 @@ namespace Ostap
        *  @param L     the oribital momentum
        *  @param qs    the scale momentum 
        */
-      Channel0 ( const double                  gamma = 0.150 , 
-                 const double                  m1    = 0.139 , 
-                 const double                  m2    = 0.139 , 
-                 const unsigned short          L     = 0     , 
-                 const double                  qs    = 0     ) ;
+      Channel0
+      ( const double                  gamma = 0.150 , 
+        const double                  m1    = 0.139 , 
+        const double                  m2    = 0.139 , 
+        const unsigned short          L     = 0     , 
+        const double                  qs    = 0     ) ;
       // ======================================================================
       /** constructor from all parameters and Jackson's formfactor 
        *  @param gamma the width 
@@ -835,12 +845,13 @@ namespace Ostap
        *  @param r     the Jackson's formfactor 
        *  @param qs    the scale momentum 
        */
-      Channel0 ( const double                  gamma         , 
-                 const double                  m1            , 
-                 const double                  m2            , 
-                 const unsigned short          L             ,
-                 const FormFactors::JacksonRho r             ,
-                 const double                  qs    = 0     ) ;
+      Channel0
+      ( const double                  gamma         , 
+        const double                  m1            , 
+        const double                  m2            , 
+        const unsigned short          L             ,
+        const FormFactors::JacksonRho r             ,
+        const double                  qs    = 0     ) ;
       // ======================================================================
       /** constructor from all parameters and generic formfactor 
        *  @param gamma the width 
@@ -850,12 +861,13 @@ namespace Ostap
        *  @param f     the formfactor 
        *  @param qs    the scale momentum 
        */
-      Channel0 ( const double                  gamma         , 
-                 const double                  m1            , 
-                 const double                  m2            , 
-                 const unsigned short          L             ,
-                 const FormFactor&             f             ,
-                 const double                  qs    = 0     ) ;
+      Channel0
+      ( const double                  gamma         , 
+        const double                  m1            , 
+        const double                  m2            , 
+        const unsigned short          L             ,
+        const FormFactor&             f             ,
+        const double                  qs    = 0     ) ;
       /// copy constructor 
       Channel0 ( const Channel0&  right )           ;
       /// move constructor 
@@ -904,6 +916,7 @@ namespace Ostap
       double m_qs { 0 } ; // momentum  scale
       // ======================================================================
     };
+    
     // =========================================================================
     /** @class ChannelGRL
      *  Description of the channel 
@@ -929,14 +942,15 @@ namespace Ostap
                 class FUNCTION2,
                 class FUNCTION3,
                 class FUNCTION4>
-      ChannelGLR  ( const double       gamma            ,
-                    FUNCTION1          fN2              ,
-                    FUNCTION2          fD               ,
-                    FUNCTION3          fL               ,
-                    FUNCTION4          fRho             ,
-                    const double       s0               ,
-                    const std::string& description = "" , 
-                    const std::size_t  tag         = 0  )
+      ChannelGLR
+      ( const double       gamma            ,
+        FUNCTION1          fN2              ,
+        FUNCTION2          fD               ,
+        FUNCTION3          fL               ,
+        FUNCTION4          fRho             ,
+        const double       s0               ,
+        const std::string& description = "" , 
+        const std::size_t  tag         = 0  )
         : ChannelBW ( gamma )
         , m_fN2         ( fN2         )
         , m_fD          ( fD          )
@@ -950,21 +964,22 @@ namespace Ostap
       template <class FUNCTION1,
                 class FUNCTION2,
                 class FUNCTION3>
-      ChannelGLR  ( const double       gamma            ,
-                    FUNCTION1          fN2              ,
-                    FUNCTION2          fD               ,
-                    FUNCTION3          fL               ,
-                    const double       s0               ,
-                    const std::string& description = "" , 
-                    const std::size_t  tag         = 0  )
-      : ChannelBW ( gamma )
-      , m_fN2         ( fN2         )
-      , m_fD          ( fD          )
-      , m_fL          ( fL          )
-      , m_fRho        ( [s0] ( const double s ) -> double { return s <= s0 ? 0 : 1 ; } )
-      , m_sthreshold  ( s0          )
-      , m_tag         ( tag         ) 
-      , m_description ( description )
+      ChannelGLR
+      ( const double       gamma            ,
+        FUNCTION1          fN2              ,
+        FUNCTION2          fD               ,
+        FUNCTION3          fL               ,
+        const double       s0               ,
+        const std::string& description = "" , 
+        const std::size_t  tag         = 0  )
+        : ChannelBW ( gamma )
+        , m_fN2         ( fN2         )
+        , m_fD          ( fD          )
+        , m_fL          ( fL          )
+        , m_fRho        ( [s0] ( const double s ) -> double { return s <= s0 ? 0 : 1 ; } )
+        , m_sthreshold  ( s0          )
+        , m_tag         ( tag         ) 
+        , m_description ( description )
       {}  
       // =======================================================================
       ///  copy constructor
@@ -977,8 +992,9 @@ namespace Ostap
       // =======================================================================
       template <typename... ARGS>
       static inline ChannelGLR
-      create ( const double gamma ,
-               ARGS ...     args  ) { return ChannelGLR ( gamma , args ... ) ; }
+      create
+      ( const double gamma ,
+        ARGS ...     args  ) { return ChannelGLR ( gamma , args ... ) ; }
       // =======================================================================
     public:
       // =======================================================================
@@ -1034,7 +1050,163 @@ namespace Ostap
       /// description 
       std::string                    m_description ; // description 
       // ======================================================================
+    } ;
+    // =========================================================================
+    /** @class ChannelNRL
+     *  Description of the channel for non-relativistic Breit-Wigner function 
+     *  \f[ \begin{array}{lcl}
+     *   N^2(s,m_0)      & = & f_{N^2}(s,m_0)                       \\
+     *   D (s,m_0)       & = & \frac{1}{2} \Gamma0 * f_{\Gamma}(s)  \\
+     *  \varrho (s, m_n) & = & \Theta\left(s-s_{threshold}\right) f_{\varrho}(s,m_n)
+     *  \end{array}\,,\f]
+     *  where \f$ f_{N^2}]\f$,  \f$ f_{D}]\f$, \f$ f_L \f$  and 
+     *  \f$ f_{\varrho}]\f$ are provdied externally
+     *  - Integresting special case is when   
+     *    \f$ f_L (s,m_0^2) \f$ and \f$ f_D \f$ as real and imaginary parts 
+     *   of the amplitude related via the dispersion relation  
+     *  with the single subtraction 
+     *  \f[ f_L(s) = - \frac{s}{\pi} 
+     *  \int \frac{f_D(s^\prime d s^{\prime}}{s^\prime(s^\prime -s ) } \f]
+     */
+    class ChannelNRL: public ChannelBW 
+    {
+    public:
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2,
+                class FUNCTION3>
+      ChannelNRL
+      ( const double       gamma            ,
+        FUNCTION1          fN2              ,
+        FUNCTION2          fGamma           ,
+        FUNCTION3          fRho             ,
+        const double       s0               ,
+        const bool         fake             ,
+        const std::string& description = "" , 
+        const std::size_t  tag         = 0  )
+        : ChannelBW     ( gamma       )
+        , m_fN2         ( fN2         )
+        , m_fGamma      ( fGamma      )
+        , m_fRho        ( fRho        )
+        , m_sthreshold  ( s0          )
+        , m_fake        ( fake        ) 
+        , m_tag         ( tag         ) 
+        , m_description ( description )
+      {}
+      // ======================================================================
+      template <class FUNCTION1,
+                class FUNCTION2>
+      ChannelNRL
+      ( const double       gamma            ,
+        FUNCTION1          fN2              ,
+        FUNCTION2          fGamma           ,
+        const double       s0               ,
+        const bool         fake             ,
+        const std::string& description = "" , 
+        const std::size_t  tag         = 0  )
+        : ChannelBW     ( gamma       )
+        , m_fN2         ( fN2         )
+        , m_fGamma      ( fGamma      )
+        , m_fRho        ( [] ( const double /* s */ ) -> double { return 1 ; } )
+        , m_sthreshold  ( s0          )
+        , m_fake        ( fake        ) 
+        , m_tag         ( tag         ) 
+        , m_description ( description )
+      {}
+      // ======================================================================
+      template <class FUNCTION2>
+      ChannelNRL
+      ( const double       gamma            ,
+        FUNCTION2          fGamma           ,
+        const double       s0               ,
+        const bool         fake             ,
+        const std::string& description = "" , 
+        const std::size_t  tag         = 0  )
+        : ChannelBW     ( gamma       )
+        , m_fN2         ( fGamma      )
+        , m_fGamma      ( fGamma      )
+        , m_fRho        ( [] ( const double /* s */ ) -> double { return 1 ; } )
+        , m_sthreshold  ( s0          )
+        , m_fake        ( fake        ) 
+        , m_tag         ( tag         ) 
+        , m_description ( description )
+      {}
+      // =======================================================================
+      ///  copy constructor
+      ChannelNRL ( const ChannelNRL& right ) = default ;
+      // =======================================================================
+      /// clone method
+      ChannelNRL*  clone() const override ; // clone method
+      // =======================================================================
+    public:
+      // =======================================================================
+      template <typename... ARGS>
+      static inline ChannelNRL
+      create
+      ( const double gamma ,
+        ARGS ...     args  ) { return ChannelNRL ( gamma , args ... ) ; }
+      // =======================================================================
+    public:
+      // =======================================================================
+      /** squared  numerator for the amplitude/width  
+       * \f[ N^2(s,m_0) = m_0 \Gamma0 f_{N^2}(s)\f]
+       */
+      double               N2
+      ( const double s  , 
+        const double m0 ) const override { return m0 * gamma0 () * m_fN2 ( s ) ; }      
+      // ======================================================================
+      /** term in the denominator for the amplitide
+       * \f[ D (s,m_0) = \frac{1}{2}\Gamma_0 f_{\Gamma} (s) + ... \f]
+       */
+      // ======================================================================
+      std::complex<double> D    
+      ( const double s  , 
+        const double m0 ) const override 
+      {
+        const double t1 = 0.5 * gamma0() * m_fGamma ( s ) ;
+        if ( !m_fake ) { return std::complex<double> ( t1 , 0 ) ; }
+        const double m  = std::sqrt ( s ) ;
+        const double t2 = ( m - m0 ) - ( m0 * m0 - s ) ;
+        return std::complex<double> ( t1 , t2 ) ;
+      }    
+      // ======================================================================
+      /** get the phase space factor  \f$ \varrho(s) \f$
+       * \f[ \varrho (s, m_n) = \Theta\left(s-s_{threshold}\right) f_{\varrho}(s)\f] 
+       */
+      double rho_s 
+      ( const double    s  , 
+        const double /* mn */ ) const override 
+      { return s <= m_sthreshold ? 0.0 : m_fRho ( s ) ; }
+      /// get the opening threshold \f$ s_{threshold} \$ for the channel 
+      double s_threshold () const override { return m_sthreshold ; }
+      // =======================================================================
+    public: //  helper methods 
+      // =======================================================================
+      /// unique tag/label  
+      std::size_t tag       () const override ;
+      /// describe the channel 
+      std::string describe  () const override { return m_description ; }
+      // =======================================================================
+    private :
+      // =======================================================================
+      /// function N2
+      std::function<double(double)>  m_fN2         ; // function N2
+      /// function fGamma
+      std::function<double(double)>  m_fGamma      ; // function fGamma 
+      /// function fRho
+      std::function<double(double)>  m_fRho        ; // function fRho
+      /// s-threhold 
+      double                         m_sthreshold  ; // s-threhold
+      /// add fake term to have real non-relativiic BReit?
+      bool                           m_fake        ; // add fake term? 
+      /// unique tag 
+      std::size_t                    m_tag         ; // unique tag 
+      /// description 
+      std::string                    m_description ; // description 
+      // ======================================================================
     } ;    
+
+
     // ========================================================================
     /** @class BW
      *
@@ -1233,11 +1405,12 @@ namespace Ostap
        *  @param m2   the mass of the 2nd daughter particle 
        *  @param L    the orbital momentum 
        */
-      BreitWigner ( const double         m0     = 0.770 ,
-                    const double         gam0   = 0.150 ,
-                    const double         m1     = 0.139 ,
-                    const double         m2     = 0.139 ,
-                    const unsigned short L      = 0     ) ;
+      BreitWigner
+      ( const double         m0     = 0.770 ,
+        const double         gam0   = 0.150 ,
+        const double         m1     = 0.139 ,
+        const double         m2     = 0.139 ,
+        const unsigned short L      = 0     ) ;
       // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
@@ -1248,12 +1421,13 @@ namespace Ostap
        *  @param F    the Jackson's formfactor 
        */
       // ======================================================================
-      BreitWigner ( const double         m0         ,
-                    const double         gam0       ,
-                    const double         m1         ,
-                    const double         m2         ,
-                    const unsigned short L          ,
-                    const FormFactors::JacksonRho F ) ;
+      BreitWigner
+      ( const double         m0         ,
+        const double         gam0       ,
+        const double         m1         ,
+        const double         m2         ,
+        const unsigned short L          ,
+        const FormFactors::JacksonRho F ) ;
       // ======================================================================
       /** constructor from all parameters
        *  @param m0   the pole position 
@@ -1263,16 +1437,18 @@ namespace Ostap
        *  @param L    the orbital momentum 
        *  @param F    the formfactor 
        */
-      BreitWigner ( const double         m0    ,
-                    const double         gam0  ,
-                    const double         m1    ,
-                    const double         m2    ,
-                    const unsigned short L     ,
-                    const FormFactor&    F     ) ;
+      BreitWigner
+      ( const double         m0    ,
+        const double         gam0  ,
+        const double         m1    ,
+        const double         m2    ,
+        const unsigned short L     ,
+        const FormFactor&    F     ) ;
       // ======================================================================
       /// constructor from the channel 
-      BreitWigner ( const double         m0       ,
-                    const ChannelBW&     channel ) ;
+      BreitWigner
+      ( const double         m0       ,
+        const ChannelBW&     channel ) ;
       /// copy constructor
       BreitWigner ( const BreitWigner&  bw ) ;
       /// move constructor
@@ -1297,9 +1473,10 @@ namespace Ostap
     public:
       // ======================================================================
       // constructor from all parameters
-      Rho0  ( const double m0       = 770   ,     // MeV
-              const double gam0     = 150   ,     // MeV
-              const double pi_mass  = 139.6 ) ;   // MeV
+      Rho0
+      ( const double m0       = 770   ,     // MeV
+        const double gam0     = 150   ,     // MeV
+        const double pi_mass  = 139.6 ) ;   // MeV
       /// destructor
       virtual ~Rho0 () ;
       // ======================================================================
@@ -1322,10 +1499,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      Kstar0  ( const double m0       = 770   ,     // MeV
-                const double gam0     = 150   ,     // MeV
-                const double k_mass   = 493.7 ,     // MeV
-                const double pi_mass  = 139.6 ) ;   // MeV
+      Kstar0
+      ( const double m0       = 770   ,     // MeV
+        const double gam0     = 150   ,     // MeV
+        const double k_mass   = 493.7 ,     // MeV
+        const double pi_mass  = 139.6 ) ;   // MeV
       /// destructor
       virtual ~Kstar0 () ;
       // ======================================================================
@@ -1348,9 +1526,10 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from all parameters
-      Phi0  ( const double m0       = 1019.5 ,     // MeV
-              const double gam0     =    4.3 ,     // MeV
-              const double k_mass   =  493.7 ) ;   // MeV
+      Phi0
+      ( const double m0       = 1019.5 ,     // MeV
+        const double gam0     =    4.3 ,     // MeV
+        const double k_mass   =  493.7 ) ;   // MeV
       /// destructor
       virtual ~Phi0 () ;
       // ======================================================================
@@ -2161,16 +2340,19 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the channel and phase-space 
-      Channel23L ( const ChannelBW&                  ch , 
-                   const Ostap::Math::PhaseSpace23L& ps ) ;
+      Channel23L
+      ( const ChannelBW&                  ch , 
+        const Ostap::Math::PhaseSpace23L& ps ) ;
       /// constructor from the channel and dalitz configuration 
-      Channel23L ( const ChannelBW&                  ch , 
-                   const Ostap::Kinematics::Dalitz&  dp , 
-                   const unsigned short              L2 ) ;
-      Channel23L ( const ChannelCW&                  ch , 
-                   const double                      m3 ,  
-                   const double                      M  ,
-                   const unsigned short              L2 ) ;
+      Channel23L
+      ( const ChannelBW&                  ch , 
+        const Ostap::Kinematics::Dalitz&  dp , 
+        const unsigned short              L2 ) ;
+      Channel23L
+      ( const ChannelCW&                  ch , 
+        const double                      m3 ,  
+        const double                      M  ,
+        const unsigned short              L2 ) ;
       Channel23L ( const Channel23L& right ) ;
       Channel23L* clone () const override ;
       // ======================================================================
@@ -2229,7 +2411,7 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
-    /** @class ChannelNR 
+    /** @class ChannelNR3
      *  Describe a non-resonant 3-body decay channel \f$ m \rigthtarrow m_1 m_2 m_3 \f$
      *  The basic functions are : 
      *  \f[\begin{array}{lcc} 
@@ -2239,18 +2421,19 @@ namespace Ostap
      *   \end{array}\,,\f]
      *  where \f$ \rho_3(s)\f$ is a threebody phase space      
      */
-    class ChannelNR : public ChannelBW 
+    class ChannelNR3 : public ChannelBW 
     {
     public: 
       // =====================================================================
       /// constructor from (partial) width and three masses 
-      ChannelNR ( const double gamma = 1 , 
-                  const double m1    = 1 , 
-                  const double m2    = 1 , 
-                  const double m3    = 1 ) ;
+      ChannelNR3
+      ( const double gamma = 1 , 
+        const double m1    = 1 , 
+        const double m2    = 1 , 
+        const double m3    = 1 ) ;
       // =====================================================================
       /// clone method
-      ChannelNR* clone() const override ;  
+      ChannelNR3* clone() const override ;  
       // =====================================================================
     public:
       // =====================================================================
@@ -2479,8 +2662,9 @@ namespace Ostap
     public :
       // ======================================================================
       /// constructor with gamma and pion mass
-      ChannelGS ( const double gamma = 150 ,
-                  const double mpi   = 139 ) ;
+      ChannelGS
+      ( const double gamma = 150 ,
+        const double mpi   = 139 ) ;
       /// clone method
       ChannelGS* clone() const override ;
       // ======================================================================
@@ -2579,14 +2763,15 @@ namespace Ostap
        *  @param b  the LASS parameter
        *  @param e  the LASS parameter
        */
-      LASS ( const double m0 = 1429    ,   // K*(1450) mass
-             const double g0 =  287    ,   // K*(1430) width
-             const double m1 =  493.7  ,   // kaon mass 
-             const double m2 =  139.6  ,   // pion mass 
-             const double m3 =  957.8  ,   // eta' mass 
-             const double a  = 4.03e-3 , 
-             const double b  = 1.29e-3 ,
-             const double e  = 1.00    ) ; // elasticity 
+      LASS
+      ( const double m0 = 1429    ,   // K*(1450) mass
+        const double g0 =  287    ,   // K*(1430) width
+        const double m1 =  493.7  ,   // kaon mass 
+        const double m2 =  139.6  ,   // pion mass 
+        const double m3 =  957.8  ,   // eta' mass 
+        const double a  = 4.03e-3 , 
+        const double b  = 1.29e-3 ,
+        const double e  = 1.00    ) ; // elasticity 
       // ======================================================================
       /// clone method 
       LASS* clone () const  override ;
@@ -2971,7 +3156,6 @@ namespace Ostap
       // ======================================================================
     } ;  
     // ========================================================================
-
   } //                                             end of namespace Ostap::Math
   // ==========================================================================
 } //                                                     end of namespace Ostap
