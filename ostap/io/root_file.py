@@ -719,7 +719,7 @@ def _rd_ls_tree_ ( rdir ) :
 #  rdir = ...
 #  rdir.ls_table ()
 #  @endcode  
-def _rd_ls_table_ ( rdir , prefix = '# ' ) :
+def _rd_table_ ( rdir , prefix = '# ' ) :
     """Show the content of the directory as a table
     >>> rdir = ...
     >>> rdir.ls_table ()
@@ -749,8 +749,24 @@ def _rd_ls_table_ ( rdir , prefix = '# ' ) :
         name = '<.>' + name [ -maxkey - maxtype : ]
         
     import ostap.logger.table as T
-    table = T.table ( table , title = '%s' % name , prefix = '# ' )
+    return T.table ( table , title = '%s' % name , prefix = '# ' )
+
+# =============================================================================
+## Show the content of the directory as a table
+#  @code
+#  rdir = ...
+#  rdir.ls_table ()
+#  @endcode  
+def _rd_ls_table_ ( rdir , prefix = '# ' ) :
+    """Show the content of the directory as a table
+    >>> rdir = ...
+    >>> rdir.ls_table ()
+    """
+
+    table = _rf_table_ ( rdir , prefix = prefix )
+
     logger.info ( 'Directory %s:\n%s' % ( rdir.GetName() , table ) )
+
 
 # =============================================================================
 ## the basic protocol:
@@ -786,6 +802,7 @@ ROOT.TNamed    .__rshift__   = _tnamed_rshift_
 ROOT.TDirectory.show_tree    = _rd_show_tree_
 ROOT.TDirectory.ls_tree      = _rd_ls_tree_
 ROOT.TDirectory.ls_table     = _rd_ls_table_
+ROOT.TDirectory.as_table     = _rd_table_
 
 ROOT.TDirectory.rm           = _rd_rm_
 

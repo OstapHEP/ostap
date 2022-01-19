@@ -27,7 +27,7 @@ __all__     = (
 import ROOT, random, math, sys, ctypes  
 from   builtins                 import range
 from   ostap.core.core          import ( Ostap, VE, hID, dsID , strings , 
-                                         valid_pointer , split_string )
+                                         valid_pointer , split_string   , ROOTCWD )
 from   ostap.core.ostap_types   import integer_types, string_types  
 from   ostap.math.base          import islong
 from   ostap.utils.progress_bar import progress_bar 
@@ -1340,7 +1340,7 @@ _new_methods_ += [
 RAD = ROOT.RooAbsData
 # =============================================================================
 ## change the default storage for RooDataSet 
-def setStorage ( new_type = RAD.Tree ) :
+def setStorage ( new_type = RAD.Tree , silent = False ) :
     """ Redefine the default storage 
     """
     if not new_type in ( RAD.Tree , RAD.Vector ) :
@@ -1348,7 +1348,15 @@ def setStorage ( new_type = RAD.Tree ) :
         new_type = RAD.Tree
         
     if RAD.getDefaultStorageType() != new_type :
-        logger.info  ( 'RooAbsData: DEFINE default storage type to be %d' % new_type ) 
+        if   new_type == RAD.Tree and not silent : 
+            logger.info  ( 'RooAbsData: DEFINE default storage type to be RooAbsData.Tree'      )
+        elif new_type == RAD.Vector    and not silent : 
+            logger.info  ( 'RooAbsData: DEFINE default storage type to be RooAbsData.Vector'    )
+        elif new_type == RAD.Composite and not silent : 
+            logger.info  ( 'RooAbsData: DEFINE default storage type to be RooAbsData.Composite' )
+        elif not silent :
+            logger.info  ( 'RooAbsData: DEFINE default storage type to be %s' % new_type        )
+            
         RAD.setDefaultStorageType ( new_type  ) 
 
     the_type = RAD.getDefaultStorageType()
@@ -1364,16 +1372,17 @@ class UseStorage(object) :
     >>> with UseStorage() :
     ...
     """
-    def __init__  ( self , new_storage = RAD.Tree ) :
+    def __init__  ( self , new_storage = RAD.Tree , silent = True ) :
         if not new_storage in ( RAD.Tree , RAD.Vector )  :
             raise AttributeError( 'Invalid storage type %s' % new_storage )
         self.new_storage = new_storage
         self.old_storage = RAD.getDefaultStorageType()
+        self.silent      = silent
     def __enter__ ( self ) :
         self.old_storage = RAD.getDefaultStorageType()
-        setStorage (  self.new_storage )
+        setStorage (  self.new_storage , silent = self.silent )
     def __exit__ (  self , *_ ) :
-        setStorage (  self.old_storage )
+        setStorage (  self.old_storage , silent = self.silent )
 
 # =============================================================================
 ## context manager to change the storage type
@@ -2092,13 +2101,109 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
             writer.writerow ( values )
 
 # =============================================================================
+ROOT.RooDataSet.as_csv            = ds_to_csv
 ROOT.RooDataSet.to_csv            = ds_to_csv
 ROOT.RooDataSet.toCsv             = ds_to_csv
+ROOT.RooDataSet.asCsv             = ds_to_csv
 
 _new_methods_ += [
+    ROOT.RooDataSet.as_csv ,
     ROOT.RooDataSet.to_csv ,
-    ROOT.RooDataSet.toCsv
+    ROOT.RooDataSet.toCsv  , 
+    ROOT.RooDataSet.asCsv
     ]
+
+# ============================================================================
+## Get dataset as <code>TTree</code>
+#  - for Tree-based datasets gets the internal tree
+#  - otherwise tree will be created
+#  @code
+#  dataset = ...
+#  tree    = dataset.asTree() 
+#  @endcode
+def ds_to_tree ( dataset , weight = '' , filename = '' ) :
+    """Get dataset as `ROOT.TTree`
+    - for Tree-based datasets gets the internal tree
+    - otherwise tree will be created
+    
+    >>> dataset = ...
+    >>> tree    = dataset.asTree() 
+    """
+    
+    import ostap.io.root_file
+    import ostap.trees.trees
+    
+    ## first, unweight it, if weighted 
+    if dataset.isWeighted () :
+        
+        with useStorage ( RAD.Tree ) , ROOTCWD() :
+            
+            if not filename :
+                import ostap.utils.cleanup as CU 
+                filename = CU.CleanUp.tempfile ( suffix = '.root' )
+                logger.info ( "Temporary ROOT file is created: %s" % filename ) 
+
+            with ROOT.TFile ( filename , 'u' ) as rfile :
+                
+                rfile.cd ()
+                uwds , wname = dataset.unweight ( weight )
+                
+                tree = uwds.GetClonedTree()
+                
+                tree.SetName ( 'tree_%s' % dataset.GetName() )
+                tree.Write()
+                tname = tree.GetName()
+            
+                del uwds
+                logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
+                
+            chain = ROOT.TChain ( tname )
+            chain.AddFile ( filename )
+            return chain 
+
+    
+    store = dataset.store()
+    if hasattr ( store , 'tree' ) :
+        tree = store.tree()
+        if valid_pointer ( tree ) and len ( tree ) == len ( dataset ) :
+            return dataset.GetClonedTree()
+        
+    with useStorage ( RAD.Tree ) , ROOTCWD() :
+        
+        if not filename :
+            import ostap.utils.cleanup as CU 
+            filename = CU.CleanUp.tempfile ( suffix = '.root' )
+            logger.info ( "Temporary ROOT file is created: %s" % filename ) 
+            
+        with ROOT.TFile ( filename , 'u' ) as rfile :
+
+            rfile.cd ()
+            tree = dataset.GetClonedTree()
+            tree.SetName ( 'tree_%s' % dataset.GetName() )
+            tree.Write()
+            tname = tree.GetName()
+            logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
+            
+        chain = ROOT.TChain ( tname )
+        chain.AddFile ( filename )
+        return chain 
+            
+
+# ============================================================================
+
+ROOT.RooDataSet.as_tree            = ds_to_tree
+ROOT.RooDataSet.to_tree            = ds_to_tree
+ROOT.RooDataSet.toTree             = ds_to_tree
+ROOT.RooDataSet.asTree             = ds_to_tree
+
+
+_new_methods_ += [
+    ROOT.RooDataSet.as_tree ,
+    ROOT.RooDataSet.to_tree ,
+    ROOT.RooDataSet.toTree  ,
+    ROOT.RooDataSet.asTree
+    ]
+
     
 # =============================================================================d
 ## Get "slice" from <code>RooAbsData</code> in form of numpy array
@@ -2251,7 +2356,6 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
         ds1 = ds1s        
         ds2 = ds2s
 
-
     ## construct the name for new common weight variable
     new_weight = weight if weight else 'weight'
     i = 0 
@@ -2348,6 +2452,7 @@ def ds_combine ( ds1 , ds2 , r1 , r2 , weight = '' , silent = False , title = ''
 
     
     return dsw
+
 
 # ============================================================================
 try : 

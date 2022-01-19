@@ -1,5 +1,7 @@
 ## New features:
 
+  1. add an easy `dataset -> TTree` cnversion function 
+
 ## Backward incompatible  
 
 ## Bug fixes:
