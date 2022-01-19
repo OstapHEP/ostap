@@ -2151,7 +2151,8 @@ def ds_to_tree ( dataset , weight = '' , filename = '' ) :
                 tree = uwds.GetClonedTree()
                 
                 tree.SetName ( 'tree_%s' % dataset.GetName() )
-                tree.Write()
+                tree .Write()
+                ## rfile.Write() 
                 tname = tree.GetName()
             
                 del uwds
@@ -2180,7 +2181,8 @@ def ds_to_tree ( dataset , weight = '' , filename = '' ) :
             rfile.cd ()
             tree = dataset.GetClonedTree()
             tree.SetName ( 'tree_%s' % dataset.GetName() )
-            tree.Write()
+            tree .Write()
+            ## rfile.Write()
             tname = tree.GetName()
             logger.debug ( 'ROOT file %s\n%s' % ( filename , rfile.as_table ( prefix = '# ' ) ) ) 
             
