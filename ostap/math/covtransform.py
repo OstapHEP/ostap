@@ -34,13 +34,12 @@ if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.covtransform' )
 else                       : logger = getLogger ( __name__                  )
 # =============================================================================
 from   ostap.core.core       import Ostap, VE 
-from   ostap.math.derivative import Partial
 import ostap.math.linalg
 # =============================================================================
 
 
 # =============================================================================
-## Transform the covariance nmatrix C at point X to the variables Y(X)
+## Transform the covariance matrix C at point `X` to the variables `Y(X)`
 #  for \f$ y = y ( x ) \f$, it gets
 #  \f[  C(y)= J C(x) J^\mathrm{T} \f],
 #  where \f$ J = \left( \frac{\partial y }{\partial x } \right) \f$
@@ -59,7 +58,7 @@ import ostap.math.linalg
 #  @param Y  "new" variables  (array of callables)
 #  @return covarinance matrix for variables Y  
 def transform ( C , X , *Y ) :
-    """ Transform the covariance nmatrix C at point X to the variables Y(X)
+    """ Transform the covariance matrix `C` at point `X` to the variables `Y(X)`
     >>> X = 1 , 2
     >>> C = Ostap.SymMatrix(2)()
     >>> C [ 0 , 0 ] = 0.20
@@ -82,7 +81,6 @@ def transform ( C , X , *Y ) :
 
     shape = C.shape
     assert shape [ 0 ] == shape[1] and shape[0] == nx  , 'Invalid shape of matrix C!' 
-
 
     CC  = Ostap.SymMatrix  ( nx ) ()
     for i in range  ( CC.kRows ) :

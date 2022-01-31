@@ -1147,14 +1147,14 @@ class LinAlg(object) :
         nx = len ( x )
         ny = len ( y )
         
-        from ostap.math.derivative  import Partial
+        from ostap.math.derivative  import PartialDerivative as PD 
         from ostap.math.ve          import VE 
 
         ## Jacobi matrix  
         J  = LinAlg.Matrix ( ny , nx ) ()
         for j , f  in enumerate ( y ) : 
             for i in range ( nx ) :
-                P = Partial ( i , f  )            
+                P = PD ( i , f  )            
                 J [ j , i ] = P ( *x )
 
         ##  result 

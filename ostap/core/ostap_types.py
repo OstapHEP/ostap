@@ -56,7 +56,8 @@ else :
     python_version = 2 
     import collections     as C
 # =============================================================================
-if   ( 3 , 5 ) <= python_version : from collections.abc import Generator, Collection, Sequence, Iterable, Sized   
+if   ( 3 , 5 ) <= python_version :
+    from collections.abc import Collection, Sequence, Iterable, Sized, Generator   
 elif ( 3 , 3 ) <= python_version :
     from collections.abc import Collection, Sequence, Iterable, Sized   
     from types           import GeneratorType as Generator 

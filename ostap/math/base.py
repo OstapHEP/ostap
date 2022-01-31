@@ -97,7 +97,10 @@ __all__     = (
     'cpp'            , ## C++ global  namespace 
     'Ostap'          , ## C++ namespace Ostap 
     'std'            , ## C++ namespace Ostap
-    'axis_range'     , ## suitable axis range 
+    'axis_range'     , ## suitable axis range
+    ## 
+    'gcd'            , ## gcd-function 
+    'lcm'            , ## lcm-function 
     ) 
 # =============================================================================
 import ROOT, cppyy, sys, math 
@@ -823,6 +826,31 @@ def axis_range ( xmin , xmax , delta = 0.05 , log = False ) :
     
     return xmin , xmax
 
+# =============================================================================
+if   (3,9) <= sys.version_info :
+    # =========================================================================
+    ## Least Common Multiple.
+    lcm = math.lcm
+    # =========================================================================
+    ## Greatest Common Divisor 
+    gcd = math.gcd 
+elif (3,5) <= sys.version_info :
+    # =========================================================================
+    ## Greatest Common Divisor 
+    gcd = math.gcd 
+    ## Least Common Multiple.
+    # =========================================================================
+    def lcm ( a , b ) :
+        """ Least Common Multiple"""
+        return abs ( a , b ) // gcd ( a , b )
+else :
+    # =========================================================================
+    ## Greatest Common Divisor 
+    from fractions import gcd
+    ## Least Common Multiple.
+    def lcm ( a , b ) :    
+        """ Least Common Multiple"""
+        return ( a * b ) // _gcd ( a , b )
 
 # =============================================================================
 ## imports at the end of the module to avoid ciurcular dependency 

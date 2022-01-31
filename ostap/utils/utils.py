@@ -91,11 +91,17 @@ __all__     = (
     'random_name'        , ## get some random name
     'short_hash_name'    , ## get some short hash name
     ##
-    'choices'            , ## `random.choiices` function 
+    'choices'            , ## `random.choices` function
+    ## 
+    'memoize'            , ## Simple lightweight unbounded cache
+    'absproperty'        , ## abstract property decorator
+    'classprop'          , ## class property decorator
+    'numcalls'           , ## decoratro for #ncalls  
+    ## 
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math, time , random ## attention here!!
+import ROOT, time, os , sys, math, time , functools, abc, random ## attention here!!
 from   builtins             import range
 from   itertools            import repeat, chain, islice 
 # =============================================================================
@@ -1281,7 +1287,187 @@ def  balanced ( expression , left = '([' , right = ')]' ) :
 
     return True if not stack else False 
 
+# =============================================================================
 
+
+# ============================================================================
+if   ( 3 , 9) <= sys.version_info : memoize = functools.cache 
+elif ( 3 , 2) <= sys.version_info : 
+    
+    # =========================================================================
+    ## Simple lightweight unbounded cache
+    def memoize ( user_function ):
+        """Simple lightweight unbounded cache"""
+        return functools.lru_cache(maxsize=None)(user_function)
+    
+else :
+        
+    # =========================================================================
+    ## Simple lightweight unbounded cache
+    class memoize(object):
+        """Simple lightweight unbounded cache
+        """
+        def __init__(self, func):
+            
+            self.func  = func
+            self.cache = {}
+            functools.update_wrapper ( self , func ) 
+            
+        def __call__(self, *args, **kwargs ):
+            
+            all_args = tuple ( args ) , tuple ( kwargs.iteritems() )
+                
+            if all_args in self.cache:    
+                return self.cache [ all_args ]
+            
+            value = self.func( *args , **kwargs )
+            self.cache [ all_args] = value
+            
+            return value
+        
+        def __repr__(self):
+            return self.func.__doc__
+        def __get__(self, obj, objtype):
+          return functools.partial(self.__call__, obj)
+   
+    
+# ============================================================================
+## abstract prpoperty
+#  @code
+#  @absproperty
+#  def A ( self ) : ...  
+#  @endcode
+if (3,3) <= sys.version_info  :
+    
+    # =========================================================================
+    ## absract property decorator
+    #  @code
+    #  @absproperty
+    #  def A ( self ) : ...  
+    #  @endcode
+    def absproperty ( func ) :
+        """Abstract property
+        @absproperty
+        def A ( self ) : ...
+        """
+        return property ( abc.abstractmethod ( func ) ) 
+        
+else :
+
+    # =========================================================================
+    ## abstract prpoperty
+    #  @code
+    #  @absproperty
+    #  def A ( self ) : ...  
+    #  @endcode
+    absproperty = abc.abstractproperty
+
+    
+# =============================================================================
+if (3,9) <= sys.version_info :
+    
+    # =========================================================================
+    ## class property decorator
+    #  @code
+    #  @classprop
+    #  def A ( cls ) : ...  
+    #  @endcode
+    def classprop ( func ) :
+        """Class property
+        @classprop
+        def A ( cls ) : ...
+        """
+        return classmethod ( property ( func ) ) 
+        
+else :
+
+    # =========================================================================
+    ## class @classproperty
+    #  class property decorator  (copied and simplified from astropy)
+    #  @code
+    #  @classprop
+    #  def A ( cls ) : ...  
+    #  @endcode
+    class classprop(property):
+        """Class property
+        @classprop
+        def A ( cls ) : ...
+        """        
+        def __new__(cls, fget=None, doc=None):
+            if fget is None:
+                # Being used as a decorator--return a wrapper that implements
+                # decorator syntax
+                def wrapper(func):
+                    return cls(func)            
+                return wrapper
+            return super().__new__(cls)
+        
+        def __init__(self, fget, doc=None, ):
+            fget = self._wrap_fget(fget)
+            super().__init__(fget=fget, doc=doc)
+            
+            # There is a buglet in Python where self.__doc__ doesn't
+            # get set properly on instances of property subclasses if
+            # the doc argument was used rather than taking the docstring
+            # from fget
+            # Related Python issue: https://bugs.python.org/issue24766
+            if doc is not None:
+                self.__doc__ = doc
+                
+        def __get__(self, obj, objtype):
+            # The base property.__get__ will just return self here;
+            # instead we pass objtype through to the original wrapped
+            # function (which takes the class as its sole argument)
+            val = self.fget.__wrapped__(objtype)
+            return val
+
+        def getter(self, fget):
+            return super().getter(self._wrap_fget(fget))
+        
+        def setter(self, fset):
+            raise NotImplementedError(
+                "classproperty can only be read-only; use a metaclass to "
+                "implement modifiable class-level properties")
+        
+        def deleter(self, fdel):
+            raise NotImplementedError(
+                "classproperty can only be read-only; use a metaclass to "
+                "implement modifiable class-level properties")
+        
+        @staticmethod
+        def _wrap_fget(orig_fget):
+            if isinstance(orig_fget, classmethod):
+                orig_fget = orig_fget.__func__
+                
+            # Using stock functools.wraps instead of the fancier version
+            # found later in this module, which is overkill for this purpose
+            
+            @functools.wraps(orig_fget)
+            def fget(obj):
+                return orig_fget(obj.__class__)
+            
+            return fget 
+
+# =============================================================================
+## @class NumCalls
+#  Count a number of  times a callable object is invoked
+class NumCalls (object):
+    """Count a number of  times a callable object is invoked"""
+    def __init__ ( self , func ) :
+        self.__func  = func
+        self.__count = 0
+        functools.update_wrapper ( self, func ) 
+    def __call__ ( self, *args , **kwargs ) :
+        self.__count +=1
+        return self.__func ( *args , **kwargs )
+    @property
+    def count ( self ) :
+        """``count'': number of times the function was invoked"""
+        return self.__count
+    
+# ==============================================================================        
+#  Count a number of  times a callable object is invoked
+numcalls = NumCalls
 
 # =============================================================================
 if '__main__' == __name__ :

@@ -521,8 +521,8 @@ def pretty_ve ( value , width = 8 , precision = 6 , parentheses = True ) :
     
     v =           value.value ()   
     e = max ( 0 , value.error () ) 
-    
-    return fmt % ( v / 10**n , e / 10**n ) , n 
+
+    return fmt % ( v / 10**n , e / 10**n ) , n
 
 # ===============================================================================
 ## nice printout of the object with asymmetric  errors   ( string + exponent)

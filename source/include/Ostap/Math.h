@@ -881,7 +881,11 @@ namespace Ostap
     {
       long double dot = 0 ;
       for ( ; begin != end ; ++begin, ++begin2 ) 
-      { dot = std::fma ( (long double) *begin , (long double) *begin2 , dot ) ; }
+      {
+        const long double x1 = *begin  ;
+        const long double x2 = *begin2 ;        
+        dot = std::fma ( x1 , x2 , dot ) ; 
+      }
       return dot  ;  
     }
     // ========================================================================
@@ -936,12 +940,19 @@ namespace Ostap
      *  @param N (INPUT) length of the sequences 
      *  @param x (INPUT) the first sequence 
      *  @param y (INPUT) the second sequence 
+     *  @param skipx skipx  skip first <code> skipx</code> elements from x 
+     *  @param skipy skipy  skop first <code> skipy</code> elements from y 
      *  @return   "dot" product of two sequences 
      */
-    inline double dot_fma 
-    ( const unsigned int N , 
-      const double*      x , 
-      const double*      y ) { return dot_fma ( x , x + N , y ) ; }
+    inline double dot_fma_ 
+    ( const unsigned int N         , 
+      const double*      x         , 
+      const double*      y         , 
+      const unsigned int skipx     ,  
+      const unsigned int skipy     ) 
+    { return dot_fma ( x + skipx     , 
+                       x + skipx + N ,
+                       y + skipy     ) ; }    
     // ========================================================================
     /** Kahan summation 
      *  @see https://en.wikipedia.org/wiki/Kahan_summation_algorithm
@@ -1074,12 +1085,19 @@ namespace Ostap
      *  @param N (INPUT) length of the sequences 
      *  @param x (INPUT) the first sequence 
      *  @param y (INPUT) the second sequence 
+     *  @param skipx skipx  skip first <code> skipx</code> elements from x 
+     *  @param skipy skipy  skop first <code> skipy</code> elements from y 
      *  @return   "dot" product of two sequences 
      */
-    inline double dot_kahan
-    ( const unsigned int N , 
-      const double*      x , 
-      const double*      y ) { return dot_kahan ( x , x + N , y ) ; }
+    inline double dot_kahan_
+    ( const unsigned int N     , 
+      const double*      x     , 
+      const double*      y     , 
+      const unsigned int skipx ,
+      const unsigned int skipy )
+    { return dot_kahan ( x + skipx     ,
+                         x + skipx + N , 
+                         y + skipy     ) ; }
     // ========================================================================
     /// simple scaling of elements of non-constant sequence        
     template <class ITERATOR  , 
