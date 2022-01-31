@@ -1379,7 +1379,7 @@ if (3,9) <= sys.version_info :
         """
         return classmethod ( property ( func ) ) 
         
-else :
+elif (3,0) <= sys.version_info : 
 
     # =========================================================================
     ## class @classproperty
@@ -1400,11 +1400,11 @@ else :
                 def wrapper(func):
                     return cls(func)            
                 return wrapper
-            return super().__new__(cls)
+            return super(classprop,cls).__new__(cls)
         
         def __init__(self, fget, doc=None, ):
             fget = self._wrap_fget(fget)
-            super().__init__(fget=fget, doc=doc)
+            super(classprop,self).__init__(fget=fget, doc=doc)
             
             # There is a buglet in Python where self.__doc__ doesn't
             # get set properly on instances of property subclasses if
@@ -1422,7 +1422,7 @@ else :
             return val
 
         def getter(self, fget):
-            return super().getter(self._wrap_fget(fget))
+            return super(classprop,self).getter(self._wrap_fget(fget))
         
         def setter(self, fset):
             raise NotImplementedError(
@@ -1446,7 +1446,15 @@ else :
             def fget(obj):
                 return orig_fget(obj.__class__)
             
-            return fget 
+            return fget
+else :
+    
+    class classprop(object):
+        def __init__(self, fget):
+            self.fget = fget
+        def __get__(self, inst, cls):
+            return self.fget(cls)
+
 
 # =============================================================================
 ## @class NumCalls

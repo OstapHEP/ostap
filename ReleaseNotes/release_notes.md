@@ -7,7 +7,6 @@
   1. allow numerical derivatoiebd up to order 6 
   1. add test for derivatived for function with discontinuous derivatie 
 
-
 ## Backward incompatible  
 
 ## Bug fixes:

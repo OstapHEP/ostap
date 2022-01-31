@@ -173,12 +173,22 @@ def calc_dot ( fun , point , step , stencil , coeffs , args = () , kwargs = {} )
     return result
 
 
-# =========================================================================
-## get hmax: select minimal from positive, else -1 
-def get_hmax ( *h ) :
-    """get hmax : select minimal from positive, else -1"""
-    return min ( ( i for i in h if 0 < i ) , default = -1 )
-
+if (3,4) <= sys.version_info :
+    # =========================================================================
+    ## get hmax: select minimal from positive, else -1 
+    def get_hmax ( *h ) :
+        """get hmax : select minimal from positive, else -1"""
+        return min ( ( i for i in h if 0 < i ) , default = -1 )
+else :
+    # =========================================================================
+    ## get hmax: select minimal from positive, else -1 
+    def get_hmax ( *h ) :
+        """get hmax : select minimal from positive, else -1"""
+        pos = [ i for i in h if 0 < i ]
+        if   not pos          : return -1
+        elif 1 == len ( pos ) : return pos [ 0 ] 
+        return min ( pos )
+    
 # =============================================================================
 ## @class Rule
 #  Define the rule for numerical differentiation (abstract class) 
@@ -1687,7 +1697,7 @@ class DerivativeFD(object) :
         i_c    = self.__central.interval
         
         h_c    = self.__central.h_guess ( x )
-        n_p    = abs ( max ( i_c , default = 2 , key = abs ) ) 
+        n_p    = abs ( max ( i_c , key = abs ) ) 
         
         region = h_c * n_p
 
