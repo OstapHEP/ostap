@@ -1053,10 +1053,17 @@ for model in ( Ostap.Math.Chebyshev              ,
                ##
                Ostap.Math.GammaBW3               , 
                ## helper stufff
-               ## Ostap.Functions.PyCallable        , 
+               ## Ostap.Functions.PyCallable     , 
                Ostap.Math.Piecewise              , 
                Ostap.Math.ChebyshevApproximation ,
                D.Derivative                      ,
+               D.Derivative1                     ,
+               D.Derivative2                     ,
+               D.Derivative3                     ,
+               D.Derivative4                     ,
+               D.Derivative5                     ,
+               D.Derivative6                     ,
+               ##
                Ostap.Math.Histo1D                ,
                ## 
                Ostap.Math.Multiply               ,

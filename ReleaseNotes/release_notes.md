@@ -5,6 +5,8 @@
   1. allow forwad and bacjeard rules for finite differences 
   1. allow specification of singular points for numerical derivatives   
   1. allow numerical derivatoiebd up to order 6 
+  1. add test for derivatived for function with discontinuous derivatie 
+
 
 ## Backward incompatible  
 

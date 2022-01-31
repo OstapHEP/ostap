@@ -13,15 +13,21 @@ It tests local implementation of numerical derivatives
 # ============================================================================= 
 from __future__ import print_function
 # ============================================================================= 
-import random, math 
+import ROOT, random, math 
 from   math                   import exp, sin, cos, pi, tanh
 from   ostap.core.core        import VE 
-from   ostap.math.derivative  import Derivative, Derivative1, iszero , Eval2VE 
+from ostap.math.models        import f1_draw
+from   ostap.math.derivative  import ( Derivative  , iszero      , Eval2VE     ,
+                                       Derivative1 , Derivative2 , Derivative3 ,
+                                       Derivative4 , Derivative5 , Derivative6 )
+                                       
 from   ostap.math.finitediffs import CentralRule, ForwardOpen, BackwardOpen  
 from   ostap.stats.counters   import SE
 from   ostap.utils.timing     import timing
 import ostap.logger.table     as     T
 from   ostap.logger.utils     import pretty_ve
+from   ostap.utils.utils      import wait
+from   ostap.plotting.canvas  import use_canvas
 # ============================================================================= 
 # logging 
 # =============================================================================
@@ -194,6 +200,47 @@ def test_derivative_5 ():
     table = T.table ( table , title = title , prefix = '# ' , alignment=5*'c' )
     logger.info ('%s\n%s' % ( title , table ) ) 
 
+
+# =============================================================================
+def test_derivative_6 ():
+    """Function with discontiniute derivatives
+    """
+    
+    logger = getLogger ( 'test_derivative_6' )
+
+    ## function
+    a        = 1.5 
+    fun      = lambda x : abs ( math.sin ( a * x ) )  ## NB! 
+    
+    ## singular points 
+    singular = [ i * math.pi / a  for i in range ( -20 , 21 ) ]
+
+    derivs = (
+        Derivative1 ( fun , singular = singular , max_step = 0.5 ) ,
+        Derivative2 ( fun , singular = singular , max_step = 0.5 ) ,
+        Derivative3 ( fun , singular = singular , max_step = 0.5 ) ,
+        Derivative4 ( fun , singular = singular , max_step = 0.5 ) ,
+        Derivative5 ( fun , singular = singular , max_step = 0.5 ) ,
+        Derivative6 ( fun , singular = singular , max_step = 0.5 ) ,        
+        )
+
+    lines = [] 
+    with wait ( 5 ) , use_canvas ( 'test_derivative_6' ) :
+        xmin, xmax = -4 , 4 
+        f1_draw ( fun , xmin = xmin , xmax = xmax  , linecolor=2 , linewidth = 3 , min = -12 , max = 12 )
+        for i, d in enumerate ( derivs , start = 1 ) :
+            color = 2 + i  
+            d.draw ( 'same' , xmin = xmin  , xmax = xmax , linecolor = color , linewidth = 2 )
+            v  = a**i 
+            l1 = ROOT.TLine ( xmin , -v , xmax , -v )
+            l2 = ROOT.TLine ( xmin ,  v , xmax ,  v )
+            for l in ( l1 ,l2 ) :
+                l.SetLineColor ( color ) 
+                l.SetLineStyle ( 8     ) 
+                lines.append ( l )
+                l.draw() 
+            
+        
 
 # =============================================================================
 def differences_testing ( RULE , logger ) :
@@ -422,7 +469,8 @@ if '__main__' == __name__ :
     test_derivative_2 ()
     test_derivative_3 ()
     test_derivative_4 ()
-    test_derivative_5 ()
+    test_derivative_5 ()    
+    test_derivative_6 ()
     
     test_central_differences  () 
     test_forward_differences  () 

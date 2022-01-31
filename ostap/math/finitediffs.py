@@ -1416,6 +1416,19 @@ class CentralRuleD6 (CentralRule) :
     def __init__ ( self , I = 2 , with_error = False , max_step = -1 ) :
         CentralRule.__init__ ( self , 6 , I , with_error = with_error , max_step = max_step )
 
+# =============================================================================
+## Get an optimal value for paramters for Richardson's extrapolation
+#  It is a (numerical)solution of equation \f$ f(t) = 0 \f$, where
+#  \f$ f(t) = n t^{n+d} + (n+d) t^n - d \f$ 
+@memoize 
+def t_opt ( d , n ) :
+    """Get an optimal value for paramters for Richardson's extrapolation
+    It is a (numerical) solution of equation `f(t) = 0`, where
+    `f(t) = n t^{n+d} + (n+d) t^n - d` 
+    """
+    fun = lambda t :  n*pow ( t , n + d ) + ( n + d ) * pow ( t , n ) - d
+    from ostap.math.rootfinder import solve
+    return solve ( fun , 1.e-15 , 1-1.e-15 )
 
 # =============================================================================
 ## Richardson's extrapolation for numerical differentiation rule
@@ -1597,6 +1610,14 @@ class DerivativeFD(object) :
         self.__richardson = int ( richardson ) 
         self.__step       = max ( float ( step ) , 0 )
         
+        if self.richardson : 
+            if not hasattr ( central  , 't_optimal' ) :
+                central .t_optimal = t_opt ( central .D , central .N )
+            if forward  and not hasattr ( forward  , 't_optimal' ) :
+                forward .t_optimal = t_opt ( forward .D , forward .N )
+            if backward and not hasattr ( backward , 't_optimal' ) :
+                backward.t_optimal = t_opt ( backward.D , backward.N )
+            
     @property
     def D ( self ) :
         """``D'' : derivative order"""
@@ -1678,8 +1699,6 @@ class DerivativeFD(object) :
             xmax  = points [ 0 ]
             dist1 = float ( xmax - x ) 
 
-            print ( 'Case 1' , x , xmax , dist1 , region ) 
-
             ## use backward or cerntral rules 
             if dist1 < 1.1 * region : return self.__backward , hmx
             else                    : return self.__central  , get_hmax ( 0.95 * dist1 / n_p , hmx )  
@@ -1690,8 +1709,6 @@ class DerivativeFD(object) :
             xmin  = points [-1]
             dist2 = float ( x - xmin ) 
             
-            print ( 'Case 2' , x , xmin , dist2 , region ) 
-
             ## use forward or central rules 
             if dist2 < 1.1 * region : return self.__forward , hmx 
             else                    : return self.__central , get_hmax ( 0.95 * dist2 / n_p , hmx ) 
@@ -1702,8 +1719,6 @@ class DerivativeFD(object) :
 
         dist1 = float ( xmax - x    )
         dist2 = float ( x    - xmin )
-
-        print ( 'Case 3' , x,  ( xmin, xmax)  , (dist1 , dist2) , region )
 
         ## use backward rule 
         if dist1   < 1.1 * region and dist1 <= dist2 :
@@ -1721,11 +1736,12 @@ class DerivativeFD(object) :
     def __call__  ( self , x , *args , **kwargs ) :
 
         x      = float ( x ) 
-        fun    = self.__fun
-        
         ## find a proper rule to use 
-        rule , hmax = self.find_rule ( x , )
-            
+        rule , hmax = self.find_rule ( x )
+
+        ## the function itself 
+        fun    = self.__fun
+                    
         ## get the optimal step
         hopt , fval = rule.optimal_step ( fun , x , self.step , hmax , args = args , kwargs = kwargs )
         
@@ -1737,8 +1753,8 @@ class DerivativeFD(object) :
         ## make Richardson's (iterative) extrapolation
         # =====================================================================
         
-        ## get Richardson's parameter        
-        t = rule.t_optimal 
+        ## get Richardson's parameter
+        t = rule.t_optimal
         
         with WithError ( rule , False ) : 
             values = [
@@ -1776,7 +1792,7 @@ class DerivativeFD(object) :
 #  various rule.
 #  - If <code>singular</code> points are specified, in their vinicity
 #  special <code>forward</code> and <code>backward</code> are used
-#  - Optionally one can aqpply Richardson's iterative extrapolation
+#  - Optionally one can apply Richardson's iterative extrapolation
 #  to improve results 
 #  @code
 #  derivative = Derivative1 ( fun )
@@ -1788,7 +1804,7 @@ class Derivative1(DerivativeFD) :
     various rule.
     - If `singular` points are specified, in their vinicity
     special `forward` and `backward` rules  are used
-    - Optionally one can aqpply Richardson's iterative extrapolation
+    - Optionally one can apply Richardson's iterative extrapolation
     to improve results
     
     >>> derivative = Derivative1 ( fun )
@@ -1918,7 +1934,7 @@ class Derivative2(DerivativeFD) :
 #  various rule.
 #  - If <code>singular</code> points are specified, in their vinicity
 #  special <code>forward</code> and <code>backward</code> are used
-#  - Optionally one can aqpply Richardson's iterative extrapolation
+#  - Optionally one can apply Richardson's iterative extrapolation
 #  to improve results 
 #  @code
 #  derivative = Derivative3 ( fun )
@@ -1930,7 +1946,7 @@ class Derivative3(DerivativeFD) :
     various rule.
     - If `singular` points are specified, in their vinicity
     special `forward` and `backward` rules  are used
-    - Optionally one can aqpply Richardson's iterative extrapolation
+    - Optionally one can apply Richardson's iterative extrapolation
     to improve results
     
     >>> derivative = Derivative3 ( fun )
@@ -1989,7 +2005,7 @@ class Derivative3(DerivativeFD) :
 #  various rule.
 #  - If <code>singular</code> points are specified, in their vinicity
 #  special <code>forward</code> and <code>backward</code> are used
-#  - Optionally one can aqpply Richardson's iterative extrapolation
+#  - Optionally one can apply Richardson's iterative extrapolation
 #  to improve results 
 #  @code
 #  derivative = Derivative4 ( fun )
@@ -2001,7 +2017,7 @@ class Derivative4(DerivativeFD) :
     various rule.
     - If `singular` points are specified, in their vinicity
     special `forward` and `backward` rules  are used
-    - Optionally one can aqpply Richardson's iterative extrapolation
+    - Optionally one can apply Richardson's iterative extrapolation
     to improve results
     
     >>> derivative = Derivative4 ( fun )
@@ -2060,7 +2076,7 @@ class Derivative4(DerivativeFD) :
 #  various rule.
 #  - If <code>singular</code> points are specified, in their vinicity
 #  special <code>forward</code> and <code>backward</code> are used
-#  - Optionally one can aqpply Richardson's iterative extrapolation
+#  - Optionally one can apply Richardson's iterative extrapolation
 #  to improve results 
 #  @code
 #  derivative = Derivative5 ( fun )
@@ -2072,7 +2088,7 @@ class Derivative5(DerivativeFD) :
     various rule.
     - If `singular` points are specified, in their vinicity
     special `forward` and `backward` rules  are used
-    - Optionally one can aqpply Richardson's iterative extrapolation
+    - Optionally one can apply Richardson's iterative extrapolation
     to improve results
     
     >>> derivative = Derivative5 ( fun )
@@ -2132,7 +2148,7 @@ class Derivative5(DerivativeFD) :
 #  various rule.
 #  - If <code>singular</code> points are specified, in their vinicity
 #  special <code>forward</code> and <code>backward</code> are used
-#  - Optionally one can aqpply Richardson's iterative extrapolation
+#  - Optionally one can apply Richardson's iterative extrapolation
 #  to improve results 
 #  @code
 #  derivative = Derivative6 ( fun )
@@ -2144,7 +2160,7 @@ class Derivative6(DerivativeFD) :
     various rule.
     - If `singular` points are specified, in their vinicity
     special `forward` and `backward` rules  are used
-    - Optionally one can aqpply Richardson's iterative extrapolation
+    - Optionally one can apply Richardson's iterative extrapolation
     to improve results
     
     >>> derivative = Derivative6 ( fun )
