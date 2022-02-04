@@ -176,12 +176,12 @@ if (3,2)  <= sys.version_info :
         import shutil 
         assert os.path.exists ( source ) , \
                "copyfile: ``source'' %s does nto exist!" % source 
-        
+
+        destination = os.path.realpath ( destination )    
         os.makedirs ( os.path.dirname ( destination ), exist_ok = True)
         return shutil.copy2 ( source , destination )
 
 else :
-
     
     # =========================================================================
     ## copy source file into destination, creating intermediate directories
@@ -194,6 +194,7 @@ else :
         assert os.path.exists ( source ) , \
                "copyfile: ``source'' %s does nto exist!" % source
 
+        destination = os.path.realpath ( destination )    
         try:
             return shutil.copy2 ( source , destination )            
         except IOError as io_err:

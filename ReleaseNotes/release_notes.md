@@ -2,6 +2,7 @@
 
   1. add `commonpath` and `copy_file` utilities to `ostap.utils.basic`
   1. add `commonpath` and `copy_files` methods for `ostap.trees.data_utils.Files`
+  1. imporve `copy_files` in  `ostap.trees.data_utils.Files`
 
 ## Backward incompatible  
 

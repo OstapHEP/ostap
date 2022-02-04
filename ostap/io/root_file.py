@@ -68,7 +68,7 @@ __all__     = (
     'REOPEN'       , ## context manager to <code>ROOT.TFileReOpen('UPDATE')</code>
     ) 
 # =============================================================================
-import ROOT, os , cppyy              ## attention here!!
+import ROOT, sys, os , cppyy              ## attention here!!
 cpp = cppyy.gbl
 # =============================================================================
 # logging 
@@ -1070,6 +1070,35 @@ def  _rd_len_ ( rdir ) :
 
 
 ROOT.TDirectory.__len__ = _rd_len_
+
+
+
+# ========================================================================
+## copy ROOT file (possible with protocol)
+def copy_file ( source , destination , progress = True ) :
+    """Copy ROOT file (possible with protocol)
+    """
+    
+    if os.path.exists ( source ) and os.path.isfile ( source ) : 
+        from ostap.utils.basic import copy_file as cpfile
+        return cpfile ( source , destination )
+
+    ## check existance with ROOT 
+    rf = ROOT.TFile.Open ( source , 'r' )
+    if not rf : raise IOError ( "``%s'' is nor a readable ROOT file!" )
+
+    ## check the destination directory
+    destination = os.path.realpath ( destination ) 
+    destdir     = os.path.dirname  ( destination )
+    if not os.path.exists ( destdir ) : 
+        os.makedirs ( destdir )
+
+    ## the main line! 
+    with rf : rf.Cp ( destination , True ) 
+    
+    assert os.path.exists ( destination ) and os.path.isfile ( destination ) , \
+           "Misisng destination %s file!" % destination 
+    return destination
 
 # =============================================================================
 _decorated_classes_ = (

@@ -58,12 +58,30 @@ else                       : logger = getLogger ( __name__     )
 # =============================================================================
 if not hasattr ( ROOT.TTree , '__len__' ) :  
     ROOT.TTree. __len__ = lambda s : s.GetEntries()
+
 # =============================================================================
+## protocols for remote (ROOT) files 
 protocols = (
-    'root:/' ,
-    'http:/' ,
-    'https:/',    
+    'root:'  ,
+    'xroot:' ,
+    'http:'  ,
+    'https:' ,    
     )
+# =============================================================================
+## Does the filenamse starts with protocol?
+def has_protocol ( fname ) :
+    """Does the filenamse starts with protocol? """
+    for p in protocols :
+        if fname.startswith ( p ) : return True
+    return False
+# =============================================================================
+## Strip protocl from the file name 
+def strip_protocol ( fname ) :
+    """Strip protocl from the file name"""
+    for p in protocols :
+        if fname.startswith ( p ) : return fname.replace ( p , '' ) 
+    return fname
+
 # =============================================================================
 class DataProcessor (object) :
     def __init__   ( self , data  )  :
@@ -166,7 +184,7 @@ class Files(object):
     # =========================================================================
     ## Get the list of files from the patterns 
     def the_files ( self ) :
-        """Get the list of files form the patterns"""
+        """Get the list of files from the patterns"""
         
         _files = set ()
         
@@ -439,12 +457,20 @@ class Files(object):
 
     # =========================================================================
     ## get a common path (prefix) for all files in collection
+    #  - protocols are ignored 
     @property 
     def commonpath ( self ) :
-        """``commonpath'': common path (prefix) for all files in collection"""
+        """``commonpath'': common path (prefix) for all files in collection
+        - protocols are ignored 
+        """
         from ostap.utils.basic import commonpath 
         ##
-        cp = commonpath ( self.__files )
+        if any ( has_protocol ( f ) for f in self.__files ) :
+            files = []
+            for f in self.__files :
+                files .append ( strip_protocol ( f ) ) 
+        else : files = self.__files 
+        cp = commonpath ( files )
         return cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
     # =========================================================================
 
@@ -458,7 +484,8 @@ class Files(object):
         - common path (prefix) for all files will be replaced by new directory
         """
         
-        from ostap.utils.basic import writeable, copy_file 
+        from ostap.utils.basic  import writeable,    copy_file 
+        from ostap.io.root_file import copy_file as copy_root_file 
 
         ## create directory if needed 
         if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
@@ -466,16 +493,26 @@ class Files(object):
         assert writeable ( new_dir ), \
                "New directory ``%s'' is not writable!" % new_dir 
 
-        nd = os.path.normpath ( new_dir ) 
+        nd = os.path.normpath ( new_dir )
+        nd = os.path.realpath ( nd      ) 
         cp = self.commonpath
 
         copied = []
+
         
         from ostap.utils.progress_bar import progress_bar
         for f in progress_bar ( self.__files , silent = self.silent ) :
-            nf     = f.replace ( cp , nd ) 
-            nf     = os.path.normpath ( nf )
-            result = copy_file ( f , nf )
+
+            fs = os.path.normpath ( strip_protocol ( f ) ) 
+            nf = fs.replace ( cp , nd ) 
+            nf = os.path.normpath ( nf )
+            
+            if not has_protocol ( f ) :
+                if self.verbose : logger.info ( "copy %s to %s " % ( f , nf ) ) 
+                result = copy_file      ( f , nf )
+            else                      :
+                result = copy_root_file ( f , nf , progress  = self.verbose )
+                
             copied.append ( result )
             
         copied = tuple ( copied )
