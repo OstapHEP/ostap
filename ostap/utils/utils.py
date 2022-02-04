@@ -97,11 +97,11 @@ __all__     = (
     'absproperty'        , ## abstract property decorator
     'classprop'          , ## class property decorator
     'numcalls'           , ## decoratro for #ncalls  
-    ## 
+    ##
     )
 
 # =============================================================================
-import ROOT, time, os , sys, math, time , functools, abc, random ## attention here!!
+import ROOT, time, os , sys, math, time, functools, abc, random ## attention here!!
 from   builtins             import range
 from   itertools            import repeat, chain, islice 
 # =============================================================================
@@ -1354,6 +1354,7 @@ if (3,3) <= sys.version_info  :
         
 else :
 
+    import abc 
     # =========================================================================
     ## abstract prpoperty
     #  @code
@@ -1476,6 +1477,8 @@ class NumCalls (object):
 # ==============================================================================        
 #  Count a number of  times a callable object is invoked
 numcalls = NumCalls
+
+
 
 # =============================================================================
 if '__main__' == __name__ :

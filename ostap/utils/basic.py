@@ -23,11 +23,14 @@ __all__     = (
     'with_ipython'  , ## do we run IPython ? 
     'isatty'        , ## is the stream ``isatty'' ?
     'terminal_size' , ## get the size of terminal cosole
-    'writeable'     , ## good writeable direcrtory?
+    'writeable'     , ## good writeable directory?
     'whoami'        , ## who am I? 
+    'commonpath'    , ## common path(prefix) for list of files
+    'copy_file'     , ## copy fiel creating inetremadiet directorys if needed 
+    ## 
     )
 # =============================================================================
-import sys,os 
+import sys, os 
 # =============================================================================
 ## is sys.stdout attached to terminal or not  ?
 #  @code
@@ -139,7 +142,66 @@ def writeable ( adir ) :
             return False
 
     return False    
-   
+
+
+# =============================================================================
+if (3,5) <= sys.version_info :
+
+    ## get a common path(prefix) for list of paths 
+    commonpath = os.path.commonpath
+    
+else :
+
+    ## get a common path(prefix) for list of paths
+    # Fix for a  buggy <code>os.path.commonprefix</code>
+    #  @see https://www.rosettacode.org/wiki/Find_common_directory_path#Python
+    def commonpath ( paths ) :
+        """Get a common path(prefix) for list of paths
+        Fix a buggy `os.path.commonprefix`
+        - https://www.rosettacode.org/wiki/Find_common_directory_path#Python
+        """
+        return os.path.dirname ( os.path.commonprefix ( paths ) ) 
+
+
+# =============================================================================
+if (3,2)  <= sys.version_info :
+    
+    # =========================================================================
+    ## copy source file into destination, creating intermediate directories
+    #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+    def copy_file ( source , destination ) :
+        """Copy source file into destination, creating intermedoiate directories
+        - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+        """
+        import shutil 
+        assert os.path.exists ( source ) , \
+               "copyfile: ``source'' %s does nto exist!" % source 
+        
+        os.makedirs ( os.path.dirname ( destination ), exist_ok = True)
+        return shutil.copy2 ( source , destination )
+
+else :
+
+    
+    # =========================================================================
+    ## copy source file into destination, creating intermediate directories
+    #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+    def copy_file ( source , destination ) :
+        """Copy source file into destination, creating intermedoiate directories
+        - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+        """
+        import shutil 
+        assert os.path.exists ( source ) , \
+               "copyfile: ``source'' %s does nto exist!" % source
+
+        try:
+            return shutil.copy2 ( source , destination )            
+        except IOError as io_err:
+            os.makedirs ( os.path.dirname ( destination ) )
+            
+        return shutil.copy2 ( source , destination )
+  
+
 # =============================================================================
 if __name__ == '__main__' :
 

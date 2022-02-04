@@ -1,8 +1,13 @@
 ## New features:
 
+  1. add `commonpath` and `copy_file` utilities to `ostap.utils.basic`
+  1. add `commonpath` and `copy_files` methods for `ostap.trees.data_utils.Files`
+
 ## Backward incompatible  
 
 ## Bug fixes:
+
+  1. fix bugs for the operators in `ostap.trees.data_utils.Files`
 
 
 # v1.6.9.2

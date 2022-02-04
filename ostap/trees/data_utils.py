@@ -48,7 +48,7 @@ __all__     = (
     'Data2'       , ## collect files and create two TChain objects 
     )
 # =============================================================================
-import ROOT, os, glob, random, math  
+import ROOT, os, glob, random, math
 # =============================================================================
 # logging 
 # =============================================================================
@@ -140,8 +140,16 @@ class Files(object):
         return self.__silent
     @silent.setter
     def silent    ( self , value ) :
-        self.__silent = True if value else  False
+        self.__silent = True if value else False
 
+    @property
+    def verbose ( self ) :
+        """``verbose'' : verbose processing?"""
+        return not self.silent
+    @verbose.setter 
+    def verbose ( self , value ) :
+        self.__silent = False if value else True 
+        
     # =========================================================================
     ## check if the file is a part of collection
     #  @code
@@ -208,12 +216,25 @@ class Files(object):
         if not the_file in self.__files : self.__files.append ( the_file )
         
     ## clone it! 
-    def  clone ( self ) :
+    def  clone ( self               ,
+                 files       = None ,
+                 description = None ,
+                 patterns    = None ) :
         """ Clone the object
         """
         import copy
-        return copy.copy ( self )
-
+        result = copy.copy ( self )
+        if not files       is None :
+            if isinstance ( files , str ) : files = files , 
+            result.__files        = tuple ( files )
+            result.__patterns     = () 
+        if not description is None :
+            result.__descrfiption = str ( description )
+        if not patterns    is None :
+            result.__patterns     = tuple ( patterns )
+            
+        return result
+    
     # =========================================================================
     ## check operations
     def check_ops ( self , other ):
@@ -230,11 +251,11 @@ class Files(object):
         >>> ds  = ds1 | ds2 ## ditto
         """
         if not self.check_ops ( other ) : return NotImplemenbted
+
+        files       = self.files + tuple ( f for f in other.files if not f in self.files ) 
+        description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
         
-        result = self.clone()
-        clone.__files      = self.files + tuple ( f for f in other.files if not f in self.files ) 
-        result.description = "|".join ( "(%s)" for s in ( self.description , other.description ) ) , 
-        return result
+        return self.clone ( files = files , description = description , patterns = () )
 
     ## get an intersection of two datasets 
     def __and__ (  self , other ) :
@@ -246,13 +267,25 @@ class Files(object):
         """
         if not self.check_ops ( other ) : return NotImplemenbted
 
-        result = self.clone()
-        clone.__files      = tuple ( f for f in self.files if f in other.files )
-        result.description = "&".join ( "(%s)" for s in ( self.description , other.description ) ) , 
-        return result
+        files       = tuple ( f for f in self.files if f in other.files )
+        description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
+        
+        return self.clone ( files = files , description = description , patterns = () )
 
     __add__  = __or__    
     __mul__  = __and__
+
+    
+    ## get union of two datasets 
+    def union ( self , other ) :
+        """Union of two datasets"""
+        return self | other
+    
+    ## get intersection of two datasets 
+    def intersection ( self , other ) :
+        """Intersection of two datasets"""
+        return self & other
+    
 
     ## subtraction for datasets 
     def __sub__ (  self , other ) :
@@ -263,10 +296,10 @@ class Files(object):
         """
         if not isinstance ( other , Files ) : return NotImplemented
 
-        result = self.clone()
-        clone.__files      = tuple ( f for f in self.files if not f in other.files )
-        result.description = "-".join ( "(%s)" for s in ( self.description , other.description ) ) , 
-        return result
+        files       = tuple ( f for f in self.files if not f in other.files )
+        description = "-".join ( "(%s)" for s in ( self.description , other.description ) ) 
+
+        return self.clone ( files = files , description = description , patterns = () )
     
     # =========================================================================
     ## get a sample of at most  n-elements (if n is integer and >=1 )  or n-fraction 
@@ -297,9 +330,10 @@ class Files(object):
         >>> f1 = files.sample ( 5   ) ##  5     files
         >>> f2 = files.sample ( 0.1 ) ## 10% of files 
         """
-        result = self.clone ()
-        result.__files = self.sample_files ( n , sort )
-        return result
+        files       = self.sample_files ( n , sort )
+        description = "Sample(%d): %s" % ( n , self.description )
+        
+        return self.clone ( files = files , description = description , patterns = () )
     
     # =========================================================================
     ##  Get an element or slice 
@@ -314,9 +348,11 @@ class Files(object):
         >>> f1 = files[5] 
         >>> f2 = files[4:10]
         """
-        result = self.clone ()
-        result.__files = self.files [item ] 
-        return result
+        
+        files       = self.files [ item ]
+        description = "Item(%d): %s" % ( item , self.description )
+        
+        return self.clone ( files = files , description = description , patterns = () )
         
     ## printout 
     def __str__(self):
@@ -401,7 +437,51 @@ class Files(object):
         
         raise IOError ( "The output file %s does not exist!" % output )
 
+    # =========================================================================
+    ## get a common path (prefix) for all files in collection
+    @property 
+    def commonpath ( self ) :
+        """``commonpath'': common path (prefix) for all files in collection"""
+        from ostap.utils.basic import commonpath 
+        ##
+        cp = commonpath ( self.__files )
+        return cp if os.path.isdir ( cp ) else os.path.dirname ( cp ) 
+    # =========================================================================
 
+    # =========================================================================
+    ## copy all the files to new directory
+    #  - new directory will be created (if needed)
+    #  - common path (prefix) for all files will be replaced by new directory
+    def copy_files ( self , new_dir ) :
+        """copy all the files to new directory
+        - new directory will be created (if needed)
+        - common path (prefix) for all files will be replaced by new directory
+        """
+        
+        from ostap.utils.basic import writeable, copy_file 
+
+        ## create directory if needed 
+        if not os.path.exists ( new_dir ) : os.makedirs ( new_dir )
+        
+        assert writeable ( new_dir ), \
+               "New directory ``%s'' is not writable!" % new_dir 
+
+        nd = os.path.normpath ( new_dir ) 
+        cp = self.commonpath
+
+        copied = []
+        
+        from ostap.utils.progress_bar import progress_bar
+        for f in progress_bar ( self.__files , silent = self.silent ) :
+            nf     = f.replace ( cp , nd ) 
+            nf     = os.path.normpath ( nf )
+            result = copy_file ( f , nf )
+            copied.append ( result )
+            
+        copied = tuple ( copied )
+
+        return self.clone ( files = copied , patterns = () ) 
+    
 # =============================================================================
 ## @class Data
 #  Simple utility to access to certain chain in the set of ROOT-files
