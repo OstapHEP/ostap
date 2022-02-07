@@ -484,7 +484,7 @@ class Files(object):
         - common path (prefix) for all files will be replaced by new directory
         """
         
-        from ostap.utils.basic  import writeable,    copy_file 
+        from ostap.utils.basic  import writeable,    copy_file
         from ostap.io.root_file import copy_file as copy_root_file 
 
         ## create directory if needed 
@@ -493,14 +493,17 @@ class Files(object):
         assert writeable ( new_dir ), \
                "New directory ``%s'' is not writable!" % new_dir 
 
-        nd = os.path.normpath ( new_dir )
-        nd = os.path.realpath ( nd      ) 
+        nd = os.path.abspath  ( new_dir )
+        nd = os.path.normpath ( nd      ) 
+        nd = os.path.realpath ( nd      )
+        
         cp = self.commonpath
 
         copied = []
 
         
         from ostap.utils.progress_bar import progress_bar
+        nf = len ( self.__files ) 
         for f in progress_bar ( self.__files , silent = self.silent ) :
 
             fs = os.path.normpath ( strip_protocol ( f ) ) 
@@ -508,10 +511,9 @@ class Files(object):
             nf = os.path.normpath ( nf )
             
             if not has_protocol ( f ) :
-                if self.verbose : logger.info ( "copy %s to %s " % ( f , nf ) ) 
-                result = copy_file      ( f , nf )
+                result = copy_file      ( f , nf , progress = ( 1 == nf ) and not self.silent ) 
             else                      :
-                result = copy_root_file ( f , nf , progress  = self.verbose )
+                result = copy_root_file ( f , nf , progress = ( 1 == nf ) and not self.silent ) 
                 
             copied.append ( result )
             

@@ -1479,7 +1479,50 @@ class NumCalls (object):
 numcalls = NumCalls
 
 
+# =============================================================================
+## Copy file with the progress
+#  @code
+#  copy_with_progress ( 'inputfilename.ext' , 'outputfilename.ext' ) 
+#  @endcode
+def copy_with_progress ( source  , destination ) :
+    """Copy file with progress
+    >>> copy_with_progress ( 'inputfilename.ext' , 'outputfilename.ext' ) 
+    """
+    assert os.path.exists ( source ) and os.path.isfile ( source ), \
+           "copy_with_progress: ``source'' %s does nto exist!" % source
+    
+    total = os.stat ( source ) . st_size
+    BLOCK = 512 * 1024
 
+    destination = os.path.abspath  ( destination )    
+    destination = os.path.normpath ( destination )
+    destination = os.path.realpath ( destination )
+    if os.path.exists ( destination ) and os.path.isdir ( destination ) :
+        destination = os.path.join ( destination , os.path.basename ( source ) )
+        
+    from ostap.utils.progress_bar import ProgressBar 
+    read = 0
+    
+    with ProgressBar ( total , silent = total < 3 * BLOCK )  as pbar : 
+        with open ( source , 'rb' ) as fin :
+            with open ( destination , 'wb' ) as fout :
+                while True :
+                    
+                    block = fin.read ( BLOCK )
+                    fout.write ( block )
+                    
+                    read  += len ( block )
+                    pbar.update_amount ( read )
+                    if not block : break             ## BREAK
+                
+    assert os.path.exists ( destination ) and \
+           os.path.isfile ( destination ) and \
+           os.stat ( destination ).st_size == total, \
+           "Invalid ``destination'' %s " % destination
+    
+    return os.path.realpath ( destination )
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     

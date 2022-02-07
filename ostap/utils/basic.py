@@ -164,45 +164,75 @@ else :
 
 
 # =============================================================================
-if (3,2)  <= sys.version_info :
+if (3,2) <= sys.version_info :
+
+    make_dirs = os.makedirs
     
-    # =========================================================================
-    ## copy source file into destination, creating intermediate directories
-    #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-    def copy_file ( source , destination ) :
-        """Copy source file into destination, creating intermedoiate directories
-        - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-        """
-        import shutil 
-        assert os.path.exists ( source ) , \
-               "copyfile: ``source'' %s does nto exist!" % source 
-
-        destination = os.path.realpath ( destination )    
-        os.makedirs ( os.path.dirname ( destination ), exist_ok = True)
-        return shutil.copy2 ( source , destination )
-
 else :
     
-    # =========================================================================
-    ## copy source file into destination, creating intermediate directories
-    #  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
-    def copy_file ( source , destination ) :
-        """Copy source file into destination, creating intermedoiate directories
-        - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+    def make_dirs ( name , mode = 0o777 , exist_ok = False ):
+        """makedirs(path [, mode=0o777])
+        
+        Super-mkdir; create a leaf directory and all intermediate ones.
+        Works like mkdir, except that any intermediate path segment (not
+        just the rightmost) will be created if it does not exist.  This is
+        recursive.
+        
         """
-        import shutil 
-        assert os.path.exists ( source ) , \
-               "copyfile: ``source'' %s does nto exist!" % source
-
-        destination = os.path.realpath ( destination )    
-        try:
-            return shutil.copy2 ( source , destination )            
-        except IOError as io_err:
-            os.makedirs ( os.path.dirname ( destination ) )
+        head, tail = path.split(name)
+        if not tail:
+            head, tail = path.split(head)
             
-        return shutil.copy2 ( source , destination )
-  
+        if head and tail and not path.exists(head):
+            try:
+                
+                make_dirs ( head , mode , exist_ok = exist_ok ) ## RECURSION!
+                
+            except OSError as e :
+                
+                # be happy if someone already created the path
+                if e.errno != errno.EEXIST:
+                    raise
+                
+            if tail == os.curdir:           # xxx/newdir/. exists if xxx/newdir exists
+                return
 
+        try :
+            
+            mkdir ( name , mode )
+            
+        except OSError:
+            # Cannot rely on checking for EEXIST, since the operating system
+            # could give priority to other errors like EACCES or EROFS
+            if not exist_ok or not os.path.isdir ( name ) :
+                raise
+            
+# =========================================================================
+## copy source file into destination, creating intermediate directories
+#  @see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+def copy_file ( source , destination , progress = False ) :
+    """Copy source file into destination, creating intermediate directories
+    - see https://stackoverflow.com/questions/2793789/create-destination-path-for-shutil-copy-files/49615070 
+    """
+    assert os.path.exists ( source ) and os.path.isfile ( source ), \
+           "copy_file: ``source'' %s does not exist!" % source 
+    
+    destination = os.path.abspath  ( destination )    
+    destination = os.path.normpath ( destination )
+    destination = os.path.realpath ( destination )
+    
+    if os.path.exists ( destination ) and os.path.isdir ( destination ) :
+        destination = os.path.join ( destination , os.path.basename ( source ) )
+        
+    make_dirs ( os.path.dirname ( destination ) , exist_ok = True)
+    
+    if not progress : 
+        import shutil 
+        return shutil.copy2 ( source , destination )
+    else :
+        from ostap.utils.utils import copy_with_progress
+        return copy_with_progress ( source , destination )
+    
 # =============================================================================
 if __name__ == '__main__' :
 
