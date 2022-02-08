@@ -915,7 +915,7 @@ class Data2(Data):
         """
         return isinstance ( other , Data2 )          and \
                self.chain1_name == other.chain1_name and \
-               self.chain1_name == other.chain2_name
+               self.chain2_name == other.chain2_name
 
     # =========================================================================
     ## get DataFrame for the first chain

@@ -119,7 +119,11 @@ class DataAndLumi(Data2):
             except ImportError :
                 logger.error('DataAndLumi:getLumi is not available!')
                 return -1.e+6
-                
+    @property
+    def luminosity ( self ) :
+        """``luminosity'': get the Luminosity"""
+        return self.getLumi() 
+        
     ## printout 
     def __str__(self):
         

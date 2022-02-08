@@ -1,8 +1,12 @@
+# v1.6.9.5
+
 ## New features:
 
 ## Backward incompatible  
 
 ## Bug fixes:
+  
+  1. (re)fix the bug for the operators in `ostap.trees.data_utils`
 
 # v1.6.9.4
 
