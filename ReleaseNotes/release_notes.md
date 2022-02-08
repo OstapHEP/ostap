@@ -1,3 +1,5 @@
+# v1.6.9.4
+
 ## New features:
 
   1. add `commonpath` and `copy_file` utilities to `ostap.utils.basic`

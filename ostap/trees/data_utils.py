@@ -110,7 +110,8 @@ class Files(object):
                   maxfiles    = -1      ,
                   silent      = False   ) :
         #
-        if isinstance ( files , str ) :  files =  [ files ]
+        if   isinstance ( files , str   ) : files = [ files ]
+        elif isinstance ( files , Files ) : files = files.files   
         #
         #
         
@@ -146,7 +147,10 @@ class Files(object):
     def description ( self ) :
         """``description'': description of this collection"""
         return self.__description
-    
+    @description.setter
+    def description ( self , value ) :
+        self.__description = str ( value )
+        
     @property
     def patterns  ( self ) :
         """``patterns'' : the list of patterns"""
@@ -504,16 +508,16 @@ class Files(object):
         
         from ostap.utils.progress_bar import progress_bar
         nf = len ( self.__files ) 
-        for f in progress_bar ( self.__files , silent = self.silent ) :
+        for f in progress_bar ( self.__files , silent = self.silent or nf <=1 ) :
 
             fs = os.path.normpath ( strip_protocol ( f ) ) 
             nf = fs.replace ( cp , nd ) 
             nf = os.path.normpath ( nf )
             
             if not has_protocol ( f ) :
-                result = copy_file      ( f , nf , progress = ( 1 == nf ) and not self.silent ) 
+                result = copy_file      ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
             else                      :
-                result = copy_root_file ( f , nf , progress = ( 1 == nf ) and not self.silent ) 
+                result = copy_root_file ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
                 
             copied.append ( result )
             
@@ -590,7 +594,7 @@ class Data(Files):
         """``check'' : make check for `TTree`/`TChain` structures
         """
         return self.__check
-    
+
     ## check the content of the two trees
     @staticmethod 
     def check_trees ( tree1 , tree2 , the_file = '' ) :
@@ -749,10 +753,6 @@ class Data2(Data):
         """``chain1'' : (re)built and return the first `TChain` object (same as ``chain'')
         """
         return self.chain
-    
-        ch = ROOT.TChain( self.chain_name )
-        for f in self.files : ch.Add ( f )
-        return ch
     
     @property
     def chain2 ( self ) :
