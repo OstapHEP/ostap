@@ -264,6 +264,23 @@ class Files(object):
         """
         return isinstance ( other , Files ) 
 
+    # =========================================================================
+    ## check that the list of fiels is the same
+    #  @code
+    #  ds1 = ...
+    #  ds2 = ...\
+    #  ds1 == ds2 
+    #  @endcode 
+    def __eq__ ( self , other ) :
+        """Check that the list of fiels is the same
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds1 == ds2 
+        """
+        if not self.check_ops ( other ) : return False 
+        ##
+        return set ( self.files ) == set ( other.files ) 
+
     ## merge two sets together
     def __or__ ( self , other ) :
         """ Merge two sets together
@@ -272,7 +289,7 @@ class Files(object):
         >>> ds  = ds1 + ds2 
         >>> ds  = ds1 | ds2 ## ditto
         """
-        if not self.check_ops ( other ) : return NotImplemenbted
+        if not self.check_ops ( other ) : return NotImplemented
 
         files       = self.files + tuple ( f for f in other.files if not f in self.files ) 
         description = "|".join ( "(%s)" for s in ( self.description , other.description ) )
@@ -287,12 +304,30 @@ class Files(object):
         >>> ds  = ds1 & ds2 ## get intersection 
         >>> ds  = ds1 * ds2 ## ditto
         """
-        if not self.check_ops ( other ) : return NotImplemenbted
+        if not self.check_ops ( other ) : return NotImplemented
 
         files       = tuple ( f for f in self.files if f in other.files )
         description = "&".join ( "(%s)" for s in ( self.description , other.description ) )
         
         return self.clone ( files = files , description = description , patterns = () )
+
+    ## get an exclusive OR for  two datasets 
+    def __xor__ (  self , other ) :
+        """ get an exclusive OR for  two sets
+        >>> ds1 = ...
+        >>> ds2 = ...
+        >>> ds  = ds1 ^ ds2 ## get an exclusive OR 
+        """
+        if not self.check_ops ( other ) : return NotImplemented
+
+        files1 = [ f for f in self .files if not f in other.files ]
+        files2 = [ f for f in other.files if not f in self.files  ]
+        files  = tuple ( files1 + files2 ) 
+        
+        description = "^".join ( "(%s)" for s in ( self.description , other.description ) )
+        
+        return self.clone ( files = files , description = description , patterns = () )
+
 
     __add__  = __or__    
     __mul__  = __and__
@@ -307,7 +342,16 @@ class Files(object):
     def intersection ( self , other ) :
         """Intersection of two datasets"""
         return self & other
-    
+
+    ## get difference of two datasets 
+    def difference  ( self , other ) :
+        """Differfence of two datasets"""
+        return self - other
+
+    ## get symmetric difference of two datasets 
+    def symmetric_difference  ( self , other ) :
+        """Symmetric Differfence of two datasets"""
+        return self ^ other
 
     ## subtraction for datasets 
     def __sub__ (  self , other ) :
@@ -669,7 +713,7 @@ class Data(Files):
         """Check operations
         """
         return isinstance ( other , Data ) and self.chain_name == other.chain_name
-    
+
     # =========================================================================
     ## get DataFrame for the chain
     #  @see ROOT::RDataFrame
