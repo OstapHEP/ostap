@@ -3,7 +3,7 @@
 # =============================================================================
 # Copyright (c) Ostap developers.
 # ============================================================================= 
-# @file test_fitting_toys.py
+# @file test_parallel_toys.py
 # Test module for ostap/fitting/toys.py
 # - make some fitting toys 
 # ============================================================================= 
@@ -29,7 +29,7 @@ from   ostap.utils.utils            import wait
 # =============================================================================
 from ostap.logger.logger import getLogger
 if '__main__' == __name__  or '__builtin__' == __name__ : 
-    logger = getLogger ( 'test_fitting_toys' )
+    logger = getLogger ( 'test_parallel_toys' )
 else : 
     logger = getLogger ( __name__ )
 # =============================================================================

@@ -85,7 +85,7 @@ class Timer(object):
                     format = 'Timing %-18s %.3fs' ,
                     start  = ''                   ) :
         
-        self.name   = name
+        self.__name   = name
         
         if   logger and isinstance ( logger , _logger_t ) :
             self.logger = logger.info
@@ -103,23 +103,43 @@ class Timer(object):
         else                      : self.start_message = '' 
         
     def __enter__ ( self ) :
-        self.start = _timer ()
+        self.__start = _timer ()
         if self.logger and self.start_message :
             self.logger ( self.start_message )
         return self
     
     def __exit__  ( self, *_ ) :
-        self.stop  = _timer ()
-        self.delta = self.stop - self.start
+        self.__stop  = _timer ()
+        self.__delta = self.__stop - self.__start
         
         if self.logger :
             
             try :
-                message = self.format       % ( self.name , self.delta ) 
+                message = self.format       % ( self.__name , self.__delta ) 
             except TypeError :
-                message = 'Timing %-18s %s' % ( self.name , self.delta )                
+                message = 'Timing %-18s %s' % ( self.__name , self.__delta )                
             self.logger ( message )
             
+    @property
+    def name ( self ) :
+        """``name'' : Timer name"""
+        return self.__name
+    
+    @property
+    def start ( self ):
+        """``start'' : Timer start"""
+        return self._start
+    
+    @property
+    def stop  ( self ):
+        """``stop'' : Timer stop"""
+        return self.__stop
+    
+    @property
+    def delta ( self ) :
+        """``delta'' : stop - start for Timer"""
+        return self.__delta
+    
 # =============================================================================
 ## Simple context manager to measure the time
 #

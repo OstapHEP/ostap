@@ -103,7 +103,7 @@ Bool_t Ostap::Selector::Process ( Long64_t entry )
 // ============================================================================
 Bool_t Ostap::Selector::Notify         () { return ROOT_Selector::Notify ()  ; }
 // ============================================================================
-// teminnate the slave 
+// teminate the slave 
 // ============================================================================
 void   Ostap::Selector::SlaveTerminate () { ROOT_Selector::SlaveTerminate () ; }
 // ============================================================================

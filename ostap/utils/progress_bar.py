@@ -346,16 +346,16 @@ class ProgressBar(object):
         if not self.silent and self.bar != self.last :   
             if self.prefix : self.output.write( self.prefix ) 
             self.output.write ( self.bar + self.r ) 
-            self.output.flush ()
             self.last = self.bar  
-        
+            self.output.flush ()
+            
     def end  ( self  ) :
         if not self.silent :
             if self.__end is None : self.__end = time.time () 
             self.build_bar()
             if self.prefix : self.output.write( self.prefix ) 
             self.output.write ( self.bar + '\n' ) 
-            self.output.flush()
+        self.output.flush()
         self.silent = True
         
     def __enter__ ( self      ) :

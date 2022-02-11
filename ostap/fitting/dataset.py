@@ -1660,7 +1660,8 @@ def _ds_table_0_ ( dataset        ,
     title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
         
     if not _vars :
-        return report , 120 
+        return title , 120 
+        ## return report , 120 
 
 
     weight = None

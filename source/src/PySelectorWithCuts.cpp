@@ -170,7 +170,11 @@ bool Ostap::SelectorWithCuts::good_entry  ( Long64_t entry )
 Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry ) 
 { 
   //
-  if ( !good_entry ( entry ) ) { return false ; }
+  if ( !good_entry ( entry ) ) 
+  {
+    increment_event () ;
+    return false       ;   // RETURN 
+  }
   //
   // increment the event counter for good events 
   ++m_good  ;
@@ -187,6 +191,28 @@ Bool_t Ostap::SelectorWithCuts::Process      ( Long64_t entry )
   // ==========================================================================
 #endif 
 }
+// ============================================================================
+// terminate the slave 
+// ============================================================================
+void Ostap::SelectorWithCuts::SlaveTerminate () 
+{ return Ostap::Selector::SlaveTerminate() ; }
+// ============================================================================
+// terminate
+// ============================================================================
+void Ostap::SelectorWithCuts::Terminate      ()
+{ return Ostap::Selector::Terminate() ; }
+// ============================================================================
+// get entry 
+// ============================================================================
+Int_t Ostap::SelectorWithCuts::GetEntry       
+( Long64_t entry  , 
+  Int_t    getall )
+{ return Ostap::Selector::GetEntry ( entry , getall ) ; }
+// ============================================================================
+// Version 
+// ============================================================================
+Int_t Ostap::SelectorWithCuts::Version () const                
+{ return Ostap::Selector::Version () ; }
 // ============================================================================
 // is formula OK?
 // ============================================================================

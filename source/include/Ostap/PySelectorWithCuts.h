@@ -68,11 +68,24 @@ namespace Ostap
   public:
     // ========================================================================
     Bool_t Notify       () override ;
-    // ========================================================================
-    void   Init         ( TTree*   tree  ) override ;
-    void   Begin        ( TTree*   tree  ) override ;
-    void   SlaveBegin   ( TTree*   tree  ) override ;
-    Bool_t Process      ( Long64_t entry ) override ;
+    // ========================================================================\
+    /// Init 
+    void   Init           ( TTree*   tree  )      override ;
+    /// begin 
+    void   Begin          ( TTree*   tree  )      override ;
+    /// initialize the slave 
+    void   SlaveBegin     ( TTree*   tree  )      override ;
+    /// process 
+    Bool_t Process        ( Long64_t entry )      override ;
+    /// terminate the slave 
+    void   SlaveTerminate ()                      override ;
+    /// terminate
+    void   Terminate      ()                      override ;
+    /// get entry 
+    Int_t  GetEntry       ( Long64_t entry      , 
+                            Int_t    getall = 0 ) override ;
+    /// Version 
+    Int_t  Version        () const                override ;
     // ========================================================================
   public:
     // ========================================================================    

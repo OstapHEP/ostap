@@ -787,7 +787,8 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__skip     = defaultdict(int)
         self.__notifier = None
         self.__stat     = SelStat() 
-
+        self.__last     = -1
+        
     @property 
     def name ( self ) :
         """``name''  - the name of selector/dataset"""
@@ -813,7 +814,7 @@ class SelectorWithVars(SelectorWithCuts) :
     def variables ( self ) :
         """``variables'' - the list/tuple of variables (cleared in Terminate)"""
         return self.__variables
-
+    
     @property
     def varset ( self ) :
         """``varset'' : the structure of RooDataSet"""
@@ -905,24 +906,26 @@ class SelectorWithVars(SelectorWithCuts) :
             from ostap.utils.progress_bar import ProgressBar
             self.__progress = ProgressBar ( max_value = self.total   ,
                                             silent    = self.silence )
-            
         if not self.silence :
-            if   0 == self.processed % 1000 or 1 == self.good () % 1000 :
-                self.__progress.update_amount ( self.event () )
-            else : 
-                evtn = self.event()                
-                if 0 == evtn % 10000 or evtn < 5 or 0 < self.total < evtn + 10 : 
-                    self.__progress.update_amount ( evtn )
-                                               
+            
+            evnt  = self.event ()
+            total = self.total
+            
+            step  = 10000 if total <= 1 else divmod ( total , 350 ) [0]
+            
+            if evnt    < 20 or 0 < total < evnt + 20 or self.__last + step <= evnt :
+                self.__progress.update_amount ( evnt )
+                self.__last = evnt 
+            
         self.stat.processed += 1
         
         #
         ## == for more convenience
         #
         bamboo = self.tree 
-        ## 
-        return  self.fill ( bamboo )
-
+        ##        
+        return self.fill ( bamboo )
+        
     # =========================================================================
     ## fill it! 
     def fill ( self , bamboo ) :
@@ -983,12 +986,9 @@ class SelectorWithVars(SelectorWithCuts) :
         kw.update ( kwargs )
         return SelectorWithVars ( **kw ) 
 
+    # =========================================================================
     ## termination 
     def Terminate ( self  ) :
-        #
-        
-        if self.__progress :
-            self.__progress.end() 
         #
         ## Aborted? 
         if   0 != self.GetAbort() :
@@ -1132,7 +1132,6 @@ class SelectorWithVars(SelectorWithCuts) :
         """Initialize the selector
         - see Ostap::SelectorWithCuts::Init 
         """
-        
         ## reset the formula 
         self.reset_formula ( tree )
         if valid_pointer ( tree ) :
@@ -1172,7 +1171,17 @@ class SelectorWithVars(SelectorWithCuts) :
         self.reset_formula  ( tree  ) 
         #
         assert self.ok () , 'SlaveBegin::Formula is invalid!'
-        #   
+        #
+        #
+        if not self.__progress and not self.silence :
+            tree            = self.tree
+            self.stat.total = tree.GetEntries()
+            self.logger.info ( "Selector(%s): processing TChain('%s') #entries: %d" % ( self.name , tree.GetName() , self.total ) )
+            ## decoration:
+            from ostap.utils.progress_bar import ProgressBar
+            self.__progress = ProgressBar ( max_value = self.total   ,
+                                            silent    = self.silence )
+            
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
         #
@@ -1209,11 +1218,11 @@ class SelectorWithVars(SelectorWithCuts) :
     def SlaveTerminate ( self               ) :
         """Terminate slave processing
         - see Ostap::SelectorWithCuts::SlaveTerminate
-        """
-        
+        """        
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
-
+            self.__progress.end () 
+            
         if self.__notifier :
             self.__notifier.exit()
             self.__notifier = None  
@@ -1329,6 +1338,7 @@ def make_dataset ( tree              ,
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
+
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
@@ -1625,15 +1635,15 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
-    
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
 
         if selector.really_trivial and not selector.morecuts and not '[' in selector.selection :
 
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
-            ds , stat  = self.make_dataset ( variables = selector.variables , selection = selector.selection , silent = silent )
+            variables     = selector.variables 
+            ds , stat     = self.make_dataset ( variables = variables , selection = selector.selection , silent = silent )
             selector.data = ds
-            selector.stat = stat 
+            selector.stat = stat
             return 1
         
     # =========================================================================
@@ -1723,7 +1733,6 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     avars = list ( set ( avars ) )
                     avars.sort() 
                     logger.debug ('PROCESS: dump only %s' % list ( avars ) )
-                    
                     from ostap.core.core import strings as _strings
                     avars    = _strings ( avars ) 
                     snapshot = frame . Snapshot ( 'tree' , tf.filename , avars )
