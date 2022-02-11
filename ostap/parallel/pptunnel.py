@@ -192,7 +192,9 @@ class ppServer(object) :
                 if enabledVerbose() :
                     copier = PS.Copier ( 'SSH-copier' )
                     import ostap.utils.cleanup as CU
+                    print ( 'BEFORE CREATION!')
                     tmpdir = CU.CleanUp.tempdir ()
+                    print ( 'AFTER CREATION!', tmpdir )
                     source = "%s:%s" %  ( self.__remote_host , self.__profile )
                     copier ( source = source , destination = tmpdir )
                     copier.launch()

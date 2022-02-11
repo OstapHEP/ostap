@@ -98,6 +98,7 @@ __all__     = (
     'classprop'          , ## class property decorator
     'numcalls'           , ## decoratro for #ncalls  
     ##
+    'hadd'               , ## merge ROOT files using command `hadd`
     )
 
 # =============================================================================
@@ -1522,7 +1523,84 @@ def copy_with_progress ( source  , destination ) :
     
     return os.path.realpath ( destination )
 
+
+# =========================================================================
+## merge all files using <code>hadd</code> script from ROOT
+#  @param output  name of the output merged file, if None,
+#                 the temporary name will be generated,
+#                 that will be deleted at the end of the session
+#  @param opts   options for command <code>hadd</code>
+#  @return the name of the merged file
+# OPTIONS:
+# -a                                   Append to the output
+# -k                                   Skip corrupt or non-existent files, do not exit
+# -T                                   Do not merge Trees
+# -O                                   Re-optimize basket size when merging TTree
+# -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+# -j                                   Parallelize the execution in multiple processes
+# -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+# -d                                   Carry out the partial multiprocess execution in the specified directory
+# -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+# -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+# -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+# -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+# -fk                                  Sets the target file to contain the baskets with the same compression
+#                                      as the input files (unless -O is specified). Compresses the meta data
+#                                      using the compression level specified in the first input or the
+#                                      compression setting after fk (for example 206 when using -fk206)
+# -ff                                  The compression level use is the one specified in the first input
+# -f0                                  Do not compress the target file
+# -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)  
+def hadd ( self , files , output = None , opts = "-ff" ) :
+    """<erge all files using <code>hadd</code> script from ROOT
+    - `output`  name of the output merged file
+    - `opts`   options for command <code>hadd</code>
+    It returns the name of the merged file
     
+    If no output file name is specified, the temporary name
+    will be generate and the temporary file will be deleted
+    at the end of the session
+    
+    OPTIONS:
+    # -a                                   Append to the output
+    # -k                                   Skip corrupt or non-existent files, do not exit
+    # -T                                   Do not merge Trees
+    # -O                                   Re-optimize basket size when merging TTree
+    # -v                                   Explicitly set the verbosity level: 0 request no output, 99 is the default
+    # -j                                   Parallelize the execution in multiple processes
+    # -dbg                                 Parallelize the execution in multiple processes in debug mode (Does not delete partial files stored inside working directory)
+    # -d                                   Carry out the partial multiprocess execution in the specified directory
+    # -n                                   Open at most 'maxopenedfiles' at once (use 0 to request to use the system maximum)
+    # -cachesize                           Resize the prefetching cache use to speed up I/O operations(use 0 to disable)
+    # -experimental-io-features            Used with an argument provided, enables the corresponding experimental feature for output trees
+    # -f                                   Gives the ability to specify the compression level of the target file(by default 4) 
+    # -fk                                  Sets the target file to contain the baskets with the same compression
+    #                                      as the input files (unless -O is specified). Compresses the meta data
+    #                                      using the compression level specified in the first input or the
+    #                                      compression setting after fk (for example 206 when using -fk206)
+    # -ff                                  The compression level use is the one specified in the first input
+    # -f0                                  Do not compress the target file
+    # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
+    """
+    if not output :
+        import ostap.utils.cleanup as CU
+        output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
+        
+    import subprocess
+
+    ## patterns ? 
+    if isinstance ( files , str ) :
+        import glob
+        files = [ f for f in glob.iglob ( files ) ] 
+                    
+    args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in files ]
+    subprocess.check_call ( args )
+    
+    if os.path.exists ( output ) and os.path.isfile ( output ) :
+        return output 
+    
+    raise IOError ( "The output file %s does not exist!" % output )
+
 # =============================================================================
 if '__main__' == __name__ :
     

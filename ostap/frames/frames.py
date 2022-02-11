@@ -83,10 +83,10 @@ def _fr_new_init_ ( self , name , *args , **kwargs ) :
     
     if       mt and not ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.EnableImplicitMT  ()
-        logger.info ( 'DataFrame:ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) )
+        logger.debug ( 'DataFrame:ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) )
     elif not mt and     ROOT.ROOT.IsImplicitMTEnabled() :
         ROOT.ROOT.DisableImplicitMT ()
-        logger.info ( 'DataFrame: ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
+        logger.info  ( 'DataFrame: ImplicitMT is %s' % ( 'Enabled' if ROOT.ROOT.IsImplicitMTEnabled() else 'Disabled' ) ) 
         
     self._fr_old_init_ ( name , *args , **kwargs ) 
 

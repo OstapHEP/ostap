@@ -49,7 +49,7 @@ from   ostap.logger.logger import getLogger
 if '__main__' == __name__ : logger = getLogger ( 'ostap.parallel.task' )
 else                      : logger = getLogger ( __name__              )
 # =============================================================================
-import operator, abc  
+import os, operator, abc  
 from   itertools   import repeat, count 
 # ==============================================================================
 ## @class Task
@@ -91,14 +91,19 @@ class Task(object) :
         ## define the local trash 
 
         obj.__directory   = None
+        
         obj.__environment = {}
         obj.__prepend_to  = {}
         obj.__append_to   = {}
         obj.__dot_in_path = None
+        
         obj.__batch       = None  
         obj.__batch_set   = False
+        
         obj.__build       = None
-        obj.__build_set   = False 
+        obj.__build_set   = False
+        
+        obj.__cleanup     = True
         
         return obj
 
@@ -219,7 +224,13 @@ class Task(object) :
         """``build_set'': is build directory defined?"""
         return self.__build_set
 
-    
+    @property
+    def cleanup ( self ) :
+        """``cleanup'' : cleanup the temporary directories"""
+        return self.__cleanup
+    @cleanup.setter
+    def cleanup ( self , value ) :
+        self.__cleanup     = True if value else False
         
 # =============================================================================
 ## @class GenericTask
@@ -252,7 +263,8 @@ class GenericTask(Task) :
                    directory   = None  ,
                    environment = {}    ,
                    append_to   = {}    ,
-                   prepend_to  = {}    ) :
+                   prepend_to  = {}    ,
+                   cleanup     = True  ) :
         """Generic task for the parallel processing. One needs to define three functions/functors
         - processor   :         output = processor   ( jobid , item ) 
         - merger      : updated_output = merger      ( old_output , new_output )
@@ -277,7 +289,10 @@ class GenericTask(Task) :
         self.directory     = directory
         self.environment  . update ( environment ) 
         self.append_to    . update ( append_to   ) 
-        self.prepend_to   . update ( prepend_to  ) 
+        self.prepend_to   . update ( prepend_to  )
+        
+        self.cleanup       = cleanup
+
         
     # =========================================================================
     ## local initialization (executed once in parent process)
@@ -351,7 +366,8 @@ class FuncTask(Task) :
                    directory   = None  ,
                    environment = {}    ,
                    append_to   = {}    ,
-                   prepend_to  = {}    ) :
+                   prepend_to  = {}    ,
+                   cleanup     = True  ) :
         
         self.__function    = func
         self.__merger      = merger
@@ -365,6 +381,8 @@ class FuncTask(Task) :
         self.append_to    . update ( append_to   ) 
         self.prepend_to   . update ( prepend_to  ) 
 
+        self.cleanup       = cleanup
+        
     # =========================================================================
     ## local initialization (executed once in parent process)
     def initialize_local   ( self ) :
@@ -745,10 +763,16 @@ def task_executor ( item ) :
         from ostap.core.build_dir import UseBuildDir as build_context
     else :
         from ostap.utils.utils    import NoContext   as build_context 
-        
 
-    ## use build & batch context 
-    with build_context ( task.build ), batch_context ( task.batch ) : 
+    ##
+    if task.cleanup : 
+        from ostap.utils.cleanup  import CleanUpPID  as clean_context
+    else : 
+        from ostap.utils.utils    import NoContext   as clean_context 
+       
+    
+    ## use clean, build & batch context 
+    with clean_context (),  build_context ( task.build ), batch_context ( task.batch ) : 
         
         ## perform remote  inialization (if needed) 
         task.initialize_remote ( jobid ) 
@@ -756,7 +780,6 @@ def task_executor ( item ) :
         with Statistics ()  as stat :    
             result = task.process ( jobid , *args ) 
             return jobid , result , stat
-
         
 # =============================================================================
 ## helper function to execute the function and collect statisticc
@@ -772,11 +795,12 @@ def func_executor ( item ) :
     jobid = item [ 1  ] 
     args  = item [ 2: ]
     
+    ##
+    from ostap.utils.cleanup import CleanUpPID as clean_context
     from ostap.utils.utils import batch 
-    with batch ( True ) :
-        
+    with clean_context () , batch ( True ) :        
         with Statistics ()  as stat :
-            return jobid , fun ( jobid , *args ) , stat 
+            return jobid , fun ( jobid , *args ) , stat
         
 # ============================================================================
 ## @class TaskManager
@@ -837,7 +861,8 @@ class TaskManager(object) :
         """
         
         job_chunk = kwargs.pop ( 'chunk_size', 10000 )
-        
+        if job_chunk <= 0 : job_chunk = 10000
+
         from ostap.utils.utils import chunked 
         chunks    = list ( chunked ( args , job_chunk ) )
 
@@ -984,7 +1009,7 @@ class TaskManager(object) :
         return self.__ncpus
 
     # ===========================================================================
-    ## get PP-statistics if/when posisble 
+    ## get PP-statistics if/when posssible  
     @abc.abstractmethod
     def get_pp_stat ( self ) : 
         """Get PP-statistics if/when posisble 

@@ -60,6 +60,7 @@ class  FillTask(Task) :
         with logWarning() :
             import ostap.core.pyrouts            
             import ostap.trees.trees
+            import ostap.fitting.roofit 
 
         
         ## reconstruct chain from the item 
@@ -87,6 +88,7 @@ class  FillTask(Task) :
         if not all : args  = nevents , first 
             
         num = chain.process ( selector , *args                 ,
+                              silent    = True                 , 
                               shortcut  = all and self.trivial ,
                               use_frame = self.use_frame       )
         
@@ -104,6 +106,7 @@ class  FillTask(Task) :
     ## merge results/datasets 
     def merge_results ( self , result , jobid = -1 ) :
         
+        import ostap.fitting.dataset
         if result :
             ds , stat = result
             if not self.__output or not self.__output[0] :
@@ -115,7 +118,7 @@ class  FillTask(Task) :
                 stat_.processed  += stat.processed ## procesed 
                 stat_.skipped    += stat.skipped   ## skipped                
                 self.__output = ds_ , stat_
-                ds.clear () 
+                ds.erase () 
             del result            
             logger.debug ( 'Merging: %d entries ' % len( self.__output[0] ) )
         else :
@@ -132,15 +135,16 @@ class  FillTask(Task) :
 #  selector =  ...
 #  chain.pprocess ( selector )
 #  @endcode 
-def pprocess ( chain               ,
-               selector            ,
-               nevents    = -1     ,
-               first      = 0      ,
-               shortcut   = True   ,   ## important 
-               chunk_size = 100000 ,   ## important 
-               max_files  = 5      ,
-               use_frame  =  20000 ,   ## important 
-               silent     = False  , **kwargs ) :
+def pprocess ( chain                  ,
+               selector               ,
+               nevents      = -1      ,
+               first        = 0       ,
+               shortcut     = True    ,   ## important 
+               chunk_size   = 1000000 ,   ## important 
+               max_files    = 5       ,
+               use_frame    =  20000  ,   ## important 
+               silent       = False   ,
+               job_chunk    = -1      , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
@@ -167,7 +171,7 @@ def pprocess ( chain               ,
     task  = FillTask ( variables , selection , trivial , use_frame )
     wmgr  = WorkManager ( silent     = silent     , **kwargs )
     trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
-    wmgr.process( task , trees )
+    wmgr.process( task , trees , chunk_size = job_chunk )
     del trees
     
     dataset, stat = task.results()  

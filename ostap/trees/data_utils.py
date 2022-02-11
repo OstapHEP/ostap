@@ -92,7 +92,7 @@ class DataProcessor (object) :
         data = self.data.clone() 
         data.add_files ( items )
         return data
-
+        
 # =============================================================================
 ## @class Files
 #  Simple utility to pickup the list of files 
@@ -251,9 +251,9 @@ class Files(object):
             result.__files        = tuple ( files )
             result.__patterns     = () 
         if not description is None :
-            result.__descrfiption = str ( description )
+            result.__descrfiption = str   ( description )
         if not patterns    is None :
-            result.__patterns     = tuple ( patterns )
+            result.__patterns     = tuple ( patterns    )
             
         return result
     
@@ -416,7 +416,10 @@ class Files(object):
         """
         
         files       = self.files [ item ]
-        description = "Item(%d): %s" % ( item , self.description )
+        if isinstance ( item , int ) : 
+            description = "Item(%d): %s" % ( item , self.description )
+        else :
+            description = "%s: %s" % ( item , self.description )
         
         return self.clone ( files = files , description = description , patterns = () )
         
@@ -489,20 +492,9 @@ class Files(object):
         # -f0                                  Do not compress the target file
         # -f6                                  Use compression level 6. (See TFile::SetCompressionSettings for the support range of value.)                            
         """
-        if not output :
-            import ostap.utils.cleanup as CU
-            output = CU.CleanUp.tempfile ( prefix = 'ostap-hadd-' , suffix = '.root' )
-            
-        import subprocess
-        
-        args    = [ 'hadd' ] + opts.split() + [ output ] + [ f for f in self.files ]
-        subprocess.check_call ( args )
-        
-        if os.path.exists ( output ) and os.path.isfile ( output ) :
-            return output 
-        
-        raise IOError ( "The output file %s does not exist!" % output )
-
+        from ostap.utils.utils import hadd as hadd_
+        return hadd_ ( self.files , ouput = output , opts = opts  )
+    
     # =========================================================================
     ## get a common path (prefix) for all files in collection
     #  - protocols are ignored 

@@ -65,6 +65,10 @@ if not base_tmp_dir :
         logger.warning ('Directory ``%s'' is not writeable!' % base_tmp_dir )
         base_tmp_dir = None
 
+# ===============================================================================
+## local storage of temporary pid-dependent temporary directories 
+base_tmp_pid_dirs = {}
+
 # ===========================================================================
 ## create the base temporary directory
 def make_base_tmp_dir () :
@@ -79,12 +83,10 @@ def make_base_tmp_dir () :
     now     = datetime.datetime.now()
     prefix  = "%s%s-%d-"   %  ( prefix , now.strftime ( date_format ) , os.getpid () )
 
-    return tempfile.mkdtemp ( prefix = prefix ) 
+    t = tempfile.mkdtemp ( prefix = prefix ) 
+    return t
 
 
-# ===============================================================================
-## local storage of temporary pid-dependent temporary directories 
-base_tmp_pid_dirs = {}
 # ===============================================================================
 ## get the process-dependent name of the temporary directory 
 def tmp_dir ( pid = None ) :
@@ -94,7 +96,7 @@ def tmp_dir ( pid = None ) :
         return base_tmp_dir 
         
     if not pid : pid = os.getpid()
-    
+
     if not pid in base_tmp_pid_dirs :
         piddir = make_base_tmp_dir ()
         base_tmp_pid_dirs [ pid ] = piddir
@@ -109,7 +111,7 @@ class UseTmpDir ( object ) :
     """
     def __init__   ( self , temp_dir = None ) :
         
-        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir ()  
+        self.__tmp_dir = temp_dir if ( temp_dir is None or writeable ( temp_dir ) ) else tmp_dir ( os.getpid () )  
         self.previous  = None
         
     def __enter__  ( self ) :
@@ -324,7 +326,28 @@ class  CleanUp(object) :
             return CleanUp.remove_dir  ( fname )
         elif os.path.exists ( fname ) and os.path.isfile ( fname ) :
             return CleanUp.remove_file ( fname )
+
+# ============================================================================
+## Context manager to cleanup PID-dependent directories 
+class CleanUpPID(object) :
+    """Context manager to cleanup PID-dependent directories
+    """
+    def __enter__ ( self ) :
         
+        pid = os.getpid () 
+        self.__piddir = tmp_dir ( pid ) 
+        if not pid in base_tmp_pid_dirs : 
+            self.__piddir = None
+            
+    def __exit__ ( self , *_ ) :
+        if self.__piddir :
+            CleanUp.remove_dir (  self.__piddir )
+            
+    @property
+    def piddir ( self ) :
+        """``piddir'' : PID-dependend temproary directory"""
+        return self.__piddir
+    
 # =============================================================================
 if base_tmp_dir and for_cleanup :
     CleanUp().tmpdirs = base_tmp_dir 
@@ -348,8 +371,9 @@ def _cleanup_ () :
         f = tmp_dirs.pop()
         CleanUp.remove_dir ( f )
 
+
     ## 3.remove base directories
-    global base_tmp_pid_dirs 
+    global base_tmp_pid_dirs    
     for k in base_tmp_pid_dirs :
         d = base_tmp_pid_dirs [ k ]
         CleanUp.remove_dir ( d )
@@ -373,7 +397,7 @@ def _cleanup_ () :
             import ostap.logger.table as T
             table = T.table ( rows , title = title , prefix = "# " , alignment = 'rl' )
             logger.info ( '%s:\n%s' % ( title , table ) ) 
-            
+
     if CleanUp._failed :
         title = 'Not removed directories/files'
         rows  = []

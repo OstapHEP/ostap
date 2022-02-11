@@ -689,7 +689,8 @@ class SelectorWithVars(SelectorWithCuts) :
         self.__varset    = ROOT.RooArgSet() 
 
         self.__triv_vars = True
-        vvars = set() 
+        vvars  = set()
+        vnames = set () 
         for v in variables :
 
             vv = v 
@@ -701,6 +702,10 @@ class SelectorWithVars(SelectorWithCuts) :
 
             assert isinstance  ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
 
+            if vv.name in self.__varset :
+                logger.error ( 'Variable  %s is already defined! skip it' % vv.name )
+                continue 
+
             self.__variables.append ( vv     )
             self.__varset   .add    ( vv.var )
             #
@@ -711,7 +716,7 @@ class SelectorWithVars(SelectorWithCuts) :
                 self.__triv_vars = False
             #
             vvars.add ( vv ) 
-            
+
         self.__variables = tuple( self.__variables ) 
 
         self.__triv_sel  = valid_formula ( selection , self.__varset ) 
@@ -1334,6 +1339,10 @@ def make_dataset ( tree              ,
     
     selection = str ( selection ) if isinstance ( selection , ROOT.TCut ) else selection  
     selection = selection.strip() if isinstance ( selection , str       ) else selection 
+
+    branches = set ( tree.branches () )
+    leaves   = set ( tree.leaves   () ) 
+    names    = set ()
     
     cuts = [ selection ] if selection else [] 
     for v in variables :
@@ -1347,6 +1356,18 @@ def make_dataset ( tree              ,
             logger.error("Do not know how to treat the variable %s/%s, skip it" % ( v , type ( v ) ) )
             continue
 
+        if vv.name in names :
+            logger.error ( 'Variable %s already defined! skip it' % vv.name )
+            continue
+        
+        if vv.name != vv.formula :            
+            if vv.name in branches :
+                logger.erorr ( "Variable %s exists as branch! skip it" % vv.name )
+                continue
+            if vv.name in leaves   :
+                logger.erorr ( "Variable %s exists as leaf! skip it"   % vv.name )
+                continue
+
         if vv.trivial and vv.name == vv.formula : 
             
             assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
@@ -1358,15 +1379,18 @@ def make_dataset ( tree              ,
             
             formulas.append ( vv )
             continue
-        
+
         else :
             
             logger.error("Do not know how to treat the variable %s, skip it" % vv.name )
             continue 
         
+        names.add ( vv.name ) 
+
         mn , mx = vv.minmax
         if _minv < mn : cuts.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
         if _maxv > mx : cuts.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
+
 
     ## 
     cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut()
@@ -1413,11 +1437,11 @@ def make_dataset ( tree              ,
 
     f1 = len ( varsete ) * 1.0 / len ( tree.branches() )
     f2 = skipped         * 1.0 / max ( 1 , total ) 
-    if f1 < 0.25 and f2 < 0.10 :
+    if f1   < 0.20 and f2 < 0.10 and not silent :
         logger.warning ( "Only tiny fraction of variables (% 4.1f%%) and data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f1 * 100 , f2 * 100 ) ) 
-    elif f1 < 0.25 :
+    elif f1 < 0.20 and not silent :
         logger.warning ( "Only tiny fraction of variables (% 4.1f%%) is requested: prefiltering can speedup process" % ( f1 * 100  ) )
-    elif f2 < 0.1  : 
+    elif f2 < 0.10 and not silent : 
         logger.warning ( "Only tiny fraction of data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f2 * 100 ) ) 
         
 
@@ -1630,23 +1654,29 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             total  = len ( self )
 
             frame  = Ostap.DataFrame ( self , enable = True )
+            ## frame  = Ostap.DataFrame ( self , enable = False )
             if not silent :
                 pb = frame.ProgressBar ( len ( self ) )
+                
+            columns = set ( frame.columns() ) 
             
             vars   = list ( selector.variables )
             tvars  = [ v for v in vars if     v.trivial ] ## trivial vars 
             vars_  = [ v for v in vars if not v.trivial ] ## non-trivial vars
             nvars  = []
             scuts  = []
-
+            
+            dvars  = [ v.name for v in vars if v.name != v.formula and v.name in columns ]
+            assert not dvars, "Can't redefine existing variables: %s" % dvars  
+            
             ranges = []
 
             ## loop over trivial vars :
             for v in tvars :
                 
                 mn , mx = v.minmax
-                if v.name == v.formula :  ## really trivial variable 
-                    nvars.append ( v ) 
+                if  v.name == v.formula :  ## really trivial variable 
+                    nvars.append ( v )
                 else :                    ## almost trivial: formula exists  
                     newv  = Variable  ( v.var                       ,
                                         description = v.description ,
@@ -1690,10 +1720,13 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     ## otherwise dump only needed variables 
                     bvars = self.the_variables( [ v.formula for v in tvars ] )
                     avars = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
-                    from ostap.core.core import strings as _strings
-                    avars = set ( avars )
+                    avars = list ( set ( avars ) )
+                    avars.sort() 
                     logger.debug ('PROCESS: dump only %s' % list ( avars ) )
-                    snapshot = frame . Snapshot ( 'tree' , tf.filename , _strings ( *avars ) )
+                    
+                    from ostap.core.core import strings as _strings
+                    avars    = _strings ( avars ) 
+                    snapshot = frame . Snapshot ( 'tree' , tf.filename , avars )
 
                 if not silent :
                     from ostap.frames.frames import report_print
@@ -1729,7 +1762,11 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                             
                 import ostap.io.root_file
 
-                assert frame.Count().GetValue()>0 , 'Selection result is empty'
+                nn = frame.Count().GetValue()
+                if nn <= 0 :
+                    logger.warning ( 'Selection frame result is empty' )
+                elif not silent :
+                    logger.info    ( 'Selected frame %d entries' % nn  )
                 
                 with ROOT.TFile.Open ( tf.filename  , 'read' ) as tt : 
                     tree         = tt.tree
@@ -1763,8 +1800,9 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     selector.stat.processes = new_selector.stat.processed 
                     selector.stat.skiped    = new_selector.stat.skipped 
                     del new_selector
-                    
+
                     return result
+
                 
     import ostap.fitting.roofit
     
