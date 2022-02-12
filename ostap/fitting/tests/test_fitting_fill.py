@@ -25,7 +25,8 @@ from   ostap.trees.data             import Data
 from   ostap.fitting.pyselectors    import Variable, SelectorWithVars
 from   ostap.logger.colorized       import attention
 import ostap.logger.table           as     T
-import ostap.parallel.parallel_fill 
+import ostap.parallel.parallel_fill
+from   ostap.parallel.parallel      import DILL_PY3_issue 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -35,6 +36,7 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__            )
 # =============================================================================
+
 
 # =============================================================================
 ## create a file with tree 
@@ -109,6 +111,11 @@ def prepare_data ( nfiles = 50 ,  nentries = 500  ) :
 GeV = 1.0
 MeV = GeV/1000
 
+
+def ptcut ( s ) : return 3 < s.pt
+
+def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
+
 # =============================================================================
 def test_fitting_fill_1 () :
 
@@ -117,8 +124,7 @@ def test_fitting_fill_1 () :
 
     ## prepare data
     with timing ( "Prepare test data" , logger = logger ) : 
-        files = prepare_data ( 10 , 10000 )
-        ## files = prepare_data ( 2 , 1000 )
+        files = prepare_data ( 4 , 5000 )
         data  = Data ( 'S' ,  files )
 
     mJPsi = ROOT.RooRealVar ( 'mJPsi' , 'mass(J/Psi) [GeV]' , 3.0 * GeV , 3.2 * GeV )
@@ -208,9 +214,18 @@ def test_fitting_fill_1 () :
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
         ] 
 
-    config = { 'variables' : variables          ,
-               'selection' : "pt>7 && eta<3"    ,
-               'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
+    if not DILL_PY3_issue :
+        
+        config = { 'variables' : variables          ,
+                   'selection' : "pt>7 && eta<3"    ,
+                   'cuts'   :lambda s : s.pt > 3    } ## ATTENTION: no trivial cuts!
+        
+    else :
+        
+        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+        config = { 'variables' : variables          ,
+                   'selection' : "pt>7 && eta<3"    ,
+                   'cuts'      : ptcut              } ## ATTENTION: no trivial cuts!
     
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
@@ -272,16 +287,31 @@ def test_fitting_fill_1 () :
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables' ) ) 
     # =========================================================================
- 
-    variables = [
-        Variable ( mJPsi     , accessor = 'mass' ) ,
-        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-        ( 'pt'  , ) ,
-        ( 'eta' , ) ,
-        ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
-        ]
-    
+     
+    if not DILL_PY3_issue : 
+       
+        variables = [
+            Variable ( mJPsi     , accessor = 'mass' ) ,
+            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'pt'  , ) ,
+            ( 'eta' , ) ,
+            ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
+            ]
+        
+    else :
+        
+        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+        variables = [
+            Variable ( mJPsi     , accessor = 'mass' ) ,
+            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'pt'  , ) ,
+            ( 'eta' , ) ,
+            ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
+            ]
+
+
     config = { 'variables' : variables          ,
                'selection' : "pt>7 && eta<3"    }
 
@@ -347,20 +377,42 @@ def test_fitting_fill_1 () :
     logger.info ( attention ( 'Non-trivial variables + CUT' ) ) 
     # =========================================================================
  
-    variables = [
-        Variable ( mJPsi     , accessor = 'mass' ) ,
-        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
-        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
-        ( 'pt'  , ) ,
-        ( 'eta' , ) ,
-        ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
-        ]
+    if not DILL_PY3_issue : 
+        
+        variables = [
+            Variable ( mJPsi     , accessor = 'mass' ) ,
+            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'pt'  , ) ,
+            ( 'eta' , ) ,
+            ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
+            ]
+        
+    else :
+
+        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+        variables = [
+            Variable ( mJPsi     , accessor = 'mass' ) ,
+            Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
+            Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'pt'  , ) ,
+            ( 'eta' , ) ,
+            ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
+            ]
+            
     
-    config = { 'variables' : variables          ,
-               'selection' : "pt>7 && eta<3"    ,
-               'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
-    
-    
+    if not DILL_PY3_issue :
+        
+        config = { 'variables' : variables          ,
+                   'selection' : "pt>7 && eta<3"    ,
+                   'cuts'      :lambda s : s.pt > 3 } ## ATTENTION: no trivial cuts! 
+    else :
+        
+        logger.warning ( 'There is an issue with dill+python3: avoid lambda!' ) 
+        config = { 'variables' : variables          ,
+                   'selection' : "pt>7 && eta<3"    ,
+                   'cuts'      : ptcut              } ## ATTENTION: no trivial cuts! 
+        
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 

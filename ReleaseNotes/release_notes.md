@@ -7,6 +7,8 @@
 
 ## Bug fixes:
 
+  1. fix new test for `DILL_PY3_issue`
+
 
 # v1.6.9.7
 
