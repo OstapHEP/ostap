@@ -104,6 +104,54 @@ WSE .__iadd__ =  _se_iadd_
 SE  .__add__  =  _se_add_
 WSE .__add__  = _wse_add_
 
+
+## # =============================================================================
+## ## equal counters?
+## def _se_eq_ ( s1 , s2 ) :
+##     """Equal counters?"""
+##     ##
+##     if not isinstance ( s2 , SE ) : return NotImplemented
+##     ## 
+##     return s1.n   () == s2.n   () and \
+##            s1.mu  () == s2.mu  () and \
+##            s1.mu2 () == s2.mu2 () and \
+##            s1.min () == s2.min () and \
+##            s1.max () == s2.max ()
+## # =============================================================================
+## ## non-equal counters?
+## def _se_ne_ ( s1 , s2 ) :
+##     """Non-qqual counters?"""
+##     if not isinstance ( s2 , SE ) : return NotImplemented 
+##     return not ( s1 == s2 )
+
+## SE.__eq__ = _se_eq_
+## SE.__ne__ = _se_ne_
+
+## # =============================================================================
+## ## equal counters?
+## def _wse_eq_ ( s1 , s2 ) :
+##     """Equal counters?"""
+##     ##
+##     if not isinstance ( s2 , WSE ) : return NotImplemented
+##     ##
+##     return s1.n       () == s2.n       () and \
+##            s1.mu      () == s2.mu      () and \
+##            s1.mu2     () == s2.mu2     () and \
+##            s1.weights () == s2.weights () and \
+##            s1.values  () == s2.values  ()
+
+## # =============================================================================
+## ## non-equal counters?
+## def _wse_ne_ ( s1 , s2 ) :
+##     """Non-qqual counters?"""
+##     ##
+##     if not isinstance ( s2 , WSE ) : return NotImplemented
+##     ##    
+##     return not ( s1 == s2 )
+
+## WSE.__eq__ = _wse_eq_
+## WSE.__ne__ = _wse_ne_
+
 # =============================================================================
 # minor decoration for WStatEntity 
 # ============================================================================= 
@@ -120,6 +168,7 @@ WSE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 WSE. minmax  = lambda s :            s.values  ().minmax() 
 WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
 WSE.__str__  = lambda s : 'WStat: '+ s.toString()
+
 
 # =============================================================================
 _decorated_classes_ = (
@@ -148,5 +197,5 @@ if '__main__' == __name__  :
     logger.info (80*'*')
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

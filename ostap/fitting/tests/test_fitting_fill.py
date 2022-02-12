@@ -49,6 +49,7 @@ def create_tree ( fname , nentries = 1000 ) :
     import ostap.io.root_file
     
     from array import array 
+    var0   = array ( 'i', [ 0 ] )
     var1   = array ( 'd', [ 0 ] )
     var2   = array ( 'd', [ 0 ] )
     var3   = array ( 'd', [ 0 ] )
@@ -66,6 +67,7 @@ def create_tree ( fname , nentries = 1000 ) :
         root_file.cd () 
         tree = ROOT.TTree ( 'S','tree' )
         tree.SetDirectory ( root_file  ) 
+        tree.Branch ( 'evt'   , var0 , 'evt/I'   )
         tree.Branch ( 'mass'  , var1 , 'mass/D'  )
         tree.Branch ( 'pt'    , var2 , 'pt/D'    )
         tree.Branch ( 'eta'   , var3 , 'eta/D'   )
@@ -83,6 +85,7 @@ def create_tree ( fname , nentries = 1000 ) :
             pt  = random.uniform      ( 0   ,  8     )
             eta = random.uniform      ( 2   ,  4     )
             
+            var0 [ 0 ] = i 
             var1 [ 0 ] = m
             var2 [ 0 ] = pt
             var3 [ 0 ] = eta
@@ -113,13 +116,12 @@ MeV = GeV/1000
 
 
 def ptcut ( s ) : return 3 < s.pt
-
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
 # =============================================================================
-def test_fitting_fill_1 () :
-
-
+## def test_fitting_fill_1 () :
+if 1 < 2 :
+    
     logger = getLogger ('test_fitting_fill_1' ) 
 
     ## prepare data
@@ -135,8 +137,9 @@ def test_fitting_fill_1 () :
  
     variables = [
         Variable ( mJPsi     , accessor = 'mass' ) ,
-        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200 , 'mass*1000'   ) , 
-        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100 , '1.0*vv10[2]' ) , 
+        Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200 , 'mass*1000.0' ) , 
+        Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100 , '1.0*vv10[2]' ) ,
+        ( 'evt' , ) , 
         ( 'pt'  , ) ,
         ( 'eta' , ) ,
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
@@ -147,19 +150,23 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = False )            
+        data.chain.process ( selector , shortcut = False , use_frame = False )
+        ds1_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = False )        
+        ds1_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = True  )
+        ds1_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        ds1_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -175,19 +182,23 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )            
+        data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        ds1p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
+        ds1p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        ds1p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        ds1p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -209,6 +220,7 @@ def test_fitting_fill_1 () :
         Variable ( mJPsi     , accessor = 'mass' ) ,
         Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200 , 'mass*1000'   ) , 
         Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100 , '1.0*vv10[2]' ) , 
+        ( 'evt' , ) , 
         ( 'pt'  , ) ,
         ( 'eta' , ) ,
         ( 'x'   , 'some variable'  , 0 , 5000 , '(mass+pt+eta)/eta' ) 
@@ -231,18 +243,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = False )
+        ds2_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = False )
+        ds2_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = True  )
+        ds2_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        ds2_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -259,18 +275,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = False , maX_files = 1 )
+        ds2p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = False , maX_files = 1 )
+        ds2p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        ds2p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        ds2p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -294,6 +314,7 @@ def test_fitting_fill_1 () :
             Variable ( mJPsi     , accessor = 'mass' ) ,
             Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
             Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'evt' , ) , 
             ( 'pt'  , ) ,
             ( 'eta' , ) ,
             ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
@@ -306,6 +327,7 @@ def test_fitting_fill_1 () :
             Variable ( mJPsi     , accessor = 'mass' ) ,
             Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
             Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'evt' , ) , 
             ( 'pt'  , ) ,
             ( 'eta' , ) ,
             ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
@@ -319,18 +341,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = False )
+        ds3_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = False )
+        ds3_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = True  )
+        ds3_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        ds3_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -348,18 +374,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        ds3p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )
+        ds3p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        ds3p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1)
+        ds3p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -383,6 +413,7 @@ def test_fitting_fill_1 () :
             Variable ( mJPsi     , accessor = 'mass' ) ,
             Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
             Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'evt' , ) , 
             ( 'pt'  , ) ,
             ( 'eta' , ) ,
             ( 'x'   , 'some variable'  , 0 , 5000 , lambda s : (s.mass+s.pt+s.eta)/s.eta ) 
@@ -395,6 +426,7 @@ def test_fitting_fill_1 () :
             Variable ( mJPsi     , accessor = 'mass' ) ,
             Variable ( 'massMeV' , 'mass in MeV' , 3000 , 3200  , 'mass*1000'   ) , 
             Variable ( 'vv102'   , 'vv10[2]'     , -1   ,  100  , '1.0*vv10[2]' ) , 
+            ( 'evt' , ) , 
             ( 'pt'  , ) ,
             ( 'eta' , ) ,
             ( 'x'   , 'some variable'  , 0 , 5000 , xvar ) 
@@ -417,18 +449,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = False )
+        ds4_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = False )
+        ds4_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = False , use_frame = True  )
+        ds4_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        ds4_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -446,18 +482,22 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        ds4p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )
+        ds4p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        ds4p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
         data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        ds4p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
 
@@ -469,6 +509,7 @@ def test_fitting_fill_1 () :
     title4p = "Non-trivial variables + CUT (parallel)"
     table4p = T.table ( table , title = title4p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
+
 
 
     logger.info ( '%s\n%s' % ( title1  , table1  ) )
@@ -483,11 +524,15 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
+
+    
 # =============================================================================
 if '__main__' == __name__ :
 
-    test_fitting_fill_1 ()
     
+    ## test_fitting_fill_1 ()
+    pass
+
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================
