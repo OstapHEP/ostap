@@ -118,8 +118,7 @@ def ptcut ( s ) : return 3 < s.pt
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
 # =============================================================================
-## def test_fitting_fill_1 () :
-if 1 < 2 :
+def test_fitting_fill_1 () :
     
     logger = getLogger ('test_fitting_fill_1' ) 
 
@@ -529,7 +528,7 @@ if 1 < 2 :
 if '__main__' == __name__ :
 
     
-    ## test_fitting_fill_1 ()
+    test_fitting_fill_1 ()
     pass
 
 # =============================================================================

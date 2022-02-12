@@ -676,7 +676,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         cuts0 = cuts 
         if ''   == cuts : cuts0 = 0
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , dataset.varlist() , False )
+            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )
             
             assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
             del cuts0
@@ -712,7 +712,7 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         
         if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
-            cuts0 = ROOT.RooFormulaVar ( cuts , cuts , dataset.varlist() , False )
+            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )
 
             assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
             del cuts0
@@ -1126,7 +1126,7 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
 
     tmp_name = 'var_%d' % hash ( ( vname , formula ) )    
-    vcom     = ROOT.RooFormulaVar ( tmp_name , formula , formula , vlst , False )
+    vcom     = Ostap.FormulaVar ( tmp_name , formula , formula , vlst , False )
     
     assert vcom.ok() , 'addVar: invalid formula %s' % formula 
     del vcom
@@ -2048,7 +2048,7 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
             
             vv = v.strip()
             
-            vvar = ROOT.RooFormulaVar ( vv , vv , dataset.varlist() , False )
+            vvar = Ostap.FormulaVar ( vv , vv , dataset.varlist() , False )
             
             assert vvar.ok() , 'ds_to_csv: invalid formula %s' % v 
             del vvar 
@@ -2592,7 +2592,7 @@ except ImportError :
 #  for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
 #     print (row, weight) 
 #  @endcode 
-def _rad_rows_ ( dataset , variables , cuts = '' , cutrange = '' , first = 0 , last = -1 ) :
+def _rad_rows_ ( dataset , variables = [] , cuts = '' , cutrange = '' , first = 0 , last = -1 ) :
     """Iterator for rows in dataset
     >>> dataset = ...
     >>> for row , weight in dataset.rows ( 'pt pt/p mass ' , 'pt>1' ) :
@@ -2602,7 +2602,7 @@ def _rad_rows_ ( dataset , variables , cuts = '' , cutrange = '' , first = 0 , l
     if last < 0 : last = ROOT.TTree.kMaxEntries    
     last  = min ( last , len ( dataset ) )
     first = max ( 0    , first           ) 
-    
+
     if isinstance ( variables , string_types ) : variables = split_string ( variables , ' ,;:' )
     vars = []
     for v in variables :
@@ -2612,7 +2612,7 @@ def _rad_rows_ ( dataset , variables , cuts = '' , cutrange = '' , first = 0 , l
     formulas = []
     varlist  = dataset.varlist () 
     for v in vars :
-        f0 =  ROOT.RooFormulaVar ( v , v , varlist , False )
+        f0    = Ostap.FormulaVar ( v , v , varlist , False )
         assert f0.ok () , 'rows: invalid formula %s' % v
         del f0
         used  = Ostap.usedVariables ( v , varlist )            
@@ -2621,7 +2621,7 @@ def _rad_rows_ ( dataset , variables , cuts = '' , cutrange = '' , first = 0 , l
 
     fcuts = None 
     if cuts :
-        f0 =  ROOT.RooFormulaVar ( cuts , cuts , varlist , False )
+        f0    = Ostap.FormulaVar ( cuts , cuts , varlist , False )
         assert f0.ok () , 'rows: invalid formula %s' % cuts
         del f0
         used  = Ostap.usedVariables ( cuts , varlist )            
