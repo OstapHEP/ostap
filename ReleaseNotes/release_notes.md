@@ -1,13 +1,19 @@
+
 ## New features:
+
 
  1. add more extensive test/examples `test_fitting_fill.py`
  1. several tweaks for parallelisation 
 
+
 ## Backward incompatible  
+
 
 ## Bug fixes:
 
+
   1. fix new test for `DILL_PY3_issue`
+
 
 
 # v1.6.9.7
