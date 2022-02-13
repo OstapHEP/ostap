@@ -14,7 +14,7 @@
 __author__ = "Ostap developers"
 __all__    = () ## nothing to import
 # ============================================================================= 
-import ROOT, random
+import ROOT, random, sys 
 from   builtins                     import range
 import ostap.core.pyrouts 
 import ostap.fitting.roofit
@@ -26,7 +26,6 @@ from   ostap.fitting.pyselectors    import Variable, SelectorWithVars
 from   ostap.logger.colorized       import attention
 import ostap.logger.table           as     T
 import ostap.parallel.parallel_fill
-from   ostap.parallel.parallel      import DILL_PY3_issue 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -37,6 +36,10 @@ else :
     logger = getLogger ( __name__            )
 # =============================================================================
 
+DILL_PY3_issue = False 
+if ( 3 , 6 ) <= sys.version_info : 
+    from   ostap.parallel.parallel import DILL_PY3_issue
+    
 # =============================================================================
 ## create a file with tree 
 def create_tree ( fname , nentries = 1000 ) :
