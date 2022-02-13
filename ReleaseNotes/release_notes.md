@@ -1,3 +1,4 @@
+# v1.6.9.9
 
 ## New features:
 
@@ -51,11 +52,12 @@
 
 # v1.6.9.2
 
+
 ## New features:
 
   1. add an easy `dataset -> TTree` cnversion function 
   1. add much better tretament of finite differences for numerical derivatives 
-  1. allow forwad and bacjeard rules for finite differences 
+  1. allow forwad and bacjeard rules for finite differences
   1. allow specification of singular points for numerical derivatives   
   1. allow numerical derivatoiebd up to order 6 
   1. add test for derivatived for function with discontinuous derivatie 
