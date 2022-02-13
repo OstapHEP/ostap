@@ -1,8 +1,6 @@
 
 ## New features:
 
-
-
  1. add more extensive test/examples `test_fitting_fill.py`
  1. several tweaks for parallelisation 
 
