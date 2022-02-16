@@ -1640,6 +1640,7 @@ def _ds_table_0_ ( dataset        ,
         mnmx = s.minmax ()
         mean = s.mean   ()
         rms  = s.rms    ()
+
         r    = ( vv.GetName  () ,                      ## 0 
                  vv.GetTitle () ,                      ## 1 
                  ('%+.5g' % mean.value() ).strip() ,   ## 2
@@ -2475,102 +2476,103 @@ _new_methods_ += [
     ROOT.RooAbsData.binned 
     ]
 
-## # ============================================================================
-## ## Are two datastes equal by content?
-## #  @code
-## #  ds1 = ...
-## #  ds2 = ...
-## #  ds_equal ( ds1 , ds2 )
-## #  ds1 == ds2 
-## #  @endcode 
-## def ds_equal ( ds1 , ds2 ) : 
-##     """Are two datastes equal by content?
-##     ds1 = ...
-##     ds2 = ...
-##     ds_equal ( ds1 , ds2 ) 
-##     ds1 == ds2 
-##     """
+# ============================================================================
+## Are two datastes equal by content?
+#  @code
+#  ds1 = ...
+#  ds2 = ...
+#  ds_equal ( ds1 , ds2 )
+#  ds1 == ds2 
+#  @endcode 
+def ds_equal ( ds1 , ds2 ) : 
+    """Are two datastes equal by content?
+    ds1 = ...
+    ds2 = ...
+    ds_equal ( ds1 , ds2 ) 
+    ds1 == ds2 
+    """
 
-##     if ds1 is ds2 : return True    
-##     ## same length ? 
-##     if len ( ds1 ) != len ( ds2 ) : return False
+    if ds1 is ds2 : return True    
+    ## same length ? 
+    if len ( ds1 ) != len ( ds2 ) : return False
     
-##     ## same variables ? 
-##     vars1 = set ( ( v.name for v in ds1.varset () ) ) 
-##     vars2 = set ( ( v.name for v in ds2.varset () ) )
-##     if vars1 != vars2 : return False
+    ## same variables ? 
+    vars1 = set ( ( v.name for v in ds1.varset () ) ) 
+    vars2 = set ( ( v.name for v in ds2.varset () ) )
+    if vars1 != vars2 : return False
 
-##     ## both binned or unbinned?
-##     b1 = ds1.binned ()
-##     b2 = ds2.binned ()
-##     if b1 and not b2 : return False
-##     if b2 and not b1 : return False
-
-    
-##     ## both weighted or non-weighted?
-##     w1 = ds1.isWeighted ()
-##     w2 = ds2.isWeighted ()
-##     if w1 and not w2 : return False
-##     if w2 and not w1 : return False
-
-##     ## both non-poissoned 
-##     n1 = ds1.isNonPoissonWeighted ()
-##     n2 = ds2.isNonPoissonWeighted ()
-##     if n1 and not n2 : return False
-##     if n2 and not n1 : return False
+    ## both binned or unbinned?
+    b1 = ds1.binned ()
+    b2 = ds2.binned ()
+    if b1 and not b2 : return False
+    if b2 and not b1 : return False
 
     
-##     if w1 and w2 :
-##         if ds1.store_error      () and not ds2.store_error      () : return False
-##         if ds2.store_error      () and not ds1.store_error      () : return False
-##         if ds1.store_asym_error () and not ds2.store_asym_error () : return False
-##         if ds2.store_asym_error () and not ds1.store_asym_error () : return False
+    ## both weighted or non-weighted?
+    w1 = ds1.isWeighted ()
+    w2 = ds2.isWeighted ()
+    if w1 and not w2 : return False
+    if w2 and not w1 : return False
 
-##         wv1 = Ostap.Utils.getWeight ( ds1 )
-##         wv2 = Ostap.Utils.getWeight ( ds2 )
+    ## both non-poissoned 
+    n1 = ds1.isNonPoissonWeighted ()
+    n2 = ds2.isNonPoissonWeighted ()
+    if n1 and not n2 : return False
+    if n2 and not n1 : return False
 
-##         if wv1 != wv2 : return False
+    
+    if w1 and w2 :
+        if ds1.store_error      () and not ds2.store_error      () : return False
+        if ds2.store_error      () and not ds1.store_error      () : return False
+        if ds1.store_asym_error () and not ds2.store_asym_error () : return False
+        if ds2.store_asym_error () and not ds1.store_asym_error () : return False
+
+        wv1 = Ostap.Utils.getWeight ( ds1 )
+        wv2 = Ostap.Utils.getWeight ( ds2 )
+
+        if wv1 != wv2 : return False
         
-##     ## check content
+    ## check content
     
-##     st1   = ds1.statVars ( list ( vars1 ) )
-##     st2   = ds2.statVars ( list ( vars2 ) )
-##     keys1 = set ( st1.keys() )
-##     keys2  = set ( st2.keys() )
-##     if keys1 != keys2 : return False
-    
-##     for k in keys1 :
+    st1   = ds1.statVars ( list ( vars1 ) )
+    st2   = ds2.statVars ( list ( vars2 ) )
+    keys1 = set ( st1.keys() )
+    keys2 = set ( st2.keys() )
+    if keys1 != keys2 : return False
 
-##         s1 = st1 [ k ]
-##         s2 = st2 [ k ]
-##         if s1 != s2 : return False 
+    from ostap.math.base import isequal, isequalf  
+    for k in keys1 :
 
-##     return True
+        s1 = st1 [ k ]
+        s2 = st2 [ k ]
+        if s1 != s2 : return False 
+
+    return True
+
+# ============================================================================
+## Are two datastes non-equal by content?
+#  @code
+#  ds1 = ...
+#  ds2 = ...
+#  ds_nonequal ( ds1 , ds2 )
+#  ds1 != ds2 
+#  @endcode 
+def ds_nonequal ( ds1 , ds2 ) : 
+    """Are two datastes non-equal by content?
+    ds1 = ...
+    ds2 = ...
+    ds_nonequal ( ds1 , ds2 ) 
+    ds1 != ds2 
+    """
+    return not ds_equal ( ds1 , ds2 ) 
 
 ## # ============================================================================
-## ## Are two datastes non-equal by content?
-## #  @code
-## #  ds1 = ...
-## #  ds2 = ...
-## #  ds_nonequal ( ds1 , ds2 )
-## #  ds1 != ds2 
-## #  @endcode 
-## def ds_nonequal ( ds1 , ds2 ) : 
-##     """Are two datastes non-equal by content?
-##     ds1 = ...
-##     ds2 = ...
-##     ds_nonequal ( ds1 , ds2 ) 
-##     ds1 != ds2 
-##     """
-##     return not ds_equal ( ds1 , ds2 ) 
-
-## # ============================================================================
-## ROOT.RooAbsData.__eq__ = ds_equal
-## ROOT.RooAbsData.__ne__ = ds_nonequal 
-## _new_methods_ += [
-##     ROOT.RooAbsData.__eq__ , 
-##     ROOT.RooAbsData.__ne__ 
-##     ]
+ROOT.RooAbsData.__eq__ = ds_equal
+ROOT.RooAbsData.__ne__ = ds_nonequal 
+_new_methods_ += [
+    ROOT.RooAbsData.__eq__ , 
+    ROOT.RooAbsData.__ne__ 
+    ]
 
 # ============================================================================
 

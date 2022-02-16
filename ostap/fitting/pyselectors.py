@@ -654,15 +654,16 @@ class SelectorWithVars(SelectorWithCuts) :
     >>> dataset = selector.data   
     """
     ## constructor 
-    def __init__ ( self                           ,
-                   variables                      ,  ## list of variables  
-                   selection                      ,  ## Tree-selection 
-                   cuts         = None            ,
-                   name         = ''              ,
-                   fullname     = ''              ,
-                   silence      = False           ,
-                   tree         = ROOT.nullptr    ,
-                   logger       = logger          ) :
+    def __init__ ( self                            ,
+                   variables                       ,  ## list of variables  
+                   selection                       ,  ## Tree-selection 
+                   cuts          = None            ,  ## python function  
+                   roo_cuts      = ''              ,  ## selection based on dataset variables (RooFormula)  
+                   name          = ''              ,
+                   fullname      = ''              ,
+                   silence       = False           ,
+                   tree          = ROOT.nullptr    ,
+                   logger        = logger          ) :
         
         if not name :
             name = dsID ()
@@ -777,8 +778,21 @@ class SelectorWithVars(SelectorWithCuts) :
             ##
             self.__varset
             )
+
+        ## selection using RooFit machinery 
+        self.__roo_cuts    = None 
+        self.__roo_formula = None
         
-        #
+        if roo_cuts :
+            varlist = self.__data.varlist() 
+            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
+            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            del    roosel
+            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
+            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            self.__roo_formula = roosel 
+            self.__roo_cuts    = roo_cuts 
+    
         ## it is still very puzzling for me: should this line be here at all??
         ROOT.SetOwnership ( self.__data  , False )
         
@@ -824,6 +838,11 @@ class SelectorWithVars(SelectorWithCuts) :
     def morecuts ( self ) :
         """``morecuts'' -   additional cust to be applied in selection"""
         return self.__cuts
+
+    @property
+    def roo_cuts( self ) :
+        """``roo-cuts'': addtional selection/cuts based on RooFit machinery (RooFormula)"""
+        return self.__roo_cuts
 
     @property
     def trivial_vars( self ) :
@@ -953,9 +972,11 @@ class SelectorWithVars(SelectorWithCuts) :
                 return 0                     ## RETURN 
 
             var.setVal ( value ) 
-            
-        self.__data .add ( self.__varset )
 
+        ## no roo-cuts are specified or roo-cuts are satisfied 
+        if ( not self.__roo_formula ) or self.__roo_formula.getVal() : 
+            self.__data .add ( self.__varset )
+            
         return 1 
 
     # =========================================================================
@@ -980,6 +1001,7 @@ class SelectorWithVars(SelectorWithCuts) :
         kw = {}
         kw [ 'variables' ] = self.variables
         kw [ 'selection' ] = self.selection 
+        kw [ 'roo_cuts'  ] = self.roo_cuts
         kw [ 'cuts'      ] = self.morecuts
         kw [ 'silence'   ] = self.silence
 
@@ -997,12 +1019,17 @@ class SelectorWithVars(SelectorWithCuts) :
             self.__data = None 
             del self.__varset
             del self.__variables
-            self.__varset     =  ()
-            self.__variables  =  ()
+            self.__varset      = ()
+            self.__variables   = ()
+            self.__roo_formula = None
             
             return  ## RETURN
-
-        ##get total number of input events from base class 
+        
+        if self.roo_cuts :
+            del self.__roo_formula
+            self.__roo_formula = None
+            
+        ## get total number of input events from base class 
         self.stat.total = self.event()
         
         if not self.silence :
@@ -1151,6 +1178,19 @@ class SelectorWithVars(SelectorWithCuts) :
         ## reset the formula 
         self.reset_formula ( tree ) 
 
+        # reset Roo-formula (if specified) 
+        if self.roo_cuts :
+            roo_cuts = self.roo_cuts 
+            del self.__roo_formula 
+            varlist = self.__data.varlist() 
+            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
+            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            del    roosel
+            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
+            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            self.__roo_formula = roosel 
+            
+        ## take care on the progress bar 
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
             
@@ -1161,7 +1201,7 @@ class SelectorWithVars(SelectorWithCuts) :
     ## Start slave processing
     #  @see Ostap::SelectorWithCuts::SlaveBegin
     def SlaveBegin     ( self , tree ) :
-        """Start sslave processing
+        """Start slave processing
         - see Ostap::SelectorWithCuts::SlaveBegin
         """
         #
@@ -1173,6 +1213,19 @@ class SelectorWithVars(SelectorWithCuts) :
         assert self.ok () , 'SlaveBegin::Formula is invalid!'
         #
         #
+        # reset Roo-formula (if specified) 
+        if self.roo_cuts :
+            roo_cuts = self.roo_cuts 
+            del self.__roo_formula 
+            varlist = self.__data.varlist() 
+            roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
+            assert roosel .ok() , 'SelectorWithVars: invalid ``roo_cuts'': %s' % roo_cuts
+            del    roosel
+            used    = Ostap.usedVariables ( roo_cuts , varlist  )            
+            roosel  = Ostap.FormulaVar    ( roo_cuts , used     , True )
+            self.__roo_formula = roosel 
+            
+        ## take care on the progress bar 
         if not self.__progress and not self.silence :
             tree            = self.tree
             self.stat.total = tree.GetEntries()
@@ -1218,7 +1271,12 @@ class SelectorWithVars(SelectorWithCuts) :
     def SlaveTerminate ( self               ) :
         """Terminate slave processing
         - see Ostap::SelectorWithCuts::SlaveTerminate
-        """        
+        """
+        
+        if self.roo_cuts :
+            del self.__roo_formula
+            self.__roo_formula = None
+            
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
             self.__progress.end () 
@@ -1234,7 +1292,7 @@ from   ostap.io.zipshelve import ZipShelf
 # =============================================================================
 
 # ==============================================================================
-## @class    SelectorWithVarsCached
+## @class  SelectorWithVarsCached
 #  Generic selector which loads already loaded datasets from cache
 #  @date   2014-07-02
 #  @author Sasha Baranov a.baranov@cern.ch
@@ -1246,11 +1304,18 @@ class SelectorWithVarsCached(SelectorWithVars) :
                    variables                      ,  ## list of variables  
                    selection                      ,  ## Tree-selection 
                    files                          ,  ## List of files
-                   cuts         = None            ,
+                   cuts         = None            ,  ## Tree-based cuts 
+                   roo_cuts     = ''              ,  ## RooFit-based cuts 
                    name         = ''              ,
                    fullname     = ''              ) : 
 
-        SelectorWithVars.__init__(self, variables, selection, cuts, name, fullname)
+        SelectorWithVars.__init__( self ,
+                                   variables = variables ,
+                                   selection = selection ,
+                                   cuts      = cuts      ,
+                                   roo_cuts  = roo_cuts  ,
+                                   name      = name      ,
+                                   fullname  = fullname  )
 
         # Try load from cache
         self._loaded_from_cache = False
@@ -1329,9 +1394,10 @@ class SelectorWithVarsCached(SelectorWithVars) :
 #  ds   = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
 def make_dataset ( tree              ,
-                   variables         ,
-                   selection = ''    ,
-                   name      = ''    ,
+                   variables         , ## varibales 
+                   selection = ''    , ## TTree selection 
+                   roo_cuts  = ''    , ## Roo-Fit selection  
+                   name      = ''    , 
                    title     = ''    ,
                    silent    = False ) :
     """Create the dataset from the tree
@@ -1354,7 +1420,7 @@ def make_dataset ( tree              ,
     leaves   = set ( tree.leaves   () ) 
     names    = set ()
     
-    cuts = [ selection ] if selection else [] 
+    limits   = [] 
     for v in variables :
 
         if   isinstance  ( v , str              ) : vv = Variable (   v )
@@ -1372,10 +1438,10 @@ def make_dataset ( tree              ,
         
         if vv.name != vv.formula :            
             if vv.name in branches :
-                logger.erorr ( "Variable %s exists as branch! skip it" % vv.name )
+                logger.error ( "Variable %s exists as branch! skip it" % vv.name )
                 continue
             if vv.name in leaves   :
-                logger.erorr ( "Variable %s exists as leaf! skip it"   % vv.name )
+                logger.error ( "Variable %s exists as leaf! skip it"   % vv.name )
                 continue
 
         if vv.trivial and vv.name == vv.formula : 
@@ -1398,12 +1464,13 @@ def make_dataset ( tree              ,
         names.add ( vv.name ) 
 
         mn , mx = vv.minmax
-        if _minv < mn : cuts.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
-        if _maxv > mx : cuts.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
+        if _minv < mn : limits.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
+        if _maxv > mx : limits.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
 
 
     ## 
-    cuts = ROOT.TCut(' && '.join(cuts) ) if cuts else ROOT.TCut()
+    limits = ROOT.TCut (' && '.join ( limits ) ) if limits else ROOT.TCut()
+    cuts   = ROOT.TCut ( limits )
     
     ## extended varset
     stor    = set() 
@@ -1411,7 +1478,18 @@ def make_dataset ( tree              ,
     for v in varset : varsete.add ( v )
 
     expressions = [ f.formula for f in formulas ]
-    if selection : expressions.append ( selection ) 
+
+    if selection :
+        ## h1 = hash ( ( tuple ( tree.branches() ) , tuple ( tree.leaves() ) , tree.GetName() ) ) 
+        ## h2 = hash ( tuple ( v.name for v in varset   ) )
+        ## h3 = hash ( tuple ( v.name for v in formulas ) )
+        ## h4 = hash ( ( h1 ,h2 , h3 , selection , str ( limits ) ) ) 
+        ## selname = "select_%d" %  ( h4 % 2**32 )  
+        ## sel     = Variable ( selname , accessor = selection )
+        ## print ( 'ADDING SELECTION EXPRESSION' , selname , selection ) 
+        ## formulas.append ( sel ) 
+        cuts = cuts & ROOT.TCut ( selection ) 
+        expressions.append      ( selection ) 
 
     if expressions :
 
@@ -1439,10 +1517,9 @@ def make_dataset ( tree              ,
         title = tree.GetTitle ()
 
     total     = len ( tree )
-    processed = tree.statVar ( '1' , selection    ).nEntries()
-    skipped   = tree.statVar ( '1' , str ( cuts ) ).nEntries() 
+    processed = tree.statVar ( '1' , selection      ).nEntries()
+    skipped   = tree.statVar ( '1' , str ( limits ) ).nEntries() 
 
-    
     stat = SelStat ( total , processed , processed - skipped )
 
     f1 = len ( varsete ) * 1.0 / len ( tree.branches() )
@@ -1459,18 +1536,18 @@ def make_dataset ( tree              ,
     from ostap.utils.timing import timing
     from ostap.utils.utils  import NoContext
     TIMING = timing if not silent else NoContext
-    
+
     with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
         with rooSilent ( ROOT.RooFit.ERROR  , True ) :
-            with rootError( ROOT.kWarning ) :            
-                ds = ROOT.RooDataSet ( name  , title , tree , varsete , str( cuts ) )
+            with rootError ( ROOT.kWarning ) :
+                ds = ROOT.RooDataSet ( name  , title , tree , varsete , str ( cuts ) )
                 varsete = ds.get()
                 
     if not silent :
         logger.debug( "make_dataset: Initial dataset\n%s" % ds.table ( prefix = "# " ) ) 
     
     ## add complex expressions 
-    if formulas :
+    if formulas or roo_cuts :
         # a
         vset = ds.get()
         vlst = ROOT.RooArgList()
@@ -1479,8 +1556,9 @@ def make_dataset ( tree              ,
         fcols = ROOT.RooArgList() 
 
         ffs   = []
-        fcuts = [] 
-        for f in formulas :            
+        fcuts = []
+        for f in formulas :
+            
             fv = Ostap.FormulaVar ( f.name , f.description , f.formula , vlst , False )
             assert fv.ok() , 'Invalid formula: %s' % f.formula 
             ffs.append ( fv )
@@ -1497,7 +1575,10 @@ def make_dataset ( tree              ,
                 for  f in fcols : ds.addColumn ( f ) 
                 del fcols
                 del ffs 
-            
+
+        ## insert Roo-Fit cuts here!
+        if roo_cuts : fcuts.append ( roo_cuts )  ## ATTENTION: insert Roo-Fit cuts here!
+        
         ##  apply cuts (if any) for the  complex expressions 
         if fcuts :
             fcuts = [ '(%s)' % f for f in fcuts ]
@@ -1641,7 +1722,10 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
 
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
             variables     = selector.variables 
-            ds , stat     = self.make_dataset ( variables = variables , selection = selector.selection , silent = silent )
+            ds , stat     = self.make_dataset ( variables = variables          ,
+                                                selection = selector.selection ,
+                                                roo_cuts  = selector.roo_cuts  ,
+                                                silent    = silent             )
             selector.data = ds
             selector.stat = stat
             return 1
@@ -1655,11 +1739,14 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
     if all and 0 < use_frame and isinstance ( self , ROOT.TTree ) and use_frame <= len ( self ) :
         
         if isinstance ( selector , SelectorWithVars ) and selector.selection :
+
             
-            if not silent : logger.info ( "Make try to use the intermediate TFrame!" )
+            if not silent : logger.info ( "Make try to use the intermediate DataFrame!" )
+
+            selection = selector.selection
             
-            from ostap.utils.utils   import ImplicitMT 
-            import ostap.frames.frames
+            from ostap.utils.utils    import ImplicitMT 
+            import ostap.frames.frames as    FR
             
             total  = len ( self )
 
@@ -1675,6 +1762,7 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
             vars_  = [ v for v in vars if not v.trivial ] ## non-trivial vars
             nvars  = []
             scuts  = []
+            rcuts  = selector.roo_cuts
             
             dvars  = [ v.name for v in vars if v.name != v.formula and v.name in columns ]
             assert not dvars, "Can't redefine existing variables: %s" % dvars  
@@ -1707,30 +1795,37 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     if silent : scuts.append ( hcut )
                     else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
 
-            frame  = frame.Filter ( selector.selection , 'SELECTION' )            
+            ## selvar = FR.var_name  ( 'selection_' , tuple ( [ c for c in frame.GetColumnNames () ] ) ,
+            ##                        selection , self.name , tuple ( self.files() ) )
+            ## frame  = frame.Define ( selvar , selection ) 
+            ## frame  = frame.Filter ( selvar , 'SELECTION'        )            
+            frame  = frame.Filter ( selection , 'SELECTION' )
 
             for  c , f in ranges : 
                 frame = frame.Filter ( c  , f )
                 logger.debug  ( 'PROCESS: add cut %s ' % c )
 
             if scuts :
-                acut = ' && '.join ( ( "(%s)" % c for c in scuts ) )
+                acut  = ' && '.join ( ( "(%s)" % c for c in scuts ) )
                 frame = frame.Filter ( acut , 'RANGES' )
                 logger.debug  ( 'PROCESS: add cut %s ' % acut )
 
+            if rcuts :
+                frame = frame.Filter ( rcuts , 'ROO-CUTS' )
+                
             from ostap.utils.cleanup import TempFile
             with TempFile ( suffix = '.root' , prefix = 'ostap-frame-' ) as tf :
                 if not silent : logger.info ( 'Prepare snapshot/loop over the tree %s' % tf.filename )
                 report   = frame . Report ()
 
                 if vars_  :
-                    ## is some variables are non-trivial: dump the whole tree 
+                    ## If some variables are non-trivial: dump the whole tree 
                     snapshot = frame . Snapshot ( 'tree' , tf.filename )
                 else      :
                     ## otherwise dump only needed variables 
-                    bvars = self.the_variables( [ v.formula for v in tvars ] )
-                    avars = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
-                    avars = list ( set ( avars ) )
+                    bvars  = self.the_variables( [ v.formula for v in tvars ] )
+                    avars  = list ( bvars ) + [ v.name for v in nvars if not v in bvars ] 
+                    avars  = list ( set ( avars ) )
                     avars.sort() 
                     logger.debug ('PROCESS: dump only %s' % list ( avars ) )
                     from ostap.core.core import strings as _strings
@@ -1812,15 +1907,21 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
 
                     return result
 
-                
+
+    # =========================================================================
+    ## Standard processing: no tricks, shortcuts, ...
+    # =========================================================================
+    
     import ostap.fitting.roofit
     
     nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
-    if   isinstance ( self , ROOT.TTree ) :
-        args =  () if all else ( nevents , first)        
+    if   isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
+        if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
+        args =  () if all else ( nevents , first )        
         return Ostap.Utils.process ( self , selector , *args ) 
 
     ## RooDataSet is here:
+    if not silent : logger.info ( "Process RooDataSet!" )
     
     assert not self.isWeighted() , \
            'Processing of the weighted dataset is not possible (yet?)'
@@ -1837,15 +1938,13 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
 
     from ostap.fitting.roofit import useStorage
     
-    logger.info ( 'I am here 4' )
-
     with useStorage() :
         
         logger.info ('Prepare the cloned dataset with TTree-storage type')
         from ostap.core.core import dsID            
         cloned = self.Clone ( dsID() )
         
-        result = _process_ ( cloned , selector ,
+        result = _process_ ( cloned    , selector  ,
                              nevents   = nevents   ,
                              first     = first     ,
                              shortcut  = shortcut  ,

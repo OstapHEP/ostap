@@ -1,3 +1,17 @@
+## New features:
+
+  1. add opton for parallel file copy 
+  1. add arrgument parallel=False` for `Files.copy_files` 
+  1. add `roo_cuts` argument for `SelectorWitjCuts` and ``make_dataset`
+  1. add new test for counters 
+  1. imporve numerical precision for counters 
+ 
+## Backward incompatible  
+
+## Bug fixes:
+  1. bug fix in `WStatEntity::add` for onitialization shortcut
+ 
+
 # v1.6.9.9
 
 ## New features:

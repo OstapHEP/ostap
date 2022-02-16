@@ -79,12 +79,17 @@ Ostap::StatEntity::add ( const double value )
     //
     return *this ;      // RETURN
   }
+  //
   // update the regular case 
-  m_n   += 1       ;                                                   // UPDATE 
-  const long double delta   = value - m_mu ;             
-  const long double delta_n = delta / m_n  ;
-  m_mu  += delta_n ;                                                   // UPDATE
-  m_mu2  = m_mu2 * ( m_n - 1 ) / m_n + delta_n * ( delta - delta_n ) ; // UPDATE
+  //
+  const unsigned long long N     = m_n + 1             ;  
+  const long double        fA    = m_n * 1.0L / N      ;
+  const long double        fB    = 1.0L - fA           ;
+  const long double        delta = 1.0L * value - m_mu ;
+  //
+  m_n  += 1                                     ; // UPDATE 
+  m_mu  = fA * m_mu  + fB * value               ; // UPDATE 
+  m_mu2  = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE
   //
   m_min  = std::min ( m_min , value ) ;                                // UPDATE       
   m_max  = std::max ( m_max , value ) ;                                // UPDATE 
@@ -100,7 +105,7 @@ double Ostap::StatEntity::rms    () const
 // sum of values 
 // ============================================================================
 double Ostap::StatEntity::sum    () const 
-{ return 0 < m_n ? m_mu * m_n : 0.0L ; }
+{ return 0 < m_n ? 1.0L * m_mu * m_n : 0.0L ; }
 // ============================================================================
 // sum of value^2
 // ============================================================================
@@ -167,14 +172,14 @@ Ostap::StatEntity::add ( const Ostap::StatEntity& other )
     return *this ;
   }
   //
-  const unsigned long long N     = m_n + other.m_n   ;
-  const long double        fA    = m_n * 1.0L / N    ;
-  const long double        fB    = 1.0L - fA         ;
-  const long double        delta = 1.0L * m_mu - other.m_mu ;
+  const unsigned long long N     = m_n + other.m_n          ;
+  const long double        fA    = m_n * 1.0L / N           ;
+  const long double        fB    = 1.0L - fA                ;
+  const long double        delta = 1.0L * other.m_mu - m_mu ;
   //
-  m_n   = N                                 ;                       // UPDATE 
-  m_mu  = m_mu  * fA + other.m_mu  * fB     ;                       // UPDATE 
-  m_mu2 = m_mu2 * fA + other.m_mu2 * fB + fA * fB * delta * delta ; // UPDATE
+  m_n   = m_n + other.m_n                   ;                       // UPDATE 
+  m_mu  = fA * m_mu  + fB * other.m_mu      ;                       // UPDATE 
+  m_mu2 = fA * m_mu2 + fB * other.m_mu2 + fA * fB * delta * delta ; // UPDATE
   //
   m_min = std::min ( m_min , other.m_min )  ;                       // UPDATE           
   m_max = std::max ( m_max , other.m_max )  ;                       // UPDATE 

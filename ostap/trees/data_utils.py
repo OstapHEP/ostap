@@ -518,7 +518,7 @@ class Files(object):
     ## copy all the files to new directory
     #  - new directory will be created (if needed)
     #  - common path (prefix) for all files will be replaced by new directory
-    def copy_files ( self , new_dir ) :
+    def copy_files ( self , new_dir , parallel = False ) :
         """copy all the files to new directory
         - new directory will be created (if needed)
         - common path (prefix) for all files will be replaced by new directory
@@ -539,26 +539,49 @@ class Files(object):
         
         cp = self.commonpath
 
-        copied = []
-
         
-        from ostap.utils.progress_bar import progress_bar
-        nf = len ( self.__files ) 
-        for f in progress_bar ( self.__files , silent = self.silent or nf <=1 ) :
+        if parallel :
 
-            fs = os.path.normpath ( strip_protocol ( f ) ) 
-            nf = fs.replace ( cp , nd ) 
-            nf = os.path.normpath ( nf )
-            
-            if not has_protocol ( f ) :
-                result = copy_file      ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
-            else                      :
-                result = copy_root_file ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
+            regular_files  = [] 
+            root_files     = [] 
+            for f in self.__files :
+                fs = os.path.normpath ( strip_protocol ( f ) ) 
+                nf = fs.replace ( cp , nd ) 
+                nf = os.path.normpath ( nf )
+                pair = f , nf 
+                if has_protocol ( f ) : root_files   .append ( pair )
+                else                  : regular_files.append ( pair ) 
                 
-            copied.append ( result )
+            from ostap.parallel.parallel_copy import copy_files as parallel_copy
+            copied1 = []
+            copied2 = []
             
-        copied = tuple ( copied )
+            if regular_files :
+                copied1 = parallel_copy ( regular_files , maxfiles = 1 , copier = copy_file      , progress = not self.silent )
+            if root_files :
+                copied2 = parallel_copy (    root_files , maxfiles = 1 , copier = copy_root_file , progress = not self.silent )
+                
+            copied  = [ d[1] for d in copied1 ] + [ d[1] for d in copied2 ] 
 
+        else :
+            
+            copied = []
+            from ostap.utils.progress_bar import progress_bar
+            nf = len ( self.__files ) 
+            for f in progress_bar ( self.__files , silent = self.silent or nf <=1 ) :
+                
+                fs = os.path.normpath ( strip_protocol ( f ) ) 
+                nf = fs.replace ( cp , nd ) 
+                nf = os.path.normpath ( nf )
+                
+                if not has_protocol ( f ) :
+                    result = copy_file      ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
+                else                      :
+                    result = copy_root_file ( f , nf , progress = ( 1 == nf ) and self.verbose ) 
+                    
+                copied.append ( result )
+                
+        copied = tuple ( copied )
         return self.clone ( files = copied , patterns = () ) 
     
 # =============================================================================

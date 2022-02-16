@@ -59,11 +59,12 @@ namespace Ostap
      *  @param minv the minimum value 
      *  @param maxv the maximum value 
      */
-    StatEntity ( const unsigned long entries ,
-                 const double        mu      ,
-                 const double        mu2     ,
-                 const double        minv    ,
-                 const double        maxv    ) ;
+    StatEntity 
+    ( const unsigned long entries ,
+      const double        mu      ,
+      const double        mu2     ,
+      const double        minv    ,
+      const double        maxv    ) ;
     // ======================================================================
   public: // the basic accessors 
     // ======================================================================
@@ -296,7 +297,7 @@ namespace Ostap
      *  @param other counter to be added
      *  @return self-reference
      *  @see Pebay, P., Terriberry, T.B., Kolla, H. et al. Comput Stat (2016) 31: 1305. 
-     *  @see https://doi.org/10.1007/s00180-015-0637-z
+     *  @see https://doi.org/10.1007/s00180-015-0637-zu
      */
     StatEntity& add    ( const StatEntity& value ) ;
     // ========================================================================

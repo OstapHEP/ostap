@@ -129,7 +129,7 @@ std = cpp.std
 ## C++ namespace Ostap
 Ostap = cpp.Ostap 
 
-
+# =============================================================================
 from ostap.logger.utils import ROOTIgnore
 from ostap.logger.mute  import mute
 logger.debug ("Suppress error/warnings from ROOT")
@@ -137,6 +137,7 @@ with ROOTIgnore ( ROOT.kWarning + 1 ) :
     with mute ( True  , True ) : _ = ROOT.RooRealVar() 
     iszero   = Ostap.Math.Zero     ('double')()
     isequal  = Ostap.Math.Equal_To ('double')()
+    isequalf = Ostap.Math.Equal_To ('float' )()
     isint    = Ostap.Math.isint 
     islong   = Ostap.Math.islong
     

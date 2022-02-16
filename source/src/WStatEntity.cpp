@@ -45,28 +45,30 @@ Ostap::WStatEntity::add
 ( const double value  ,  
   const double weight )
 {
+  //
   if ( 0 == n() ) 
   {
     m_mu  = value ;
-    m_mu2 = value ;
-    if ( !s_zero ( weight ) ) { m_values += value ; }
+    m_mu2 = 0     ;
+    if ( weight ) { m_values += value ; }
     m_weights += weight ;    
     //
     return *this ;
   }
   //
-  const long double wA    = sumw ()           ;
-  const long double wB    = weight            ;
-  const long double W     = wA + wB           ;
-  const long double fA    = wA / W            ;
-  const long double fB    = 1.0L - fA         ;
-  const long double delta = m_mu - value      ;
+  const long double wA    = n () * m_weights.mu() ;
+  const long double wB    = weight                ; 
   //
-  m_mu  = m_mu  * fA + value * fB ;              // UPDATE 
-  m_mu2 = m_mu2 * fA + fA * fB * delta * delta ; // UPDATE 
+  const long double W     = wA + wB               ;
+  const long double fA    = wA / W                ;
+  const long double fB    = 1.0L - fA             ;
+  const long double delta = 1.0L * value - m_mu   ;
   //
-  if ( !s_zero ( weight ) ) { m_values += value ; }
-  m_weights += weight ;    
+  m_mu  = fA * m_mu  + fB * value              ; // UPDATE 
+  m_mu2 = fA * m_mu2 + fA * fB * delta * delta ; // UPDATE 
+  //
+  if ( weight ) { m_values += value ; }          // UPDATE 
+  m_weights += weight ;                          // UPDATE 
   //
   return *this ;
 }
@@ -159,18 +161,19 @@ Ostap::WStatEntity::add ( const Ostap::WStatEntity& other )
     return *this ;
   }
   //
-  const long double wA    =       sumw ()     ;
-  const long double wB    = other.sumw ()     ;
-  const long double W     = wA + wB           ;
-  const long double fA    = wA / W            ;
-  const long double fB    = 1.0L - fA         ;
-  const long double delta = m_mu - other.m_mu ;
+  const long double wA    = 1.0L *       n () *       m_weights.mu () ; //       sumw () 
+  const long double wB    = 1.0L * other.n () * other.m_weights.mu () ; // other.sumw ()     ;
   //
-  m_mu  = m_mu  * fA + other.m_mu  * fB ;                           // UPDATE 
-  m_mu2 = m_mu2 * fA + other.m_mu2 * fB + fA * fB * delta * delta ; // UPDATE 
+  const long double W     = wA + wB                  ;
+  const long double fA    = wA / W                   ;
+  const long double fB    = 1.0L - fA                ; // wB / W            ;
+  const long double delta = 1.0L * other.m_mu - m_mu ;
   //
-  m_values  += other.m_values  ;
-  m_weights += other.m_weights ;
+  m_mu  = fA * m_mu  + fB * other.m_mu   ;                           // UPDATE 
+  m_mu2 = fA * m_mu2 + fB * other.m_mu2  + fA * fB * delta * delta ; // UPDATE 
+  //
+  m_values  += other.m_values  ; // UPDATE 
+  m_weights += other.m_weights ; // UPDATE 
   //
   return *this ;
 }

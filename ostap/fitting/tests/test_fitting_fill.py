@@ -121,7 +121,8 @@ def ptcut ( s ) : return 3 < s.pt
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
 # =============================================================================
-def test_fitting_fill_1 () :
+## def test_fitting_fill_1 () :
+if 1 < 2 :
     
     logger = getLogger ('test_fitting_fill_1' ) 
 
@@ -512,6 +513,48 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
 
+    from ostap.fitting.dataset import ds_nonequal
+    
+    if ds_nonequal ( ds1_1 , ds1_2  ) : logger.warning  ('Datasets ds1_1  and ds1_2   are non equal!' )
+    if ds_nonequal ( ds1_1 , ds1_3  ) : logger.warning  ('Datasets ds1_1  and ds1_3   are non equal!' )
+    if ds_nonequal ( ds1_1 , ds1_4  ) : logger.warning  ('Datasets ds1_1  and ds1_4   are non equal!' )
+
+    if ds_nonequal ( ds1_1 , ds1p_1 ) : logger.warning  ('Datasets ds1_1  and ds1p_1  are non equal!' )
+    if ds_nonequal ( ds1_2 , ds1p_2 ) : logger.warning  ('Datasets ds1_2  and ds1p_2  are non equal!' )
+    if ds_nonequal ( ds1_3 , ds1p_3 ) : logger.warning  ('Datasets ds1_3  and ds1p_3  are non equal!' )
+    if ds_nonequal ( ds1_4 , ds1p_4 ) : logger.warning  ('Datasets ds1_4  and ds1p_4  are non equal!' )
+
+    if ds_nonequal ( ds2_1 , ds2_2  ) : logger.warning  ('Datasets ds2_1  and ds2_2   are non equal!' )
+    if ds_nonequal ( ds2_1 , ds2_3  ) : logger.warning  ('Datasets ds2_1  and ds2_3   are non equal!' )
+    if ds_nonequal ( ds2_1 , ds2_4  ) : logger.warning  ('Datasets ds2_1  and ds2_4   are non equal!' )
+
+    if ds_nonequal ( ds2_1 , ds2p_1 ) : logger.warning  ('Datasets ds2_1  and ds2p_1  are non equal!' )
+    if ds_nonequal ( ds2_2 , ds2p_2 ) : logger.warning  ('Datasets ds2_2  and ds2p_2  are non equal!' )
+    if ds_nonequal ( ds2_3 , ds2p_3 ) : logger.warning  ('Datasets ds2_3  and ds2p_3  are non equal!' )
+    if ds_nonequal ( ds2_4 , ds2p_4 ) : logger.warning  ('Datasets ds2_4  and ds2p_4  are non equal!' )
+
+    if ds_nonequal ( ds3_1 , ds3_2  ) : logger.warning  ('Datasets ds3_1  and ds2_2   are non equal!' )
+    if ds_nonequal ( ds3_1 , ds3_3  ) : logger.warning  ('Datasets ds3_1  and ds2_3   are non equal!' )
+    if ds_nonequal ( ds3_1 , ds3_4  ) : logger.warning  ('Datasets ds3_1  and ds2_4   are non equal!' )
+
+    if ds_nonequal ( ds3_1 , ds3p_1 ) : logger.warning  ('Datasets ds3_1  and ds3p_1  are non equal!' )
+    if ds_nonequal ( ds3_2 , ds3p_2 ) : logger.warning  ('Datasets ds3_2  and ds3p_2  are non equal!' )
+    if ds_nonequal ( ds3_3 , ds3p_3 ) : logger.warning  ('Datasets ds3_3  and ds3p_3  are non equal!' )
+    if ds_nonequal ( ds3_4 , ds3p_4 ) : logger.warning  ('Datasets ds3_4  and ds3p_4  are non equal!' )
+
+    if ds_nonequal ( ds4_1 , ds4_2  ) : logger.warning  ('Datasets ds4_1  and ds4_2   are non equal!' )
+    if ds_nonequal ( ds4_1 , ds4_3  ) : logger.warning  ('Datasets ds4_1  and ds4_3   are non equal!' )
+    if ds_nonequal ( ds4_1 , ds4_4  ) : logger.warning  ('Datasets ds4_1  and ds4_4   are non equal!' )
+
+    if ds_nonequal ( ds4_1 , ds4p_1 ) : logger.warning  ('Datasets ds4_1  and ds4p_1  are non equal!' )
+    if ds_nonequal ( ds4_2 , ds4p_2 ) : logger.warning  ('Datasets ds4_2  and ds4p_2  are non equal!' )
+    if ds_nonequal ( ds4_3 , ds4p_3 ) : logger.warning  ('Datasets ds4_3  and ds4p_3  are non equal!' )
+    if ds_nonequal ( ds4_4 , ds4p_4 ) : logger.warning  ('Datasets ds4_4  and ds4p_4  are non equal!' )
+
+    if ds_nonequal ( ds1_1 , ds2_1  ) : logger.warning  ('Datasets ds1_1  and ds2_1   are non equal!' )
+    if ds_nonequal ( ds1_1 , ds3_1  ) : logger.warning  ('Datasets ds1_1  and ds3_1   are non equal!' )
+    if ds_nonequal ( ds1_1 , ds4_1  ) : logger.warning  ('Datasets ds1_1  and ds4_1   are non equal!' )
+
 
     logger.info ( '%s\n%s' % ( title1  , table1  ) )
     logger.info ( '%s\n%s' % ( title1p , table1p ) )
@@ -525,13 +568,12 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
-
     
 # =============================================================================
 if '__main__' == __name__ :
 
     
-    test_fitting_fill_1 ()
+    ## test_fitting_fill_1 ()
     pass
 
 # =============================================================================

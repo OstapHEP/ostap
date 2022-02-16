@@ -22,9 +22,10 @@ __all__     = (
     ) 
 # =============================================================================
 import ROOT, cppyy
-from   ostap.math.ve   import Ostap, VE 
+from   ostap.math.ve   import Ostap, VE
+from   ostap.math.base import isequal, isequalf  
 # =============================================================================
-
+_new_methods_ = []
 # =============================================================================
 SE    = Ostap.StatEntity 
 WSE   = Ostap.WStatEntity 
@@ -49,8 +50,8 @@ if not hasattr ( SE , '_orig_mean' ) :
     SE._orig_mean = _orig_mean
 
 
-SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2()       )
-SE. minmax  = lambda s :    ( s.min()         , s.max()        ) 
+SE. sum     = lambda s : VE ( s._orig_sum  () , s.sum2 ()      )
+SE. minmax  = lambda s :    ( s.min        () , s.max  ()      ) 
 SE. mean    = lambda s : VE ( s._orig_mean () , s.meanErr()**2 )
 
 # ==============================================================================
@@ -65,6 +66,19 @@ def _se_iadd_ ( self , other ) :
     >>> cnt += value 
     """
     return self.add ( other )
+
+# ==============================================================================
+## Update the counter
+#  @code
+#  >>> cnt  = ...
+#  >>> cnt -= value
+#  @endcode
+def _se_isub_ ( self , other ) :
+    """Update the counter
+    >>> cnt  = ...
+    >>> cnt -= value 
+    """
+    return self.add ( -other )
 
 # ==============================================================================
 ## add two counters
@@ -100,57 +114,76 @@ def _wse_add_ ( self , other ) :
 # =============================================================================
 
 SE  .__iadd__ =  _se_iadd_
-WSE .__iadd__ =  _se_iadd_
 SE  .__add__  =  _se_add_
 WSE .__add__  = _wse_add_
 
 
-## # =============================================================================
-## ## equal counters?
-## def _se_eq_ ( s1 , s2 ) :
-##     """Equal counters?"""
-##     ##
-##     if not isinstance ( s2 , SE ) : return NotImplemented
-##     ## 
-##     return s1.n   () == s2.n   () and \
-##            s1.mu  () == s2.mu  () and \
-##            s1.mu2 () == s2.mu2 () and \
-##            s1.min () == s2.min () and \
-##            s1.max () == s2.max ()
-## # =============================================================================
-## ## non-equal counters?
-## def _se_ne_ ( s1 , s2 ) :
-##     """Non-qqual counters?"""
-##     if not isinstance ( s2 , SE ) : return NotImplemented 
-##     return not ( s1 == s2 )
+# ==============================================================================
+## numbers are close enough?
+def closef ( a , b , N = 100 ) :
+    return ( a == b ) or isequalf ( a , b ) or abs ( a - b ) * N <= abs ( a ) + abs ( b )
+    
+# =============================================================================
+## equal counters?
+def _se_eq_ ( s1 , s2 ) :
+    """Numerically equal counters?"""
+    ##
+    if not isinstance ( s2 , SE ) : return NotImplemented
+    ## 
+    return s1.n     () == s2.n   ()           and \
+           isequalf ( s1.mu  () , s2.mu  () ) and \
+           closef   ( s1.mu2 () , s2.mu2 () ) and \
+           s1.min () == s2.min ()             and \
+           s1.max () == s2.max ()
+# =============================================================================
+## non-equal counters?
+def _se_ne_ ( s1 , s2 ) :
+    """Numerically non-equal counters?
+    """
+    if not isinstance ( s2 , SE ) : return NotImplemented 
+    return not ( s1 == s2 )
 
-## SE.__eq__ = _se_eq_
-## SE.__ne__ = _se_ne_
+SE.__eq__ = _se_eq_
+SE.__ne__ = _se_ne_
 
-## # =============================================================================
-## ## equal counters?
-## def _wse_eq_ ( s1 , s2 ) :
-##     """Equal counters?"""
-##     ##
-##     if not isinstance ( s2 , WSE ) : return NotImplemented
-##     ##
-##     return s1.n       () == s2.n       () and \
-##            s1.mu      () == s2.mu      () and \
-##            s1.mu2     () == s2.mu2     () and \
-##            s1.weights () == s2.weights () and \
-##            s1.values  () == s2.values  ()
+_new_methods_ += [
+    SE.sum       ,
+    SE.mean      ,
+    SE.minmax    ,
+    SE.__add__   ,
+    SE.__iadd__  ,    
+    SE.__isub__  ,    
+    SE.__repr__  ,
+    SE.__str__   ,
+    SE.__str__   ,
+    SE.__eq__    , 
+    SE.__ne__    ,
+    ]
 
-## # =============================================================================
-## ## non-equal counters?
-## def _wse_ne_ ( s1 , s2 ) :
-##     """Non-qqual counters?"""
-##     ##
-##     if not isinstance ( s2 , WSE ) : return NotImplemented
-##     ##    
-##     return not ( s1 == s2 )
+# =============================================================================
+## equal counters?
+def _wse_eq_ ( s1 , s2 ) :
+    """Numerically equal counters?"""
+    ##
+    if not isinstance ( s2 , WSE ) : return NotImplemented
+    ##
+    return s1.n       () == s2.n       ()       and \
+           isequalf   ( s1.mu  () , s2.mu  () ) and \
+           closef     ( s1.mu2 () , s2.mu2 () ) and \
+           s1.weights () == s2.weights ()       and \
+           s1.values  () == s2.values  ()
 
-## WSE.__eq__ = _wse_eq_
-## WSE.__ne__ = _wse_ne_
+# =============================================================================
+## non-equal counters?
+def _wse_ne_ ( s1 , s2 ) :
+    """Numerically non-equal counters?"""
+    ##
+    if not isinstance ( s2 , WSE ) : return NotImplemented
+    ##    
+    return not ( s1 == s2 )
+
+WSE.__eq__ = _wse_eq_
+WSE.__ne__ = _wse_ne_
 
 # =============================================================================
 # minor decoration for WStatEntity 
@@ -169,6 +202,37 @@ WSE. minmax  = lambda s :            s.values  ().minmax()
 WSE.__repr__ = lambda s : 'WStat: '+ s.toString()
 WSE.__str__  = lambda s : 'WStat: '+ s.toString()
 
+_new_methods_ += [
+    WSE.sum      ,
+    WSE.mean     ,
+    WSE.minmax   ,
+    WSE.__add__  ,
+    WSE.__repr__ ,
+    WSE.__str__  ,
+    WSE.__str__  ,
+    WSE.__eq__   ,
+    WSE.__ne__   ,
+    ]
+
+# =============================================================================
+## Count iterable
+#  @code
+#  c = SE.count ( [1,2,3,4] )  
+#  @endcode
+def se_count ( values ) :
+    """Count iterable
+    >>> c = SE.count ( [1,2,3,4] )  
+    """
+    cnt = SE ()
+    for v in values : cnt.add ( v ) 
+    return cnt
+SE.count = staticmethod ( se_count )
+
+_new_methods_ += [
+    SE.count ,
+    ]
+
+_new_methods_ = tuple ( _new_methods_ )
 
 # =============================================================================
 _decorated_classes_ = (
