@@ -16,7 +16,7 @@ jobs:
         include:
             - { build: 1, lcg: dev3/latest, platform: x86_64-centos7-gcc9-opt }
             - { build: 2, lcg: dev3/latest, platform: x86_64-centos7-gcc8-opt }
-            - { build: 3, lcg: dev3python2/latest, platform: x86_64-centos7-gcc10-opt}
+            - { build: 3, lcg: dev3python3/latest, platform: x86_64-centos7-gcc10-opt}
       fail-fast: false
      runs-on: ubuntu-latest 
      steps:
