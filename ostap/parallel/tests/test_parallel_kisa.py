@@ -194,11 +194,11 @@ def test_kisa2 () :
             selection = '2<=mass && mass<4 && 0<=c2dtf && c2dtf<5' ,
             silence   = True 
             )
-        st = data.chain.pprocess ( selector               ,
-                                   silent     = False     ,
-                                   chunk_size = -1        ,
-                                   max_files  =  1        ,
-                                   ppservers  = ppservers )
+        st = data.chain.parallel_fill ( selector               ,
+                                        silent     = False     ,
+                                        chunk_size = -1        ,
+                                        max_files  =  1        ,
+                                        ppservers  = ppservers )
         ds = selector.data 
         del selector 
     logger.info ( 'Dataset (paralell):\n%s' % ds.table ( prefix = '# ' ) )
@@ -237,7 +237,7 @@ def test_kisa3 () :
             silence   = True 
             )
         chain =  data.chain
-        st = chain.pprocess ( selector , silent = False , shortcut = True )
+        st = chain.parallel_fill ( selector , silent = False , shortcut = True )
         ds = selector.data
         del selector 
     logger.info ( 'Dataset (paralell):\n%s' % ds.table ( prefix = '# ' ) )
@@ -245,13 +245,10 @@ def test_kisa3 () :
 # =============================================================================
 if '__main__' == __name__ :
 
-    
     test_kisa  ()
     test_kisa2 ()    
     test_kisa3 ()
     
-
-      
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

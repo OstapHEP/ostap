@@ -118,6 +118,8 @@ from   ostap.core.meta_info     import old_PyROOT
 import ostap.fitting.roofit 
 from   ostap.utils.progress_bar import ProgressBar
 # =============================================================================
+_new_methods_ = []
+# =============================================================================
 ## @class Selector
 #  Useful intermediate class for implementation of (py)selectors 
 #  @see Ostap::Selector
@@ -515,10 +517,15 @@ class SelStat(object) :
     """Helper class to keep the statististics for SelectorWithVars
     """
     def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
+
+
+        assert 0<= total and 0 <= processed and 0 <= skipped , \
+               "Invalid counters: %s/%s/%s" % ( total, processed , skipped)
+        
         self.__total     = total
         self.__processed = processed 
         self.__skipped   = skipped  
-
+        
     @property
     def total ( self ) :
         """``total''   : total number of events"""
@@ -1518,7 +1525,8 @@ def make_dataset ( tree              ,
 
     total     = len ( tree )
     processed = tree.statVar ( '1' , selection      ).nEntries()
-    skipped   = tree.statVar ( '1' , str ( limits ) ).nEntries() 
+    ## skipped   = tree.statVar ( '1' , str ( limits ) ).nEntries() 
+    skipped   = tree.statVar ( '1' , cuts           ).nEntries() 
 
     stat = SelStat ( total , processed , processed - skipped )
 
@@ -1633,65 +1641,15 @@ def make_dataset ( tree              ,
 
 ROOT.TTree.make_dataset = make_dataset
         
-# =============================================================================
-## Create RooDataset from the tree
-#  @code 
-#  tree = ...
-#  ds   = tree.fill_dataset2 ( [ 'px , 'py' , 'pz' ] ) 
-#  @endcode
-def fill_dataset ( tree                 ,
-                   variables            ,
-                   selection    = ''    ,
-                   name         = ''    ,
-                   title        = ''    ,
-                   shortcut     = True  ,
-                   use_frame    = 50000 , 
-                   silent       = False ) :
-    """Create the dataset from the tree
-    >>> tree = ...
-    >>> ds = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] ) 
-    """
-    selector = SelectorWithVars ( variables , selection , silence = silent ) 
-    tree.process ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
-    data = selector.data
-    stat = selector.stat
-    del selector 
-    return data , stat 
-
-ROOT.TTree.fill_dataset = fill_dataset
 
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
 #
 # @code
-#
-# from ostap.fitting.pyselectors import Selector
-#
-# class MySelector ( Selector ) :
-#
-#      def __init__ ( self ) :
-#
-#           return Selector ( self )
-#
-#      def Process  ( self , entry ) :
-#          # == getting the next entry from the tree
-#           if self.GetEntry ( entry ) <= 0 : return 0             ## RETURN 
-#        
-#           # == for more convenience
-#           tree = self.tree 
-#
-#           # apply trivial "acceptance" cuts 
-#           if not 2 <= tree.y   <=  4.5   : return 0               ## RETURN
-#           if not 1 <= tree.pt  <=  10.0  : return 0               ## RETURN
-#
-#           return 1
-#
-# 
-# selector = MySelector()
-#
-# chain = ...
-# chain.process ( selector )  ## NB: note lowercase "process" here !!!
-#
+# from ostap.fitting.pyselectors import SelectorWithVars 
+# selector = SelectorWithVars ( ... ) 
+# chain    = ...
+# chain.fill_dataset2 ( selector )  ## NB: note lowercase "process" here !!!
 # @endcode
 #
 # The module has been developed and used with great success in
@@ -1701,16 +1659,19 @@ ROOT.TTree.fill_dataset = fill_dataset
 # @see Ostap::Process 
 # @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 # @date   2010-04-30
-#
-def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , silent = False  , use_frame = 50000 ) :
+def fill_dataset2 ( self              ,
+                    selector          ,
+                    nevents   = -1    ,
+                    first     =  0    ,
+                    shortcut  = True  ,
+                    silent    = False ,
+                     use_frame = 50000 ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
-    >>> from ostap.fitting.pyselectors import Selector    
-    >>> class MySelector ( Selector ) : ... 
-    ...
-    >>> selector = MySelector()    
-    >>> chain = ...
-    >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
+    >>> from ostap.fitting.pyselectors import SelectorWithCVars     
+    >>> selector = SelectorWithVars ( ... ) 
+    >>> chain    = ...
+    >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase ``process'' here !!!    
     """
 
     ## process all events? 
@@ -1740,7 +1701,6 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
         
         if isinstance ( selector , SelectorWithVars ) and selector.selection :
 
-            
             if not silent : logger.info ( "Make try to use the intermediate DataFrame!" )
 
             selection = selector.selection
@@ -1885,21 +1845,22 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
                     new_selector = SelectorWithVars ( nvars + vars_ ,
                                                       ''            , ## no cuts here! 
                                                       cuts     = selector.morecuts ,
+                                                      roo_cuts = selector.roo_cuts , 
                                                       name     = selector.name     ,
                                                       fullname = selector.fullname ,
                                                       silence  = selector.silence  )
                     
-                    if not silent : logger.info ( 'redirect to other processing' )
+                    if not silent : logger.info ( 'Redirect to (re)processing' )
                     
-                    result       = _process_ ( tree , new_selector ,
-                                               nevents   = -1      ,
-                                               first     =  0      ,
-                                               shortcut  = True    ,
-                                               silent    = silent  ,
-                                               use_frame = -1      )
-
-                    selector.data = new_selector.data
-
+                    result       = fill_dataset2 ( tree                ,
+                                                   new_selector        ,
+                                                   nevents   = -1      ,
+                                                   first     =  0      ,
+                                                   shortcut  = True    ,
+                                                   silent    = silent  ,
+                                                   use_frame = -1      )
+                    
+                    selector.data           = new_selector.data
                     selector.stat.total     = total_0
                     selector.stat.processes = new_selector.stat.processed 
                     selector.stat.skiped    = new_selector.stat.skipped 
@@ -1907,9 +1868,8 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
 
                     return result
 
-
     # =========================================================================
-    ## Standard processing: no tricks, shortcuts, ...
+    ## Standard processing: no tricks, no shortcuts, ...
     # =========================================================================
     
     import ostap.fitting.roofit
@@ -1953,7 +1913,132 @@ def _process_ ( self , selector , nevents = -1 , first = 0 , shortcut = True , s
         cloned.reset()
         del cloned
         return result
-        
+
+fill_dataset2. __doc__ += '\n' + Ostap.Utils.process.__doc__
+
+ROOT.TTree.fill_dataset2 = fill_dataset2
+
+# =============================================================================
+## Create RooDataset from the tree
+#  @code 
+#  tree = ...
+#  ds   = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
+#  @endcode
+def fill_dataset1 ( tree                 ,
+                    variables            ,
+                    selection    = ''    ,
+                    roo_cuts     = ''    , 
+                    name         = ''    ,
+                    title        = ''    ,
+                    shortcut     = True  ,
+                    use_frame    = 50000 , 
+                    silent       = False ) :
+    """Create the dataset from the tree
+    >>> tree = ...
+    >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
+    """
+    selector = SelectorWithVars ( variables , selection , roo_cuts = roo_cuts , silence = silent ) 
+    tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
+    data = selector.data
+    stat = selector.stat
+    del selector 
+    return data , stat 
+
+ROOT.TTree.fill_dataset1 = fill_dataset1
+
+# =============================================================================
+## Create RooDataset from the tree
+#  @code 
+#  tree = ...
+#  ds   = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] ) 
+#  @endcode
+def fill_dataset ( tree     ,
+                   selector , **kwargs ) :
+    """Create the dataset from the tree
+    >>> tree = ...
+    >>> ds = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] )
+    - see `ROOT.TTree.fill_dataset1`
+    - see `ROOT.TTree.fill_dataset2`
+    """
+    if isinstance ( selector , SelectorWithVars ) :
+        return fill_dataset2 ( tree , selector , **kwargs )
+    return fill_dataset1 ( tree , selector , **kwargs )
+
+fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__
+fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__
+
+ROOT.TTree.fill_dataset = fill_dataset
+
+
+# =============================================================================
+## define the helper function for proper decoration of ROOT.TTree/TChain
+#
+# @code
+#
+# from ostap.fitting.pyselectors import Selector
+#
+# class MySelector ( Selector ) :
+#
+#      def __init__ ( self ) :
+#
+#           return Selector ( self )
+#
+#      def Process  ( self , entry ) :
+#          # == getting the next entry from the tree
+#           if self.GetEntry ( entry ) <= 0 : return 0             ## RETURN 
+#        
+#           # == for more convenience
+#           tree = self.tree 
+#
+#           # apply trivial "acceptance" cuts 
+#           if not 2 <= tree.y   <=  4.5   : return 0               ## RETURN
+#           if not 1 <= tree.pt  <=  10.0  : return 0               ## RETURN
+#
+#           return 1
+# 
+# selector = MySelector()
+#
+# chain = ...
+# chain.process ( selector )  ## NB: note lowercase "process" here !!!
+#
+# @endcode
+#
+# The module has been developed and used with great success in
+# ``Kali, framework for fine cailbration of LHCb Electormagnetic Calorimeter''
+#
+# @see Ostap::Selector 
+# @see Ostap::Process 
+# @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+# @date   2010-04-30
+def _process_ ( self , selector , nevents = -1 , first = 0 , **kwargs ) :
+    """ ``Process'' the tree/chain with proper TPySelector :
+    
+    >>> from ostap.fitting.pyselectors import Selector    
+    >>> class MySelector ( Selector ) : ... 
+    ...
+    >>> selector = MySelector()    
+    >>> chain = ...
+    >>> chain.process ( selector )  ## NB: note lowercase ``process'' here !!!    
+    """
+
+    if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
+        return fill_dataset2 ( self              ,
+                               selector          ,
+                               nevents = nevents ,
+                               first   = first   , **kwargs ) 
+    
+    # =========================================================================
+    ## Standard processing: no tricks, no shortcuts, ...
+    # =========================================================================
+    
+    import ostap.fitting.roofit
+    
+    nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
+    args    =  () if all else ( nevents , first )
+    
+    return Ostap.Utils.process ( self , selector , *args ) 
+
+
 _process_. __doc__ += '\n' + Ostap.Utils.process.__doc__
 
 # =============================================================================
@@ -1962,6 +2047,17 @@ for t in ( ROOT.TTree      ,
            ROOT.TChain     ,
            ROOT.RooAbsData ) : t.process  = _process_ 
 
+
+_new_methods_ = [
+    ROOT.TTree.make_dataset  ,
+    ROOT.TTree.fill_dataset  ,
+    ROOT.TTree.fill_dataset1 ,
+    ROOT.TTree.fill_dataset2 ,    
+    ROOT.TTree.process       ,
+    ROOT.RooAbsData.process  , ## senseless :-( 
+    ]
+
+_new_methods_ = tuple ( _new_methods_ ) 
 
 # =============================================================================
 if '__main__' == __name__ :

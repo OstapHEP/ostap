@@ -151,22 +151,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds1_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = False )        
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = False )        
         ds1_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
         ds1_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds1_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -183,22 +183,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
         ds1p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 :
         logger.info ( attention ( t2.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )        
         ds1p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
         ds1p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds1p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -243,22 +243,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds2_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
         ds2_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
         ds2_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds2_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -275,22 +275,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = False , maX_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = False , maX_files = 1 )
         ds2p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = False , maX_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = False , maX_files = 1 )
         ds2p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
         ds2p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds2p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -341,22 +341,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds3_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
         ds3_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
         ds3_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds3_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -374,22 +374,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
         ds3p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )
         ds3p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
         ds3p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1)
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1)
         ds3p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -449,22 +449,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = False )
         ds4_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = False )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = False )
         ds4_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = False , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = False , use_frame = True  )
         ds4_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.process ( selector , shortcut = True  , use_frame = True  )
+        data.chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds4_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 
@@ -482,22 +482,22 @@ def test_fitting_fill_1 () :
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = False , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = False , max_files = 1 )
         ds4p_1 = selector.data 
     with timing ( "   SHORTCUT, no FRAME" , logger = None ) as t2 : 
         logger.info ( attention ( t2.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = False , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = False , max_files = 1 )
         ds4p_2 = selector.data 
     with timing ( "No SHORTCUT,    FRAME" , logger = None ) as t3 : 
         logger.info ( attention ( t3.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = False , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = False , use_frame = True  , max_files = 1 )
         ds4p_3 = selector.data 
     with timing ( "   SHORTCUT,    FRAME" , logger = None ) as t4 : 
         logger.info ( attention ( t4.name ) )
         selector = SelectorWithVars ( **config ) 
-        data.chain.pprocess ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
+        data.chain.parallel_fill ( selector , shortcut = True  , use_frame = True  , max_files = 1 )
         ds4p_4 = selector.data 
 
     table = [ ('Configuration' , 'CPU' ) ] 

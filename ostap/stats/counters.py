@@ -130,9 +130,10 @@ def _se_eq_ ( s1 , s2 ) :
     ##
     if not isinstance ( s2 , SE ) : return NotImplemented
     ## 
+    ## closef   ( s1.mu2 () , s2.mu2 () ) and \
     return s1.n     () == s2.n   ()           and \
            isequalf ( s1.mu  () , s2.mu  () ) and \
-           closef   ( s1.mu2 () , s2.mu2 () ) and \
+           isequalf ( s1.mu2 () , s2.mu2 () ) and \
            s1.min () == s2.min ()             and \
            s1.max () == s2.max ()
 # =============================================================================
@@ -167,9 +168,10 @@ def _wse_eq_ ( s1 , s2 ) :
     ##
     if not isinstance ( s2 , WSE ) : return NotImplemented
     ##
+    ## closef     ( s1.mu2 () , s2.mu2 () ) and \
     return s1.n       () == s2.n       ()       and \
            isequalf   ( s1.mu  () , s2.mu  () ) and \
-           closef     ( s1.mu2 () , s2.mu2 () ) and \
+           isequalf   ( s1.mu2 () , s2.mu2 () ) and \
            s1.weights () == s2.weights ()       and \
            s1.values  () == s2.values  ()
 

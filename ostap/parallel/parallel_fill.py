@@ -133,26 +133,31 @@ class  FillTask(Task) :
 #  @code
 #  chain    = ...
 #  selector =  ...
-#  chain.pprocess ( selector )
+#  parallel_fill        ( chain , selector ) 
+#  chain.parallel_fill  ( selector         ) ## ditto 
 #  @endcode 
-def pprocess ( chain                  ,
-               selector               ,
-               nevents      = -1      ,
-               first        = 0       ,
-               shortcut     = True    ,   ## important 
-               chunk_size   = 1000000 ,   ## important 
-               max_files    = 5       ,
-               use_frame    =  20000  ,   ## important 
-               silent       = False   ,
-               job_chunk    = -1      , **kwargs ) :
+def parallel_fill ( chain                  ,
+                    selector               ,
+                    nevents      = -1      ,
+                    first        = 0       ,
+                    shortcut     = True    ,   ## important 
+                    chunk_size   = 1000000 ,   ## important 
+                    max_files    = 5       ,
+                    use_frame    =  20000  ,   ## important 
+                    silent       = False   ,
+                    job_chunk    = -1      , **kwargs ) :
     """ Parallel processing of loooong chain/tree 
     >>>chain    = ...
     >>> selector =  ...
     >>> chain.pprocess ( selector )
     """
+    import ostap.fitting.roofit 
+    from   ostap.fitting.pyselectors import SelectorWithVars 
+    from   ostap.trees.trees         import Chain
     
-    from ostap.trees.trees import Chain
-
+    assert isinstance ( selector , SelectorWithVars ) , \
+           "Invalid type of ``selector'': %s" % type ( selector ) 
+    
     ch = Chain ( chain ) 
 
     selection = selector.selection
@@ -192,8 +197,39 @@ def pprocess ( chain                  ,
     
     return 1 
 
-ROOT.TChain.pprocess = pprocess
-ROOT.TTree .pprocess = pprocess
+
+ROOT.TChain.parallel_fill = parallel_fill 
+ROOT.TTree .parallel_fill = parallel_fill 
+
+
+# ===================================================================================
+## parallel processing of loooong chain/tree 
+#  @code
+#  chain    = ...
+#  selector =  ...
+#  pprocess       ( chain , selector ) 
+#  chain.pprocess ( selector         ) ## ditto 
+#  @endcode 
+def pprocess ( chain , selector , *args , **kwargs ) :
+    """parallel processing of loooong chain/tree 
+    >>> chain    = ...
+    >>> selector =  ...
+    >>> pprocess       ( chain , selector ) 
+    >>> chain.pprocess ( selector         ) ## ditto 
+    """
+    
+    from ostap.fitting.pyselectors import SelectorWithVars
+    
+    assert isinstance ( selector , SelectorWithVars ) , \
+           "Invalid type of ``selector'': %s" % type ( selector ) 
+
+    logger.warning ( "Use ``parallel_fill'' instead of ``pprocess''!" ) 
+    
+    return parallel_fill ( chain , selector, *args , **kwargs )  
+    
+
+ROOT.TChain.pprocess = pprocess 
+ROOT.TTree .pprocess = pprocess 
 
 # =============================================================================
 
@@ -203,6 +239,8 @@ _decorated_classes_ = (
     )
 
 _new_methods_       = (
+    ROOT.TTree .parallel_fill ,
+    ROOT.TChain.parallel_fill ,
     ROOT.TTree .pprocess ,
     ROOT.TChain.pprocess ,
     )
