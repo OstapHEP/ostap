@@ -1756,7 +1756,7 @@ def make_dataset ( tree              ,
         return make_dataset_old ( tree      = tree      ,
                                   variables = variables ,
                                   selection = selection ,
-                                  roo_cuts  = root_cuts ,
+                                  roo_cuts  = roo_cuts  ,
                                   name      = name      ,
                                   title     = title     ,
                                   silent    = silent    )
