@@ -1,5 +1,12 @@
+## New features:
+
+## Backward incompatible:  
+ 
+## Bug fixes:
 
 # v1.7.0.1
+
+## New features:
 
   1. add opton for parallel file copy 
   1. add arrgument parallel=False` for `Files.copy_files` 
