@@ -1,8 +1,5 @@
-# v1.7.0.0
 
-
-
-## New features:
+# v1.7.0.1
 
   1. add opton for parallel file copy 
   1. add arrgument parallel=False` for `Files.copy_files` 
