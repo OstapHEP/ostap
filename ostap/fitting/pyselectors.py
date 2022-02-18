@@ -104,19 +104,19 @@ __all__ = (
 # =============================================================================
 import ROOT, cppyy, math, sys
 # =============================================================================
-# logging 
-# =============================================================================
-from   ostap.logger.logger      import getLogger
-from   ostap.logger.colorized   import attention, allright
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pyselectors' )
-else                       : logger = getLogger ( __name__          )
-# =============================================================================
 from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
                                          dsID , valid_pointer , binomEff ) 
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
 from   ostap.core.meta_info     import old_PyROOT 
 import ostap.fitting.roofit 
 from   ostap.utils.progress_bar import ProgressBar
+# =============================================================================
+# logging 
+# =============================================================================
+from   ostap.logger.logger      import getLogger
+from   ostap.logger.colorized   import attention, allright
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.fitting.pyselectors' )
+else                       : logger = getLogger ( __name__          )
 # =============================================================================
 _new_methods_ = []
 # =============================================================================
@@ -427,6 +427,7 @@ class Variable(object) :
         self.__var         = var
         self.__minmax      = var.minmax()
         self.__accessor    = accessor
+        self.__checked     = False
         
     @property
     def var         ( self ) :
@@ -474,13 +475,116 @@ class Variable(object) :
 
     @property
     def really_trivial ( self ) :
-        """``really_trivial'' - is it really trivia enough for RooFit?"""
+        """``really_trivial'' - is it really trivial enough for RooFit?"""
         triv = self.trivial 
         return triv and  ( not '[' in triv ) and ( not ']' in triv )
+    
+    @property
+    def checked ( self ) :
+        """``checked'' : checked?
+        """
+        return self.__checked
 
 
 # =============================================================================
-## is this expression corresponds to a valid RooFit formula?
+## @class Variables
+#  Helper structure to manage/keep/check list of variables
+class Variables(object) :
+    """Helper structure to manage/keep/check list of variables
+    """
+    def __init__ ( self , variables ) :
+
+        self.__variables = []
+        self.__triv_vars = True
+
+        names = set()
+        vset  = ROOT.RooArgSet()
+        
+        for v in variables :
+
+            if   isinstance   ( v , str              ) : vv = Variable (   v ) 
+            elif isinstance   ( v , ROOT.RooAbsReal  ) : vv = Variable (   v )
+            elif isinstance   ( v , ( tuple , list ) ) : vv = Variable (  *v )
+            elif isinstance   ( v , dict             ) : vv = Variable ( **v )
+            elif isinstance   ( v , Variable         ) : vv = v  
+            
+            assert isinstance ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
+
+            name = vv.name
+            if name in names :
+                logger.error ( "Variable %s is already in the list, skip it" % name ) 
+                continue
+
+            if name in vset  : 
+                logger.error ( 'Variable  %s is already defined! skip it' % name )
+                continue
+
+            if vv.var in vset : 
+                logger.error ( 'Variable  %s is already defined! skip it' % name )
+                continue
+            
+            names.add ( name )
+            
+            self.__variables.append ( vv     )
+            vset.add    ( vv.var )
+            #
+            if   vv.trivial and vv.name == vv.formula : pass
+            elif vv.really_trivial                    : pass
+            elif vv.formula                           : pass
+            else                                      :
+                self.__triv_vars = False
+
+        self.__variables = tuple ( self.__variables ) 
+
+    @property
+    def variables ( self ) :
+        """``varibales'' the actual list/tuple of variables"""
+        return self.__variables
+
+    @property
+    def trivial_vars( self ) :
+        """``trivial_vars'' : are all variables ``trivial'' (suitable for fast-processing)?"""
+        return self.__triv_vars
+
+    ## number of variables 
+    def __len__ ( self ) : 
+        """Number of variables"""
+        return len ( self.__variables )
+    ## get item
+    def __getitem__ ( self , item ) :
+        """Get certain item"""
+        return self.__variables [ item ]
+    ## iterator 
+    def __iter__    ( self ) :
+        """Make an iteration over variables"""
+        return iter ( self.__variables )
+
+    # =========================================================================
+    ## check if variable (or index) is already in the list 
+    def __contains__ ( self , item ) :
+        """Check if variable (or index) is already in the list
+        """
+        
+        if isinstance ( item , int ) :
+            return 0 < item < len ( self.__variables )
+
+        if isinstance ( item , Variable ) :
+            return ( item.name in self ) and ( item.var in self ) 
+        
+        if isinstance ( item , string_types ) :
+            name = str ( item )
+            for v in self.__variables :
+                if name == v.name : return True
+            return False
+        
+        if isinstance ( item , ROOT.RooAbsArg ) :
+            return item in self.__varset
+        
+        return False
+    
+        
+# =============================================================================
+## Is this expression corresponds to a valid RooFit formula?
 def valid_formula ( expression , varset ) :
     """Is this expression corresponds to a valid RooFit formula?
     """
@@ -506,10 +610,9 @@ def valid_formula ( expression , varset ) :
     
     from ostap.logger.utils import mute 
     with mute ( True , True ) :
-
         return Ostap.validFormula ( expression , varset )
     
-        
+    
 # ==============================================================================
 ## @class SelStat
 #  Helper class to keep the statististics for SelectorWithVars 
@@ -517,7 +620,6 @@ class SelStat(object) :
     """Helper class to keep the statististics for SelectorWithVars
     """
     def __init__ ( self ,  total = 0 , processed = 0 , skipped = 0 ) :
-
 
         assert 0<= total and 0 <= processed and 0 <= skipped , \
                "Invalid counters: %s/%s/%s" % ( total, processed , skipped)
@@ -556,6 +658,12 @@ class SelStat(object) :
                "Invalid value for ``skipped''"
         self.__skipped = value
 
+    def __str__ ( self ) :
+        return 'SelStat(total=%s,processed=%s,skipped=%s)' % ( self.__total     ,
+                                                               self.__processed ,
+                                                               self.__skipped   )
+    __repr__ = __str__
+    
 # ==============================================================================
 ## Define generic selector to fill RooDataSet from TChain
 #
@@ -694,47 +802,52 @@ class SelectorWithVars(SelectorWithCuts) :
         
         self.__cuts      = cuts
         self.__variables = [] 
-        self.__varset    = ROOT.RooArgSet() 
+        self.__varset    = ROOT.RooArgSet()
+        
+        ## vvars  = set ()
+        ## vnames = set ()
+        ## for v in variables :
 
-        self.__triv_vars = True
-        vvars  = set()
-        vnames = set () 
-        for v in variables :
+        ##     vv = v 
+        ##     if   isinstance ( v , str              ) : vv = Variable (   v ) 
+        ##     elif isinstance ( v , ROOT.RooAbsReal  ) : vv = Variable (   v )
+        ##     elif isinstance ( v , ( tuple , list ) ) : vv = Variable (  *v )
+        ##     elif isinstance ( v , dict             ) : vv = Variable ( **v )
+        ##     elif isinstance ( v , Variable         ) : vv = v  
 
-            vv = v 
-            if   isinstance ( v , str              ) : vv = Variable (   v ) 
-            elif isinstance ( v , ROOT.RooAbsReal  ) : vv = Variable (   v )
-            elif isinstance ( v , ( tuple , list ) ) : vv = Variable (  *v )
-            elif isinstance ( v , dict             ) : vv = Variable ( **v )
-            elif isinstance ( v , Variable         ) : vv = v  
+        ##     assert isinstance  ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
 
-            assert isinstance  ( vv , Variable ), 'Invalid variable %s/%s' % ( vv , type ( vv ) )
+        ##     if vv.name in self.__varset :
+        ##         logger.error ( 'Variable  %s is already defined! skip it' % vv.name )
+        ##         continue 
 
-            if vv.name in self.__varset :
-                logger.error ( 'Variable  %s is already defined! skip it' % vv.name )
-                continue 
+        ##     self.__variables.append ( vv     )
+        ##     self.__varset   .add    ( vv.var )
+        ##     #
+        ##     if   vv.trivial and vv.name == vv.formula : pass
+        ##     elif vv.really_trivial                    : pass
+        ##     elif vv.formula                           : pass
+        ##     else                                      :
+        ##         self.__triv_vars = False
+        ##     #
+        ##     vvars.add ( vv )
+            
+        ## self.__variables = tuple( self.__variables ) 
 
-            self.__variables.append ( vv     )
-            self.__varset   .add    ( vv.var )
-            #
-            if   vv.trivial and vv.name == vv.formula : pass
-            elif vv.really_trivial                    : pass
-            elif vv.formula                           : pass
-            else                                      :
-                self.__triv_vars = False
-            #
-            vvars.add ( vv ) 
-
-        self.__variables = tuple( self.__variables ) 
-
-        self.__triv_sel  = valid_formula ( selection , self.__varset ) 
+        self.__variables = Variables ( variables ) 
+        for v in self.__variables : self.__varset.add ( v.var )
+            
+        assert 1 <= len ( self.__variables ), \
+               'Invalid setting of variablesl!'
+        
+        self.__triv_sel  = valid_formula ( selection , self.varset ) 
         triv_cuts        = not cuts
         
-        self.__trivial = self.__triv_vars and self.__triv_sel and triv_cuts
+        self.__trivial = self.trivial_vars and self.__triv_sel and triv_cuts
         if not self.silence :
-            tv = allright ( 'True' ) if self.__triv_vars else attention ( 'False' )
-            ts = allright ( 'True' ) if self.__triv_sel  else attention ( 'False' )
-            tc = allright ( 'True' ) if triv_cuts        else attention ( 'False' )
+            tv = allright ( 'True' ) if self.trivial_vars else attention ( 'False' )
+            ts = allright ( 'True' ) if self.__triv_sel   else attention ( 'False' )
+            tc = allright ( 'True' ) if triv_cuts         else attention ( 'False' )
             self.logger.info ( "Suitable for fast processing: variables:%s, selection:%s, py-cuts:%s" % ( tv , ts , tc ) )
             
         if not self.silence: 
@@ -768,9 +881,9 @@ class SelectorWithVars(SelectorWithCuts) :
                                       fmt_max  % v.minmax [1]  , triv ) )
                 
             if fullname != self.name : 
-                title = '%s("%s","%s") %d variables' % ( 'RooDataSet', self.name , fullname , len ( self.__varset ) )
+                title = '%s("%s","%s") %d variables' % ( 'RooDataSet', self.name , fullname , len ( self.varset ) )
             else :
-                title = '%s("%s") %d variables'      % ( 'RooDataSet', self.name ,            len ( self.__varset ) )
+                title = '%s("%s") %d variables'      % ( 'RooDataSet', self.name ,            len ( self.varset ) )
                         
             import ostap.logger.table as T
             t  = T.table (  table_data , title , '# ' )
@@ -783,7 +896,7 @@ class SelectorWithVars(SelectorWithCuts) :
             self.name ,
             fullname  , 
             ##
-            self.__varset
+            self.varset
             )
 
         ## selection using RooFit machinery 
@@ -854,7 +967,7 @@ class SelectorWithVars(SelectorWithCuts) :
     @property
     def trivial_vars( self ) :
         """``trivial_vars'' : are all variables ``trivial'' (suitable for fast-processing)?"""
-        return self.__triv_vars
+        return self.__variables.trivial_vars
 
     @property
     def really_trivial ( self ) :
@@ -982,7 +1095,7 @@ class SelectorWithVars(SelectorWithCuts) :
 
         ## no roo-cuts are specified or roo-cuts are satisfied 
         if ( not self.__roo_formula ) or self.__roo_formula.getVal() : 
-            self.__data .add ( self.__varset )
+            self.__data .add ( self.varset )
             
         return 1 
 
@@ -1398,15 +1511,15 @@ class SelectorWithVarsCached(SelectorWithVars) :
 ## Create RooDataset from the tree
 #  @code 
 #  tree = ...
-#  ds   = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
+#  ds   = tree.make_dataset_old ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
-def make_dataset ( tree              ,
-                   variables         , ## varibales 
-                   selection = ''    , ## TTree selection 
-                   roo_cuts  = ''    , ## Roo-Fit selection  
-                   name      = ''    , 
-                   title     = ''    ,
-                   silent    = False ) :
+def make_dataset_old ( tree              ,
+                       variables         , ## varibales 
+                       selection = ''    , ## TTree selection 
+                       roo_cuts  = ''    , ## Roo-Fit selection  
+                       name      = ''    , 
+                       title     = ''    ,
+                       silent    = False ) :
     """Create the dataset from the tree
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
@@ -1425,23 +1538,12 @@ def make_dataset ( tree              ,
 
     branches = set ( tree.branches () )
     leaves   = set ( tree.leaves   () ) 
-    names    = set ()
     
-    limits   = [] 
-    for v in variables :
+    limits    = []
 
-        if   isinstance  ( v , str              ) : vv = Variable (   v )
-        elif isinstance  ( v , ROOT.RooRealVar  ) : vv = Variable (   v )
-        elif isinstance  ( v , ( tuple , list ) ) : vv = Variable (  *v )
-        elif isinstance  ( v , dict             ) : vv = Variable ( **v )
-        elif isinstance  ( v , Variable         ) : vv = v 
-        else :
-            logger.error("Do not know how to treat the variable %s/%s, skip it" % ( v , type ( v ) ) )
-            continue
-
-        if vv.name in names :
-            logger.error ( 'Variable %s already defined! skip it' % vv.name )
-            continue
+    variables = Variables ( variables ) 
+    
+    for vv in variables :
         
         if vv.name != vv.formula :            
             if vv.name in branches :
@@ -1456,7 +1558,7 @@ def make_dataset ( tree              ,
             assert hasattr  ( tree , vv.name ) , "Tree/Chain has no branch ``%s''" % vv.name
             
             varset.add  ( vv.var )
-            vars.add ( vv )
+            vars.add    ( vv )
             
         elif vv.formula :
             
@@ -1468,8 +1570,6 @@ def make_dataset ( tree              ,
             logger.error("Do not know how to treat the variable %s, skip it" % vv.name )
             continue 
         
-        names.add ( vv.name ) 
-
         mn , mx = vv.minmax
         if _minv < mn : limits.append ( "(%.16g <= %s)" % ( mn      , vv.name ) ) 
         if _maxv > mx : limits.append ( "(%s <= %.16g)" % ( vv.name , mx      ) )
@@ -1487,14 +1587,6 @@ def make_dataset ( tree              ,
     expressions = [ f.formula for f in formulas ]
 
     if selection :
-        ## h1 = hash ( ( tuple ( tree.branches() ) , tuple ( tree.leaves() ) , tree.GetName() ) ) 
-        ## h2 = hash ( tuple ( v.name for v in varset   ) )
-        ## h3 = hash ( tuple ( v.name for v in formulas ) )
-        ## h4 = hash ( ( h1 ,h2 , h3 , selection , str ( limits ) ) ) 
-        ## selname = "select_%d" %  ( h4 % 2**32 )  
-        ## sel     = Variable ( selname , accessor = selection )
-        ## print ( 'ADDING SELECTION EXPRESSION' , selname , selection ) 
-        ## formulas.append ( sel ) 
         cuts = cuts & ROOT.TCut ( selection ) 
         expressions.append      ( selection ) 
 
@@ -1524,9 +1616,8 @@ def make_dataset ( tree              ,
         title = tree.GetTitle ()
 
     total     = len ( tree )
-    processed = tree.statVar ( '1' , selection      ).nEntries()
-    ## skipped   = tree.statVar ( '1' , str ( limits ) ).nEntries() 
-    skipped   = tree.statVar ( '1' , cuts           ).nEntries() 
+    processed = tree.statVar ( '1' , selection ).nEntries()
+    skipped   = tree.statVar ( '1' , cuts      ).nEntries() 
 
     stat = SelStat ( total , processed , processed - skipped )
 
@@ -1539,7 +1630,6 @@ def make_dataset ( tree              ,
     elif f2 < 0.10 and not silent : 
         logger.warning ( "Only tiny fraction of data (% 4.1F%%) is requested: prefiltering can speedup process" % ( f2 * 100 ) ) 
         
-
     from ostap.logger.utils import rooSilent, rootError
     from ostap.utils.timing import timing
     from ostap.utils.utils  import NoContext
@@ -1566,7 +1656,7 @@ def make_dataset ( tree              ,
         ffs   = []
         fcuts = []
         for f in formulas :
-            
+
             fv = Ostap.FormulaVar ( f.name , f.description , f.formula , vlst , False )
             assert fv.ok() , 'Invalid formula: %s' % f.formula 
             ffs.append ( fv )
@@ -1577,9 +1667,9 @@ def make_dataset ( tree              ,
 
         with rooSilent ( ROOT.RooFit.ERROR + 1 , True ) :
             with rootError( ROOT.kError ) :
-                ## it causes some strange behaviour
+                ## ## it causes some strange behaviour
                 ## ds.addColumns ( fcols )
-                ## it is ok: 
+                ## ## it is ok: 
                 for  f in fcols : ds.addColumn ( f ) 
                 del fcols
                 del ffs 
@@ -1595,13 +1685,13 @@ def make_dataset ( tree              ,
             with rooSilent ( ROOT.RooFit.ERROR  + 1  , True ) :
                 with rootError( ROOT.kError + 1 ) :
                     ds1 = ROOT.RooDataSet ( dsID() , ds.title , ds , _vars , fcuts ) 
-            ds.clear()
-            del ds
-            ds = ds1
-            varsete = ds.get()
+                    ds.clear()
+                    del ds
+                    ds = ds1
+                    varsete = ds.get()
             if not silent :
-                logger.info ( "make_dataset: dataset after (f)cuts\n%s" % ds.table ( prefix = "# " ) ) 
-            
+                logger.info ( "make_dataset: dataset after (f)cuts\n%s" % ds.table ( prefix = "# " ) )
+                
         nvars = ROOT.RooArgSet()
         for v in varset   : nvars.add ( v     )
         for v in formulas : nvars.add ( v.var )
@@ -1639,9 +1729,146 @@ def make_dataset ( tree              ,
         
     return ds , stat 
 
-ROOT.TTree.make_dataset = make_dataset
-        
+ROOT.TTree.make_dataset_old = make_dataset_old
 
+
+
+
+# =============================================================================
+## Create RooDataset from the tree using Tree->FRame->Dataste transformation 
+#  @code 
+#  tree = ...
+#  ds   = tree.make_dataset2 ( [ 'px , 'py' , 'pz' ] ) 
+#  @endcode
+def make_dataset ( tree              ,
+                   variables         , ## varibales 
+                   selection = ''    , ## TTree selection 
+                   roo_cuts  = ''    , ## Roo-Fit selection  
+                   name      = ''    , 
+                   title     = ''    ,
+                   silent    = False ) :
+    """Create the dataset from the tree
+    >>> tree = ...
+    >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
+    """
+    from ostap.core.meta_info import root_info 
+    if root_info < ( 6 , 26 ) :
+        return make_dataset_old ( tree      = tree      ,
+                                  variables = variables ,
+                                  selection = selection ,
+                                  roo_cuts  = root_cuts ,
+                                  name      = name      ,
+                                  title     = title     ,
+                                  silent    = silent    )
+    
+    if not silent :
+        logger.info  ("Use new efficient RooDataSet filling machinery")
+        
+    import ostap.trees.cuts
+    import ostap.fitting.roofit
+
+    from ostap.frames.frames import DataFrame, report_print  
+    frame = DataFrame ( tree )
+
+    total = len ( tree )
+    
+    if not silent :
+        pb = frame.ProgressBar ( total )
+                    
+    columns = set ( tree.branches() ) | set ( tree.leaves() )
+
+    scuts  = [] 
+    limits = []
+
+    vars = Variables ( variables ) 
+    for v in vars :
+        
+        mn , mx = v.minmax
+        
+        if _minv < mn :
+            lcut = "(%.16g <= %s)" % ( mn     , v.name )
+            if silent : scuts.append  (   lcut )
+            else      : limits.append ( ( lcut , 'RANGE(%s,low)'  % v.name ) )
+            
+        if _maxv > mx :
+            hcut = "(%s <= %.16g)" % ( v.name , mx     )
+            if silent : scuts.append ( hcut )
+            else      : limits.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
+            
+        if v.name == v.formula and v.name in columns : continue
+
+        ## define new variable 
+        frame = frame.Define ( v.name , v.formula )
+
+    ## define ``range/limit'' cuts: 
+    for c , f in limits :
+        frame = frame.Filter ( c , f )
+        
+    if scuts :
+        acut  = ' && '.join ( ( "(%s)" % c for c in scuts ) )
+        frame = frame.Filter ( acut      , 'RANGES' )
+        
+    if selection :
+        frame = frame.Filter ( selection , 'SELECTION' )
+
+    if roo_cuts  :
+        frame = frame.Filter ( roo_cuts  , 'ROO-CUTS'  )
+
+    report   = frame.Report()
+    
+    varset   = ROOT.RooArgSet()
+    for v in vars : varset.add ( v.var )
+    
+    name     = dsID() 
+    title    = "Data set from DataFrame"
+    
+    rds = frame.Book (
+        ROOT.std.move ( ROOT.RooDataSetHelper( name , title , varset ) ) ,
+        tuple ( v.name for v in vars ) )
+    
+    ds   = rds.GetValue()
+
+
+    selcuts  = None
+    roocuts  = None
+    lastcut  = None
+    ncuts    = 0 
+    for c in report :
+        ncuts += 1 
+        if   c.GetName() == 'SELECTION' : selcuts = c.GetAll () , c.GetPass ()
+        elif c.GetName() == 'ROO-CUTS'  : roocuts = c.GetAll () , c.GetPass ()
+        else                            : lastcut = c.GetAll () , c.GetPass () 
+
+    if not silent and ncuts : 
+        title = 'Tree->DataFrame->RooDataSet transformation'
+        logger.info ( title + '\n%s' % report_print ( report , title , '# ' ) )
+    
+    if selcuts and roocuts :
+        skipped   = total - selcuts [ 0 ] 
+        processed = roocuts [ 1 ] 
+    elif selcuts :
+        skipped   = total - selcuts [ 0 ] 
+        processed = selcuts [ 1 ] 
+    elif roocuts :
+        skipped   = total - roocuts [ 0 ] 
+        processed =         roocuts [ 1 ] 
+    elif lastcut :
+        if 0 == lastcut [1]  :
+            skipped   = total
+            processed = 0 
+        else :
+            skipped   = total - lastcut[1] 
+            processed = lastcut[1]
+    else : 
+        skipped   = 0 
+        processed = total
+        
+        
+    return ds , SelStat ( total , processed , skipped ) 
+
+ROOT.TTree.make_dataset = make_dataset
+
+        
 # =============================================================================
 ## define the helper function for proper decoration of ROOT.TTree/TChain
 #
@@ -1665,7 +1892,7 @@ def fill_dataset2 ( self              ,
                     first     =  0    ,
                     shortcut  = True  ,
                     silent    = False ,
-                     use_frame = 50000 ) :
+                    use_frame = 50000 ) :
     """ ``Process'' the tree/chain with proper TPySelector :
     
     >>> from ostap.fitting.pyselectors import SelectorWithCVars     
@@ -1706,12 +1933,11 @@ def fill_dataset2 ( self              ,
             selection = selector.selection
             
             from ostap.utils.utils    import ImplicitMT 
-            import ostap.frames.frames as    FR
+            from ostap.frames.frames  import DataFrame 
             
             total  = len ( self )
 
-            frame  = Ostap.DataFrame ( self , enable = True )
-            ## frame  = Ostap.DataFrame ( self , enable = False )
+            frame  = DataFrame ( self , enable = True )
             if not silent :
                 pb = frame.ProgressBar ( len ( self ) )
                 
@@ -1755,10 +1981,6 @@ def fill_dataset2 ( self              ,
                     if silent : scuts.append ( hcut )
                     else      : ranges.append ( ( hcut , 'RANGE(%s,high)' % v.name ) )
 
-            ## selvar = FR.var_name  ( 'selection_' , tuple ( [ c for c in frame.GetColumnNames () ] ) ,
-            ##                        selection , self.name , tuple ( self.files() ) )
-            ## frame  = frame.Define ( selvar , selection ) 
-            ## frame  = frame.Filter ( selvar , 'SELECTION'        )            
             frame  = frame.Filter ( selection , 'SELECTION' )
 
             for  c , f in ranges : 
@@ -1877,7 +2099,7 @@ def fill_dataset2 ( self              ,
     nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
     if   isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
         if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
-        args =  () if all else ( nevents , first )        
+        args =  () if all else ( nevents , first )
         return Ostap.Utils.process ( self , selector , *args ) 
 
     ## RooDataSet is here:
@@ -1889,12 +2111,13 @@ def fill_dataset2 ( self              ,
     store = self.store()
     if store and store.tree() :
         tree = store.tree()
-        return _process_ ( tree     ,  selector  ,
-                           nevents   = nevents   ,
-                           first     = first     ,
-                           shortcut  = shortcut  ,
-                           silent    = silent    ,
-                           use_frame = use_frame )
+        return fill_dataset2 ( tree      ,
+                               selector  ,
+                               nevents   = nevents   ,
+                               first     = first     ,
+                               shortcut  = shortcut  ,
+                               silent    = silent    ,
+                               use_frame = use_frame )
 
     from ostap.fitting.roofit import useStorage
     
@@ -1904,12 +2127,13 @@ def fill_dataset2 ( self              ,
         from ostap.core.core import dsID            
         cloned = self.Clone ( dsID() )
         
-        result = _process_ ( cloned    , selector  ,
-                             nevents   = nevents   ,
-                             first     = first     ,
-                             shortcut  = shortcut  ,
-                             silent    = silent    ,
-                             use_frame = use_frame )
+        result = fill_dataset2 ( cloned    ,
+                                 selector  ,
+                                 nevents   = nevents   ,
+                                 first     = first     ,
+                                 shortcut  = shortcut  ,
+                                 silent    = silent    ,
+                                 use_frame = use_frame )
         cloned.reset()
         del cloned
         return result
@@ -1925,9 +2149,10 @@ ROOT.TTree.fill_dataset2 = fill_dataset2
 #  ds   = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
 def fill_dataset1 ( tree                 ,
-                    variables            ,
-                    selection    = ''    ,
-                    roo_cuts     = ''    , 
+                    variables            ,  ## list of variables 
+                    selection    = ''    ,  ## TTree-cuts 
+                    roo_cuts     = ''    ,  ## RooFit cuts 
+                    cuts         = None  ,  ## python callable 
                     name         = ''    ,
                     title        = ''    ,
                     shortcut     = True  ,
@@ -1937,7 +2162,12 @@ def fill_dataset1 ( tree                 ,
     >>> tree = ...
     >>> ds = tree.fill_dataset1 ( [ 'px , 'py' , 'pz' ] ) 
     """
-    selector = SelectorWithVars ( variables , selection , roo_cuts = roo_cuts , silence = silent ) 
+    selector = SelectorWithVars ( variables ,
+                                  selection = selection ,
+                                  cuts      = cuts      , 
+                                  roo_cuts  = roo_cuts  ,
+                                  name      = name      , 
+                                  silence   = silent    ) 
     tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
     data = selector.data
     stat = selector.stat
@@ -1952,17 +2182,18 @@ ROOT.TTree.fill_dataset1 = fill_dataset1
 #  tree = ...
 #  ds   = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] ) 
 #  @endcode
-def fill_dataset ( tree     ,
-                   selector , **kwargs ) :
+def fill_dataset ( tree      ,
+                   variables , **kwargs ) :
     """Create the dataset from the tree
     >>> tree = ...
     >>> ds = tree.fill_dataset ( [ 'px , 'py' , 'pz' ] )
     - see `ROOT.TTree.fill_dataset1`
     - see `ROOT.TTree.fill_dataset2`
     """
-    if isinstance ( selector , SelectorWithVars ) :
+    if isinstance ( variables , SelectorWithVars ) :
+        selector = variables 
         return fill_dataset2 ( tree , selector , **kwargs )
-    return fill_dataset1 ( tree , selector , **kwargs )
+    return fill_dataset1 ( tree , variables , **kwargs )
 
 fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__
 fill_dataset.__doc__ += '\n' + fill_dataset2.__doc__

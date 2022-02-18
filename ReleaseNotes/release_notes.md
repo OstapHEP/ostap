@@ -1,5 +1,9 @@
 ## New features:
 
+ 1. add more efficinect way to fil RooDataSet (actiavted for ROOT>=6.26)
+ 1. update examples & tests
+ 1. imporve code in `pyselectors.py` 
+
 ## Backward incompatible:  
  
 ## Bug fixes:

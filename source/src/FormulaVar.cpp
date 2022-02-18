@@ -48,7 +48,8 @@ Ostap::makeFormula
   const std::string& expression  , 
   const RooArgList & dependents  ) 
 {
-  const std::string vname { Ostap::tmp_name ( "formula1_" , expression ) } ;
+  //
+  const std::string vname { Ostap::tmp_name ( "test_formula1_" , expression ) } ;
   //
   std::unique_ptr<RooFormula> ptr {} ;
   try 

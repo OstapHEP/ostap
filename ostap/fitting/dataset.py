@@ -2485,7 +2485,7 @@ _new_methods_ += [
 #  ds1 == ds2 
 #  @endcode 
 def ds_equal ( ds1 , ds2 ) : 
-    """Are two datastes equal by content?
+    """Are two datasets equal by content?
     ds1 = ...
     ds2 = ...
     ds_equal ( ds1 , ds2 ) 
@@ -2566,9 +2566,25 @@ def ds_nonequal ( ds1 , ds2 ) :
     """
     return not ds_equal ( ds1 , ds2 ) 
 
-## # ============================================================================
-ROOT.RooAbsData.__eq__ = ds_equal
-ROOT.RooAbsData.__ne__ = ds_nonequal 
+# =============================================================================
+## Are two datasets equal by content?
+def _ds_eq_ ( ds1 , ds2 ) :
+    """Are two datasets equal by content?"""
+    if not isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
+    ## raise TypeError ( "RooAbsData can be compared only with RooAbsData!" )
+    return ds_equal ( ds1 , ds2 ) 
+
+# =============================================================================
+## Are two datasets non-equal by content?
+def _ds_ne_ ( ds1 , ds2 ) :
+    """Are two datasets equal by content?"""
+    if isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
+    ## raise TypeError ( "RooAbsData can be compared only with RooAbsData!" )
+    return ds_nonequal ( ds1 , ds2 ) 
+
+# ==========================================================================
+ROOT.RooAbsData.__eq__ = _ds_eq_ 
+ROOT.RooAbsData.__ne__ = _ds_ne_ 
 _new_methods_ += [
     ROOT.RooAbsData.__eq__ , 
     ROOT.RooAbsData.__ne__ 
