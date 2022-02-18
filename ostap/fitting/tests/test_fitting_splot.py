@@ -33,7 +33,6 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 
-
 def test_splot () :
 
     logger = getLogger ( 'test_splot' )
