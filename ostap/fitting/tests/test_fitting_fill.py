@@ -16,6 +16,7 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT, random, sys 
 from   builtins                     import range
+from   ostap.core.meta_info         import root_info 
 import ostap.core.pyrouts 
 import ostap.fitting.roofit
 import ostap.io.root_file 
@@ -120,6 +121,9 @@ MeV = GeV/1000
 def ptcut ( s ) : return 3 < s.pt
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
+
+test_new_fill = (6,26) <= root_info 
+
 # =============================================================================
 def test_fitting_fill_1 () :
     
@@ -170,24 +174,35 @@ def test_fitting_fill_1 () :
         logger.info ( attention ( t4.name ) )        
         selector = SelectorWithVars ( **config ) 
         chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
-        ds1_4 = selector.data        
-    with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
-        logger.info ( attention ( t5.name ) )        
-        ds1_5 , _ = chain.make_dataset ( silent = False , **config )
-
-
+        ds1_4 = selector.data
+        
+    if test_new_fill : 
+        with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
+            logger.info ( attention ( t5.name ) )        
+            ds1_5 , _ = chain.make_dataset ( silent = False , **config )
+            
     table = [ ('Configuration' , 'CPU' ) ] 
 
     table.append ( ( t1.name , '%.3fs' % t1.delta ) )
     table.append ( ( t2.name , '%.3fs' % t2.delta ) )
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
-    table.append ( ( t5.name , '%.3fs' % t5.delta ) )
+
+    if test_new_fill : 
+        table.append ( ( t5.name , '%.3fs' % t5.delta ) )
 
     title1 = "All trivial variables"
     table1 = T.table ( table , title = title1 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1 , table1 ) ) 
 
+
+    if ds1_1 != ds1_2   : logger.error ('Datasets ds1_1  and ds1_2   are different!' )
+    if ds1_1 != ds1_3   : logger.error ('Datasets ds1_1  and ds1_3   are different!' )
+    if ds1_1 != ds1_4   : logger.error ('Datasets ds1_1  and ds1_4   are different!' )
+
+    if test_new_fill    : 
+        if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
+        
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -220,6 +235,10 @@ def test_fitting_fill_1 () :
     table1p = T.table ( table , title = title1p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title1p , table1p ) ) 
 
+    if ds1_1 != ds1p_1  : logger.error ('Datasets ds1_1  and ds1p_1  are different!' )
+    if ds1_2 != ds1p_2  : logger.error ('Datasets ds1_2  and ds1p_2  are different!' )
+    if ds1_3 != ds1p_3  : logger.error ('Datasets ds1_3  and ds1p_3  are different!' )
+    if ds1_4 != ds1p_4  : logger.error ('Datasets ds1_4  and ds1p_4  are different!' )
 
     # =========================================================================
     logger.info ( attention( 'Trivial variables + CUT' ) ) 
@@ -280,6 +299,11 @@ def test_fitting_fill_1 () :
     table2 = T.table ( table , title = title2 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title2 , table2 ) ) 
 
+    if ds2_1 != ds2_2   : logger.error ('Datasets ds2_1  and ds2_2   are different!' )
+    if ds2_1 != ds2_3   : logger.error ('Datasets ds2_1  and ds2_3   are different!' )
+    if ds2_1 != ds2_4   : logger.error ('Datasets ds2_1  and ds2_4   are different!' )
+
+
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -311,6 +335,14 @@ def test_fitting_fill_1 () :
     title2p = "Trivial variables + CUT (parallel)"
     table2p = T.table ( table , title = title2p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title2p , table2p ) ) 
+
+
+    if ds1_1 != ds2_1   : logger.error ('Datasets ds1_1  and ds2_1   are different!' )
+
+    if ds2_1 != ds2p_1  : logger.error ('Datasets ds2_1  and ds2p_1  are different!' )
+    if ds2_2 != ds2p_2  : logger.error ('Datasets ds2_2  and ds2p_2  are different!' )
+    if ds2_3 != ds2p_3  : logger.error ('Datasets ds2_3  and ds2p_3  are different!' )
+    if ds2_4 != ds2p_4  : logger.error ('Datasets ds2_4  and ds2p_4  are different!' )
 
 
     # =========================================================================
@@ -378,6 +410,12 @@ def test_fitting_fill_1 () :
     table3 = T.table ( table , title = title3 , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title3 , table3 ) ) 
 
+    if ds1_1 != ds3_1   : logger.error ('Datasets ds1_1  and ds3_1   are different!' )
+
+    if ds3_1 != ds3_2   : logger.error ('Datasets ds3_1  and ds2_2   are different!' )
+    if ds3_1 != ds3_3   : logger.error ('Datasets ds3_1  and ds2_3   are different!' )
+    if ds3_1 != ds3_4   : logger.error ('Datasets ds3_1  and ds2_4   are different!' )
+
 
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
@@ -411,6 +449,10 @@ def test_fitting_fill_1 () :
     table3p = T.table ( table , title = title3p , prefix = '# ' , alignment = 'rr' )
     logger.info ( '%s\n%s' % ( title3p , table3p ) ) 
 
+    if ds3_1 != ds3p_1  : logger.error ('Datasets ds3_1  and ds3p_1  are different!' )
+    if ds3_2 != ds3p_2  : logger.error ('Datasets ds3_2  and ds3p_2  are different!' )
+    if ds3_3 != ds3p_3  : logger.error ('Datasets ds3_3  and ds3p_3  are different!' )
+    if ds3_4 != ds3p_4  : logger.error ('Datasets ds3_4  and ds3p_4  are different!' )
 
     # =========================================================================
     logger.info ( attention ( 'Non-trivial variables + CUT' ) ) 
@@ -487,6 +529,12 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4 , table4 ) ) 
 
 
+    if ds1_1 != ds4_1   : logger.error ('Datasets ds1_1  and ds4_1   are different!' )
+    
+    if ds4_1 != ds4_2   : logger.error ('Datasets ds4_1  and ds4_2   are different!' )
+    if ds4_1 != ds4_3   : logger.error ('Datasets ds4_1  and ds4_3   are different!' )
+    if ds4_1 != ds4_4   : logger.error ('Datasets ds4_1  and ds4_4   are different!' )
+
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 : 
         logger.info ( attention ( t1.name ) )
         selector = SelectorWithVars ( **config ) 
@@ -520,46 +568,10 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
 
-    if ds1_1 != ds1_2   : logger.warning  ('Datasets ds1_1  and ds1_2   are different!' )
-    if ds1_1 != ds1_3   : logger.warning  ('Datasets ds1_1  and ds1_3   are different!' )
-    if ds1_1 != ds1_4   : logger.warning  ('Datasets ds1_1  and ds1_4   are different!' )
-    if ds1_1 != ds1_5   : logger.warning  ('Datasets ds1_1  and ds1_5   are different!' )
-
-    if ds1_1 != ds1p_1  : logger.warning  ('Datasets ds1_1  and ds1p_1  are different!' )
-    if ds1_2 != ds1p_2  : logger.warning  ('Datasets ds1_2  and ds1p_2  are different!' )
-    if ds1_3 != ds1p_3  : logger.warning  ('Datasets ds1_3  and ds1p_3  are different!' )
-    if ds1_4 != ds1p_4  : logger.warning  ('Datasets ds1_4  and ds1p_4  are different!' )
-
-    if ds2_1 != ds2_2   : logger.warning  ('Datasets ds2_1  and ds2_2   are different!' )
-    if ds2_1 != ds2_3   : logger.warning  ('Datasets ds2_1  and ds2_3   are different!' )
-    if ds2_1 != ds2_4   : logger.warning  ('Datasets ds2_1  and ds2_4   are different!' )
-
-    if ds2_1 != ds2p_1  : logger.warning  ('Datasets ds2_1  and ds2p_1  are different!' )
-    if ds2_2 != ds2p_2  : logger.warning  ('Datasets ds2_2  and ds2p_2  are different!' )
-    if ds2_3 != ds2p_3  : logger.warning  ('Datasets ds2_3  and ds2p_3  are different!' )
-    if ds2_4 != ds2p_4  : logger.warning  ('Datasets ds2_4  and ds2p_4  are different!' )
-
-    if ds3_1 != ds3_2   : logger.warning  ('Datasets ds3_1  and ds2_2   are different!' )
-    if ds3_1 != ds3_3   : logger.warning  ('Datasets ds3_1  and ds2_3   are different!' )
-    if ds3_1 != ds3_4   : logger.warning  ('Datasets ds3_1  and ds2_4   are different!' )
-
-    if ds3_1 != ds3p_1  : logger.warning  ('Datasets ds3_1  and ds3p_1  are different!' )
-    if ds3_2 != ds3p_2  : logger.warning  ('Datasets ds3_2  and ds3p_2  are different!' )
-    if ds3_3 != ds3p_3  : logger.warning  ('Datasets ds3_3  and ds3p_3  are different!' )
-    if ds3_4 != ds3p_4  : logger.warning  ('Datasets ds3_4  and ds3p_4  are different!' )
-
-    if ds4_1 != ds4_2   : logger.warning  ('Datasets ds4_1  and ds4_2   are different!' )
-    if ds4_1 != ds4_3   : logger.warning  ('Datasets ds4_1  and ds4_3   are different!' )
-    if ds4_1 != ds4_4   : logger.warning  ('Datasets ds4_1  and ds4_4   are different!' )
-
-    if ds4_1 != ds4p_1  : logger.warning  ('Datasets ds4_1  and ds4p_1  are different!' )
-    if ds4_2 != ds4p_2  : logger.warning  ('Datasets ds4_2  and ds4p_2  are different!' )
-    if ds4_3 != ds4p_3  : logger.warning  ('Datasets ds4_3  and ds4p_3  are different!' )
-    if ds4_4 != ds4p_4  : logger.warning  ('Datasets ds4_4  and ds4p_4  are different!' )
-
-    if ds1_1 != ds2_1   : logger.warning  ('Datasets ds1_1  and ds2_1   are different!' )
-    if ds1_1 != ds3_1   : logger.warning  ('Datasets ds1_1  and ds3_1   are different!' )
-    if ds1_1 != ds4_1   : logger.warning  ('Datasets ds1_1  and ds4_1   are different!' )
+    if ds4_1 != ds4p_1  : logger.error ('Datasets ds4_1  and ds4p_1  are different!' )
+    if ds4_2 != ds4p_2  : logger.error ('Datasets ds4_2  and ds4p_2  are different!' )
+    if ds4_3 != ds4p_3  : logger.error ('Datasets ds4_3  and ds4p_3  are different!' )
+    if ds4_4 != ds4p_4  : logger.error ('Datasets ds4_4  and ds4p_4  are different!' )
 
 
     logger.info ( '%s\n%s' % ( title1  , table1  ) )
@@ -574,12 +586,13 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
+
 # =============================================================================
 if '__main__' == __name__ :
 
 
     test_fitting_fill_1 ()
-
+    pass 
 
 # =============================================================================
 ##                                                                      The END 

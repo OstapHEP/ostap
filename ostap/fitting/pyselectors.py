@@ -104,6 +104,7 @@ __all__ = (
 # =============================================================================
 import ROOT, cppyy, math, sys
 # =============================================================================
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import ( cpp  , Ostap , items_loop ,
                                          dsID , valid_pointer , binomEff ) 
 from   ostap.core.ostap_types   import num_types, string_types, integer_types
@@ -1638,7 +1639,7 @@ def make_dataset_old ( tree              ,
     with TIMING ( 'Fill RooDataSet' , logger = logger ) : 
         with rooSilent ( ROOT.RooFit.ERROR  , True ) :
             with rootError ( ROOT.kWarning ) :
-                ds = ROOT.RooDataSet ( name  , title , tree , varsete , str ( cuts ) )
+                ds      = ROOT.RooDataSet ( name  , title , tree , varsete , str ( cuts ) )
                 varsete = ds.get()
                 
     if not silent :
@@ -1751,7 +1752,8 @@ def make_dataset ( tree              ,
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
-    from ostap.core.meta_info import root_info 
+    if not title : title = 'Dataset from %s' % tree.GetName()
+        
     if root_info < ( 6 , 26 ) :
         return make_dataset_old ( tree      = tree      ,
                                   variables = variables ,
@@ -1905,9 +1907,14 @@ def fill_dataset2 ( self              ,
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
-
-        if selector.really_trivial and not selector.morecuts and not '[' in selector.selection :
-
+        
+        if ( not selector.morecuts ) and \
+           selector.trivial_vars     and \
+           ( ( 6 , 26 ) <= root_info or selector.really_trivial ) :
+    
+            ## if selector.really_trivial and not selector.morecuts ) and \
+            ##    ( not '[' in selector.selection ) : 
+            
             if not silent : logger.info ( "Make try to use the SHORTCUT!" )
             variables     = selector.variables 
             ds , stat     = self.make_dataset ( variables = variables          ,

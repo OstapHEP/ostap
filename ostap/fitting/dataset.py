@@ -2494,58 +2494,89 @@ def ds_equal ( ds1 , ds2 ) :
 
     if ds1 is ds2 : return True    
     ## same length ? 
-    if len ( ds1 ) != len ( ds2 ) : return False
+    if len ( ds1 ) != len ( ds2 ) :
+        logger.debug ("compare datasets: different lengths") 
+        return False
     
     ## same variables ? 
     vars1 = set ( ( v.name for v in ds1.varset () ) ) 
     vars2 = set ( ( v.name for v in ds2.varset () ) )
-    if vars1 != vars2 : return False
+    if vars1 != vars2 :
+        logger.debug ("compare datasets: different variables") 
+        return False
 
     ## both binned or unbinned?
     b1 = ds1.binned ()
     b2 = ds2.binned ()
-    if b1 and not b2 : return False
-    if b2 and not b1 : return False
+    if b1 and not b2 :
+        logger.debug ("compare datasets: binned vs unbinned") 
+        return False
+    if b2 and not b1 :
+        logger.debug ("compare datasets: unbinned vs binned") 
+        return False
 
     
     ## both weighted or non-weighted?
     w1 = ds1.isWeighted ()
     w2 = ds2.isWeighted ()
-    if w1 and not w2 : return False
-    if w2 and not w1 : return False
+    if w1 and not w2 :
+        logger.debug ("compare datasets: weighted vs non-weighted") 
+        return False
+    if w2 and not w1 :
+        logger.debug ("compare datasets: non-weighted vs weighted") 
+        return False
 
     ## both non-poissoned 
     n1 = ds1.isNonPoissonWeighted ()
     n2 = ds2.isNonPoissonWeighted ()
-    if n1 and not n2 : return False
-    if n2 and not n1 : return False
+    if n1 and not n2 :
+        logger.debug ("compare datasets: NP-weighted vs non-weighted") 
+        return False
+    if n2 and not n1 :
+        logger.debug ("compare datasets: non-weighted vs NP-weighted") 
+        return False
 
-    
     if w1 and w2 :
-        if ds1.store_error      () and not ds2.store_error      () : return False
-        if ds2.store_error      () and not ds1.store_error      () : return False
-        if ds1.store_asym_error () and not ds2.store_asym_error () : return False
-        if ds2.store_asym_error () and not ds1.store_asym_error () : return False
+        
+        if ds1.store_error      () and not ds2.store_error      () :
+            logger.debug ("compare datasets: weight-errors vs no errors") 
+            return False
+        if ds2.store_error      () and not ds1.store_error      () :
+            logger.debug ("compare datasets: no errors vs weight-errors") 
+            return False
+        if ds1.store_asym_error () and not ds2.store_asym_error () :
+            logger.debug ("compare datasets: asym-errors vs no errors") 
+            return False
+        if ds2.store_asym_error () and not ds1.store_asym_error () :
+            logger.debug ("compare datasets: no errors vs asym-errors") 
+            return False
 
         wv1 = Ostap.Utils.getWeight ( ds1 )
         wv2 = Ostap.Utils.getWeight ( ds2 )
 
-        if wv1 != wv2 : return False
+        if wv1 != wv2 :
+            logger.debug ("compare datasets: different weight names") 
+            return False
         
     ## check content
+    if 0 == len ( ds1 ) : return True 
     
     st1   = ds1.statVars ( list ( vars1 ) )
     st2   = ds2.statVars ( list ( vars2 ) )
     keys1 = set ( st1.keys() )
     keys2 = set ( st2.keys() )
-    if keys1 != keys2 : return False
+    if keys1 != keys2 :
+        logger.debug ("compare datasets: different vars") 
+        return False
 
     from ostap.math.base import isequal, isequalf  
     for k in keys1 :
 
         s1 = st1 [ k ]
         s2 = st2 [ k ]
-        if s1 != s2 : return False 
+        if s1 != s2 :
+            logger.debug ("compare datasets: different %s" % k ) 
+            return False 
 
     return True
 
@@ -2571,15 +2602,13 @@ def ds_nonequal ( ds1 , ds2 ) :
 def _ds_eq_ ( ds1 , ds2 ) :
     """Are two datasets equal by content?"""
     if not isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
-    ## raise TypeError ( "RooAbsData can be compared only with RooAbsData!" )
     return ds_equal ( ds1 , ds2 ) 
 
 # =============================================================================
 ## Are two datasets non-equal by content?
 def _ds_ne_ ( ds1 , ds2 ) :
-    """Are two datasets equal by content?"""
-    if isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
-    ## raise TypeError ( "RooAbsData can be compared only with RooAbsData!" )
+    """Are two datasets non-equal by content?"""
+    if not isinstance  ( ds2 , ROOT.RooAbsData ) : return NotImplemented 
     return ds_nonequal ( ds1 , ds2 ) 
 
 # ==========================================================================
