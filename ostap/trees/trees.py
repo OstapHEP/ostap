@@ -713,18 +713,18 @@ def _stat_covs_ ( tree        ,
     _cov2  = _DV()
 
     if cuts : 
-        length = Ostap.StatVar._statCov ( tree   ,
-                                          _vars  ,
-                                          cuts   ,
-                                          _stats ,
-                                          _cov2  ,
-                                          *args  ) 
+        length = Ostap.StatVar.statCov ( tree   ,
+                                         _vars  ,
+                                         cuts   ,
+                                         _stats ,
+                                         _cov2  ,
+                                         *args  ) 
     else :
-        length = Ostap.StatVar._statCov ( tree   ,
-                                          _vars  ,
-                                          _stats ,
-                                          _cov2  ,
-                                          *args  )
+        length = Ostap.StatVar.statCov ( tree   ,
+                                         _vars  ,
+                                         _stats ,
+                                         _cov2  ,
+                                         *args  )
         
     l = len(_vars)
     if 0 == length : 

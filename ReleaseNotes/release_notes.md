@@ -1,8 +1,8 @@
 ## New features:
 
- 1. add more efficinect way to fil RooDataSet (actiavted for ROOT>=6.26)
+ 1. add (much) more efficient way to fill `RooDataSet` (activated for ROOT>=6.26)
  1. update examples & tests
- 1. imporve code in `pyselectors.py` 
+ 1. improve code in `pyselectors.py` 
 
 ## Backward incompatible:  
  
@@ -12,9 +12,9 @@
 
 ## New features:
 
-  1. add opton for parallel file copy 
-  1. add arrgument parallel=False` for `Files.copy_files` 
-  1. add `roo_cuts` argument for `SelectorWitjCuts` and ``make_dataset`
+  1. add option for parallel file copy 
+  1. add argument `parallel=False` for `Files.copy_files` 
+  1. add `roo_cuts` argument for `SelectorWithCuts` and `make_dataset`
   1. add new test for counters 
   1. imporve numerical precision for counters 
   1. add `TChain.parallel_fill` (new name for `TChain.pprocess`)
@@ -25,7 +25,7 @@
 ## Backward incompatible  
  
 ## Bug fixes:
-  1. bug fix in `WStatEntity::add` for onitialization shortcut
+  1. bug fix in `WStatEntity::add` for initialisation shortcut
  
 # v1.6.9.9
 

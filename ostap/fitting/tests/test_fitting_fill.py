@@ -126,7 +126,7 @@ test_new_fill = (6,26) <= root_info
 
 # =============================================================================
 def test_fitting_fill_1 () :
-    
+## if 1 < 2 :     
     logger = getLogger ('test_fitting_fill_1' ) 
 
     ## prepare data
@@ -202,6 +202,7 @@ def test_fitting_fill_1 () :
 
     if test_new_fill    : 
         if ds1_1 != ds1_5 : logger.error ('Datasets ds1_1  and ds1_5   are different!' )
+
         
     with timing ( "No SHORTCUT, no FRAME" , logger = None ) as t1 :
         logger.info ( attention ( t1.name ) )
@@ -586,7 +587,7 @@ def test_fitting_fill_1 () :
     logger.info ( '%s\n%s' % ( title4  , table4  ) ) 
     logger.info ( '%s\n%s' % ( title4p , table4p ) ) 
 
-
+        
 # =============================================================================
 if '__main__' == __name__ :
 
