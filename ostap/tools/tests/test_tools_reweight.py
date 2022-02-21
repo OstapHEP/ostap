@@ -48,12 +48,17 @@ hdata = h1_axis( [    i   for i in range(0,20) ] +
                  [ 20+i*2 for i in range(0,20) ] +
                  [ 60+i*4 for i in range(0,10) ] + [ 100 ] )
 
-for i in range( 0, 500000 ) :
+
+N1 = 500000
+N2 = 500000
+N3 = 400000
+
+for i in range( 0, N1 ) :
     v = 100 + random.expovariate ( -1.0/60 ) 
     while v <   0 : v +=100
     while v > 100 : v -=100        
     hdata.Fill(v)
-for i in range( 0, 500000 ) :
+for i in range( 0, N2 ) :
     v = random.gauss(50,10) 
     while v <   0 : v +=100
     while v > 100 : v -=100        
@@ -69,7 +74,7 @@ with ROOT.TFile.Open( testdata ,'recreate') as mc_file:
     xvar = array  ( 'f', [0])
     mctree.Branch ( 'x' , xvar , 'x/F' )
     
-    for i in range ( 400000 ) : 
+    for i in range ( N3 ) : 
         xvar[0] = random.expovariate(1.0/80)            
         mctree.Fill()
         
@@ -160,7 +165,7 @@ for iter in range ( 1 , maxIter + 1  ) :
         # ==============================================================================
         ## 4) compare "Data" and "MC"  after the reweighting on the given iteration    
         logger.info  ( tag + ': compare DATA and MC for iteration #%d' % iter )
-
+        
         hh = 'Iteration#%d: ' % iter 
         
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis 
@@ -175,7 +180,7 @@ for iter in range ( 1 , maxIter + 1  ) :
         
     # =========================================================================
     ## prepare the plot of weighted MC for the given iteration
-    
+
     ## final density on data 
     data_density = hdata.density()
     
@@ -188,12 +193,14 @@ for iter in range ( 1 , maxIter + 1  ) :
     mc_density  .draw ('e1 same')
     time.sleep ( 5 ) 
     
-    if not more and iter > 3 : 
+    if not more and iter > 3 :
+        print ( 'HERE/3' )
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         break
 
     cvs_file = CleanUp.tempfile ( suffix = '.csv' , prefix ='ostap-test-tools-reweight-' )
     mcds.to_csv ( cvs_file , dialect = 'excel-tab' )
+
 
     mcds.clear () 
     del mcds , selector

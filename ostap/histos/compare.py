@@ -17,6 +17,13 @@ __all__     = ()
 # =============================================================================
 import ROOT, math 
 # =============================================================================
+from   ostap.core.meta_info   import root_info 
+from   ostap.core.core        import hID , VE 
+import ostap.histos.histos 
+import ostap.histos.param
+import ostap.fitting.param 
+from   ostap.logger.colorized import allright  
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
@@ -24,12 +31,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.compare' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( 'Some specific comparison of histo-objects')
-# =============================================================================
-from   ostap.core.core        import hID , VE 
-import ostap.histos.histos 
-import ostap.histos.param
-import ostap.fitting.param 
-from   ostap.logger.colorized import allright  
 # =============================================================================
 ## Can 1D-histogram can be considered as ``constant'' ?
 #  @code
@@ -75,7 +76,7 @@ def _h1_cmp_fit_ ( h1              ,
     >>> r  = h1.cmp_fit ( h2 )
     >>> if r : print r.Prob()    
     """
-    
+
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
            "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )    
     if isinstance ( h2 , ROOT.TH1 ) :
@@ -96,7 +97,7 @@ def _h1_cmp_fit_ ( h1              ,
     f2.fix      ( 1 , 0 )
     f2.fix      ( 2 , 1 )
 
-    rf = f2.Fit ( h1 , 'S' + opts )    
+    rf = f2.Fit ( h1 , 'S' + opts )
     if 0 != rf.Status() :
         logger.error ( "Can't fit with function " % rf.Status() )
         return None
@@ -1259,12 +1260,13 @@ def _h1_cmp_prnt_ ( h1                  ,
     >>> h1 , h2 = ...
     >>> h1.cmp_prnt ( h2 ) 
     """
+    
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
            "cmp_prnt: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
     if isinstance ( h2 , ROOT.TH1 ) :
         assert 1 == h2.dim () , "cmp_prnt: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
-
+ 
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1
         h2_ = h2.density() if hasattr ( h2 , 'density' ) else h2
@@ -1302,7 +1304,7 @@ def _h1_cmp_prnt_ ( h1                  ,
     numbers.append ( skew )
     numbers.append ( kurt )
 
-    if 4 < max_moment  : 
+    if 4 < max_moment  :
         for i in range ( 5 , max_moment + 1 ) :
             v1   = h1.stdMoment ( i , exp_moment )
             v2   = h2.stdMoment ( i , exp_moment )
@@ -1333,8 +1335,10 @@ def _h1_cmp_prnt_ ( h1                  ,
         row = allright ( v ) , v1.toString ( fmt ) , v2.toString( fmt ) , dv.toString ( fmt )         
         table_data.append ( row ) 
 
+    
     title = title if title else '%s vs %s' % ( head1 , head2 ) 
     import ostap.logger.table as T
+    
     return T.table ( table_data , title = title , prefix = prefix  )
 
     
@@ -1440,8 +1444,10 @@ def _h2_cmp_prnt_ ( h1              ,
     fmt3 = '{:^%d}' % wid3
     fmt4 = '{:^%d}' % wid4
     
+
     import itertools 
     for i , v , f in zip ( itertools.count() , values , functions ) :
+
         v1 = f ( h1 )
         v2 = f ( h2 )
         dv = v1 - v2
@@ -1559,24 +1565,29 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
         value = dmx [ -1 ]  * 100       
         row   = allright ( diffpos ) , '[%]' , value.toString( fmt ( value ) ) 
         rows.append ( row  )
-        
+
+    acos = lambda x : ME.acos ( max ( min ( x , 1.0 ) , -1.0 ) )  
+    
     if angle :
         value = h1.cmp_cos ( h2 , density = density )
-        value = math.acos    ( value ) 
+        ## value = math.acos    ( value )
+        value = acos ( value ) 
         v , n = pretty_float ( value )
         row   = allright ( angle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle :
         value = h1.cmp_dcos ( h2 , density = density )
-        value = ME.acos     ( value ) 
+        ## value = ME.acos     ( value )
+        value = acos ( value ) 
         v , n = pretty_ve ( value  , parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
 
     if dangle and histo2 :
         value = h2.cmp_dcos ( h1 , density = density )
-        value = ME.acos     ( value ) 
+        ## value = ME.acos     ( value )
+        value = acos ( value ) 
         v , n = pretty_ve ( value  , parentheses = False )
         row   = allright ( dangle ) , '[10^%d]' %n if  n  else  '' , v 
         rows.append ( row  )
@@ -1617,23 +1628,28 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
     if probfit and histo2 :
 
-        rf1   = h1.cmp_fit ( h2 , density = density ) 
-        prob  = rf1.Prob()
-        
-        value = prob 
-        v , n = pretty_float ( value )
-        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
-        rows.append ( row  )
+        if (6,27)<= root_info :
+            
+            logger.warning ('H1_CMP_DIFF_PRNT: cmp_fit is teporarily disabled (6.27/1)')
+            
+        else : 
 
-        rf2   = h2.cmp_fit ( h1 , density = density ) 
-        prob  = rf2.Prob()
-        
-        value = prob 
-        v , n = pretty_float ( value )
-        row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
-        rows.append ( row  )
-        
-        
+            rf1   = h1.cmp_fit ( h2 , density = density ) 
+            prob  = rf1.Prob()        
+            
+            value = prob 
+            v , n = pretty_float ( value )
+            row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+            rows.append ( row  )
+            
+            rf2   = h2.cmp_fit ( h1 , density = density ) 
+            prob  = rf2.Prob()
+            
+            value = prob 
+            v , n = pretty_float ( value )
+            row   = allright ( probfit ) , '[10^%d]' %n if  n  else  '' , v 
+            rows.append ( row  )
+
     import ostap.logger.table as T
     return T.table ( rows , title =  title , prefix = prefix , alignment = 'lcl' )
 

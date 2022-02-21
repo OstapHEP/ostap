@@ -135,7 +135,7 @@ class C1Fun(object) :
 
     def Draw ( self , *args , **kwargs ) : return self.draw ( *args , **kwargs ) 
     def draw ( self , *args , **kwargs ) :
-        t = self.tf1()
+        t = self.__tf1
         return t.draw( *args , **kwargs )
 
 

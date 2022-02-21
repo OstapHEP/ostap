@@ -321,7 +321,17 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
 
         from ostap.utils.cidict import cidict
         kw = cidict ( transform = cidict_fun , **kwargs )
-        
+
+        ## Global color (Line, Marker, Fill) 
+        if 'Color' in kw :
+            color = check_color ( kw.pop('Color' ) ) 
+            if not 'LineColor'   in kw and hasattr ( obj , 'SetLineColor'   ) :
+                obj.SetLineColor   ( color )
+            if not 'MarkerColor' in kw and hasattr ( obj , 'SetMarkerColor' ) :
+                obj.SetMarkerColor ( color )
+            if not 'FillColor'   in kw and hasattr ( obj , 'SetFillColor'   ) :
+                obj.SetFillColor   ( color )
+                
         ## Line
         
         if 'LineColor'  in kw and hasattr ( obj , 'SetLineColor' ) :
@@ -349,6 +359,7 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
             obj.SetFillColor   ( color )
         if 'FillStyle'   in kw and hasattr ( obj , 'SetFillStyle' ) :
             obj.SetFillStyle   ( kw.pop('FillStyle' ) )
+
 
         ## Min/max values  
 
