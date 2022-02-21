@@ -41,11 +41,13 @@ class  FillTask(Task) :
     def __init__ ( self               ,
                    variables          ,
                    selection          ,
+                   roo_cuts  = ''     , 
                    trivial   = False  , 
                    use_frame = 100000 ) :
         
         self.variables = variables 
-        self.selection = selection 
+        self.selection = selection
+        self.roo_cuts  = roo_cuts 
         self.trivial   = trivial  
         self.use_frame = use_frame 
         self.__output  = ()  
@@ -80,26 +82,29 @@ class  FillTask(Task) :
         from   ostap.fitting.pyselectors import SelectorWithVars
         
         ## use selector  
-        selector = SelectorWithVars ( self.variables ,
-                                      self.selection ,
-                                      silence = True )
+        selector = SelectorWithVars ( variables = self.variables ,
+                                      selection = self.selection ,
+                                      roo_cuts  = self.roo_cuts  , 
+                                      silence   = True           )
         
         args = ()  
         if not all : args  = nevents , first 
-            
-        num = chain.process ( selector , *args                 ,
-                              silent    = True                 , 
-                              shortcut  = all and self.trivial ,
-                              use_frame = self.use_frame       )
         
-        self.__output = selector.data, selector.stat  
+        dataset , stat  = chain.fill_dataset2 ( selector  ,
+                                                *args     ,
+                                                silent    = True                 , 
+                                                shortcut  = all and self.trivial ,
+                                                use_frame = self.use_frame       )
         
-        if  num < 0 :
-            logger.warning ("Processing status %s (jobid #%s)"  %  ( num % jobid ) ) 
+        ## self.__output = selector.data, selector.stat  
+        self.__output = dataset, stat 
         
-        ##del selector.data
-        ##del      selector        
-        logger.debug ( 'Processed %s and filled %d entries (jobid #%s)' % ( item , len( self.__output ) , jobid ) )
+        ## if  num < 0 :
+        ##   logger.warning ("Processing status %s (jobid #%s)"  %  ( num % jobid ) ) 
+        
+        ## del selector.data
+        ## del      selector        
+        logger.debug ( 'Processed %s and filled %d entries (jobid #%s)' % ( stat , len ( dataset ) , jobid ) )
 
         return self.__output 
 
@@ -162,7 +167,8 @@ def parallel_fill ( chain                  ,
 
     selection = selector.selection
     variables = selector.variables
-
+    roo_cuts  = selector.roo_cuts
+    
     ## trivial   = selector.trivial_vars and not selector.morecuts
     
     trivial   = selector.really_trivial and not selector.morecuts 
@@ -173,7 +179,12 @@ def parallel_fill ( chain                  ,
         logger.info ("Configuration is ``trivial'': redefine ``chunk-size'' to -1")
         chunk_size = -1
         
-    task  = FillTask ( variables , selection , trivial , use_frame )
+    task  = FillTask ( variables = variables ,
+                       selection = selection ,
+                       roo_cuts  = roo_cuts  ,
+                       trivial   = trivial   ,
+                       use_frame = use_frame )
+    
     wmgr  = WorkManager ( silent     = silent     , **kwargs )
     trees = ch.split    ( chunk_size = chunk_size , max_files = max_files )
     wmgr.process( task , trees , chunk_size = job_chunk )
@@ -188,15 +199,14 @@ def parallel_fill ( chain                  ,
     skipped = 'Skipped:%d' % stat.skipped
     skipped = '/' + attention ( skipped ) if stat.skipped else ''
     logger.info (
-        'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n# %s' % (
+        'Selector(%s): Events Processed:%d/Total:%d%s CUTS: "%s"\n%s' % (
         selector.name    ,
         stat.processed   ,
         stat.total       ,
         skipped          ,
         selector.cuts()  , dataset.table ( prefix = '# ' ) ) )             
     
-    return 1 
-
+    return dataset, stat  
 
 ROOT.TChain.parallel_fill = parallel_fill 
 ROOT.TTree .parallel_fill = parallel_fill 

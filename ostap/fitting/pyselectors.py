@@ -2112,12 +2112,23 @@ def fill_dataset2 ( self              ,
     # =========================================================================
     
     import ostap.fitting.roofit
-    
+
     nevents = nevents if 0 <= nevents else ROOT.TChain.kMaxEntries
-    if   isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
+    if isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
+        if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
+        args   =  () if all else ( nevents , first )
+        result = Ostap.Utils.process ( self , selector , *args )
+        if result < 0   : logger.error ("TTree::Process: result is %s" % result )
+        elif not silent : logger.info  ("TTree::Process: result is %s" % result )  
+        return selector.data, selector.stat
+    
+    if isinstance ( self , ROOT.TTree ) and isinstance ( selector , ROOT.TSelector ) :
         if not silent : logger.info ( "No shortcuts&frame tricks posisble: use plain Selector" )
         args =  () if all else ( nevents , first )
-        return Ostap.Utils.process ( self , selector , *args ) 
+        result = Ostap.Utils.process ( self , selector , *args )
+        if result < 0   : logger.error ("TTree::Process: result is %s" % result )
+        elif not silent : logger.info  ("TTree::Process: result is %s" % result )  
+        return result 
 
     ## RooDataSet is here:
     if not silent : logger.info ( "Process RooDataSet!" )
@@ -2142,8 +2153,7 @@ def fill_dataset2 ( self              ,
         
         logger.info ('Prepare the cloned dataset with TTree-storage type')
         from ostap.core.core import dsID            
-        cloned = self.Clone ( dsID() )
-        
+        cloned = self.Clone ( dsID() )        
         result = fill_dataset2 ( cloned    ,
                                  selector  ,
                                  nevents   = nevents   ,
