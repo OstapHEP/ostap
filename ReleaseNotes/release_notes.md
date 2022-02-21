@@ -6,9 +6,6 @@
  1. temporary disable call for `cmt_fit` form `cmp_diff_prnt` for vey fresh version of ROOT 
 
 
-
- 
-
 ## Backward incompatible:  
  
 ## Bug fixes:
