@@ -197,7 +197,7 @@ long Ostap::Utils::process
 ( TTree*             tree     ,
   TSelector*         selector )
 {
-  if ( 0 == tree || 0 == selector ) { return 0 ; }
+  if ( 0 == tree || 0 == selector ) { return -1 ; }
   return tree->Process ( selector ) ;
 }
 // ============================================================================
@@ -221,7 +221,7 @@ long Ostap::Utils::process
   const unsigned long events    , 
   const unsigned long first     ) 
 {
-  if ( 0 == tree || 0 == selector ) { return 0 ; }
+  if ( 0 == tree || 0 == selector ) { return -1 ; }
   return tree->Process ( selector , "" , events , first ) ;
 } 
 // ============================================================================
@@ -242,7 +242,7 @@ long Ostap::Utils::process
 ( TChain*            chain    ,
   TSelector*         selector )
 {
-  if ( 0 == chain || 0 == selector ) { return 0 ; }
+  if ( 0 == chain || 0 == selector ) { return -1 ; }
   return chain -> Process ( selector ) ;
 }
 // ============================================================================
@@ -266,7 +266,7 @@ long Ostap::Utils::process
   const unsigned long events   ,
   const unsigned long first    ) 
 {
-  if ( 0 == chain || 0 == selector ) { return 0 ; }
+  if ( 0 == chain || 0 == selector ) { return -1 ; }
   return chain -> Process ( selector , "" , events , first ) ;
 }
 // ============================================================================
