@@ -98,7 +98,8 @@ __all__ = (
     'Selector'         ,        ## The ``fixed'' TPySelector
     'SelectorWithCuts' ,        ## The ``fixed'' TPySelector with TTree-formula 
     'SelectorWithVars' ,        ## Generic selctor to fill RooDataSet from TTree/TChain
-    'Variable'         ,        ## helper class to define variable 
+    'Variable'         ,        ## helper class to define variable
+    'DataSet_NEW_FILL' ,        ## Is new efficient filing machinery activated? 
     'SelectorWithVarsCached'    ## Generic selector with cache   
 )
 # =============================================================================
@@ -1508,6 +1509,11 @@ class SelectorWithVarsCached(SelectorWithVars) :
 
         return 1
 
+
+# =============================================================================
+## Is new efficienct fill machinery activated? 
+DataSet_NEW_FILL = ( 6 , 26 ) <= root_info 
+
 # =============================================================================
 ## Create RooDataset from the tree
 #  @code 
@@ -1526,6 +1532,9 @@ def make_dataset_old ( tree              ,
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
 
+    if DataSet_NEW_FILL :
+        logger.info ( "It is better to use more efficinect function ``make_dataset''" )
+    
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
@@ -1754,7 +1763,7 @@ def make_dataset ( tree              ,
     """
     if not title : title = 'Dataset from %s' % tree.GetName()
         
-    if root_info < ( 6 , 26 ) :
+    if not DataSet_NEW_FILL :
         return make_dataset_old ( tree      = tree      ,
                                   variables = variables ,
                                   selection = selection ,
@@ -1908,14 +1917,14 @@ def fill_dataset2 ( self              ,
 
     if all and shortcut and isinstance ( self , ROOT.TTree ) and isinstance ( selector , SelectorWithVars ) :
         
-        if ( not selector.morecuts ) and \
-           selector.trivial_vars     and \
-           ( ( 6 , 26 ) <= root_info or selector.really_trivial ) :
-    
+        if ( not selector.morecuts )  and \
+               selector.trivial_vars  and \
+               ( DataSet_NEW_FILL or selector.really_trivial ) :
+            
             ## if selector.really_trivial and not selector.morecuts ) and \
             ##    ( not '[' in selector.selection ) : 
             
-            if not silent : logger.info ( "Make try to use the SHORTCUT!" )
+            if not silent : logger.info ( "Make try to use the *SHORTCUT*!" )
             variables     = selector.variables 
             ds , stat     = self.make_dataset ( variables = variables          ,
                                                 selection = selector.selection ,
@@ -1923,7 +1932,8 @@ def fill_dataset2 ( self              ,
                                                 silent    = silent             )
             selector.data = ds
             selector.stat = stat
-            return 1
+            
+            return ds , stat  
         
     # =========================================================================
     ## If the length is large and selection is not empty,
@@ -2178,7 +2188,8 @@ def fill_dataset1 ( tree                 ,
     tree.fill_dataset2 ( selector , silent = silent , shortcut  = shortcut , use_frame = use_frame )
     data = selector.data
     stat = selector.stat
-    del selector 
+    del selector
+    
     return data , stat 
 
 ROOT.TTree.fill_dataset1 = fill_dataset1

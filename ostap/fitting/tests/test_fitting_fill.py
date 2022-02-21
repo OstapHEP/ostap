@@ -23,7 +23,7 @@ import ostap.io.root_file
 from   ostap.utils.progress_bar     import progress_bar
 from   ostap.utils.timing           import timing  
 from   ostap.trees.data             import Data
-from   ostap.fitting.pyselectors    import Variable, SelectorWithVars
+from   ostap.fitting.pyselectors    import Variable, SelectorWithVars, DataSet_NEW_FILL
 from   ostap.logger.colorized       import attention
 import ostap.logger.table           as     T
 import ostap.parallel.parallel_fill
@@ -36,7 +36,6 @@ if '__main__' == __name__  or '__builtin__' == __name__ :
 else : 
     logger = getLogger ( __name__            )
 # =============================================================================
-
 DILL_PY3_issue = False 
 if ( 3 , 6 ) <= sys.version_info : 
     from   ostap.parallel.parallel import DILL_PY3_issue
@@ -122,8 +121,6 @@ def ptcut ( s ) : return 3 < s.pt
 def xvar  ( s ) : return (s.mass+s.pt+s.eta)/s.eta 
 
 
-test_new_fill = (6,26) <= root_info 
-
 # =============================================================================
 def test_fitting_fill_1 () :
 ## if 1 < 2 :     
@@ -176,7 +173,7 @@ def test_fitting_fill_1 () :
         chain.fill_dataset ( selector , shortcut = True  , use_frame = True  )
         ds1_4 = selector.data
         
-    if test_new_fill : 
+    if DataSet_NEW_FILL :  
         with timing ( " pure-FRAME (new) " , logger = None ) as t5 : 
             logger.info ( attention ( t5.name ) )        
             ds1_5 , _ = chain.make_dataset ( silent = False , **config )
@@ -188,7 +185,7 @@ def test_fitting_fill_1 () :
     table.append ( ( t3.name , '%.3fs' % t3.delta ) )
     table.append ( ( t4.name , '%.3fs' % t4.delta ) )
 
-    if test_new_fill : 
+    if DataSet_NEW_FILL : 
         table.append ( ( t5.name , '%.3fs' % t5.delta ) )
 
     title1 = "All trivial variables"
