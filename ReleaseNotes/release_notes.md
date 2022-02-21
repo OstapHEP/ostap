@@ -3,7 +3,10 @@
  1. add (much) more efficient way to fill `RooDataSet` (activated for ROOT>=6.26)
  1. update examples & tests
  1. improve code in `pyselectors.py` 
- 1. temparily disable call for `cmt_fit` form `cmp_diff_prnt` for vey fresh version of ROOT 
+ 1. temporary disable call for `cmt_fit` form `cmp_diff_prnt` for vey fresh version of ROOT 
+
+
+
  
 
 ## Backward incompatible:  
