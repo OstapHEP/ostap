@@ -1572,8 +1572,6 @@ def make_dataset_old ( tree              ,
     
     limits    = []
 
-
-
     for vv in variables :
         
         if vv.name != vv.formula :            
@@ -1766,7 +1764,7 @@ ROOT.TTree.make_dataset_old = make_dataset_old
 
 
 # =============================================================================
-## Create RooDataset from the tree using Tree->FRame->Dataste transformation 
+## Create RooDataset from the tree using Tree->Frame->Dataset transformation 
 #  @code 
 #  tree = ...
 #  ds   = tree.make_dataset2 ( [ 'px , 'py' , 'pz' ] ) 
@@ -1778,7 +1776,7 @@ def make_dataset ( tree              ,
                    name      = ''    , 
                    title     = ''    ,
                    silent    = False ) :
-    """Create the dataset from the tree
+    """Create the dataset from the tree via intermediate Frame 
     >>> tree = ...
     >>> ds = tree.make_dataset ( [ 'px , 'py' , 'pz' ] ) 
     """
@@ -1933,6 +1931,10 @@ def fill_dataset2 ( self              ,
     >>> chain.fill_dataset2 ( selector )  ## NB: note lowercase ``process'' here !!!    
     """
 
+    ## if use_frame and root_info < (6,15) :
+    ##    logger.warning ( 'Processing via DataFrame is disabled for %s' % str ( root_info ) ) 
+    ##    use_frame = False 
+
     ## process all events? 
     all = 0 == first and ( 0 > nevents or len ( self ) <= nevents )
 
@@ -1976,6 +1978,9 @@ def fill_dataset2 ( self              ,
             total  = len ( self )
 
             frame  = DataFrame ( self , enable = True )
+
+            frame_main = frame
+            
             if not silent :
                 pb = frame.ProgressBar ( len ( self ) )
                 

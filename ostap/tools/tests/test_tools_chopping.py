@@ -15,7 +15,8 @@ __date__    = "2015-10-26"
 __all__     = ()  ## nothing to be imported 
 # =============================================================================
 import ROOT, os
-import ostap.io.root_file 
+import ostap.io.root_file
+from   ostap.core.meta_info     import root_info
 from   builtins                 import range
 from   ostap.core.core          import ROOTCWD
 from   ostap.utils.progress_bar import progress_bar 
@@ -37,6 +38,10 @@ if not os.path.exists( data_file ) :
     
     nB = 20000
     nS = 10000
+
+    if root_info < (6,15) : 
+        nB = 2000
+        nS = 1000
 
     s_evt_per_run = 927
     b_evt_per_run = 511
@@ -158,12 +163,12 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         )
 
     from ostap.utils.timing import timing
-
+    
     # train it!  
-    with timing ( 'for TMVA/Chopping training' , logger ) : 
+    with timing ( 'for TMVA/Chopping training' , logger ) :
         trainer.train () 
         tar_file      = trainer.tar_file
-
+        
 # =============================================================================
 # remove unnesessary output files
 for f in trainer.output_files :
@@ -200,6 +205,8 @@ variables = [
 
 ## 2) create TMVA/Chopping reader
 from ostap.tools.chopping import Reader
+
+print ( 'READER/0' )
 
 reader = Reader (
     N             = N         , ##  number of   categories

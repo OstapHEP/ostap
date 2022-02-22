@@ -4,7 +4,7 @@
  1. update examples & tests
  1. improve code in `pyselectors.py` 
  1. temporary disable call for `cmt_fit` form `cmp_diff_prnt` for vey fresh version of ROOT 
-
+ 1. extend to ancient version of ROOT 6/14 (except for paralllel chopping) 
 
 ## Backward incompatible:  
  

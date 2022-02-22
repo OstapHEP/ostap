@@ -64,7 +64,9 @@ class ReduceTree(CleanUp):
         from   ostap.frames.frames import DataFrame
         frame  = DataFrame ( chain )
         report = None
-
+        
+        self.__frame_main = frame
+        
         if not  silent :
             pbar = frame.ProgressBar ( len (  chain ) )
             
@@ -116,7 +118,7 @@ class ReduceTree(CleanUp):
             ## logger.debug ( 'ReduceTree: output file is %s' % output )  
             if not tmp_keep : self.trash.add ( output  )
 
-        if  selections : report = frame.Report()
+        ## if  selections : report = frame.Report()
             
         if selections and addselvars :
             bvars     = chain.the_variables ( selections )
@@ -184,6 +186,8 @@ class ReduceTree(CleanUp):
         self.__report += '\n# Reduce %d -> %d branches, %d -> %d entries' % ( nb_ , nb , ne_ , ne ) 
         self.__report += '\n# Output:%s size:%s'                          % ( self.__output , fs  )
         self.__report += '\n# %s' % str ( self.__chain ) 
+
+        del self.__frame_main
         
     def __str__  ( self ) : return self.__report 
     def __repr__ ( self ) : return self.__report 

@@ -88,10 +88,6 @@ __all__     = (
     )
 # =============================================================================
 import ROOT, os, shutil, tarfile  
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
-else                       : logger = getLogger ( __name__               )
-# =============================================================================
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
 from   ostap.tools.tmva       import dir_name 
@@ -100,7 +96,11 @@ from   ostap.core.ostap_types import integer_types
 import ostap.trees.trees 
 import ostap.trees.cuts
 import ostap.utils.utils      as     Utils 
-from   ostap.core.meta_info   import root_version_int
+from   ostap.core.meta_info   import root_version_int, root_info 
+# =============================================================================
+from ostap.logger.logger      import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.chopping' )
+else                       : logger = getLogger ( __name__               )
 # =============================================================================
 ## @class Trainer
 #  The ``chopping''  trainer. Th einterface is very similar to TMVA Trainer
@@ -227,9 +227,13 @@ class Trainer(object) :
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
-        self.__parallel        = True if parallel        else False 
+        self.__parallel        = True if parallel         else False 
         self.__logging         = True if logging         else False
-        
+
+        if self.__parallel and root_info < (6,15) :
+            logger.warning ( "Parallel chopping is activated only for ROOT>6.15")
+            self.__parallel = False
+            
         self.__parallel_conf   = {}
         self.__parallel_conf.update ( parallel_conf )
         

@@ -23,13 +23,13 @@ __all__     = (
 # =============================================================================
 import ROOT
 # =============================================================================
-from   ostap.core.core        import cpp, Ostap, strings, split_string  
+from   ostap.core.core        import cpp, Ostap, strings, split_string
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.ostap_types import integer_types, string_types  
 from   ostap.logger.utils     import multicolumn
 from   ostap.utils.basic      import terminal_size, isatty
 from   ostap.logger.colorized import allright
 import ostap.histos.histos
-from   ostap.core.meta_info   import root_info
 # =============================================================================
 # logging 
 # =============================================================================
@@ -79,7 +79,7 @@ def _fr_new_init_ ( self , name , *args , **kwargs ) :
     >>> f = DataFrame ( .... , enable = True  ) ## default 
     >>> f = DataFrame ( .... , enable = False )
     """
-    
+        
     mt = kwargs.pop ( 'enable' , True )
     
     if       mt and not ROOT.ROOT.IsImplicitMTEnabled() :
