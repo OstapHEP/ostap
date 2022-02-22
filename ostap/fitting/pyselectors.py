@@ -1533,11 +1533,32 @@ def make_dataset_old ( tree              ,
     """
 
     if DataSet_NEW_FILL :
-        logger.info ( "It is better to use more efficinect function ``make_dataset''" )
+        if not silent : logger.info ( "Switch to more efficient function ``make_dataset''" )
+        return make_dataset ( tree                  ,
+                              variables = variables ,
+                              seletion  = selection ,
+                              roo_cuts  = roo_cuts  ,
+                              name      = name      ,
+                              title     = title     ,
+                              silent    = silent    )
     
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
+    variables = Variables ( variables ) 
+    if not variables.trivial_vars or ( '[' in selection ) or ( '[' in roo_cuts ) :
+        if not silent : logger.info ( "Variables/selection are not trivial, switch to ``fill_dataset''" )
+        return fill_dataset ( tree                  ,
+                              variables = variables ,
+                              selection = selection ,
+                              roo_cuts  = roo_cuts  ,
+                              name      = name      ,
+                              title     = title     ,
+                              shortcut  = True      ,
+                              use_frame = True      , ## IMPORTANT!
+                              silent    = silent    ) 
+    
+    
     varset   = ROOT.RooArgSet()
     vars     = set()
 
@@ -1551,8 +1572,8 @@ def make_dataset_old ( tree              ,
     
     limits    = []
 
-    variables = Variables ( variables ) 
-    
+
+
     for vv in variables :
         
         if vv.name != vv.formula :            
