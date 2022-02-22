@@ -902,7 +902,7 @@ class SelectorWithVars(SelectorWithCuts) :
             )
 
         ## selection using RooFit machinery 
-        self.__roo_cuts    = None 
+        self.__roo_cuts    = ''
         self.__roo_formula = None
         
         if roo_cuts :
@@ -1545,7 +1545,7 @@ def make_dataset_old ( tree              ,
     import ostap.trees.cuts
     import ostap.fitting.roofit
 
-    variables = Variables ( variables ) 
+    variables = Variables ( variables )
     if not variables.trivial_vars or ( '[' in selection ) or ( '[' in roo_cuts ) :
         if not silent : logger.info ( "Variables/selection are not trivial, switch to ``fill_dataset''" )
         return fill_dataset ( tree                  ,
