@@ -1,3 +1,5 @@
+# v1.7.0.2
+
 ## New features:
 
  1. add (much) more efficient way to fill `RooDataSet` (activated for ROOT>=6.26)
