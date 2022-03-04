@@ -45,7 +45,7 @@ __all__     = (
 import ROOT, math, random 
 import ostap.fitting.variables 
 import ostap.fitting.roocollections
-from   builtins                import range 
+from   builtins                import range
 from   ostap.core.core         import Ostap, rootID, VE, items_loop, isequal 
 from   ostap.core.ostap_types  import ( num_types      , list_types     ,
                                         integer_types  , string_types   ,
@@ -53,7 +53,7 @@ from   ostap.core.ostap_types  import ( num_types      , list_types     ,
 from   ostap.logger.utils      import roo_silent
 from   sys                     import version_info as python_version 
 from   ostap.math.random_ext   import ve_gauss, poisson
-from   ostap.core.meta_info    import root_version_int
+from   ostap.core.meta_info    import root_version_int, root_info 
 from   ostap.fitting.variables import SETVAR 
 from   ostap.fitting.roocmdarg import flat_args, check_arg 
 # =============================================================================
@@ -592,6 +592,7 @@ class MakeVar ( object ) :
                         self.warning ( 'parse_args: confusing VERBOSE/SILENT %s/%s' % ( a , silent ) )
                         silent = not a 
                 _args.append ( ROOT.RooFit.Verbose (     a ) )
+
             elif kup in ( 'SILENT'           ,
                           'SILENCE'          ) and isinstance ( a , bool ) :
                 if not silent is None :
@@ -602,24 +603,34 @@ class MakeVar ( object ) :
                     if a == verbose :
                         self.warning ( 'parse_args: confusing SILENT/VERBOSE %s/%s' % ( a , verbose ) )
                         verbose = not a
-                _args.append ( ROOT.RooFit.Verbose ( not a ) ) 
+                _args.append ( ROOT.RooFit.Verbose ( not a ) )
+                
             elif kup in ( 'STRATEGY'         , 
                           'MINUITSTRATEGY'   ,
-                          'STRATEGYMINUIT'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 : 
-                _args.append ( ROOT.RooFit.Strategy (    a ) ) 
+                          'STRATEGYMINUIT'   ) and isinstance ( a , integer_types ) and 0 <= a <= 2 :
+                
+                _args.append ( ROOT.RooFit.Strategy (    a ) )
+                
             elif kup in ( 'PRINTLEVEL'       ,
                           'MINUITPRINT'      ,
                           'MINUITLEVEL'      ) and isinstance ( a , integer_types ) and -1 <= a <= 3 :
-                _args.append ( ROOT.RooFit.PrintLevel ( a ) ) 
+                
+                _args.append ( ROOT.RooFit.PrintLevel ( a ) )
+                
             elif kup in ( 'PRINTEVALERRORS'  ,
                           'PRINTERRORS'      ,
                           'ERRORSPRINT'      ) and isinstance ( a , integer_types ) and -1 <= a :
-                _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )                
+                
+                _args.append ( ROOT.RooFit.PrintEvalErrors ( a ) )
+                
             elif kup in ( 'TIMER'            ,
                           'TIMING'           ) and isinstance ( a , bool ) :
-                _args.append ( ROOT.RooFit.Timer    ( a ) ) 
+                
+                _args.append ( ROOT.RooFit.Timer    ( a ) )
+                
             elif kup in ( 'WARNING'          ,
                           'WARNINGS'         ) and isinstance ( a , bool ) :
+                
                 _args.append ( ROOT.RooFit.Warnings ( a ) ) 
             
             elif kup in ( 'SUMW2'            ,
@@ -655,16 +666,22 @@ class MakeVar ( object ) :
                     
             elif kup in ( 'BATCH'            ,
                           'BATCHMODE'        ) and isinstance ( a , bool ) and 62000 <= root_version_int :
-                _args.append (  ROOT.RooFit.BatchMode ( a ) )                                
+                
+                _args.append (  ROOT.RooFit.BatchMode ( a ) )
+                
             elif kup in ( 'EXTENDED' ,       ) and isinstance ( a , bool ) :
-                _args.append   (  ROOT.RooFit.Extended ( a ) )                
+                
+                _args.append   (  ROOT.RooFit.Extended ( a ) )
+                
             elif kup in ( 'CPU'              ,
                           'CPUS'             ,
                           'NCPU'             ,
                           'NCPUS'            ,
                           'NUMCPU'           ,
-                          'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a : 
-                _args.append   (  ROOT.RooFit.NumCPU( a  ) ) 
+                          'NUMCPUS'          ) and isinstance ( a , int ) and 1<= a :
+                
+                _args.append   (  ROOT.RooFit.NumCPU( a  ) )
+                
             elif kup in ( 'CPU'              ,
                           'CPUS'             ,
                           'NCPU'             ,
@@ -674,43 +691,62 @@ class MakeVar ( object ) :
                  isinstance ( a , list_types ) and 2 == len ( a )  and \
                  isinstance ( a[0] , integer_types ) and 1 <= a[1] and \
                  isinstance ( a[1] , integer_types ) and 0 <= a[1] <=3 :
+                
                 _args.append   (  ROOT.RooFit.NumCPU( a[0] ,  a[1] ) ) 
                 
             elif kup in ( 'RANGE'            ,
                           'FITRANGE'         ,
                           'RANGES'           ,
                           'FITRANGES'        ) and isinstance ( a , string_types ) :
-                _args.append   (  ROOT.RooFit.Range ( a ) )  
+                
+                _args.append   (  ROOT.RooFit.Range ( a ) )
+                
             elif kup in ( 'RANGE'            ,
                           'FITRANGE'         ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  num_types ) \
                  and isinstance ( a[1] ,  num_types ) \
-                 and a[0] < a[1]  : 
+                 and a[0] < a[1]  :
+                
                 _args.append   (  ROOT.RooFit.Range ( a[0] , a[1] ) )
+                
             elif kup in ( 'MINIMIZER'  ,     ) and isinstance ( a , list_types   ) \
                  and isinstance ( a[0] ,  string_types ) \
                  and isinstance ( a[1] ,  string_types ) :
-                _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )                 
+                
+                _args.append   (  ROOT.RooFit.Minimizer ( a[0] , a[1] ) )
+                
             elif kup in  ( 'HESSE'    ,      ) and isinstance ( a , bool ) :
+                
                 _args.append   (  ROOT.RooFit.Hesse ( a )  )
+                
             elif kup in  ( 'INITIALHESSE'    ,
                            'INITHESSE'       ,
                            'HESSEINIT'       ,
                            'HESSEINITIAL'    ) and isinstance ( a , bool ) :
+                
                 _args.append   (  ROOT.RooFit.InitialHesse ( a )  )
+                
             elif kup in ( 'OPTIMIZE'         ,
                           'OPTIMISE'         ) and isinstance ( a , integer_types  ) :
+                
                 _args.append   (  ROOT.RooFit.Optimize     ( a )  )
+                
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , bool           ) :
+                
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+                
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , ROOT.RooArgSet ) :
+                
                 _args.append   (  ROOT.RooFit.Minos        ( a )  )
+                
             elif kup in ( 'MINOS'    ,       ) and isinstance ( a , string_types   ) \
-                     and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :                
+                     and hasattr  ( self , 'params' ) and a in self.params ( dataset ) :
+                
                 _v = self.params()[ a ]
                 _s = ROOT.RooArgSet ( _v )
                 self.aux_keep.append ( _s ) 
-                _args.append   (  ROOT.RooFit.Minos        ( _s )  )                
+                _args.append   (  ROOT.RooFit.Minos        ( _s )  )
+                
             elif kup in ( 'MINOS'    ,       ) and not isinstance ( a , string_types ) :
 
                 _s     = ROOT.RooArgSet()
@@ -728,14 +764,21 @@ class MakeVar ( object ) :
                 _args.append   (  ROOT.RooFit.Minos ( _s )  )
                                 
             elif kup in ( 'SAVE'     ,       ) and isinstance ( a , bool           ) :
+                
                 _args.append   (  ROOT.RooFit.Save         ( a )  )
+                
             elif kup in ( 'CLONE'            ,
                           'CLONEDATA'        ) and isinstance ( a , bool           ) :
+                
                 _args.append   (  ROOT.RooFit.CloneData    ( a )  )
+                
             elif kup in ( 'OFFSET'           ) and isinstance ( a , bool           ) :
+                
                 _args.append   (  ROOT.RooFit.Offset       ( a )  )
-            elif kup in ( 'FITOPTIONS'       ,
-                          'FITOPTION'        ) and isinstance ( a , string_types ) :
+                
+            elif kup in ( 'FITOPTIONS' , 'FITOPTION'      ) and \
+                          isinstance ( a , string_types   ) and root_info < ( 6 , 28 ) :
+                
                 _args.append   (  ROOT.RooFit.FitOptions   ( a )  )
                 
             elif kup in ( 'CONSTRAINT'       ,

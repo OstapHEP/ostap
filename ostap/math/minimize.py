@@ -42,8 +42,12 @@ import math, warnings
 from math import sqrt
 try :
     import numpy
-    import numpy  as np 
-    _epsilon = math.sqrt(numpy.finfo(float).eps)
+    import numpy  as np
+    
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        _epsilon = math.sqrt(numpy.finfo(float).eps)
+        
 except ImportError :
     class numpy(object) :
         @staticmethod 
@@ -780,7 +784,9 @@ def bracket(func, xa=0.0, xb=1.0, args=(), grow_limit=110.0, maxiter=1000):
 
 
 try :
-    from scipy.optimize import minimize_scalar as ms 
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from scipy.optimize import minimize_scalar as ms 
     minimize_scalar = ms  
     scipy_available = True 
 except ImportError :

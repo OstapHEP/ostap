@@ -2,6 +2,8 @@
 
 ## Backward incompatible:  
  
+ 1. for ROOT>6.28 remove treatment of `RooFit.FitOptions`
+
 ## Bug fixes:
 
 

@@ -227,8 +227,11 @@ def romberg ( fun                ,
 
 # =============================================================================
 try :
-    from scipy import integrate
-    # =============================================================================
+    # =========================================================================
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from scipy import integrate
+    # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
     #  func = ...

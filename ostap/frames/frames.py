@@ -591,7 +591,6 @@ def frame_project ( frame , model , *what ) :
 
     if   isinstance ( model , ROOT.TH3 ) and 3 == model.dim () : 
         assert 3 <= len ( what ) <= 4, 'Invalid number of parameters %s' % str ( what )
-
         
         m = model.model () 
         
@@ -636,7 +635,7 @@ def frame_project ( frame , model , *what ) :
     if histo : histo.Reset()
     
     ## get the list of currently known names
-    vars = tuple ( frame.GetColumnNames () ) 
+    vars = tuple ( ( str(c) for c in frame.GetColumnNames () ) ) 
 
     nvars = []
 

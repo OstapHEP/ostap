@@ -81,7 +81,7 @@ __all__     = (
     'aitken_delta2'      , ## aitken delta2 acceleration process   
 )
 # =============================================================================
-import sys, collections
+import sys, collections, warnings 
 from   ostap.math.base  import isequal, iszero , samesign
 from   builtins import range
 # =============================================================================
@@ -1245,8 +1245,10 @@ def find_root ( f                   , ## the function
 
 # =============================================================================
 try :
-    import scipy.optimize
-    findroot = scipy.optimize.brentq 
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        import scipy.optimize
+        findroot = scipy.optimize.brentq 
 except ImportError :
     logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
     findroot = find_root

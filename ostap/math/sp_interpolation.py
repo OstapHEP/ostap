@@ -15,11 +15,15 @@ __date__    = "2020-02-28"
 __all__     = (
     )
 # =============================================================================
+import warnings 
+# =============================================================================
 from   ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.math.sp_interpolation' )
 else                       : logger = getLogger ( __name__                      )
 # =============================================================================
-import scipy.interpolate as SI
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import scipy.interpolate as SI
 
 # ==============================================================================
 ## simple class for scipy-based interpolation  

@@ -35,11 +35,13 @@ class Reweighter(object) :
     
     def __init__ ( self , **kwargs )  :
 
-        from hep_ml.reweight import GBReweighter as GBRW 
-        self.__reweighter = GBRW ( **kwargs ) 
-        self.__variables  = ()
-        self.__nvars      = 0 
-        
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")                
+            from hep_ml.reweight import GBReweighter as GBRW 
+            self.__reweighter = GBRW ( **kwargs ) 
+            self.__variables  = ()
+            self.__nvars      = 0
+            
     @property
     def reweighter ( self ) :
         """``reweighter'' : get the underlying reweighter object"""

@@ -46,6 +46,7 @@ __all__     = (
     'natural_number'   ,  ## natural nunber? @see Ostap::Math::natural_number
     ##
     'valid_pointer'    ,  ## Is it a valid C++ pointer?
+    'root_enum'        ,  ## Get enum from ROOT by name 
     ##
     'strings'          , ## construct std::vector<std::string>
     'split_string'     , ## split the string  according to separators 
@@ -264,6 +265,48 @@ def valid_pointer ( obj ) :
     return True if r else False
 
 # =============================================================================
+## Get value of enum form ROOT by name
+#  @code
+#  red = root_enum ( 'Red' ) 
+#  @endcode 
+def root_enum ( name , default = None ) :
+    """ Get value of enum form ROOT by name
+    >>> red   = root_enum ( 'Red'   )
+    >>> blue  = root_enum ( 'Blue'  )    
+    >>> green = root_enum ( 'Green' )    
+    """    
+    assert isinstance ( name , string_types ) , \
+           'Invalid type for enum name %s' % type ( name )
+           
+    return getattr ( ROOT, 'k' + name , default )
+
+
+# =============================================================================
+## Convert color name into color index
+def check_color ( color ) :
+    """Convert color name into color index 
+    """
+    if isinstance ( color , string_types ) :
+        
+        clow = color.lower() 
+        if   clow in ( 'black'   ,     ) : return 1 
+        elif clow in ( 'red'     , 'r' ) : return 2 
+        elif clow in ( 'blue'    , 'b' ) : return 4 
+        elif clow in ( 'green'   , 'g' ) : return 8 ## dark green here 
+        elif clow in ( 'yellow'  , 'y' ) : return 5 
+        elif clow in ( 'cyan'    , 'c' ) : return 6 
+        elif clow in ( 'magenta' , 'm' ) : return 7                
+        
+        ## get the color from ROOT by color name
+        c = root_enum ( clow.capitalize() , None )
+        if c is None    : logger.error ('Unknown color:"%s"' % color ) 
+        elif isinstance ( c , integer_types ) and 0 < c :
+            return int ( c )                               ## RETURN 
+
+    return color
+
+
+# =============================================================================
 ## Silent draw 
 # =============================================================================
 if not hasattr ( ROOT.TObject , 'draw' ) :
@@ -299,25 +342,6 @@ if not hasattr ( ROOT.TObject , 'draw' ) :
         >>> obj.draw ( max         = 100 )
 
         """
-
-        def check_color ( color ) :
-            
-            if isinstance ( color , string_types ) :
-                
-                clow = color.lower() 
-                if   clow in ( 'black'   ,     ) : return 1 
-                elif clow in ( 'red'     , 'r' ) : return 2 
-                elif clow in ( 'blue'    , 'b' ) : return 4 
-                elif clow in ( 'green'   , 'g' ) : return 8 ## dark green here 
-                elif clow in ( 'yellow'  , 'y' ) : return 5 
-                elif clow in ( 'cyan'    , 'c' ) : return 6 
-                elif clow in ( 'magenta' , 'm' ) : return 7                
-
-                ## get the color from ROOT by color name 
-                c = getattr ( ROOT , 'k' + clow.capitalize() , None )
-                if c and isinstance ( c , integer_types ) and 0 < c : return int ( c )
-                
-            return color
 
         from ostap.utils.cidict import cidict
         kw = cidict ( transform = cidict_fun , **kwargs )
@@ -760,6 +784,7 @@ def _rtc_iadd_ ( self , item ) :
 
 ROOT.TCollection. __iadd__ = _rtc_iadd_ 
     
+
 # =============================================================================
 _decorated_classes_ = (
     ROOT.TObject        ,
