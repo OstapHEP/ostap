@@ -18,7 +18,11 @@ __all__     = (
     'report_as_table'    , ## print the report
     'frame_progress'     , ## progress bar for frame 
     'frame_table'        , ## print data frame as table 
-    'frame_project'      , ## project data frame to the (1D/2D/3D) histogram 
+    'frame_project'      , ## project data frame to the (1D/2D/3D) histogram
+    'frame_print'        , ## print frame
+    'frame_nEff'         , ## nEff function for frames
+    'frame_statVar'      , ## stat var for frame 
+    'frame_statCov'      , ## sta tcov for frame 
     ) 
 # =============================================================================
 import ROOT
@@ -47,7 +51,7 @@ except AttributeError :
 Ostap.DataFrame    = DataFrame 
 CNT                = DataFrame.ColumnNames_t 
 
-DataFrame.columns  = lambda s : tuple ( s.GetColumnNames() ) 
+DataFrame.columns  = lambda s : tuple ( [ str(c) for c in s.GetColumnNames() ] ) 
 DataFrame.branches = DataFrame.columns 
 
 
@@ -153,12 +157,13 @@ def frame_progress ( self          ,
 #  data = ...
 #  neff = data.nEff('b1*b1')
 #  @endcode
-def _fr_nEff_  ( self , cuts = '' ) :
+def frame_nEff ( self , cuts = '' ) :
     """Get the effective entries in data frame 
     >>> data = ...
     >>> neff = data.nEff('b1*b1')
     """
-    return Ostap.StatVar.nEff ( self , cuts )
+    frame = DataFrame ( self ) 
+    return Ostap.StatVar.nEff ( frame , cuts )
 
 # =============================================================================
 ## Get statistics for the  given expression in data frame
@@ -167,13 +172,14 @@ def _fr_nEff_  ( self , cuts = '' ) :
 #  c1 = data.statVar( 'S_sw' , 'pt>10' ) 
 #  c2 = data.statVar( 'S_sw' , 'pt>0'  )
 #  @endcode
-def _fr_statVar_ ( self , expression ,  cuts = '' ) :
+def frame_statVar ( self , expression ,  cuts = '' ) :
     """Get statistics for the  given expression in data frame
     >>> data = ...
     >>> c1 = data.statVar( 'S_sw' , 'pt>10' ) 
     >>> c2 = data.statVar( 'S_sw' )
     """
-    return Ostap.StatVar.statVar( self , expression , cuts , )
+    frame = DataFrame ( self ) 
+    return Ostap.StatVar.statVar ( frame , expression , cuts , )
 
 
 # =============================================================================
@@ -186,10 +192,10 @@ def _fr_statVar_ ( self , expression ,  cuts = '' ) :
 #  @endcode
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date   2018-06-18
-def _fr_statCov_ ( frame       ,
-                   expression1 ,
-                   expression2 ,
-                   cuts = ''   ) :
+def frame_statCov ( self        ,
+                    expression1 ,
+                    expression2 ,
+                    cuts = ''   ) :
     """Get the statistic for pair of expressions in DataFrame
     
     >>>  frame  = ...
@@ -204,6 +210,7 @@ def _fr_statCov_ ( frame       ,
     stat2  = Ostap.WStatEntity       ()
     cov2   = Ostap.Math.SymMatrix(2) ()
 
+    frame  = DataFrame ( self ) 
     length = Ostap.StatVar.statCov ( frame       ,
                                      expression1 ,
                                      expression2 ,
@@ -222,9 +229,11 @@ def _fr_statCov_ ( frame       ,
 #  stat  = frame.statVar ( 'pt'           , lazy = True )
 #  stat  = frame.statVar ( 'pt' , 'eta>0' , lazy = True )
 #  @endcode
-def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
+def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
     """Get statistics of variable(s)
     """
+
+    frame  = DataFrame ( self ) 
 
     input_string = False 
     if isinstance ( expressions , string_types ) :
@@ -232,7 +241,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
         expressions = [ expressions ]
     
     ## get the list of currently known names
-    vars = tuple ( frame.GetColumnNames () ) 
+    vars = tuple ( [ str( c ) for c in frame.GetColumnNames () ] )
 
     names   = {}
 
@@ -282,7 +291,7 @@ def _fr_statVar_new_ ( frame , expressions , cuts = '' , lazy = False  ) :
 #  frame = ...
 #  print frame
 #  @endcode 
-def _fr_print_ ( t ) :
+def frame_print ( t ) :
     """Simplified print out for the  frame 
     
     >>> frame = ...
@@ -291,7 +300,7 @@ def _fr_print_ ( t ) :
     ##
     res = "DataFrame Enries/#%d" %  len ( t )  
     ##
-    _c          = list ( t.columns () )
+    _c          = [ str(c) for c in t.GetColumnNames() ] 
     _c.sort ()  
     res        += "\nColumns:\n%s" % multicolumn ( _c , indent = 2 , pad = 1 )
     return res
@@ -304,13 +313,14 @@ def _fr_print_ ( t ) :
 #  table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
 #  print ( table ) 
 #  @endcode 
-def frame_table ( frame , pattern = None ,  cuts = '' , more_vars = () , prefix = '' ) :
+def frame_table ( self , pattern = None ,  cuts = '' , more_vars = () , prefix = '' ) :
     """Data frame as table
     >>> frame = ...
     >>> table = frame_table ( frame , '.*PT.*' , cuts = ... , more_vars = [ 'x*x/y' , 'y+z'] )
     >>> print ( table )
     """
-    
+
+    frame = DataFrame ( self )
     def col_type ( var ) :
         
         if var in cols : t = frame.GetColumnType ( var )
@@ -669,12 +679,12 @@ def frame_project ( frame , model , *what ) :
 # decorate 
 # ==============================================================================
 if not hasattr ( DataFrame , '__len__') : DataFrame.__len__ = _fr_len_
-DataFrame .__str__     = _fr_print_ 
-DataFrame .__repr__    = _fr_print_
+DataFrame .__str__     = frame_print
+DataFrame .__repr__    = frame_print
 
-DataFrame .nEff        = _fr_nEff_
-DataFrame .statVar     = _fr_statVar_
-DataFrame .statCov     = _fr_statCov_
+DataFrame .nEff        = frame_nEff
+DataFrame .statVar     = frame_statVar
+DataFrame .statCov     = frame_statCov
 DataFrame .ProgressBar = frame_progress
 DataFrame .progress    = frame_progress
 
@@ -732,7 +742,7 @@ if ( 6 , 25 ) <= root_info :
     frame_statVar       = _fr_statVar_new_
     frame_statVars      = _fr_statVar_new_
     DataFrame.statVars  = _fr_statVar_new_
-    __all__ = __all__ + ( 'frame_statVar' , 'frame_statVars' ) 
+    __all__ = __all__ + ( 'frame_statVars' , ) 
     _new_methods_      = _new_methods_ + ( DataFrame.statVars , ) 
     
 # =============================================================================

@@ -511,10 +511,10 @@ Quantiles = StatVar.Quantiles
 Interval  = StatVar.Interval 
 QInterval = StatVar.QInterval 
 
-def _q_str_  ( o ) : return "Quantile(%.5g,n=%d)"         % ( o.quantile  , o.nevents )
-def _qs_str_ ( o ) : return "Quantiles(%d,n=%d)"          % ( o.quantiles , o.nevents )
+def _q_str_  ( o ) : return "Quantile(%.5g,n=%s)"         % ( o.quantile  , o.nevents )
+def _qs_str_ ( o ) : return "Quantiles(%s,n=%s)"          % ( o.quantiles , o.nevents )
 def _i_str_  ( o ) : return "Interval([%.5g,%.5g])"       % ( o.low       , o.high    )
-def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%d)" % ( o.interval.low  ,
+def _qi_str_ ( o ) : return "QInterval([%.5g,%.5g],n=%s)" % ( o.interval.low  ,
                                                               o.interval.high , o.nevents )
 Quantile  .__str__  = _q_str_
 Quantile  .__repr__ = _q_str_

@@ -14,10 +14,13 @@ from ostap.logger.logger import getLogger
 if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
 else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
-import ROOT, os 
-from ostap.frames.frames import DataFrame
-from ostap.utils.cleanup import CleanUp
-from ostap.trees.trees   import Tree
+import ROOT, os
+from ostap.core.pyrouts    import hID 
+from ostap.frames.frames   import DataFrame, frame_project
+from ostap.utils.cleanup   import CleanUp
+from ostap.trees.trees     import Tree
+from ostap.plotting.canvas import use_canvas
+from ostap.utils.utils     import wait 
 
 tmpdir = CleanUp().tmpdir
 fname  = os.path.join ( tmpdir , 'test_frame.root' )
@@ -39,7 +42,6 @@ fill_tree ( tname, fname )
 frame = DataFrame ( tname        , fname        )
 tree  = Tree      ( name = tname , file = fname ).chain
 
-
 from ostap.utils.utils  import implicitMT
 from ostap.utils.timing import timing
 
@@ -50,7 +52,7 @@ def test_frame0 () :
         with implicitMT ( mt ) :
 
             logger.info ( 80*'*' ) 
-            logger.info ( 'MT enabled?  %s/%s' % ( ROOT.ROOT.IsImplicitMTEnabled() , ROOT.ROOT.GetImplicitMTPoolSize() ) ) 
+            logger.info ( 'MT enabled?  %s' % ROOT.ROOT.IsImplicitMTEnabled() ) 
             
             logger.info ( 'Tree  :\n%s' % tree  ) 
             logger.info ( 'Frame :\n%s' % frame )
@@ -79,34 +81,36 @@ def test_frame0 () :
                                                                               tree .median   (       'b1' , 'b1/(b2+1)' ) ) )
             logger.info ( "terciles('b1','b1<500'):      %30s vs %-30s "  % ( frame.terciles (       'b1' , 'b1/(b2+1)' ) ,
                                                                               tree .terciles (       'b1' , 'b1/(b2+1)' ) ) )
+
             
 
-def test_frame1 () :
-    c = 0 
-    for mt in  ( False , True , False , True ) :
-        with implicitMT ( mt ) :
-            logger.info ( 'MT enabled?  %s/%s' % ( ROOT.ROOT.IsImplicitMTEnabled() , ROOT.ROOT.GetImplicitMTPoolSize() ) ) 
-            for obj in ( (tree,'Tree') , (frame,'Frame') , ( tree , 'Tree') ) :            
-                with timing( obj[1] , logger ) :
-                ##logger.info ('Kurtosis: %s ' % obj[0].kurtosis ( 'b1' , 'b1/(b2+1)' ) ) 
-                    c += obj[0].kurtosis ( 'b1' , 'b1/(b2+1)' ) 
-                                                          
 
-def test_frame2 ( ) :
+def test_frame1 ( ) :
 
-    h1 = tree .draw('b1','1/b1')
-    h2 = frame.draw('b1','1/b1')
+    h1 = tree .draw ( 'b1' , '1/b1' )
+    h2 = frame.draw ( 'b1' , '1/b1' )
+
+    h1 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
+    h2 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
+
+    tree.project  ( h1    , 'b1' , '1.0/b1' )
+    frame_project ( frame , h2 , 'b1' , '2.0/b1' )
     
+    with wait ( 3 ), use_canvas ( 'test_frame1' ) : 
+        h1.red  ()
+        h2.blue ()    
+        h1.draw ()
+        h2.draw ( 'same hist' )
+        
         
 # =============================================================================
 if '__main__' == __name__ :
     
-    ## test_frame0 () 
-    ## test_frame1 ()
-    ## test_frame2 ()
+    test_frame0 () 
+    test_frame1 ()
     
     pass
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
