@@ -285,6 +285,7 @@ namespace Ostap
      *  @see https://arxiv.org/abs/1510.04923v1
      *  @param value (INPUT) value to be added
      *  @return self-reference 
+     *  @attention non-finite values ar eignored! 
      */
     StatEntity& add    ( const double      value ) ;
     // ========================================================================

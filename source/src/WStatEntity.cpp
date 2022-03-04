@@ -46,6 +46,9 @@ Ostap::WStatEntity::add
   const double weight )
 {
   //
+  /// ignore non-finite values 
+  if ( !std::isfinite ( value  ) || !std::isfinite ( weight ) ) { return *this ; }
+  //
   if ( 0 == n() ) 
   {
     m_mu  = value ;

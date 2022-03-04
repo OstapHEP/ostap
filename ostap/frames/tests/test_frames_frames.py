@@ -16,7 +16,7 @@ else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
 import ROOT, os
 from ostap.core.pyrouts    import hID 
-from ostap.frames.frames   import DataFrame, frame_project
+from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov 
 from ostap.utils.cleanup   import CleanUp
 from ostap.trees.trees     import Tree
 from ostap.plotting.canvas import use_canvas
@@ -30,9 +30,9 @@ def fill_tree ( tname , fname ):
     
     tdf = DataFrame        ( 1000 )
     a   = tdf.ProgressBar  ( 1000 )
-    tdf.Define   ("one", "1.0"               )\
-       .Define   ("b1" , "(double) tdfentry_")\
-       .Define   ("b2" , "(1.0+b1)*(1.0+b1)" )\
+    tdf.Define   ("one", "1.0"                    )\
+       .Define   ("b1" , "(double) tdfentry_ + 1 ")\
+       .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      )\
        .Snapshot ( tname, fname )
     
 # We prepare an input tree to run on
@@ -94,20 +94,28 @@ def test_frame1 ( ) :
     h2 = ROOT.TH1D( hID() , '' , 100 , 0 , 1000 )
 
     tree.project  ( h1    , 'b1' , '1.0/b1' )
-    frame_project ( frame , h2 , 'b1' , '2.0/b1' )
+    frame_project ( tree  , h2 , 'b1' , '2.0/b1' )
     
     with wait ( 3 ), use_canvas ( 'test_frame1' ) : 
         h1.red  ()
         h2.blue ()    
         h1.draw ()
         h2.draw ( 'same hist' )
-        
+
+def test_frame2 ( ) :
+
+    s1 = tree.statVar  (        'b1' , '1/b1' )
+    s2 = frame_statVar ( tree , 'b1' , '1/b1' )
+    
+    logger.info ('StatTree  :%s' % s1 ) 
+    logger.info ('StatFrame :%s' % s2 ) 
         
 # =============================================================================
 if '__main__' == __name__ :
     
     test_frame0 () 
     test_frame1 ()
+    test_frame2 ()
     
     pass
 

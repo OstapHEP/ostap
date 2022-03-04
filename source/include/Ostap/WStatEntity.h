@@ -107,7 +107,12 @@ namespace Ostap
     // ======================================================================
   public: // the main methods 
     // ======================================================================
-    /// the only one important method: add value with the given weight 
+    /** the only one important method: add value with the given weight 
+     *  @param value  value to be added 
+     *  @param weight associated weight 
+     *  @attention non-finite values  are ignored! 
+     *  @attention non-finite weights are ignored! 
+     */
     WStatEntity& add   
     ( const double value      ,  
       const double weight = 1 ) ;

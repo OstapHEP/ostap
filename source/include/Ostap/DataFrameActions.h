@@ -94,7 +94,7 @@ namespace ROOT
         /// size of m_slots 
         unsigned long                            m_N      { 1 } ;
         /// (current) results per  slot 
-        std::vector<Ostap::StatEntity>           m_slots  {}    ;
+        std::vector<Ostap::StatEntity>           m_slots  { 1 } ;
         // ===================================================================
       } ; //                        The end of class ROOT::Detail::RDF::StatVar
 
@@ -144,9 +144,11 @@ namespace ROOT
         template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
 #endif 
         void Exec ( unsigned int slot , const T &vs , const double weight = 1 )
-        { Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } }
+        {
+          Ostap::WStatEntity& e = m_slots [ slot % m_N ] ; for ( const auto & v : vs ) { e.add ( v , weight ) ; } 
+        }
         // ===============================================================================
-        /// The basic method: increment the counter for the vector-like coliumn of weight 
+        /// The basic method: increment the counter for the vector-like column of weight 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,22,0)
         template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
 #else 
@@ -169,7 +171,7 @@ namespace ROOT
         /// size of m_slots 
         unsigned long                             m_N      { 1 } ;
         /// (current) results per  slot 
-        std::vector<Ostap::WStatEntity>           m_slots  {}    ;
+        std::vector<Ostap::WStatEntity>           m_slots  { 1 } ;
         // ===================================================================
       } ; //                        The end of class ROOT::Detail::RDF::StatVar 
       // ======================================================================

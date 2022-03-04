@@ -1,5 +1,8 @@
 ## New features:
 
+ 1. extend test for DataFrsmes 
+ 1. StatEntity and WStatEntity: ignore non-finite values/weights  
+
 ## Backward incompatible:  
  
  1. for ROOT>6.28 remove treatment of `RooFit.FitOptions`

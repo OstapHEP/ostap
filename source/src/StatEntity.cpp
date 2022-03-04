@@ -69,6 +69,9 @@ Ostap::StatEntity::StatEntity
 Ostap::StatEntity& 
 Ostap::StatEntity::add ( const double value ) 
 {
+  /// ignore non-finite values 
+  if ( !std::isfinite ( value ) ) { return *this ; }
+  //
   if ( 0 == m_n ) 
   {
     m_n   = 1 ;

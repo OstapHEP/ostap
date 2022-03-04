@@ -259,7 +259,7 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
 
     cname = cuts 
     if cuts and not cuts in vars :
-        used    = vars + tuple ( current.GetDefinedColumnNames() )        
+        used    = vars + tuple ( [ str(c) for c in current.GetDefinedColumnNames() ] )        
         vn      = var_name ( 'cut_' , used , cuts , *vars )
         current = current.Define ( vn , cuts )
         cname   = vn
@@ -268,9 +268,9 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
     for e in names :
 
         if cname : 
-            results [ e ] = current.Book( Ostap.Actions.WStatVar() , CNT ( [ names [ e ] , cname ] ) ) 
+            results [ e ] = current.Book( ROOT.std.move ( Ostap.Actions.WStatVar() ) , CNT ( [ names [ e ] , cname ] ) ) 
         else :
-            results [ e ] = current.Book( Ostap.Actions. StatVar() , CNT ( 1 , names[e] ) ) 
+            results [ e ] = current.Book( ROOT.std.move ( Ostap.Actions. StatVar() ) , CNT ( 1 , names[e] ) ) 
 
 
     if not lazy :
@@ -591,6 +591,8 @@ ROOT.TH3 .model = _th3_model
 # 
 def frame_project ( frame , model , *what ) :
 
+    frame  = DataFrame ( frame )
+    
     if 1 <= len ( what ) <= 2 :
         ww = split_string ( what[0] , ' ,:;' )
         if 1 < len ( ww ) :
