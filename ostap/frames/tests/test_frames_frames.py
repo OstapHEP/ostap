@@ -21,6 +21,7 @@ from ostap.utils.cleanup   import CleanUp
 from ostap.trees.trees     import Tree
 from ostap.plotting.canvas import use_canvas
 from ostap.utils.utils     import wait 
+from ostap.core.meta_info  import root_version 
 
 tmpdir = CleanUp().tmpdir
 fname  = os.path.join ( tmpdir , 'test_frame.root' )
@@ -46,6 +47,11 @@ from ostap.utils.utils  import implicitMT
 from ostap.utils.timing import timing
 
 def test_frame0 () :
+    
+    logger = getLogger ( 'test_frame0' ) 
+    if root_version < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+        return 
     
     for mt in  ( False , True ) :
         
@@ -87,6 +93,11 @@ def test_frame0 () :
 
 def test_frame1 ( ) :
 
+    logger = getLogger ( 'test_frame1' ) 
+    if root_version < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+        return 
+    
     h1 = tree .draw ( 'b1' , '1/b1' )
     h2 = frame.draw ( 'b1' , '1/b1' )
 
@@ -104,6 +115,11 @@ def test_frame1 ( ) :
 
 def test_frame2 ( ) :
 
+    logger = getLogger ( 'test_frame2' ) 
+    if root_version < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+        return 
+  
     s1 = tree.statVar  (        'b1' , '1/b1' )
     s2 = frame_statVar ( tree , 'b1' , '1/b1' )
     
