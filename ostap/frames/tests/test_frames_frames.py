@@ -16,12 +16,11 @@ else                       : logger = getLogger ( __name__            )
 # ============================================================================= 
 import ROOT, os
 from ostap.core.pyrouts    import hID 
- 
 from ostap.utils.cleanup   import CleanUp
 from ostap.trees.trees     import Tree
 from ostap.plotting.canvas import use_canvas
 from ostap.utils.utils     import wait 
-from ostap.core.meta_info  import root_version 
+from ostap.core.meta_info  import root_info
 
 tmpdir = CleanUp().tmpdir
 fname  = os.path.join ( tmpdir , 'test_frame.root' )
@@ -40,7 +39,7 @@ def fill_tree ( tname , fname ):
 tname = "myTree"
 fill_tree ( tname, fname )
 
-if (6,16) <= root_version :  
+if (6,16) <= root_info :  
     from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov
     frame = DataFrame ( tname        , fname        )
     tree  = Tree      ( name = tname , file = fname ).chain
@@ -51,8 +50,8 @@ from ostap.utils.timing import timing
 def test_frame0 () :
     
     logger = getLogger ( 'test_frame0' ) 
-    if root_version < (6,16) : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+    if root_info < (6,16) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
     for mt in  ( False , True ) :
@@ -96,8 +95,8 @@ def test_frame0 () :
 def test_frame1 ( ) :
 
     logger = getLogger ( 'test_frame1' ) 
-    if root_version < ( 6 , 16 ) : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+    if root_info < ( 6 , 16 ) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
     h1 = tree .draw ( 'b1' , '1/b1' )
@@ -118,8 +117,8 @@ def test_frame1 ( ) :
 def test_frame2 ( ) :
 
     logger = getLogger ( 'test_frame2' ) 
-    if root_version <  ( 6 , 16 ) : 
-        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_version ) )
+    if root_info <  ( 6 , 16 ) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
     s1 = tree.statVar  (        'b1' , '1/b1' )
