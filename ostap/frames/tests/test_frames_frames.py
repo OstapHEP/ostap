@@ -8,12 +8,6 @@
 """ Test module for ostap/frames/frames.py.
 """
 # ============================================================================= 
-# logging 
-# =============================================================================
-from ostap.logger.logger import getLogger
-if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
-else                       : logger = getLogger ( __name__            )
-# ============================================================================= 
 import ROOT, os
 from ostap.core.pyrouts    import hID 
 from ostap.utils.cleanup   import CleanUp
@@ -21,38 +15,52 @@ from ostap.trees.trees     import Tree
 from ostap.plotting.canvas import use_canvas
 from ostap.utils.utils     import wait 
 from ostap.core.meta_info  import root_info
+from ostap.utils.utils     import implicitMT
+from ostap.utils.timing    import timing
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' ==  __name__ : logger = getLogger ( 'test_frames_frames' )
+else                       : logger = getLogger ( __name__            )
+# ============================================================================= 
 
-tmpdir = CleanUp().tmpdir
-fname  = os.path.join ( tmpdir , 'test_frame.root' )
 
-# A simple helper function to fill a test tree
-def fill_tree ( tname , fname ):
+if root_info < (6,16) :
     
-    tdf = DataFrame        ( 1000 )
-    a   = tdf.ProgressBar  ( 1000 )
-    tdf.Define   ("one", "1.0"                    )\
-       .Define   ("b1" , "(double) tdfentry_ + 1 ")\
-       .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      )\
-       .Snapshot ( tname, fname )
+    logger.warning ( "Tests are disabled for this version of ROOT %s" % str ( root_info ) )
     
-# We prepare an input tree to run on
-tname = "myTree"
-fill_tree ( tname, fname )
-
-if (6,16) <= root_info :  
+else :
+    
     from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov
-    frame = DataFrame ( tname        , fname        )
-    tree  = Tree      ( name = tname , file = fname ).chain
     
-from ostap.utils.utils  import implicitMT
-from ostap.utils.timing import timing
+    # A simple helper function to fill a test tree
+    def fill_tree ( tname , fname ):
+        
+        tdf = DataFrame        ( 1000 )
+        a   = tdf.ProgressBar  ( 1000 )
+        tdf.Define   ("one", "1.0"                    )\
+                   .Define   ("b1" , "(double) tdfentry_ + 1 ")\
+                   .Define   ("b2" , "(1.0+b1)*(1.0+b1)"      )\
+                   .Snapshot ( tname, fname )
+        
+    # We prepare an input tree to run on
+    tname  = "myTree"
+    tmpdir = CleanUp().tmpdir
+    fname  = os.path.join ( tmpdir , 'test_frame.root' )
+    
+    fill_tree ( tname, fname )
 
+# =============================================================================
 def test_frame0 () :
     
     logger = getLogger ( 'test_frame0' ) 
     if root_info < (6,16) : 
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
+    
+    frame = DataFrame ( tname        , fname        )
+    tree  = Tree      ( name = tname , file = fname ).chain
     
     for mt in  ( False , True ) :
         
@@ -99,6 +107,9 @@ def test_frame1 ( ) :
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
+    frame = DataFrame ( tname        , fname        )
+    tree  = Tree      ( name = tname , file = fname ).chain
+    
     h1 = tree .draw ( 'b1' , '1/b1' )
     h2 = frame.draw ( 'b1' , '1/b1' )
 
@@ -121,6 +132,9 @@ def test_frame2 ( ) :
         logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
         return 
     
+    frame = DataFrame ( tname        , fname        )
+    tree  = Tree      ( name = tname , file = fname ).chain
+
     s1 = tree.statVar  (        'b1' , '1/b1' )
     s2 = frame_statVar ( tree , 'b1' , '1/b1' )
     
