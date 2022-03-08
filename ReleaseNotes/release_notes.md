@@ -1,3 +1,5 @@
+# v1.7.0.4
+
 ## New features:
 
  1. extend test for DataFrsmes 
@@ -34,7 +36,7 @@
   1. add new test for counters 
   1. imporve numerical precision for counters 
   1. add `TChain.parallel_fill` (new name for `TChain.pprocess`)
-  1. add `TChain.fill_dataset1` 
+  1. add `TChain.fill_xfdataset1` 
   1. add `TChain.fill_dataset2` 
   1. add `TChain.fill_dataset` 
   
