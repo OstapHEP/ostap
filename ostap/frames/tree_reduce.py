@@ -23,6 +23,11 @@ __all__     = (
 # =============================================================================
 import ROOT, os 
 # =============================================================================
+import ostap.trees.trees
+from   ostap.core.meta_info import root_info 
+from   ostap.core.core      import cpp, Ostap 
+from   ostap.utils.cleanup  import CleanUp 
+# =============================================================================
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger 
@@ -30,10 +35,6 @@ if '__main__' ==  __name__ : logger = getLogger( 'ostap.frames.tree_reduce' )
 else                       : logger = getLogger( __name__ )
 # =============================================================================
 logger.debug ( "``Reduce'' TTree using ROOT::RDataFrame object")
-# =============================================================================
-import ostap.trees.trees
-from   ostap.core.core     import cpp, Ostap 
-from   ostap.utils.cleanup import CleanUp 
 # =============================================================================
 ## @class ReduceTree
 #  Reduce TTree object using intermediate (temporary
@@ -139,13 +140,14 @@ class ReduceTree(CleanUp):
         ne_ = len ( chain             )
         
         ## chain name:
-        ## FIXME!
-        # cname = chain.GetName()  ## produces ROOT error
         if not name :
-            _ , _ , cname = chain.GetName().rpartition ( '/' ) 
-            name = '%s_reduced' % cname 
+            cname = chain.GetName()  ## produces ROOT error
+            if root_info < ( 6 , 24 ) : 
+                _ , _ , cname = chain.GetName().rpartition ( '/' )                
+            name = '%s_reduced' % cname
+            
         self.__name = name
-        
+                
         if not save_vars : 
             snapshot = frame.Snapshot ( name , output )
         else :

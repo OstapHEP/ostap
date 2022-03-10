@@ -2206,8 +2206,9 @@ def the_variables ( tree , expression , *args ) :
     
     sizes = list ( sizes )
     sizes.sort ()
-    
-    return  tuple ( sizes ) + tuple ( vars ) 
+
+    ## SIZES MUST BE FIRST! 
+    return  tuple ( sizes ) + tuple ( vars )  ## SIZES MUST BE FIRST! 
 
 
 ROOT.TTree.the_variables = the_variables
