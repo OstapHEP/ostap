@@ -51,34 +51,19 @@ except AttributeError :
 Ostap.DataFrame    = DataFrame 
 CNT                = DataFrame.ColumnNames_t 
 
-# =============================================================================
-if (6,16) <= root_info : 
-    # =========================================================================
-    ## get all column names
-    #  @code
-    #  cols = colums ( frame ) 
-    #  @endcode 
-    def columns ( frame ) :
-        """Get all column names
-        >>> cols = colums ( frame ) 
-        """
-        names  = [ str(c) for c in frame.GetColumnNames()        ]
+# =========================================================================
+## get all column names
+#  @code
+#  cols = colums ( frame ) 
+#  @endcode 
+def columns ( frame ) :
+    """Get all column names
+    >>> cols = colums ( frame ) 
+    """
+    names  = [ str(c) for c in frame.GetColumnNames()        ]
+    if (6,16) <= root_info : 
         names += [ str(c) for c in frame.GetDefinedColumnNames() ]            
-        return tuple ( sorted ( set ( names ) ) )    
-    # =========================================================================
-else :
-    # =========================================================================
-    ## get all column names
-    #  @code
-    #  cols = colums ( frame ) 
-    #  @endcode 
-    def columns ( frame ) :
-        """Get all column names
-        >>> cols = colums ( frame ) 
-        """
-        names = [ str(c) for c in frame.GetColumnNames()        ]
-        return tuple ( sorted ( set ( names ) ) ) 
-
+     return tuple ( sorted ( set ( names ) ) )    
     
 frame_columns      = columns
 
