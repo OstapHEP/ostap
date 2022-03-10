@@ -51,9 +51,24 @@ except AttributeError :
 Ostap.DataFrame    = DataFrame 
 CNT                = DataFrame.ColumnNames_t 
 
-DataFrame.columns  = lambda s : tuple ( [ str(c) for c in s.GetColumnNames() ] ) 
-DataFrame.branches = DataFrame.columns 
+# ==============================================================================
+## get all column names
+#  @code
+#  cols = colums ( frame ) 
+#  @endcode 
+def columns ( frame ) :
+    """Get all column names
+    >>> cols = colums ( frame ) 
+    """
+    names1 = [ str(c) for c in frame.GetColumnNames()        ] 
+    names2 = [ str(c) for c in frame.GetDefinedColumnNames() ] 
+    names  = names1 + names2 
+    return tuple ( sorted ( set ( names ) ) ) 
 
+frame_columns      = columns
+
+DataFrame.columns  = frame_columns 
+DataFrame.branches = frame_columns 
 
 # ==============================================================================
 ## generate new, unique name for the variable 
@@ -300,9 +315,8 @@ def frame_print ( t ) :
     ##
     res = "DataFrame Enries/#%d" %  len ( t )  
     ##
-    _c          = [ str(c) for c in t.GetColumnNames() ] 
-    _c.sort ()  
-    res        += "\nColumns:\n%s" % multicolumn ( _c , indent = 2 , pad = 1 )
+    cols = frame_columns ( t ) 
+    res        += "\nColumns:\n%s" % multicolumn ( cols , indent = 2 , pad = 1 )
     return res
 
 
