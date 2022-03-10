@@ -51,20 +51,35 @@ except AttributeError :
 Ostap.DataFrame    = DataFrame 
 CNT                = DataFrame.ColumnNames_t 
 
-# ==============================================================================
-## get all column names
-#  @code
-#  cols = colums ( frame ) 
-#  @endcode 
-def columns ( frame ) :
-    """Get all column names
-    >>> cols = colums ( frame ) 
-    """
-    names1 = [ str(c) for c in frame.GetColumnNames()        ] 
-    names2 = [ str(c) for c in frame.GetDefinedColumnNames() ] 
-    names  = names1 + names2 
-    return tuple ( sorted ( set ( names ) ) ) 
+# =============================================================================
+if (6,16) <= root_info : 
+    # =========================================================================
+    ## get all column names
+    #  @code
+    #  cols = colums ( frame ) 
+    #  @endcode 
+    def columns ( frame ) :
+        """Get all column names
+        >>> cols = colums ( frame ) 
+        """
+        names  = [ str(c) for c in frame.GetColumnNames()        ]
+        names += [ str(c) for c in frame.GetDefinedColumnNames() ]            
+        return tuple ( sorted ( set ( names ) ) )    
+    # =========================================================================
+else :
+    # =========================================================================
+    ## get all column names
+    #  @code
+    #  cols = colums ( frame ) 
+    #  @endcode 
+    def columns ( frame ) :
+        """Get all column names
+        >>> cols = colums ( frame ) 
+        """
+        names = [ str(c) for c in frame.GetColumnNames()        ]
+        return tuple ( sorted ( set ( names ) ) ) 
 
+    
 frame_columns      = columns
 
 DataFrame.columns  = frame_columns 
@@ -256,8 +271,9 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         expressions = [ expressions ]
     
     ## get the list of currently known names
-    vars = tuple ( [ str( c ) for c in frame.GetColumnNames () ] )
-
+    vars     = frame_columns ( self ) 
+    all_nars = set ( vars ) 
+    
     names   = {}
 
     current = frame    
@@ -266,16 +282,20 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         if e in vars :
             names [ e ] = e 
             continue
-
-        used    = vars + tuple ( current.GetDefinedColumnNames() )
+        
+        used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
         vn      = var_name ( 'var_' , vars , e , *vars )
+        all_vars.add ( vn )
+        
         current = current.Define ( vn , e )
+        
         names [ e ] = vn
 
     cname = cuts 
     if cuts and not cuts in vars :
-        used    = vars + tuple ( [ str(c) for c in current.GetDefinedColumnNames() ] )        
+        used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
         vn      = var_name ( 'cut_' , used , cuts , *vars )
+        all_vars.add ( vn )
         current = current.Define ( vn , cuts )
         cname   = vn
 
@@ -661,19 +681,22 @@ def frame_project ( frame , model , *what ) :
     if histo : histo.Reset()
     
     ## get the list of currently known names
-    vars = tuple ( ( str(c) for c in frame.GetColumnNames () ) ) 
+    vars = frame_columns ( frame )  
 
     nvars = []
 
     current = frame 
-    added   = False 
+    added   = False
+
+    all_nars = set ( vars )     
     for w in what :
         
         if   w in  vars : nvars.append ( w )
         elif w in nvars : nvars.append ( w )
         else :
-            used    = vars + tuple ( nvars ) + tuple ( current.GetDefinedColumnNames() )
+            used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
             ww      = var_name ( 'var_' , used , *what )
+            all_vars.add ( ww ) 
             current = current.Define ( ww , w )
             nvars.append ( ww )
             added = True 
