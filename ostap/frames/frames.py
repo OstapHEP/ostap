@@ -256,8 +256,8 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         expressions = [ expressions ]
     
     ## get the list of currently known names
-    vars     = frame_columns ( self ) 
-    all_nars = set ( vars ) 
+    vars     = frame_columns ( frame ) 
+    all_vars = set ( vars ) 
     
     names   = {}
 
@@ -269,9 +269,8 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
             continue
         
         used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
-        vn      = var_name ( 'var_' , vars , e , *vars )
+        vn      = var_name ( 'var_' , used , e , *vars )
         all_vars.add ( vn )
-        
         current = current.Define ( vn , e )
         
         names [ e ] = vn
@@ -670,10 +669,9 @@ def frame_project ( frame , model , *what ) :
 
     nvars = []
 
-    current = frame 
-    added   = False
-
-    all_nars = set ( vars )     
+    current  = frame 
+    added    = False
+    all_vars = set ( vars )     
     for w in what :
         
         if   w in  vars : nvars.append ( w )
@@ -684,6 +682,7 @@ def frame_project ( frame , model , *what ) :
             all_vars.add ( ww ) 
             current = current.Define ( ww , w )
             nvars.append ( ww )
+            all_vars.add ( ww ) 
             added = True 
 
     if   isinstance ( model , ROOT.RDF.TH3DModel ) : action = current.Histo3D ( model , *nvars )
