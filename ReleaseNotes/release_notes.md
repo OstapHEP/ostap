@@ -13,7 +13,6 @@
  
 ## Bug fixes:
 
-
 # v1.7.0.4
 
 ## New features:
