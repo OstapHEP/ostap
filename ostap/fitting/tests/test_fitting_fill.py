@@ -79,8 +79,7 @@ def create_tree ( fname , nentries = 1000 ) :
             
         for i in range ( 1 , NM ) :
             tree.Branch ( "vv%d" % i , mvars[i] , 'vv%d[4]/D' % i )
-            
-                          
+                                      
         for i in range ( nentries ) : 
             
             m   = random.gauss        ( 3.1 ,  0.015 )

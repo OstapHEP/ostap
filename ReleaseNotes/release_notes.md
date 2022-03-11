@@ -1,4 +1,5 @@
 ## New features: 
+  1. add methods `size_vars` and `array_vars` for `ROOT.TTree`
 
 ## Backward incompatible:  
  

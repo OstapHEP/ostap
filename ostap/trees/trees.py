@@ -2214,6 +2214,89 @@ def the_variables ( tree , expression , *args ) :
 ROOT.TTree.the_variables = the_variables
 
 # ===============================================================================
+## Get all ``size''-variables
+#  @code
+#  tree  = ... 
+#  sizes = tree.size_vars() 
+#  @endcode 
+def _rt_size_vars_ ( tree ) :
+    """Get all ``size''-variables
+    >>> tree  = ... 
+    >>> sizes = tree.size_vars() 
+    """
+    leaves   = tree.leaves   ()
+    branches = tree.branches ()
+    all      = set ( leaves + branches )
+    sizes    = set () 
+
+    for leaf in leaves :
+        
+        l = tree.GetLeaf( leaf )
+        t = l.GetTitle ()
+
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
+            for i in n :
+                if i in all : sizes.add ( i )
+            
+        b  = l   .GetBranch ( )
+        t  = b   .GetTitle  ( )
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            n = t [ p1 + 1 : p2 ]
+            n = n.replace ( '][' , ',' )
+            n = n.split   ( ',' ) 
+            for i in n :
+                if i in all : sizes.add ( i )
+
+    return tuple ( sorted ( sizes ) )
+
+ROOT.TTree.size_vars = _rt_size_vars_
+
+# ===============================================================================
+## Get all ``array-like''-variables
+#  @code
+#  tree  = ... 
+#  arrays = tree.array_vars() 
+#  @endcode 
+def _rt_array_vars_ ( tree ) :
+    """Get all ``array-like''-variables
+    >>> tree  = ... 
+    >>> arrays = tree.array_vars() 
+    """
+    leaves   = tree.leaves   ()
+    branches = tree.branches ()
+    all      = set ( leaves + branches )
+    
+    arrays   = set () 
+
+    for leaf in leaves :
+        
+        l = tree.GetLeaf( leaf )
+        t = l.GetTitle ()
+
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            arrays.add ( leaf )
+            
+        b  = l   .GetBranch ( )
+        t  = b   .GetTitle  ( )
+        p1 = t. find ( '[' )
+        p2 = t.rfind ( ']' )
+        if 0 < p1 < p2 :
+            arrays.add ( b.GetName()  )
+
+    return tuple ( sorted ( arrays ) )
+
+ROOT.TTree.array_vars = _rt_array_vars_
+
+# ===============================================================================
 ## @class ActiveBranches
 #  Context manager to activate only certain branches in the tree.
 #  It drastically speeds up the iteration over the tree.
@@ -2865,6 +2948,9 @@ _new_methods_       = (
     #
     ROOT.TTree.slice        ,
     ROOT.TTree.slices       ,
+    #
+    ROOT.TTree.size_vars    , 
+    ROOT.TTree.array_vars   , 
     #
     ROOT.TTree.nEff             , 
     ROOT.TTree.get_moment       , 
