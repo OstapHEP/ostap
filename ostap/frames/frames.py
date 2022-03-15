@@ -672,7 +672,10 @@ def frame_project ( frame , model , *what ) :
     current  = frame 
     added    = False
     all_vars = set ( vars )     
-    for w in what :
+    for ww in what :
+
+        w = ww
+        if isinstance ( ww , ROOT.TCut ) : w = str ( ww )
         
         if   w in  vars : nvars.append ( w )
         elif w in nvars : nvars.append ( w )

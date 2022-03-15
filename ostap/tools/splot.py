@@ -138,7 +138,8 @@ class sPlot1D(object) :
 
         ## sum of all histograms 
         hsum = template.clone()
-        hsum.Reset() ; hsum . Sumw2() 
+        hsum.Reset() ;
+        if not hsum.GetSumw2() : hsum . Sumw2() 
 
         for k in hcomponents : hsum += hcomponents[k] * fitresult( k )[0].value() 
 
@@ -147,7 +148,8 @@ class sPlot1D(object) :
         for i in range ( l ) :
 
             cmp = template.clone() ;
-            cmp.Reset() ; cmp.Sumw2() 
+            cmp.Reset() ;
+            if not cmp.GetSumw2() : cmp.Sumw2() 
             for j in range ( l ) :
                 cmp += fitresult.cov ( names[i] , names[j] ) * hcomponents [ names[j] ] 
                 

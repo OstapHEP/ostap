@@ -141,10 +141,11 @@ class ReduceTree(CleanUp):
         
         ## chain name:
         if not name :
-            cname = chain.GetName()  ## produces ROOT error
-            if root_info < ( 6 , 24 ) : 
-                _ , _ , cname = chain.GetName().rpartition ( '/' )                
-            name = '%s_reduced' % cname
+            name = chain.GetName()  ## produces ROOT error
+            name = '%s_reduced' % name
+            
+        if root_info < ( 6 , 24 ) : 
+            _ , _ , name = name.rpartition ( '/' )                
             
         self.__name = name
                 
@@ -284,7 +285,9 @@ def reduce  ( tree               ,
     result = Chain ( reduced.chain )
     if not output : result.trash.add ( reduced.output )  
 
-    if silent :        
+    if not silent :
+        logger.info ('Reduce: %s' % str ( reduced ) ) 
+    else     : 
         nb = len ( result.chain.branches() )
         ne = len ( result.chain            )
         f  = float ( nb0 * ne0 ) / ( nb  * ne ) 
