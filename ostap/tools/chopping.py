@@ -448,7 +448,13 @@ class Trainer(object) :
         if self.chop_background :
             bcuts = icategory * bcuts if bcuts else icategory
 
-        mp = self.make_plots and ( self.verbose or 0 == i ) 
+        if self.parallel :
+            mp = self.make_plots and ( self.verbose or 0 == i )        
+            vb = self.verbose    and (                 0 == i ) 
+        else :
+            mp = self.make_plots 
+            vb = self.verbose   
+            
         t  = TMVATrainer ( methods           = self.methods          ,
                            variables         = self.variables         ,
                            signal            = self.__signal          ,
@@ -466,9 +472,9 @@ class Trainer(object) :
                            background_cuts   = bcuts                  ,
                            ##
                            name              = nam                    ,
-                           verbose           = self.verbose           ,
+                           verbose           = vb                     , ## verbose 
                            logging           = self.logging           ,
-                           make_plots        = mp                     ,
+                           make_plots        = mp                     , ## make plots 
                            multithread       = self.multithread       ,
                            category          = i                      ,
                            workdir           = self.workdir           )
@@ -604,6 +610,11 @@ class Trainer(object) :
     def verbose ( self ) :
         """``verbose'' : verbosity  flag"""
         return self.__verbose
+
+    @property
+    def silent ( self ) :
+        """``silent'' : verbosity  flag"""
+        return not self.verbose
 
     @property
     def signal_categories ( self ) :
@@ -859,7 +870,7 @@ class Trainer(object) :
         logfiles = []
 
         from ostap.utils.progress_bar import progress_bar
-        for  t in progress_bar ( self.trainers , silent = not self.verbose ) :
+        for t in progress_bar ( self.trainers , silent = self.verbose ) :
             if self.verbose : self.logger.info  ( "Train the trainer ``%s''" % ( t.name ) ) 
             t.train() 
             weights  += [ t.weights_files ] 
@@ -1098,6 +1109,7 @@ class Reader(object) :
                    weights_files                  , 
                    name         = 'ChopperReader' ,
                    options      = ''              ,
+                   logger       = None            ,
                    verbose      = False           ) :
         """ Book the reader:
         >>> reader = Reader ( 
@@ -1116,7 +1128,9 @@ class Reader(object) :
 
         assert isinstance ( N , integer_types ) and 1 <= N , "``N'' is illegal %s/%s"  % ( N , type(N) )
 
-        self.__name          = str(name) 
+        self.__name          = str(name)
+        self.__logger        = logger if logger else getLogger ( self.name )
+  
         self.__categoryfunc  = categoryfunc, 
         self.__N             = N
         
@@ -1134,8 +1148,7 @@ class Reader(object) :
         self.__readers   = []
         for i in range ( self.N ) :
             
-            inam = '%s_%03d'   % ( self.name , i )
-            
+            inam = '%s_%03d'   % ( self.name , i )            
             self.__readers.append ( TMVAReader ( name          = inam                  ,
                                                  variables     = self.variables        ,
                                                  weights_files = self.weights_files[i] ,
@@ -1159,6 +1172,11 @@ class Reader(object) :
         """```name'' - the name of Chopper Reader"""
         return self.__name
 
+    @property
+    def logger ( self ) :
+        """``logger'' : the logger instace for this Trainer"""
+        return self.__logger
+    
     @property
     def N ( self ) :
         """```N'' - number of categories"""

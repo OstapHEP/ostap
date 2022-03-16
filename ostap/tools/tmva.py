@@ -970,31 +970,32 @@ class Trainer(object):
             if hasattr ( ROOT.TMVA , 'variables'    ) : ROOT.TMVA.variables    ( self.name , output )    
             if hasattr ( ROOT.TMVA , 'correlations' ) : ROOT.TMVA.correlations ( self.name , output )
             
-            if  root_info < ( 6 , 18 ) or root_info >= ( 6,20 ) :
-                if hasattr ( ROOT.TMVA , 'mvas'         ) : 
-                    for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
-                    
             if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 for i in range ( 4 ) : ROOT.TMVA.efficiencies  ( self.name , output , i )
 
-            if hasattr ( ROOT.TMVA , 'paracoor'            ) : ROOT.TMVA.paracoor           ( self.name , output )
-            ## if hasattr ( ROOT.TMVA , 'probas'              ) : ROOT.TMVA.probas             ( self.name , output )
-            if hasattr ( ROOT.TMVA , 'training_history'    ) : ROOT.TMVA.training_history   ( self.name , output )
+            if root_info < ( 6 , 18 ) or root_info >= ( 6,20 ) :
+                if hasattr ( ROOT.TMVA , 'mvas'         ) : 
+                    for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
 
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
-                if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) : ROOT.TMVA.likelihoodrefs     ( self.name , output )
-            
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
-                if hasattr ( ROOT.TMVA , 'network'             ) : ROOT.TMVA.network            ( self.name , output )
-                if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) : ROOT.TMVA.annconvergencetest ( self.name , output )
-
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
-                if hasattr ( ROOT.TMVA , 'BDT'                ) : ROOT.TMVA.BDT                ( self.name , output )
-                if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) : ROOT.TMVA.BDTControlPlots    ( self.name , output )
+                if hasattr ( ROOT.TMVA , 'paracoor'            ) : ROOT.TMVA.paracoor           ( self.name , output )
                 
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
-                if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) : ROOT.TMVA.BoostControlPlots  ( self.name , output )
-            
+                ## if hasattr ( ROOT.TMVA , 'probas'              ) : ROOT.TMVA.probas             ( self.name , output )
+                if hasattr ( ROOT.TMVA , 'training_history'    ) : ROOT.TMVA.training_history   ( self.name , output )
+                
+                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
+                    if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) : ROOT.TMVA.likelihoodrefs     ( self.name , output )
+                    
+                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
+                    if hasattr ( ROOT.TMVA , 'network'             ) : ROOT.TMVA.network            ( self.name , output )
+                    if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) : ROOT.TMVA.annconvergencetest ( self.name , output )
+                    
+                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
+                    if hasattr ( ROOT.TMVA , 'BDT'                ) : ROOT.TMVA.BDT                ( self.name , output )
+                    if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) : ROOT.TMVA.BDTControlPlots    ( self.name , output )
+                    
+                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
+                    if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) : ROOT.TMVA.BoostControlPlots  ( self.name , output )
+     
             ## if 62000 > root_version_int : 
             ## ROOT.TMVA.correlations                       ( self.name , output     )
             ## for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
@@ -1143,6 +1144,7 @@ class Reader(object)  :
                    variables            ,
                    weights_files        ,
                    options      = ''    ,
+                   logger       = None  , 
                    verbose      = True  ) :
         """Construct the TMVA reader         
         >>> from ostap.tools.tmva import Reader
@@ -1171,6 +1173,9 @@ class Reader(object)  :
         
         """            
 
+        self.__name   = name
+        self.__logger = logger if logger else getLogger ( self.name )
+
         if root_version_int < 61800 : 
             ROOT.TMVA.Tools.Instance()
         
@@ -1184,7 +1189,6 @@ class Reader(object)  :
         options = opts_replace ( options , 'Color:'           , verbose and isatty () ) 
 
         self.__reader = ROOT.TMVA.Reader( options , verbose )
-        self.__name   = name
 
         ## treat the weigths files
         self.__weights = WeightsFiles ( weights_files )
@@ -1215,7 +1219,7 @@ class Reader(object)  :
 
             else :
                 
-                logger.error ('Reader(%s): Invalid variable description!' % name )
+                self.logger.error ('Invalid variable description!'     )
                 raise AttributeError ( 'Invalid variable description!' )
 
             ##                     name    accessor   address 
@@ -1233,11 +1237,9 @@ class Reader(object)  :
         for method , xml in  items_loop ( self.weights.files ) :
             m = self.__reader.BookMVA ( method , xml )
             assert  m , 'Error in booking %s/%s' % (  method  , xml )
-            logger.debug ('TMVA Reader(%s) is booked for method:%s xml: %s' % (  self.__name ,
-                                                                                 method      ,
-                                                                                 xml         ) )
+            self.logger.debug ('TMVA Reader is booked for method:%s xml: %s' % ( method , xml ) )
             
-        logger.info ('TMVA Reader(%s) booked methods are %s' %  ( self.__name , self.__methods ) )
+        self.logger.info ('TMVA Reader  booked methods are %s' % str ( self.__methods ) )
         self.__methods = tuple ( self.__methods )
 
     @property
@@ -1245,6 +1247,11 @@ class Reader(object)  :
         """``name'' - the name of the reader"""
         return self.__name
 
+    @property
+    def logger ( self ) :
+        """``logger'' : the logger instace for this Trainer"""
+        return self.__logger
+    
     @property
     def reader ( self ) :
         """``reader'' - the  actual TMVA.Reader object"""
@@ -1670,5 +1677,5 @@ if '__main__' == __name__ :
 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
