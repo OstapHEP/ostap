@@ -25,10 +25,8 @@ from   ostap.utils.progress_bar import progress_bar
 # logging 
 # =============================================================================
 from ostap.logger.logger import getLogger
-if '__main__' == __name__  or '__builtin__'  == __name__ : 
-    logger = getLogger ( 'ostap.test_tools_tmva' )
-else : 
-    logger = getLogger ( __name__ )
+if '__main__' == __name__  : logger = getLogger ( 'ostap.test_tools_tmva' )
+else                       : logger = getLogger ( __name__ )
 # ==============================================================================
 
 
@@ -44,9 +42,7 @@ if 1 < 2 :
         ## nS =   20000
         logger.info('Prepare input ROOT file with data  %s' % data_file )
         with ROOT.TFile.Open( data_file ,'recreate') as test_file:
-            logger.info('HERE-0!') 
             test_file.cd()
-            logger.info('HERE-1!') 
             treeSignal = ROOT.TTree('S','signal     tree')
             treeBkg    = ROOT.TTree('B','background tree')
             treeSignal.SetDirectory ( test_file ) 
@@ -109,8 +105,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     trainer = Trainer (
         name    = 'TestTMVA' ,   
         methods = [ # type               name   configuration
-        ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator" ) ,
-        ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+3:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
+        ( ROOT.TMVA.Types.kMLP        , "MLP"         , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator" ) ,
+        ( ROOT.TMVA.Types.kMLP        , "MLPT"        , "H:!V:EstimatorType=CE:VarTransform=N:NCycles=200:HiddenLayers=N+5:TestRate=5:!UseRegulator:VarTransform=G,D" ) ,
         ( ROOT.TMVA.Types.kBDT        , "BDTG0"       , "H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
         ( ROOT.TMVA.Types.kBDT        , "BDTGT"       , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3:VarTransform=G,D" ) , 
         ( ROOT.TMVA.Types.kBDT        , "BDTG"        , "H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=100:MaxDepth=3" ) , 
@@ -125,9 +121,9 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample
-        verbose        = True                     )
-
-
+        verbose        = True                     ,
+        workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
+    
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
         weights_files = trainer.train ()
@@ -223,8 +219,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     
     from ostap.tools.tmva import addTMVAResponse
 
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
+    logger.info ('dataset SIG:\n%s' % ds1 )
+    logger.info ('dataset BKG:\n%s' % ds2 )
     addTMVAResponse ( ds1 ,
                       inputs        = ( 'var1' ,  'var2' , 'var3' ) ,
                       weights_files = tar_file ,
@@ -239,8 +235,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
     ## The END of addTMVAResponse  fragment
     # =========================================================================
 
-    logger.info ('dataset SIG: %s' %  ds1 )
-    logger.info ('dataset BKG: %s' %  ds2 )
+    logger.info ('dataset SIG:\n%s' % ds1 )
+    logger.info ('dataset BKG:\n%s' % ds2 )
 
 for m in methods :
 

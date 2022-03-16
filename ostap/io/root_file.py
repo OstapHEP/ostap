@@ -763,7 +763,7 @@ def _rd_ls_table_ ( rdir , prefix = '# ' ) :
     >>> rdir.ls_table ()
     """
 
-    table = _rf_table_ ( rdir , prefix = prefix )
+    table = _rd_table_ ( rdir , prefix = prefix )
 
     logger.info ( 'Directory %s:\n%s' % ( rdir.GetName() , table ) )
 

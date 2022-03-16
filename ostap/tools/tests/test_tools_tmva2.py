@@ -121,8 +121,9 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
         signal         = tSignal                  , ## ``Signal'' sample
         background     = tBkg                     , ## ``Background'' sample         
-        verbose        = True  )
-    
+        verbose        = True                     , 
+        workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva2-workdir-' ) ) ##  working directory 
+
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 
         weights_files = trainer.train ()

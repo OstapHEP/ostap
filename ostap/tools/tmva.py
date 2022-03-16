@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/tools/tmva.py
@@ -48,6 +48,7 @@ from ostap.core.ostap_types  import num_types, string_types
 from ostap.core.meta_info    import root_version_int 
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
+pattern_PLOTS = "%s/plots/*.*" 
 # =============================================================================
 def dir_name ( name ) :
     name = str( name )
@@ -253,8 +254,10 @@ class Trainer(object):
                    logging           = True   ,
                    name              = 'TMVA' ,
                    make_plots        = True   ,
+                   workdir           = ''     , 
                    category          = -1     ,
-                   multithread       = False  ) :
+                   multithread       = False  ,
+                   logger            = None   ) :
         
         """Constructor with list of methods
         
@@ -272,11 +275,24 @@ class Trainer(object):
         - For more detailes
         see http://www.slac.stanford.edu/grp/eg/minos/ROOTSYS/cvs/tmva/test/TMVAClassification.py.
         """
-        
+
+        self.__name   = name 
+        self.__logger = logger if logger else getLogger ( self.name )
+
+        dirname         = dir_name        ( self.name )
+        self.__dirname  = dirname
+
+        self.__logging           = False
+        if  logging :
+            if isinstance ( logging , string_types ) : self.__logging = logging 
+            else                                     : self.__logging = "%s.log" % self.name
+
         self.__methods           = tuple ( methods    )
         
         variables                = list  ( variables  ) ; variables.sort()
         self.__variables         = tuple ( variables  )
+
+
         
         from ostap.trees.trees import Chain
         
@@ -291,7 +307,7 @@ class Trainer(object):
                 if ws :
                     sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
                     signal_weight = sw
-                    logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
+                    self.logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
             signal     = Chain ( signal.tree () ) 
 
             
@@ -306,7 +322,7 @@ class Trainer(object):
                 if ws :
                     bw = ws if not background_weight else background_weight * ROOT.TCut ( ws )
                     backround_weight = bw 
-                    logger.info ( 'Redefine Background weight to be %s' % background_weight )
+                    self.logger.info ( 'Redefine Background weight to be %s' % background_weight )
             background = Chain ( background.tree () )
             
 
@@ -328,26 +344,33 @@ class Trainer(object):
         ## self.__verbose = True if verbose else False 
         self.__verbose = True if ( verbose and  self.category <= 0 ) else False 
 
-        self.__name    = name 
-
-        self.__logging           = False
-        if  logging :
-            if isinstance ( logging , string_types ) : self.__logging = logging 
-            else                                     : self.__logging = self.name + '.log'
 
         self.__bookingoptions   = bookingoptions
                 
         self.__configuration    = configuration
 
+        import os 
+        if not workdir : workdir = os.getcwd()
+        if not os.path.exists ( workdir ) :
+            from ostap.utils.basis import make_dirs
+            make_dirs ( workdir )
+        assert workdir and os.path.exists ( workdir ) and os.path.isdir ( workdir ), \
+               'No valid working directory!'
+        
+        self.__workdir = os.path.abspath ( workdir ) 
+        if self.verbose : self.logger.debug ("Working directory is %s" % self.workdir )
+   
         ##
         ## outputs :
         ## 
         self.__weights_files = []
         self.__class_files   = []
-        self.__output_file   = output_file if output_file else '%s.root' % self.name 
+        self.__output_file   = output_file if output_file else os.path.join ( self.workdir , '%s.root' % self.name )
         self.__tar_file      = None 
         self.__log_file      = None
-
+        self.__plots         = []
+        
+        self.__output_file   = os.path.abspath ( self.output_file ) if self.output_file else None  
 
         #
         ## minor adjustment
@@ -357,7 +380,7 @@ class Trainer(object):
         
         if 0 > opts.find ( "AnalysisType=" ) :
             opts += ":AnalysisType=Classification"
-            logger.debug('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
+            self.logger.debug('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
 
         opts = opts_replace ( opts , 'V:'               ,     self.verbose )
         opts = opts_replace ( opts , 'Silent:'          , not self.verbose )
@@ -379,9 +402,9 @@ class Trainer(object):
 
         self.__bookingoptions = str ( opts )
 
-        dirname     = dir_name ( self.name )
-        pattern_xml = pattern_XML   % ( dirname ,  dirname )
-        pattern_C   = pattern_CLASS % ( dirname ,  dirname )
+        
+        pattern_xml = pattern_XML   % ( self.dirname ,  self.dirname )
+        pattern_C   = pattern_CLASS % ( self.dirname ,  self.dirname )
 
         rf = []
         import glob,os
@@ -391,11 +414,11 @@ class Trainer(object):
         for f in glob.glob ( pattern_C   ) :
             rf.append ( f ) 
             os.remove ( f )
-        if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
+        if rf : self.logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
         
-        self.__dirname     = dirname
-        self.__pattern_xml = pattern_xml 
-        self.__pattern_C   = pattern_C 
+        self.__pattern_xml   = pattern_xml 
+        self.__pattern_C     = pattern_C 
+        self.__pattern_plots = pattern_PLOTS % self.name
 
         self.__multithread = multithread and 61800 <= root_version_int 
 
@@ -408,6 +431,11 @@ class Trainer(object):
     def methods ( self ) :
         """``methods'' : the list of TMVA methods to be used"""
         return tuple(self.__methods)
+
+    @property
+    def logger ( self ) :
+        """``logger'' : the logger instace for this Trainer"""
+        return self.__logger
     
     @property
     def variables ( self ) :
@@ -514,7 +542,17 @@ class Trainer(object):
     @property 
     def multithread ( self ) :
         """``multithread'' : make try to use multithreading in TMVA"""
-        return self.__multithread 
+        return self.__multithread
+    
+    @property
+    def workdir ( self ) :
+        """``workdir'' : working directory"""
+        return self.__workdir
+
+    @property
+    def plots ( self ) :
+        """``plots'': list of produced plots"""
+        return self.__plots
     
     # =========================================================================
     ## train TMVA 
@@ -527,9 +565,26 @@ class Trainer(object):
         >>> trainer.train ()
         return the name of output XML files with the weights 
         """
+        from ostap.utils.utils import keepCWD
+        with keepCWD ( self.workdir ) :
+            return self._train() 
+
+    # =========================================================================
+    ## train TMVA 
+    #  @code
+    #  trainer.train ()
+    #  @endcode  
+    #  @return the name of output XML file with the weights 
+    def _train ( self )  :
+        """ train TMVA 
+        >>> trainer.train ()
+        return the name of output XML files with the weights 
+        """
 
         log = self.logging 
 
+        print ('_TRAIN', log )
+        
         self.__log_file = None
 
         if  log :
@@ -546,8 +601,6 @@ class Trainer(object):
 
             from ostap.logger.utils  import MuteC  , NoContext
             context  = NoContext () if self.verbose and self.category in ( 0 , -1 ) else MuteC     ()
-
-
             
         from ostap.logger.utils import NoContext
         from ostap.utils.utils  import ImplicitMT
@@ -558,44 +611,105 @@ class Trainer(object):
             
             result = self.__train ()
             
-            if log and os.path.exists ( log ) and os.path.isfile ( log ) :
-                self.__log_file = log
-                if log == '%s.log' % self.name and os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
-                    try :
-                        shutil.move ( log , self.dirname )
-                        nl = os.path.join ( self.dirname , log )
-                        if os.path.exists ( nl ) and os.path.isfile ( nl ) : self.__log_file = nl
-                    except :
-                        pass
-                        
-            logger.info ( "Trainer(%s):      variables: %s" % ( self.name , self.variables  ) )
+            ## Training outputs
+                    
+            rows = [ ( 'Item' , 'Value' ) ]
+            
+            row  = 'Variables', ', '.join( self.variables )
+            rows.append ( row )
+
             if self.spectators : 
-                logger.info ( "Trainer(%s):     spectators: %s" % ( self.name , self.spectators ) )
+                row  = 'Spectators', ', '.join( self.spectators )
+                rows.append ( row )
+
+            row = 'Methdos' ,  ', '.join( [ i[1] for i in  self.methods ] )
+            rows.append ( row )
+            
+            if self.workdir and os.path.exists ( self.workdir ) and os.path.isdir ( self.workdir ) :
+                row = "Workdir" , self.workdir 
+                rows.append ( row )
                 
-            if self.weights_files :  
-                logger.info  ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
-            if self.class_files   : 
-                logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.class_files   ) )
-            if self.output_file and \
+            if self.weights_files : 
+                from ostap.utils.basic import commonpath
+                wd = commonpath ( self.weights_files ) if 1 < len ( self.weights_files ) else ''
+                if wd :
+                    row = "Weights directory" , wd
+                    rows.append ( row )
+                lw = len ( wd )
+                for w in self.weights_files :
+                    row = "Weights file" , w if not lw else w[lw+1:]
+                    rows.append ( row )
+
+            if self.class_files : 
+                from ostap.utils.basic import commonpath 
+                wd = commonpath ( self.class_files ) if 1 < len ( self.class_files ) else ''
+                if wd :
+                    row = "Classes directory" , wd
+                    rows.append ( row )
+                lw = len ( wd )
+                for w in self.class_files :
+                    row = "Class file" , w if not lw else w[lw+1:]
+                    rows.append ( row )
+                    
+            if self.plots :
+                from ostap.utils.basic import commonpath 
+                wd = commonpath ( self.plots ) if 1 < len ( self.plots ) else ''
+                if wd :
+                    row = "Plots directory" , wd
+                    rows.append ( row )
+                lw = len ( wd )
+                for w in self.plots :
+                    row = "Plot file" , w if not lw else w[lw+1:]
+                    rows.append ( row )
+                
+            if self.output_file and os.path.exists ( self.output_file  ) : 
+                row = "Output ROOT file" , self.output_file
+                rows.append ( row )
+                
+            if self.log_file and os.path.exists ( self.log_file  ) : 
+                row = "Log file" , self.log_file 
+                rows.append ( row )
+                
+            if self.tar_file and os.path.exists ( self.tar_file  ) and tarfile.is_tarfile ( self.tar_file ) : 
+                row = "Tar file" , self.tar_file 
+                rows.append ( row )
+                
+            import ostap.logger.table as T
+            title = "TMVA %s outputs" % self.name 
+            table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
+            self.logger.info ( "%s\n%s" % ( title , table ) ) 
+            
+            if self.verbose                          and \
+                   self.tar_file                     and \
+                   os.path.exists ( self.tar_file  ) and \
+                   tarfile.is_tarfile ( self.tar_file ) :
+                self.logger.info ( 'Content of the tar file %s' % self.tar_file )
+                with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
+                
+            if self.verbose and self.output_file       and \
                    os.path.exists ( self.output_file ) and \
                    os.path.isfile ( self.output_file ) :
-                logger.info  ( "Trainer(%s): Output  file  : %s" % ( self.name , self.output_file   ) )
-            if self.log_file and \
-                   os.path.exists ( self.log_file ) and \
-                   os.path.isfile ( self.log_file ) :
-                logger.info  ( "Trainer(%s): Log     file  : %s" % ( self.name , self.log_file      ) )
-            if self.tar_file and \
-                   os.path.exists     ( self.tar_file ) and \
-                   os.path.isfile     ( self.tar_file ) and \
-                   tarfile.is_tarfile ( self.tar_file ) : 
-                logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.tar_file      ) )
-                if self.verbose : 
-                    with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
+                import ostap.io.root_file 
+                with ROOT.TFile.open ( self.output_file , 'r' ) as rf :
+                    table = rf.as_table()
+                    self.logger.info ( "Content of the output ROOT file %s\n%s" % ( self.output_file , table ) )
 
-            if  self.make_plots : self.makePlots()
+                   
+        if log and os.path.exists ( log ) and os.path.isfile ( log ) :
+            try :
+                shutil.move ( log , self.dirname )
+                log = os.path.join ( self.dirname , os.path.basename ( log ) )
+            except :
+                pass
             
-            return result
+        if log and os.path.exists ( log ) and os.path.isfile ( log ) :
+            self.__log_file = os.path.abspath ( log )
+        else : 
+            self.__log_file = None 
+
+        return result
     
+
             
     # =========================================================================
     ## train TMVA 
@@ -617,7 +731,7 @@ class Trainer(object):
         for f in glob.glob ( self.__pattern_C   ) :
             rf.append ( f )
             os.remove ( f )
-        if rf : logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
+        if rf : self.logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
 
         ## ROOT 6/18 crashes here...
         ## if root_version_int < 61800 : 
@@ -625,7 +739,7 @@ class Trainer(object):
 
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
-            logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
+            self.logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
 
             ## the final adjustment 
             opts = self.__bookingoptions
@@ -638,8 +752,8 @@ class Trainer(object):
 
             bo = self.bookingoptions.split (':')
             bo.sort() 
-            if self.verbose : logger.info  ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
-            else            : logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
+            if self.verbose : self.logger.info  ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
+            else            : self.logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
 
             factory = ROOT.TMVA.Factory (                
                 self.name             ,
@@ -658,7 +772,7 @@ class Trainer(object):
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv[0] ) 
                 dataloader.AddVariable  ( *vv )    
-            logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
+            self.logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
 
             for v in self.spectators :
                 vv = v
@@ -667,16 +781,16 @@ class Trainer(object):
                 dataloader.AddSpectator ( *vv )
                 #
             if self.spectators : 
-                logger.info ( "Trainer(%s):        spectators:``%s''" % ( self.name ,      self.spectators ) )
+                self.logger.info ( "Trainer(%s):        spectators:``%s''" % ( self.name ,      self.spectators ) )
             #            
             if self.signal_cuts :
-                logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
+                self.logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
                     
             if self.background_cuts :
-                logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
+                self.logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
             #
             if self.prefilter :
-                if self.verbose : logger.info ( 'Start data pre-filtering before TMVA processing' )
+                if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
                 all_vars.append   ( self.prefilter )
                 
                 if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
@@ -698,9 +812,9 @@ class Trainer(object):
                 import ostap.parallel.parallel_reduce as TR
                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
-                logger.info ( 'Pre-filter Signal     before processing' )
+                self.logger.info ( 'Pre-filter Signal     before processing' )
                 self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
-                logger.info ( 'Pre-filter Background before processing' )
+                self.logger.info ( 'Pre-filter Background before processing' )
                 self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )                                
                 self.__signal     = self.__SigTR
                 self.__background = self.__BkgTR
@@ -721,14 +835,14 @@ class Trainer(object):
                 bw = sb.sum ()
                 
                 if self.signal_weight     :
-                    logger.info ( 'Trainer(%s): Signal           : %s/%s ' % ( self.name , ns , sw ) )
+                    self.logger.info ( 'Trainer(%s): Signal           : %s/%s ' % ( self.name , ns , sw ) )
                 else :
-                    logger.info ( 'Trainer(%s): Signal           : %s    ' % ( self.name , ns      ) )
+                    self.logger.info ( 'Trainer(%s): Signal           : %s    ' % ( self.name , ns      ) )
                 
                 if self.background_weight :
-                    logger.info ( 'Trainer(%s): Background       : %s/%s ' % ( self.name , nb , bw ) )
+                    self.logger.info ( 'Trainer(%s): Background       : %s/%s ' % ( self.name , nb , bw ) )
                 else :
-                    logger.info ( 'Trainer(%s): Background       : %s    ' % ( self.name , nb      ) )
+                    self.logger.info ( 'Trainer(%s): Background       : %s    ' % ( self.name , nb      ) )
 
                 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
@@ -736,12 +850,12 @@ class Trainer(object):
             #
             if self.signal_weight :
                 dataloader.SetSignalWeightExpression     ( self.signal_weight     )
-                logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name , attention ( self.signal_weight     ) ) )
+                self.logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name , attention ( self.signal_weight     ) ) )
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
-                logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , attention ( self.background_weight ) ) )
+                self.logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , attention ( self.background_weight ) ) )
                 
-            logger.info     ( "Trainer(%s): Configuration    :``%s''" % ( self.name , self.configuration ) )
+            self.logger.info     ( "Trainer(%s): Configuration    :``%s''" % ( self.name , self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
                 ROOT.TCut ( self.signal_cuts     ) ,
                 ROOT.TCut ( self.background_cuts ) ,
@@ -750,20 +864,20 @@ class Trainer(object):
             for m in self.methods :
                 bo = m[2].split(':')
                 bo.sort() 
-                if  self.verbose : logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
-                else             : logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                if  self.verbose : self.logger.info  ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
+                else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
                 
                 factory.BookMethod ( dataloader , *m )
            
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
-            logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
             factory.TrainAllMethods    ()
             ## Test MVAs
-            logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
             factory.TestAllMethods     ()
             # Evaluate MVAs
-            logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
             factory.EvaluateAllMethods ()
             
         # check the output.
@@ -779,7 +893,7 @@ class Trainer(object):
                     pass  
             try : 
                 with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile : 
-                    logger.debug ( "Trainer(%s): Output ROOT file is %s" % ( self.name , outFile.GetName() ) )
+                    self.logger.debug ( "Trainer(%s): Output ROOT file is %s" % ( self.name , outFile.GetName() ) )
                     if self.verbose : outFile.ls()
             except :
                 pass
@@ -787,44 +901,53 @@ class Trainer(object):
         del dataloader
         del factory 
 
+        if  self.make_plots : self.makePlots()
+            
         import glob, os 
-        self.__weights_files = [ f for f in glob.glob ( self.__pattern_xml ) ]
-        self.__class_files   = [ f for f in glob.glob ( self.__pattern_C   ) ]
-
+        self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
+        self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
+        self.__plots         = tuple ( [ f for f in glob.glob ( self.__pattern_plots ) ] )
+        
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
-            logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
-        
+            self.logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in self.weights_files : tar.add ( x )
             for x in self.  class_files : tar.add ( x )
-            if self.log_file and os.path.exists ( self.log_file) and os.path.isfile ( self.log_file ) :
+            for x in self.__plots       : tar.add ( x )
+            if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
                 tar.add ( self.log_file ) 
 
+        self.__weights_files = tuple ( [ os.path.abspath ( f ) for f in self.weights_files ] ) 
+        self.__class_files   = tuple ( [ os.path.abspath ( f ) for f in self.class_files   ] ) 
+        self.__plots         = tuple ( [ os.path.abspath ( f ) for f in self.__plots       ] ) 
+        
         ## finally set tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :            
             if os.path.exists ( self.dirname ) and os.path.isdir ( self.dirname ) :
                 try :
                     shutil.move ( tfile , self.dirname )
                     ntf = os.path.join ( self.dirname , tfile )
-                    if os.path.exists ( ntf ) and tarfile.is_tarfile( ntf ) : tfile = ntf 
+                    if os.path.exists ( ntf ) and tarfile.is_tarfile( ntf ) : tfile = os.path.abspath ( ntf )
                 except :
                     pass 
-            self.__tar_file = tfile
+            self.__tar_file = os.path.abspath ( tfile ) 
                         
         return self.tar_file 
 
-    ## make the standard TMVA plots 
+    # =========================================================================
+    ## make selected standard TMVA plots 
     def makePlots ( self ) :
-        """Make the standard TMVA plots"""
+        """Make selected standard TMVA plots"""
 
         output = self.output_file
 
         if not output :
-            logger.warning ('No output file is registered!')
+            self.logger.warning ('No output file is registered!')
             return
         if not os.path.exists ( output ) or not os.path.isfile ( output ) :
-            logger.error   ('No output file %s is found !' % output )
+            self.logger.error   ('No output file %s is found !' % output )
             return
         
         try :
@@ -832,28 +955,51 @@ class Trainer(object):
             with ROOT.TFile.Open ( output , 'READ' , exception = True ) as o :
                 pass   
         except IOError :
-            logger.error ("Output file %s can't be opened!"   % output )
+            self.logger.error ("Output file %s can't be opened!"   % output )
             return
 
         #
         ## make the plots in TMVA  style
         #
         
-        logger.info ('Making the standard TMVA plots') 
+        self.logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists 
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
         groot = ROOT.ROOT.GetROOT() 
         with batch ( groot.IsBatch () or not show_plots ) :
- 
-            ROOT.TMVA.variables                              ( self.name , output     )
+
+            if hasattr ( ROOT.TMVA , 'variables'    ) : ROOT.TMVA.variables    ( self.name , output )    
+            if hasattr ( ROOT.TMVA , 'correlations' ) : ROOT.TMVA.correlations ( self.name , output )
+            if hasattr ( ROOT.TMVA , 'mvas'         ) : 
+                for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
+            if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
+                for i in range ( 4 ) : ROOT.TMVA.efficiencies  ( self.name , output , i )
+
+            if hasattr ( ROOT.TMVA , 'paracoor'            ) : ROOT.TMVA.paracoor           ( self.name , output )
+            ## if hasattr ( ROOT.TMVA , 'probas'              ) : ROOT.TMVA.probas             ( self.name , output )
+            if hasattr ( ROOT.TMVA , 'training_history'    ) : ROOT.TMVA.training_history   ( self.name , output )
+
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
+                if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) : ROOT.TMVA.likelihoodrefs     ( self.name , output )
             
-            if 62000 > root_version_int : 
-                ROOT.TMVA.correlations                       ( self.name , output     )
-                for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
-                ## ROOT.TMVA.mvaeffs                            ( self.name , output     )
-                for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
-        
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
+                if hasattr ( ROOT.TMVA , 'network'             ) : ROOT.TMVA.network            ( self.name , output )
+                if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) : ROOT.TMVA.annconvergencetest ( self.name , output )
+
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
+                if hasattr ( ROOT.TMVA , 'BDT'                ) : ROOT.TMVA.BDT                ( self.name , output )
+                if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) : ROOT.TMVA.BDTControlPlots    ( self.name , output )
+                
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
+                if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) : ROOT.TMVA.BoostControlPlots  ( self.name , output )
+            
+            ## if 62000 > root_version_int : 
+            ## ROOT.TMVA.correlations                       ( self.name , output     )
+            ## for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
+            ## ROOT.TMVA.mvaeffs                            ( self.name , output     )
+            ## for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
+
         ## convert EPS  files to PDF 
         if cmd_exists ( 'epstopdf' ) :
             odir, _ = os.path.split ( os.path.abspath ( output ) )
@@ -865,8 +1011,7 @@ class Trainer(object):
                         pdf = eps[:-4] + '.pdf'
                         if not os.path.exists ( pdf ) : 
                             r   =  subprocess.call ( [ 'epstopdf' , eps ] )                        
-                            if r != 0 : logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) ) 
-
+                            if r != 0 : self.logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) )
                             
 # =============================================================================
 ## @class Reader

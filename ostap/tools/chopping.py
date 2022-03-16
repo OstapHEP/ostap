@@ -200,9 +200,11 @@ class Trainer(object) :
                    chop_background   = True                  ,   # chop the background ?
                    logging           = True                  ,   # create log-files    ?
                    make_plots        = True                  ,   # make standard plots ?
+                   workdir           = ''                    ,   # working directory   
                    multithread       = False                 ,   # use multithreading  ?
                    parallel          = True                  ,   # parallel training   ? 
-                   parallel_conf     = {}                    ) : # parallel configuration ? 
+                   parallel_conf     = {}                    ,   # parallel configuration ?
+                   logger            = None                  ) : # logger to be used 
         
         """Create TMVA ``chopping'' trainer
         
@@ -223,15 +225,22 @@ class Trainer(object) :
         ... verbose    = False )
         
         """
+
+        
         assert isinstance ( N , integer_types ) and 1 < N , "Invalid number of categories"
+
+        self.__name   = name
+        self.__logger = logger if logger else getLogger ( self.name )
+
+
 
         self.__chop_signal     = True if chop_signal     else False 
         self.__chop_background = True if chop_background else False 
-        self.__parallel        = True if parallel         else False 
+        self.__parallel        = True if parallel        else False 
         self.__logging         = True if logging         else False
 
         if self.__parallel and root_info < (6,15) :
-            logger.warning ( "Parallel chopping is activated only for ROOT>6.15")
+            self.logger.warning ( "Parallel chopping is activated only for ROOT>6.15")
             self.__parallel = False
             
         self.__parallel_conf   = {}
@@ -242,7 +251,7 @@ class Trainer(object) :
         self.__N         = N
 
         assert signal     , 'Invalid Signal     is specified!'
-        assert background , 'Invalid Backrgound is specified!'
+        assert background , 'Invalid Background is specified!'
 
         from ostap.trees.trees import Chain      
         if   isinstance ( signal     , Chain           ) : pass 
@@ -256,7 +265,7 @@ class Trainer(object) :
                 if ws :
                     sw = ws if not signal_weight else signal_weight * ROOT.TCut ( ws )
                     signal_weight = sw
-                    logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
+                    self.logger.info ( 'Redefine Signal     weight to be %s' % signal_weight )
             signal     = Chain ( signal.tree () )
                         
         if   isinstance ( background , Chain           ) : pass 
@@ -270,7 +279,7 @@ class Trainer(object) :
                 if ws :
                     bw = ws if not background_weight else background_weight * ROOT.TCut ( ws )
                     backround_weight = bw 
-                    logger.info ( 'Redefine Background weight to be %s' % background_weight )
+                    self.logger.info ( 'Redefine Background weight to be %s' % background_weight )
             background = Chain ( background.tree () ) 
 
         self.__signal            = signal     
@@ -292,7 +301,6 @@ class Trainer(object) :
         self.__bookingoptions    = bookingoptions
         self.__configuration     = configuration
         
-        self.__name              = name
         self.__verbose           = True if verbose    else False 
         self.__make_plots        = True if make_plots else False
         
@@ -305,6 +313,18 @@ class Trainer(object) :
 
         self.__multithread       = multithread and 61800 <= root_version_int 
 
+        if not workdir : workdir = os.getcwd()
+
+        if not os.path.exists ( workdir ) :
+            from ostap.utils.basis import make_dirs
+            make_dirs ( workdir )
+            
+        assert os.path.exists ( workdir ) and os.path.isdir ( workdir ), \
+               'No valid working directory!'
+        
+        self.__workdir = os.path.abspath ( workdir ) 
+        self.logger.info ("Working directory is %s" % self.__workdir )
+        
         # =====================================================================
         ## prefilter 
         # =====================================================================
@@ -345,12 +365,12 @@ class Trainer(object) :
                 import ostap.frames.tree_reduce       as TR
 
             silent = not self.verbose 
-            logger.info ( 'Pre-filter Signal     before processing' )
+            self.logger.info ( 'Pre-filter Signal     before processing' )
             self.__SigTR = TR.reduce ( self.signal        ,
                                        selection = scuts  ,
                                        save_vars = avars  ,
                                        silent    = silent )
-            logger.info ( 'Pre-filter Background before processing' )
+            self.logger.info ( 'Pre-filter Background before processing' )
             self.__BkgTR = TR.reduce ( self.background    ,
                                        selection = bcuts  ,
                                        save_vars = avars  ,
@@ -372,8 +392,8 @@ class Trainer(object) :
             self.signal.project     ( hs2 , cat , self.signal_cuts )
             self.__sig_histos = hs1   , hs2
             st = hs2.stat()
-            if 0 >=  st.min()  : logger.warning ("Some signal categories are empty!")                 
-            logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+            if 0 >=  st.min()  : self.logger.warning ("Some signal categories are empty!")                 
+            self.logger.info('Signal     category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
                         
         if self.chop_background  :
             hb1 = ROOT.TH1F( hID() , 'Background categories' , self.N * 5 , -0.5 , self.N - 1 ) 
@@ -383,8 +403,8 @@ class Trainer(object) :
             self.__bkg_histos = hb1 , hb2
             ##
             st = hb2.stat()
-            if 0 >=  st.min()  : logger.warning ("Some background categories are empty!")                 
-            logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
+            if 0 >=  st.min()  : self.logger.warning ("Some background categories are empty!")                 
+            self.logger.info('Background category population mean/rms: %s/%6g' % ( st.mean() , st.rms() ) )
 
         
         ##  trick to please Kisa 
@@ -402,7 +422,7 @@ class Trainer(object) :
 
     ## create all trainers 
     def __create_trainers ( self ) :
-        if self.trainers : logger.debug ('Remove existing trainers ')
+        if self.trainers : self.logger.debug ('Remove existing trainers ')
         self.__trainers = [] 
         for i in  range ( self.N ) : self.__trainers.append ( self.create_trainer ( i ) )
         self.__trainers     = tuple ( self.__trainers ) 
@@ -444,7 +464,8 @@ class Trainer(object) :
                            logging           = self.logging           ,
                            make_plots        = mp                     ,
                            multithread       = self.multithread       ,
-                           category          = i                      )
+                           category          = i                      ,
+                           workdir           = self.workdir           )
         
         return t
     
@@ -452,10 +473,15 @@ class Trainer(object) :
     def name    ( self ) :
         """``name''    : the name of TMVA chopper"""
         return self.__name
+
+    @property
+    def logger ( self ) :
+        """``logger'' : logger instance for the trainer"""
+        return self.__logger
     
     @property
     def dirname  ( self ) :
-        """``dirname''  : the output directiory name"""
+        """``dirname''  : the output directory name"""
         return str(self.__dirname) 
 
     @property
@@ -610,7 +636,13 @@ class Trainer(object) :
     def multithread ( self ) :
         """``multithread'' : make try to use multithreading in TMVA"""
         return self.__multithread 
-    
+
+    @property
+    def workdir ( self ) :
+        """``workdir'' : working directory"""
+        return self.__workdir
+
+
     # =========================================================================
     ## The main method: training of all subsamples 
     #  - Use the trainer
@@ -626,6 +658,111 @@ class Trainer(object) :
     # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
     # @endcode
     def train ( self ) :
+        """ The main method: training of all subsamples 
+        - Use the trainer
+        >>> trainer.train()
+        
+        - Get  results from the  trainer
+        >>> weights_files = trainer.weights_files ## weights files (XML) 
+        >>> class_files   = trainer.  class_files ## class files (C++)
+        >>> output_files  = trainer. output_files ## output ROOT files 
+        >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
+        """
+        from ostap.utils.utils import keepCWD
+        with keepCWD ( self.workdir ) :
+            result = self._train()
+            
+        rows = [ ( 'Item' , 'Value' ) ]
+        
+        row  = 'Variables', ', '.join( self.variables )
+        rows.append ( row )
+        
+        if self.spectators : 
+            row  = 'Spectators', ', '.join( self.spectators )
+            rows.append ( row )
+            
+        row = 'Methdos' ,  ', '.join( [ i[1] for i in  self.methods ] )
+        rows.append ( row )
+
+        row = 'Category' , self.category 
+        rows.append ( row )
+
+        row = 'N' , "%d" % self.N
+        rows.append ( row )
+        
+        if self.tar_file and os.path.exists ( self.tar_file  ) and tarfile.is_tarfile ( self.tar_file ) : 
+            row = "Tar file" , self.tar_file 
+            rows.append ( row )
+            
+        if self.log_file and os.path.exists ( self.log_file  ) and tarfile.is_tarfile ( self.log_file ) : 
+            row = "Log file" , self.log_file 
+            rows.append ( row )
+            
+        def flatten(t):
+            return [ item for sublist in t for item in sublist]
+        
+        if self.weights_files : 
+            wfiles = flatten ( self.weights_files )
+            from ostap.utils.basic import commonpath
+            wd = commonpath ( wfiles ) if 1 < len ( wfiles  ) else ''
+            if wd :
+                row = "Weights directory" , wd
+                rows.append ( row )
+            lw = len ( wd )
+            for w in sorted ( wfiles ) :
+                row = "Weights file" , w if not lw else w[lw+1:]
+                rows.append ( row )
+
+        if self.class_files : 
+            cfiles = flatten ( self.class_files )
+            from ostap.utils.basic import commonpath
+            wd = commonpath ( cfiles ) if 1 < len ( cfiles  ) else ''
+            if wd :
+                row = "Class directory" , wd
+                rows.append ( row )
+            lw = len ( wd )
+            for w in sorted ( cfiles ) :
+                row = "Class  file" , w if not lw else w[lw+1:]
+                rows.append ( row )
+
+        import ostap.logger.table as T
+        title = "Chopping %s outputs" % self.name 
+        table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
+        self.logger.info ( "%s\n%s" % ( title , table ) ) 
+
+        
+        if self.verbose                          and \
+               self.tar_file                     and \
+               os.path.exists ( self.tar_file  ) and \
+               tarfile.is_tarfile ( self.tar_file ) :
+            self.logger.info ( 'Content of the tar file %s' % self.tar_file )
+            with tarfile.open ( self.tar_file , 'r' ) as tar : tar.list ()
+
+        if self.verbose                          and \
+               self.log_file                     and \
+               os.path.exists ( self.log_file  ) and \
+               tarfile.is_tarfile ( self.log_file ) :
+            self.logger.info ( 'Content of the tar/log file %s' % self.log_file )
+            with tarfile.open ( self.log_file , 'r' ) as tar : tar.list ()
+            
+        return result 
+        
+            
+    # =========================================================================
+    ## The main method: training of all subsamples 
+    #  - Use the trainer
+    # @code 
+    # >>> trainer.train()
+    # @endcode
+    #
+    # - Get  results from the  trainer
+    # @code
+    # >>> weights_files = trainer.weights_files ## weights files (XML) 
+    # >>> class_files   = trainer.  class_files ## class files (C++)
+    # >>> output_files  = trainer. output_files ## output ROOT files 
+    # >>> tar_file      = trainer.    tar_file  ## tar-file (XML&C++)
+    # @endcode
+    def _train ( self ) :
         """ The main method: training of all subsamples 
         - Use the trainer
         >>> trainer.train()
@@ -655,7 +792,8 @@ class Trainer(object) :
                 try :
                     shutil.move ( self.tar_file , self.dirname )
                     ntf = os.path.join ( self.dirname , self.tar_file )
-                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) : self.__tar_file = ntf 
+                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) :
+                        self.__tar_file = os.path.abspath ( ntf )
                 except :
                     pass
                 
@@ -663,7 +801,8 @@ class Trainer(object) :
                 try :
                     shutil.move ( self.log_file , self.dirname )
                     ntf = os.path.join ( self.dirname , self.log_file )
-                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) : self.__log_file = ntf 
+                    if os.path.exists ( ntf ) and tarfile.is_tarfile ( ntf ) :
+                        self.__log_file = os.path.abspath ( ntf )
                 except :
                     pass
 
@@ -675,6 +814,7 @@ class Trainer(object) :
                         pass
                     
         return self.tar_file
+
 
     # =========================================================================
     ## The main method: training of all subsamples sequentially 
@@ -712,27 +852,20 @@ class Trainer(object) :
         tarfiles = [] 
         logfiles = [] 
         for  t in self.trainers :
-            logger.info  ( "Trainer(%s): train the trainer ``%s''" % ( self.name , t.name ) ) 
+            self.logger.info  ( "Train the trainer ``%s''" % ( t.name ) ) 
             t.train() 
             weights  += [ t.weights_files ] 
             classes  += [ t.  class_files ] 
             outputs  += [ t. output_file  ] 
             tarfiles += [ t.    tar_file  ] 
-            logfiles += [ t.    log_file  ] if t.log_file else [] 
+            logfiles += [ t.    log_file  ] if t.log_file and os.path.exists ( t.log_file ) else [] 
+
 
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
 
         self.make_tarfile ( tarfiles , logfiles )
-
-        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
-        logger.debug ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
-        logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
-        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) )
-        if self.log_file : 
-            logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
-
 
         return self.tar_file 
 
@@ -785,15 +918,8 @@ class Trainer(object) :
         self.__weights_files = tuple ( weights ) 
         self.__class_files   = tuple ( classes )
         self.__output_files  = tuple ( outputs )
-        
-        self.make_tarfile ( tarfiles , logfiles )
 
-        logger.debug ( "Trainer(%s): Class   files : %s" % ( self.name , self.  class_files ) ) 
-        logger.debug ( "Trainer(%s): Weights files : %s" % ( self.name , self.weights_files ) )
-        logger.info  ( "Trainer(%s): Output  files : %s" % ( self.name , self. output_files ) ) 
-        logger.info  ( "Trainer(%s): Tar     file  : %s" % ( self.name , self.    tar_file  ) ) 
-        if self.log_file :
-            logger.info  ( "Trainer(%s): Log/tgz file  : %s" % ( self.name , self. log_file ) ) 
+        self.make_tarfile ( tarfiles , logfiles )
 
         self.__trainer_dirs = tuple ( dirnames ) 
         
@@ -804,33 +930,33 @@ class Trainer(object) :
     
         import tarfile, os
         
-        tfile = self.name + '.tgz'
+        tfile = '%s.tgz' % self.name 
         if os.path.exists ( tfile ) :
-            logger.verbose ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+            self.logger.verbose ( "Remove existing tar-file %s" % tfile ) 
             
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in  tarfiles: tar.add ( x )
-            logger.info ( "Trainer(%s): Tar/gz    file  : %s" % ( self.name , tfile ) ) 
-            if self.verbose : tar.list ()
+            self.logger.info ( "Tar/gz    file  : %s" % tfile ) 
+            ## if self.verbose : tar.list ()
 
         ## finally set the tar-file 
         if os.path.exists ( tfile ) and tarfile.is_tarfile( tfile ) :
-            self.__tar_file = tfile
+            self.__tar_file = tfile ; ## os.path.abspath ( tfile ) 
 
         if not logfiles : return tfile
         
-        lfile = self.name + '_logs.tgz'
+        lfile = '%s_logs.tgz' % self.name 
         if os.path.exists ( lfile ) :
-            logger.verbose ( "Trainer(%s): Remove existing tar-logfile %s" % ( self.name , lfile ) )
-        
+            self.logger.verbose ( "Remove existing tar-logfile %s" % lfile )
+
         with tarfile.open ( lfile , 'w:gz' ) as tar :
             for x in  logfiles: tar.add ( x )
-            logger.info ( "Trainer(%s): Tar/gz logfile  : %s" % ( self.name , lfile ) ) 
-            if self.verbose : tar.list ()
+            self.logger.info ( "Tar/gz logfile  : %s" % lfile  ) 
+            ## if self.verbose : tar.list ()
         
-        ## finally set the tar-file 
+        ## finally set the tar/log-file 
         if os.path.exists ( lfile ) and tarfile.is_tarfile( lfile ) :
-            self.__log_file = lfile 
+            self.__log_file = lfile ## os.path.abspath ( lfile )
             
         return tfile
 
@@ -1409,13 +1535,20 @@ def addChoppingResponse ( dataset                     , ## input dataset to be u
     if isinstance ( chopper , str ) :
         
         if chopper in dataset :
+            
             chopper = getattr ( dataset , chopper )
-        else : 
+            
+        else :
+            
             varset  = dataset.get()
             varlist = ROOT.RooArgList()
             for v in varset : varlist.add ( v )
-            chopper = ROOT.RooFormulaVar( 'chopping' , chopper , varlist )
-            logger.debug ( 'Create chopping function %s' %  chopper ) 
+            
+            chop  = Ostap.FormulaVar       ( 'chopping' , chopper , varlist , False )
+            assert chop.ok() , 'Chopping: invalid ``chopper'' expression: %s' % chopper
+            del chop 
+            used    = Ostap.usedVariables ( chopper    , varlist  )            
+            chopper = Ostap.FormulaVar    ( 'chopping' , chopper  , used    ,  True )
 
     assert isinstance ( chopper , ROOT.RooAbsReal ), 'Invalid chopper type %s' % chopper 
         
@@ -1455,5 +1588,5 @@ if '__main__' == __name__ :
 
 
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
