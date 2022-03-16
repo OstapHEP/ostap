@@ -239,7 +239,13 @@ class Trainer(object) :
         self.__parallel        = True if parallel        else False 
         self.__logging         = True if logging         else False
 
-        if self.__parallel and root_info < (6,15) :
+        if self.parallel :
+            from ostap.parallel.parallel import DILL_PY3_issue
+            if DILL_PY3_issue :
+                self.logger.warning ("Disable parallel chopping due to DILL_PY3_issue")
+                self.__parallel = False
+                
+        if self.parallel and root_info < (6,15) :
             self.logger.warning ( "Parallel chopping is activated only for ROOT>6.15")
             self.__parallel = False
             
@@ -850,9 +856,11 @@ class Trainer(object) :
         classes  = []
         outputs  = [] 
         tarfiles = [] 
-        logfiles = [] 
-        for  t in self.trainers :
-            self.logger.info  ( "Train the trainer ``%s''" % ( t.name ) ) 
+        logfiles = []
+
+        from ostap.utils.progress_bar import progress_bar
+        for  t in progress_bar ( self.trainers , silent = not self.verbose ) :
+            if self.verbose : self.logger.info  ( "Train the trainer ``%s''" % ( t.name ) ) 
             t.train() 
             weights  += [ t.weights_files ] 
             classes  += [ t.  class_files ] 

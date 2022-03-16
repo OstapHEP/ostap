@@ -2,7 +2,7 @@
   1. add methods `size_vars` and `array_vars` for `ROOT.TTree`
   1. small adjustment for `tree_reduce`
   1. remove warnings for `splot` 
-  1. large imporromevents for tmva&chopping: allow ot specoifi working directory, etc...  
+  1. large improvements for tmva&chopping: allow ot specoifi working directory, etc...  
 
 ## Backward incompatible:  
  

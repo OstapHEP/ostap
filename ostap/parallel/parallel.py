@@ -46,6 +46,8 @@ if not worker :
         if not  worker in workers : worker = ''
 
 # ===============================================================================
+DILL_PY3_issue = False 
+
 try : 
     import dill 
 except ImportError :

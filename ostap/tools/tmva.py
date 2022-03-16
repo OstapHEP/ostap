@@ -45,7 +45,7 @@ else                       : logger = getLogger ( __name__           )
 # =============================================================================
 from ostap.core.core         import items_loop
 from ostap.core.ostap_types  import num_types, string_types
-from ostap.core.meta_info    import root_version_int 
+from ostap.core.meta_info    import root_version_int, root_info  
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 pattern_PLOTS = "%s/plots/*.*" 
@@ -380,7 +380,7 @@ class Trainer(object):
         
         if 0 > opts.find ( "AnalysisType=" ) :
             opts += ":AnalysisType=Classification"
-            self.logger.debug('Trainer(%s): booking options are appended with ":AnalysisType=Classification"' % name )
+            self.logger.debug('Booking options are appended with ":AnalysisType=Classification"' )
 
         opts = opts_replace ( opts , 'V:'               ,     self.verbose )
         opts = opts_replace ( opts , 'Silent:'          , not self.verbose )
@@ -414,7 +414,7 @@ class Trainer(object):
         for f in glob.glob ( pattern_C   ) :
             rf.append ( f ) 
             os.remove ( f )
-        if rf : self.logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
+        if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf ) 
         
         self.__pattern_xml   = pattern_xml 
         self.__pattern_C     = pattern_C 
@@ -583,8 +583,6 @@ class Trainer(object):
 
         log = self.logging 
 
-        print ('_TRAIN', log )
-        
         self.__log_file = None
 
         if  log :
@@ -731,7 +729,7 @@ class Trainer(object):
         for f in glob.glob ( self.__pattern_C   ) :
             rf.append ( f )
             os.remove ( f )
-        if rf : self.logger.debug ( "Trainer(%s): remove existing xml/class-files %s" % ( self.name , rf ) ) 
+        if rf : self.logger.debug ( "Remove existing xml/class-files %s" % rf  ) 
 
         ## ROOT 6/18 crashes here...
         ## if root_version_int < 61800 : 
@@ -739,7 +737,7 @@ class Trainer(object):
 
         with ROOT.TFile.Open ( self.output_file, 'RECREATE' )  as outFile :
 
-            self.logger.debug ( 'Trainer(%s): output ROOT file: %s ' % ( self.name , outFile.GetName() ) )
+            self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
             ## the final adjustment 
             opts = self.__bookingoptions
@@ -752,8 +750,8 @@ class Trainer(object):
 
             bo = self.bookingoptions.split (':')
             bo.sort() 
-            if self.verbose : self.logger.info  ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
-            else            : self.logger.debug ( 'Trainer(%s): book TMVA-factory %s ' % ( self.name , bo ) )
+            if self.verbose : self.logger.info  ( 'Book TMVA-factory %s ' % bo ) 
+            else            : self.logger.debug ( 'Book TMVA-factory %s ' % bo ) 
 
             factory = ROOT.TMVA.Factory (                
                 self.name             ,
@@ -772,7 +770,7 @@ class Trainer(object):
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv[0] ) 
                 dataloader.AddVariable  ( *vv )    
-            self.logger.info ( "Trainer(%s):         variables: %s" % ( self.name , self.variables  ) ) 
+            self.logger.info ( "Variables      : %s" % str ( self.variables ) ) 
 
             for v in self.spectators :
                 vv = v
@@ -781,13 +779,13 @@ class Trainer(object):
                 dataloader.AddSpectator ( *vv )
                 #
             if self.spectators : 
-                self.logger.info ( "Trainer(%s):        spectators:``%s''" % ( self.name ,      self.spectators ) )
+                self.logger.info ( "Spectators     :``%s''"  % str ( self.spectators ) )
             #            
             if self.signal_cuts :
-                self.logger.info ( "Trainer(%s): Signal       cuts:``%s''" % ( self.name ,     self.signal_cuts ) )
+                self.logger.info ( "Signal cuts    :``%s''" % self.signal_cuts ) 
                     
             if self.background_cuts :
-                self.logger.info ( "Trainer(%s): Background   cuts:``%s''" % ( self.name , self.background_cuts ) )
+                self.logger.info ( "Background cuts:``%s''" % self.background_cuts ) 
             #
             if self.prefilter :
                 if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
@@ -835,14 +833,14 @@ class Trainer(object):
                 bw = sb.sum ()
                 
                 if self.signal_weight     :
-                    self.logger.info ( 'Trainer(%s): Signal           : %s/%s ' % ( self.name , ns , sw ) )
+                    self.logger.info ( 'Signal           : %s/%s ' % ( ns , sw ) )
                 else :
-                    self.logger.info ( 'Trainer(%s): Signal           : %s    ' % ( self.name , ns      ) )
+                    self.logger.info ( 'Signal           : %s    ' % ( ns      ) )
                 
                 if self.background_weight :
-                    self.logger.info ( 'Trainer(%s): Background       : %s/%s ' % ( self.name , nb , bw ) )
+                    self.logger.info ( 'Background       : %s/%s ' % ( nb , bw ) )
                 else :
-                    self.logger.info ( 'Trainer(%s): Background       : %s    ' % ( self.name , nb      ) )
+                    self.logger.info ( 'Background       : %s    ' % ( nb      ) )
 
                 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
@@ -850,12 +848,12 @@ class Trainer(object):
             #
             if self.signal_weight :
                 dataloader.SetSignalWeightExpression     ( self.signal_weight     )
-                self.logger.info ( "Trainer(%s): Signal     weight:``%s''" % ( self.name , attention ( self.signal_weight     ) ) )
+                self.logger.info ( "Signal     weight:``%s''" % ( attention ( self.signal_weight     ) ) )
             if self.background_weight :
                 dataloader.SetBackgroundWeightExpression ( self.background_weight )
-                self.logger.info ( "Trainer(%s): Background weight:``%s''" % ( self.name , attention ( self.background_weight ) ) )
+                self.logger.info ( "Background weight:``%s''" % ( attention ( self.background_weight ) ) )
                 
-            self.logger.info     ( "Trainer(%s): Configuration    :``%s''" % ( self.name , self.configuration ) )
+            self.logger.info     ( "Configuration    :``%s''" % str ( self.configuration ) )
             dataloader.PrepareTrainingAndTestTree(
                 ROOT.TCut ( self.signal_cuts     ) ,
                 ROOT.TCut ( self.background_cuts ) ,
@@ -871,13 +869,13 @@ class Trainer(object):
            
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
-            self.logger.info  ( "Trainer(%s): Train    all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Train    all methods %s " % str ( ms ) )
             factory.TrainAllMethods    ()
             ## Test MVAs
-            self.logger.info  ( "Trainer(%s): Test     all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Test     all methods %s " % str ( ms ) )
             factory.TestAllMethods     ()
             # Evaluate MVAs
-            self.logger.info  ( "Trainer(%s): Evaluate all methods %s " % ( self.name , ms ) )
+            self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
             factory.EvaluateAllMethods ()
             
         # check the output.
@@ -893,7 +891,7 @@ class Trainer(object):
                     pass  
             try : 
                 with ROOT.TFile.Open ( self.output_file, 'READ' ) as outFile : 
-                    self.logger.debug ( "Trainer(%s): Output ROOT file is %s" % ( self.name , outFile.GetName() ) )
+                    self.logger.debug ( "Output ROOT file is %s" % outFile.GetName() ) 
                     if self.verbose : outFile.ls()
             except :
                 pass
@@ -910,7 +908,7 @@ class Trainer(object):
         
         tfile = self.name + '.tgz'
         if os.path.exists ( tfile ) :
-            self.logger.debug  ( "Trainer(%s): Remove existing tar-file %s" % ( self.name , tfile ) )
+            self.logger.debug  ( "Remove existing tar-file %s" % tfile ) 
 
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in self.weights_files : tar.add ( x )
@@ -971,8 +969,11 @@ class Trainer(object):
 
             if hasattr ( ROOT.TMVA , 'variables'    ) : ROOT.TMVA.variables    ( self.name , output )    
             if hasattr ( ROOT.TMVA , 'correlations' ) : ROOT.TMVA.correlations ( self.name , output )
-            if hasattr ( ROOT.TMVA , 'mvas'         ) : 
-                for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
+            
+            if  root_info < ( 6 , 18 ) or root_info >= ( 6,20 ) :
+                if hasattr ( ROOT.TMVA , 'mvas'         ) : 
+                    for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
+                    
             if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 for i in range ( 4 ) : ROOT.TMVA.efficiencies  ( self.name , output , i )
 
