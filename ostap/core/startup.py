@@ -27,6 +27,8 @@ from ostap.utils.basic import with_ipython
 # =============================================================================
 ## check if the file is actually "empty"
 def _empty_ ( fname ) :
+    """Check if the file is actually ``empty''
+    """
     
     try :
 
@@ -40,7 +42,8 @@ def _empty_ ( fname ) :
                 l1 = l.strip()
                 if     l1 and '#' != l1[0] : return False 
             
-    except IOError : pass
+    except IOError :
+        pass
 
     return True
      

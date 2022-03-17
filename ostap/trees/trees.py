@@ -436,7 +436,7 @@ def _tt_project_ ( tree               ,
         for i , w in enumerate ( what ) : 
             n , h = _tt_project_ ( tree , hh , w , cuts , *args , use_frame = use_frame , silent = silent )
             histo += h
-            br    += n 
+            nr    += n 
         del hh
         return nr , histo 
 

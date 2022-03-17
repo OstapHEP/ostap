@@ -364,11 +364,17 @@ class Trainer(object) :
             
             import ostap.trees.trees
             avars = self.signal.the_variables ( all_vars )
-            
-            if self.parallel :
-                import ostap.parallel.parallel_reduce as TR
-            else :
+
+            if ( 6 , 24 ) <= root_info :
+                import ostap.frames.frames 
                 import ostap.frames.tree_reduce       as TR
+            else :
+                import ostap.parallel.parallel_reduce as TR
+                
+            ## if self.parallel :
+            ##     import ostap.parallel.parallel_reduce as TR
+            ## else :
+            ##     import ostap.frames.tree_reduce       as TR
 
             silent = not self.verbose 
             self.logger.info ( 'Pre-filter Signal     before processing' )

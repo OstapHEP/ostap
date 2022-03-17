@@ -1,4 +1,4 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # ==========================================================================================
 ## @file ostap/tools/tmva.py
@@ -770,7 +770,7 @@ class Trainer(object):
                 if isinstance ( vv , str ) : vv = ( vv , 'F' )
                 all_vars.append ( vv[0] ) 
                 dataloader.AddVariable  ( *vv )    
-            self.logger.info ( "Variables      : %s" % str ( self.variables ) ) 
+            self.logger.info ( "Variables           : %s" % str ( self.variables ) ) 
 
             for v in self.spectators :
                 vv = v
@@ -779,13 +779,13 @@ class Trainer(object):
                 dataloader.AddSpectator ( *vv )
                 #
             if self.spectators : 
-                self.logger.info ( "Spectators     :``%s''"  % str ( self.spectators ) )
+                self.logger.info ( "Spectators          :``%s''"  % str ( self.spectators ) )
             #            
             if self.signal_cuts :
-                self.logger.info ( "Signal cuts    :``%s''" % self.signal_cuts ) 
+                self.logger.info ( "Signal cuts         :``%s''" % self.signal_cuts ) 
                     
             if self.background_cuts :
-                self.logger.info ( "Background cuts:``%s''" % self.background_cuts ) 
+                self.logger.info ( "Background cuts     :``%s''" % self.background_cuts ) 
             #
             if self.prefilter :
                 if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
@@ -806,8 +806,11 @@ class Trainer(object):
                 if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
                 if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
 
-                ## import ostap.frames.tree_reduce       as TR
-                import ostap.parallel.parallel_reduce as TR
+                if ( 6 , 24 ) <= root_info :
+                    import ostap.frames.frames 
+                    import ostap.frames.tree_reduce       as TR
+                else :
+                    import ostap.parallel.parallel_reduce as TR
                 
                 silent = not self.verbose or not self.category in ( 0, -1 )
                 self.logger.info ( 'Pre-filter Signal     before processing' )
@@ -833,14 +836,18 @@ class Trainer(object):
                 bw = sb.sum ()
                 
                 if self.signal_weight     :
-                    self.logger.info ( 'Signal           : %s/%s ' % ( ns , sw ) )
+                    self.logger.info ( 'Signal weight       : %s'  % self.signal_weight )
+                    self.logger.info ( 'Signal total        : %s events '     % ns ) 
+                    self.logger.info ( 'Signal weighted     : %s candidates'  % sw )
                 else :
-                    self.logger.info ( 'Signal           : %s    ' % ( ns      ) )
+                    self.logger.info ( 'Signal              : %s events'      % ns )
                 
                 if self.background_weight :
-                    self.logger.info ( 'Background       : %s/%s ' % ( nb , bw ) )
+                    self.logger.info ( 'Background weight   : %s' % self.background_weight ) 
+                    self.logger.info ( 'Background total    : %s events'      % nb )
+                    self.logger.info ( 'Background weighted : %s candidates'  % bw ) 
                 else :
-                    self.logger.info ( 'Background       : %s    ' % ( nb      ) )
+                    self.logger.info ( 'Background          : %s events'      % nb )
 
                 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
