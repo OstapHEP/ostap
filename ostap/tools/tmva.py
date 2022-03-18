@@ -51,6 +51,12 @@ pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
 pattern_PLOTS = "%s/plots/*.*"
 # =============================================================================
+trivial_opts = (
+    'V', '!V' , 'H' , '!H' , 'S' , '!S' ,
+    'Verbose' , '!Verbose' ,
+    'Silent'  , '!Silent'  , ''
+    )
+# =============================================================================
 good_for_negative = (
     ROOT.TMVA.Types.kLikelihood ,
     ROOT.TMVA.Types.kPDERS      ,
@@ -451,33 +457,37 @@ class Trainer(object):
                 row = 'Spectators' , ' '.join ( self.variables )
                 rows.append ( row )
             
-            for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+            for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
                 if 0 == i : row = 'Booking options' , o
                 else      : row = ''                , o 
                 rows.append ( row )
                 
-            for i , o in enumerate ( self.configuration.split ( ':' ) ) :
-                if 0 == i : row = 'Configuraton'    , o
-                else      : row = ''                , o 
+            for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
+                if 0 == i : row = 'TMVA configuraton'    , o
+                else      : row = ''                     , o 
                 rows.append ( row )
 
+            if self.prefilter :
+                row = 'Prefilter'  , str ( self.prefilter ) 
+                rows.append ( row )
+                
             if self.signal_cuts : 
-                row = 'Signal cuts' , self.signal_cuts
+                row = 'Signal cuts' , str ( self.signal_cuts ) 
                 rows.append ( row )
 
             if self.signal_weight : 
-                row = 'Signal weight' , self.signal_weight
+                row = 'Signal weight' , str ( self.signal_weight ) 
 
             if 0 < self.signal_train_fraction < 1 :
                 row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
                 rows.append ( row )
                 
             if self.background_cuts : 
-                row = 'Background cuts' , self.background_cuts
+                row = 'Background cuts' , str ( self.background_cuts ) 
                 rows.append ( row )
 
             if self.background_weight : 
-                row = 'Background weight'    , self.background_weight
+                row = 'Background weight'    , str ( self.background_weight ) 
                 rows.append ( row )
 
             if 0 < self.background_train_fraction < 1 :
@@ -492,17 +502,15 @@ class Trainer(object):
             for m in self.methods :
                 row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
                 rows.append ( row )
-                for i , o in enumerate ( m[2].split(':' ) ) :
-                    if 0 == i : row = 'Method configruration' , o
+                for i , o in enumerate ( [ o for o in m[2].split(':' ) if not o in trivial_opts ] ) :
+                    if 0 == i : row = 'Method configuration' , o
                     else      : row =   ''                    , o 
                     rows.append ( row ) 
                 
             import ostap.logger.table as T
-            title = "TMVA Trainer %s " % self.name 
+            title = "TMVA Trainer %s created" % self.name 
             table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
             self.logger.info ( "%s\n%s" % ( title , table ) ) 
-
-            
 
     @property
     def name    ( self ) :
@@ -927,9 +935,17 @@ class Trainer(object):
                 bc = ROOT.TCut ( self.background_cuts )
                 if self.    signal_weight : sc *= self.    signal_weight
                 if self.background_weight : sc *= self.background_weight
-                
-                ss = self.signal    .statVar ( '1' , sc )
-                sb = self.background.statVar ( '1' , bc )
+
+                if ( 6 , 20 ) <= root_info :
+                    from ostap.frames.frames import frame_statVar 
+                    ss = frame_statVar ( self.signal     , '1' , sc )
+                    sb = frame_statVar ( self.background , '1' , bc )
+                else :
+                    ss = self.signal    .statVar ( '1' , sc )
+                    sb = self.background.statVar ( '1' , bc )
+                    
+                if isinstance ( ss , WSE ) : ss = ss.values()
+                if isinstance ( sb , WSE ) : sb = sb.values()
                 
                 NS = ss.nEntries ()
                 SW = ss.sum      ()            
@@ -943,7 +959,7 @@ class Trainer(object):
                     bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
                     nt =  'nTrain_Signal=%s' % nt
                     self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend configuration for ``%s''" % nt ) 
+                    self.logger.info ( "Extend TMVA configuration for ``%s''" % nt ) 
                     
                 if 0 < self.background_train_fraction < 1 :
                     nt = math.ceil ( NB * self.background_train_fraction )
@@ -952,13 +968,14 @@ class Trainer(object):
                     bo = [ b for b in bo if not b.startswith('nTest_Background' ) ]
                     nt =  'nTrain_Background=%s' % nt
                     self.__configuration = ':'.join ( [ nt ] + bo ) 
-                    self.logger.info ( "Extend configuration for ``%s''" % nt ) 
+                    self.logger.info ( "Extend TMVA configuration for ``%s''" % nt ) 
 
             # =================================================================
             # The table
             # =================================================================            
 
-            if self.verbose :
+            ## if self.verbose :
+            if 1 < 2 : 
                 
                 rows = [ ( 'Item' , 'Value' ) ]
                 
@@ -972,26 +989,26 @@ class Trainer(object):
                     row = 'Spectators' , ' '.join ( self.variables )
                     rows.append ( row )
                     
-                for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+                for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' ) if not o in trivial_opts ] ) :
                     if 0 == i : row = 'Booking options' , o
                     else      : row = ''                , o 
                     rows.append ( row )
                     
-                for i , o in enumerate ( self.configuration.split ( ':' ) ) :
-                    if 0 == i : row = 'Configuraton'    , o
-                    else      : row = ''                , o 
+                for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts ] ) :
+                    if 0 == i : row = 'TMVA configuraton' , o
+                    else      : row = ''                  , o 
                     rows.append ( row )
                     
                 if self.signal_cuts : 
-                    row = 'Signal cuts' , self.signal_cuts
+                    row = 'Signal cuts' , str ( self.signal_cuts ) 
                     rows.append ( row )
 
                 if self.signal_weight : 
-                    row = 'Signal weight' , self.signal_weight
+                    row = 'Signal weight' , str ( self.signal_weight ) 
                     rows.append ( row )
                     row = 'Signal total'     , '%s' % NS
                     rows.append ( row ) 
-                    row = 'Signal weighted'  , '%s' % NW
+                    row = 'Signal weighted'  , '%s' % SW
                     rows.append ( row ) 
                 else :
                     row = 'Signal total'     , '%s' % NS
@@ -1002,11 +1019,11 @@ class Trainer(object):
                     rows.append ( row )
                     
                 if self.background_cuts : 
-                    row = 'Background cuts' , self.background_cuts
+                    row = 'Background cuts' , str ( self.background_cuts ) 
                     rows.append ( row )
                     
                 if self.background_weight : 
-                    row = 'Background weight'    , self.background_weight
+                    row = 'Background weight'    , str ( self.background_weight ) 
                     rows.append ( row )
                     row = 'Background total'     , '%s' % NB
                     rows.append ( row ) 

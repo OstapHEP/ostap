@@ -90,7 +90,7 @@ __all__     = (
 import ROOT, os, shutil, tarfile  
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
-from   ostap.tools.tmva       import dir_name, good_for_negative  
+from   ostap.tools.tmva       import dir_name, good_for_negative, trivial_opts   
 from   ostap.core.core        import WSE 
 from   ostap.core.pyrouts     import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types import integer_types 
@@ -494,33 +494,37 @@ class Trainer(object) :
                 row = 'Spectators' , ' '.join ( self.variables )
                 rows.append ( row )
             
-            for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+            for i , o in enumerate ( [ o for o in self.bookingoptions.split ( ':' )  if not o in trivial_opts ] ) :
                 if 0 == i : row = 'Booking options' , o
                 else      : row = ''                , o 
                 rows.append ( row )
                 
-            for i , o in enumerate ( self.configuration.split ( ':' ) ) :
-                if 0 == i : row = 'Configuraton'    , o
-                else      : row = ''                , o 
+            for i , o in enumerate ( [ o for o in self.configuration.split ( ':' ) if not o in trivial_opts  ] ) :
+                if 0 == i : row = 'TMVA configuraton'    , o
+                else      : row = ''                     , o 
                 rows.append ( row )
 
+            if self.prefilter :
+                row = 'Prefilter'  , str ( self.prefilter ) 
+                rows.append ( row )
+                
             if self.signal_cuts : 
-                row = 'Signal cuts' , self.signal_cuts
+                row = 'Signal cuts' , str ( self.signal_cuts ) 
                 rows.append ( row )
 
             if self.signal_weight : 
-                row = 'Signal weight' , self.signal_weight
+                row = 'Signal weight' , str ( self.signal_weight ) 
 
             if 0 < self.signal_train_fraction < 1 :
                 row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
                 rows.append ( row )
                 
             if self.background_cuts : 
-                row = 'Background cuts' , self.background_cuts
+                row = 'Background cuts' , str ( self.background_cuts )
                 rows.append ( row )
 
             if self.background_weight : 
-                row = 'Background weight'    , self.background_weight
+                row = 'Background weight', str ( self.background_weight ) 
                 rows.append ( row )
 
             if 0 < self.background_train_fraction < 1 :
@@ -535,13 +539,13 @@ class Trainer(object) :
             for m in self.methods :
                 row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
                 rows.append ( row )
-                for i , o in enumerate ( m[2].split(':' ) ) :
+                for i , o in enumerate ( [ o for o in m[2].split(':' ) if not o in trivial_opts ] ) :
                     if 0 == i : row = 'Method configruration' , o
                     else      : row =   ''                    , o 
                     rows.append ( row ) 
                 
             import ostap.logger.table as T
-            title = "Chopping Trainer %s " % self.name 
+            title = "Chopping Trainer %s created" % self.name 
             table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
             self.logger.info ( "%s\n%s" % ( title , table ) ) 
 

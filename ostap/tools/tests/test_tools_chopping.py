@@ -159,6 +159,9 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         parallel       = True     ,  ## parallel training
         prefilter      = 'var1>-1.8'  ,
         ##
+        chop_signal     = True ,
+        chop_background = True ,
+        ## 
         signal_train_fraction     = 0.85 , 
         background_train_fraction = 0.85 ,
         ##
