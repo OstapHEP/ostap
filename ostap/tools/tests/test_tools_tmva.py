@@ -117,12 +117,18 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         ( ROOT.TMVA.Types.kFisher     , "FisherG"     , "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10:VarTransform=G,D" ),
         ( ROOT.TMVA.Types.kSVM        , "SVM"         , "H:!V:Gamma=0.25:Tol=0.001:VarTransform=Norm" ) ,
         ( ROOT.TMVA.Types.kLikelihood , "Likelihood"  , "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50:VarTransform=G,D" ) ,
+        ##
+        ## ( ROOT.TMVA.Types.kPDERS      , 'PDERS'        , "H:!V:NormTree=T:VolumeRangeMode=Adaptive:KernelEstimator=Gauss:GaussSigma=0.3:NEventsMin=400:NEventsMax=600" ) ,
+        ## ( ROOT.TMVA.Types.kKNN        , 'KNN'          , "H:!V:nkNN=20:ScaleFrac=0.8:SigmaFact=1.0:Kernel=Gaus:UseKernel=F:UseWeight=T:!Trim" ) ,
+        ##
         ] ,
         variables = [ 'var1' , 'var2' ,  'var3' ] , ## Variables for training 
-        signal         = tSignal                  , ## ``Signal'' sample
-        background     = tBkg                     , ## ``Background'' sample
-        verbose        = True                     ,
-        workdir        = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
+        signal                    = tSignal                  , ## ``Signal'' sample
+        background                = tBkg                     , ## ``Background'' sample
+        verbose                   = True                     ,
+        signal_train_fraction     = 0.75                     , 
+        background_train_fraction = 0.75                     , 
+        workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
     
     from ostap.utils.timing import timing
     with timing ( 'for TMVA training' , logger ) : 

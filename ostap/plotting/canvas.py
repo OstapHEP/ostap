@@ -125,11 +125,18 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
     >>> canvas >> 'fig'       ## ditto
     """
     #
-    cnv.Update () 
+    cnv.Update ()
+
+    dirname = os.path.dirname ( fname )
+    if dirname and not os.path.exists ( dirname ) :
+        from ostap.utils.basic import make_dirs
+        dirname = os.path.abspath ( dirname ) 
+        logger.debug ( "create directory %s" % os.path.abspath ( dirname ) ) 
+        make_dirs ( dirname ) 
+    
     from ostap.logger.utils import rootWarning
     n , e  = os.path.splitext ( fname )
 
-    
     el = e.lower()
     if el.startswith('.') : el = el[1:]
     
@@ -203,7 +210,7 @@ def _cnv_print_ ( cnv , fname , exts = ( 'pdf'  , 'png' , 'eps'  , 'C'   ,
             name = fname + '.' + ext
             cnv.Print    (  name )
             logger.debug ( 'Canvas --> %s' % name )
-            
+
     return cnv 
 
 # =============================================================================

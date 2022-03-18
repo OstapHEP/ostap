@@ -154,7 +154,7 @@ def allright ( what ) :
                             bg_bright  = False  )
 
 # ==============================================================================
-## jsut for information 
+## just for information 
 def infostr ( what ) :
     """Just for information"""
     return colored_string ( what                ,

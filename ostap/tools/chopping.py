@@ -90,8 +90,9 @@ __all__     = (
 import ROOT, os, shutil, tarfile  
 from   ostap.tools.tmva       import Trainer as TMVATrainer
 from   ostap.tools.tmva       import Reader  as TMVAReader
-from   ostap.tools.tmva       import dir_name 
-from   ostap.core.pyrouts     import hID, h1_axis
+from   ostap.tools.tmva       import dir_name, good_for_negative  
+from   ostap.core.core        import WSE 
+from   ostap.core.pyrouts     import hID, h1_axis, Ostap 
 from   ostap.core.ostap_types import integer_types 
 import ostap.trees.trees 
 import ostap.trees.cuts
@@ -189,10 +190,13 @@ class Trainer(object) :
                    background_cuts   = ''            ,   # background cuts 
                    spectators        = []            ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
-                   configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ,
+                   configuration     = "SplitMode=Random:NormMode=NumEvents:!V" ,
                    signal_weight     = None                  ,                
                    background_weight = None                  ,
                    prefilter         = ''                    ,   # prefilter cuts before TMVA data loader 
+                   ##
+                   signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
+                   background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
                    name              = 'TMVAChopper'         ,   # the name 
                    verbose           = False                 ,   # verbose ? 
@@ -239,6 +243,9 @@ class Trainer(object) :
         self.__parallel        = True if parallel        else False 
         self.__logging         = True if logging         else False
 
+        self.__signal_train_fraction     = signal_train_fraction     if 0 <= signal_train_fraction     < 1 else -1.0 
+        self.__background_train_fraction = background_train_fraction if 0 <= background_train_fraction < 1 else -1.0 
+        
         if self.parallel :
             from ostap.parallel.parallel import DILL_PY3_issue
             if DILL_PY3_issue :
@@ -391,8 +398,42 @@ class Trainer(object) :
             self.__background = Chain ( self.__BkgTR.chain ) 
 
             ## do not propagate prefilters to TMVA
-            self.__prefilter = ''                        
-
+            self.__prefilter = ''
+            
+        # =====================================================================
+        ## check for signal weigths
+        # =====================================================================
+        if self.signal_weight :
+            if ( 6 , 20 ) <= root_info : 
+                from ostap.frames.frames import frame_statVar 
+                sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
+            else :
+                sw = self.signal    .statVar ( self.signal_weight     , self.signal_cuts )
+            if isinstance ( sw , WSE ) : sw = sw.values()
+            mn , mx = sw.minmax() 
+            if mn < 0 : 
+                ## there are negative weights :
+                for m in self.methods :
+                    if not m[0] in good_for_negative :
+                        self.logger.error ( 'Method ``%s'' does not support negative (signal) weights' % m[1] )
+            
+        # =====================================================================
+        ## check for backgrund weigths
+        # =================================================================
+        if self.background_weight :
+            if ( 6 , 20 ) <= root_info :
+                from ostap.frames.frames import frame_statVar 
+                bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
+            else :
+                bw = self.background.statVar ( self.background_weight , self.background_cuts )
+            if isinstance ( bw , WSE ) : bw = bw.values()
+            mn , mx = bw.minmax() 
+            if mn < 0 : 
+                ## there are negative weights :
+                for m in self.methods :
+                    if not m[0] in good_for_negative :
+                        self.logger.error ( 'Method ``%s'' does not support negative (background) weights' % m[1] )
+                        
         # =====================================================================
         ## Category population:
         # =====================================================================
@@ -432,6 +473,78 @@ class Trainer(object) :
         self.__tar_file      = None 
         self.__log_file      = None 
 
+        
+        if self.verbose :
+            
+            rows = [ ( 'Item' , 'Value' ) ]
+            
+            row  = 'Name'      , self.name
+            rows.append ( row )
+
+            row = 'Category'  , self.category
+            rows.append ( row )
+            
+            row = 'N'         , '%d' % self.N
+            rows.append ( row )
+
+            row = 'Variables'      , ' '.join ( self.variables )
+            rows.append ( row )
+
+            if self.spectators :
+                row = 'Spectators' , ' '.join ( self.variables )
+                rows.append ( row )
+            
+            for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+                if 0 == i : row = 'Booking options' , o
+                else      : row = ''                , o 
+                rows.append ( row )
+                
+            for i , o in enumerate ( self.configuration.split ( ':' ) ) :
+                if 0 == i : row = 'Configuraton'    , o
+                else      : row = ''                , o 
+                rows.append ( row )
+
+            if self.signal_cuts : 
+                row = 'Signal cuts' , self.signal_cuts
+                rows.append ( row )
+
+            if self.signal_weight : 
+                row = 'Signal weight' , self.signal_weight
+
+            if 0 < self.signal_train_fraction < 1 :
+                row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
+                rows.append ( row )
+                
+            if self.background_cuts : 
+                row = 'Background cuts' , self.background_cuts
+                rows.append ( row )
+
+            if self.background_weight : 
+                row = 'Background weight'    , self.background_weight
+                rows.append ( row )
+
+            if 0 < self.background_train_fraction < 1 :
+                row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                rows.append ( row )
+                
+            ms  = [ m[1] for m in self.methods ]
+            row = 'Methods' , ' '.join ( ms ) 
+            rows.append ( row )
+            
+            from ostap.logger.colorized import allright 
+            for m in self.methods :
+                row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
+                rows.append ( row )
+                for i , o in enumerate ( m[2].split(':' ) ) :
+                    if 0 == i : row = 'Method configruration' , o
+                    else      : row =   ''                    , o 
+                    rows.append ( row ) 
+                
+            import ostap.logger.table as T
+            title = "Chopping Trainer %s " % self.name 
+            table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
+            self.logger.info ( "%s\n%s" % ( title , table ) ) 
+
     ## create all trainers 
     def __create_trainers ( self ) :
         if self.trainers : self.logger.debug ('Remove existing trainers ')
@@ -470,10 +583,15 @@ class Trainer(object) :
                            configuration     = self.configuration     ,
                            signal_weight     = self.signal_weight     ,
                            background_weight = self.background_weight ,
-                           prefilter         = self.prefilter         ,
                            ##
+                           prefilter         = ''                     , ## attention! 
+                           ##
+                           signal_train_fraction     = self.signal_train_fraction     ,  
+                           background_train_fraction = self.background_train_fraction ,
+                           ##                           
                            output_file       = ''                     , 
                            ##
+                           
                            signal_cuts       = scuts                  , 
                            background_cuts   = bcuts                  ,
                            ##
@@ -626,8 +744,18 @@ class Trainer(object) :
     def signal_categories ( self ) :
         """``signal_categories'' - two histograms(different binning) with signal category population"""
         return self.__sig_histos
-    @property
     
+    @property
+    def signal_train_fraction ( self ) :
+        """``signal_train_fraction'': if non-negative, fraction of signal events used for training"""
+        return self.__signal_train_fraction
+
+    @property
+    def background_train_fraction ( self ) :
+        """``background_train_fraction'': if non-negative, fraction of background events used for training"""
+        return self.__background_train_fraction
+
+    @property
     def background_categories ( self ) :
         """``background_categories'' - two histograms(different binning) with background category population"""
         return self.__bkg_histos

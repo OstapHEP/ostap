@@ -34,21 +34,31 @@ __all__     = (
     "tmvaGUI"
     )
 # =============================================================================
-import ROOT, os, tarfile, shutil 
+import ROOT, os, math, tarfile, shutil 
+# =============================================================================
+from ostap.core.core         import items_loop, WSE, Ostap
+from ostap.core.ostap_types  import num_types, string_types
+from ostap.core.meta_info    import root_version_int, root_info  
 # =============================================================================
 # logging 
 # =============================================================================
-from ostap.logger.logger import getLogger, attention
+from ostap.logger.logger     import getLogger, attention
 # =============================================================================
 if '__main__' ==  __name__ : logger = getLogger ( 'ostap.tools.tmva' )
 else                       : logger = getLogger ( __name__           )
 # =============================================================================
-from ostap.core.core         import items_loop
-from ostap.core.ostap_types  import num_types, string_types
-from ostap.core.meta_info    import root_version_int, root_info  
 pattern_XML   = "%s/weights/%s*.weights.xml"
 pattern_CLASS = "%s/weights/%s*.class.C" 
-pattern_PLOTS = "%s/plots/*.*" 
+pattern_PLOTS = "%s/plots/*.*"
+# =============================================================================
+good_for_negative = (
+    ROOT.TMVA.Types.kLikelihood ,
+    ROOT.TMVA.Types.kPDERS      ,
+    ROOT.TMVA.Types.kPDEFoam    ,
+    ROOT.TMVA.Types.kKNN        ,
+    ROOT.TMVA.Types.kSVM        ,
+    ROOT.TMVA.Types.kBDT
+    )
 # =============================================================================
 def dir_name ( name ) :
     name = str( name )
@@ -244,10 +254,13 @@ class Trainer(object):
                    background_cuts   = ''     ,  # background cuts                   
                    spectators        = []     ,
                    bookingoptions    = "Transformations=I;D;P;G,D" , 
-                   configuration     = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents" ,
+                   configuration     = "SplitMode=Random:NormMode=NumEvents" ,
                    signal_weight     = None   ,                
                    background_weight = None   ,
                    prefilter         = ''     ,  ## prefilter cuts before TMVA data loader 
+                   ##
+                   signal_train_fraction     = -1 , ## fraction of signal events used for training     : 0<=f<1 
+                   background_train_fraction = -1 , ## fraction of background events used for training : 0<=f<1
                    ##
                    output_file       = ''     ,  ## the name of output file
                    verbose           = True   ,
@@ -292,8 +305,11 @@ class Trainer(object):
         variables                = list  ( variables  ) ; variables.sort()
         self.__variables         = tuple ( variables  )
 
-
+        self.__configuration    = configuration
         
+        self.__signal_train_fraction     = signal_train_fraction     if 0 <= signal_train_fraction     < 1 else -1.0 
+        self.__background_train_fraction = background_train_fraction if 0 <= background_train_fraction < 1 else -1.0 
+
         from ostap.trees.trees import Chain
         
         if   isinstance ( signal     , Chain           ) : pass 
@@ -347,7 +363,6 @@ class Trainer(object):
 
         self.__bookingoptions   = bookingoptions
                 
-        self.__configuration    = configuration
 
         import os 
         if not workdir : workdir = os.getcwd()
@@ -422,6 +437,73 @@ class Trainer(object):
 
         self.__multithread = multithread and 61800 <= root_version_int 
 
+        if self.verbose :
+            
+            rows = [ ( 'Item' , 'Value' ) ]
+            
+            row  = 'Name'      , self.name
+            rows.append ( row )
+
+            row = 'Variables'      , ' '.join ( self.variables )
+            rows.append ( row )
+
+            if self.spectators :
+                row = 'Spectators' , ' '.join ( self.variables )
+                rows.append ( row )
+            
+            for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+                if 0 == i : row = 'Booking options' , o
+                else      : row = ''                , o 
+                rows.append ( row )
+                
+            for i , o in enumerate ( self.configuration.split ( ':' ) ) :
+                if 0 == i : row = 'Configuraton'    , o
+                else      : row = ''                , o 
+                rows.append ( row )
+
+            if self.signal_cuts : 
+                row = 'Signal cuts' , self.signal_cuts
+                rows.append ( row )
+
+            if self.signal_weight : 
+                row = 'Signal weight' , self.signal_weight
+
+            if 0 < self.signal_train_fraction < 1 :
+                row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
+                rows.append ( row )
+                
+            if self.background_cuts : 
+                row = 'Background cuts' , self.background_cuts
+                rows.append ( row )
+
+            if self.background_weight : 
+                row = 'Background weight'    , self.background_weight
+                rows.append ( row )
+
+            if 0 < self.background_train_fraction < 1 :
+                row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                rows.append ( row )
+
+            ms  = [ m[1] for m in self.methods ]
+            row = 'Methods' , ' '.join ( ms ) 
+            rows.append ( row )
+            
+            from ostap.logger.colorized import allright 
+            for m in self.methods :
+                row = 'Method' , '%s Id:%s' % ( allright ( m[1] ) , m[0] )
+                rows.append ( row )
+                for i , o in enumerate ( m[2].split(':' ) ) :
+                    if 0 == i : row = 'Method configruration' , o
+                    else      : row =   ''                    , o 
+                    rows.append ( row ) 
+                
+            import ostap.logger.table as T
+            title = "TMVA Trainer %s " % self.name 
+            table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
+            self.logger.info ( "%s\n%s" % ( title , table ) ) 
+
+            
+
     @property
     def name    ( self ) :
         """``name''    : the name of TMVA trainer"""
@@ -491,7 +573,17 @@ class Trainer(object):
     def configuration ( self ) :
         """``configuration'' : options used to book TMVA"""
         return str(self.__configuration)
-    
+
+    @property
+    def signal_train_fraction ( self ) :
+        """``signal_train_fraction'': if non-negative, fraction of signal events used for training"""
+        return self.__signal_train_fraction
+
+    @property
+    def background_train_fraction ( self ) :
+        """``background_train_fraction'': if non-negative, fraction of background events used for training"""
+        return self.__background_train_fraction
+
     @property
     def verbose ( self ) :
         """``verbose'' : verbosity  flag"""
@@ -706,9 +798,7 @@ class Trainer(object):
             self.__log_file = None 
 
         return result
-    
-
-            
+                
     # =========================================================================
     ## train TMVA 
     #  @code
@@ -739,7 +829,10 @@ class Trainer(object):
 
             self.logger.debug ( 'Output ROOT file: %s ' %  outFile.GetName() )
 
-            ## the final adjustment 
+            # =================================================================
+            ## the final adjustment
+            # =================================================================
+            
             opts = self.__bookingoptions
             from ostap.utils.basic import isatty
             OK1  = self.verbose and self.category in ( 0 , -1 )
@@ -748,6 +841,200 @@ class Trainer(object):
             opts = opts_replace ( opts , 'Color:'           , OK2 ) 
             self.__bookingoptions = opts 
 
+            # =================================================================
+            #
+            # =================================================================
+
+
+            if self.prefilter :
+                
+                if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
+                all_vars.append   ( self.prefilter )
+                
+                if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
+                if self.signal_weight     : all_vars.append ( self.signal_weight     )
+                if self.background_cuts   : all_vars.append ( self.background_cuts   )
+                if self.background_weight : all_vars.append ( self.background_weight )
+                
+                import ostap.trees.trees
+                avars = self.signal.the_variables ( all_vars )
+                
+                import ostap.trees.cuts 
+                cuts  = ROOT.TCut ( self.prefilter )
+                scuts = { 'PreSelect' : cuts }
+                bcuts = { 'PreSelect' : cuts } 
+                if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
+                if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
+                
+                if ( 6 , 24 ) <= root_info :
+                    import ostap.frames.frames 
+                    import ostap.frames.tree_reduce       as TR
+                else :
+                    import ostap.parallel.parallel_reduce as TR
+                
+                silent = not self.verbose or not self.category in ( 0, -1 )
+                self.logger.info ( 'Pre-filter Signal     before processing' )
+                self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
+                self.logger.info ( 'Pre-filter Background before processing' )
+                self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )
+                
+                self.__signal     = self.__SigTR
+                self.__background = self.__BkgTR
+            
+            # =====================================================================
+            ## check for signal weigths
+            # =====================================================================
+            if self.signal_weight :
+                if ( 6 , 20 ) <= root_info : 
+                    from ostap.frames.frames import frame_statVar 
+                    sw = frame_statVar ( self.signal , self.signal_weight , self.signal_cuts )
+                else :
+                    sw = self.signal    .statVar ( self.signal_weight     , self.signal_cuts )
+                if isinstance ( sw , WSE ) : sw = sw.values()
+                mn , mx = sw.minmax() 
+                if mn < 0 : 
+                ## there are negative weights :
+                    for m in self.methods :
+                        if not m[0] in good_for_negative :
+                            self.logger.error ( 'Method ``%s'' does not support negative (signal) weights' % m[1] )
+                            
+            # =================================================================
+            ## check for background weigths
+            # =================================================================
+            if self.background_weight :
+                if ( 6 , 20 ) <= root_info :
+                    from ostap.frames.frames import frame_statVar 
+                    bw = frame_statVar ( self.background , self.background_weight , self.background_cuts )
+                else :
+                    bw = self.background.statVar ( self.background_weight , self.background_cuts )
+                if isinstance ( bw , WSE ) : bw = bw.values()
+                mn , mx = bw.minmax() 
+                if mn < 0 : 
+                ## there are negative weights :
+                    for m in self.methods :
+                        if not m[0] in good_for_negative :
+                            self.logger.error ( 'Method ``%s'' does not support negative (background) weights' % m[1] )
+                            
+                            
+            NS = -1
+            NB = -1
+            SW = None
+            BW = None
+            
+            if 0<= self.signal_train_fraction <1 or 0<= self.background_train_fraction < 1 or self.verbose :
+                
+                sc = ROOT.TCut ( self.    signal_cuts )
+                bc = ROOT.TCut ( self.background_cuts )
+                if self.    signal_weight : sc *= self.    signal_weight
+                if self.background_weight : sc *= self.background_weight
+                
+                ss = self.signal    .statVar ( '1' , sc )
+                sb = self.background.statVar ( '1' , bc )
+                
+                NS = ss.nEntries ()
+                SW = ss.sum      ()            
+                NB = sb.nEntries ()
+                BW = sb.sum      ()
+                
+                if 0 < self.signal_train_fraction < 1 :
+                    nt = math.ceil ( NS * self.signal_train_fraction )
+                    bo = self.configuration.split ( ':' )
+                    bo = [ b for b in bo if not b.startswith('nTrain_Signal') ]
+                    bo = [ b for b in bo if not b.startswith('nTest_Signal' ) ]
+                    nt =  'nTrain_Signal=%s' % nt
+                    self.__configuration = ':'.join ( [ nt ] + bo ) 
+                    self.logger.info ( "Extend configuration for ``%s''" % nt ) 
+                    
+                if 0 < self.background_train_fraction < 1 :
+                    nt = math.ceil ( NB * self.background_train_fraction )
+                    bo = self.configuration.split ( ':' )
+                    bo = [ b for b in bo if not b.startswith('nTrain_Background') ]
+                    bo = [ b for b in bo if not b.startswith('nTest_Background' ) ]
+                    nt =  'nTrain_Background=%s' % nt
+                    self.__configuration = ':'.join ( [ nt ] + bo ) 
+                    self.logger.info ( "Extend configuration for ``%s''" % nt ) 
+
+            # =================================================================
+            # The table
+            # =================================================================            
+
+            if self.verbose :
+                
+                rows = [ ( 'Item' , 'Value' ) ]
+                
+                row  = 'Name'      , self.name
+                rows.append ( row )
+                
+                row = 'Variables'      , ' '.join ( self.variables )
+                rows.append ( row )
+                
+                if self.spectators :
+                    row = 'Spectators' , ' '.join ( self.variables )
+                    rows.append ( row )
+                    
+                for i , o in enumerate ( self.bookingoptions.split ( ':' ) ) :
+                    if 0 == i : row = 'Booking options' , o
+                    else      : row = ''                , o 
+                    rows.append ( row )
+                    
+                for i , o in enumerate ( self.configuration.split ( ':' ) ) :
+                    if 0 == i : row = 'Configuraton'    , o
+                    else      : row = ''                , o 
+                    rows.append ( row )
+                    
+                if self.signal_cuts : 
+                    row = 'Signal cuts' , self.signal_cuts
+                    rows.append ( row )
+
+                if self.signal_weight : 
+                    row = 'Signal weight' , self.signal_weight
+                    rows.append ( row )
+                    row = 'Signal total'     , '%s' % NS
+                    rows.append ( row ) 
+                    row = 'Signal weighted'  , '%s' % NW
+                    rows.append ( row ) 
+                else :
+                    row = 'Signal total'     , '%s' % NS
+                    rows.append ( row ) 
+
+                if 0 < self.signal_train_fraction < 1 :
+                    row = 'Signal train fraction' , '%.1f%%' % ( 100 *  self.signal_train_fraction ) 
+                    rows.append ( row )
+                    
+                if self.background_cuts : 
+                    row = 'Background cuts' , self.background_cuts
+                    rows.append ( row )
+                    
+                if self.background_weight : 
+                    row = 'Background weight'    , self.background_weight
+                    rows.append ( row )
+                    row = 'Background total'     , '%s' % NB
+                    rows.append ( row ) 
+                    row = 'Bacgground weighted'  , '%s' % BW
+                    rows.append ( row ) 
+                else :
+                    row = 'Background total'     , '%s' % NB
+                    rows.append ( row ) 
+                    
+                if 0 < self.background_train_fraction < 1 :
+                    row = 'Backgroundtrain fraction' , '%.1f%%' % ( 100 *  self.background_train_fraction ) 
+                    rows.append ( row )
+                    
+                ## for m in self.methods :
+                ##    row = 'Method' , '%s #%s' % ( m[1] , m[0] )
+                ##    rows.append ( row )
+                ##    for i , o in enumerate ( m[2].split(':' ) ) :
+                ##        if 0 == i : row = 'Method configruration' , o
+                ##        else      : row =   ''                    , o 
+                ##        rows.append ( row ) 
+                        
+                import ostap.logger.table as T
+                title = "TMVA Trainer %s start " % self.name 
+                table = T.table (  rows , title = title , prefix = "# " , alignment = "lw" )
+                self.logger.info ( "%s\n%s" % ( title , table ) ) 
+                
+                
+                
             bo = self.bookingoptions.split (':')
             bo.sort() 
             if self.verbose : self.logger.info  ( 'Book TMVA-factory %s ' % bo ) 
@@ -778,79 +1065,11 @@ class Trainer(object):
                 all_vars.append ( vv[0] ) 
                 dataloader.AddSpectator ( *vv )
                 #
-            if self.spectators : 
-                self.logger.info ( "Spectators          :``%s''"  % str ( self.spectators ) )
-            #            
-            if self.signal_cuts :
-                self.logger.info ( "Signal cuts         :``%s''" % self.signal_cuts ) 
-                    
-            if self.background_cuts :
-                self.logger.info ( "Background cuts     :``%s''" % self.background_cuts ) 
-            #
-            if self.prefilter :
-                if self.verbose : self.logger.info ( 'Start data pre-filtering before TMVA processing' )
-                all_vars.append   ( self.prefilter )
-                
-                if self.signal_cuts       : all_vars.append ( self.signal_cuts       )
-                if self.signal_weight     : all_vars.append ( self.signal_weight     )
-                if self.background_cuts   : all_vars.append ( self.background_cuts   )
-                if self.background_weight : all_vars.append ( self.background_weight )
-                
-                import ostap.trees.trees
-                avars = self.signal.the_variables ( all_vars )
 
-                import ostap.trees.cuts 
-                cuts  = ROOT.TCut ( self.prefilter )
-                scuts = { 'PreSelect' : cuts }
-                bcuts = { 'PreSelect' : cuts } 
-                if self.signal_cuts     : scuts.update ( { 'Signal'     : self.signal_cuts     } ) 
-                if self.background_cuts : bcuts.update ( { 'Background' : self.background_cuts } )
-
-                if ( 6 , 24 ) <= root_info :
-                    import ostap.frames.frames 
-                    import ostap.frames.tree_reduce       as TR
-                else :
-                    import ostap.parallel.parallel_reduce as TR
-                
-                silent = not self.verbose or not self.category in ( 0, -1 )
-                self.logger.info ( 'Pre-filter Signal     before processing' )
-                self.__SigTR = TR.reduce ( self.signal     , selection = scuts , save_vars = avars , silent = silent )
-                self.logger.info ( 'Pre-filter Background before processing' )
-                self.__BkgTR = RT.reduce ( self.background , selection = bcuts , save_vars = avars , silent = silent )                                
-                self.__signal     = self.__SigTR
-                self.__background = self.__BkgTR
-                
-            if self.verbose :
-                sc = ROOT.TCut ( self.    signal_cuts )
-                bc = ROOT.TCut ( self.background_cuts )
-                if self.    signal_weight : sc *= self.    signal_weight
-                if self.background_weight : sc *= self.background_weight
-                
-                ss = self.signal    .statVar ( '1' , sc )
-                sb = self.background.statVar ( '1' , bc )
-                
-                ns = ss.nEntries()
-                sw = ss.sum ()
-                
-                nb = sb.nEntries()
-                bw = sb.sum ()
-                
-                if self.signal_weight     :
-                    self.logger.info ( 'Signal weight       : %s'  % self.signal_weight )
-                    self.logger.info ( 'Signal total        : %s events '     % ns ) 
-                    self.logger.info ( 'Signal weighted     : %s candidates'  % sw )
-                else :
-                    self.logger.info ( 'Signal              : %s events'      % ns )
-                
-                if self.background_weight :
-                    self.logger.info ( 'Background weight   : %s' % self.background_weight ) 
-                    self.logger.info ( 'Background total    : %s events'      % nb )
-                    self.logger.info ( 'Background weighted : %s candidates'  % bw ) 
-                else :
-                    self.logger.info ( 'Background          : %s events'      % nb )
-
-                
+            if self.verbose : self.logger.info ( "Loading ``Signal''     sample" ) 
             dataloader.AddTree ( self.signal     , 'Signal'     , 1.0 , ROOT.TCut ( self.    signal_cuts ) )
+            
+            if self.verbose : self.logger.info ( "Loading ``Background'' sample" )             
             dataloader.AddTree ( self.background , 'Background' , 1.0 , ROOT.TCut ( self.background_cuts ) )
             #
             if self.signal_weight :
@@ -873,7 +1092,7 @@ class Trainer(object):
                 else             : self.logger.debug ( "Book %11s/%d method %s" % ( m[1] , m[0] , bo ) )
                 
                 factory.BookMethod ( dataloader , *m )
-           
+
             # Train MVAs
             ms = tuple( i[1] for i in  self.methods )
             self.logger.info  ( "Train    all methods %s " % str ( ms ) )
@@ -884,6 +1103,19 @@ class Trainer(object):
             # Evaluate MVAs
             self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
             factory.EvaluateAllMethods ()
+
+        ## AUC for ROC curves
+        if self.verbose : 
+            rows = [ ('Method' , 'AUC' ) ]
+            for m in ms :
+                auc = factory.GetROCIntegral ( dataloader , m )
+                row = str(m) , '%.4g' % auc
+                rows.append ( row ) 
+            import ostap.logger.table as T
+            title = "AUC compare"
+            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
+            self.logger.info ( "%s:\n%s" % ( title , table  ) )
+
             
         # check the output.
         if os.path.exists ( self.output_file ) :
@@ -903,11 +1135,12 @@ class Trainer(object):
             except :
                 pass
             
+        if  self.make_plots : self.makePlots ( factory , dataloader )
+
         del dataloader
         del factory 
 
-        if  self.make_plots : self.makePlots()
-            
+        
         import glob, os 
         self.__weights_files = tuple ( [ f for f in glob.glob ( self.__pattern_xml   ) ] )
         self.__class_files   = tuple ( [ f for f in glob.glob ( self.__pattern_C     ) ] ) 
@@ -943,7 +1176,7 @@ class Trainer(object):
 
     # =========================================================================
     ## make selected standard TMVA plots 
-    def makePlots ( self ) :
+    def makePlots ( self , factory = None , loader = None ) :
         """Make selected standard TMVA plots"""
 
         output = self.output_file
@@ -963,6 +1196,8 @@ class Trainer(object):
             self.logger.error ("Output file %s can't be opened!"   % output )
             return
 
+            
+            
         #
         ## make the plots in TMVA  style
         #
@@ -972,7 +1207,16 @@ class Trainer(object):
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
         groot = ROOT.ROOT.GetROOT() 
-        with batch ( groot.IsBatch () or not show_plots ) :
+        from ostap.logger.utils import rootWarning
+        with batch ( groot.IsBatch () or not show_plots ) , rootWarning ()  :
+
+            ## ROC curve 
+            if factory and loader :
+                import ostap.plotting.canvas 
+                cnv = factory.GetROCCurve ( loader )
+                if cnv :
+                    cnv.Draw()
+                    cnv >> ( "%s/plots/ROC" % self.dirname )
 
             if hasattr ( ROOT.TMVA , 'variables'    ) : ROOT.TMVA.variables    ( self.name , output )    
             if hasattr ( ROOT.TMVA , 'correlations' ) : ROOT.TMVA.correlations ( self.name , output )
@@ -1010,7 +1254,7 @@ class Trainer(object):
             ## for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
 
         ## convert EPS  files to PDF 
-        if cmd_exists ( 'epstopdf' ) :
+        if cmd_exists ( 'epstopdf' ) and root_info < ( 6 , 20 ) :
             odir, _ = os.path.split ( os.path.abspath ( output ) )
             if os.path.exists ( odir ) and os.path.isdir ( odir ) :                
                 import glob, subprocess

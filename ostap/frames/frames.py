@@ -194,7 +194,7 @@ def frame_statVar ( self , expression ,  cuts = '' ) :
     >>> c2 = data.statVar( 'S_sw' )
     """
     frame = DataFrame ( self ) 
-    return Ostap.StatVar.statVar ( frame , expression , cuts , )
+    return Ostap.StatVar.statVar ( frame , str ( expression ) , str ( cuts )  )
 
 
 # =============================================================================
@@ -263,7 +263,8 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
 
     current = frame    
     for e in expressions :
-        
+
+        e = str ( e )
         if e in vars :
             names [ e ] = e 
             continue
@@ -275,6 +276,7 @@ def _fr_statVar_new_ ( self , expressions , cuts = '' , lazy = False  ) :
         
         names [ e ] = vn
 
+    cuts  = str ( cuts )
     cname = cuts 
     if cuts and not cuts in vars :
         used    = tuple ( all_vars | set ( frame_columns ( current ) ) ) 
