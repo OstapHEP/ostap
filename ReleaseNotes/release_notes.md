@@ -4,6 +4,7 @@
   1. remove warnings for `splot` 
   1. large improvements for tmva&chopping: allow ot specify working directory, etc...  
   1. allow specification of training signal&background fractions for tmva&chopping 
+  1. disable ROC curved and ROC/AUX for old versions 
 
 ## Backward incompatible:  
  

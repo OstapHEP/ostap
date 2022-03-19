@@ -523,6 +523,11 @@ class Trainer(object):
         return tuple(self.__methods)
 
     @property
+    def method_names ( self ) :
+        """``method_names'' : tuple of method names"""
+        return tuple ( m[1] for m in self.__methods ) 
+        
+    @property
     def logger ( self ) :
         """``logger'' : the logger instace for this Trainer"""
         return self.__logger
@@ -1111,7 +1116,7 @@ class Trainer(object):
                 factory.BookMethod ( dataloader , *m )
 
             # Train MVAs
-            ms = tuple( i[1] for i in  self.methods )
+            ms = self.method_names 
             self.logger.info  ( "Train    all methods %s " % str ( ms ) )
             factory.TrainAllMethods    ()
             ## Test MVAs
@@ -1121,19 +1126,6 @@ class Trainer(object):
             self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
             factory.EvaluateAllMethods ()
 
-        ## AUC for ROC curves
-        if self.verbose : 
-            rows = [ ('Method' , 'AUC' ) ]
-            for m in ms :
-                auc = factory.GetROCIntegral ( dataloader , m )
-                row = str(m) , '%.4g' % auc
-                rows.append ( row ) 
-            import ostap.logger.table as T
-            title = "AUC compare"
-            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
-            self.logger.info ( "%s:\n%s" % ( title , table  ) )
-
-            
         # check the output.
         if os.path.exists ( self.output_file ) :
 
@@ -1151,9 +1143,27 @@ class Trainer(object):
                     if self.verbose : outFile.ls()
             except :
                 pass
-            
+
+        ## AUC for ROC curves
+        if self.verbose : ## and ( 6 , 24 ) <= root_info : 
+            rows = [ ('Method' , 'AUC' ) ]
+            for m in self.methods :
+                mname = m[1]
+                if m[0] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
+                    logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
+                    continue 
+                auc = factory.GetROCIntegral ( dataloader , mname )
+                row = mname , '%.5g' % auc
+                rows.append ( row ) 
+            import ostap.logger.table as T
+            title = "AUC compare"
+            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
+            self.logger.info ( "%s:\n%s" % ( title , table  ) )
+
+
         if  self.make_plots : self.makePlots ( factory , dataloader )
 
+            
         del dataloader
         del factory 
 
@@ -1228,7 +1238,7 @@ class Trainer(object):
         with batch ( groot.IsBatch () or not show_plots ) , rootWarning ()  :
 
             ## ROC curve 
-            if factory and loader :
+            if factory and loader and ( 6 , 24 ) <= root_info :
                 import ostap.plotting.canvas 
                 cnv = factory.GetROCCurve ( loader )
                 if cnv :
