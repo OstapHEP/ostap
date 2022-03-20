@@ -1144,13 +1144,22 @@ class Trainer(object):
             except :
                 pass
 
+        ## ROC curves 
+        if self.make_plots and ( 6 , 24 ) <= root_info :
+            import ostap.plotting.canvas 
+            cnv = factory.GetROCCurve ( dataloader )
+            if cnv :
+                cnv.Draw()
+                cnv >> ( "%s/plots/ROC" % self.dirname )
+
+                
         ## AUC for ROC curves
         if self.verbose : ## and ( 6 , 24 ) <= root_info : 
             rows = [ ('Method' , 'AUC' ) ]
             for m in self.methods :
                 mname = m[1]
                 if m[0] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
-                    logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
+                    self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
                     continue 
                 auc = factory.GetROCIntegral ( dataloader , mname )
                 row = mname , '%.5g' % auc
@@ -1159,13 +1168,13 @@ class Trainer(object):
             title = "AUC compare"
             table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
             self.logger.info ( "%s:\n%s" % ( title , table  ) )
-
-
-        if  self.make_plots : self.makePlots ( factory , dataloader )
-
             
+
         del dataloader
         del factory 
+
+                
+        if  self.make_plots : self.makePlots ()
 
         
         import glob, os 
@@ -1180,7 +1189,7 @@ class Trainer(object):
         with tarfile.open ( tfile , 'w:gz' ) as tar :
             for x in self.weights_files : tar.add ( x )
             for x in self.  class_files : tar.add ( x )
-            for x in self.__plots       : tar.add ( x )
+            for x in self.  plots       : tar.add ( x )
             if self.log_file and os.path.exists ( self.log_file ) and os.path.isfile ( self.log_file ) :
                 tar.add ( self.log_file ) 
 
@@ -1203,14 +1212,15 @@ class Trainer(object):
 
     # =========================================================================
     ## make selected standard TMVA plots 
-    def makePlots ( self , factory = None , loader = None ) :
+    def makePlots ( self , name = None , output = None , ) :
         """Make selected standard TMVA plots"""
 
-        output = self.output_file
-
+        name   = name   if name   else self.name
+        output = output if output else self.output_file
+        
         if not output :
-            self.logger.warning ('No output file is registered!')
-            return
+            self.logger.warning ('No output file is specified!')
+            return 
         if not os.path.exists ( output ) or not os.path.isfile ( output ) :
             self.logger.error   ('No output file %s is found !' % output )
             return
@@ -1222,77 +1232,73 @@ class Trainer(object):
         except IOError :
             self.logger.error ("Output file %s can't be opened!"   % output )
             return
-
-            
-            
+          
         #
         ## make the plots in TMVA  style
         #
         
         self.logger.info ('Making the standard TMVA plots') 
-        from ostap.utils.utils import batch , cmd_exists 
+        from ostap.utils.utils import batch , cmd_exists, keepCanvas  
         show_plots = self.category in ( 0 , -1 ) and self.verbose
 
         groot = ROOT.ROOT.GetROOT() 
         from ostap.logger.utils import rootWarning
         with batch ( groot.IsBatch () or not show_plots ) , rootWarning ()  :
 
-            ## ROC curve 
-            if factory and loader and ( 6 , 24 ) <= root_info :
-                import ostap.plotting.canvas 
-                cnv = factory.GetROCCurve ( loader )
-                if cnv :
-                    cnv.Draw()
-                    cnv >> ( "%s/plots/ROC" % self.dirname )
-
-            if hasattr ( ROOT.TMVA , 'variables'    ) : ROOT.TMVA.variables    ( self.name , output )    
-            if hasattr ( ROOT.TMVA , 'correlations' ) : ROOT.TMVA.correlations ( self.name , output )
-            
-            if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
-                for i in range ( 4 ) : ROOT.TMVA.efficiencies  ( self.name , output , i )
-
+            if hasattr ( ROOT.TMVA , 'variables'    ) :
+                if self.verbose : self.logger.info ( "Execute macro ROOT.TMVA.variables")
+                ROOT.TMVA.variables    ( name , output ) 
+                                        
+            if hasattr ( ROOT.TMVA , 'correlations' ) :
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.correlations")
+                ROOT.TMVA.correlations ( name , output )
+                
             if root_info < ( 6 , 18 ) or root_info >= ( 6,20 ) :
                 if hasattr ( ROOT.TMVA , 'mvas'         ) : 
-                    for i in range ( 4 ) : ROOT.TMVA.mvas          ( self.name , output , i )
-
-                if hasattr ( ROOT.TMVA , 'paracoor'            ) : ROOT.TMVA.paracoor           ( self.name , output )
+                    for i in ( 0 , 3 ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
+                        ROOT.TMVA.mvas          ( name , output , i )
+                        
+                if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
+                    ROOT.TMVA.mvaeffs ( name , output )
                 
-                ## if hasattr ( ROOT.TMVA , 'probas'              ) : ROOT.TMVA.probas             ( self.name , output )
-                if hasattr ( ROOT.TMVA , 'training_history'    ) : ROOT.TMVA.training_history   ( self.name , output )
-                
+                if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
+                    ROOT.TMVA.efficiencies  ( self.name , output , 2 )
+                    
+                if hasattr ( ROOT.TMVA , 'paracoor'            ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
+                    ROOT.TMVA.paracoor           ( name , output )
+                    
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
-                    if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) : ROOT.TMVA.likelihoodrefs     ( self.name , output )
-                    
+                    if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
+                        ROOT.TMVA.likelihoodrefs     ( name , output )
+                        
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
-                    if hasattr ( ROOT.TMVA , 'network'             ) : ROOT.TMVA.network            ( self.name , output )
-                    if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) : ROOT.TMVA.annconvergencetest ( self.name , output )
-                    
+                    self.logger.info ( "before netweork"  )
+                    if hasattr ( ROOT.TMVA , 'network'             ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.network")
+                        ROOT.TMVA.network            ( name , output )
+                    if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
+                        ROOT.TMVA.annconvergencetest ( name , output )
+                
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
-                    if hasattr ( ROOT.TMVA , 'BDT'                ) : ROOT.TMVA.BDT                ( self.name , output )
-                    if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) : ROOT.TMVA.BDTControlPlots    ( self.name , output )
+                    self.logger.info ( "before BDT"  )
+                    if hasattr ( ROOT.TMVA , 'BDT'                ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
+                        ROOT.TMVA.BDT                ( name , output )
+                    if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
+                        ROOT.TMVA.BDTControlPlots    ( name , output )
                     
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
-                    if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) : ROOT.TMVA.BoostControlPlots  ( self.name , output )
-     
-            ## if 62000 > root_version_int : 
-            ## ROOT.TMVA.correlations                       ( self.name , output     )
-            ## for i in range(4)   : ROOT.TMVA.mvas         ( self.name , output , i )
-            ## ROOT.TMVA.mvaeffs                            ( self.name , output     )
-            ## for i in range(1,3) : ROOT.TMVA.efficiencies ( self.name , output , i )
+                    if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
+                        ROOT.TMVA.BoostControlPlots  ( name , output )
 
-        ## convert EPS  files to PDF 
-        if cmd_exists ( 'epstopdf' ) and root_info < ( 6 , 20 ) :
-            odir, _ = os.path.split ( os.path.abspath ( output ) )
-            if os.path.exists ( odir ) and os.path.isdir ( odir ) :                
-                import glob, subprocess
-                for edir , _ , _ in os.walk ( odir ) :
-                    if not self.name in edir : continue                     
-                    for eps in glob.iglob ( os.path.join ( edir , '*.eps' ) ) :
-                        pdf = eps[:-4] + '.pdf'
-                        if not os.path.exists ( pdf ) : 
-                            r   =  subprocess.call ( [ 'epstopdf' , eps ] )                        
-                            if r != 0 : self.logger.warning('epstopdf: unable convert %s to PDF: %s' % ( eps , r ) )
-                            
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
