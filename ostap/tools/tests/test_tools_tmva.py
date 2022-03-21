@@ -126,8 +126,8 @@ with ROOT.TFile.Open( data_file ,'READ') as datafile :
         signal                    = tSignal                  , ## ``Signal'' sample
         background                = tBkg                     , ## ``Background'' sample
         verbose                   = True                     ,
-        signal_train_fraction     = 0.75                     , 
-        background_train_fraction = 0.75                     , 
+        signal_train_fraction     = 0.75                     ,        
+        background_train_fraction = 0.75                     ,
         workdir                   = CleanUp.tempdir ( prefix = 'ostap-tmva-workdir-' ) ) ##  working directory 
     
     from ostap.utils.timing import timing

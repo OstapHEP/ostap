@@ -272,7 +272,7 @@ class Trainer(object):
                    verbose           = True   ,
                    logging           = True   ,
                    name              = 'TMVA' ,
-                   make_plots        = True   ,
+                   make_plots        = False  ,
                    workdir           = ''     , 
                    category          = -1     ,
                    multithread       = False  ,
@@ -1145,13 +1145,12 @@ class Trainer(object):
                 pass
 
         ## ROC curves 
-        if self.make_plots and ( 6 , 24 ) <= root_info :
-            import ostap.plotting.canvas 
+        if self.make_plots or self.verbose : ## and ( 6 , 24 ) <= root_info :
+            import ostap.plotting.canvas
             cnv = factory.GetROCCurve ( dataloader )
             if cnv :
                 cnv.Draw()
                 cnv >> ( "%s/plots/ROC" % self.dirname )
-
                 
         ## AUC for ROC curves
         if self.verbose : ## and ( 6 , 24 ) <= root_info : 
@@ -1174,7 +1173,9 @@ class Trainer(object):
         del factory 
 
                 
-        if  self.make_plots : self.makePlots ()
+        if  self.make_plots :
+            self.logger.warning ("makePlots is (temporary) disabled") 
+            ## self.makePlots ()
 
         
         import glob, os 
@@ -1243,61 +1244,57 @@ class Trainer(object):
 
         groot = ROOT.ROOT.GetROOT() 
         from ostap.logger.utils import rootWarning
-        with batch ( groot.IsBatch () or not show_plots ) , rootWarning ()  :
+        with batch ( groot.IsBatch () or not show_plots ) : ##  , rootWarning ()  :
 
             if hasattr ( ROOT.TMVA , 'variables'    ) :
                 if self.verbose : self.logger.info ( "Execute macro ROOT.TMVA.variables")
                 ROOT.TMVA.variables    ( name , output ) 
-                                        
+                
             if hasattr ( ROOT.TMVA , 'correlations' ) :
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.correlations")
                 ROOT.TMVA.correlations ( name , output )
                 
-            if ( 6 , 24 ) <= root_info  :
-
-                if hasattr ( ROOT.TMVA , 'mvas'         ) : 
-                    for i in ( 0 , 3 ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
-                        ROOT.TMVA.mvas          ( name , output , i )
-                
-                if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
-                    ROOT.TMVA.mvaeffs ( name , output )
-                
-                if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
-                    ROOT.TMVA.efficiencies  ( self.name , output , 2 )
+            if hasattr ( ROOT.TMVA , 'mvas'         ) : 
+                for i in ( 0 , 3 ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
+                    ROOT.TMVA.mvas          ( name , output , i )
                     
-                if hasattr ( ROOT.TMVA , 'paracoor'            ) :
-                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
-                    ROOT.TMVA.paracoor           ( name , output )
-                    
-                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
-                    if hasattr ( ROOT.TMVA , 'likelihoodrefs'      ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
-                        ROOT.TMVA.likelihoodrefs     ( name , output )
+            if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
+                ROOT.TMVA.mvaeffs ( name , output )
+                
+            if hasattr ( ROOT.TMVA , 'efficiencies' ) :
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
+                ROOT.TMVA.efficiencies  ( self.name , output , 2 )
+                
+            if hasattr ( ROOT.TMVA , 'paracoor'            ) :
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
+                ROOT.TMVA.paracoor           ( name , output )
+                
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kLikelihood ) ] : 
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.likelihoodrefs")
+                ROOT.TMVA.likelihoodrefs     ( name , output )
                         
-                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
-                    if hasattr ( ROOT.TMVA , 'network'             ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.network")
-                        ROOT.TMVA.network            ( name , output )
-                    if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
-                        ROOT.TMVA.annconvergencetest ( name , output )
-                
-                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
-                    if hasattr ( ROOT.TMVA , 'BDT'                ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
-                        ROOT.TMVA.BDT                ( name , output )
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] :                    
+                if hasattr ( ROOT.TMVA , 'network'             ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.network")
+                    ROOT.TMVA.network            ( name , output )
+                if hasattr ( ROOT.TMVA , 'nannconvergencetest' ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
+                    ROOT.TMVA.annconvergencetest ( name , output )
+                    
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
+                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
+                ROOT.TMVA.BDT                ( name , output )
                     ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
                     ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
                     ##    ROOT.TMVA.BDTControlPlots    ( name , output )
                     
-                if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
-                    if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
-                        ROOT.TMVA.BoostControlPlots  ( name , output )
-
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
+                if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BoostControlPlots")
+                    ROOT.TMVA.BoostControlPlots  ( name , output )
+                    
 # =============================================================================
 ## @class Reader
 #  Rather generic python interface to TMVA-reader
@@ -1346,7 +1343,7 @@ class Trainer(object):
 #  ...     print('MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg) )
 #  @endcode
 #
-#  - It it natually merges with Ostap's SelectorWithVars utility
+#  - It it naturally merges with Ostap's SelectorWithVars utility
 #
 #  @see TMVA::Reader
 #  @date   2013-10-02
@@ -1395,7 +1392,7 @@ class Reader(object)  :
     ...     bdtg = bdtg_fun ( entry )  ## evalaute BDTG-TMVA
     ...     print ( 'MLP/BDTG for  this event are %s/%s' %  (mlp , bdtg)) 
     
-    It it natually merges with Ostap's SelectorWithVars utility 
+    It it naturally merges with Ostap's SelectorWithVars utility 
     """    
     ## constructor
     #  @code 

@@ -203,7 +203,7 @@ class Trainer(object) :
                    chop_signal       = False                 ,   # chop the signal     ?
                    chop_background   = True                  ,   # chop the background ?
                    logging           = True                  ,   # create log-files    ?
-                   make_plots        = True                  ,   # make standard plots ?
+                   make_plots        = False                 ,   # make standard plots ?
                    workdir           = ''                    ,   # working directory   
                    multithread       = False                 ,   # use multithreading  ?
                    parallel          = True                  ,   # parallel training   ? 
