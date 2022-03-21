@@ -1253,12 +1253,13 @@ class Trainer(object):
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.correlations")
                 ROOT.TMVA.correlations ( name , output )
                 
-            if root_info < ( 6 , 18 ) or root_info >= ( 6,20 ) :
+            if ( 6 , 24 ) <= root_info  :
+
                 if hasattr ( ROOT.TMVA , 'mvas'         ) : 
                     for i in ( 0 , 3 ) :
                         if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
                         ROOT.TMVA.mvas          ( name , output , i )
-                        
+                
                 if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
                     if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
                     ROOT.TMVA.mvaeffs ( name , output )
@@ -1277,7 +1278,6 @@ class Trainer(object):
                         ROOT.TMVA.likelihoodrefs     ( name , output )
                         
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kMLP ) ] : 
-                    self.logger.info ( "before netweork"  )
                     if hasattr ( ROOT.TMVA , 'network'             ) :
                         if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.network")
                         ROOT.TMVA.network            ( name , output )
@@ -1286,13 +1286,12 @@ class Trainer(object):
                         ROOT.TMVA.annconvergencetest ( name , output )
                 
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
-                    self.logger.info ( "before BDT"  )
                     if hasattr ( ROOT.TMVA , 'BDT'                ) :
                         if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
                         ROOT.TMVA.BDT                ( name , output )
-                    if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
-                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
-                        ROOT.TMVA.BDTControlPlots    ( name , output )
+                    ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
+                    ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
+                    ##    ROOT.TMVA.BDTControlPlots    ( name , output )
                     
                 if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
                     if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
