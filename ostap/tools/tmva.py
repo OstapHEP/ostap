@@ -1145,7 +1145,7 @@ class Trainer(object):
                 pass
 
         ## ROC curves 
-        if self.make_plots or self.verbose : ## and ( 6 , 24 ) <= root_info :
+        if ( self.make_plots or self.verbose ) and ( 6 , 24 ) <= root_info :
             import ostap.plotting.canvas
             cnv = factory.GetROCCurve ( dataloader )
             if cnv :
