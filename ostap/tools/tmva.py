@@ -1147,9 +1147,10 @@ class Trainer(object):
                 if cnv :
                     cnv.Draw()
                     cnv >> ( "%s/plots/ROC" % self.dirname )
+                    del cnv
                     
         ## AUC for ROC curves
-        if self.verbose : ## and ( 6 , 24 ) <= root_info : 
+        if self.verbose : 
             rows = [ ('Method' , 'AUC' ) ]
             for m in self.methods :
                 mname = m[1]
@@ -1280,8 +1281,7 @@ class Trainer(object):
                     ROOT.TMVA.mvaeffs  ( name , output )
                 elif self.verbose :
                     self.logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
-                    
-                
+                                    
             if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
                 ROOT.TMVA.efficiencies  ( self.name , output , 2 )
