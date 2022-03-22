@@ -1,3 +1,5 @@
+# v1.7.1.0
+
 ## New features: 
   1. add methods `size_vars` and `array_vars` for `ROOT.TTree`
   1. small adjustment for `tree_reduce`
