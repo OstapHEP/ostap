@@ -272,7 +272,7 @@ class Trainer(object):
                    verbose           = True   ,
                    logging           = True   ,
                    name              = 'TMVA' ,
-                   make_plots        = False  ,
+                   make_plots        = True   ,
                    workdir           = ''     , 
                    category          = -1     ,
                    multithread       = False  ,
@@ -602,6 +602,11 @@ class Trainer(object):
         """``verbose'' : verbosity  flag"""
         return self.__verbose
 
+    @property
+    def silent ( self ) :
+        """``silent'' : verbosity flag"""
+        return not self.verbose
+    
     @property
     def logging ( self ) :
         """``logging'' : logging flag : produce log-file?"""
@@ -1070,7 +1075,7 @@ class Trainer(object):
             factory.SetVerbose( self.verbose )
         
             ## 
-            dataloader = ROOT.TMVA.DataLoader ( self.dirname )
+            dataloader = ROOT.TMVA.DataLoader ( self.name )
 
             #
             all_vars = [] 
@@ -1126,6 +1131,34 @@ class Trainer(object):
             self.logger.info  ( "Evaluate all methods %s " % str ( ms ) )
             factory.EvaluateAllMethods ()
 
+
+        ## ROC curves 
+        if ( self.make_plots or self.verbose ) :
+            import ostap.plotting.canvas
+            ## cnv = factory.GetROCCurve ( dataloader )
+            cnv = factory.GetROCCurve ( self.name )
+            if cnv :
+                cnv.Draw()
+                cnv >> ( "%s/plots/ROC" % self.dirname )
+                
+        ## AUC for ROC curves
+        if self.verbose : ## and ( 6 , 24 ) <= root_info : 
+            rows = [ ('Method' , 'AUC' ) ]
+            for m in self.methods :
+                mname = m[1]
+                if m[0] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
+                    self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
+                    continue 
+                ## auc = factory.GetROCIntegral ( dataloader , mname )
+                auc = factory.GetROCIntegral ( self.name , mname )
+                row = mname , '%.5g' % auc
+                rows.append ( row ) 
+            import ostap.logger.table as T
+            title = "AUC compare"
+            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
+            self.logger.info ( "%s:\n%s" % ( title , table  ) )
+            
+
         # check the output.
         if os.path.exists ( self.output_file ) :
 
@@ -1144,37 +1177,13 @@ class Trainer(object):
             except :
                 pass
 
-        ## ROC curves 
-        if ( self.make_plots or self.verbose ) and ( 6 , 24 ) <= root_info :
-            import ostap.plotting.canvas
-            cnv = factory.GetROCCurve ( dataloader )
-            if cnv :
-                cnv.Draw()
-                cnv >> ( "%s/plots/ROC" % self.dirname )
-                
-        ## AUC for ROC curves
-        if self.verbose : ## and ( 6 , 24 ) <= root_info : 
-            rows = [ ('Method' , 'AUC' ) ]
-            for m in self.methods :
-                mname = m[1]
-                if m[0] == ROOT.TMVA.Types.kCuts and root_info < ( 6 , 24 ) :
-                    self.logger.warning ( 'Skip ROC/AUC for %s' % m[1] ) 
-                    continue 
-                auc = factory.GetROCIntegral ( dataloader , mname )
-                row = mname , '%.5g' % auc
-                rows.append ( row ) 
-            import ostap.logger.table as T
-            title = "AUC compare"
-            table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
-            self.logger.info ( "%s:\n%s" % ( title , table  ) )
-            
 
         del dataloader
         del factory 
 
-                
+        
         if  self.make_plots :
-            self.logger.warning ("makePlots is (temporary) disabled") 
+            self.logger.warning ( "makePlots is tempprary disabled, call this function offline")
             ## self.makePlots ()
 
         
@@ -1254,20 +1263,20 @@ class Trainer(object):
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.correlations")
                 ROOT.TMVA.correlations ( name , output )
                 
-            if hasattr ( ROOT.TMVA , 'mvas'         ) : 
+            if hasattr ( ROOT.TMVA , 'mvas'    ) : 
                 for i in ( 0 , 3 ) :
                     if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
-                    ROOT.TMVA.mvas          ( name , output , i )
+                    ROOT.TMVA.mvas ( name , output , i )
                     
-            if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
+            if hasattr ( ROOT.TMVA , 'mvaeffs' ) : 
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
-                ROOT.TMVA.mvaeffs ( name , output )
+                ROOT.TMVA.mvaeffs  ( name , output )
                 
-            if hasattr ( ROOT.TMVA , 'efficiencies' ) :
+            if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
                 ROOT.TMVA.efficiencies  ( self.name , output , 2 )
                 
-            if hasattr ( ROOT.TMVA , 'paracoor'            ) :
+            if hasattr ( ROOT.TMVA , 'paracoor' ) :
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.paracoor")
                 ROOT.TMVA.paracoor           ( name , output )
                 
