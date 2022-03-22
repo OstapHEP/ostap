@@ -663,7 +663,12 @@ class Trainer(object):
     def plots ( self ) :
         """``plots'': list of produced plots"""
         return self.__plots
-    
+
+    @property
+    def show_plots ( self ) :
+        """``show_plots'': show plots?"""
+        return self.verbose and ( self.category in ( 0 , -1 ) )
+        
     # =========================================================================
     ## train TMVA 
     #  @code
@@ -1133,14 +1138,16 @@ class Trainer(object):
 
 
         ## ROC curves 
-        if ( self.make_plots or self.verbose ) :
+        if ( self.make_plots or self.verbose ) and ( 6 , 24 ) <= root_info :
             import ostap.plotting.canvas
+            from ostap.utils.utils import batch , keepCanvas
+            with batch ( ROOT.ROOT.GetROOT().IsBatch() or not self.show_plots ) , keepCanvas() : 
             ## cnv = factory.GetROCCurve ( dataloader )
-            cnv = factory.GetROCCurve ( self.name )
-            if cnv :
-                cnv.Draw()
-                cnv >> ( "%s/plots/ROC" % self.dirname )
-                
+                cnv = factory.GetROCCurve ( self.name )
+                if cnv :
+                    cnv.Draw()
+                    cnv >> ( "%s/plots/ROC" % self.dirname )
+                    
         ## AUC for ROC curves
         if self.verbose : ## and ( 6 , 24 ) <= root_info : 
             rows = [ ('Method' , 'AUC' ) ]
@@ -1154,7 +1161,7 @@ class Trainer(object):
                 row = mname , '%.5g' % auc
                 rows.append ( row ) 
             import ostap.logger.table as T
-            title = "AUC compare"
+            title = "ROC/AUC compare"
             table = T.table ( rows , prefix = "# " , title = title , alignment = "ll" )
             self.logger.info ( "%s:\n%s" % ( title , table  ) )
             
@@ -1181,10 +1188,12 @@ class Trainer(object):
         del dataloader
         del factory 
 
-        
+
         if  self.make_plots :
-            self.logger.warning ( "makePlots is tempprary disabled, call this function offline")
-            ## self.makePlots ()
+            if ( 6 , 24 ) <= root_info : 
+                self.logger.warning ( "``makePlots'' is temporary disabled, call this function offline: ``trainer.makePlots()'' ")
+            else : 
+                self.makePlots ()
 
         
         import glob, os 
@@ -1249,12 +1258,9 @@ class Trainer(object):
         
         self.logger.info ('Making the standard TMVA plots') 
         from ostap.utils.utils import batch , cmd_exists, keepCanvas  
-        show_plots = self.category in ( 0 , -1 ) and self.verbose
-
-        groot = ROOT.ROOT.GetROOT() 
         from ostap.logger.utils import rootWarning
-        with batch ( groot.IsBatch () or not show_plots ) : ##  , rootWarning ()  :
-
+        with batch ( ROOT.ROOT.GetROOT().IsBatch () or not self.show_plots ) , keepCanvas() : ##  , rootWarning ()  :
+            
             if hasattr ( ROOT.TMVA , 'variables'    ) :
                 if self.verbose : self.logger.info ( "Execute macro ROOT.TMVA.variables")
                 ROOT.TMVA.variables    ( name , output ) 
@@ -1268,9 +1274,13 @@ class Trainer(object):
                     if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvas(...,%s)" % i)
                     ROOT.TMVA.mvas ( name , output , i )
                     
-            if hasattr ( ROOT.TMVA , 'mvaeffs' ) : 
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
-                ROOT.TMVA.mvaeffs  ( name , output )
+            if hasattr ( ROOT.TMVA , 'mvaeffs' ) :
+                if ( 6 , 24 ) <= root_info : 
+                    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.mvaeffs")
+                    ROOT.TMVA.mvaeffs  ( name , output )
+                elif self.verbose :
+                    self.logger.warning ( "Skip    macro ROOT.TMVA.mvaeffs")
+                    
                 
             if hasattr ( ROOT.TMVA , 'efficiencies' ) : 
                 if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.efficiencies(...,2)")
@@ -1292,12 +1302,17 @@ class Trainer(object):
                     if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.annconvergencetest")
                     ROOT.TMVA.annconvergencetest ( name , output )
                     
-            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] : 
-                if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
-                ROOT.TMVA.BDT                ( name , output )
+            if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBDT ) ] :
+                if hasattr ( ROOT.TMVA , 'BDT' ) : 
+                    if ( 6 , 24 ) <= root_info :
+                        if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDT")
+                        ROOT.TMVA.BDT                ( name , output )
                     ##if hasattr ( ROOT.TMVA , 'BDTControlPlots'    ) :
                     ##    if self.verbose : self.logger.info  ( "Execute macro ROOT.TMVA.BDTControlPlots")
                     ##    ROOT.TMVA.BDTControlPlots    ( name , output )
+                    elif self.verbose :
+                        self.logger.warning ( "Skip    macro ROOT.TMVA.BDT")
+                        
                     
             if [ m for m in self.methods if ( m[0] == ROOT.TMVA.Types.kBoost ) ] : 
                 if hasattr ( ROOT.TMVA , 'BoostControlPlots'  ) :
