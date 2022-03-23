@@ -25,7 +25,7 @@ __all__     = (
     'frame_statCov'      , ## sta tcov for frame 
     ) 
 # =============================================================================
-import ROOT
+import ROOT, math
 # =============================================================================
 from   ostap.core.core        import cpp, Ostap, strings, split_string
 from   ostap.core.meta_info   import root_info 
@@ -149,19 +149,24 @@ def frame_progress ( self          ,
     
     cnt = self.Count () 
     if not isatty() : return cnt
-    
-    length = length if isinstance ( length , integer_types ) and  0 < length else len ( self )
-    width  = width  if isinstance ( width  , integer_types ) and 10 < width  else terminal_size()[1]
-    
-    if width < 16 : width = 16 
-    nchunks = width - 14
-    csize   = max ( int ( length / nchunks ) , 1 ) 
 
-    left   = "[ "
-    right  = " ]"
+    left    = "[ "
+    right   = " ]"
+    
+    minw    = len ( left ) + len ( right ) + 3 + 1 + 1 + 1 
+    length  = length if isinstance ( length , integer_types ) and         0 < length else len ( self )
+    width   = width  if isinstance ( width  , integer_types ) and 10 + minw <= width else terminal_size()[1]
+    
+    width   = max ( 10 , width - minw ) 
+    
+    nchunks = max ( 250 , width + 1 ) 
+    csize , rr = divmod ( length , nchunks ) 
+    if rr : nchunks += 1 
+    
     symbol = allright ( symbol )
 
-    fun = Ostap.Utils.frame_progress ( csize , nchunks , symbol , ' ' , left , right )
+
+    fun = Ostap.Utils.frame_progress ( nchunks , width , symbol , ' ' , left , right )
     cnt.OnPartialResultSlot  ( csize , fun )
 
     return cnt

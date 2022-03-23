@@ -32,10 +32,10 @@ if root_info < (6,16) :
     
 else :
     
-    from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov
+    from ostap.frames.frames   import DataFrame, frame_project, frame_statVar, frame_statCov, frame_progress 
     
     # A simple helper function to fill a test tree
-    def fill_tree ( tname , fname ):
+    def fill_tree ( tname , fname ) :
         
         tdf = DataFrame        ( 1000 )
         a   = tdf.ProgressBar  ( 1000 )
@@ -50,7 +50,6 @@ else :
     fname  = os.path.join ( tmpdir , 'test_frame.root' )
     
     fill_tree ( tname, fname )
-
 
 
 # =============================================================================
@@ -102,6 +101,7 @@ def test_frame0 () :
             
 
 
+# =============================================================================
 def test_frame1 ( ) :
 
     logger = getLogger ( 'test_frame1' ) 
@@ -127,6 +127,7 @@ def test_frame1 ( ) :
         h1.draw ()
         h2.draw ( 'same hist' )
 
+# =============================================================================
 def test_frame2 ( ) :
 
     logger = getLogger ( 'test_frame2' ) 
@@ -142,15 +143,33 @@ def test_frame2 ( ) :
     
     logger.info ('StatTree  :%s' % s1 ) 
     logger.info ('StatFrame :%s' % s2 ) 
+
+# =============================================================================
+def test_frame3 () :
+
+    logger = getLogger ( 'test_frame2' ) 
+    if root_info < ( 6 , 16 ) : 
+        logger.warning ( "Test is disabled for this version of ROOT %s" % str ( root_info ) )
+        return 
+
+    tree   = Tree      ( name = tname , file = fname ).chain
+
+    for i in range ( 5 ) :
         
+        frame = DataFrame ( tname        , fname        )
+        pb    = frame_progress ( frame , len ( tree ) )
+        logger.info ( 'Value: %d %s' % ( i , pb.GetValue() ) ) 
+        
+        
+
+    
 # =============================================================================
 if '__main__' == __name__ :
     
-    test_frame0 () 
-    test_frame1 ()
-    test_frame2 ()
-    
-    pass
+    ## test_frame0 () 
+    ## test_frame1 ()
+    ## test_frame2 ()
+    test_frame3 ()
 
 # =============================================================================
 ##                                                                      The END 

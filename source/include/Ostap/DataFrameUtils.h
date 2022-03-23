@@ -20,9 +20,8 @@ namespace Ostap
   {
     // =======================================================================
     /** helper function to create callable  for drawing of progress bar to the frame 
-     *  @param  chunk   sise of each chunk  (parameter <code>everyN</code> for 
-     *                                       <code>OnPartialResultSlot</code>)
      *  @param  nchunks total number of chunks 
+     *  @param  width   effective bar width (no left, rigtht & percentage)
      *  @param  symbol symbol to use as progress 
      *  @param  blank  blank symbol
      *  @param  left   prefix 
@@ -34,8 +33,8 @@ namespace Ostap
      */
     std::function<void(unsigned int,ULong64_t&)>
     frame_progress
-    ( const unsigned long  chunk          , 
-      const unsigned short nchunks        , 
+    ( const unsigned short nchunks        , 
+      const unsigned short width   =  80  , 
       const std::string&   symbol  = "#"  , 
       const std::string&   blank   = " "  ,
       const std::string&   left    = "[ " ,
