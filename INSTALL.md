@@ -10,7 +10,7 @@ You need to provide ROOTSYS environment for building the package library. The li
 
 After setting the enviroments clone and build ostap package: 
 
-    git clone  git://github.com/OstapHEP/ostap.git
+    git clone https://github.com/OstapHEP/ostap.git
     cd ostap
     mkdir build
     cd build
