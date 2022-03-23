@@ -2,7 +2,6 @@
 
   1. improve progress bar for data frames 
 
-
 ## Backward incompatible:  
  
 ## Bug fixes:
