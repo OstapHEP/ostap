@@ -199,10 +199,12 @@ def test_fourier_sum() :
         logger.warning("No numpy/scipy is avilable, skip the test test")
         return
 
-    with timing ( 'Fourier-sum[10]' , logger ) :
-        params  = [ h.fourier_sum ( 10 ) for h in histos if hasatr ( h , 'fourier_sum' ) ]
 
-    for h , f in zip ( histos , params ) :
+    hh = [ h for h in histos if hasattr ( h , 'fourier_sum' ) ]
+    with timing ( 'Fourier-sum[10]' , logger ) :
+        params  = [ h.fourier_sum ( 10 ) for h in hh ]
+
+    for h , f in zip ( hh , params ) :
         with wait ( 1 ) ,  use_canvas ( 'test_fourier_sum: ' + h.GetTitle() )  :
             h.draw()
             f.draw('same')
@@ -216,10 +218,11 @@ def test_cosine_sum() :
         logger.warning("No numpy/scipy is avilable, skip the test test")
         return
 
+    hh = [ h for h in histos if hasattr ( h , 'cosine_sum' ) ]
     with timing ( 'Cosine-sum[10]' , logger ) :
-        params  = [ h.cosine_sum ( 10 ) for h in histos if hasattr ( h , 'cosine_sum' ) ]
+        params  = [ h.cosine_sum ( 10 ) for h in hh ]
         
-    for h , f in zip ( histos , params ) :
+    for h , f in zip ( hh , params ) :
         with wait ( 1 ) ,  use_canvas ( 'test_cosine_sum: ' + h.GetTitle() )  :
             h.draw()
             f.draw('same')

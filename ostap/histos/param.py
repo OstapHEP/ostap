@@ -134,15 +134,6 @@ __date__    = "2011-06-07"
 __all__     = () ## nothing to import 
 # =============================================================================
 import ROOT, math 
-# =============================================================================
-# logging 
-# =============================================================================
-from ostap.logger.logger    import getLogger 
-if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.param' )
-else                       : logger = getLogger( __name__             )
-# =============================================================================
-logger.debug ( 'Some parameterization utilities for Histo objects')
-# =============================================================================
 from ostap.core.core        import cpp, VE, funID, Ostap
 from ostap.math.param       import ( legendre_sum      ,
                                      chebyshev_sum     ,
@@ -152,7 +143,17 @@ from ostap.math.param       import ( legendre_sum      ,
                                      bernsteineven_sum )
 from ostap.core.ostap_types import integer_types, long_type
 from collections            import namedtuple 
-                        
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger    import getLogger 
+# =============================================================================
+if '__main__' ==  __name__ : logger = getLogger( 'ostap.histos.param' )
+else                       : logger = getLogger( __name__             )
+# =============================================================================
+logger.debug ( 'Some parameterization utilities for Histo objects')
+# =============================================================================
+_new_methods_ = []
 # =============================================================================
 inf_pos =  float('inf') ## positive infinity
 inf_neg = -float('inf') ## negative infinity
@@ -778,10 +779,10 @@ try :
         t.fourier        = _h1_fourier_
         t.cosine         = _h1_cosine_
 
-    _new_methods_ .append ( _h1_fourier_sum_    )
-    _new_methods_ .append ( _h1_cosine_sum_     )
-    _new_methods_ .append ( _h1_fourier         )
-    _new_methods_ .append ( _h1_cosine          )
+    _new_methods_ .append ( _h1_fourier_sum_  )
+    _new_methods_ .append ( _h1_cosine_sum_   )
+    _new_methods_ .append ( _h1_fourier_      )
+    _new_methods_ .append ( _h1_cosine_       )
         
 except ImportError :
     pass
@@ -1607,7 +1608,6 @@ def _h1_concavespline_ ( h1               ,
 
 # =============================================================================
 
-_new_methods_ = []
 # =============================================================================
 ## decorate histograms 
 for t in ( ROOT.TH1D , ROOT.TH1F ) :
