@@ -35,7 +35,8 @@ try :
     from   ostap.math.interpolation import bspline_interpolate
 except ImportError :
     bspline_interpolate = None
-    
+    logger.warning ( "``bspline_interpolate'' is not available" )
+                     
 ## calculate "distance" between two functions 
 def distance ( fun1 , fun2 , low , high ) :
     """calculate ``distance'' between two functions"""
@@ -96,10 +97,11 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
 
-        for d in ( 1 , 3 , 5 , 7  ) :
-            item = ( 'BSpline%dSP' % d , t[0] ) , bspline_interpolate ( t[1], d )
-            interpolants.append ( item )
-
+        if bspline_interpolate : 
+            for d in ( 1 , 3 , 5 , 7  ) :
+                item = ( 'BSpline%dSP' % d , t[0] ) , bspline_interpolate ( t[1], d )
+                interpolants.append ( item )
+            
     for n , t in interpolants :
         functions.add ( ( n , t ) ) 
             

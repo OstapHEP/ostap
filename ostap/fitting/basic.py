@@ -1756,21 +1756,32 @@ class PDF (FUNC) :
         >>>  fun = ...
         >>>  print 'RMS: %s ' % fun.rms()
         """
-        fun  = self.fun 
-        if   hasattr ( fun , 'rms'            ) : return fun.rms()        
-        elif hasattr ( fun , 'Rms'            ) : return fun.Rms()        
-        elif hasattr ( fun , 'RMS'            ) : return fun.RMS()        
+        
+        from ostap.stats.moments import rms      as sp_rms
+        from ostap.stats.moments import variance as sp_variance 
+        
+        fun   = self.fun
+        ftype = type ( fun ) 
+        if   hasattr ( ftype , 'rms' ) and not ftype.rms is sp_rms :
+            return fun.rms()        
+        elif hasattr ( ftype , 'Rms' ) :
+            return fun.Rms()        
+        elif hasattr ( ftype , 'RMS' ) :
+            return fun.RMS()        
         elif self.tricks and hasattr ( fun , 'function' ) :
-            
+
             if   hasattr ( fun , 'setPars'    ) : fun.setPars()
             
-            ff = fun.function()            
-            if   hasattr ( ff , 'rms'        ) : return ff.rms()
-            elif hasattr ( ff , 'variance'   ) : return ff.variance   ()**0.5  
-            elif hasattr ( ff , 'dispersion' ) : return ff.dispersion ()**0.5 
-            
-        from ostap.stats.moments import rms as _rms
-        return  self._get_stat_ ( _rms , **kwargs )
+            ff = fun.function()
+            ftype = type ( ff ) 
+            if   hasattr ( ftype , 'rms'        ) and not ftype.rms        is sp_rms      :
+                return ff.rms()
+            elif hasattr ( ftype , 'variance'   ) and not ftype.variance   is sp_variance :
+                return ff.variance   ()**0.5  
+            elif hasattr ( ftype , 'dispersion' ) and not ftype.dispersion is sp_variance :
+                return ff.dispersion ()**0.5 
+
+        return  self._get_stat_ ( sp_rms , **kwargs )
 
     # =========================================================================
     ## get the effective Skewness
@@ -1781,8 +1792,8 @@ class PDF (FUNC) :
         >>>  print 'SKEWNESS: %s ' % pdf.skewness()
         """
         ## use generic machinery 
-        from ostap.stats.moments import skewness as _skewness
-        return self._get_stat_ ( _skewness , **kwargs )
+        from ostap.stats.moments import skewness as sp_skewness
+        return self._get_stat_ ( sp_skewness , **kwargs )
 
     # =========================================================================
     ## get the effective Kurtosis
@@ -1793,8 +1804,8 @@ class PDF (FUNC) :
         >>>  print 'KURTOSIS: %s ' % pdf.kurtosis()
         """
         ## use generic machinery 
-        from ostap.stats.moments import kurtosis as _kurtosis
-        return self._get_stat_ ( _kurtosis , **kwargs )
+        from ostap.stats.moments import kurtosis as sp_kurtosis
+        return self._get_stat_ ( sp_kurtosis , **kwargs )
 
     # =========================================================================
     ## get the effective median
@@ -1817,7 +1828,7 @@ class PDF (FUNC) :
         """
         from ostap.stats.moments import mean as _mean
         return self._get_stat_ ( _mean , **kwargs )
-    
+
     # =========================================================================
     ## get the effective moment for the distribution
     def moment ( self , N , **kwargs ) :
@@ -1840,6 +1851,89 @@ class PDF (FUNC) :
         """
         from ostap.stats.moments import central_moment as _moment
         return self._get_stat_ ( _moment , N , **kwargs ) 
+
+    # =========================================================================
+    ## get moment using <code>RooAbsPdf::moment</code> method
+    #  @see RooAbsPdf::moment
+    #  @code
+    #  pdf = ...
+    #  v4  = pdf.sroo_moment ( 5 , central = True )
+    #  @endcode
+    def roo_moment ( self , order , central ) :
+        """Get moment using <code>RooAbsPdf::moment</code> method
+        >>> pdf = ...
+        >>> v5  = pdf.sroo_moment ( 5 , central = True )
+        - see `ROOT.RooAbsPdf.moment`
+        """
+        assert isinstance ( order , integer_types ) and 0<= order , \
+               'roo_moment: invalid moment order %s !' % order
+
+        from ostap.logger.utils import rootWarning, roo_silent 
+        with rootWarning() , roo_silent ( True ) : 
+            mom    = self.pdf.moment ( self.xvar , order , central , False  )
+            result = mom.getVal ()
+            del mom
+            return result 
+
+    # =========================================================================
+    ## get mean using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_mean ( self ) :
+        """get mean using RooAbdPdf method
+         -see `ROOT.RooAbdPdf.moment`
+         """
+        return self.roo_moment ( 1 , central = False )
+
+    # =========================================================================
+    ## get variance using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_variance ( self ) :
+        """get variance  using RooAbdPdf method
+         -see `ROOT.RooAbdPdf.moment`
+         """
+        return self.roo_moment ( 2 , central = True )
+
+    # =========================================================================
+    ## get dispersion  using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_dispersion  ( self ) :
+        """get dispersion using RooAbdPdf method
+         -see `ROOT.RooAbdPdf.moment`
+         """
+        return self.roo_variance () 
+
+    # =========================================================================
+    ## get RMS using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_rms ( self ) :
+        """get RMS using RooAbdPdf method
+         -see `ROOT.RooAbdPdf.moment`
+         """
+        v2 = self.roo_variance() 
+        return math.sqrt ( v2 )
+
+    # =========================================================================
+    ## get skewness using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_skewness ( self ) :
+        """get skewness using RooAbdPdf method
+        -see `ROOT.RooAbdPdf.moment`
+        """
+        m2 = self.roo_moment ( 2 , central = True )
+        m3 = self.roo_moment ( 3 , central = True )        
+        return m3/ ( m2 ** ( 3.0 / 2 ) )
+
+    # =========================================================================
+    ## get kurtosis  using RooAbdPdf method
+    #  @see RooAbdPdf::moment 
+    def roo_kurtosis ( self ) :
+        """get kurtosis using RooAbdPdf method
+        -see `ROOT.RooAbdPdf.moment`
+        """
+        m2 = self.roo_moment ( 2 , central = True )
+        m4 = self.roo_moment ( 4 , central = True )    
+        return m4 / ( m2 * m2 ) - 3.0 
+    
 
     # =========================================================================
     ## get the effective quantile 

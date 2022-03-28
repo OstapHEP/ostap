@@ -35,10 +35,12 @@ logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 use_scipy = False 
 try :
+    import numpy 
     import scipy
     use_scipy = True 
 except ImportError :
     use_scipy = False 
+    logger.warning ("Numpy/scipy-dependent are disables!")
     
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
@@ -191,11 +193,14 @@ def test_chebyshev_sum() :
 
 # =============================================================================
 def test_fourier_sum() :
-            
+    
     logger = getLogger("test_fourier_sum")
+    if not use_scipy :
+        logger.warning("No numpy/scipy is avilable, skip the test test")
+        return
 
     with timing ( 'Fourier-sum[10]' , logger ) :
-        params  = [ h.fourier_sum ( 10 ) for h in histos ]
+        params  = [ h.fourier_sum ( 10 ) for h in histos if hasatr ( h , 'fourier_sum' ) ]
 
     for h , f in zip ( histos , params ) :
         with wait ( 1 ) ,  use_canvas ( 'test_fourier_sum: ' + h.GetTitle() )  :
@@ -208,11 +213,11 @@ def test_cosine_sum() :
 
     logger = getLogger("test_cosine_sum")
     if not use_scipy :
-        logger.warning("No scipy is avilable, skip the test test")
+        logger.warning("No numpy/scipy is avilable, skip the test test")
         return
 
     with timing ( 'Cosine-sum[10]' , logger ) :
-        params  = [ h.cosine_sum ( 10 ) for h in histos ]
+        params  = [ h.cosine_sum ( 10 ) for h in histos if hasattr ( h , 'cosine_sum' ) ]
         
     for h , f in zip ( histos , params ) :
         with wait ( 1 ) ,  use_canvas ( 'test_cosine_sum: ' + h.GetTitle() )  :

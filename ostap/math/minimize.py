@@ -51,9 +51,13 @@ try :
 except ImportError :
     class numpy(object) :
         @staticmethod 
-        def abs  ( value ) : return abs ( value ) 
+        def abs  ( value )      : return abs ( value ) 
         @staticmethod 
-        def size ( value ) : return 1 
+        def size ( value )      : return 1 
+        @staticmethod 
+        def sign ( value )      : return math.copysign ( 1.0 , value )
+        @staticmethod
+        def max ( a , *kwargs ) : return max ( a ) 
     import sys 
     _epsilon = sys.float_info.epsilon*0.5
     np =  numpy

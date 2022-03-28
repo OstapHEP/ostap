@@ -510,11 +510,23 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
     - see ROOT.RooAbsData.reduce
     """
 
-    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str(cuts)
     
-    if   isinstance ( vars , ROOT.RooArgSet  ) :
-        return dset.reduce ( vars , cuts )
+    if ( not vars ) and ( not cuts ) : return dset.__class__ ( dset )  ##  return copy 
+    elif not vars : vars = dset.varset()
+    
+    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str(cuts)
+
+    if cuts and isisntane ( cuts , string_types ) : 
+        cuts0 = Ostap.FormulaVar ( cuts , cuts , dset.varlist() , False )            
+        assert cuts0.ok() , 'ds_subset: invalid formula %s' % cuts
+        del cuts0
+        used  = Ostap.usedVariables ( cuts , dset.varlist() )            
+        cuts  = Ostap.FormulaVar    ( cuts , cuts , used , True )
+
+
+    if   isinstance ( vars , ROOT.RooArgSet  ) : return dset.reduce ( vars , cuts )
     elif isinstance ( vars , string_types    ) : vars = [ vars ]
+
     
     aset   = ROOT.RooArgSet()
     varset = dset.get()
@@ -676,11 +688,9 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         cuts0 = cuts 
         if ''   == cuts : cuts0 = 0
         elif isinstance ( cuts , str ) :
-            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )
-            
+            cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )            
             assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
             del cuts0
-            
             used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
             cuts0 = Ostap.FormulaVar    ( cuts , cuts , used , True )
 
@@ -713,10 +723,8 @@ def ds_project  ( dataset , histo , what , cuts = '' , *args ) :
         if   '' == cuts : cuts0 = 0 
         elif isinstance ( cuts , str ) :
             cuts0 = Ostap.FormulaVar ( cuts , cuts , dataset.varlist() , False )
-
             assert cuts0.ok() , 'ds_project: invalid formula %s' % cuts
-            del cuts0
-            
+            del cuts0            
             used  = Ostap.usedVariables ( cuts , dataset.varlist() )            
             cuts0 = Ostap.FormulaVar   ( cuts , cuts , used , True )
             
@@ -1126,11 +1134,9 @@ def _rds_addVar_ ( dataset , vname , formula ) :
 
 
     tmp_name = 'var_%d' % hash ( ( vname , formula ) )    
-    vcom     = Ostap.FormulaVar ( tmp_name , formula , formula , vlst , False )
-    
+    vcom     = Ostap.FormulaVar ( tmp_name , formula , formula , vlst , False )    
     assert vcom.ok() , 'addVar: invalid formula %s' % formula 
-    del vcom
-    
+    del vcom    
     used = Ostap.usedVariables ( formula , vlst )
     vcol = Ostap.FormulaVar ( vname , formula , formula , used , True  )
 
@@ -1602,12 +1608,13 @@ _new_methods_ += [
 
 
 # ==============================================================================
-def _ds_table_0_ ( dataset        ,
-                   variables = [] ,
-                   cuts      = '' ,
-                   first     = 0  ,
+def _ds_table_0_ ( dataset           ,
+                   variables = []    ,
+                   cuts      = ''    ,
+                   first     = 0     ,
                    last      = 2**62 ,
-                   prefix    =  '' ) :
+                   prefix    = ''    ,
+                   title     = ''    ) :
     """Print data set as table
     """
     varset = dataset.get()
@@ -1652,13 +1659,15 @@ def _ds_table_0_ ( dataset        ,
         
 
     tt = dataset.GetTitle()
-    
-    if tt and tt != dataset.GetName() : 
-        title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
-    else :
-        title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )             
 
-    title +=  '%d entries, %d variables' %  ( len ( dataset ) , len ( varset ) )
+    if not title :
+        
+        if  tt and tt != dataset.GetName()  : 
+            title = '%s("%s","%s"):' % ( dataset.__class__.__name__ , dataset.GetName () , tt ) 
+        else :
+            title = '%s("%s"):'      % ( dataset.__class__.__name__ , dataset.GetName () )
+
+        title =  '%s %d entries, %d variables' %  ( title , len ( dataset ) , len ( varset ) )
         
     if not _vars :
         return title , 120 
@@ -1817,12 +1826,12 @@ def _ds_table_0_ ( dataset        ,
 #  dataset = ...
 #  print dataset.table() 
 #  @endcode
-def _ds_table_ (  dataset ,  variables = [] , prefix = '' ) :
+def _ds_table_ (  dataset ,  variables = [] , prefix = '' , title = '' ) :
     """print dataset in a form of the table
     >>> dataset = ...
     >>> print dataset.table()
     """
-    return _ds_table_0_ ( dataset ,  variables , prefix = prefix )[0]
+    return _ds_table_0_ ( dataset ,  variables , prefix = prefix , title = title )[0]
 
 # =============================================================================
 ##  print DataSet
@@ -2049,11 +2058,9 @@ def ds_to_csv ( dataset , fname , vars = () , more_vars = () , weight_var = '' ,
             
             vv = v.strip()
             
-            vvar = Ostap.FormulaVar ( vv , vv , dataset.varlist() , False )
-            
+            vvar = Ostap.FormulaVar ( vv , vv , dataset.varlist() , False )            
             assert vvar.ok() , 'ds_to_csv: invalid formula %s' % v 
-            del vvar 
-            
+            del vvar             
             used = Ostap.usedVariables ( vv , dataset.varlist() )            
             vvar = Ostap.FormulaVar    ( vv , vv , used , True )
             mvars.append ( vvar )

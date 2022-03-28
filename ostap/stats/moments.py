@@ -305,12 +305,12 @@ class Variance(Mean) :
         ## 
         args   = args if args else self.args
         ##
-        n0 = self._moment0_ (     func ,            *args ) ## moment-0
+        n0 = self._moment0_ (     func ,            *args ) ## moment-0, normalization 
         n1 = self._momentK_ ( 1 , func , mu = 0.0 , *args ) ## moment-1 
         ##
-        mu = float(n1/n0)                        ## mean-value 
-        ## central moment 
-        m2 = self._momentK_ ( 2 , func , mu , *args ) 
+        mu = float(n1/n0)                                   ## mean-value        
+        ## central moment
+        m2 = self._momentK_ ( 2 , func , mu , *args )
         ##
         return m2/n0
     
@@ -389,7 +389,7 @@ class Skewness(Variance) :
         ##
         m2 /= n0 ## normalize 
         m3 /= n0 ## normalize
-        ## 
+        ##
         return m3/(m2**(3.0/2))
     
     def __str__ ( self ) :
@@ -987,7 +987,13 @@ class CL_asymm(object) :
     def prob ( self ) :
         "``prop'' - confidence level"
         return self.__prob
-    
+
+
+
+pos_inf = float ( '+Inf' )
+neg_inf = float ( '-Inf' )
+
+
 # =============================================================================
 ## calculate some statistical quantities of variable,
 #  considering function to be PDF 
@@ -997,17 +1003,15 @@ def sp_action ( func , actor , xmin = None , xmax = None , *args , **kwargs ) :
     """Calculate some statistical quantities of variable, considering function to be PDF 
     """
     ##
-    import numpy
-    ##
     if   isinstance  ( xmin , num_types ) : xmn =  float ( xmin            ) 
     elif hasattr     ( func ,'GetXmin'  ) : xmn =  float ( func.GetXmin () )
     elif hasattr     ( func ,'xmin'     ) : xmn =  float ( func.xmin    () ) 
-    else                                  : xmn = -numpy.inf
+    else                                  : xmn =  neg_inf 
     ##
     if   isinstance  ( xmax , num_types ) : xmx =  float ( xmax            )
     elif hasattr     ( func ,'GetXmax'  ) : xmx =  float ( func.GetXmax () ) 
     elif hasattr     ( func ,'xmax'     ) : xmx =  float ( func.xmax    () )
-    else                                  : xmx = +numpy.inf
+    else                                  : xmx =  pos_inf 
     ##
     xmn = float ( xmn ) if isinstance ( xmn , integer_types ) else xmn 
     xmx = float ( xmx ) if isinstance ( xmx , integer_types ) else xmx

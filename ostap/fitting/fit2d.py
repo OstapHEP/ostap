@@ -930,7 +930,16 @@ for _a in (
     'quantile'       , 
     'cl_symm'        , 
     'cl_asymm'       ,
-    'derivative'     ) :
+    'derivative'     ,
+    ##
+    'roo_moment'     , 
+    'roo_mean'       ,
+    'roo_variance'   ,
+    'roo_dispersion' ,
+    'roo_rms'        ,
+    'roo_skewness'   ,
+    'roo_kurtosis'   ,    
+    ) :
 
     if hasattr ( PDF2 , _a ) :
         def _suppress_ ( self , *args , **kwargs ) :

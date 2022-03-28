@@ -51,22 +51,31 @@ logger.info ('DATASET\n%s' % dataset.table ( prefix = "# " ) )
 
 # =============================================================================
 def make_print ( pdf , fitresult , title , logger = logger ) :
-
+    
     title2 ='%s resolution model' % title 
     logger.info ('%-20s : fit result\n%s' % ( title ,
                                               fitresult.table ( title  = title2 ,
                                                                 prefix = '# '   ) ) )
     
-    rows = [ ( 'Parameter' , 'Value') ]
+    rows = [ ( 'Parameter' , 'Value', '(Roo)Value' ) ]
     
-    rows.append ( ( 'mean'       , '%+.6g' % pdf.get_mean  () ) )
-    rows.append ( ( 'mode'       , '%+.6g' % pdf.mode      () ) )
-    rows.append ( ( 'median'     , '%+.6g' % pdf.median    () ) )
-    rows.append ( ( 'mindpoint'  , '%+.6g' % pdf.mid_point () ) )
-    rows.append ( ( 'rms'        , '%+.6g' % pdf.rms       () ) )
-    rows.append ( ( 'FWHM'       , '%+.6g' % pdf.fwhm      () ) )
-    rows.append ( ( 'skewness'   , '%+.6g' % pdf.skewness  () ) )
-    rows.append ( ( 'kurtosis'   , '%+.6g' % pdf.kurtosis  () ) )
+    row = 'mean'       , '%+.6g' % pdf.get_mean  () , '%+.6g' % pdf.roo_mean  ()
+    rows.append ( row )
+    
+    row = 'mode'       , '%+.6g' % pdf.mode      () , ''
+    rows.append ( row )
+    row = 'median'     , '%+.6g' % pdf.median    () , ''
+    rows.append ( row )
+    row = 'midpoint'   , '%+.6g' % pdf.mid_point () , ''
+    rows.append ( row )
+    row = 'rms'        , '%+.6g' % pdf.rms       () , '%+.6g' % pdf.roo_rms  ()
+    rows.append ( row )    
+    row = 'FWHM'       , '%+.6g' % pdf.fwhm      () , ''
+    rows.append ( row )    
+    row = 'skewness'   , '%+.6g' % pdf.skewness  () , '%+.6g' % pdf.roo_skewness  ()
+    rows.append ( row )    
+    row = 'kurtosis'   , '%+.6g' % pdf.kurtosis  () , '%+.6g' % pdf.roo_kurtosis  ()  
+    rows.append ( row )    
 
     table = T.table ( rows , title = title2 ,  prefix = '# ' )
     logger.info ( 'Global features for %s\n%s' % ( title2 , table ) ) 
@@ -78,8 +87,9 @@ models = set()
 # =============================================================================
 ## Single gauss
 # =============================================================================
-def test_gauss () :
-
+## def test_gauss () :
+if 1 < 2 :
+    
     logger = getLogger ( 'test_gauss' )
     
     logger.info ('Test ResoGauss:  single Gaussian resolution model' )
@@ -114,7 +124,7 @@ def test_2gauss () :
                        scale    = ( 1.2 , 1.01 , 5.0   ) )
     
     result, frame = reso. fitTo ( dataset , silent = True )
-    result, frame = reso. fitTo ( dataset , silnet = True )
+    result, frame = reso. fitTo ( dataset , silent = True )
     with wait ( 1 ) , use_canvas ( 'test_2gauss' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -376,13 +386,14 @@ def test_hypatia () :
     logger.info ('Test Hyperbolic: symmetric generalised Hyperbolic resolution model' )
     from   ostap.fitting.resolution import ResoHypatia
     reso = ResoHypatia ( 'Hypatia' , mass ,
-                         sigma = ( 0.1 , 0.01 , 5.0 ) ,
-                         zeta = ( 1.0 , 1.e-5 , 1.e+5 ) ,
-                         lambd = ( -20,20 ) ,
-                         sigma0 = 0.01 ) 
+                         sigma  = ( 0.1 , 0.01 , 5.0 ) ,
+                         zeta   = ( 1.0 , 1.e-5 , 1.e+5 ) ,
+                         lambd  = ( -20,20 ) ,
+                         sigma0 = 0.01 )
     
-    result, frame = reso. fitTo ( dataset , silent = True  )
-    result, frame = reso. fitTo ( dataset , silent = True  )    
+    for i in range ( 6 ) :
+        result, frame = reso. fitTo ( dataset , silent = True  )
+        
     with wait ( 1 ) , use_canvas ( 'test_genhyperbolic' ) : 
         result, frame = reso. fitTo ( dataset , silent = True , draw = True )
         
@@ -477,52 +488,54 @@ def test_db() :
 # =============================================================================
 if '__main__' == __name__ :
 
-    with timing ("Gauss"     , logger ) :  
-        test_gauss      () ## single Gaussian resolution model
+    ## with timing ("Gauss"     , logger ) :  
+    ## test_gauss      () ## single Gaussian resolution model
         
-    with timing ("2-Gauss"   , logger ) :  
-        test_2gauss     () ## double Gaussian resolution model
+    ## with timing ("2-Gauss"   , logger ) :  
+    ##     test_2gauss     () ## double Gaussian resolution model
         
-    with timing ("Apo2"      , logger ) :  
-        test_apo2       () ## symmetric Apollonios resoltuion model
+    ## with timing ("Apo2"      , logger ) :  
+    ##     test_apo2       () ## symmetric Apollonios resoltuion model
         
-    with timing ("CB2"       , logger ) :  
-        test_cb2        () ## double-sided Crystal Ball resoltuion model
+    ## with timing ("CB2"       , logger ) :  
+    ##     test_cb2        () ## double-sided Crystal Ball resoltuion model
         
-    with timing ("Sech"      , logger ) :  
-        test_sech       () ## hyperbolic secant resolution model
+    ## with timing ("Sech"      , logger ) :  
+    ##     test_sech       () ## hyperbolic secant resolution model
 
-    with timing ("Logistic"  , logger ) :  
-        test_logistic   () ## logistic resolution model
+    ## with timing ("Logistic"  , logger ) :  
+    ##     test_logistic   () ## logistic resolution model
         
-    with timing ("Bukin"     , logger ) :  
-        test_bukin      () ## Bukin resolution model
+    ## with timing ("Bukin"     , logger ) :  
+    ##     test_bukin      () ## Bukin resolution model
     
-    with timing ("SinhAsinh" , logger ) :  
-        test_sinhasinh  () ## SinhAsinh resolution model
+    ## with timing ("SinhAsinh" , logger ) :  
+    ##     test_sinhasinh  () ## SinhAsinh resolution model
 
-    with timing ("JohnsonSU" , logger ) :  
-        test_johnsonSU  () ## JohnsonSU resolution model
+    ## with timing ("JohnsonSU" , logger ) :  
+    ##     test_johnsonSU  () ## JohnsonSU resolution model
 
-    with timing ("Hyperbolic" , logger ) :  
-        test_hyperbolic  () ## Hyperbolic resolution model
+    ## with timing ("Hyperbolic" , logger ) :  
+    ##     test_hyperbolic  () ## Hyperbolic resolution model
     
-    with timing ("GenHyperbolic" , logger ) :  
-        test_genhyperbolic  () ## generalised Hyperbolic resolution model
+    ## with timing ("GenHyperbolic" , logger ) :  
+    ##     test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
-    with timing ("Hypatia" , logger ) :  
-        test_hypatia       () ## generalised Hyperbolic resolution model
+    ## with timing ("Hypatia" , logger ) :  
+    ##     test_hypatia       () ## generalised Hyperbolic resolution model
 
-    with timing ("Das"        , logger ) :  
-        test_das          ()   ## Das resolution model
+    ## with timing ("Das"        , logger ) :  
+    ##     test_das          ()   ## Das resolution model
 
-    ## check finally that everything is serializeable:
-    with timing ("Save to DB"    , logger ) :  
-        test_db ()          
+    ## ## check finally that everything is serializeable:
+    ## with timing ("Save to DB"    , logger ) :  
+    ##     test_db ()          
 
-    ## check finally that everything is serializeable:
+    ## prit all models for comparion
     with timing ("Dump models"    , logger ) :  
         dump_models ()           
+
+        
 
 # =============================================================================
 ##                                                                      The END 

@@ -99,13 +99,14 @@ if not _poisson :
         pass
 
 if not _poisson : 
-    logger.dbug ('Use home-made replacement for poisson')
+    logger.debug ('Use home-made replacement for poisson')
     _MAX   = 30.0
     import math
     _sqrt  = math.sqrt
     _exp   = math.exp
-    import ROOT,cppyy 
-    _round = cppyy.gbl.Ostap.Math.round
+    ## _round = cppyy.gbl.Ostap.Math.round
+    from   ostap.math.base import Ostap
+    _round = Ostap.Math.round
     ## hand-made replacement for poisson random number generator  
     def _poisson_ ( self , mu ) :
         mu = float ( mu )

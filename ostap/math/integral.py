@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # =============================================================================
-## @file  ostap/math/integral.py
+## @file  ostath/integral.py
 #  Simple wrapper over scipy integration in a spirit of derivative.py 
 #  - In case scipy is not available, it provides a reasonable replacement
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
@@ -98,8 +98,8 @@ def romberg ( fun                ,
               epsrel   = 1.49e-8 ,
               limit    = 10      , # ignored, kept to mimic consistency with 
               args     = ()      ,
-              nmax     = 8       , # steps in Richardson's extrapolation
-              maxdepth = 20        # the maxmal depth 
+              nmax     = 12      , # steps in Richardson's extrapolation
+              maxdepth = 100       # the maxmal depth 
               ) : 
     """Straw-man replacement of scipy.integrate.quad when it is not available.
     Actually it is a primitive form of Romberg's adaptive integration
@@ -167,7 +167,7 @@ def romberg ( fun                ,
 
         # first check the maximal depth 
         if 0 < maxdepth <= depth :
-            warnings.warn('Romberg integration: maximal depth is reached')
+            ## logger.warning ( 'Romberg integration: maximal depth of %s is reached' % maxdepth )
             return  e, d , depth , nf 
         
         # prepare to split the interval into 2**n subintervals 
@@ -182,7 +182,7 @@ def romberg ( fun                ,
         rr , ee , dd  = 0.0 , 0.0 , 0
 
         # split the region and start recursion: 
-        for i in range( n2 ) :
+        for i in range ( n2 ) :
             
             ai = a  + i*h
             bi = ai +   h
@@ -202,8 +202,8 @@ def romberg ( fun                ,
     
     a  = float ( x0     ) 
     b  = float ( x      ) 
-    ea = float ( epsabs )
-    er = float ( epsrel )
+    ea = float ( epsabs ) * 100 
+    er = float ( epsrel ) * 100 
     
     # the same edges 
     if isequal ( a , b )  :

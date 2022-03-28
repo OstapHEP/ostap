@@ -10,8 +10,8 @@
 # - as even Bernstein/Bezier sum 
 # - as      Chebyshev        sum  
 # - as      Legendre         sum 
-# - as      Fourier          sum 
-# - as      Cosine/Fourier   sum 
+# - as      Fourier          sum (if numpy/scipy available)
+# - as      Cosine/Fourier   sum (if numpy/scipy available) 
 # - as      plain monomal    sum
 # - as positive                           Bernstein/Bezier sum
 # - as positive even                      Bernstein/Bezier sum
@@ -74,8 +74,8 @@
 - as even Bernstein/Bezier sum 
 - as      Chebyshev        sum  
 - as      Legendre         sum 
-- as      Fourier          sum 
-- as      Cosine/Fourier   sum 
+- as      Fourier          sum (if numpy/scipy available)
+- as      Cosine/Fourier   sum (is numpy/scipy available)
 - as      plain monomal    sum
 - as positive                           Bernstein/Bezier sum
 - as positive even                      Bernstein/Bezier sum
@@ -146,8 +146,6 @@ logger.debug ( 'Some parameterization utilities for Histo objects')
 from ostap.core.core        import cpp, VE, funID, Ostap
 from ostap.math.param       import ( legendre_sum      ,
                                      chebyshev_sum     ,
-                                     fourier_sum       ,
-                                     cosine_sum        ,
                                      bezier_sum        ,
                                      bernstein_sum     , 
                                      beziereven_sum    ,
@@ -588,132 +586,205 @@ def _h1_legendre_fast_ ( h1 , degree , xmin = inf_neg , xmax = inf_pos ) :
     
     return func 
         
+
+
+try :
     
-# =============================================================================
-## represent 1D-histo as Fourier polynomial
-#  @code
-#  h = ...                  ## the histogram
-#  b = h.fourier ( 3 )      ## make a fit... 
-# 
-#  tf1        = b[0]        ## TF1 object
-#  obj        = b[1]        ## helper object 
-#  fun        = b[2]        ## underlying normalzed C++ object 
-#  fit_result = b[3]        ## fit result & status
-#  norm       = b[4]        ## normalization
-# 
-#  x = ...
-#  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
-#  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
-#  @endcode 
-def _h1_fourier_ ( h1 ,  
-                   degree           ,
-                   fejer = False    ,
-                   opts   = 'SQ0'   ,
-                   xmin   = inf_neg ,
-                   xmax   = inf_pos ,
-                   fixes  = ()      ,
-                   params = ()      ,
-                   limits = ()      , 
-                   refit  = 1       ) :
-                        
-    """Represent histo as Fourier sum 
+    from ostap.math.param       import fourier_sum 
+    from ostap.math.param       import cosine_sum
     
-    >>> h = ... # the histogram
-    >>> b = h.fourier ( 3 )  ## make a fit... 
+    # =============================================================================
+    ## make a histogram representation in terms of Fourier serie
+    #  @code 
+    #  histo  = ...
+    #  fsum   = histo.fourier_sum ( 4 )
+    #  print fsum
+    #  x = ...
+    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    #  @endcode 
+    #  @see Ostap::Math::FourierSum
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2015-07-26
+    def _h1_fourier_sum_ ( h1 , N , fejer = False , **kwargs ) :
+        """Make a histogram representation in terms of Fourier serie
+        >>> histo  = ...
+        >>> fsum   = histo.fourier_sum ( 4 )
+        >>> print fsum
+        >>> x = ...
+        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+        """
+        ##
+        xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+        xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+        ##
+        return fourier_sum ( h1 , N , xmin , xmax , fejer )
+    
+    # =============================================================================
+    ## make a histogram representation in terms of cosine Fourier serie
+    #  @code 
+    #  histo  = ...
+    #  fsum   = histo.cosine_sum ( 4 )
+    #  print fsum
+    #  x = ...
+    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    #  @endcode 
+    #  @see Ostap::Math::CosineSum
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2015-07-26
+    def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
+        """Make a histogram representation in terms of cosine Fourier serie
+        >>> histo  = ...
+        >>> fsum   = histo.cosine_sum ( 4 )
+        >>> print fsum
+        >>> x = ...
+        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+        """
+        ##
+        xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
+        xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
+        ##
+        return cosine_sum ( h1 , N , xmin , xmax , fejer )
+    
+    # =============================================================================
+    ## represent 1D-histo as Fourier polynomial
+    #  @code
+    #  h = ...                  ## the histogram
+    #  b = h.fourier ( 3 )      ## make a fit... 
+    # 
+    #  tf1        = b[0]        ## TF1 object
+    #  obj        = b[1]        ## helper object 
+    #  fun        = b[2]        ## underlying normalzed C++ object 
+    #  fit_result = b[3]        ## fit result & status
+    #  norm       = b[4]        ## normalization
+    # 
+    #  x = ...
+    #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
+    #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
+    #  @endcode 
+    def _h1_fourier_ ( h1 ,  
+                       degree           ,
+                       fejer = False    ,
+                       opts   = 'SQ0'   ,
+                       xmin   = inf_neg ,
+                       xmax   = inf_pos ,
+                       fixes  = ()      ,
+                       params = ()      ,
+                       limits = ()      , 
+                       refit  = 1       ) :
         
-    >>> tf1        = b[0]    ## TF1 object
-    >>> obj        = b[1]    ## helper object 
-    >>> fun        = b[2]    ## underlying normalzed C++ object 
-    >>> fit_result = b[3]    ## fit result & status
-    >>> norm       = b[4]    ## normalization 
+        """Represent histo as Fourier sum 
+        
+        >>> h = ... # the histogram
+        >>> b = h.fourier ( 3 )  ## make a fit... 
+        
+        >>> tf1        = b[0]    ## TF1 object
+        >>> obj        = b[1]    ## helper object 
+        >>> fun        = b[2]    ## underlying normalzed C++ object 
+        >>> fit_result = b[3]    ## fit result & status
+        >>> norm       = b[4]    ## normalization 
+        
+        >>> x = ...
+        >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
+        >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
+        """
+        #
+        
+        ## make reasonable approximation:
+        xmin = max ( xmin , h1.xmin() ) 
+        xmax = min ( xmax , h1.xmax() )
+        func = fourier_sum ( h1 , degree , xmin , xmax , fejer )
     
-    >>> x = ...
-    >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
-    >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
-    """
-    #
+        ## make a fit 
+        if not params : params = tuple ( [ p for p in func.pars() ] ) 
+        from ostap.fitting.param import H_fit
+        return _h1_param_sum_ ( h1              ,
+                                func            ,
+                                H_fit           ,
+                                opts   = opts   ,
+                                xmin   = xmin   ,
+                                xmax   = xmax   ,
+                                fixes  = fixes  ,
+                                params = params ,
+                                limits = limits ,
+                                refit  = refit  )
+    
+    # =============================================================================
+    ## represent 1D-histo as cosine Fourier polynomial
+    #  @code
+    #  h = ...                  ## the histogram
+    #  b = h.cosine ( 3 )       ## make a fit... 
+    # 
+    #  tf1        = b[0]        ## TF1 object
+    #  obj        = b[1]        ## helper object 
+    #  fun        = b[2]        ## underlying normalzed C++ object 
+    #  fit_result = b[3]        ## fit result & status
+    #  norm       = b[4]        ## normalization
+    # 
+    #  x = ...
+    #  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
+    #  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
+    #  @endcode 
+    def _h1_cosine_ ( h1 ,
+                      degree           ,
+                      fejer = False    ,
+                      opts   = 'SQ0'   ,
+                      xmin   = inf_neg ,
+                      xmax   = inf_pos ,
+                      fixes  = ()      ,
+                      params = ()      ,
+                      limits = ()      ,
+                      refit  = 1       ) :
+        
+        """Represent histo as Cosine Fourier sum 
+        
+        >>> h = ... # the histogram
+        >>> b = h.cosine ( 3 )  ## make a fit... 
+        
+        >>> tf1        = b[0]    ## TF1 object
+        >>> obj        = b[1]    ## helper object 
+        >>> fun        = b[2]    ## underlying normalzed C++ object 
+        >>> fit_result = b[3]    ## fit result & status
+        >>> norm       = b[4]    ## normalization 
+        
+        >>> x = ...
+        >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
+        >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
+        """
+        #
+        
+        ## make reasonable approximation:
+        xmin = max ( xmin , h1.xmin() ) 
+        xmax = min ( xmax , h1.xmax() )  
+        func = cosine_sum ( h1 , degree , xmin , xmax , fejer )
+        
+        ## make a fit 
+        if not params : params = tuple ( [ p for p in func.pars() ] ) 
+        from ostap.fitting.param import H_fit
+        return _h1_param_sum_ ( h1              ,
+                                func            ,
+                                H_fit           ,
+                                opts   = opts   ,
+                                xmin   = xmin   ,
+                                xmax   = xmax   ,
+                                fixes  = fixes  ,
+                                params = params ,
+                                limits = limits , 
+                                refit  = refit  )
 
-    ## make reasonable approximation:
-    xmin = max ( xmin , h1.xmin() ) 
-    xmax = min ( xmax , h1.xmax() )  
-    func = fourier_sum ( h1 , degree , xmin , xmax , fejer )
-    
-    ## make a fit 
-    if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
-    return _h1_param_sum_ ( h1              ,
-                            func            ,
-                            H_fit           ,
-                            opts   = opts   ,
-                            xmin   = xmin   ,
-                            xmax   = xmax   ,
-                            fixes  = fixes  ,
-                            params = params ,
-                            limits = limits ,
-                            refit  = refit  )
+    for t in ( ROOT.TH1F , ROOT.TH1D ) :
+        
+        t.fourier_sum    = _h1_fourier_sum_
+        t.cosine_sum     = _h1_cosine_sum_
+        t.fourier        = _h1_fourier_
+        t.cosine         = _h1_cosine_
 
-# =============================================================================
-## represent 1D-histo as cosine Fourier polynomial
-#  @code
-#  h = ...                  ## the histogram
-#  b = h.cosine ( 3 )       ## make a fit... 
-# 
-#  tf1        = b[0]        ## TF1 object
-#  obj        = b[1]        ## helper object 
-#  fun        = b[2]        ## underlying normalzed C++ object 
-#  fit_result = b[3]        ## fit result & status
-#  norm       = b[4]        ## normalization
-# 
-#  x = ...
-#  print 'TF1(%s) = %s' % ( x , tf1 ( x )        ) 
-#  print 'fun(%s) = %s' % ( x , fun ( x ) * norm )
-#  @endcode 
-def _h1_cosine_ ( h1 ,
-                  degree           ,
-                  fejer = False    ,
-                  opts   = 'SQ0'   ,
-                  xmin   = inf_neg ,
-                  xmax   = inf_pos ,
-                  fixes  = ()      ,
-                  params = ()      ,
-                  limits = ()      ,
-                  refit  = 1       ) :
-    
-    """Represent histo as Cosine Fourier sum 
-    
-    >>> h = ... # the histogram
-    >>> b = h.cosine ( 3 )  ## make a fit... 
-    
-    >>> tf1        = b[0]    ## TF1 object
-    >>> obj        = b[1]    ## helper object 
-    >>> fun        = b[2]    ## underlying normalzed C++ object 
-    >>> fit_result = b[3]    ## fit result & status
-    >>> norm       = b[4]    ## normalization 
-    
-    >>> x = ...
-    >>> print 'TF1(%s) = %s' % ( x ,        tf1 ( x ) ) 
-    >>> print 'FUN(%s) = %s' % ( x , norm * fun ( x ) ) 
-    """
-    #
-
-    ## make reasonable approximation:
-    xmin = max ( xmin , h1.xmin() ) 
-    xmax = min ( xmax , h1.xmax() )  
-    func = cosine_sum ( h1 , degree , xmin , xmax , fejer )
-
-    ## make a fit 
-    if not params : params = tuple ( [ p for p in func.pars() ] ) 
-    from ostap.fitting.param import H_fit
-    return _h1_param_sum_ ( h1              ,
-                            func            ,
-                            H_fit           ,
-                            opts   = opts   ,
-                            xmin   = xmin   ,
-                            xmax   = xmax   ,
-                            fixes  = fixes  ,
-                            params = params ,
-                            limits = limits , 
-                            refit  = refit  )
+    _new_methods_ .append ( _h1_fourier_sum_    )
+    _new_methods_ .append ( _h1_cosine_sum_     )
+    _new_methods_ .append ( _h1_fourier         )
+    _new_methods_ .append ( _h1_cosine          )
+        
+except ImportError :
+    pass
 
 # =============================================================================
 ## represent 1D-histo as plain vanilla polynomial
@@ -1546,8 +1617,6 @@ for t in ( ROOT.TH1D , ROOT.TH1F ) :
     t.beziereven     = _h1_bernsteineven_ ## ditto 
     t.chebyshev      = _h1_chebyshev_
     t.legendre       = _h1_legendre_
-    t.fourier        = _h1_fourier_
-    t.cosine         = _h1_cosine_
     t.polynomial     = _h1_polinomial_
     t.positive       = _h1_positive_
     t.positiveeven   = _h1_positiveeven_
@@ -1570,7 +1639,6 @@ _new_methods_ += [
     _h1_bernsteineven_ ,
     _h1_chebyshev_     ,
     _h1_legendre_      ,
-    _h1_fourier_       ,
     _h1_polinomial_    ,
     _h1_positive_      ,
     _h1_positiveeven_  ,
@@ -2267,57 +2335,6 @@ def _h1_chebyshev_sum_ ( h1 , N , **kwargs ) :
     ##
     return chebyshev_sum ( h1 , N , xmin , xmax )
 
-# =============================================================================
-## make a histogram representation in terms of Fourier serie
-#  @code 
-#  histo  = ...
-#  fsum   = histo.fourier_sum ( 4 )
-#  print fsum
-#  x = ...
-#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-#  @endcode 
-#  @see Ostap::Math::FourierSum
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2015-07-26
-def _h1_fourier_sum_ ( h1 , N , fejer = False , **kwargs ) :
-    """Make a histogram representation in terms of Fourier serie
-    >>> histo  = ...
-    >>> fsum   = histo.fourier_sum ( 4 )
-    >>> print fsum
-    >>> x = ...
-    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    """
-    ##
-    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
-    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
-    ##
-    return fourier_sum ( h1 , N , xmin , xmax , fejer )
-
-# =============================================================================
-## make a histogram representation in terms of cosine Fourier serie
-#  @code 
-#  histo  = ...
-#  fsum   = histo.cosine_sum ( 4 )
-#  print fsum
-#  x = ...
-#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-#  @endcode 
-#  @see Ostap::Math::CosineSum
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2015-07-26
-def _h1_cosine_sum_ ( h1 , N , fejer = False , **kwargs ) :
-    """Make a histogram representation in terms of cosine Fourier serie
-    >>> histo  = ...
-    >>> fsum   = histo.cosine_sum ( 4 )
-    >>> print fsum
-    >>> x = ...
-    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    """
-    ##
-    xmin = max ( kwargs.get( 'xmin' , h1.xmin() ) , h1.xmin () ) 
-    xmax = min ( kwargs.get( 'xmax' , h1.xmax() ) , h1.xmax () ) 
-    ##
-    return cosine_sum ( h1 , N , xmin , xmax , fejer )
 
 # =============================================================================
 ## make a histogram representation in terms of Bezier(Bernstein) sum
@@ -2388,8 +2405,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
 
     h.legendre_sum      = _h1_legendre_sum_
     h.chebyshev_sum     = _h1_chebyshev_sum_
-    h.fourier_sum       = _h1_fourier_sum_
-    h.cosine_sum        = _h1_cosine_sum_
     h.bezier_sum        = _h1_bezier_sum_
     h.bernstein_sum     = _h1_bezier_sum_
     h.beziereven_sum    = _h1_beziereven_sum_
@@ -2397,8 +2412,6 @@ for h in ( ROOT.TH1F , ROOT.TH1D ) :
     
 _new_methods_ .append ( _h1_legendre_sum_   )
 _new_methods_ .append ( _h1_chebyshev_sum_  )
-_new_methods_ .append ( _h1_fourier_sum_    )
-_new_methods_ .append ( _h1_cosine_sum_     )
 _new_methods_ .append ( _h1_bezier_sum_     )
 _new_methods_ .append ( _h1_beziereven_sum_ )
 

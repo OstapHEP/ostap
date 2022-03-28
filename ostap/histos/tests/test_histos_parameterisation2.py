@@ -34,10 +34,13 @@ else :
 logger.info ( 'Test for histogram parameterisation')
 # =============================================================================
 try :
+    import numpy 
     import scipy
+    use_scipy = True 
 except ImportError :
-    scipy = None 
-    
+    use_scipy = False 
+    logger.warning ("Numpy/scipy-dependent are disables!")
+
 # =============================================================================
 from ostap.histos.param import legendre_sum, chebyshev_sum
 from ostap.core.core    import hID, fID 
@@ -289,10 +292,15 @@ def test_convex_poly () :
 def test_fourier () :
     
     logger =   getLogger("test_fourier")
+    
+    if not use_scipy :
+        logger.warning("No numpy/scipy is avilable, skip 'fourier' test")
+        return
+
     with timing ( 'Fourier [4]' , logger ) :
         params = [ h5.fourier ( 4 ) , 
                    h6.fourier ( 6 ) ] 
-
+        
     for h , f in zip  ( ( h5 , h6 ) , params ) :
         with wait ( 2 ) , use_canvas ( 'test_fourier: %s' % h.GetTitle () ) : 
             h    .draw  ()
@@ -303,8 +311,8 @@ def test_fourier () :
 def test_cosine() :
     
     logger =   getLogger("test_cosine")
-    if not scipy :
-        logger.warning("No scipy is avilable, skip 'cosine' test")
+    if not use_scipy :
+        logger.warning("No numpy/scipy is avilable, skip 'cosine' test")
         return
     
     with timing ( 'Cosine [4]' , logger ) :

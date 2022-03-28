@@ -53,14 +53,14 @@ tag_mc     = 'MC2_tree'
 
 import ostap.parallel.kisa
 
-N1 = 1000000
-N2 = 200000
+N1   = 1000000
+N2   = 200000
 
-N1 = 100000
-N2 = 10000
+N1   = 100000
+N2   = 10000
 
-xmax     = 20.0
-ymax     = 15.0 
+xmax = 20.0
+ymax = 15.0 
 
 def prepare_data ( ) : 
     #
@@ -226,32 +226,38 @@ def prepare_data ( ) :
         mctree.Write()
         mc_file.ls()
 
-if not os.path.exists( testdata ) :
-    with timing ( "Prepare input data" , logger = logger ) :
-        prepare_data ()
 
 # =============================================================================
-## Input data/mc samples 
-# =============================================================================
-data = Data ( 'DATA_tree' , testdata )
-mc   = Data ( tag_mc      , testdata ) 
-
-ddata , wdata = data.chain.slice ( 'x y' , transpose = True )
-dmc   , wmc   = mc  .chain.slice ( 'x y' , transpose = True )
+def test_gbreweight() :
 
 
-try :
+    logger = getLogger("test_gbreweight")
     
-    from ostap.tools.reweighter import Reweighter
-    rw = Reweighter ()
+    try :
+        
+        from ostap.tools.reweighter import Reweighter
+        rw = Reweighter ()
+        
+    except ImportError :
     
-except ImportError :
-    rw = None
-    logger.error ('GBReweighter is not available!')
+        logger.error ('GBReweighter is not available!')
+        return 
 
+
+    if not os.path.exists( testdata ) :
+        with timing ( "Prepare input data" , logger = logger ) :
+            prepare_data ()
+            
+    # =========================================================================
+    ## Input data/mc samples 
+    # =========================================================================
+    data = Data ( 'DATA_tree' , testdata )
+    mc   = Data ( tag_mc      , testdata ) 
     
-if rw :
+    ddata , wdata = data.chain.slice ( 'x y' , transpose = True )
+    dmc   , wmc   = mc  .chain.slice ( 'x y' , transpose = True )
 
+        
     ## train BDT
     rw.reweight ( original = dmc , target = ddata ) 
     
@@ -294,9 +300,12 @@ if rw :
         
         time.sleep ( 2 ) 
         
-                     
+# =============================================================================
+if '__main__' == __name__ :
+    
 
-
+    test_gbreweight() 
+    
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

@@ -73,7 +73,8 @@ def test_legendre_sum () :
     logger.info ( 'Represent the function as Legendre sum')
 
     
-    func = lambda x : math.sin ( x ) / x 
+    func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
+
     xmin = 0
     xmax = 2 * math.pi 
 
@@ -92,7 +93,8 @@ def test_chebyshev_sum () :
     logger.info ( 'Represent the function as Chebyshev sum')
 
     
-    func = lambda x : math.sin ( x ) / x 
+    func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
+
     xmin = 0
     xmax = 2 * math.pi 
 
@@ -111,14 +113,18 @@ def test_fourier_sum () :
     logger = getLogger('test_fourier_sum')
     logger.info ( 'Represent the function as Fourier sum')
 
+
+    func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
     
-    func = lambda x : math.sin ( x ) / x if 0 < x else 1.0 
     xmin = 0 
     xmax = 2 * math.pi 
 
-    from ostap.math.param import fourier_sum
+    try :
+        from ostap.math.param import fourier_sum
+    except ImportError :
+        logger.error ("Can't import fourier_sum!")
+        return 
 
-    
     with wait ( 3 ) , use_canvas ( 'test_fourier_sum' ) , timing ( logger = logger ) :
         make_test ( func , xmin , xmax , fourier_sum , range ( 1 , 11 ) , logger )
 
@@ -130,11 +136,16 @@ def test_cosine_sum () :
     logger = getLogger('test_cosine_sum')
     logger.info ( 'Represent the function as a sum of cosine functions')
     
-    func = lambda x : math.sin ( x ) / x if 0 < x else 1.0 
+    func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
+
     xmin = 0 
     xmax = 2 * math.pi 
 
-    from ostap.math.param import cosine_sum
+    try :        
+        from ostap.math.param import cosine_sum
+    except ImportError :
+        logger.error ("Can't import cosine_sum!")
+        return 
 
     
     with wait ( 3 ) , use_canvas ( 'test_cosine_sum' ) , timing ( logger = logger ) :
@@ -149,7 +160,8 @@ def test_bernstein_sum () :
     logger.info ( 'Represent the function as a sum of Bernstein polynomials')
 
     
-    func = lambda x : math.sin ( x ) / x if 0 < x else 1.0 
+    func = lambda x : 1.0 if abs(x)<1.e-6  else math.sin(x)/x 
+
     xmin = 0 
     xmax = 2 * math.pi 
 

@@ -51,61 +51,57 @@ def test_models ():
     cnt2 = SE()  
     cnt3 = SE()  
     for f in funcs :
-        ## print f.xmin() , f.xmax() , f.ymin() , f.ymax(), type(f)
-        for i in range(f.npars() ) :
+        for i in range ( f.npars () ) :
             f.setPar( i, random.uniform ( 1 , 5 ) )
             if hasattr  ( f , 'setTau'  ) : f.setTau  ( random.uniform ( -2  , 2  ) )
             if hasattr  ( f , 'setTauX' ) : f.setTauX ( random.uniform ( -2  , 2  ) )
             if hasattr  ( f , 'setTauY' ) : f.setTauY ( random.uniform ( -2  , 2  ) )
             
-    for i in range(0,1000) :
+    for i in range(0,100) :
         
         if 0 == i:
-            x1,x2,y1,y2 = xmin,xmax,ymin,ymax
+            
+            x1, x2, y1, y2 = xmin, xmax, ymin, ymax
+            
         else :
-            x1 = random.uniform ( xmin , xmax/2  )
-            x2 = random.uniform ( x1   , xmax    )
-            y1 = random.uniform ( ymin , ymax/2  )
-            y2 = random.uniform ( y1   , ymax    )
+            
+            x1 = random.uniform ( xmin , xmax / 2  )
+            x2 = random.uniform ( x1   , xmax      )
+            y1 = random.uniform ( ymin , ymax / 2  )
+            y2 = random.uniform ( y1   , ymax      )
             
         for f in funcs :
             
             i1 = f.integral (       x1 , x2 , y1 , y2 )
             i2 = integral2  ( f   , x1 , x2 , y1 , y2 )
-            r1 = (i1-i2)/(abs(i1)+abs(i2))
-            assert  abs(r1) < 1.e-5 , 'I2:ERROR: difference is too large: %s (%.2f,%.2f,%.2f,%.2f) %s' % ( r1 , x1 , x2  , y1 , y2 , type(f) )  
+            
+            r1 = ( i1 - i2 ) / ( abs ( i1 ) + abs ( i2 ) )
+            if 1.e-5 < abs ( r1 ) : logger.error ( 'I2:ERROR: difference is too large: %.6g (%.4g,%.4g,%.4g,%.4g) %s' % ( r1 , x1 , x2 , y1 , y2 , type(f) )  )
             cnt1 += r1
-
-            ym = 0.5 * (  y1 + y2 )
             
-            i1 = f.integrateX ( ym , x1 , x2 )
-            
-            IX = Integrate2D_X ( f , x1 , x2 )
+            ym = 0.5 * (  y1 + y2 )            
+            i1 = f.integrateX  ( ym , x1 , x2 )            
+            IX = Integrate2D_X ( f  , x1 , x2 )
             i2 = IX( ym )
 
-            r2 = (i1-i2)/(abs(i1)+abs(i2))
-            assert  abs(r2) < 1.e-5 , 'IX:ERROR: difference is too large: %s (%.2f,%.2f,%.2f) %s' % ( r1 , x1 , x2  , ym , type(f) )  
+            r2 = ( i1 - i2 ) / ( abs ( i1 ) + abs ( i2 ) )
+            if 1.e-5 < abs ( r2 ) : logger.error ( 'IX:ERROR: difference is too large: %.6g (%.4g,%.4g,%.4g,%.4g) %s' % ( r2 , x1 , x2 , y1 , y2  , type(f) )  )
             cnt2 += r2
 
             xm = 0.5 * (  x1 + x2 )
             
-            i1 = f.integrateY ( xm , y1 , y2 )
-            
-            IY = Integrate2D_Y ( f , y1 , y2 )
-            i2 = IY( xm )
+            i1 = f.integrateY  ( xm , y1 , y2 )            
+            IY = Integrate2D_Y ( f  , y1 , y2 )
+            i2 = IY ( xm )
 
-            r3 = (i1-i2)/(abs(i1)+abs(i2))
-            assert  abs(r3) < 1.e-5 , 'IY:ERROR: difference is too large: %s (%.2f,%.2f,%.2f) %s' % ( r1 , y1 , y2  , xm , type(f) )  
+            r3 = ( i1 - i2 ) / ( abs ( i1 ) + abs ( i2 ) )
+            if 1.e-5 < abs ( r3 ) : logger.error ( 'IY:ERROR: difference is too large: %.6g (%.4g,%.4g,%.4g,%.4g) %s' % ( r3 , x1 , x2 , y1 , y2  , type(f) )  )
             cnt3 += r3
 
-
-            
-            
-            
-    print ( 'COUNTER(I2):' , cnt1 )
-    print ( 'COUNTER(IX):' , cnt2 )
-    print ( 'COUNTER(IY):' , cnt3 )
-            
+    logger.info ( 'Counter(I2) %s' % cnt1 )
+    logger.info ( 'Counter(IX) %s' % cnt2 )
+    logger.info ( 'Counter(IY) %s' % cnt3 )
+    
 # =============================================================================
 if '__main__' == __name__ :
         
@@ -113,5 +109,5 @@ if '__main__' == __name__ :
 
     
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================

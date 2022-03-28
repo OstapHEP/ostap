@@ -36,6 +36,9 @@ else                       : logger = getLogger ( __name__             )
 # ============================================================================= 
 def test_moments1() :
     #
+
+    logger = getLogger("tests_moments1")
+    
     import math
     mean_ = Mean     (0, math.pi)
     logger.info ( 'sin@[0,pi]                mean: %s ' % mean_ (math.sin) ) 
@@ -67,13 +70,13 @@ def test_moments1() :
     from math import exp 
     gau = lambda x : exp(-0.5*x*x)
 
-    logger.info ( 'Skewness(gauss,-10,10) %s ' % skewness ( gau  , -10 , 10 ) ) 
-    logger.info ( 'Kurtosis(gauss,-10,10) %s ' % kurtosis ( gau  , -10 , 10 ) )
+    logger.info ( 'Skewness(gauss,-5,5) %s ' % skewness ( gau  , -5 , 5 ) ) 
+    logger.info ( 'Kurtosis(gauss,-5,5) %s ' % kurtosis ( gau  , -5 , 5 ) )
 
-    gau1 = lambda x : exp(-0.5*x*x) if x > 0 else 0
+    gau1 = lambda x : exp(-0.5*x*x) if x > 0 else exp(-0.5*x*x*16)
 
-    logger.info ( 'Skewness(agau ,-10,10) %s ' % skewness ( gau1 , -10 , 10 ) ) 
-    logger.info ( 'Kurtosis(agau ,-10,10) %s ' % kurtosis ( gau1 , -10 , 10 ) ) 
+    logger.info ( 'Skewness(agau ,-5,5) %s ' % skewness ( gau1 , -5 , 5 ) ) 
+    logger.info ( 'Kurtosis(agau ,-5,5) %s ' % kurtosis ( gau1 , -5 , 5 ) ) 
 
     logger.info ( 80*'*' ) 
 
@@ -82,6 +85,8 @@ def test_moments1() :
 def test_moments2 () :
     #
     import math
+
+    logger = getLogger("tests_moments2")
 
     try :
         from scipy.optimize import brentq

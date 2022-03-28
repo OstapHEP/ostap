@@ -70,8 +70,6 @@ __all__     = (
     ## several stand-alone function for parameteriztaion of of functions 
     'legendre_sum'      , ## Legendre         sum for the given function/object 
     'chebyshev_sum'     , ## Chebyshev        sum for the given function/object
-    'fourier_sum'       , ## Fourier          sum for the given function/object
-    'cosine_sum'        , ## Cosine Fourier   sum for the given function/object 
     'bezier_sum'        , ## Bezier/Bernstein sum for the given function/object
     'bernstein_sum'     , ## - ditto -
     'beziereven_sum'    , ## even Bezier/Bernstein sum for the given function/object
@@ -240,120 +238,127 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 
-# =============================================================================
-## make a function representation in terms of Fourier series
-#  @code 
-#  func = lambda x : x * x
-#  fsum = fourier_sum ( func , 4 , -1 , 1 )
-#  print fsum
-#  x = ...
-#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-#  @endcode 
-#  @see Gaudi::Math::FourierSum
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2015-07-26
-def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
-    """Make a function/histiogram representation in terms of Fourier series
-    >>> func = lambda x : x * x
-    >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
-    >>> print fsum
-    >>> x = ...
-    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    """
-    assert is_integer ( N ) and 0 <= N , "fourier_sum: invalid N %s " % N 
+try :
 
-    xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
-
-    ## start to play with numpy 
     import numpy
     
-    ## 1) vectorize the function
-    vfunc = numpy.vectorize ( func ) 
-    
-    ## prepare sampling 
-    f_sample = 2 * N
-    t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
-
-    ## make Fast Fourier Transform 
-    y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
-    y *= 2.0 / t.size
-    
-    #
-    ## decode the results:
-    #
-    
-    a0 = y[0].real
-    a  = y[1:-1].real
-    b  = y[1:-1].imag
-
-    #
-    ## prepare the output
-    #
-    fsum = Ostap.Math.FourierSum ( N, xmin , xmax , fejer )
-
-    #
-    ## fill it!
-    #
-    fsum.setPar( 0, a0 )
-    for i in range ( 1 , N + 1 ) :
+    # =============================================================================
+    ## make a function representation in terms of Fourier series
+    #  @code 
+    #  func = lambda x : x * x
+    #  fsum = fourier_sum ( func , 4 , -1 , 1 )
+    #  print fsum
+    #  x = ...
+    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+    #  @endcode 
+    #  @see Gaudi::Math::FourierSum
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2015-07-26
+    def fourier_sum ( func , N , xmin , xmax , fejer = False ) :
+        """Make a function/histiogram representation in terms of Fourier series
+        >>> func = lambda x : x * x
+        >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
+        >>> print fsum
+        >>> x = ...
+        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+        """
+        assert is_integer ( N ) and 0 <= N , "fourier_sum: invalid N %s " % N 
         
-        if 0 == i % 2 :
-            fsum.setA ( i ,  a[i-1] )
-            fsum.setB ( i , -b[i-1] )
-        else          :
-            fsum.setA ( i , -a[i-1] )
-            fsum.setB ( i ,  b[i-1] )
+        xmin , xmax = _get_xminmax_ ( func , xmin , xmax , 'fourier_sum' )
+        
+        
+        ## 1) vectorize the function
+        vfunc = numpy.vectorize ( func ) 
+        
+        ## prepare sampling 
+        f_sample = 2 * N
+        t, dt    = numpy.linspace ( xmin , xmax , f_sample + 2, endpoint=False , retstep=True )
+        
+        ## make Fast Fourier Transform 
+        y  = numpy.fft.rfft ( vfunc ( t ) ) ## / t.size
+        y *= 2.0 / t.size
+        
+        #
+        ## decode the results:
+        #
+        
+        a0 = y[0].real
+        a  = y[1:-1].real
+        b  = y[1:-1].imag
+        
+        #
+        ## prepare the output
+        #
+        fsum = Ostap.Math.FourierSum ( N, xmin , xmax , fejer )
+        
+        #
+        ## fill it!
+        #
+        fsum.setPar( 0, a0 )
+        for i in range ( 1 , N + 1 ) :
+            
+            if 0 == i % 2 :
+                fsum.setA ( i ,  a[i-1] )
+                fsum.setB ( i , -b[i-1] )
+            else          :
+                fsum.setA ( i , -a[i-1] )
+                fsum.setB ( i ,  b[i-1] )
+                
+        return fsum
+
+    # =============================================================================
+    ## make a function representation in terms of cosine Fourier series
+    #  @code 
+    #  func = lambda x : x * x
+    #  fsum = cosine_sum ( func , 4 , -1 , 1 )
+    #  print fsum.pars()
+    #  x = ...
+    #  print 'FUN(%s) = %s ' % ( x , fsum ( x ) )
+    #  @endcode 
+    #  @see Gaudi::Math::CosineSum
+    #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
+    #  @date 2015-07-26
+    def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
+        """Make a function/histiogram representation in terms of Fourier series
+        >>> func = lambda x : x * x
+        >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
+        >>> print fsum
+        >>> x = ...
+        >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
+        """
+        assert is_integer ( N ) and 0 <= N , "cosine_sum: invalid N %s " % N 
+        
+        xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
+
+        
+        ## 1) prepare sampling
+        t     = numpy.linspace ( xmin , xmax , N + 1 , endpoint=True )
+        
+        ## 2) vectorize the function
+        vfunc = numpy.vectorize ( lambda x : float ( func ( x ) ) )
+        
+        ## make cosine fourier transform 
+        import scipy.fftpack 
+        r = scipy.fftpack.dct ( vfunc ( t ) , 1 ) / N 
+        
+        #
+        ## decode the results & prepare the output
+        #
+        csum = Ostap.Math.CosineSum ( N, xmin , xmax , fejer )
+        for i in range ( 0 , N + 1 ) : csum.setPar ( i , r[i] )
+        
+        return csum
     
-    return fsum
+    __all__ = __all__ + (
+        'fourier_sum' , ## Fourier        sum for the given function/object
+        'cosine_sum'    ## Cosine Fourier sum for the given function/object 
+        )
+
+except ImportError :
+    pass
 
 # =============================================================================
-## make a function representation in terms of cosine Fourier series
-#  @code 
-#  func = lambda x : x * x
-#  fsum = cosine_sum ( func , 4 , -1 , 1 )
-#  print fsum.pars()
-#  x = ...
-#  print 'FUN(%s) = %s ' % ( x , fsum ( x ) )
-#  @endcode 
-#  @see Gaudi::Math::CosineSum
-#  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-#  @date 2015-07-26
-def cosine_sum ( func , N , xmin , xmax , fejer = False ) :
-    """Make a function/histiogram representation in terms of Fourier series
-    >>> func = lambda x : x * x
-    >>> fsum = fourier_sum ( func , 4 , -1 , 1 )
-    >>> print fsum
-    >>> x = ...
-    >>> print 'FUN(%s) = %s ' % ( x , fsum ( x ) ) 
-    """
-    assert is_integer ( N ) and 0 <= N , "cosine_sum: invalid N %s " % N 
-
-    xmin,xmax = _get_xminmax_ ( func , xmin , xmax , 'cosine_sum' )
-
-    ## start to play with numpy 
-    import numpy
-    
-    ## 1) prepare sampling
-    t     = numpy.linspace ( xmin , xmax , N + 1 , endpoint=True )
-
-    ## 2) vectorize the function
-    vfunc = numpy.vectorize ( lambda x : float ( func ( x ) ) )
-
-    ## make cosine fourier transform 
-    import scipy.fftpack 
-    r = scipy.fftpack.dct ( vfunc ( t ) , 1 ) / N 
-    
-    #
-    ## decode the results & prepare the output
-    #
-    csum = Ostap.Math.CosineSum ( N, xmin , xmax , fejer )
-    for i in range ( 0 , N + 1 ) : csum.setPar ( i , r[i] )
-
-    ##
-    return csum
-
-# =============================================================================
-## BernsteinDualBasis 
+## BernsteinDualBasis
 _bernstein_dual_basis_ = {}
 # =============================================================================
 ## make a function representation in terms of Bezier sum

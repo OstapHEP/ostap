@@ -1839,7 +1839,7 @@ def _chain_add_new_branch_array ( chain           ,
 # =============================================================================
 try : 
     import numpy, ctypes  
-except ImportErorr :
+except ImportError :
     numpy = None
     
 # ==============================================================================
