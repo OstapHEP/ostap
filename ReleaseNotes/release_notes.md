@@ -8,7 +8,6 @@
 
   1.  minor bug fixes for ``no-numpy'' regime 
 
-
 # v1.7.1.0
 
 ## New features: 
