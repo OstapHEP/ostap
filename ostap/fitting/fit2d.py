@@ -29,6 +29,7 @@ __all__     = (
 # =============================================================================
 import ROOT, random 
 from   builtins               import range
+from   ostap.core.meta_info   import root_info 
 from   ostap.core.core        import dsID , VE , Ostap, hID , iszero, valid_pointer
 from   ostap.core.ostap_types import integer_types, num_types, list_types, iterable_types   
 from   ostap.fitting.roofit   import SETVAR
@@ -296,7 +297,7 @@ class PDF2 (PDF,FUNC2) :
    #         in_range = in_range ,
         
         if in_range :
-            options_cut     =tuple ( [ ROOT.RooFit.CutRange        ( in_range ),])
+            options_cut =tuple ( [ ROOT.RooFit.CutRange ( in_range ) , ] )
             newargs [ 'data_options' ] = self.draw_option ( 'data_options' , **newargs ) + options_cut
             
         if in_range : 
@@ -318,7 +319,25 @@ class PDF2 (PDF,FUNC2) :
         ## redefine the drawing variable:
         # 
         self.draw_var = drawvar
-        
+        ##
+        if in_range and root_info < ( 6 , 24 ) :
+            from itertools import chain 
+            for p in chain ( self.signals               ,
+                             self.backgrounds           ,
+                             self.components            ,
+                             self.crossterms1           ,
+                             self.crossterms2           ,
+                             self.combined_signals      ,
+                             self.combined_backgrounds  ,
+                             self.combined_components   ) :
+                
+                if   isinstance ( p , ( ROOT.RooHistPdf , ROOT.RooParamHistFunc ) ) :
+                    self.warning ("``in_range'' is specified, it does not work properly for ROOT<6.24")
+                elif isinstance ( p , ( ROOT.RooAddPdf , ROOT.RooProdPdf ) ) : 
+                    for pp in p.pdfList() :
+                        if isinstance  ( pp , ( ROOT.RooHistPdf , ROOT.RooParamHistFunc ) ) :
+                            self.warning ("``in_range'' is specified, it does not work properly for ROOT<6.24")
+                            
         #
         ## delegate the actual drawing to the base class
         #

@@ -1,7 +1,8 @@
 ## New features: 
 
   1. improve progress bar for data frames 
-
+  1. add warning message for drawing in ranegs for the  `RooHistPdf` with ROOT<6.24 
+  
 ## Backward incompatible:  
  
 ## Bug fixes:
