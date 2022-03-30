@@ -693,7 +693,7 @@ class PDF (FUNC) :
                 
             used_options.add ( 'draw_combined_component'    ) 
             used_options.add ( 'combined_component_options' ) 
-            used_options.add ( 'combined_componnet_style  ' )
+            used_options.add ( 'combined_component_style'   )
             
             ## draw ``signal'' components
             soptions     = self.draw_option (    'signal_options'  , **kwargs )
