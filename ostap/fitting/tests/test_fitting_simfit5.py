@@ -1,0 +1,226 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# =============================================================================
+# Copyright (c) Ostap developers.
+# ============================================================================= 
+# @file ostap/fitting/tests/test_fitting_simfit5.py
+# Test module for ostap/fitting/simfit.py
+# - It tests the most simple "Simultaneous fit"
+# ============================================================================= 
+""" Test module for ostap/fitting/simfit.py
+- It tests the most simple ``Simultaneous fit''
+"""
+# ============================================================================= 
+__author__ = "Ostap developers"
+__all__    = () ## nothing to import
+# ============================================================================= 
+import ROOT, random
+import ostap.fitting.roofit 
+import ostap.fitting.models     as     Models 
+from   builtins                 import range 
+from   ostap.core.core          import dsID
+from   ostap.utils.timing       import timing 
+from   ostap.logger.utils       import rooSilent
+from   ostap.plotting.canvas    import use_canvas
+from   ostap.utils.utils        import wait
+from   ostap.fitting.simfit     import combined_data
+from   ostap.fitting.utils      import H1D_dset 
+# =============================================================================
+# logging 
+# =============================================================================
+from ostap.logger.logger import getLogger
+if '__main__' == __name__  or '__builtin__' == __name__ : 
+    logger = getLogger ( 'test_fitting_simfit5' )
+else : 
+    logger = getLogger ( __name__ )
+# =============================================================================
+## make simple test mass 
+mass     = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass' ,  0 , 10 )
+## and three mass-differences 
+dm1      = ROOT.RooRealVar ( 'dm1' , 'delta-m1' ,  -10 , 10 )
+dm2      = ROOT.RooRealVar ( 'dm2' , 'delta-m2' ,  -10 , 10 )
+dm3      = ROOT.RooRealVar ( 'dm3' , 'delta-m3' ,  -10 , 10 )
+
+# =============================================================================
+## book very simple data set for ``DATA''
+# =============================================================================
+varset   = ROOT.RooArgSet  ( mass )
+dataset  = ROOT.RooDataSet ( dsID() , 'Test Data set' , varset )  
+
+mean1    = 3
+sigma1   = 0.5
+NS1      = 250
+for i in range ( NS1 ) :
+    v1 = random.gauss ( mean1 , sigma1 ) 
+    if v1 in mass :
+        mass.setVal ( v1     )
+        dataset.add ( varset )
+        
+mean2    = 5
+sigma2   = 0.5
+NS2      = 250
+for i in range ( NS2 ) :
+    v2 = random.gauss ( mean2 , sigma2 ) 
+    if v2 in mass :
+        mass.setVal ( v2     )
+        dataset.add ( varset )
+
+mean3    = 7
+sigma3   = 0.5
+NS3      = 250
+for i in range ( NS3 ) :
+    v3 = random.gauss ( mean3 , sigma3 ) 
+    if v3 in mass :
+        mass.setVal ( v3     )
+        dataset.add ( varset )
+
+        
+NB = 2000 
+for i in range ( NB ) :
+    v3 = random.uniform ( 0 , 10  )
+    if v3 in mass :
+        mass.setVal ( v3     )
+        dataset.add ( varset )
+        
+vset1 = ROOT.RooArgSet  ( dm1 )
+dset1 = ROOT.RooDataSet ( dsID () , 'Test data set 1: resolutuon for dm1' , vset1 )
+for i in range ( 20000 ) :
+    v1 = random.gauss ( 0 , sigma1 ) 
+    if v1 in dm1 :
+        dm1.setVal ( v1    )
+        dset1.add  ( vset1 )
+        
+vset2 = ROOT.RooArgSet  ( dm2 )
+dset2 = ROOT.RooDataSet ( dsID () , 'Test data set 2: resolutuon for dm2' , vset2 )
+for i in range ( 20000 ) :
+    v2 = random.gauss ( 0 , sigma2 ) 
+    if v2 in dm2 :
+        dm2.setVal ( v2    )
+        dset2.add  ( vset2 )
+
+vset3 = ROOT.RooArgSet  ( dm3 )
+dset3 = ROOT.RooDataSet ( dsID () , 'Test data set 3: resolutuon for dm3' , vset3 )
+for i in range ( 20000 ) :
+    v3 = random.gauss ( 0 , sigma3 ) 
+    if v3 in dm3 :
+        dm3.setVal ( v3    )
+        dset3.add  ( vset3 )
+
+category = ROOT.RooCategory ( 'sample' , 'sample' , 'data' , 'dm1' , 'dm2' , 'dm3' )
+vars     = ROOT.RooArgSet   ( mass, dm1 , dm2 , dm3 )
+
+cdataset = combined_data ( category ,
+                           vars     ,  
+                           datasets = { 'data' : dataset ,
+                                        'dm1'  : dset1   ,
+                                        'dm2'  : dset2   ,
+                                        'dm3'  : dset3   } )
+logger.info ( 'Combined dataset:\n%s' % cdataset.table ( prefix = '# ' ) )                            
+
+
+# =============================================================================
+def test_simfit5() : 
+
+    logger = getLogger ( 'test_simfit5' )
+
+    # =========================================================================
+    ## resoltuion for the left peak 
+    # =========================================================================
+    reso1 = Models.ResoGauss ( 'RG1'       ,
+                               xvar  = dm1 ,
+                               sigma = ( sigma1 , sigma1 / 2 , sigma1 * 2 ) ,
+                               mean  = ( 0 , -1 , 1 ) )
+
+    # fit DM1 dataset for resolution 
+    r1 , f1 = reso1.fitTo ( dset1 , silent = True )
+    r1 , f1 = reso1.fitTo ( dset1 , silent = True , draw = True , nbins = 100 )
+
+    # =========================================================================
+    ## resoltuion for the central peak 
+    # =========================================================================
+    reso2 = Models.ResoGauss ( 'RG2'       ,
+                               xvar  = dm2 ,
+                               sigma = ( sigma2 , sigma2 / 2 , sigma2 * 2 ) ,
+                               mean  = ( 0 , -1 , 1 ) )
+
+    # fit DM2 dataset for resolution 
+    r2 , f2 = reso2.fitTo ( dset2 , silent = True )
+    r2 , f2 = reso2.fitTo ( dset2 , silent = True , draw = True , nbins = 100 )
+
+    # =========================================================================
+    ## resoltuion for the right peak 
+    # =========================================================================
+    reso3 = Models.ResoGauss ( 'RG3'       ,
+                               xvar  = dm3 ,
+                               sigma = ( sigma3 , sigma3 / 2 , sigma3 * 2 ) ,
+                               mean  = ( 0 , -1 , 1 ) )
+
+    # fit DM2 dataset for resolution 
+    r3 , f3 = reso3.fitTo ( dset3 , silent = True )
+    r3 , f3 = reso3.fitTo ( dset3 , silent = True , draw = True , nbins = 100 )
+
+    # =========================================================================
+    # model for data fit 
+    # =========================================================================
+    signal1 = Models.Gauss_pdf ( 'G1' ,
+                                 xvar  = mass        ,
+                                 sigma = reso1.sigma , 
+                                 mean  = ( mean1 , mean1 - 1 , mean1 + 1 ) )
+    signal2 = Models.Gauss_pdf ( 'G2' ,
+                                 xvar  = mass        ,
+                                 sigma = reso2.sigma , 
+                                 mean  = ( mean2 , mean2 - 1 , mean2 + 1 ) )
+    signal3 = Models.Gauss_pdf ( 'G3' ,
+                                 xvar  = mass        ,
+                                 sigma = reso3.sigma , 
+                                 mean  = ( mean3 , mean3 - 1 , mean3 + 1 ) )
+    
+    background = Models.PolyPos_pdf ( 'Bkg' , xvar = mass , power = 1 )
+    
+    model = Models.Fit1D ( signals    = [ signal1 , signal2 , signal3 ] ,
+                           background = background            )
+    model.S = NS1 , NS2 , NS3 
+    model.B = NB
+
+    # =========================================================================
+    ## Fit data (without resolution samples)
+    # =========================================================================
+    r0 , f0 = model.fitTo ( dataset , silent = True )
+    r0 , f0 = model.fitTo ( dataset , silent = True , draw = True , nbins = 100 )
+
+    logger.info ( 'Fit result (only data):\n%s' % r0.table ( prefix = "# " ) )
+    
+    
+    ## combine PDFs
+    model_sim  = Models.SimFit (
+        category , { 'data' : model ,
+                     'dm1'  : reso1 ,
+                     'dm2'  : reso2 ,
+                     'dm3'  : reso3 } , name = 'X' )
+    
+    # =========================================================================
+    ## Simultanegous tit data with resolution samples)
+    # =========================================================================
+    r , f = model_sim.fitTo ( cdataset , silent = True )
+    r , f = model_sim.fitTo ( cdataset , silent = True )
+
+    logger.info ( 'Simultaneous fit result:\n%s' % r.table ( prefix = "# " ) )
+    
+    with use_canvas ( 'test_simfit5' ) , wait ( 1 ) :
+        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset , nbins = 100 )
+        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset , nbins = 100 )
+        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset , nbins = 100 )
+        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset , nbins = 100 )
+        
+        
+    
+# =============================================================================
+if '__main__' == __name__ :
+
+    with timing ("simfit-5", logger ) :
+        test_simfit5 () 
+
+
+# =============================================================================
+##                                                                      The END 
+# =============================================================================

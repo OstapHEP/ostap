@@ -2,7 +2,8 @@
 
   1. improve progress bar for data frames 
   1. add warning message for drawing in ranegs for the  `RooHistPdf` with ROOT<6.24 
-  
+  1. add one more example/test for simultaneous fit machinery:  `test_fitting_simfit5`  
+
 ## Backward incompatible:  
  
 ## Bug fixes:

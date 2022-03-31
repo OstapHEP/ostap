@@ -701,7 +701,7 @@ class PDF (FUNC) :
             self._draw( self.signals , frame , soptions , sbstyle , args )
 
             used_options.add ( 'signal_options' ) 
-            used_options.add ( 'signal_style  ' )
+            used_options.add ( 'signal_style'   )
 
             ## draw combined ``signals'' components 
             if self.combined_signals :
