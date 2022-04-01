@@ -17,6 +17,7 @@ __all__    = () ## nothing to import
 import ROOT, random
 import ostap.fitting.roofit
 import ostap.fitting.models        as     Models
+from   ostap.core.meta_info        import root_info 
 from   ostap.fitting.morphing_pdf  import Morphing1D_pdf, Morphing2D_pdf 
 from   ostap.utils.utils           import vrange
 from   builtins                    import range
@@ -43,9 +44,13 @@ for i in range ( N ) :
 def test_morphing1 () :
 
     logger = getLogger ('test_morphing1')    
-    if ROOT.gROOT.GetVersionInt() < 62301 :
+    if root_info < ( 6 , 23 )  :
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return 
+        return
+
+    if ( 6 , 27 ) <= root_info  :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return
 
     pdf1 = Models.Gauss_pdf ( 'G1' , xvar = mass , mean = 10 , sigma = 1 )
     pdf2 = Models.Gauss_pdf ( 'G2' , xvar = mass , mean = 10 , sigma = 2 )
@@ -70,10 +75,15 @@ def test_morphing1 () :
 # ============================================================================
 def test_morphing2 () :
     
-    logger = getLogger ('test_morphing2')    
-    if ROOT.gROOT.GetVersionInt() < 62301 :
+    logger = getLogger ('test_morphing2')
+    
+    if root_info < ( 6 , 23 )  :
         logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
-        return 
+        return
+
+    if ( 6 , 27 ) <= root_info  :
+        logger.warning( 'Test is disabled for ROOT version %s' % ROOT.gROOT.GetVersion() )
+        return
 
     pdf11 = Models.Gauss_pdf ( 'G11' , xvar = mass , mean =  8 , sigma = 1 )
     pdf12 = Models.Gauss_pdf ( 'G12' , xvar = mass , mean = 10 , sigma = 1 )
