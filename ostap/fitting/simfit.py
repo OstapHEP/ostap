@@ -125,7 +125,7 @@ def combined_data ( sample          ,
         dset = None 
         if isinstance ( datasets , dict ) : dset = datasets[label]
         else :
-            for ds in dataset :
+            for ds in datasets :
                 if label == ds[0] :
                     dset =  ds[1]
                     break

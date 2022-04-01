@@ -1,3 +1,6 @@
+# v1.7.1.2
+
+
 ## New features: 
 
   1. improve progress bar for data frames 
@@ -9,6 +12,7 @@
 ## Bug fixes:
 
   1.  minor bug fixes for ``no-numpy'' regime 
+  1.  fix typo in `combine_data` in `simfit.py` (thanks to Abdul-Kerim Gusseinov)
 
 # v1.7.1.0
 
