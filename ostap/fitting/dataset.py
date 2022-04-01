@@ -1722,6 +1722,7 @@ def _ds_table_0_ ( dataset           ,
             if not valid_pointer ( store ) : store = None
             if store and not isinstance ( store , ROOT.RooTreeDataStore ) :
 
+                last  = min ( last , len ( dataset ) + 1 ) 
                 rargs = ROOT.RooFit.EventRange ( first , last ) , 
                 if cuts :
                     ## need all variables 

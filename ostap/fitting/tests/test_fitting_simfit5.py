@@ -35,11 +35,16 @@ else :
     logger = getLogger ( __name__ )
 # =============================================================================
 ## make simple test mass 
-mass     = ROOT.RooRealVar ( 'test_mass1' , 'Some test mass' ,  0 , 10 )
+mass     = ROOT.RooRealVar ( 'mass' , 'Some test mass' ,  0 , 10 )
 ## and three mass-differences 
-dm1      = ROOT.RooRealVar ( 'dm1' , 'delta-m1' ,  -10 , 10 )
-dm2      = ROOT.RooRealVar ( 'dm2' , 'delta-m2' ,  -10 , 10 )
-dm3      = ROOT.RooRealVar ( 'dm3' , 'delta-m3' ,  -10 , 10 )
+dm1      = ROOT.RooRealVar ( 'dm1'  , 'delta-m1' ,  -10 , 10 )
+dm2      = ROOT.RooRealVar ( 'dm2'  , 'delta-m2' ,  -10 , 10 )
+dm3      = ROOT.RooRealVar ( 'dm3'  , 'delta-m3' ,  -10 , 10 )
+
+## historgams 
+hdm1     = dm1.histo ( 10000 )
+hdm2     = dm2.histo ( 10000 )
+hdm3     = dm3.histo ( 10000 )
 
 # =============================================================================
 ## book very simple data set for ``DATA''
@@ -84,38 +89,61 @@ for i in range ( NB ) :
         
 vset1 = ROOT.RooArgSet  ( dm1 )
 dset1 = ROOT.RooDataSet ( dsID () , 'Test data set 1: resolutuon for dm1' , vset1 )
-for i in range ( 20000 ) :
+for i in range ( 50000 ) :
     v1 = random.gauss ( 0 , sigma1 ) 
     if v1 in dm1 :
+        hdm1.Fill  ( v1    )  
         dm1.setVal ( v1    )
         dset1.add  ( vset1 )
-        
+            
 vset2 = ROOT.RooArgSet  ( dm2 )
 dset2 = ROOT.RooDataSet ( dsID () , 'Test data set 2: resolutuon for dm2' , vset2 )
-for i in range ( 20000 ) :
+for i in range ( 50000 ) :
     v2 = random.gauss ( 0 , sigma2 ) 
     if v2 in dm2 :
+        hdm2.Fill  ( v2    )  
         dm2.setVal ( v2    )
         dset2.add  ( vset2 )
 
 vset3 = ROOT.RooArgSet  ( dm3 )
 dset3 = ROOT.RooDataSet ( dsID () , 'Test data set 3: resolutuon for dm3' , vset3 )
-for i in range ( 20000 ) :
+for i in range ( 50000 ) :
     v3 = random.gauss ( 0 , sigma3 ) 
     if v3 in dm3 :
+        hdm3.Fill  ( v3    )  
         dm3.setVal ( v3    )
         dset3.add  ( vset3 )
 
 category = ROOT.RooCategory ( 'sample' , 'sample' , 'data' , 'dm1' , 'dm2' , 'dm3' )
 vars     = ROOT.RooArgSet   ( mass, dm1 , dm2 , dm3 )
 
-cdataset = combined_data ( category ,
-                           vars     ,  
-                           datasets = { 'data' : dataset ,
-                                        'dm1'  : dset1   ,
-                                        'dm2'  : dset2   ,
-                                        'dm3'  : dset3   } )
-logger.info ( 'Combined dataset:\n%s' % cdataset.table ( prefix = '# ' ) )                            
+cdataset1 = combined_data ( category ,
+                            vars     ,  
+                            datasets = { 'data' : dataset ,
+                                         'dm1'  : dset1   ,
+                                         'dm2'  : dset2   ,
+                                         'dm3'  : dset3   } )
+logger.info ( 'Combined dataset/1:\n%s' % cdataset1.table ( prefix = '# ' ) )                            
+
+
+# ======================================================================
+## make try to use binned daatset  (as weighted datasets)
+# ======================================================================
+
+dsdm1  = H1D_dset ( hdm1 , xaxis = dm1 , weighted = True , skip_zero = True )
+dsdm2  = H1D_dset ( hdm2 , xaxis = dm2 , weighted = True , skip_zero = True )
+dsdm3  = H1D_dset ( hdm3 , xaxis = dm3 , weighted = True , skip_zero = True )
+
+dataset.addVar( 'h1weight' , '1.0' ) 
+cdataset2 = combined_data ( category ,
+                            vars     ,  
+                            datasets = { 'data' : dataset.makeWeighted ( 'h1weight' ) ,
+                                         'dm1'  : dsdm1.dset ,
+                                         'dm2'  : dsdm2.dset ,
+                                         'dm3'  : dsdm3.dset } ,
+                            args = ( ROOT.RooFit.WeightVar( dsdm1.wname ) , ) )
+
+logger.info ( 'Combined dataset/2:\n%s' % cdataset2.table ( prefix = '# ' ) )                            
 
 
 # =============================================================================
@@ -130,7 +158,7 @@ def test_simfit5() :
                                xvar  = dm1 ,
                                sigma = ( sigma1 , sigma1 / 2 , sigma1 * 2 ) ,
                                mean  = ( 0 , -1 , 1 ) )
-
+    
     # fit DM1 dataset for resolution 
     r1 , f1 = reso1.fitTo ( dset1 , silent = True )
     r1 , f1 = reso1.fitTo ( dset1 , silent = True , draw = True , nbins = 100 )
@@ -199,27 +227,41 @@ def test_simfit5() :
                      'dm3'  : reso3 } , name = 'X' )
     
     # =========================================================================
-    ## Simultanegous tit data with resolution samples)
+    ## Simultanegous fit data with resolution samples)
     # =========================================================================
-    r , f = model_sim.fitTo ( cdataset , silent = True )
-    r , f = model_sim.fitTo ( cdataset , silent = True )
+    r_1 , f_1 = model_sim.fitTo ( cdataset1 , silent = True )
+    r_1 , f_1 = model_sim.fitTo ( cdataset1 , silent = True )
 
-    logger.info ( 'Simultaneous fit result:\n%s' % r.table ( prefix = "# " ) )
+    logger.info ( 'Simultaneous fit result (unbinned reso):\n%s' % r_1.table ( prefix = "# " ) )
     
     with use_canvas ( 'test_simfit5' ) , wait ( 1 ) :
-        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset , nbins = 100 )
-        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset , nbins = 100 )
-        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset , nbins = 100 )
-        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset , nbins = 100 )
+        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset1 , nbins = 100 )
+        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset1 , nbins = 100 )
+        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset1 , nbins = 100 )
+        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset1 , nbins = 100 )
         
+
+    # =========================================================================
+    ## Simultanegous fit data with resolution samples)
+    # =========================================================================
+    r_2 , f_2 = model_sim.fitTo ( cdataset2 , silent = True , sumw2 = True )
+    r_2 , f_2 = model_sim.fitTo ( cdataset2 , silent = True , sumw2 = True )
+
+    logger.info ( 'Simultaneous fit result (binned reso):\n%s' % r_2.table ( prefix = "# " ) )
+    
+    with use_canvas ( 'test_simfit5' ) , wait ( 1 ) :
+        with wait ( 1 ) : fdm1 = model_sim.draw ( 'dm1'  , cdataset2 , nbins = 100 )
+        with wait ( 1 ) : fdm2 = model_sim.draw ( 'dm2'  , cdataset2 , nbins = 100 )
+        with wait ( 1 ) : fdm3 = model_sim.draw ( 'dm3'  , cdataset2 , nbins = 100 )
+        with wait ( 1 ) : fd   = model_sim.draw ( 'data' , cdataset2 , nbins = 100 )
         
+
     
 # =============================================================================
 if '__main__' == __name__ :
 
     with timing ("simfit-5", logger ) :
         test_simfit5 () 
-
 
 # =============================================================================
 ##                                                                      The END 

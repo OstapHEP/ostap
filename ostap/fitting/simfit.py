@@ -133,8 +133,8 @@ def combined_data ( sample          ,
         assert isinstance ( dset , ROOT.RooAbsData ),\
                'Invalid data set for label %s' % label
 
-        assert not dset.isNonPoissonWeighted () ,\
-               'Weighted data cannot be combined!'
+        ##assert not dset.isNonPoissonWeighted () ,\
+        ##       'Weighted data cannot be combined!'
 
         if not dset.isWeighted () :
             largs.append (  ROOT.RooFit.Import ( label , dset ) )

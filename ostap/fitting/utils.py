@@ -1846,7 +1846,7 @@ class MakeVar ( object ) :
 
 
 # =============================================================================
-## simple convertor of 1D-histo to data set
+## simple convertor of 1D-histo to weighted or binned data set
 #  @code
 #  h   = ...
 #  dset = H1D_dset ( h )
@@ -1861,7 +1861,7 @@ class MakeVar ( object ) :
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H1D_dset(MakeVar) :
-    """Simple convertor of 1D-histogram into data set
+    """Simple convertor of 1D-histogram into weighted or binned data set
     >>> h   = ...
     >>> dset = H1D_dset ( h )
     One can create `binned` (default) or `weighted` data set
@@ -1872,12 +1872,13 @@ class H1D_dset(MakeVar) :
     w_min = -1.e+100 
     w_max =  1.e+100
     
-    def __init__ ( self             , 
-                   histo            ,
-                   xaxis    = None  , ## predefined axis/variable ? 
-                   density  = False ,
-                   weighted = False , ## weighted or binned? 
-                   silent   = False ) :
+    def __init__ ( self              , 
+                   histo             ,
+                   xaxis     = None  , ## predefined axis/variable ? 
+                   density   = False ,
+                   weighted  = False , ## weighted or binned?
+                   skip_zero = False , ## skip zero bins for weighted dataset? 
+                   silent    = False ) :
         
         import ostap.histos.histos
         
@@ -1889,14 +1890,15 @@ class H1D_dset(MakeVar) :
         self.__histo_hash = hash ( histo )
         
 
-        name           = histo.GetName()
-        self.__xaxis   = self.make_var ( xaxis , 'x_%s' % name , 'x-axis(%s)' % name , None , *(histo.xminmax()) )
+        name             = histo.GetName()
+        self.__xaxis     = self.make_var ( xaxis , 'x_%s' % name , 'x-axis(%s)' % name , None , *(histo.xminmax()) )
         
-        self.__density = True if density else False 
-        self.__silent  = silent 
-
-        self.__wvar    = None
-
+        self.__skip_zero = True if skip_zero else False
+        self.__density   = True if density   else False 
+        self.__silent    = silent 
+        
+        self.__wvar      = None
+        
         with roo_silent ( self.silent ) :  
 
             ## create weighted dataset ?
@@ -1904,11 +1906,12 @@ class H1D_dset(MakeVar) :
                 
                 wname = weighted if isinstance ( weighted , string_types ) else 'h1weight'
                 
-                self.__wvar = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max ) 
-                self.__vset = ROOT.RooArgSet   ( self.__xaxis ,  self.__wvar )
-                self.__wset = ROOT.RooArgSet   ( self.__wvar      )
-                self.__warg = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
-                self.__dset = ROOT.RooDataSet  (
+                self.__wvar  = ROOT.RooRealVar  ( wname , "weight-variable" , 1 , self.w_min , self.w_max )
+                self.__wname = self.__wvar.GetName() 
+                self.__vset  = ROOT.RooArgSet   ( self.__xaxis ,  self.__wvar )
+                self.__wset  = ROOT.RooArgSet   ( self.__wvar      )
+                self.__warg  = ROOT.RooFit.WeightVar ( self.__wvar ) , ROOT.RooFit.StoreError ( self.__wset )
+                self.__dset  = ROOT.RooDataSet  (
                     rootID ( 'whds_' )  , "Weighted data set for the histogram '%s'" % histo.GetTitle() ,
                     self.__vset , *self.__warg )
 
@@ -1916,6 +1919,7 @@ class H1D_dset(MakeVar) :
                 wvar = self.__wvar 
                 with SETVAR ( xvar ) :
                     for i, x , v in histo.items () :
+                        if skip_zero and 0 == v.value() and 0 == v.error () : continue 
                         xvar.setVal     ( x.value () )
                         self.__dset.add ( self.__vset , v.value() , v.error() ) 
                         
@@ -1940,7 +1944,11 @@ class H1D_dset(MakeVar) :
     @property
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
-        return self.__density    
+        return self.__density
+    @property
+    def skip_zero ( self ) :
+        """``skip_zero'' : skip zero bins for weighted dataset in histo?"""
+        return self.__skip_zero    
     @property
     def silent( self ) :
         """Use the silent mode?"""
@@ -1957,25 +1965,30 @@ class H1D_dset(MakeVar) :
     def weight ( self ) :
         """``weight'' : get weight variable if defined, None otherwise"""
         return self.__wvar
-
+    @property
+    def wname  ( self ) :
+        """``wname'' : het weight name (if defined)"""
+        return None if ( self.__wvar is None ) else self.__wvar.GetName() 
+    
 # =============================================================================
-## simple convertor of 2D-histo to data set
+## simple convertor of 2D-histo to weighted or binned data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H2D_dset(MakeVar) :
-    """Simple convertor of 2D-histogram into data set
+    """Simple convertor of 2D-histogram into weighted or binned data set
     """
     
     w_min = -1.e+100 
     w_max =  1.e+100
     
-    def __init__ ( self             ,
-                   histo            ,
-                   xaxis    = None  ,
-                   yaxis    = None  ,
-                   density  = False ,
-                   weighted = False ,
-                   silent   = False ) :
+    def __init__ ( self              ,
+                   histo             ,
+                   xaxis     = None  ,
+                   yaxis     = None  ,
+                   density   = False ,
+                   weighted  = False ,
+                   skip_zero = False , ## skip zero bins for weighted dataset? 
+                   silent    = False ) :
         #
         import ostap.histos.histos
         
@@ -1994,8 +2007,9 @@ class H2D_dset(MakeVar) :
         self.__yaxis = self.make_var ( yaxis , 'y_%s' % name , 'y-axis(%s)' % name ,
                                        yaxis , *(histo.yminmax()) )
         
-        self.__density = True if density else False 
-        self.__silent  = silent
+        self.__skip_zero = True if skip_zero else False
+        self.__density   = True if density else False 
+        self.__silent    = silent
         
         self.__wvar    = None
 
@@ -2019,6 +2033,7 @@ class H2D_dset(MakeVar) :
                 wvar = self.__wvar 
                 with SETVAR ( xvar ) :
                     for i, x , y , v in histo.items () :
+                        if skip_zero and 0 == v.value() and 0 == v.error () : continue 
                         xvar.setVal     ( x.value () )
                         yvar.setVal     ( y.value () )
                         self.__dset.add ( self.__vset , v.value() , v.error() ) 
@@ -2049,6 +2064,10 @@ class H2D_dset(MakeVar) :
         """Treat the histo as ``density'' histogram?"""
         return self.__density    
     @property
+    def skip_zero ( self ) :
+        """``skip_zero'' : skip zero bins for weighted dataset in histo?"""
+        return self.__skip_zero    
+    @property
     def silent( self ) :
         """Use the silent mode?"""
         return self.__silent
@@ -2066,24 +2085,25 @@ class H2D_dset(MakeVar) :
         return self.__wvar
     
 # =============================================================================
-## simple convertor of 3D-histo to data set
+## simple convertor of 3D-histo to weighted or binned data set
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
 class H3D_dset(MakeVar) :
-    """Simple convertor of 3D-histogram into data set
+    """Simple convertor of 3D-histogram into weighted or binned data set
     """
     
     w_min = -1.e+100 
     w_max =  1.e+100
     
-    def __init__ ( self             ,
-                   histo            ,
-                   xaxis    = None  ,
-                   yaxis    = None  ,
-                   zaxis    = None  ,
-                   density  = False ,
-                   weighted = False ,
-                   silent   = False ) :
+    def __init__ ( self              ,
+                   histo             ,
+                   xaxis     = None  ,
+                   yaxis     = None  ,
+                   zaxis     = None  ,
+                   density   = False ,
+                   weighted  = False ,
+                   skip_zero = False , ## skip zero bins for weighted dataset? 
+                   silent    = False ) :
         
         import ostap.histos.histos
 
@@ -2106,8 +2126,9 @@ class H3D_dset(MakeVar) :
         self.__zaxis = self.make_var ( zaxis , 'z_%s' % name , 'z-axis(%s)' % name ,
                                        zaxis , *(histo.zminmax()) )
         
-        self.__density = True if density else False 
-        self.__silent  = silent
+        self.__skip_zero = True if skip_zero else False
+        self.__density   = True if density else False 
+        self.__silent    = silent
         
         self.__wvar    = None
         
@@ -2132,6 +2153,7 @@ class H3D_dset(MakeVar) :
                 wvar = self.__wvar 
                 with SETVAR ( xvar ) :
                     for i, x , y , z , v in histo.items () :
+                        if skip_zero and 0 == v.value() and 0 == v.error () : continue 
                         xvar.setVal     ( x.value () )
                         yvar.setVal     ( y.value () )
                         zvar.setVal     ( z.value () )
@@ -2167,6 +2189,10 @@ class H3D_dset(MakeVar) :
     def density( self ) :
         """Treat the histo as ``density'' histogram?"""
         return self.__density    
+    @property
+    def skip_zero ( self ) :
+        """``skip_zero'' : skip zero bins for weighted dataset in histo?"""
+        return self.__skip_zero    
     @property
     def silent( self ) :
         """Use the silent mode?"""

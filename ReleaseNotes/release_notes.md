@@ -1,5 +1,7 @@
 ## New features: 
 
+  1. extend example   `test_fitting_simfit5` to use binned distributions 
+
 ## Backward incompatible:  
  
 ## Bug fixes:
