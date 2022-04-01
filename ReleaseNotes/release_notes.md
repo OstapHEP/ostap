@@ -6,7 +6,6 @@
  
 ## Bug fixes:
 
-
 # v1.7.1.2
 
 ## New features: 
