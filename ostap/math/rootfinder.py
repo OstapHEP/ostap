@@ -1245,12 +1245,15 @@ def find_root ( f                   , ## the function
 
 # =============================================================================
 try :
+    # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        import scipy.optimize
-        findroot = scipy.optimize.brentq 
+        from scipy.optimize import brentq as scipy_brentq 
+        findroot = scipy_brentq
+    # =========================================================================
 except ImportError :
-    logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
+    # =========================================================================
+    ## logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
     findroot = find_root
 
 
@@ -1282,6 +1285,9 @@ if '__main__' == __name__ :
     
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
+
+    if findroot is find_root : 
+        logger.warning ("scipy.optimize.brentq is not available, use local ``find_root''-replacement")
 
 # =============================================================================
 ##                                                                      The END 

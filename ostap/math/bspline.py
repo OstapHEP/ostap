@@ -271,27 +271,9 @@ def interpolate ( func , abscissas , spline , *args ) :
     
     return bs 
 
-
-# =============================================================================    
-## Construct the variation diminishing approximation 
-#  @code
-#  b1 = approximate ( lambda x : x*x , [0,0.5,1,2]    , 3 )  
-#  b2 = interpolate ( { 0:0 , 0.5:0.25 , 1:1 } , None , 3 )  
-#  b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 3 )  
-#  @endcode 
-#  @param func      (INPUT) the function or list of function values
-#  @param abscissas (INPUT) absiccas
-#  @param order     (INPUT) the order of spline
-#  @return interpolation spline 
-def approximate ( func , spline , *args ) : 
-    """Construct the interpolation B-spline
-    """
-    bs = Ostap.Math.BSpline ( spline , *args )
-    xv = bs.greville_abscissas()
-    N  =  bs.npars()
-    for i in  range(N) : bs.setPar ( i , func ( xv[i] ) )
-    return bs
-
+# =============================================================================
+## For b-spline interpolation we need scipy!
+# ============================================================================
 
 try :
     import scipy
@@ -339,7 +321,29 @@ if scipy :
         pars = doubles ( spl.c )
         
         return Ostap.Math.BSpline ( knots , pars )
+    
     __all__ = __all__ + ( 'interpolation', )
+
+# =============================================================================    
+## Construct the variation diminishing approximation 
+#  @code
+#  b1 = approximate ( lambda x : x*x , [0,0.5,1,2]    , 3 )  
+#  b2 = interpolate ( { 0:0 , 0.5:0.25 , 1:1 } , None , 3 )  
+#  b3 = interpolate ( [0,0.25,1,4] , [ 0,0.5, 1,2]    , 3 )  
+#  @endcode 
+#  @param func      (INPUT) the function or list of function values
+#  @param abscissas (INPUT) absiccas
+#  @param order     (INPUT) the order of spline
+#  @return interpolation spline 
+def approximate ( func , spline , *args ) : 
+    """Construct the interpolation B-spline
+    """
+    bs = Ostap.Math.BSpline ( spline , *args )
+    xv = bs.greville_abscissas()
+    N  =  bs.npars()
+    for i in  range(N) : bs.setPar ( i , func ( xv[i] ) )
+    return bs
+
 
 # =============================================================================
 ## merge duplicated roots together 
@@ -750,6 +754,9 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    if not scipy :
+        logger.warning ("Since scipy is not available, bSpline interpolation is disabled")
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

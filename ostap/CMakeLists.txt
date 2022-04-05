@@ -37,10 +37,10 @@ else()
 endif()
 
 
-find_python_module ( numpy QUIET )
-if ( NOT ${PY_numpy_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install numpy ${PIP_ARGS})
-endif()
+## find_python_module ( numpy QUIET )
+## if ( NOT ${PY_numpy_FOUND} )
+## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install numpy ${PIP_ARGS})
+## endif()
 
 find_python_module ( numpy QUIET )
 if ( NOT ${PY_numpy_FOUND} )
@@ -48,10 +48,10 @@ message ( "----> warning (optional)          numpy is NOT found!" )
 endif()
 
 
-find_python_module ( scipy QUIET )
-if ( NOT ${PY_scipy_FOUND} )
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install scipy ${PIP_ARGS})
-endif()
+## find_python_module ( scipy QUIET )
+## if ( NOT ${PY_scipy_FOUND} )
+## execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install scipy ${PIP_ARGS})
+## endif()
 
 find_python_module ( scipy QUIET )
 if ( NOT ${PY_scipy_FOUND} )

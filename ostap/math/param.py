@@ -238,11 +238,11 @@ def chebyshev_sum ( func , N , xmin , xmax ) :
     return csum
 
 
+# =============================================================================
 try :
-
+    # =========================================================================
     import numpy
-    
-    # =============================================================================
+    # =========================================================================
     ## make a function representation in terms of Fourier series
     #  @code 
     #  func = lambda x : x * x
@@ -306,6 +306,21 @@ try :
                 
         return fsum
 
+    __all__ = __all__ + (
+        'fourier_sum' , ## Fourier        sum for the given function/object
+        )
+
+except ImportError :
+    pass
+
+
+# =============================================================================
+try :
+    # =========================================================================
+    import numpy
+    import scipy 
+    # =========================================================================
+
     # =============================================================================
     ## make a function representation in terms of cosine Fourier series
     #  @code 
@@ -350,8 +365,7 @@ try :
         return csum
     
     __all__ = __all__ + (
-        'fourier_sum' , ## Fourier        sum for the given function/object
-        'cosine_sum'    ## Cosine Fourier sum for the given function/object 
+        'cosine_sum' , ## Cosine Fourier sum for the given function/object 
         )
 
 except ImportError :
@@ -517,6 +531,11 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    if not 'fourier_sum' in __all__ :
+        logger.warning ("Since numpy is not available, fourier_sum is disabled") 
+    if not 'cosine_sum' in __all__ :
+        logger.warning ("Since scipy is not available, cosine_sum is disabled")
+        
 # =============================================================================
 ##                                                                      The END 
 # =============================================================================

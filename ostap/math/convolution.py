@@ -20,8 +20,7 @@
 __version__ = "$Revision$"
 __author__  = "Vanya BELYAEV Ivan.Belyaev@cern.ch"
 __date__    = "2011-12-01"
-## __all__     = (
-##    )
+__all__     = ()
 # =============================================================================
 import  ROOT, math
 # =============================================================================
@@ -34,7 +33,8 @@ else                       : logger = getLogger ( __name__                 )
 
 try :
     from ostap.math.sp_convolution import ( ArrayConvolution ,
-                                            GaussConvolution , Convolution )
+                                            GaussConvolution ,
+                                            Convolution      )
     __all__  = ( 'ArrayConvolution' ,
                  'GaussConvolution' ,
                  'Convolution'      )

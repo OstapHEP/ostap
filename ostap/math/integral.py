@@ -226,11 +226,13 @@ def romberg ( fun                ,
     return VE ( v , e * e ) if err else v 
 
 # =============================================================================
+## 1D integration 
+# =============================================================================
 try :
     # =========================================================================
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        from scipy import integrate
+        from scipy.integrate import quad as scipy_quad
     # =========================================================================
     ## Calculate the integral (from x0 to x) for the 1D-function 
     #  @code 
@@ -252,11 +254,12 @@ try :
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = integrate.quad ( func , xmin , xmax , **kwargs )
+            result = scipy_quad ( func , xmin , xmax , **kwargs )
             return VE ( result[0] , result[1] * result[1] ) if err else result[0]
         
 except ImportError :
-    logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")
+    # =========================================================================
+    ## logger.warning ("scipy.integrate is not available, use local ``romberg''-replacement")
     ## use romberg integration as default method when scipy is not available 
     integral = romberg
 # =============================================================================
@@ -314,10 +317,10 @@ def _genzmalik2_ ( func , xlims , ylims , args = () ) :
     >>> print 'Integral %s, error: %s' % ( i7,  abs(i7-i5) )  
     
     """
-    xc = 0.5 * ( xlims[1] + xlims[0] )
-    dx = 0.5 * ( xlims[1] - xlims[0] )
-    yc = 0.5 * ( ylims[1] + ylims[0] )
-    dy = 0.5 * ( ylims[1] - ylims[0] )
+    xc = 0.5 * ( xlims [ 1 ] + xlims [ 0 ] )
+    dx = 0.5 * ( xlims [ 1 ] - xlims [ 0 ] )
+    yc = 0.5 * ( ylims [ 1 ] + ylims [ 0 ] )
+    dy = 0.5 * ( ylims [ 1 ] - ylims [ 0 ] )
 
     _func = lambda x,y :   float ( func ( x , y , *args ) )
     
@@ -335,8 +338,8 @@ def _genzmalik2_ ( func , xlims , ylims , args = () ) :
     s5  = _func ( xc + _l5 * dx , yc + _l5 * dy ) + _func ( xc + _l5 * dx , yc - _l5 * dy )
     s5 += _func ( xc - _l5 * dx , yc + _l5 * dy ) + _func ( xc - _l5 * dx , yc - _l5 * dy )
 
-    i7  = _w2 [0] * s1 + _w2 [1] * s2 + _w2 [2] * s3 + _w2 [3] * s4 + _w2 [4] * s5/2**2 
-    i5  = _w2p[0] * s1 + _w2p[1] * s2 + _w2p[2] * s3 + _w2p[3] * s4
+    i7  = _w2  [ 0 ] * s1 + _w2  [ 1 ] * s2 + _w2  [ 2 ] * s3 + _w2  [ 3 ] * s4 + _w2 [ 4 ] * s5/2**2 
+    i5  = _w2p [ 0 ] * s1 + _w2p [ 1 ] * s2 + _w2p [ 2 ] * s3 + _w2p [ 3 ] * s4
     
     vol = 4 * dx * dy
 
@@ -373,12 +376,12 @@ def _genzmalik3_ ( func , xlims , ylims , zlims , args =  () ) :
     >>> print 'Integral %s, error: %s' % ( i7,  abs(i7-i5) )  
     
     """
-    xc = 0.5 * ( xlims[1] + xlims[0] )
-    dx = 0.5 * ( xlims[1] - xlims[0] )
-    yc = 0.5 * ( ylims[1] + ylims[0] )
-    dy = 0.5 * ( ylims[1] - ylims[0] )
-    zc = 0.5 * ( zlims[1] + zlims[0] )
-    dz = 0.5 * ( zlims[1] - zlims[0] )
+    xc = 0.5 * ( xlims [ 1 ] + xlims [ 0 ] )
+    dx = 0.5 * ( xlims [ 1 ] - xlims [ 0 ] )
+    yc = 0.5 * ( ylims [ 1 ] + ylims [ 0 ] )
+    dy = 0.5 * ( ylims [ 1 ] - ylims [ 0 ] )
+    zc = 0.5 * ( zlims [ 1 ] + zlims [ 0 ] )
+    dz = 0.5 * ( zlims [ 1 ] - zlims [ 0 ] )
 
     _f = lambda x,y,z : float ( func ( x , y , z , *args ) )
     
@@ -420,8 +423,8 @@ def _genzmalik3_ ( func , xlims , ylims , zlims , args =  () ) :
     s5 += _f ( xc - _l5 * dx , yc - _l5 * dy , zc + _l5 * dz )
     s5 += _f ( xc - _l5 * dx , yc - _l5 * dy , zc - _l5 * dz )
     
-    i7  = _w3 [0] * s1 + _w3 [1] * s2 + _w3 [2] * s3 + _w3 [3] * s4 + _w3 [4] * s5/2**3 
-    i5  = _w3p[0] * s1 + _w3p[1] * s2 + _w3p[2] * s3 + _w3p[3] * s4
+    i7  = _w3  [ 0 ] * s1 + _w3  [ 1 ] * s2 + _w3  [ 2 ] * s3 + _w3  [ 3 ] * s4 + _w3 [ 4 ] * s5/2**3 
+    i5  = _w3p [ 0 ] * s1 + _w3p [ 1 ] * s2 + _w3p [ 2 ] * s3 + _w3p [ 3 ] * s4
     
     vol = 8 * dx * dy * dz 
 
@@ -456,7 +459,7 @@ def _split2_ ( xlims , ylims ) :
     
 
 # ============================================================================
-## split 3D-region into  eight smaller pieces
+## split 3D-region into eight smaller pieces
 #  @code
 #  region     =  (-1,1),( -2,5) , (-3,3)
 #  newregions = _split3_( region )
@@ -581,7 +584,13 @@ def _genzmalik_( func , limits , basic_rule , splitter ,
 #  r      = genzmalik2 ( func , xmin=-1 , xmax=2 , ymin=-1 , ymax=2 )
 #  print 'Integral: %s ' % r 
 #  @endcode 
-def genzmalik2 ( func , xmin , xmax , ymin ,  ymax , args = () , err = False , epsabs = 1.5e-7 , epsrel = 1.5e-7 ) :
+def genzmalik2 ( func   ,
+                 xmin   , xmax   ,
+                 ymin   , ymax   ,
+                 args   = ()     ,
+                 err    = False  ,
+                 epsabs = 1.5e-7 ,
+                 epsrel = 1.5e-7 ) :
     """ Adaptive numerical 2D integration using Genz&Malik's basic rule
     
     A.C. Genz, A.A. Malik, ``Remarks on algorithm 006: An adaptive algorithm for
@@ -601,9 +610,15 @@ def genzmalik2 ( func , xmin , xmax , ymin ,  ymax , args = () , err = False , e
     """
 
     limits  = ( xmin , xmax ) , ( ymin , ymax ) 
-    r,e,n,s = _genzmalik_ ( func , limits , _genzmalik2_ , _split2_ , args , abs(epsabs) , abs(epsrel) )
+    r , e , n , s = _genzmalik_ ( func           ,
+                                  limits         ,
+                                  _genzmalik2_   ,
+                                  _split2_       ,
+                                  args           ,
+                                  abs ( epsabs ) ,
+                                  abs ( epsrel ) )
     
-    return VE ( r , e * e )  if err else r 
+    return VE ( r , e * e ) if err else r 
 
 # =============================================================================
 ## Adaptive numerical 3D integration using Genz&Malik's basic rule
@@ -619,7 +634,14 @@ def genzmalik2 ( func , xmin , xmax , ymin ,  ymax , args = () , err = False , e
 #  r      = genzmalik3 ( func , xmin=-1 , xmax=2 , ymin=-1 , ymax=2 , zmin = -4, zmax = 7)
 #  print 'Integral: %s ' % r 
 #  @endcode 
-def genzmalik3 ( func , xmin , xmax , ymin ,  ymax , zmin ,  zmax , args = () , err = False , epsabs = 1.5e-7 , epsrel = 1.5e-7 ) :
+def genzmalik3 ( func   ,
+                 xmin   , xmax   ,
+                 ymin   , ymax   ,
+                 zmin   , zmax   ,
+                 args   = ()     ,
+                 err    = False  ,
+                 epsabs = 1.5e-7 ,
+                 epsrel = 1.5e-7 ) :
     """ Adaptive numerical 3D integration using Genz&Malik's basic rule
     
     A.C. Genz, A.A. Malik, ``Remarks on algorithm 006: An adaptive algorithm for
@@ -639,16 +661,27 @@ def genzmalik3 ( func , xmin , xmax , ymin ,  ymax , zmin ,  zmax , args = () , 
     """
 
     limits  = ( xmin , xmax ) , ( ymin , ymax ) , ( zmin , zmax ) 
-    r,e,n,s = _genzmalik_ ( func , limits , _genzmalik3_ , _split3_ , args , abs(epsabs) , abs(epsrel) )
+    r,e,n,s = _genzmalik_ ( func           ,
+                            limits         ,
+                            _genzmalik3_   ,
+                            _split3_       ,
+                            args           ,
+                            abs ( epsabs ) ,
+                            abs ( epsrel ) )
     
     return VE ( r , e * e )  if err else r 
 
 
-
+# =============================================================================
+## 2D integration 
 # =============================================================================
 try :
-    from scipy import integrate
-    # =============================================================================
+    # =========================================================================
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from scipy.integrate import dblquad as scipy_dblquad
+        
+    # =========================================================================
     ## Calculate the integral (from ) for the 2D-function 
     #  @code 
     #  func = lambda x,y : x*x + y*y
@@ -671,14 +704,15 @@ try :
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = integrate.dblquad ( func ,
-                                         ymin , ymax     ,
-                                         lambda x : xmin ,
-                                         lambda x : xmax , **kwargs )
+            result = scipy_dblquad ( func ,
+                                     ymin , ymax     ,
+                                     lambda x : xmin ,
+                                     lambda x : xmax , **kwargs )
             return VE( result[0] , result[1] * result[1] ) if err else result[0]
         
 except ImportError :
-    logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
+    # =========================================================================
+    ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
     ## use Genz&Malik integration as default method when scipy is not available 
     integral2 = genzmalik2 
 # =============================================================================
@@ -686,9 +720,14 @@ except ImportError :
 
 
 # =============================================================================
+## 3D integration 
+# =============================================================================
 try :
-    from scipy import integrate
-    # =============================================================================
+    # =========================================================================
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        from scipy.integrate import tplquad as scipy_tplquad
+    # =========================================================================
     ## Calculate the inteegral for the 3D-function 
     #  @code 
     #  func = lambda x,y,z: x*x+y*y+z*z
@@ -712,19 +751,22 @@ try :
         import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            result = integrate.tplquad ( func ,
-                                         zmin , zmax ,
-                                         lambda z   : ymin ,
-                                         lambda z   : ymax ,
-                                         lambda y,z : xmin ,
-                                         lambda y,z : xmax , **kwargs )
+            result = scipy_tplquad ( func ,
+                                     zmin , zmax ,
+                                     lambda z   : ymin ,
+                                     lambda z   : ymax ,
+                                     lambda y,z : xmin ,
+                                     lambda y,z : xmax , **kwargs )
             return VE( result[0] , result[1] * result[1] ) if err else result[0]
         
 except ImportError :
-    logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
+    # ========================================================================
+    ## logger.warning ("scipy.integrate is not available, use local ``genz&malik''-replacement")
     ## use Genz&Malik integration as default method when scipy is not available 
     integral3 = genzmalik3 
 # =============================================================================
+
+
 
 # =============================================================================
 ## @class IntegralBase
@@ -1670,6 +1712,15 @@ if '__main__' == __name__ :
     from ostap.utils.docme import docme
     docme ( __name__ , logger = logger )
 
+    # ========================================================================
+    if integral is romberg : 
+        logger.warning ("scipy.integrate.quad    is not available, use local ``romberg''-replacement")    
+    if integral2 is genzmalik2 : 
+        logger.warning ("scipy.integrate.dblquad is not available, use local ``genz&malik''-replacement")
+        # ========================================================================
+    if integral3 is genzmalik3 : 
+        logger.warning ("scipy.integrate.tplquad is not available, use local ``genz&malik''-replacement")
+
 # =============================================================================
-# The END 
+##                                                                      The END 
 # =============================================================================
