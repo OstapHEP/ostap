@@ -1422,7 +1422,7 @@ class Shape2D_pdf(PDF2) :
         return self.__shape 
  
 
-# =============================================================================
+# ===================================================it==========================
 ## simple convertor of 2D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
