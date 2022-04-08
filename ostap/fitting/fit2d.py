@@ -1384,7 +1384,7 @@ class Model2D(PDF2) :
 #  @see Ostap::Models:Shape2D
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2020-07-20
-class Shape2D_pdf(PDF) :
+class Shape2D_pdf(PDF2) :
     """ Generic 2D-shape from C++ callable
     - see Ostap::Models:Shape2D
     """

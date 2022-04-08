@@ -1466,7 +1466,7 @@ class Model3D(PDF3) :
 #  @see Ostap::Models:Shape3D
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru
 #  @date 2020-07-20
-class Shape3D_pdf(PDF) :
+class Shape3D_pdf(PDF3) :
     """ Generic 3D-shape from C++ callable
     - see Ostap::Models:Shape3D
     """

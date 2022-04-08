@@ -5,7 +5,8 @@
 ## Backward incompatible:  
  
 ## Bug fixes:
-
+  1. fix `Shape2D_pdf` and `Shape3D_pdf` (thanks to Slava Matiunin)
+  
 # v1.7.1.2
 
 ## New features: 
