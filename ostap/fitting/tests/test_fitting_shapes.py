@@ -18,7 +18,8 @@ __all__    = () ## nothing to import
 # ============================================================================= 
 import ROOT
 import ostap.fitting.models     as     Models
-import ostap.histos.histos 
+import ostap.histos.histos
+from   ostap.core.meta_info     import root_info 
 from   ostap.core.core          import Ostap, hID
 from   ostap.plotting.canvas    import use_canvas
 from   ostap.utils.utils        import wait 
@@ -40,11 +41,18 @@ def test_shapes_1d() :
     
     logger = getLogger("test_shapes_1d")
 
-    ## C++ callabole as shape
+
+    if root_info < ( 6 , 18 ) :
+        logger.info ( "Test is distabled for ROOT %s" % str ( root_info ) )
+        return 
+
+    ## C++ callable as shape
+
+    xvar = ROOT.RooRealVar('x', '', -5, 5)
     
     s1 = Models.Shape1D_pdf ( 'S1'                                 ,
                               shape = Ostap.Math.BifurcatedGauss() ,
-                              xvar  = ( -5, 5 )                    )
+                              xvar  = xvar                        )
 
     with wait ( 1 ) , use_canvas ( "shape1d : C++ functor" ) :        
         s1.draw()
@@ -52,11 +60,11 @@ def test_shapes_1d() :
     ## histogram as shape
         
     h2  = ROOT.TH1D ( hID() , '' , 50 , -5 , 5 )
-    h2 += lambda x : 100 * s1.shape ( x )
+    h2 += lambda x : 100 * gauss ( x )
         
-    s2 = Models.Shape1D_pdf ( 'S2'              ,
-                              shape = h2        ,
-                              xvar  = s1.xvar   ) 
+    s2 = Models.Shape1D_pdf ( 'S2'         ,
+                              shape = h2   ,
+                              xvar  = xvar ) 
 
     with wait ( 1 ) , use_canvas ( "shape1d : histogram " ) :        
         s2.draw()
@@ -65,6 +73,10 @@ def test_shapes_1d() :
 def test_shapes_2d() :
     
     logger = getLogger("test_shapes_2d")
+
+    if root_info < ( 6 , 18 ) :
+        logger.info ( "Test is distabled for ROOT %s" % str ( root_info ) )
+        return 
 
     ## histogram as shape
         
@@ -92,6 +104,10 @@ def test_shapes_2d() :
 def test_shapes_3d() :
     
     logger = getLogger("test_shapes_3d")
+
+    if root_info < ( 6 , 18 ) :
+        logger.info ( "Test is distabled for ROOT %s" % str ( root_info ) )
+        return 
 
     ## histogram as shape
         
