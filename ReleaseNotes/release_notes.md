@@ -1,3 +1,5 @@
+# v1.7.1.4
+
 ## New features: 
 
   1. extend example   `test_fitting_simfit5` to use binned distributions 
