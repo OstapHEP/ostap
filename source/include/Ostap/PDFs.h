@@ -6250,13 +6250,13 @@ namespace Ostap
       // ======================================================================
       /// templated constructor 
       template <class FUNCTION> 
-      static inline Shape2D 
-      create
-      ( const char*  name  , 
-        const char*  title , 
-        RooAbsReal&  x     ,
-        RooAbsReal&  y     ,
-        FUNCTION     f     ) { return Shape2D ( name , title , x , y , f ) ; }
+        static inline Shape2D
+        create
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&  x     ,
+          RooAbsReal&  y     ,
+          FUNCTION     f     ) { return Shape2D ( name.c_str() , title.c_str () , x , y , f ) ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -6322,12 +6322,13 @@ namespace Ostap
       template <class FUNCTION> 
       static inline Shape3D 
       create
-      ( const char*  name  , 
-        const char*  title , 
-        RooAbsReal&  x     ,
-        RooAbsReal&  y     ,
-        RooAbsReal&  z     ,
-        FUNCTION     f     ) { return Shape3D ( name , title , x , y , z , f ) ; }
+        ( const std::string& name  , 
+          const std::string& title , 
+          RooAbsReal&  x     ,
+          RooAbsReal&  y     ,
+          RooAbsReal&  z     ,
+          FUNCTION     f     ) { return Shape3D ( name.c_str() , title.c_str() ,
+                                                  x , y , z , f ) ; }
       // ======================================================================
     public:
       // ======================================================================

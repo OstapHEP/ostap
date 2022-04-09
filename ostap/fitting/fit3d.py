@@ -1473,12 +1473,21 @@ class Shape3D_pdf(PDF3) :
     
     def __init__ ( self , name , shape , xvar , yvar , zvar ) :
 
-        ##  iniialize the base 
-        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
+        if isinstance ( shape , ROOT.TH3 ) and not xvar :
+            xvar = shape.xminmax()
 
+        if isinstance ( shape , ROOT.TH3 ) and not yvar :
+            yvar = shape.yminmax()
+
+        if isinstance ( shape , ROOT.TH3 ) and not zvar :
+            zvar = shape.zminmax()
+            
         if isinstance ( shape , ROOT.TH3 ) :
             self.histo = shape
             shape      = Ostap.Math.Histo3D ( shape )
+
+        ##  iniialize the base 
+        PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
             
         self.__shape = shape
         
@@ -1503,8 +1512,7 @@ class Shape3D_pdf(PDF3) :
     @property
     def shape  ( self ) :
         """``shape'': the actual C++ callable shape"""
-        return self.__shape 
- 
+        return self.__shape  
   
 # =============================================================================
 ## simple convertor of 3D-histogram into PDF
@@ -1523,7 +1531,7 @@ class H3D_pdf(H3D_dset,PDF3) :
                    order   = 0     , 
                    silent  = False ) :
         
-        H3D_dset.__init__ ( self , histo3 ,      xvar  ,      yvar  ,      zvar  ,  density , silent )
+        H3D_dset.__init__ ( self , histo3 ,      xvar  ,      yvar  ,      zvar  , density , silent )
         PDF3    .__init__ ( self , name   , self.xaxis , self.yaxis , self.zaxis ) 
         
         self.__vset  = ROOT.RooArgSet  ( self.xvar , self.yvar , self.zvar )

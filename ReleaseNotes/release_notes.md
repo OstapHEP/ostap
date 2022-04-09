@@ -1,15 +1,13 @@
-
 ## New features: 
 
-
-
-
   1. extend example   `test_fitting_simfit5` to use binned distributions 
+  1. add dedicated test for `Shape*D_pdf`
 
 ## Backward incompatible:  
  
 ## Bug fixes:
   1. fix `Shape2D_pdf` and `Shape3D_pdf` (thanks to Slava Matiunin)
+  1. more fixes for  `Shape2D_pdf` and `Shape3D_pdf`
   
 # v1.7.1.2
 

@@ -1391,15 +1391,21 @@ class Shape2D_pdf(PDF2) :
     
     def __init__ ( self , name , shape , xvar , yvar ) :
 
-        ##  iniialize the base 
-        PDF2.__init__ ( self , name , xvar , yvar ) 
-
+        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not xvar :
+            xvar = shape.xminmax()
+            
+        if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) and not yvar :
+            yvar = shape.yminmax()
+            
         if isinstance ( shape , ROOT.TH2 ) and not isinstance ( shape , ROOT.TH3 ) :
             self.histo = shape
             shape      = Ostap.Math.Histo2D ( shape )
+
+        ##  iniialize the base 
+        PDF2.__init__ ( self , name , xvar , yvar ) 
             
         self.__shape = shape
-            
+
         ## create the actual pdf
         self.pdf = Ostap.Models.Shape2D.create  (
             self.roo_name  ( 'shape2_' ) , 
@@ -1421,7 +1427,6 @@ class Shape2D_pdf(PDF2) :
         """``shape'': the actual C++ callable shape"""
         return self.__shape 
  
-
 # ===================================================it==========================
 ## simple convertor of 2D-histogram into PDF
 #  @author Vanya Belyaev Ivan.Belyaev@itep.ru

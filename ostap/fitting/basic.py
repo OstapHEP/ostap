@@ -3329,13 +3329,17 @@ class Shape1D_pdf(PDF) :
     
     def __init__ ( self , name , shape , xvar ) :
 
-        ##  iniialize the base 
-        PDF.__init__ ( self , name , xvar ) 
-        
+
+        if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) and not xvar :
+            xvar = shape.xminmax() 
+
         if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
             self.histo = shape
             shape      = Ostap.Math.Histo1D ( shape )
-
+        
+        ##  iniialize the base 
+        PDF.__init__ ( self , name , xvar ) 
+        
         self.__shape = shape
         
         ## create the actual pdf

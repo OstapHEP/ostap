@@ -346,8 +346,9 @@ namespace Ostap
      *  @param  t t-value 
      *  @param  nu parameter nu , $\nu>0$
      */
-    double student_cdf ( const double t  , 
-                         const double nu ) ;
+    double student_cdf 
+    ( const double t  , 
+      const double nu ) ;
     // ========================================================================
     /** compute Owen's T-function
      *  \f$ f(h,a) = \frac{1}{2\pi}\int_0^a \frac{ e^{ -\frac{1}{2} h^2(1+x^2)}}{1+x^2}dx \f$ 
@@ -358,7 +359,11 @@ namespace Ostap
      *  @return the value of Owen's T-function
      *  The actual code is copied from http://people.sc.fsu.edu/~burkardt/f_src/owens/owens.html
      */
-    double owen  ( const double h , const double a ) ;
+    double owen  
+    ( const double h , 
+      const double a ) ;
+    // ========================================================================
+
     // ========================================================================
     /** get the gaussian integral
      *  \f[ f = \int_a^b \exp { -\alpha^2 x^2 + \beta x } \mathrm{d}x \f]
