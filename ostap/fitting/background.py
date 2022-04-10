@@ -2534,13 +2534,13 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
              or   isinstance ( bkg , float )  \
              or ( isinstance ( bkg , tuple ) and 1 < len ( bkg ) <=3 ) :
         
-        model = Bkg_pdf ( name , mass = xvar , tau = bkg , power = 0 , **kwargs )
+        model = Bkg_pdf ( name , xvar = xvar , tau = bkg , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
 
     ## exponent 
     elif bkg is math.exp : 
         
-        model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+        model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
         if kwargs : logger.warning ( 'make_bkg: kwargs %s are ignored' % kwargs )
 
     ## strings ....
@@ -2548,19 +2548,20 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
 
         bkg = bkg.strip().lower()
 
-        if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :            
+        if   bkg in ( '' , 'const' , 'constant' , 'flat' , 'uniform' , 'p0' , 'pol0' , 'poly0' ) :
             return make_bkg ( 0 , name , xvar   , logger = logger , **kwargs ) 
-        elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) : 
-            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+        elif bkg in ( 'e' , 'exp' , 'expo' , 'e0' , 'exp0' , 'expo0' ) :
+            return Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )        
         elif bkg in ( 'e+' , 'exp+' , 'expo+' ) : 
-            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
-            model.tau.setMin ( 0 ) 
-        elif bkg in ( 'e-' , 'exp-' , 'expo-' ) :             
-            model = Bkg_pdf ( name , mass = xvar , power = 0 , **kwargs )
+            model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
+            model.tau.setMin ( 0 )            
+            return model 
+        elif bkg in ( 'e-' , 'exp-' , 'expo-' ) :
+            model = Bkg_pdf ( name , xvar = xvar , power = 0 , **kwargs )
             model.tau.setMax ( 0 ) 
-
-        import re
+            return model
         
+        import re        
         poly = re.search ( r'(poly|pol|p)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if poly :
             degree = -1 * abs ( int ( poly.group ( 'degree' ) ) ) 
@@ -2570,7 +2571,7 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
         if expo :
             degree =            int ( expo.group ( 'degree' ) ) 
             return make_bkg ( degree  , name ,  xvar , logger = logger , **kwargs  )
-
+        
         incr = re.search ( r'(increasing|increase|incr|inc|i)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
         if incr : 
             degree = int ( incr.group ( 'degree' ) )
@@ -2582,32 +2583,30 @@ def make_bkg ( bkg , name , xvar , logger = None , **kwargs ) :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = Monotonic_pdf ( name , xvar , power = degree , increasing = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-
-
+        
         decr = re.search ( r'(convex|cx)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = True )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(concave|cv)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = ConvexOnly_pdf ( name , xvar , power = degree , convex = False )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
 
         decr = re.search ( r'(roopoly|rp)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = RooPoly_pdf ( name , xvar , power = degree )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
         
         decr = re.search ( r'(roochebyshev|roocheb|chebyshev|cheb|rc)(( *)|(_*))(?P<degree>\d)' , bkg , re.IGNORECASE )
-        if desc :
+        if decr :
             degree = int ( decr.group ( 'degree' ) )
             bkg    = RooCheb_pdf ( name , xvar , power = degree )
             return make_bkg ( bkg , name ,  xvar , logger = logger , **kwargs  )
-
 
     if model :
         logger.debug ( 'make_bkg: created model is %s' % model ) 

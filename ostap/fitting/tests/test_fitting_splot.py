@@ -78,18 +78,21 @@ def test_splot () :
 
     signal = Models.Gauss_pdf ( 'G'  , xvar = mass  , mean = ( 3 , 2, 4 ) , sigma = ( 0.2 , 0.1 , 0.5 ) )
 
-    model = Models.Fit1D ( signal = signal , background  = 1 )
+    model = Models.Fit1D ( signal = signal , background = 'expo-' )
     model.S = NS
     model.B = NB
 
+    model.background.tau.fix ( -0.2 )
     signal.mean .fix ( m0.value () )
     signal.sigma.fix ( m0.error () )
     model.fitTo ( dataset , silent = True )
-    signal.mean .release() 
-    signal.sigma.release() 
-
-    
+    signal.mean .release()
     model.fitTo ( dataset , silent = True )
+    signal.sigma.release() 
+    model.fitTo ( dataset , silent = True ) 
+    model.background.tau.release  () 
+    model.fitTo ( dataset , silent = True )
+    
     with use_canvas ( 'test_splot' ) : 
         r , f = model.fitTo ( dataset , silent = True , draw = True , nbins = 50 )
     logger.info ( "Mass fit : fit results\n%s" % r.table ( title = 'Mass fit' , prefix = '# ' ) )
@@ -107,23 +110,21 @@ def test_splot () :
     logger.info ( "Signal-weighted dataset\n%s" % ds_signal.table ( prefix = '# ' ) )
     logger.info ( "Background-weighted dataset\n%s" % ds_bkg.table ( prefix = '# ' ) )
     
-    ##  make exponential fits fot signal and background samples 
+    ##  make exponential fits for signal and background samples 
     TS = Models.Bkg_pdf  ( 'TS' , xvar = tau , power = 0 )
     TB = Models.Bkg_pdf  ( 'TB' , xvar = tau , power = 0 )
     
-
-    TS.fitTo ( ds_signal , silent = True )
-    TS.fitTo ( ds_signal , silent = True )
+    TS.fitTo ( ds_signal , silent = True , sumw2 = True )
+    TS.fitTo ( ds_signal , silent = True , sumw2 = True )
     with use_canvas ( 'test_splot' ) : 
-        rS, f = TS.fitTo ( ds_signal , silent = True , draw  = True , nbins = 100 )
+        rS, f = TS.fitTo ( ds_signal , silent = True , draw  = True , nbins = 100 , sumw2 = True )
     logger.info ( "Tau/signal fit : fit results\n%s" % rS.table ( title = 'Tau signal fit' , prefix = '# ' ) )
 
 
-
-    TB.fitTo ( ds_bkg , silent = True )
-    TB.fitTo ( ds_bkg , silent = True )
+    TB.fitTo ( ds_bkg , silent = True , sumw2 = True )
+    TB.fitTo ( ds_bkg , silent = True , sumw2 = True )
     with use_canvas ( 'test_splot' ) : 
-        rB, f = TB.fitTo ( ds_bkg , silent = True , draw  = True , nbins = 100 )
+        rB, f = TB.fitTo ( ds_bkg , silent = True , draw  = True , nbins = 100 , sumw2 = True )
     logger.info ( "Tau/bkg fit : fit results\n%s" % rB.table ( title = 'Tau bkg fit' , prefix = '# ' ) )
 
     

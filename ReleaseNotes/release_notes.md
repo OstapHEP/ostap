@@ -1,8 +1,13 @@
 ## New features: 
 
+  1. add printout for added varibales into `PDF.sPlot` method 
+
 ## Backward incompatible:  
  
 ## Bug fixes:
+
+  1. fix some old typos in `make_bkg` function form `ostap/fitting/backgriund.py` 
+  1. tiny fix in `dataset.table` method 
 
 # v1.7.1.4
 

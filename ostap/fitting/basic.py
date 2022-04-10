@@ -1592,7 +1592,7 @@ class PDF (FUNC) :
     #  r,f = model.fitTo ( dataset )
     #  model.sPlot ( dataset ) 
     #  @endcode 
-    def sPlot ( self , dataset , silent = True ) : 
+    def sPlot ( self , dataset , silent = False ) : 
         """ Make sPlot analysis
         >>> r,f = model.fitTo ( dataset )
         >>> model.sPlot ( dataset ) 
@@ -1600,8 +1600,10 @@ class PDF (FUNC) :
         assert self.alist2,\
                "PDF(%s) has empty ``alist2''/(list of components)" + \
                "no sPlot is possible" % self.name 
-        
-        with roo_silent ( silent ) :
+
+
+        vars = set ( ( v.name for v in dataset.varset() ) ) 
+        with roo_silent ( True ) :
             
             splot = ROOT.RooStats.SPlot ( rootID( "sPlot_" ) ,
                                           "sPlot"            ,
@@ -1609,8 +1611,17 @@ class PDF (FUNC) :
                                           self.pdf           ,
                                           self.alist2        )
         
-            self.__splots += [ splot ]            
-            return splot 
+            self.__splots += [ splot ]
+
+        if not silent :
+            vars = set ( ( v.name for v in dataset.varset() ) ) - vars
+            if vars :  self.info ( 'sPlot: %d variables are added to dataset:\n%s' % (
+                len ( vars ) ,
+                dataset.table ( title     = 'Variables added by the sPlot' ,
+                                prefix    = '# ' ,
+                                variables = list ( vars ) ) ) )
+            
+        return splot 
     # =========================================================================
     ## generate toy-sample according to PDF
     #  @code

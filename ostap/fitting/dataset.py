@@ -1634,10 +1634,11 @@ def _ds_table_0_ ( dataset           ,
         else :
             vars = list ( dataset.branches ( variables ) ) 
             
-    elif variables : vars = [ i.GetName() for i in varset if i in variables ]        
-    else           : vars = [ i.GetName() for i in varset                   ]
+    elif variables : vars = [ i.GetName() for i in varset if i.GetName() in variables ]        
+    else           : vars = [ i.GetName() for i in varset ]
         
     #
+
     _vars = []
     
     stat = dataset.statVars ( vars , cuts , first , last ) 
