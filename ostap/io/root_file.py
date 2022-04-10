@@ -745,11 +745,11 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
             size , _  = divmod ( size , 1024 * 1024 * 1024 )
             size =  '%s GB' % size
         elif 1024 * 1024      < size :
-            size , _  = divmod ( size, 1024 * 1024  )
+            size , _  = divmod ( size , 1024 * 1024  )
             size =  '%s MB' % size
         elif 1024       < size :
-            size , _  = divmod ( size, 1024 )
-            size =  '%s kB' % sise
+            size , _  = divmod ( size , 1024 )
+            size =  '%s kB' % size
         else :
             size = '%3d  B' % size
 
