@@ -1,3 +1,5 @@
+# v1.7.1.6
+
 ## New features: 
 
   1. add printout for added varibales into `PDF.sPlot` method 
@@ -8,6 +10,7 @@
 
   1. fix some old typos in `make_bkg` function form `ostap/fitting/backgriund.py` 
   1. tiny fix in `dataset.table` method 
+  1. some (minor) fixes for `root_file` and `rootshelve` modules  
 
 # v1.7.1.4
 

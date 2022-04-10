@@ -87,7 +87,7 @@
  Access existing DB in update mode :
 
  >>> import rootshelve as DBASE   ## import the RootShelve module 
- >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
+й >>> db = DBASE.open ('a_db' )    ## access existing dbase in update mode
  ...
  >>> for key in db : print(key)
  ...
@@ -176,7 +176,9 @@ class RootOnlyShelf(shelve.Shelf):
         self.__filename = filename 
         from ostap.io.root_file import ROOTCWD, open_mode  
         with ROOTCWD() : ## NB: preserve current directory in ROOT!
-            rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args  )
+            rfile = ROOT.TFile.Open ( filename   , open_mode ( mode ) , *args )
+            if not rfile or not rfile.IsOpen() :
+                raise IOError("Can't open ``%s'' with mode ``%s''" % ( filename , mode ) )
             shelve.Shelf.__init__ ( self , rfile , writeback )
             
         self.nominal_dbname = filename
@@ -246,6 +248,14 @@ class RootOnlyShelf(shelve.Shelf):
     def __enter__   ( self       ) : return self 
     def __exit__    ( self , *_  ) : self.close ()
 
+
+    # =============================================================================
+    ## get the object from the ROOT file 
+    def get ( self , key , defval = None ) :
+        """Get the object from the ROOT file
+        """
+        return self.dict.get ( key , defval ) 
+
     # =============================================================================
     ## get item from ROOT-file
     #  @code
@@ -285,6 +295,18 @@ class RootOnlyShelf(shelve.Shelf):
         """
         shelve.Shelf.close ( self )
         
+    # =========================================================================
+    ## list the available keys 
+    def ls    ( self ) :
+        """List the available keys as table .
+        
+        >>> db = ...
+        >>> db.ls() ## all keys
+        
+        """
+        return self.dict.ls_table( prefix = "# ")
+
+
 # =============================================================================
 ## need to disable endcode/decode for the keys 
 if python_version.major > 2 :
@@ -448,8 +470,14 @@ class RootShelf(RootOnlyShelf):
         ## finally use ROOT 
         self.dict [ key ] = value
 
+    ## close the database 
+    def close ( self ) :
+        """Close the database
+        """
+        RootOnlyShelf.close ( self )
+        
     # =========================================================================
-    ## list the avilable keys 
+    ## list the available keys 
     def ls    ( self , pattern = '' , load = True ) :
         """List the available keys (patterns included).
         Pattern matching is performed accoriding to
@@ -518,12 +546,7 @@ class RootShelf(RootOnlyShelf):
         line  = 'Database %s:%s #keys: %d size: %s' % ( t , ap , len ( self ) , size )
         ll.info (  '%s\n%s' %  ( line , table ) )
 
-    ## close the database 
-    def close ( self ) :
-        """Close the database
-        """
-        RootOnlyShelf.close ( self )
-        
+
 # =============================================================================
 ## helper function to open RootShelve data base
 #  @code
@@ -534,15 +557,17 @@ class RootShelf(RootOnlyShelf):
 #  @date   2010-04-30
 def open ( filename              ,
            mode          = 'c'   ,
-           writeback     = False , *args ) : 
+           writeback     = False ,
+           root_only     = False , *args ) : 
     """
     Helper function to open RootShelve data base
     >>> import RootShelve as DBASE
     >>> db = DBASE.open ( 'mydb.root' , 'c' )
-    """    
-    return RootShelf ( filename  ,
-                       mode      ,
-                       writeback , * args )
+    """
+    db_type = RootOnlyShelf if root_only else RootShelf
+    return db_type ( filename  ,
+                     mode      ,
+                     writeback , * args ) 
 
 # =============================================================================
 ## @class TmpRootShelf

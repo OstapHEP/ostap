@@ -510,19 +510,17 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
     - see ROOT.RooAbsData.reduce
     """
 
-    
     if ( not vars ) and ( not cuts ) : return dset.__class__ ( dset )  ##  return copy 
     elif not vars : vars = dset.varset()
     
-    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str(cuts)
+    if   isinstance ( cuts , ROOT.TCut ) :   cuts = str ( cuts )
 
-    if cuts and isisntane ( cuts , string_types ) : 
+    if cuts and isinstance ( cuts , string_types ) : 
         cuts0 = Ostap.FormulaVar ( cuts , cuts , dset.varlist() , False )            
         assert cuts0.ok() , 'ds_subset: invalid formula %s' % cuts
         del cuts0
         used  = Ostap.usedVariables ( cuts , dset.varlist() )            
         cuts  = Ostap.FormulaVar    ( cuts , cuts , used , True )
-
 
     if   isinstance ( vars , ROOT.RooArgSet  ) : return dset.reduce ( vars , cuts )
     elif isinstance ( vars , string_types    ) : vars = [ vars ]
@@ -536,7 +534,7 @@ def _rad_subset_ ( dset , vars = [] , cuts = '' ) :
         else :
             raise TypeError("``subset'': unknown type %s/%s" % ( v , type(v) ) )
 
-    return dset.reduce ( aset , cuts ) if aset else dset.reduce( cuts )
+    return dset.reduce ( aset , cuts ) if aset else dset.reduce ( cuts )
 
 
 # =============================================================================

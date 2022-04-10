@@ -290,6 +290,7 @@ def _rd_contains_ ( rdir , name ) :
     ##
     if not rdir : return False 
     ##
+    name = str ( name ) 
     with ROOTCWD() :
         ##
         dirname , sep , fname = name.partition('/')
@@ -725,7 +726,7 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
     >>> rdir.ls_table ()
     """
     
-    lines   = [  ( n , k.GetClassName() ) for ( n , k ) in _rd_ikeyskeys_ ( rdir ) ]
+    lines   = [  ( n , k.GetClassName() , k.GetObjlen () ) for ( n , k ) in _rd_ikeyskeys_ ( rdir ) ]
     lines.sort()
     maxkey  = 5
     maxtype = 5
@@ -736,9 +737,23 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
     fmt_type = '%%-%ds' % ( maxtype + 2 )
     fmt_key  = '%%-%ds' % ( maxkey  + 2 )
     
-    table = [ ( fmt_key % 'Key' , fmt_type % 'type' ) ]
+    table = [ ( fmt_key % 'Key' , fmt_type % 'type' , 'Size' ) ]
     for line in lines :
-        row = fmt_key % line[0] , fmt_type % line[1]
+        
+        size = line [ 2 ] 
+        if 1024 * 1024 * 1024 < size :
+            size , _  = divmod ( size , 1024 * 1024 * 1024 )
+            size =  '%s GB' % size
+        elif 1024 * 1024      < size :
+            size , _  = divmod ( size, 1024 * 1024  )
+            size =  '%s MB' % size
+        elif 1024       < size :
+            size , _  = divmod ( size, 1024 )
+            size =  '%s kB' % sise
+        else :
+            size = '%3d  B' % size
+
+        row = fmt_key % line[0] , fmt_type % line[1] , size 
         table.append ( row ) 
 
     name = rdir.GetName()
@@ -749,7 +764,7 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
         name = '<.>' + name [ -maxkey - maxtype : ]
         
     import ostap.logger.table as T
-    return T.table ( table , title = '%s' % name , prefix = '# ' )
+    return T.table ( table , title = '%s' % name , prefix = '# ' , alignment = 'llr' )
 
 # =============================================================================
 ## Show the content of the directory as a table
