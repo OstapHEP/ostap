@@ -1664,7 +1664,6 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 ROOT.TH1D.cmp_diff_prnt = _h1_cmp_diff_prnt_
 ROOT.TH1F.cmp_diff_prnt = _h1_cmp_diff_prnt_ 
     
-
 # =============================================================================
 ## calculate and print some statistic for comparison of 2D-histograms 
 #  @code
