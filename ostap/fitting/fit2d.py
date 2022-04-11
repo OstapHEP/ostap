@@ -1421,7 +1421,7 @@ class Shape2D_pdf(PDF2) :
                 self.roo_name  ( 'shape2_' ) , 
                 "Shape-2D %s" % self.name    ,
                 self.xvar                    ,
-                self.yvar       `            ,
+                self.yvar                    ,
                 self.shape                   )  
             
         ## save the configuration
