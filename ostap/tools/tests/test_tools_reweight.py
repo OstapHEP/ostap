@@ -167,12 +167,12 @@ for iter in range ( 1 , maxIter + 1  ) :
         logger.info  ( tag + ': compare DATA and MC for iteration #%d' % iter )
         
         hh = 'Iteration#%d: ' % iter 
-        
+
         ## 4a) compare the basic properties: mean, rms, skewness and kurtosis 
         title = tag + ': DATA vs MC comparison'
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_prnt
                                     ( hmc , density = True , title = title , prefix = '# ' ) ) )
-        
+
         ## 4b) compare them        
         title = tag + ': DATA vs MC difference'
         logger.info ( '%s:\n%s' % ( title , hdata.cmp_diff_prnt
@@ -194,7 +194,6 @@ for iter in range ( 1 , maxIter + 1  ) :
     time.sleep ( 5 ) 
     
     if not more and iter > 3 :
-        print ( 'HERE/3' )
         logger.info    ( allright ( 'No more iterations, converged after #%d' % iter ) )
         break
 

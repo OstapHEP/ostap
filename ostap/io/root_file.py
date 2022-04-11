@@ -741,13 +741,13 @@ def _rd_table_ ( rdir , prefix = '# ' ) :
     for line in lines :
         
         size = line [ 2 ] 
-        if 1024 * 1024 * 1024 < size :
+        if 1024 * 1024 * 1024 <= size :
             size , _  = divmod ( size , 1024 * 1024 * 1024 )
             size =  '%s GB' % size
-        elif 1024 * 1024      < size :
+        elif 1024 * 1024      <= size :
             size , _  = divmod ( size , 1024 * 1024  )
             size =  '%s MB' % size
-        elif 1024       < size :
+        elif 1024             <= size :
             size , _  = divmod ( size , 1024 )
             size =  '%s kB' % size
         else :

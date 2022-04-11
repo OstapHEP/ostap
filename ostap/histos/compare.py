@@ -1466,7 +1466,6 @@ def _h2_cmp_prnt_ ( h1              ,
 ROOT.TH2F.cmp_prnt = _h2_cmp_prnt_
 ROOT.TH2D.cmp_prnt = _h2_cmp_prnt_
 
-
 # =============================================================================
 ## calculate and print some statistic for comparison   of 1D-histograms 
 #  @code
@@ -1492,6 +1491,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
     >>> h1 , h2 = ...
     >>> h1.cmp_diff_prnt ( h2 ) 
     """
+    
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
            "cmp_diff_prnt: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )
     
@@ -1525,7 +1525,7 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
     from   ostap.logger.utils import pretty_float, pretty_ve
     import ostap.math.math_ve as     ME
-    
+
     if distance :
         value = h1.cmp_dist ( h2 , density = density )
         v , n = pretty_float ( value  )
@@ -1628,9 +1628,9 @@ def _h1_cmp_diff_prnt_ ( h1                             ,
 
     if probfit and histo2 :
 
-        if (6,27)<= root_info :
+        if (6,26)<= root_info :
             
-            logger.warning ('H1_CMP_DIFF_PRNT: cmp_fit is teporarily disabled (6.27/1)')
+            logger.warning ('H1_CMP_DIFF_PRNT: cmp_fit is teporarily disabled %s' % str ( root_info ) )
             
         else : 
 
