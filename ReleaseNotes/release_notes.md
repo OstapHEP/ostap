@@ -1,3 +1,11 @@
+## New features: 
+
+   1. Update setters in `signals.py`
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
 # v1.7.1.6
 
 ## New features: 

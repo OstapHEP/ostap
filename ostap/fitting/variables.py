@@ -844,23 +844,36 @@ class FIXVAR(object):
         
         if isinstance ( vars , ROOT.RooAbsReal ) : vars = [ vars ]
 
-        self.vars = [] 
+        variables = [] 
         for v in vars :
             assert isinstance ( v , ROOT.RooAbsReal ),\
                    'FIXVAR: Invalid variable type %s/%s' % ( v   , type ( v ) )
-            self.vars.append ( v )
-            
+            variables.append ( v )
+
+        self.__variables = tuple ( variables )
+        self.__fixed     = ()
+        
     def __enter__ ( self        ) :
 
-        self.fixed = tuple ( [ c.isConstant() for c in self.vars ] )
-        for v in self.vars : v.fix ()
-        
+        self.__fixed = tuple ( [ c.isConstant() for c in self.variables ] )
+        for v in self.variables : v.fix ()
+
         return self
     
     def __exit__  ( self , *_   ) :
-        for v , c in zip ( self.vars , self.fixed ) :
+        for v , c in zip ( self.variables , self.fixed ) :
             if not c : v.release()
-            
+
+    @property
+    def variables ( self ) :
+        """``variables'' : list of variables"""
+        return self.__variables
+
+    @property
+    def fixed ( self ) :
+        """``fixed'' : fixed variable?"""
+        return self.__fixed
+        
 # =============================================================================
 ## Simple context manager to keep the binning scheme
 #  @code
