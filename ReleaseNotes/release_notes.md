@@ -1,6 +1,7 @@
 ## New features: 
 
    1. Update setters in `signals.py`
+   1. add `Ostap::Models::Histo1D`, `Ostap::Models::Histo2D` and `Ostap::Models::Histo3D`
 
 ## Backward incompatible:  
  

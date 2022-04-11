@@ -1405,15 +1405,25 @@ class Shape2D_pdf(PDF2) :
         PDF2.__init__ ( self , name , xvar , yvar ) 
             
         self.__shape = shape
-
-        ## create the actual pdf
-        self.pdf = Ostap.Models.Shape2D.create  (
-            self.roo_name  ( 'shape2_' ) , 
-            "Shape-2D %s" % self.name ,
-            self.xvar                 ,
-            self.yvar                 ,
-            self.shape                ) 
-
+        
+        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo2D ( self.roo_name ( 'histo2_' ) , 
+                                              "Histo-2D %s" % self.name   ,
+                                              self.xvar                   ,
+                                              self.yvar                   ,
+                                              self.shape                  )            
+        else : 
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape2D.create  (
+                self.roo_name  ( 'shape2_' ) , 
+                "Shape-2D %s" % self.name    ,
+                self.xvar                    ,
+                self.yvar       `            ,
+                self.shape                   )  
+            
         ## save the configuration
         self.config = {
             'name'    : self.name    , 

@@ -89,6 +89,106 @@ Ostap::Models::Shape3D::clone ( const char* name ) const
 
 
 
+// ============================================================================
+//  Histo1D
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Models::Histo1D::Histo1D
+( const char*                 name  , 
+  const char*                 title , 
+  RooAbsReal&                 x     ,
+  const Ostap::Math::Histo1D& histo ) 
+  : RooAbsPdf  (  name ,  title ) 
+  , m_x        ( "x"   , "x-variable" , this , x ) 
+  , m_histo    ( histo ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Histo1D::Histo1D
+( const Ostap::Models::Histo1D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name  ) 
+  , m_x       ( "x"  , this , right.m_x ) 
+  , m_histo   ( right.m_histo ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Histo1D*
+Ostap::Models::Histo1D::clone ( const char* name ) const 
+{ return new Ostap::Models::Histo1D(*this,name) ; }
+// ============================================================================
+//  Histo2D
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Models::Histo2D::Histo2D
+( const char*                 name  , 
+  const char*                 title , 
+  RooAbsReal&                 x     ,
+  RooAbsReal&                 y     ,
+  const Ostap::Math::Histo2D& histo ) 
+  : RooAbsPdf  (  name ,  title ) 
+  , m_x        ( "x"   , "x-variable" , this , x ) 
+  , m_y        ( "y"   , "y-variable" , this , y ) 
+  , m_histo    ( histo ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Histo2D::Histo2D
+( const Ostap::Models::Histo2D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name  ) 
+  , m_x       ( "x"  , this , right.m_x ) 
+  , m_y       ( "y"  , this , right.m_y ) 
+  , m_histo   ( right.m_histo ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Histo2D*
+Ostap::Models::Histo2D::clone ( const char* name ) const 
+{ return new Ostap::Models::Histo2D(*this,name) ; }
+// ============================================================================
+//  Histo3D
+// ============================================================================
+// constructor
+// ============================================================================
+Ostap::Models::Histo3D::Histo3D
+( const char*                 name  , 
+  const char*                 title , 
+  RooAbsReal&                 x     ,
+  RooAbsReal&                 y     ,
+  RooAbsReal&                 z     ,
+  const Ostap::Math::Histo3D& histo ) 
+  : RooAbsPdf  (  name ,  title ) 
+  , m_x        ( "x"   , "x-variable" , this , x ) 
+  , m_y        ( "y"   , "y-variable" , this , y ) 
+  , m_z        ( "z"   , "z-variable" , this , z ) 
+  , m_histo    ( histo ) 
+{}
+// ============================================================================
+// copy constructor 
+// ============================================================================
+Ostap::Models::Histo3D::Histo3D
+( const Ostap::Models::Histo3D& right ,
+  const char*                   name  )
+  : RooAbsPdf ( right , name  ) 
+  , m_x       ( "x"  , this , right.m_x ) 
+  , m_y       ( "y"  , this , right.m_y ) 
+  , m_z       ( "z"  , this , right.m_z ) 
+  , m_histo   ( right.m_histo ) 
+{}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Histo3D*
+Ostap::Models::Histo3D::clone ( const char* name ) const 
+{ return new Ostap::Models::Histo3D(*this,name) ; }
+// ============================================================================
 
 
 
@@ -7379,6 +7479,9 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 ClassImp(Ostap::Models::Shape1D            ) 
 ClassImp(Ostap::Models::Shape2D            ) 
 ClassImp(Ostap::Models::Shape3D            ) 
+ClassImp(Ostap::Models::Histo1D            ) 
+ClassImp(Ostap::Models::Histo2D            ) 
+ClassImp(Ostap::Models::Histo3D            ) 
 ClassImp(Ostap::Models::Uniform            ) 
 ClassImp(Ostap::Models::BreitWigner        ) 
 ClassImp(Ostap::Models::BreitWignerMC      ) 

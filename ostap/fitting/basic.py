@@ -3347,18 +3347,28 @@ class Shape1D_pdf(PDF) :
         if isinstance ( shape , ROOT.TH1 ) and not isinstance ( shape , ROOT.TH2 ) :
             self.histo = shape
             shape      = Ostap.Math.Histo1D ( shape )
-        
+
         ##  iniialize the base 
         PDF.__init__ ( self , name , xvar ) 
         
         self.__shape = shape
+
+        if isinstance ( self.shape , Ostap.Math.Histo1D ) :
         
-        ## create the actual pdf
-        self.pdf = Ostap.Models.Shape1D.create  (
-            self.roo_name ( 'shape1_' ) , 
-            "Shape-1D %s" % self.name ,
-            self.xvar                 ,
-            self.shape                ) 
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo1D ( self.roo_name ( 'histo1_' ) , 
+                                              "Histo-1D %s" % self.name   ,
+                                              self.xvar                   ,
+                                              self.shape                  )
+            
+        else :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape1D.create  (
+                self.roo_name ( 'shape1_' ) , 
+                "Shape-1D %s" % self.name ,
+                self.xvar                 ,
+                self.shape                ) 
 
         ## save the configuration
         self.config = {

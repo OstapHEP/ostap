@@ -1490,15 +1490,26 @@ class Shape3D_pdf(PDF3) :
         PDF3.__init__ ( self , name , xvar , yvar , zvar ) 
             
         self.__shape = shape
-        
-        ## create the actual pdf
-        self.pdf = Ostap.Models.Shape3D.create  (
-            self.roo_name ( 'shape3_' ) , 
-            "Shape-3D %s" % self.name ,
-            self.xvar                 ,
-            self.yvar                 ,
-            self.zvar                 ,
-            self.shape                ) 
+
+        if isinstance ( self.shape , Ostap.Math.Histo2D ) :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Histo3D ( self.roo_name ( 'histo3_' ) , 
+                                              "Histo-3D %s" % self.name   ,
+                                              self.xvar                   ,
+                                              self.yvar                   ,
+                                              self.zvar                   ,
+                                              self.shape                  )
+        else :
+            
+            ## create the actual pdf
+            self.pdf = Ostap.Models.Shape3D.create  (
+                self.roo_name ( 'shape3_' ) , 
+                "Shape-3D %s" % self.name   ,
+                self.xvar                   ,
+                self.yvar                   ,
+                self.zvar                   ,
+                self.shape                  ) 
 
         ## save the configuration
         self.config = {

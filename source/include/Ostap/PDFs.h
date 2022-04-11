@@ -15,6 +15,7 @@
 #include "Ostap/Voigt.h"
 #include "Ostap/Models.h"
 #include "Ostap/BSpline.h"
+#include "Ostap/HistoInterpolators.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -6361,6 +6362,159 @@ namespace Ostap
       std::function<double(double,double,double)>  m_function ; // function 
       // ======================================================================      
     } ;        
+    // ========================================================================
+
+
+    // ========================================================================
+    /** @class Histo1D
+     *  simple generic PDF from the histogram 
+     */
+    class Histo1D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Histo1D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      Histo1D ( const char*                 name  , 
+                const char*                 title , 
+                RooAbsReal&                 x     ,
+                const Ostap::Math::Histo1D& histo ) ;
+      /// copy constructor 
+      Histo1D ( const Histo1D& right , const char* name = nullptr ) ;
+      /// clone method
+      Histo1D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      Histo1D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override { return func ( m_x ) ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x ) const 
+      { return std::max ( m_histo ( x ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// variable 
+      RooRealProxy                   m_x     ; // variable 
+      /// the function itself 
+      Ostap::Math::Histo1D           m_histo ; // function 
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Histo2D
+     *  simple generic PDF from the histogram 
+     */
+    class Histo2D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Histo2D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      Histo2D ( const char*                 name  , 
+                const char*                 title , 
+                RooAbsReal&                 x     ,
+                RooAbsReal&                 y     ,
+                const Ostap::Math::Histo2D& histo ) ;
+      /// copy constructor 
+      Histo2D ( const Histo2D& right , const char* name = nullptr ) ;
+      /// clone method
+      Histo2D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      Histo2D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override { return func ( m_x , m_y ) ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x , 
+                     const double y ) const 
+      { return std::max ( m_histo ( x , y ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// x-variable 
+      RooRealProxy                   m_x     ; // x-variable 
+      /// y-variable 
+      RooRealProxy                   m_y     ; // y-variable 
+      /// the function itself 
+      Ostap::Math::Histo2D           m_histo ; // function 
+      // ======================================================================      
+    } ;
+    // ========================================================================
+    /** @class Histo3D
+     *  simple generic PDF from the histogram 
+     */
+    class Histo3D final : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Histo3D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// constructor
+      Histo3D ( const char*                 name  , 
+                const char*                 title , 
+                RooAbsReal&                 x     ,
+                RooAbsReal&                 y     ,
+                RooAbsReal&                 z     ,
+                const Ostap::Math::Histo3D& histo ) ;
+      /// copy constructor 
+      Histo3D ( const Histo3D& right , const char* name = nullptr ) ;
+      /// clone method
+      Histo3D* clone ( const char* name ) const override ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // fake default contructor, needed just for the proper (de)serialization
+      Histo3D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// evaluate the PDF 
+      Double_t evaluate () const override { return func ( m_x , m_y , m_z ) ; }
+      // ======================================================================        
+    public:
+      // ======================================================================
+      /// evaluate the function
+      double func  ( const double x , 
+                     const double y , 
+                     const double z ) const 
+      { return std::max ( m_histo ( x , y , z ) , 0.0 ) ; }
+      // ======================================================================        
+    private :
+      // ======================================================================
+      /// x-variable 
+      RooRealProxy                   m_x     ; // x-variable 
+      /// y-variable 
+      RooRealProxy                   m_y     ; // y-variable 
+      /// z-variable 
+      RooRealProxy                   m_z     ; // z-variable 
+      /// the function itself 
+      Ostap::Math::Histo3D           m_histo ; // function 
+      // ======================================================================      
+    } ;
     // ========================================================================
   } //                                           end of namespace Ostap::Models
   // ==========================================================================
