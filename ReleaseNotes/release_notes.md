@@ -1,6 +1,5 @@
 # v1.7.1.6
 
-
 ## New features: 
 
   1. add printout for added varibales into `PDF.sPlot` method 

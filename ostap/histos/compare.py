@@ -62,6 +62,7 @@ def _h1_constant_ ( h1 , prob = 0.10 , opts = '0Q' , density = False ) :
 ROOT.TH1D.is_constant = _h1_constant_
 ROOT.TH1F.is_constant = _h1_constant_
 
+__fun_cache = [] 
 # =============================================================================
 ## compare the 1D-histograms trying to fit one with other
 def _h1_cmp_fit_ ( h1              ,
@@ -78,9 +79,9 @@ def _h1_cmp_fit_ ( h1              ,
     """
 
     assert isinstance ( h1 , ROOT.TH1 ) and 1 == h1.dim () , \
-           "cmp_dist: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )    
+           "cmp_fit: invalid type of h1  %s/%s" % ( h1 , type ( h1 ) )    
     if isinstance ( h2 , ROOT.TH1 ) :
-        assert 1 == h2.dim () , "cmp_dist: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
+        assert 1 == h2.dim () , "cmp_fit: invalid type of h2  %s/%s" % ( h2 , type ( h2 ) )
 
     if density : 
         h1_ = h1.density() if hasattr ( h1 , 'density' ) else h1 
@@ -97,10 +98,17 @@ def _h1_cmp_fit_ ( h1              ,
     f2.fix      ( 1 , 0 )
     f2.fix      ( 2 , 1 )
 
-    rf = f2.Fit ( h1 , 'S' + opts )
+    while 100 < len ( __fun_cache ) :
+        __fun_cache.pop ()   
+    __fun_cache.insert ( 0 , ( f2 , h1 , h2 ) )
+    
+    rf  = f2.Fit ( h1 , 'S' + opts )
+    if 0 == rf.Status() and not '0' in opts :
+        cnv  = ROOT.gPad.GetCanvas() if ROOT.gPad else None
+        if cnv : cnv.Update()
+        
     if 0 != rf.Status() :
         logger.error ( "Can't fit with function " % rf.Status() )
-        return None
 
     return rf
 
