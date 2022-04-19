@@ -188,15 +188,16 @@ class Modify1D_pdf(Product1D_pdf) :
     
     - attention: it could be rather CPU-inefficient!
     """
-    def __init__ ( self           ,
-                   pdf            ,
-                   power   = 1    ,
-                   xvar    = None ,
-                   name    = ''   ,
-                   xmin    = None ,
-                   xmax    = None ,
-                   title   = ''   ,
-                   use_roo = True ) :
+    def __init__ ( self            ,
+                   pdf             ,
+                   power    = 1    ,
+                   xvar     = None ,
+                   name     = ''   ,
+                   xmin     = None ,
+                   xmax     = None ,
+                   title    = ''   ,
+                   use_roo  = True ,
+                   the_phis = None ) :
         
         assert isinstance ( power , int ) and 0 <= power,\
                "Invalid ``power''   %s" % power
@@ -218,11 +219,12 @@ class Modify1D_pdf(Product1D_pdf) :
         name = name if name else self.generate_name ( prefix = "modify_%s_%s"  % ( pdf.name , power ) )
 
         from ostap.fitting.background import PolyPos_pdf
-        pdf2 = PolyPos_pdf( self.generate_name ( 'M_%s_%s' % ( pdf.name , power ) ) ,
-                            xvar  = xvar  ,
-                            power = power ,
-                            xmin  = xmin  ,
-                            xmax  = xmax  )
+        pdf2 = PolyPos_pdf ( self.generate_name ( 'M_%s_%s' % ( pdf.name , power ) ) ,
+                             xvar     = xvar     ,
+                             power    = power    ,
+                             xmin     = xmin     ,
+                             xmax     = xmax     ,
+                             the_phis = the_phis )
         
         self.__pdf_2 = pdf2
         
@@ -244,14 +246,15 @@ class Modify1D_pdf(Product1D_pdf) :
         for c in self.pdf1.crossterms2 : self.crossterms2.add ( c )
         
         self.config = {
-            'name'    : self.name    ,
-            'pdf'     : self.pdf1    ,
-            'xvar'    : self.xvar    ,
-            'power'   : power        ,
-            'xmin'    : xmin         ,
-            'xmax'    : xmin         ,
-            'title'   : self.title   ,
-            'use_roo' : self.use_roo 
+            'name'     : self.name    ,
+            'pdf'      : self.pdf1    ,
+            'xvar'     : self.xvar    ,
+            'power'    : power        ,
+            'xmin'     : xmin         ,
+            'xmax'     : xmin         ,
+            'title'    : self.title   ,
+            'use_roo'  : self.use_roo ,
+            'the_phis' : self.phis    ,          
             }
         
     @property
@@ -266,7 +269,22 @@ class Modify1D_pdf(Product1D_pdf) :
     ##    opdf = self.pdf1
     ##    return  getattr ( opdf , attr )
 
+    @property
+    def phis    ( self ) :
+        """``phis'' : phases for correction polynomials"""
+        return self.__pdf_2.phis
+    @phis.setter
+    def phis ( self , values ) :
+        self.__pdf_2.phis  = values 
 
+    ## set all phis to be 0
+    def reset_phis ( self ) :
+        """Set all phases to be zero
+        >>> pdf = ...
+        >>> pdf.reset_phis() 
+        """
+        return self.__pdf_2.reset_phis()
+    
 models.append ( Modify1D_pdf )
 
 
@@ -493,7 +511,7 @@ class CutOff_pdf(Product1D_pdf) :
     def cutoff   ( self ) :
         """``cutoff'' : PDF ised for cut-off"""
         return self.pdf2
-    
+
 # =============================================================================
 if '__main__' == __name__ : 
 

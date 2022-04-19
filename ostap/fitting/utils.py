@@ -824,8 +824,8 @@ class MakeVar ( object ) :
                 value = bool ( aer.getInt( 0 ) )
                 if not value : self.warning ("parse_args: 'AsymptoticError=False' is specified for the weighted  dataset!")
             elif weighted :                
-                if binned : self.debug   ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted/binned dataset! ``SumW2=True'' is added" )
-                else      : self.warning ( "parse_args: Neither ``SumW2Error'' and ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
+                if binned : self.debug   ( "parse_args: Neither ``SumW2Error'' nor ``AsymptoticError'' are specified for weighted/binned dataset! ``SumW2=True'' is added" )
+                else      : self.warning ( "parse_args: Neither ``SumW2Error'' nor ``AsymptoticError'' are specified for weighted dataset! ``SumW2=True'' is added" )
                 _args.append ( ROOT.RooFit.SumW2Error ( True ) )                
             elif not weighted and sw2 :
                 self.warning ( "parse_args:``SumW2Error'' is specified for non-weighted dataset" )
