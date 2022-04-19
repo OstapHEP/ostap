@@ -2005,10 +2005,10 @@ class PSSmear_pdf ( PDF ) :
 ## @class PSSmear2_pdf
 #  Usefull class to represent "smear" phase space function
 #  @code
-#  pspdf = PSPol_pdf ( ... )
-#  gamma = 10 * MeV 
-#  shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
-#  values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
+#  pspdf       = PSPol_pdf ( ... )
+#  gamma       = 10 * MeV 
+#  shape       = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+#  values      = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
 #  smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values ) 
 #  @endcode
 #  It is very useful to smear left thresholds for phase-space-based PDFs.
@@ -2037,9 +2037,9 @@ class PSSmear_pdf ( PDF ) :
 #  @see Ostap::Math::PhaseSpaceLeft
 class PSSmear2_pdf ( PDF ) :
     """ Usefull class to represent ``smear'' phase space function
-    >>> pspdf = PSPol_pdf ( ... )
-    >>> gamma = 10 * MeV 
-    >>> shape = lambda x : 1.0/(x*x+0.25*gamma*gamma)
+    >>> pspdf  = PSPol_pdf ( ... )
+    >>> gamma  = 10 * MeV 
+    >>> shape  = lambda x : 1.0/(x*x+0.25*gamma*gamma)
     >>> values = vrange ( -5.0*gamma , 5.0 * gamma , 100 ) 
     >>> smeared_pdf = PSSmear2_pdf ( pspdf , profile = shape , values = values )
     

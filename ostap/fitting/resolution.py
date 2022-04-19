@@ -877,7 +877,6 @@ class ResoBukin (RESOLUTION) :
         """``rhoR''-parameter (right tail) for Bukin function"""
         return self.__rhoR
 
-
 # =============================================================================
 ## @class ResoJohnsonSU
 #
