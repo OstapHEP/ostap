@@ -3,9 +3,7 @@
 
   1. add new method `make_soft_constraint2 to create asymmetryc constraint
   1. add test for soft constraints `test_fitting_constraints`
-
- 
-
+, hLcpip_Sc, hLcpim_Sc
 ## Backward incompatible:  
  
 ## Bug fixes:
