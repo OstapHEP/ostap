@@ -817,7 +817,7 @@ class ResoBukin (RESOLUTION) :
                 v1name  =  self.roo_name ( 'rhoL' , self.name )     ,
                 v2name  =  self.roo_name ( 'rhoR' , self.name )     ,
                 v1title = '#rho_{L}: #rho #times (1+#kappa_{#rho})' , 
-                v2title = '#rho_{R}: #rho #times (1-#kappa_{$rho})' )
+                v2title = '#rho_{R}: #rho #times (1-#kappa_{#rho})' )
                 
         # 
         ## create PDF
