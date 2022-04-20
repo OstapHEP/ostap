@@ -734,7 +734,7 @@ class Apollonios2_pdf(MASS) :
 
     @property
     def asym ( self ) :
-        """``asym''- asymmetry parameter for Apollonios2 function (same as ``kappa''"""
+        """``asym''- asymmetry parameter for Apollonios2 function (same as ``kappa'')"""
         return self.__asym
     @asym.setter
     def asym ( self, value ) :
@@ -742,7 +742,7 @@ class Apollonios2_pdf(MASS) :
 
     @property
     def kappa ( self ) :
-        """``kappa''-parameter for Apollonios2 function (same as ``asym''"""
+        """``kappa''-parameter for Apollonios2 function (same as ``asym'')"""
         return self.__asym
     @kappa.setter
     def kappa ( self, value ) :
@@ -758,12 +758,12 @@ class Apollonios2_pdf(MASS) :
 
     @property
     def sigmaL ( self ) :
-        """(left)sigma-parameter for Apollonios-2 function"""
+        """(left) sigma-parameter for Apollonios-2 function"""
         return self.__sigmaL
     
     @property
     def sigmaR ( self ) :
-        """(right)sigma-parameter for Apollonios2 function"""
+        """(right) sigma-parameter for Apollonios2 function"""
         return self.__sigmaR
 
     

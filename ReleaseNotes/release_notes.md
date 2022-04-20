@@ -1,5 +1,17 @@
-# v1.7.1.8
 
+## New features: 
+
+  1. add new method `make_soft_constraint2 to create asymmetryc constraint
+  1. add test for soft constraints `test_fitting_constraints`
+
+ 
+
+## Backward incompatible:  
+ 
+## Bug fixes:
+
+
+# v1.7.1.8
 
 ## New features: 
 

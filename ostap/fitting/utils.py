@@ -1599,8 +1599,62 @@ class MakeVar ( object ) :
         self.aux_keep.append ( err   )
         self.aux_keep.append ( gauss )
 
-        self.info ('Constraint is created %s=%s' % ( var.name , value ) )
+        self.info ('Constraint is created %s: %s' % ( var.name , value ) )
         return  gauss 
+
+    # =========================================================================
+    ## Helper function to prepare ``soft'' asymmetric Gaussian constraint for the variable
+    #  @attention the constraint is prepared, but not applied!
+    #  @code
+    #  sigma      = ...
+    #  constraint = pdf.soft_constraint2 ( sigma , 0.15 , -0.01 , +0.05 )
+    #  @endcode 
+    def soft_constraint2 ( self      ,
+                           var       ,
+                           value     ,
+                           neg_error ,
+                           pos_error , 
+                           name = '' , title = '' ) :
+        """Prepare ``soft'' asymetric Gaussian constraint for the variable
+        -  consraint is prepared but not applied!
+        >>> sigma      = ...
+        >>> constraint = pdf.make_constraint( sigma , VE ( 0.15 , 0.01**2 ) )
+        """
+        
+        assert isinstance ( var   , ROOT.RooAbsReal ) ,\
+               "Invalid ``v'': %s/%s"  % ( var , type ( var ) )        
+        assert isinstance ( value     , num_types ) ,\
+               "Invalid ``value'': %s/%s"  % ( value , type ( value ) )
+        assert isinstance ( neg_error , num_types ) ,\
+               "Invalid ``neg_error'': %s/%s"  % ( neg_error , type ( neg_error ) )        
+        assert isinstance ( pos_error , num_types ) and 0 < pos_error ,\
+               "Invalid ``pos_error'': %s/%s"  % ( pos_error , type ( pos_error ) )
+        
+        if abs ( neg_error ) == pos_error :
+            return self.soft_constraint ( var , VE ( value , pos_error * pos_error ) ,
+                                          name = name , title = title )
+        
+        name  = name  if name  else 'Gauss_%s_%s'                      % ( var.GetName() , self.name ) 
+        title = title if title else 'Gaussian Constraint(%s,%s) at %s' % ( var.GetName() , self.name , value )
+        
+        # value & error as RooFit objects: 
+        val    = ROOT.RooFit.RooConst (       float ( value     )   )
+        poserr = ROOT.RooFit.RooConst (       float ( pos_error )   )
+        negerr = ROOT.RooFit.RooConst ( abs ( float ( neg_error ) ) ) 
+        
+        # asymmetric/bifurcated  Gaussian constrains 
+        agauss = Ostap.Models.BifurcatedGauss (
+            self.var_name ( name ) , title , var , val , negerr , poserr )
+        
+        # keep all the created technical stuff  
+        self.aux_keep.append ( val    )
+        self.aux_keep.append ( poserr )
+        self.aux_keep.append ( negerr )
+        self.aux_keep.append ( agauss )
+        
+        self.info ('Constraint is created %s: %.g+%.g-%.g' % ( var.name , value , pos_error , neg_error ) )
+        
+        return agauss 
 
     # ==========================================================================
     ## Helper function to  create soft Gaussian constraint
