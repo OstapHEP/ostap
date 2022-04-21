@@ -160,11 +160,14 @@ else :
     
 # =============================================================================
 if (3,5) <= sys.version_info :
-    ## local version of <code>isfinite</code>
+    ## local version of <code>isclose</code>
     isclose = math.isclose 
+    ## def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
+    ##    """Local version of `isclose`"""
+    ##    return math.isclose ( a , b , rel_tol = rel_tol, abs_tol = abs_tol )
 else :
     # =========================================================================
-    ## local version of <code>isfinite</code>
+    ## local version of <code>isclose</code>
     def isclose  ( a , b , rel_tol = 1.e-9 , abs_tol = 0.0  ) :
         """Local version of `isclose`"""
         return abs ( a - b ) <= max ( rel_tol * max ( abs ( a ) , abs ( b ) ) , abs_tol )

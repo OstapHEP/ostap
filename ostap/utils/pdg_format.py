@@ -44,7 +44,7 @@ __all__ = (
 import ROOT,  math, sys, enum  
 from   ostap.math.ve          import VE
 from   ostap.math.base        import frexp10, isfinite, isclose  
-from   ostap.core.ostap_types import integer_types 
+from   ostap.core.ostap_types import integer_types, string_types 
 # =============================================================================
 # logging 
 # =============================================================================
@@ -98,7 +98,7 @@ def ref_error ( mode , error , *errors ) :
         else :
             raise ValueError("ref_error: Unknown integer mode %s" % mode )
 
-    assert isinstance ( umode , Mode ),\
+    assert isinstance ( umode , ErrMode ),\
            'ref_error: Unknown mode %s' % umode
 
     if umode == ErrMode.TOTAL :        
@@ -568,8 +568,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL
     
     if   1 == ecase :
 
-        err1 = round_N ( error1 , 2 ) if isclose ( error1 , error , 1.e-2 ) else err 
-        err2 = round_N ( error2 , 2 ) if isclose ( error2 , error , 1.e-2 ) else err 
+        err1 = round_N ( error1 , 2 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err 
+        err2 = round_N ( error2 , 2 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err 
         
         if   0 == b :
             nd = 1
@@ -582,8 +582,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL
 
     elif 2 == ecase :
 
-        err1 = round_N ( error1 , 1 ) if isclose ( error1 , error , 1.e-2 ) else err 
-        err2 = round_N ( error2 , 1 ) if isclose ( error2 , error , 1.e-2 ) else err 
+        err1 = round_N ( error1 , 1 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err 
+        err2 = round_N ( error2 , 1 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err 
 
         if   0 == b :
             nd = 0
@@ -602,8 +602,8 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL
 
     elif 3 == ecase :
         
-        err1 = round_N ( error1 , 2 ) if isclose ( error1 , error , 1.e-2 ) else err  
-        err2 = round_N ( error2 , 2 ) if isclose ( error2 , error , 1.e-2 ) else err  
+        err1 = round_N ( error1 , 2 ) ## if isclose ( error1 , error , reL_tol = 1.e-2 ) else err  
+        err2 = round_N ( error2 , 2 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err  
 
         if   0 == b :
             nd = 0
@@ -624,7 +624,7 @@ def pdg_format2( value , error1 , error2  , latex = False , mode = ErrMode.TOTAL
         if latex: fmt = '(%%+.%df \\pm %%.%df \\pm %%.%df )' %  ( nd , nd , nd ) 
         else    : fmt = ' %%+.%df +/- %%.%df +/- %%.%df '    %  ( nd , nd , nd )
 
-        return fmt % ( val , err )
+        return fmt % ( val , err1 , err2  )
 
         
     if latex: fmt = '(%%+.%df \\pm %%.%df \\pm %%.%df )\\times 10^{%%d}' %  ( nd , nd , nd ) 
@@ -701,9 +701,9 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
 
     if   1 == ecase :
 
-        err1 = round_N ( error1 , 2 ) if isclose ( error1 , error , 1.e-2 ) else err  
-        err2 = round_N ( error2 , 2 ) if isclose ( error2 , error , 1.e-2 ) else err  
-        err3 = round_N ( error3 , 2 ) if isclose ( error3 , error , 1.e-2 ) else err  
+        err1 = round_N ( error1 , 2 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err  
+        err2 = round_N ( error2 , 2 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err  
+        err3 = round_N ( error3 , 2 ) ## if isclose ( error3 , error , rel_tol = 1.e-2 ) else err  
         
         if   0 == b :
             nd = 1
@@ -716,9 +716,9 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
 
     elif 2 == ecase :
 
-        err1 = round_N ( error1 , 1 ) if isclose ( error1 , error , 1.e-2 ) else err  
-        err2 = round_N ( error2 , 1 ) if isclose ( error2 , error , 1.e-2 ) else err  
-        err3 = round_N ( error3 , 1 ) if isclose ( error3 , error , 1.e-2 ) else err  
+        err1 = round_N ( error1 , 1 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err  
+        err2 = round_N ( error2 , 1 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err  
+        err3 = round_N ( error3 , 1 ) ## if isclose ( error3 , error , rel_tol = 1.e-2 ) else err  
 
         if   0 == b :
             nd = 0
@@ -737,9 +737,9 @@ def pdg_format3( value , error1 , error2 , error3 , latex = False , mode = 'tota
 
     elif 3 == ecase :
         
-        err1 = round_N ( error1 , 2 ) if isclose ( error1 , error , 1.e-2 ) else err  
-        err2 = round_N ( error2 , 2 ) if isclose ( error2 , error , 1.e-2 ) else err  
-        err3 = round_N ( error3 , 2 ) if isclose ( error3 , error , 1.e-2 ) else err  
+        err1 = round_N ( error1 , 2 ) ## if isclose ( error1 , error , rel_tol = 1.e-2 ) else err  
+        err2 = round_N ( error2 , 2 ) ## if isclose ( error2 , error , rel_tol = 1.e-2 ) else err  
+        err3 = round_N ( error3 , 2 ) ## if isclose ( error3 , error , rel_tol = 1.e-2 ) else err  
 
         if   0 == b :
             nd = 0
