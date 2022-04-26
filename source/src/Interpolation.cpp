@@ -435,7 +435,7 @@ double Ostap::Math::Interpolation::Table::berrut2nd ( const double x ) const
     //
     if ( s_equal ( x , xv ) ) { return yv ; } // RETURN 
     //
-    const long double w  = bi / ( x - xv ) * ( 0 == i || i + 1 == N ? 1 : 2 ) ;
+    const long double w  = bi / ( x - xv ) * ( ( ( 0 == i ) || ( ( i + 1 ) == N ) ) ? 1 : 2 ) ;
     //
     s1 += w * yv ;
     s2 += w      ;

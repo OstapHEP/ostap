@@ -121,6 +121,9 @@ namespace Ostap
      *  It is barycentric-like rational interpolation.
      *  For odd number of points it is barycentric, 
      * - performance is about O(n)
+     *
+     *  @see Kai Hormann, "Barycentric interpolation", 
+     *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
      *  @date 2021-11-25
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
@@ -175,6 +178,9 @@ namespace Ostap
      *  - \f$ \alpha = 2\f$ otherwise 
      *  It is barycentric rational interpolation.
      * - performance is about O(n)
+     *
+     *  @see Kai Hormann, "Barycentric interpolaiton", 
+     *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
      *  @date 2021-11-25
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
@@ -232,6 +238,9 @@ namespace Ostap
      *  - for \f$d\ge n\f$ , it corresponds to true barycentric polymnomial onterpolation
      *  - for small values of d it behaves reasonably even for weird interpolaiton mesh 
      *  - performance is about O(n), initialization about \f$ O(nd^2) \f$ 
+     *
+     *  @see Kai Hormann, "Barycentric interpolaiton", 
+     *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
      *  @date 2021-11-16
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      */
@@ -322,7 +331,10 @@ namespace Ostap
      *  @see https://doi.org/10.1137/S0036144502417715
      *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
      *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-     */
+     *
+     *  @see Kai Hormann, "Barycentric interpolaiton", 
+     *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf
+     */ 
     class Barycentric : public Interpolation::Table 
     {
     public:
@@ -486,6 +498,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */
       template <class FUNCTION>
@@ -514,7 +529,10 @@ namespace Ostap
        *       ISSN (online): 1095-7200
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
-       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */      
       template <class FUNCTION>
@@ -541,6 +559,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */      
       inline 
@@ -566,6 +587,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */
       inline 
@@ -596,6 +620,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */
       template <class KEY,class VALUE>
@@ -624,6 +651,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */
       inline   
@@ -652,6 +682,9 @@ namespace Ostap
        *  @see https://doi.org/10.1137/S0036144502417715
        *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
        *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+       *
+       *  @see Kai Hormann, "Barycentric interpolaiton", 
+       *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf       
        *  @see Ostap::Math::Barycentric
        */
       inline 

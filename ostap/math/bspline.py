@@ -302,7 +302,6 @@ if scipy :
         - see `scipy.interpolation.make_innterp_spline` 
         - see `Ostap.Math.Interpolaiton.Table` 
         """
-        
         assert isinstance ( table  , Ostap.Math.Interpolation.Table ), \
                "Inavalid interpolation type "
         assert isinstance ( degree  , integer_types )  \

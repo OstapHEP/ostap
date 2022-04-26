@@ -37,7 +37,11 @@ namespace Ostap
      *  @see https://doi.org/10.1137/S0036144502417715
      *  @see https://en.wikipedia.org/wiki/Lagrange_polynomial
      *  @see https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-     *  
+     *
+     *  @see Kai Hormann, "Barycentric interpolaiton", 
+     *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
+     *
+     * 
      *  None of this method should be applies for "long" sequence of 
      *  interpolation points ( e.g. >20), especially for uniform grid 
      *  (see https://en.wikipedia.org/wiki/Runge%27s_phenomenon)
@@ -600,10 +604,17 @@ namespace Ostap
         double neville 
         ( const double x ) const ;
         // ====================================================================
-        /// interpolation using the 1st rational Berrut's interpolant 
+        /** interpolation using the 1st rational Berrut's interpolant 
+         *  @see Kai Hormann, "Barycentric interpolation", 
+         *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
+         */
         double berrut1st 
         ( const double x ) const ;
-        /// interpolation using the 2nd rational Berrut's interpolant 
+        // =====================================================================
+        /** interpolation using the 2nd rational Berrut's interpolant 
+         *  @see Kai Hormann, "Barycentric interpolation", 
+         *  @see https://www.inf.usi.ch/hormann/papers/Hormann.2014.BI.pdf            
+         */
         double berrut2nd  
         ( const double x ) const ;        
         // ====================================================================

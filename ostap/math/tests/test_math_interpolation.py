@@ -31,6 +31,22 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 functions = set () 
 
+def more_uniform ( a , b , N , N1 = 10 ) :
+
+    assert 0 <= N  , 'N  must be positive!'
+    assert 2 <= N1 , 'N1 must be positive!'
+
+    mn , mx = min ( a , b ) , max ( a , b )
+    d   = ( mx - mn ) * 1.0 / N1
+
+    for i in range ( N ) :
+        ichunk = i % N1
+        
+        ai =  a  + ichunk * d
+        bi =  ai +          d
+        
+        yield random.uniform ( ai, bi )
+
 try :
     from   ostap.math.interpolation import bspline_interpolate
 except ImportError :
@@ -46,7 +62,7 @@ def distance ( fun1 , fun2 , low , high ) :
     from ostap.math.integral import integral 
     di = integral ( df , low , high ) 
 
-    return di / ( high - low ) 
+    return di / ( high - low )
     
 # =============================================================================
 ## interpolate the function 
@@ -157,8 +173,8 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
 
         with timing ( '' , logger = None )  as t :
             for x in xx :            
-                v  = fun   ( x )
-                vi = fi    ( x )
+                v    = fun ( x )
+                vi   = fi  ( x )
                 cnt += abs ( vi - v ) / scale
                 
         cpu [ (n1,n2) ] = t.delta
@@ -168,9 +184,9 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
 
         n1 , n2 , ff = item
         
-        c  = counters[item]
+        c   = counters [ item ]
         
-        d  = distance ( ff , fun , low , high ) 
+        d   = distance ( ff , fun , low , high ) / scale 
         row = n1 , n2  , '%9.2f +/- %-09.1f' % ( c.mean().value() , c.rms() ) , '%-9.1f' % c.max() , '%.3g' % d 
         rows.append ( row )
 
@@ -206,9 +222,9 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
 def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logger = logger , name = 'interpolation' ) :
     """Interpolate the grid"""
     
-    Abscissas =  Ostap.Math.Interpolation.Abscissas
+    Abscissas    =  Ostap.Math.Interpolation.Abscissas
         
-    data = points ( dct )
+    data         = points ( dct )
 
     ## list of interpolants 
     interpolants = []
@@ -217,16 +233,16 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     interpolants.append ( ( 'Bernstein'   , interpolate_bernstein  ( data , None , low , high ) ) ) 
     
     ## neville interpolant
-    interpolants.append ( ( 'Neville'     , Ostap.Math.Neville     ( data ) ) )
+    interpolants.append ( ( 'Neville'     , Ostap.Math.Neville      ( data ) ) )
     
     ## largange interpolant 
-    interpolants.append ( ( 'Lagrange'    , Ostap.Math.Lagrange    ( data ) ) ) 
+    interpolants.append ( ( 'Lagrange'    , Ostap.Math.Lagrange     ( data ) ) ) 
     
     ## (true) Barycentric interpolant 
-    interpolants.append ( ( 'Barycentric' , Ostap.Math.Barycentric ( data ) ) ) 
+    interpolants.append ( ( 'Barycentric' , Ostap.Math.Barycentric  ( data ) ) ) 
     
     ## Newton interpolant 
-    interpolants.append ( ( 'Newton'      , Ostap.Math.Newton      ( data ) ) ) 
+    interpolants.append ( ( 'Newton'      , Ostap.Math.Newton       ( data ) ) ) 
     
     ## 1st Berrut interpolant 
     interpolants.append ( ( 'Berrut 1st'  , Ostap.Math.Berrut1st    ( data ) ) ) 
@@ -237,11 +253,16 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     for d in range ( 10 ) :
         interpolants.append ( ( 'FloaterHormann/%d' % d  , Ostap.Math.FloaterHormann ( data , d ) ) ) 
         
-    ## bspline interpolant
-    ## bs = Ostap.Math.BSpline   ( low  , high ,  len ( data ) - 1 - degree , degree  )
-    for d in range ( 1 , 5 ) : 
+    ## bspline interpolant (Ostap) 
+    for d in range ( 1 , 6 ) : 
         interpolants.append ( ( 'BSpline/%s' % d , interpolate_bspline  ( data , None , d ) ) ) 
-    
+        
+    ## bspline interpolant (scipy) 
+    if bspline_interpolate :        
+        for d in range ( 1 , 9 , 2 )  :
+            item = ( 'BSpline%dSP' % d  , bspline_interpolate ( data , d ) )
+            interpolants.append ( item )
+            
     for n , t in interpolants :
         functions.add ( ( n , t ) ) 
 
@@ -291,8 +312,8 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
 
         with timing ( '' , logger = None )  as t :
             for x in xx :            
-                v  = tfunc ( x )
-                vi = fi    ( x )
+                v    = tfunc ( x )
+                vi   = fi    ( x )
                 cnt += abs ( vi - v ) / scale
                 
         cpu [ n ] = t.delta
@@ -303,7 +324,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
         n , ff = item
         c     = counters[item] 
 
-        d  = distance ( ff , tfunc , low , high ) 
+        d  = distance ( ff , tfunc , low , high ) / scale 
         row = n , '%9.2f +/- %-09.1f' % ( c.mean().value() , c.rms() ) , '%-9.1f' % c.max() , '%.3g' % d 
         rows.append ( row )
 
@@ -385,13 +406,17 @@ def test_random_grid_sin () :
     
     N , low , high = 14 , 0 , 2.5 * math.pi  
 
-    dct = {} 
-    mid = 0.5  * ( low + high ) 
-    while N > len ( dct ) :
-        xi = random.uniform ( low , mid  )
-        dct [ xi ] = tfun ( xi ) 
-        xi = random.uniform ( mid , high )
-        dct [ xi ] = tfun ( xi ) 
+    dct = {}
+    
+    ## mid = 0.5  * ( low + high ) 
+    ## while N > len ( dct ) :
+    ##     xi = random.uniform ( low , mid  )
+    ##     dct [ xi ] = tfun ( xi ) 
+    ##     xi = random.uniform ( mid , high )
+    ##     dct [ xi ] = tfun ( xi ) 
+
+    for x in more_uniform ( low , high , N , N ) :
+        dct [ x ] = tfun ( x )
 
     dct [ low  ] = tfun ( low  )
     dct [ high ] = tfun ( high )
@@ -413,12 +438,15 @@ def test_random_grid_abssin () :
     N , low , high = 14 , 0 , math.pi  
 
     dct = {} 
-    mid = 0.5  * ( low + high ) 
-    while N > len ( dct ) :
-        xi = random.uniform ( low , mid  )
-        dct [ xi ] = tfun ( xi ) 
-        xi = random.uniform ( mid , high )
-        dct [ xi ] = tfun ( xi ) 
+    ## mid = 0.5  * ( low + high ) 
+    ## while N > len ( dct ) :
+    ##     xi = random.uniform ( low , mid  )
+    ##     dct [ xi ] = tfun ( xi ) 
+    ##     xi = random.uniform ( mid , high )
+    ##     dct [ xi ] = tfun ( xi ) 
+
+    for x in more_uniform ( low , high , N , N ) :
+        dct [ x ] = tfun ( x )
 
     dct [ low  ] = tfun ( low  )
     dct [ high ] = tfun ( high )
@@ -438,13 +466,17 @@ def test_random_grid_sin2 () :
     
     N , low , high = 14 , 0 , 2 * math.pi  
 
-    dct = {} 
-    mid = 0.5  * ( low + high ) 
-    while N > len ( dct ) :
-        xi = random.uniform ( low , mid  )
-        dct [ xi ] = tfun ( xi ) 
-        xi = random.uniform ( mid , high )
-        dct [ xi ] = tfun ( xi ) 
+    dct = {}
+    
+    ## mid = 0.5  * ( low + high )
+    ## while N > len ( dct ) :
+    ##     xi = random.uniform ( low , mid  )
+    ##     dct [ xi ] = tfun ( xi ) 
+    ##     xi = random.uniform ( mid , high )
+    ##     dct [ xi ] = tfun ( xi ) 
+
+    for x in more_uniform ( low , high , N , N ) :
+        dct [ x ] = tfun ( x )
 
     dct [ low  ] = tfun ( low  )
     dct [ high ] = tfun ( high )
@@ -462,16 +494,20 @@ def test_random_grid_gauss () :
 
     tfun = lambda x : Ostap.Math.gauss_pdf ( x ) 
     
-    N , low , high = 14 , -4 , 5
+    N , low , high = 18 , -4 , 5
 
-    dct = {} 
-    mid = 0.5  * ( low + high ) 
-    while N > len ( dct ) :
-        xi = random.uniform ( low , mid  )
-        dct [ xi ] = tfun ( xi ) 
-        xi = random.uniform ( mid , high )
-        dct [ xi ] = tfun ( xi ) 
-
+    dct = {}
+    
+    ## mid = 0.5  * ( low + high ) 
+    ## while N > len ( dct ) :
+    ##     xi = random.uniform ( low , mid  )
+    ##     dct [ xi ] = tfun ( xi ) 
+    ##     xi = random.uniform ( mid , high )
+    ##     dct [ xi ] = tfun ( xi ) 
+        
+    for x in more_uniform ( low , high , N , N ) :
+        dct [ x ] = tfun ( x )
+        
     dct [ low  ] = tfun ( low  )
     dct [ high ] = tfun ( high )
     

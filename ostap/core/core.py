@@ -280,7 +280,50 @@ def root_enum ( name , default = None ) :
            
     return getattr ( ROOT, 'k' + name , default )
 
-
+# =============================================================================
+# predefiend ROOT colors
+# @code
+#  enum EColor { kWhite =0,   kBlack =1,   kGray=920,
+#                kRed   =632, kGreen =416, kBlue=600, kYellow=400, kMagenta=616, kCyan=432,
+#                kOrange=800, kSpring=820, kTeal=840, kAzure =860, kViolet =880, kPink=900 };
+# @endcode 
+__root_colors = {
+    'white'   : 0   ,
+    'black'   : 1   ,
+    'gray'    : 920 ,
+    'red'     : 632 ,
+    'green'   : 416 ,
+    'blue'    : 600 ,
+    'yellow'  : 400 ,
+    'magenta' : 616 ,
+    'cyan'    : 432 ,
+    'orange'  : 800 ,
+    'spring'  : 820 ,
+    'teal'    : 840 ,
+    'azure'   : 860 ,
+    'violet'  : 880 ,
+    'pink'    : 900 
+    }
+# =============================================================================
+## get predefiend ROOT color by name
+#  @code
+#  c1 = root_color ( 'Red'  )
+#  c1 = root_color ( 'kRed' )
+#  c1 = root_color ( 'RED'  )
+#  c1 = root_color ( 'KRED' )
+#  @endcode
+def root_colors ( color ) :
+    """Get predefiend ROOT color by name
+    >>> c1 = root_color ( 'Red'  )
+    >>> c1 = root_color ( 'kRed' )
+    >>> c1 = root_color ( 'RED'  )
+    >>> c1 = root_color ( 'KRED' )
+    """
+    if not isinstance ( color , string_types ) : return color 
+    c = color.lower().replace('_','')
+    if c and c[0] == 'k' : c = c[1:]
+    return __root_colors.get ( c , color )
+    
 # =============================================================================
 ## Convert color name into color index
 def check_color ( color ) :
@@ -296,9 +339,13 @@ def check_color ( color ) :
         elif clow in ( 'yellow'  , 'y' ) : return 5 
         elif clow in ( 'cyan'    , 'c' ) : return 6 
         elif clow in ( 'magenta' , 'm' ) : return 7                
+
+        ## check predefined ROOT color name
+        c = root_colors ( color)
+        if isinstance   ( c , integer_type ) and 0 < c : return int ( c ) 
         
         ## get the color from ROOT by color name
-        c = root_enum ( clow.capitalize() , None )
+        c = root_enum   ( clow.capitalize() , None )
         if c is None    : logger.error ('Unknown color:"%s"' % color ) 
         elif isinstance ( c , integer_types ) and 0 < c :
             return int ( c )                               ## RETURN 
