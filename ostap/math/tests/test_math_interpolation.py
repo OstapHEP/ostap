@@ -31,6 +31,8 @@ else                       : logger = getLogger ( __name__                      
 # =============================================================================
 functions = set () 
 
+
+
 def more_uniform ( a , b , N , N1 = 10 ) :
 
     assert 0 <= N  , 'N  must be positive!'
@@ -74,7 +76,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
     abscissas = ( ( 'Uniform'   , Abscissas ( N , low , high, 0 ) ) ,
                   ( 'Chebyshev' , Abscissas ( N , low , high, 1 ) ) ,
                   ( 'Lobatto'   , Abscissas ( N , low , high, 2 ) ) ,
-                  ## ( 'Random'    , Abscissas ( doubles (  random.uniform ( low , high ) for i in range ( N ) ) ) )
+                  ( 'Random'    , Abscissas ( doubles (  random.uniform ( low , high ) for i in range ( N ) ) ) )
                   ) 
     
     tables       = [ ( a[0] , points ( fun , a[1] ) )  for a in abscissas ]
@@ -104,12 +106,15 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
         
         item = ( 'Barycentric' , t[0] )  , Ostap.Math.Barycentric ( t[1] ) 
         interpolants.append ( item )
+        
+        item = ( 'Thiele'      , t[0] )  , Ostap.Math.Thiele      ( t[1] ) 
+        interpolants.append ( item )
 
         for d in range ( 0 , 9 ) :
             item = ( 'FloaterHormann%d' % d , t[0] ) , Ostap.Math.FloaterHormann ( t[1] , d )
             interpolants.append ( item )
         
-        for d in range ( 1 , 5 ) :
+        for d in range ( 1 , 6 ) :
             item = ( 'BSpline%d' % d , t[0] ) , interpolate_bspline  ( t[1] , None , d )
             interpolants.append ( item )
 
@@ -132,8 +137,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
             n1 , n2 = p 
             
             color = i + 3 
-            f.draw ( 'same' , linecolor = color )
-            
+            f.draw ( 'same' , linecolor = color , xmin = low , xmax = high ) 
             if hasattr ( f , 'graph' ) :
                 g = f.graph ()
                 g.draw ( 'p', markercolor = color , markersize = 2 )
@@ -211,18 +215,18 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
     
     logger.info ( '%s:\n%s' % ( title , table ) ) 
 
-    for n, i in interpolants :
-        if hasattr ( i , 'table' ) :
-            title = str ( i ) 
-            logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
-            break 
+    ## for n, i in interpolants :
+    ##     if hasattr ( i , 'table' ) :
+    ##         title = str ( i ) 
+    ##         logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
+    ##         break 
 
 # ==========================================================================================================
 ## interpolate the grid 
 def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logger = logger , name = 'interpolation' ) :
     """Interpolate the grid"""
     
-    Abscissas    =  Ostap.Math.Interpolation.Abscissas
+    Abscissas    = Ostap.Math.Interpolation.Abscissas
         
     data         = points ( dct )
 
@@ -249,7 +253,11 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     
     ## 2nd Berrut interpolant 
     interpolants.append ( ( 'Berrut 2nd'  , Ostap.Math.Berrut2nd    ( data ) ) ) 
-    
+
+    ## Thiele rational interpolant 
+    interpolants.append ( ( 'Thiele'      , Ostap.Math.Thiele       ( data ) ) ) 
+
+
     for d in range ( 10 ) :
         interpolants.append ( ( 'FloaterHormann/%d' % d  , Ostap.Math.FloaterHormann ( data , d ) ) ) 
         
@@ -277,7 +285,7 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
             n , f  = c
 
             color = i + 2 
-            f.draw ( 'same' , linecolor = color )
+            f.draw ( 'same' , linecolor = color , xmin = low , xmax = high ) 
             if hasattr ( f , 'graph' ) :
                 g = f.graph ()
                 g.draw ( 'p', markercolor = color , markersize = 2 )
@@ -349,11 +357,11 @@ def run_grid_interpolation ( tfunc , dct , N , low , high , scale = 1.e-8 , logg
     
     logger.info ( '%s:\n%s' % ( title , table ) ) 
 
-    for n, i in interpolants :
-        if hasattr ( i , 'table' ) :
-            title = str ( i ) 
-            logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
-            break 
+    ## for n, i in interpolants :
+    ##     if hasattr ( i , 'table' ) :
+    ##         title = str ( i ) 
+    ##         logger.info ( 'Interpolation data: %s %s\n%s' % ( name , i , i.table ( prefix = '# ' ) ) )
+    ##         break 
     
 # =============================================================================
 ## interpolate cos function 
@@ -386,9 +394,9 @@ def test_PW () :
     logger = getLogger ( 'test_piecewise' ) 
 
     def fun ( x ) :        
-        return x**2 if 0 <= x else abs(x)**3 
+        return 0.25*x**2 if 0 <= x else abs(x)**5
 
-    N , low , high = 15 , -2 , 3 
+    N , low , high = 15 , -1 , 2 
     logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'PW' , N , low , high )  ) 
     
     random.seed ( 50948524584 )
@@ -407,14 +415,6 @@ def test_random_grid_sin () :
     N , low , high = 14 , 0 , 2.5 * math.pi  
 
     dct = {}
-    
-    ## mid = 0.5  * ( low + high ) 
-    ## while N > len ( dct ) :
-    ##     xi = random.uniform ( low , mid  )
-    ##     dct [ xi ] = tfun ( xi ) 
-    ##     xi = random.uniform ( mid , high )
-    ##     dct [ xi ] = tfun ( xi ) 
-
     for x in more_uniform ( low , high , N , N ) :
         dct [ x ] = tfun ( x )
 
@@ -438,13 +438,6 @@ def test_random_grid_abssin () :
     N , low , high = 14 , 0 , math.pi  
 
     dct = {} 
-    ## mid = 0.5  * ( low + high ) 
-    ## while N > len ( dct ) :
-    ##     xi = random.uniform ( low , mid  )
-    ##     dct [ xi ] = tfun ( xi ) 
-    ##     xi = random.uniform ( mid , high )
-    ##     dct [ xi ] = tfun ( xi ) 
-
     for x in more_uniform ( low , high , N , N ) :
         dct [ x ] = tfun ( x )
 
@@ -467,14 +460,6 @@ def test_random_grid_sin2 () :
     N , low , high = 14 , 0 , 2 * math.pi  
 
     dct = {}
-    
-    ## mid = 0.5  * ( low + high )
-    ## while N > len ( dct ) :
-    ##     xi = random.uniform ( low , mid  )
-    ##     dct [ xi ] = tfun ( xi ) 
-    ##     xi = random.uniform ( mid , high )
-    ##     dct [ xi ] = tfun ( xi ) 
-
     for x in more_uniform ( low , high , N , N ) :
         dct [ x ] = tfun ( x )
 
@@ -497,14 +482,6 @@ def test_random_grid_gauss () :
     N , low , high = 18 , -4 , 5
 
     dct = {}
-    
-    ## mid = 0.5  * ( low + high ) 
-    ## while N > len ( dct ) :
-    ##     xi = random.uniform ( low , mid  )
-    ##     dct [ xi ] = tfun ( xi ) 
-    ##     xi = random.uniform ( mid , high )
-    ##     dct [ xi ] = tfun ( xi ) 
-        
     for x in more_uniform ( low , high , N , N ) :
         dct [ x ] = tfun ( x )
         
@@ -523,7 +500,7 @@ def test_pickle () :
     bad = False 
     import pickle
     rows = [ ( '#', 'before' , 'after' , 'mean' , 'rms' ) ]
-    for i, f in enumerate ( progress_bar ( functions ) , start = 1 ) :
+    for i , f in enumerate ( progress_bar ( functions ) , start = 1 ) :
 
         n , ff = f 
         fs = pickle.loads ( pickle.dumps ( ff ) )
@@ -577,10 +554,10 @@ if '__main__' == __name__ :
     test_random_grid_sin2   ()
     test_random_grid_gauss  ()
 
-    ## check finally that everything is serializeable:
-    test_pickle () 
-    with timing ('test_db' , logger ) :
-        test_db ()
+    ## ## check finally that everything is serializeable:
+    ## test_pickle () 
+    ## with timing ('test_db' , logger ) :
+    ##     test_db ()
     
 # =============================================================================
 ##                                                                      The END 

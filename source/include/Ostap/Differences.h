@@ -37,8 +37,9 @@ namespace Ostap
        *  @see https://en.wikipedia.org/wiki/Divided_differences 
        */ 
       template <class FUNCTION>
-      inline double divided ( FUNCTION     fun , 
-                              const double x ) { return fun  ( x ) ; }
+      inline double divided 
+      ( FUNCTION     fun , 
+        const double x ) { return fun  ( x ) ; }
       // ======================================================================
       /** Divided Forward differences of high order from the function 
        *  @code
@@ -52,10 +53,11 @@ namespace Ostap
        *  @see https://en.wikipedia.org/wiki/Divided_differences 
        */ 
       template <class FUNCTION, typename... Args>
-      inline double divided ( FUNCTION       fun  , 
-                              const double   x0   , 
-                              const Args...  args , 
-                              const double   xn   ) 
+      inline double divided
+      ( FUNCTION       fun  , 
+        const double   x0   , 
+        const Args...  args , 
+        const double   xn   ) 
       {
         const auto cfunr = std::cref ( fun ) ;
         return ( divided ( cfunr , args... , xn ) - 
@@ -70,9 +72,10 @@ namespace Ostap
        */
       template <class XITERATOR, 
                 class YITERATOR> 
-      inline double divided ( XITERATOR xbegin , 
-                              XITERATOR xend   , 
-                              XITERATOR ybegin )
+      inline double divided
+      ( XITERATOR xbegin , 
+        XITERATOR xend   , 
+        XITERATOR ybegin )
       {
         const auto N = std::distance ( xbegin , xend ) ;
         //
@@ -99,11 +102,12 @@ namespace Ostap
                 class YITERATOR, 
                 class XADAPTER ,
                 class YADAPTER >
-      inline double divided ( XITERATOR xbegin , 
-                              XITERATOR xend   , 
-                              YITERATOR ybegin , 
-                              XADAPTER  xvalue , 
-                              YADAPTER  yvalue ) 
+      inline double divided 
+      ( XITERATOR xbegin , 
+        XITERATOR xend   , 
+        YITERATOR ybegin , 
+        XADAPTER  xvalue , 
+        YADAPTER  yvalue ) 
       {
         const auto N = std::distance ( xbegin , xend ) ;
         //
@@ -141,9 +145,10 @@ namespace Ostap
          */
         template <class FUNCTION>
         inline 
-        static double evaluate ( FUNCTION     fun , 
-                                 const double x   , 
-                                 const double h   ) ;
+        static double evaluate 
+        ( FUNCTION     fun , 
+          const double x   , 
+          const double h   ) ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -166,9 +171,10 @@ namespace Ostap
       template <unsigned int N> 
       template <class FUNCTION> 
       inline 
-      double Forward<N>::evaluate ( FUNCTION fun      , 
-                                    const    double x , 
-                                    const    double h ) 
+      double Forward<N>::evaluate 
+      ( FUNCTION fun      , 
+        const    double x , 
+        const    double h ) 
       {
         const auto cfunr = std::cref ( fun ) ;
         return 
@@ -193,9 +199,10 @@ namespace Ostap
          */
         template <class FUNCTION>
         inline 
-        static double evaluate ( FUNCTION     fun , 
-                                 const double x   , 
-                                 const double h   ) ;
+        static double evaluate
+        ( FUNCTION     fun , 
+          const double x   , 
+          const double h   ) ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -218,9 +225,10 @@ namespace Ostap
       template <unsigned int N> 
       template <class FUNCTION> 
       inline 
-      double Backward<N>::evaluate ( FUNCTION fun      , 
-                                     const    double x , 
-                                     const    double h ) 
+      double Backward<N>::evaluate
+      ( FUNCTION fun      , 
+        const    double x , 
+        const    double h ) 
       {
         const auto cfunr = std::cref ( fun ) ;
         return 
@@ -245,9 +253,10 @@ namespace Ostap
          */
         template <class FUNCTION>
         inline 
-        static double evaluate ( FUNCTION     fun , 
-                                 const double x   , 
-                                 const double h   ) ;
+        static double evaluate
+        ( FUNCTION     fun , 
+          const double x   , 
+          const double h   ) ;
         // ====================================================================
       } ;
       // ======================================================================
@@ -270,9 +279,10 @@ namespace Ostap
       template <unsigned int N> 
       template <class FUNCTION> 
       inline 
-      double Central<N>::evaluate ( FUNCTION fun      , 
-                                    const    double x , 
-                                    const    double h ) 
+      double Central<N>::evaluate 
+      ( FUNCTION fun      , 
+        const    double x , 
+        const    double h ) 
       {
         const auto cfunr = std::cref ( fun ) ;
         return 
@@ -288,10 +298,11 @@ namespace Ostap
        *  @return N-th forward dirrerence 
        */
       template <class FUNCTION>
-      inline double forward ( FUNCTION             fun , 
-                              const unsigned short N   , 
-                              const double         x   , 
-                              const double         h   ) 
+      inline double forward 
+      ( FUNCTION             fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
         const auto cfunr = std::cref ( fun );
         return 
@@ -308,10 +319,11 @@ namespace Ostap
        *  @return N-th backward dirrerence 
        */
       template <class FUNCTION>
-      inline double backward ( FUNCTION             fun , 
-                               const unsigned short N   , 
-                               const double         x   , 
-                               const double         h   ) 
+      inline double backward 
+      ( FUNCTION             fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
         const auto cfunr = std::cref ( fun );
         return 
@@ -328,10 +340,11 @@ namespace Ostap
        *  @return N-th central dirrerence 
        */
       template <class FUNCTION>
-      inline double central ( FUNCTION             fun , 
-                              const unsigned short N   , 
-                              const double         x   , 
-                              const double         h   ) 
+      inline double central
+      ( FUNCTION             fun , 
+        const unsigned short N   , 
+        const double         x   , 
+        const double         h   ) 
       {
         const auto cfunr = std::cref ( fun );
         return 

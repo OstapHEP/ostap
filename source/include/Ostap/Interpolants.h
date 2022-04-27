@@ -449,6 +449,163 @@ namespace Ostap
     /// swap two Newton interpolators 
     inline void swap ( Newton& a , Newton& b ) { a.exchange ( b ) ; }
     // ========================================================================
+    /** @class Thiele
+     * Rational Thiele interpolator 
+     * \f[ R(x) = \frac{\sum_{i=0}{p} a_i x^i }{ 1 + \sum_{i=1}^{q} b_i x^i} \f]
+     *  with \f$ p = q \f$ for even \f$n\f$, and \f$ p= q+1\f$ 
+     *  otherwise.
+     * 
+     *  Interpolant is represented in a form of inverted or reciprocal 
+     *  differences
+     *  @code
+     *  T(x) = a_0 + \frac{x-x_1}{ a1 + \frac{x-x_2}{ a1 + ... } }  
+     *  @endcode 
+     *  @see T.N. Thiele, "Interplaltionrechnung", G.G.Teubner, 1907, Leipzig, Germany
+     */
+    class Thiele 
+    {
+    public:
+      // ======================================================================
+      /** templated constructor 
+       *  @param begin start  of x-sequence 
+       *  @param end   end    of x-sequence 
+       *  @param fun   function object 
+       *  @attention duplicated abscissas will be removed 
+       */
+      template <class XITERATOR , 
+                class YITERATOR ,
+                typename xvalue_type = typename std::iterator_traits<XITERATOR>::value_type,
+                typename yvalue_type = typename std::iterator_traits<YITERATOR>::value_type,
+                typename = std::enable_if<std::is_convertible<xvalue_type,long double>::value> ,
+                typename = std::enable_if<std::is_convertible<yvalue_type,long double>::value> >
+      Thiele 
+      ( XITERATOR xbegin , 
+        XITERATOR xend   ,
+        YITERATOR ybegin )
+        : m_x    ( xbegin , xend                ) 
+        , m_y    ( ybegin , ybegin + m_x.size() ) 
+        , m_rho0 () 
+      {
+        /// calculate inverted/reciprocal differences 
+        this->calc_rho0 () ;
+      }
+      // ======================================================================
+      /** constructor from vectors of abscissas and function values 
+       *  @attention the shortest array is used! Extra values are ignored
+       */
+      Thiele
+      ( const Interpolation::Abscissas::Data& x , 
+        const Interpolation::Abscissas::Data& y ) 
+        : Thiele ( x.begin  () , 
+                   x.begin  () + std::min ( x.size() , y.size() ) ,
+                   y.begin  () )
+      {}
+      // ======================================================================
+      /// contructor from the interpolation table 
+      Thiele 
+      ( const Interpolation::Table& p ) ;
+      // ======================================================================
+      /// contructor from the interpolation table 
+      Thiele 
+      ( const Interpolation::TABLE& p ) ;
+      // ======================================================================
+      /// constructor from vectors of abscissas and the function 
+      template <class FUNCTION> 
+      Thiele 
+      ( const Interpolation::Abscissas::Data& x   ,
+        FUNCTION                              fun ) 
+        : m_x    ( x        ) 
+        , m_y    ( x.size() )
+        , m_rho0 () 
+      {
+        std::transform 
+          ( m_x.begin () , m_x.end () , 
+            m_y.begin () , 
+            [&fun] ( const double x ) -> double { return fun ( x ) ; } ) ; 
+        /// calculate inverted/reciprocal differences 
+        this->calc_rho0 () ;
+      }
+      // ======================================================================
+      /// constructor from abscissas and the function 
+      template <class FUNCTION> 
+      Thiele 
+      ( const Interpolation::Abscissas& a   ,
+        FUNCTION                        fun ) 
+        : Thiele ( a.x() , fun ) 
+      {}
+      // ======================================================================
+      /// constructor from abscissas and the function 
+      template <class FUNCTION> 
+      Thiele 
+      ( FUNCTION                        fun ,
+        const Interpolation::Abscissas& a   )
+        : Thiele ( a.x() , fun ) 
+      {}
+      // ======================================================================
+      /// default constructor
+      Thiele () = default ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// the main method: get the value of interpolant 
+      double evaluate    ( const  double x ) const ;
+      /// the main method: get the value of interpolant 
+      double operator () ( const  double x ) const { return evaluate ( x ) ; }
+      // ======================================================================
+    public : 
+      // ======================================================================
+      /// swap two interpolators 
+      void exchange ( Thiele& right ) 
+      { 
+        std::swap ( m_x    , right.m_x    ) ;
+        std::swap ( m_y    , right.m_y    ) ;
+        std::swap ( m_rho0 , right.m_rho0 ) ;
+      }
+      // ======================================================================
+    public: // accessors 
+      // ======================================================================
+      const Interpolation::Abscissas::Data& x    () const { return m_x    ; }
+      const Interpolation::Abscissas::Data& y    () const { return m_y    ; }
+      const Interpolation::Abscissas::Data& rho0 () const { return m_rho0 ; }      
+      // ======================================================================
+      Interpolation::Abscissas::Data::const_iterator x_begin () const { return m_x.begin () ; }
+      Interpolation::Abscissas::Data::const_iterator x_end   () const { return m_x.end   () ; }
+      Interpolation::Abscissas::Data::const_iterator y_begin () const { return m_y.begin () ; }
+      Interpolation::Abscissas::Data::const_iterator y_end   () const { return m_y.end   () ; }        
+      // ====================================================================
+      /// number of interpolation points 
+      unsigned int size    () const { return m_x.size  () ; }
+      /// no interpolation points 
+      bool         empty   () const { return m_x.empty () ; }
+      // ====================================================================
+      /// get the entry for given index 
+      std::pair<double,double> operator[] ( const unsigned short index ) const 
+      { return std::make_pair ( x ( index ), y ( index )  ) ;  }
+      // ====================================================================
+      ///  get the abscissas for the given index 
+      double x    ( const unsigned short index ) const ;
+      ///  get the value    for the given index 
+      double y    ( const unsigned short index ) const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// calculate inverted/reciprocal differences 
+      void calc_rho0 () ;      
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// vector of abscissas 
+      Interpolation::Abscissas::Data m_x    {} ; // abscissas 
+      /// vector of functipon values 
+      Interpolation::Abscissas::Data m_y    {} ; // function values 
+      /// inverted/recoprocal differences 
+      Interpolation::Abscissas::Data m_rho0 {} ; // inverted/recoprocal differences      
+      // ======================================================================
+    } ;  
+    // ========================================================================
+    /// swap two Thiele interpolators 
+    inline void swap ( Thiele& a , Thiele& b ) { a.exchange ( b ) ; }
+    // ========================================================================
     namespace Interpolation 
     {
       // ======================================================================

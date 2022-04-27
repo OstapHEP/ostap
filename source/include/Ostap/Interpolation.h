@@ -538,13 +538,7 @@ namespace Ostap
         double x    ( const unsigned short index ) const 
         { return m_abscissas.x ( index ) ; }
         ///  get the value    for the given index 
-        double y    ( const unsigned short index ) const 
-        { 
-          static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
-          return 
-            m_values.empty()        ? s_nan :
-            index < m_values.size() ? m_values[ index ] : m_values.back()  ;
-        }
+        double y    ( const unsigned short index ) const ;
         // =====================================================================
       public: // get abscissas & data 
         // ====================================================================
@@ -664,7 +658,7 @@ namespace Ostap
         /// interpolation absciccas 
         Abscissas       m_abscissas {} ; // interpolation absciccas 
         /// function values 
-        Abscissas::Data m_values    {} ; // interpolation absciccas 
+        Abscissas::Data m_values    {} ; // interpolation points 
         // ====================================================================
       } ;
       // ======================================================================

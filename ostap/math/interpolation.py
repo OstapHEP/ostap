@@ -513,7 +513,7 @@ Ostap.Math.Interpolation.Table.table = _tab_print_
 #  print a 
 #  @endcode 
 def print_interpolant ( self , name , nmax = 7 ) :
-    """Printout for Neville interpolant
+    """Printout for the interpolant
     >>> print a  
     """
     n = len ( self )
@@ -535,14 +535,43 @@ def print_interpolant ( self , name , nmax = 7 ) :
     
     return '%s(n=%d,{%s, ... , %s})' % ( name , n , s1 , s2 )
 
-Ostap.Math.Neville         .__str__   = lambda s : print_interpolant ( s , 'Neville'                       , 7 )
-Ostap.Math.Lagrange        .__str__   = lambda s : print_interpolant ( s , 'Lagrange'                      , 7 )
-Ostap.Math.Newton          .__str__   = lambda s : print_interpolant ( s , 'Newton'                        , 7 )
-Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berrut1st'                     , 7 )
+Ostap.Math.Neville         .__str__   = lambda s : print_interpolant ( s , 'Neville'                  , 7 )
+Ostap.Math.Lagrange        .__str__   = lambda s : print_interpolant ( s , 'Lagrange'                 , 7 )
+Ostap.Math.Newton          .__str__   = lambda s : print_interpolant ( s , 'Newton'                   , 7 )
+Ostap.Math.Berrut1st       .__str__   = lambda s : print_interpolant ( s , 'Berrut1st'                , 7 )
 Ostap.Math.Berrut2nd       .__str__   = lambda s : print_interpolant ( s , 'Berrut2nd'                , 7 )
 Ostap.Math.FloaterHormann  .__str__   = lambda s : print_interpolant ( s , 'FloaterHormann%d' % s.d() , 7 )
-Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'                   , 7 )
+Ostap.Math.Barycentric     .__str__   = lambda s : print_interpolant ( s , 'Barycentric'              , 7 )
 
+# =============================================================================
+## print Thiele rational interpolant 
+def _thiele_prnt_ ( self , nmax = 7 ) :
+    """Print Thiele rational interpolant
+    """
+    n = len ( self ) 
+    
+    if n <= nmax :
+        s = ', '.join ( ( "%.3g: %.3g" %  ( self.x(i), self.y(i) ) for i in range ( n ) ) ) 
+        return '%s({%s})' % ( 'Thiele' , s )  
+    ##
+    n2 = min ( 2 , n ) 
+    s1 = ', '.join ( ( '%.3g: %.3g' % self[i] for i in  range ( n2 ) ) ) 
+    s2 =               '%.3g: %.3g' % self[ n - 1 ]
+    
+    return '%s(n=%d,{%s, ... , %s})' % ( 'Thiele' , n , s1 , s2 )
+
+Ostap.Math.Thiele.__str__     = lambda s : _thiele_prnt_ ( s ) 
+Ostap.Math.Thiele.__len__     = lambda s : s.size()
+Ostap.Math.Thiele.items       = _p_iteritems_
+Ostap.Math.Thiele.iteritems   = _p_iteritems_
+Ostap.Math.Thiele.__iter__    = _p_iter_ 
+Ostap.Math.Thiele.__getitem__ = _p_getitem_
+Ostap.Math.Thiele.graph       = _p_graph_
+Ostap.Math.Thiele.xmin        = lambda s : min ( [ x for x in s.x() ] )
+Ostap.Math.Thiele.xmax        = lambda s : max ( [ x for x in s.x() ] )
+
+    
+    
 # ==================================================================================
 ## Barycentric Lagrange interpolant 
 # ==================================================================================

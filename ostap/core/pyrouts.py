@@ -21,6 +21,7 @@ __date__    = "2011-06-07"
 __all__     = (
     #
     'cpp'             , ## global C++ namespace
+    'std'             , ## C++ std namespace
     'Ostap'           , ## C++ namespace Ostap 
     'rootID'          , ## construct the (global) unique ROOT identifier
     'funcID'          , ## construct the (global) unique ROOT identifier
@@ -79,7 +80,7 @@ from ostap.logger.utils import ROOTIgnore
 logger.info ( 'Zillions of decorations for ROOT/RooFit objects')
 # =============================================================================
 with ROOTIgnore ( 2001 ) : 
-    from ostap.core.core import ( cpp      , Ostap     , 
+    from ostap.core.core import ( cpp      , std       , Ostap           , 
                                   ROOTCWD  , rootID    , 
                                   funcID   , funID     , fID             ,
                                   histoID  , hID       , dsID            ,

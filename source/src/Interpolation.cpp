@@ -298,6 +298,16 @@ int Ostap::Math::Interpolation::Table::add
   return index ;
 }
 // ============================================================================
+//  get the value    for the given index 
+// ============================================================================
+double Ostap::Math::Interpolation::Table::y    ( const unsigned short index ) const 
+{ 
+  static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+  return 
+    m_values.empty()        ? s_nan :
+    index < m_values.size() ? m_values[ index ] : m_values.back()  ;
+}
+// ============================================================================
 /* remove the point with the given index 
  * @param index poitn with the index 
  * @return true if point is really removed 
@@ -823,7 +833,105 @@ double Ostap::Math::Barycentric::evaluate
 }
 
 
-
+// ============================================================================
+// Tiele rational interpolator
+// ============================================================================
+// contructor from the interpolation table 
+// ============================================================================
+Ostap::Math::Thiele::Thiele 
+( const Ostap::Math::Interpolation::Table& p ) 
+  : Thiele ( p.x_begin() , 
+             p.x_end  () , 
+             p.y_begin() )
+{}
+// ============================================================================
+// contructor from the interpolation table 
+// ============================================================================
+Ostap::Math::Thiele::Thiele 
+( const Ostap::Math::Interpolation::TABLE& p ) 
+  : m_x    ( p.size() ) 
+  , m_y    ( p.size() ) 
+  , m_rho0 ( ) 
+{
+  std::transform 
+    ( p.begin    () ,
+      p.end      () , 
+      m_y.begin  () ,
+      []( const auto& e )-> double { return e.second ; } ) ;  
+  std::transform 
+    ( p.begin    () ,
+      p.end      () , 
+      m_x.begin  () ,
+      []( const auto& e )-> double { return e.first ; } ) ; 
+  //
+  this->calc_rho0 () ;
+}
+// ============================================================================
+// calculate inverted/reciprocal differences 
+// ============================================================================
+void Ostap::Math::Thiele::calc_rho0 () 
+{
+  //
+  typedef Interpolation::Abscissas::Data R  ;
+  typedef std::vector<R>                 RT ;
+  //
+  const unsigned int N = m_x.size() ;
+  //
+  RT rho ( N ) ;
+  //
+  // 1st step 
+  for ( unsigned int i = 0 ; i < N ; ++i ) 
+  { rho [ i ].insert ( rho [ i ].begin() ,  N - i , m_y [ i ] ) ; }
+  //
+  // 2nd step
+  for ( unsigned int i = 0 ; i + 1 < N ; ++i ) 
+  { rho [i] [1] = ( m_x [ i ] - m_x [ i + 1 ] ) /
+      ( rho [ i ] [ 0 ] - rho [ i + 1 ] [ 0 ] ) ; }
+  //
+  // 3rd step 
+  const unsigned int NR = rho.size() ;
+  for ( unsigned int i = 2 ; i < NR ; ++i ) 
+  { for ( unsigned int j = 0 ; i + j < NR ; ++j ) 
+    { rho  [ j ] [ i ] = 
+        ( m_x [ j ] - m_x [ j + i ] ) / ( rho [ j ] [ i - 1 ] - rho [ j + 1 ] [ i - 1 ] )
+        + rho [ j + 1 ] [ i - 2 ] ; } }
+  //
+  m_rho0 = rho [0] ;
+}
+// ============================================================================
+// the main method: get the value of interpolant 
+// ============================================================================
+double Ostap::Math::Thiele::evaluate    ( const  double x ) const 
+{
+  const unsigned int NR = m_rho0.size() ;
+  //
+  double r   = 0.0 ;
+  for ( unsigned int i = NR - 1 ;  1 < i  ; --i ) 
+  { r = ( x - m_x [ i - 1 ] ) / ( m_rho0 [ i ] - m_rho0 [ i - 2 ] + r ) ; }
+  //
+  return m_y [ 0 ] + ( x - m_x [ 0 ] ) / ( m_rho0 [ 1 ] + r ) ;
+}
+// ============================================================================
+//  get the abscissas for the given index 
+// ============================================================================
+double Ostap::Math::Thiele::x    ( const unsigned short index ) const 
+{ 
+  static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+  return 
+    m_x.empty() ? s_nan : 
+    index < m_x.size() ? m_x [ index ] : m_x.back() ; 
+}
+// ============================================================================
+//  get the value    for the given index 
+// ============================================================================
+double Ostap::Math::Thiele::y    ( const unsigned short index ) const 
+{ 
+  static const double s_nan = std::numeric_limits<double>::quiet_NaN () ;
+  return 
+    m_y.empty()        ? s_nan :
+    index < m_y.size() ? m_y [ index ] : m_y.back()  ;
+}
+// ============================================================================
 
 
 // ============================================================================

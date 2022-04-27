@@ -1042,7 +1042,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.ConvexOnlySpline       ,
                #
                Ostap.Math.BernsteinDualBasis     ,
-               ## interpolation polynomials 
+               ## interpolators  
                Ostap.Math.Neville                ,
                Ostap.Math.Lagrange               ,
                Ostap.Math.Newton                 ,
@@ -1050,6 +1050,7 @@ for model in ( Ostap.Math.Chebyshev              ,
                Ostap.Math.Berrut2nd              ,
                Ostap.Math.FloaterHormann         ,
                Ostap.Math.Barycentric            ,
+               Ostap.Math.Thiele                 ,
                ##
                Ostap.Math.GammaBW3               , 
                ## helper stufff
