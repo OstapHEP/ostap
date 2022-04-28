@@ -4,6 +4,9 @@
   1. add new method `make_soft_constraint2 to create asymmetryc constraint
   1. add test for soft constraints `test_fitting_constraints`
   1. add Thiele rational interpolator 
+  1. reshuffle code between `Ostap::Kinematics::Dalitz0` and `Ostap::Kinematics::Dalitz`
+  1. `Ostap::Kinematics::Dalitz0` allow call for angular functions with floating `a`
+  1. `Ostap::Kinematoics::Dalitz0` and `Ostap::Kinematoics::Dalitz` : and methods to calcualte Wigner angles 
 
 ## Backward incompatible:  
  

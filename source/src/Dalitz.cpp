@@ -505,6 +505,567 @@ double Ostap::Kinematics::Dalitz0::P3
   return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v ) / ( 2 * std::sqrt ( s ) ) ;
 }
 // ============================================================================
+/*   \f$ \theta^{*}_{12}\f$ is angle between 
+ *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
+ *   \f$ \cos \theta^{*}_{12} = 
+ *   \left\frac { p_1o_2}{P_1P_2}\right|_{\vec{P}=0}\f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_12 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m2sq () , s3_ ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f = ( s  + m1sq ()  -  s2 ) * ( s + m2sq () - s3_ ) 
+    + 2 * s * ( m1sq()  + m2sq () - s1 ) ;
+  //
+  return  f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*   \f$ \theta^{*}_{23}\f$ is angle between 
+ *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
+ *   \f$ \cos \theta^{*}_{23} = 
+ *   \left\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_23 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m2sq () , s3_ ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m3sq () , s1  ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f = ( s + m2sq () -  s3_ ) * ( s + m3sq () - s1 ) 
+    + 2 * s * ( m2sq () + m3sq ()  - s2 ) ;
+  //
+  return  f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*   \f$ \theta^{*}_{31}\f$ is angle between 
+ *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
+ *   \f$ \cos \theta^{*}_{31} = 
+ *   \left\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_31 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m3sq () , s1  ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f = ( s + m3sq () -  s1 ) * ( s + m1sq () - s2 ) 
+    + 2 * s * ( m3sq ()  + m1sq ()  - s3_ ) ;
+  //
+  return f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \theta^{*}_{12}\f$ is angle between 
+ *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
+ *   \f$ \sin^2 \theta^{*}_{12} = 
+ *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
+ *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3)} \f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_12 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s ,  s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m2sq () , s3_ ) ;
+  const double g   = Ostap::Kinematics::G (  s1 , s2 , s , m1sq () , m2sq () , m3sq () ) ;
+  //
+  return -4 * s * g / ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \theta^{*}_{23}\f$ is angle between 
+ *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
+ *   \f$ \sin^2 \theta^{*}_{23} = 
+ *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
+ *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_23 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m2sq () , s3_  ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m3sq () , s1   ) ;
+  const double g   = Ostap::Kinematics::G (  s2 , s3_ , s , m2sq () , m3sq () , m1sq () ) ;
+  //
+  return -4 * s * g / ( f1 * f2 ) ;
+}
+// ============================================================================
+/*   \f$ \theta^{*}_{31}\f$ is angle between 
+ *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
+ *   \f$ \sin^2 \theta^{*}_{31} = 
+ *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
+ *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_31 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1  = Ostap::Kinematics::triangle ( s , m3sq ()  , s1  ) ;
+  const double f2  = Ostap::Kinematics::triangle ( s , m1sq () , s2  ) ;
+  const double g   = Ostap::Kinematics::G (  s3_ , s1 , s , m3sq () , m1sq () , m2sq () ) ;
+  //
+  return -4 * s * g / ( f1 * f2 ) ;
+}
+// =============================================================================
+// total momentum in (1,2) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P_R12  
+( const double    s     , 
+  const double    s1    , 
+  const double /* s2 */ ) const
+{
+  const double f1 = Ostap::Kinematics::triangle ( s , s1 , m3sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+}
+// =============================================================================
+// momentum of 1st particle in (1,2) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P1_R12 
+( const double /* s  */ , 
+  const double    s1    , 
+  const double /* s2 */ ) const
+{
+  const double f1 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s1 ) : 0.0 ;
+}
+// ============================================================================
+/*  cosine on the angle between 3rd and 1st particles in the  (1,2) rest frame
+ *  \f$ \cos \theta_{21}^{R(1,2)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_31_R12 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const
+{
+  //
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s  , s1      , m3sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq () , m2sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f  = ( s - s1 - m3sq()  ) * ( s1 + m1sq() - m2sq ()  ) 
+    + 2 * s1 * ( m3sq()  + m1sq()  - s3_ ) ;
+  //
+  return f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
+ *  \f$ \sin^2 \theta_{12}^{R(2,3)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_31_R12 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s  , s1      , m3sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s1 , m1sq () , m2sq () ) ;  
+  const double g  = Ostap::Kinematics::G ( s3_ , s1 , s , m1sq () , m3sq () , m2sq () ) ;
+  //
+  return -4 * s1 * g / ( f1 * f2 ) ;
+}
+// =============================================================================
+// total momentum in (2,3) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P_R23  
+( const double    s     , 
+  const double /* s1 */ , 
+  const double    s2 ) const
+{
+  const double f1 = Ostap::Kinematics::triangle ( s , s2 , m1sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+}
+// =============================================================================
+// momentum of 2nd particle in (2,3) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P2_R23  
+( const double /* s  */ , 
+  const double /* s1 */ , 
+  const double    s2    ) const
+{
+  const double f1 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
+}
+// ============================================================================
+/*  cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
+ *  \f$ \cos \theta_{12}^{R(2,3)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_12_R23 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const
+{
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f  = ( s - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
+    + 2 * s2 * ( m1sq () + m2sq () - s1 ) ;
+  //
+  return f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
+ *  \f$ \sin^2 \theta_{12}^{R(2,3)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_12_R23 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double f1 = Ostap::Kinematics::triangle ( s  , s2      , m1sq ()  ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq ()  ) ;  
+  const double g  = Ostap::Kinematics::G ( s1 , s2 , s , m2sq () , m1sq () , m3sq () ) ;
+  //
+  return -4 * s2 * g / ( f1 * f2 ) ;
+}
+// =============================================================================
+// total momentum in (3,1) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P_R31 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s , s3_ , m2sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s ) : 0.0 ;
+}
+// =============================================================================
+// momentum of 3rd particle in (3,1) restframe
+// =============================================================================
+double Ostap::Kinematics::Dalitz0::P3_R31  
+(const double s  , 
+ const double s1 , 
+ const double s2 ) const
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  const double f1 = Ostap::Kinematics::triangle ( s3_ , m3sq () , m1sq () ) ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
+}
+// ============================================================================
+/* cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+ *  \f$ \cos \theta_{23}^{R(3,1)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_23_R31 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s   , s3_     , m2sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s3_ , m3sq () , m1sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
+  //
+  const double f  = ( s - s3_ - m2sq () ) * ( s3_ + m3sq () - m1sq () ) 
+    + 2 * s3_ * ( m2sq () + m3sq() - s2 ) ;
+  //
+  return f / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+ *  \f$ \sin^2 \theta_{23}^{R(3,1)}
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::sin2_23_R31 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  const double s3_ = s3 ( s , s1 , s2 ) ;
+  //
+  const double f1 = Ostap::Kinematics::triangle ( s    , s3_     , m2sq () ) ;
+  const double f2 = Ostap::Kinematics::triangle ( s3_  , m3sq () , m1sq () ) ;  
+  const double g  = Ostap::Kinematics::G ( s2 , s3_ , s , m3sq () , m2sq () , m1sq () ) ;
+  //
+  return -4 * s3_ * g / ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{1(3)}^{1} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta131 
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m1sq () , sig1    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig3 , m1sq () , m2sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m1sq() * ( sig2 - s - m2sq () ) + ( s + m1sq() - sig1 ) * ( sig3 - m1sq() - m2sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{2(1)}^{1} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta211
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m1sq () , sig1    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig2 , m1sq () , m3sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m1sq() * ( sig3 - s - m3sq () ) + ( s + m1sq() - sig1 ) * ( sig2 - m1sq() - m3sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{2(1)}^{2} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta212
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m2sq () , sig2    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig1 , m2sq () , m3sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m2sq() * ( sig3 - s - m3sq () ) + ( s + m2sq() - sig2 ) * ( sig1 - m2sq() - m3sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{3(2)}^{2} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta322
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m2sq () , sig2    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig3 , m2sq () , m1sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m2sq() * ( sig1 - s - m1sq () ) + ( s + m2sq() - sig2 ) * ( sig3 - m2sq() - m1sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{3(2)}^{3} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta323
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m3sq () , sig3    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig2 , m3sq () , m1sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m3sq() * ( sig1 - s - m1sq () ) + ( s + m3sq() - sig3 ) * ( sig2 - m3sq() - m1sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{1(3)}^{3} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta133
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( s    , m3sq () , sig3    ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig1 , m3sq () , m2sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m3sq() * ( sig2 - s - m2sq () ) + ( s + m3sq() - sig3 ) * ( sig1 - m3sq() - m2sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{2(3)}^{1} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta231
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( sig2 , m3sq () , m1sq () ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig3 , m1sq () , m2sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m1sq() * ( m2sq () + m3sq() - sig1 ) + ( sig2 - m1sq() - m3sq() ) * ( sig3 - m1sq() - m2sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{3(1)}^{2} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta312
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( sig3 , m1sq () , m2sq () ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig1 , m2sq () , m3sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m2sq() * ( m3sq () + m1sq() - sig2 ) + ( sig3 - m2sq() - m1sq() ) * ( sig1 - m2sq() - m3sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+/*  \f$ \cos \zeta_{1(2)}^{3} \f$ 
+ *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+ *                            Phys. Rev. D 101, 034033 (2020)
+ *   @see https://doi.org/10.48550/arXiv.1910.04566
+ *   @see https://arxiv.org/abs/1910.04566
+ */
+// ============================================================================
+double Ostap::Kinematics::Dalitz0::cos_zeta123
+( const double s  , 
+  const double s1 , 
+  const double s2 ) const 
+{
+  //
+  const double sig1 = sigma1 ( s , s1 , s2 ) ;
+  const double sig2 = sigma2 ( s , s1 , s2 ) ;
+  const double sig3 = sigma3 ( s , s1 , s2 ) ;
+  //
+  const double f1   = Ostap::Kinematics::triangle ( sig1 , m2sq () , m3sq () ) ;
+  const double f2   = Ostap::Kinematics::triangle ( sig2 , m3sq () , m1sq () ) ;
+  //
+  if ( 0 >= f1 || 0 >= f2 ) { return -1 ; }
+  //
+  return 
+    ( 2 * m3sq() * ( m1sq () + m2sq() - sig3 ) + ( sig1 - m3sq() - m2sq() ) * ( sig2 - m3sq() - m1sq() ) )
+    / std::sqrt ( f1 * f2 ) ;
+}
+// ============================================================================
+
+
+
+// ============================================================================
 // Dalitz 
 // ============================================================================
 Ostap::Kinematics::Dalitz::Dalitz
@@ -513,13 +1074,13 @@ Ostap::Kinematics::Dalitz::Dalitz
   : Dalitz0 ( b )  
   , m_M     ( std::abs ( M  ) )
     // precalculated quantities: s1_min/max, s2_min/max , s3_min/max, sum(s_i) & m_i^2
-  , m_cache2 { Dalitz0::s1_max ( m_M )       , // [0]
-               Dalitz0::s2_max ( m_M )       , // [1]
-               Dalitz0::s3_max ( m_M )       , // [2] 
+  , m_cache2 { Dalitz0::s1_max ( m_M ) , // [0]
+               Dalitz0::s2_max ( m_M ) , // [1]
+               Dalitz0::s3_max ( m_M ) ,   // [2] 
                // sum of all invariants 
-               m_M * m_M + summ2 () , // [3] 
+               m_M * m_M + summ2 () ,                                                          // [3] 
                // mass-squared               
-               m_M  * m_M           , // [4]
+               m_M  * m_M           ,                                                          // [4]
                // max e1 , e2 , e3 
                ( m_M * m_M + m1sq () - ( m2 () + m3 () ) * ( m2 () + m3 () ) ) / ( 2 * m_M ) , // [5] 
                ( m_M * m_M + m2sq () - ( m1 () + m3 () ) * ( m1 () + m3 () ) ) / ( 2 * m_M ) , // [6] 
@@ -549,317 +1110,6 @@ bool Ostap::Kinematics::Dalitz::inside
   //
   return 
     0 >= Ostap::Kinematics::G ( s1 , s2 , s () , m2sq() , m1sq (), m3sq () ) ;
-}
-// ============================================================================
-/*  get the meaure of the distance from the point to the boundary of Dalitz plot. 
- *  Distance is defined as \f$ d \equiv = \lambda ( P_1^2, P_2^2, P_3^2) \f$ 
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::distance ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double p1 = Ostap::Kinematics::triangle ( s () , m1sq () , s2  ) ;
-  const double p2 = Ostap::Kinematics::triangle ( s () , m2sq () , s3_ ) ;
-  const double p3 = Ostap::Kinematics::triangle ( s () , m3sq () , s1  ) ;
-  //
-  const double scale = 0.25 / s() ;
-  //
-  return Ostap::Kinematics::triangle ( scale * p1 , scale * p2 , scale * p3 );
-} 
-// ============================================================================
-// momentum of the 1st particle 
-// ============================================================================
-double Ostap::Kinematics::Dalitz::P1 
-( const double /* s1  */ , const double s2 ) const 
-{
-  const double v = Ostap::Kinematics::triangle ( s () , m1sq () , s2 ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * sqs () ) : -std::sqrt ( -v  ) / ( 2 * sqs () ) ;
-}
-// ============================================================================
-// momentum of the 2nd particle 
-// ============================================================================
-double Ostap::Kinematics::Dalitz::P2 
-( const double s1  , const double s2 ) const 
-{
-  const double v = Ostap::Kinematics::triangle ( s () , m2sq () , s3 ( s1 , s2 ) ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * sqs () ) : -std::sqrt ( -v ) / ( 2 * sqs () ) ;
-}
-// =============================================================================
-/// momentum of the 3rd particle 
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P3 
-( const double s1  , const double /* s2 */ ) const 
-{
-  const double v = Ostap::Kinematics::triangle ( s () , m3sq () , s1 ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * sqs () ) : -std::sqrt ( -v ) / ( 2 * sqs () ) ;
-} 
-// ============================================================================
-/*   \f$ \theta^{*}_{12}\f$ is angle between 
- *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
- *   \f$ \cos \theta^{*}_{12} = 
- *   \left\frac { p_1o_2}{P_1P_2}\right|_{\vec{P}=0}\f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_12 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1  = Ostap::Kinematics::triangle ( s() ,  m1sq () , s2  ) ;
-  const double f2  = Ostap::Kinematics::triangle ( s() ,  m2sq () , s3_ ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f = ( s () + m1sq ()  -  s2 ) * ( s () + m2sq ()  - s3_ ) 
-    + 2 * s () * ( m1sq()  + m2sq () - s1 ) ;
-  //
-  return  f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*   \f$ \theta^{*}_{23}\f$ is angle between 
- *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
- *   \f$ \cos \theta^{*}_{23} = 
- *   \left\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_23 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  const double f1  = Ostap::Kinematics::triangle ( s() ,  m2sq () , s3_  ) ;
-  const double f2  = Ostap::Kinematics::triangle ( s() ,  m3sq () , s1   ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f = ( s () + m2sq () -  s3_ ) * ( s () + m3sq () - s1 ) 
-    + 2 * s () * ( m2sq () + m3sq ()  - s2 ) ;
-  //
-  return  f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*   \f$ \theta^{*}_{31}\f$ is angle between 
- *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
- *   \f$ \cos \theta^{*}_{31} = 
- *   \left\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_31 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  const double f1  = Ostap::Kinematics::triangle ( s() ,  m3sq () , s1  ) ;
-  const double f2  = Ostap::Kinematics::triangle ( s() ,  m1sq () , s2  ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f = ( s () + m3sq () -  s1 ) * ( s () + m1sq () - s2 ) 
-    + 2 * s () * ( m3sq ()  + m1sq ()  - s3_ ) ;
-  //
-  return f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*  \f$ \theta^{*}_{12}\f$ is angle between 
- *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{12} = 
- *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
- *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3)} \f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_12 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s (), m1sq () , s2  ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s (), m2sq () , s3_ ) ;
-  const double g  = Ostap::Kinematics::G (  s1 , s2 , s () , m1sq () , m2sq () , m3sq () ) ;
-  //
-  return -4 * s() * g / ( f1 * f2 ) ;
-}
-// ============================================================================
-/*  \f$ \theta^{*}_{23}\f$ is angle between 
- *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{23} = 
- *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
- *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_23 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s (), m2sq () , s3_  ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s (), m3sq () , s1   ) ;
-  const double g  = Ostap::Kinematics::G (  s2 , s3_ , s () , m2sq () , m3sq () , m1sq () ) ;
-  //
-  return -4 * s() * g / ( f1 * f2 ) ;
-}
-// ============================================================================
-/*   \f$ \theta^{*}_{31}\f$ is angle between 
- *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
- *   \f$ \sin^2 \theta^{*}_{31} = 
- *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
- *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_31 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s (), m3sq ()  , s1  ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s (), m1sq () , s2  ) ;
-  const double g  = Ostap::Kinematics::G (  s3_ , s1 , s () , m3sq () , m1sq () , m2sq () ) ;
-  //
-  return -4 * s() * g / ( f1 * f2 ) ;
-}
-// =============================================================================
-// total momentum in (2,3) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P_R23  ( const double /* s1 */ , const double s2 ) const
-{
-  const double f1 = Ostap::Kinematics::triangle ( s (), s2 , m1sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s() ) : 0.0 ;
-}
-// =============================================================================
-// momentum of 2nd particle in (2,3) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P2_R23  ( const double /* s1 */ , const double s2 ) const
-{
-  const double f1 = Ostap::Kinematics::triangle ( s2 , m2sq () , m3sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
-}
-// ============================================================================
-/*  cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
- *  \f$ \cos \theta_{12}^{R(2,3)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_12_R23 ( const double    s1    , const double s2 ) const
-{
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s () , s2      , m1sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s2   , m2sq () , m3sq () ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f  = ( s () - s2 - m1sq () ) * ( s2 + m2sq () - m3sq () ) 
-    + 2 * s2 * ( m1sq () + m2sq () - s1 ) ;
-  //
-  return f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*  sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
- *  \f$ \sin^2 \theta_{12}^{R(2,3)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_12_R23 ( const double    s1    , const double s2 ) const 
-{
-  const double f1 = Ostap::Kinematics::triangle ( s () , s2      , m1sq ()  ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s2   , m2sq () , m3sq ()  ) ;  
-  const double g  = Ostap::Kinematics::G ( s1 , s2 , s () , m2sq () , m1sq () , m3sq () ) ;
-  //
-  return -4 * s2 * g / ( f1 * f2 ) ;
-}
-// =============================================================================
-// total momentum in (1,2) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P_R12  ( const double s1 , const double /* s2 */ ) const
-{
-  const double f1 = Ostap::Kinematics::triangle ( s (), s1 , m3sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s() ) : 0.0 ;
-}
-// =============================================================================
-// momentum of 1st particle in (1,2) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P1_R12  ( const double s1 , const double /* s2 */ ) const
-{
-  const double f1 = Ostap::Kinematics::triangle ( s1 , m1sq() , m2sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s1 ) : 0.0 ;
-}
-// ============================================================================
-/*  cosine on the angle between 3rd and 1st particles in the  (1,2) rest frame
- *  \f$ \cos \theta_{21}^{R(1,2)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_31_R12 ( const double s1 , const double s2 ) const
-{
-  //
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s () , s1      , m3sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s1   , m1sq () , m2sq () ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f  = ( s() - s1 - m3sq()  ) * ( s1 + m1sq() - m2sq ()  ) 
-    + 2 * s1 * ( m3sq()  + m1sq()  - s3_ ) ;
-  //
-  return f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*  sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
- *  \f$ \sin^2 \theta_{12}^{R(2,3)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_31_R12 ( const double s1 , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s () , s1      , m3sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s1   , m1sq () , m2sq () ) ;  
-  const double g  = Ostap::Kinematics::G ( s3_ , s1 , s () , m1sq () , m3sq () , m2sq () ) ;
-  //
-  return -4 * s1 * g / ( f1 * f2 ) ;
-}
-// =============================================================================
-// total momentum in (3,1) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P_R31  ( const double s1 , const double s2 ) const
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s (), s3_ , m2sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s() ) : 0.0 ;
-}
-// =============================================================================
-// momentum of 3rd particle in (3,1) restframe
-// =============================================================================
-double Ostap::Kinematics::Dalitz::P3_R31  ( const double s1 , const double s2 ) const
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s3_ , m3sq () , m1sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
-}
-// ============================================================================
-/* cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
- *  \f$ \cos \theta_{23}^{R(3,1)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::cos_23_R31 ( const double    s1    , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s () , s3_     , m2sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s3_  , m3sq () , m1sq () ) ;
-  //
-  if ( 0 >= f1 || 0 >= f2 ) { return  -1 ; }
-  //
-  const double f  = ( s() - s3_ - m2sq () ) * ( s3_ + m3sq () - m1sq () ) 
-    + 2 * s3_ * ( m2sq () + m3sq() - s2 ) ;
-  //
-  return f / std::sqrt ( f1 * f2 ) ;
-}
-// ============================================================================
-/*  sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
- *  \f$ \sin^2 \theta_{23}^{R(3,1)}
- */
-// ============================================================================
-double Ostap::Kinematics::Dalitz::sin2_23_R31 ( const double    s1    , const double s2 ) const 
-{
-  const double s3_ = s3 ( s1 , s2 ) ;
-  //
-  const double f1 = Ostap::Kinematics::triangle ( s () , s3_     , m2sq () ) ;
-  const double f2 = Ostap::Kinematics::triangle ( s3_  , m3sq () , m1sq () ) ;  
-  const double g  = Ostap::Kinematics::G ( s2 , s3_ , s () , m3sq () , m2sq () , m1sq () ) ;
-  //
-  return -4 * s3_ * g / ( f1 * f2 ) ;
 }
 // ============================================================================
 /*  Dalitz plot density:

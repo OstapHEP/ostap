@@ -132,17 +132,19 @@ namespace Ostap
        *  @see Ostap::Kinematics::G
        *  Physical region corresponds to \f$ g\le0 \f$  
        */
-      bool   inside   ( const double s  ,
-                        const double s1 ,
-                        const double s2 ) const ;
+      bool   inside
+      ( const double s  ,
+        const double s1 ,
+        const double s2 ) const ;
       // =======================================================================
       /** get the measure of the distance form the point to the boundary of Dalitz plot. 
        *  Distance is defined as 
        *  \f$ d \equiv = \lambda ( P_1^2 , P_2^2 , P_3^2 ) \f$ 
        */
-      double distance ( const double s ,
-                        const double s1 ,
-                        const double s2 ) const ;
+      double distance
+      ( const double s ,
+        const double s1 ,
+        const double s2 ) const ;
       // ======================================================================
     public:  // more invariants  
       // ======================================================================
@@ -305,6 +307,472 @@ namespace Ostap
         const double    s2    ) const
       { return p2p3 ( s , s1 , s2 ) + m3sq () ; }
       // ======================================================================
+    public:  // Eq (V.1.4) from Byckling & Kajantie 
+      // ======================================================================
+      /**  \f$ \theta^{*}_{12}\f$ is angle between 
+       *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
+       *   \f$ \cos \theta^{*}_{12} = 
+       *   \left.\frac { p_1p_2}{P_1P_2}\right|_{\vec{P}=0}\f$
+       */
+      double cos_12  
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /**  \f$ \theta^{*}_{23}\f$ is angle between 
+       *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
+       *   \f$ \cos \theta^{*}_{23} = 
+       *   \left.\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
+       */
+      double cos_23 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+      /**  \f$ \theta^{*}_{31}\f$ is angle between 
+       *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
+       *   \f$ \cos \theta^{*}_{31} = 
+       *   \left.\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
+       */
+      double cos_31
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+    public: // Eq. (V.1.5) from Byckling & Kajantie 
+      // ======================================================================
+      /**  \f$ \theta^{*}_{12}\f$ is angle between 
+       *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
+       *   \f$ \sin^2 \theta^{*}_{12} = 
+       *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
+       *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3 ) } \f$
+       */
+      double sin2_12 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+      /**  \f$ \theta^{*}_{23}\f$ is angle between 
+       *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
+       *   \f$ \sin^2 \theta^{*}_{23} = 
+       *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
+       *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
+       */
+      double sin2_23 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+      /**  \f$ \theta^{*}_{31}\f$ is angle between 
+       *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
+       *   \f$ \sin^2 \theta^{*}_{31} = 
+       *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
+       *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
+       */
+      double sin2_31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+    public:  // (1,2) rest frame 
+      // ======================================================================
+      ///  full energy in (1,2)-rest frame 
+      inline double E_R12  
+      ( const double    s     , 
+        const double    s1    , 
+        const double /* s2 */ ) const    
+      { return ( s + s1 - m3sq ()  )        / ( 2 * std::sqrt ( s1 ) ) ; }
+      /// energy of 1st  particle in (1,2)-rest frame 
+      inline double E1_R12 
+      ( const double /* s  */ , 
+        const double    s1    , 
+        const double /* s2 */ ) const    
+      { return ( s1   + m1sq () - m2sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      /// energy of 2nd  particle in (1,2)-rest frame 
+      inline double E2_R12 
+      ( const double /* s  */ , 
+        const double    s1    ,
+        const double /* s2 */ ) const    
+      { return ( s1   + m2sq () - m1sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
+      /// energy of 3rd  particle in (1,2)-rest frame 
+      inline double E3_R12 
+      ( const double    s     , 
+        const double    s1    , 
+        const double /* s2 */ ) const    
+      { return ( s - s1 - m3sq ()  )       / ( 2 * std::sqrt ( s1 ) ) ; }
+      // =====================================================================
+      /// total momentum in (1,2)-rest frame
+      double P_R12  
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      /// momentum of 1st particle in (1,2)-rest frame 
+      double P1_R12  
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      /// momentum of 2nd particle in (1,2)-rest frame 
+      inline double P2_R12   
+      ( const double s  , 
+        const double s1 ,
+        const double s2 ) const { return P1_R12 ( s , s1 , s2 ) ; }
+      /// momentum of 3rd particle in (1,2)-rest frame 
+      inline double P3_R12  
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return P_R12  ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** cosine on the angle between 3rd and 1st particles in the  (1,2) rest frame
+       *  \f$ \cos \theta_{31}^{R(1,2)}
+       * - the same as <c>Ostap::Kinematics::cosThetaRest (p3,p1,p1+p2)</c>
+       * - the same as <c>Ostap::Kinematics::cos_theta    (p3,p1,p1+p2)</c>
+       * - the same as <c>Ostap::Kinematics::decayAngle   (p1,p1+p2,-p3)</c>
+       */
+      double cos_31_R12 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
+       *  \f$ \sin^2 \theta_{31}^{R(1,2)}
+       */
+      double sin2_31_R12 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+    public: // (2,3)-rest frame 
+      // ======================================================================
+      ///  full energy in (2,3)-rest frame 
+      inline double E_R23  
+      ( const double    s     , 
+        const double /* s1 */ , 
+        const double    s2    ) const    
+      { return ( s + s2 - m1sq () )        / ( 2 * std::sqrt ( s2 ) ) ; }
+      /// energy of 1st  particle in (2,3)-rest frame 
+      inline double E1_R23 
+      ( const double    s     , 
+        const double /* s1 */ ,
+        const double    s2    ) const    
+      { return ( s - s2 - m1sq ()  )       / ( 2 * std::sqrt ( s2 ) ) ; }
+      /// energy of 2nd  particle in (2,3)-rest frame 
+      inline double E2_R23 
+      ( const double /* s  */ , 
+        const double /* s1 */ , 
+        const double    s2    ) const    
+      { return ( s2   +  m2sq () - m3sq ()  ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      /// energy of 3rd  particle in (2,3)-rest frame 
+      inline double E3_R23 
+      ( const double /* s  */ , 
+        const double /* s1 */ , 
+        const double    s2    ) const    
+      { return ( s2   +  m3sq () - m2sq () ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      // ======================================================================
+      /// total momentum in (2,3)-rest frame
+      double P_R23   
+      ( const double    s     , 
+        const double /* s1 */ , 
+        const double    s2    ) const ;
+      /// momentum of 1st particle in (2,3)-rest frame 
+      inline double P1_R23  
+      ( const double    s     , 
+        const double    s1    , 
+        const double    s2    ) const 
+      { return P_R23  ( s , s1 , s2 ) ; }
+      /// momentum of 2nd particle in (2,3)-rest frame 
+      double P2_R23  
+      ( const double /* s  */ , 
+        const double /* s1 */ , 
+        const double    s2    ) const ;
+      /// momentum of 3rd particle in (2,3)-rest frame 
+      inline double P3_R23  
+      ( const double    s     , 
+        const double    s1    , 
+        const double    s2    ) const 
+      { return P2_R23 ( s , s1 , s2 ) ; }
+      // ======================================================================   
+      /** cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
+       *  \f$ \cos \theta_{12}^{R(2,3)}
+       * - the same as <c>Ostap::Kinematics::cosThetaRest (p1,p2,p2+p3)</c>
+       * - the same as <c>Ostap::Kinematics::cos_theta    (p1,p2,p2+p3)</c>
+       * - the same as <c>Ostap::Kinematics::decayAngle   (p1,p2+p3,-p2)</c>
+       */
+      double cos_12_R23  
+      ( const double s  , 
+        const double s1 ,
+        const double s2 ) const ;
+      /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
+       *  \f$ \sin^2 \theta_{12}^{R(2,3)}
+       */
+      double sin2_12_R23 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+    public: // (3,1)-rest frame 
+      // ======================================================================
+      ///  full energy in (3,1)-rest frame 
+      inline double E_R31  
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const    
+      { 
+        const double s3_ = s3 ( s , s1 , s2 ) ;
+        return ( s + s3_ - m2sq ()  )        / ( 2 * std::sqrt ( s3_) ) ; 
+      }
+      /// energy of 1st  particle in (3,1)-rest frame 
+      inline double E1_R31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const    
+      { 
+        const double s3_ = s3 ( s , s1 , s2 ) ;
+        return ( s3_ +  m1sq ()  - m3sq () ) / ( 2 * std::sqrt ( s3_ ) ) ;
+      }
+      /// energy of 2nd  particle in (3,1)-rest frame 
+      inline double E2_R31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const    
+      { 
+        const double s3_ = s3 ( s , s1 , s2 ) ;
+        return ( s - s3_ - m2sq ()  )       / ( 2 * std::sqrt ( s3_ ) ) ; 
+      }
+      /// energy of 3rd  particle in (2,3)-rest frame 
+      inline double E3_R31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const    
+      { 
+        const double s3_ = s3 ( s , s1 , s2 ) ;
+        return ( s3_ +  m3sq ()  - m1sq () ) / ( 2 * std::sqrt ( s3_ ) ) ; 
+      }
+      // ======================================================================
+      /// total momentum in (3,1)-rest frame
+      double P_R31   
+      ( const double    s     , 
+        const double /* s1 */ , 
+        const double    s2    ) const ;
+      /// momentum of 3rd particle in (2,3)-rest frame 
+      inline double P1_R31  
+      ( const double    s     , 
+        const double    s1    , 
+        const double    s2    ) const { return P3_R31 ( s , s1 , s2 ) ; }
+      /// momentum of 2nd particle in (3,1)-rest frame 
+      inline double P2_R31  
+      ( const double    s    , 
+        const double    s1   , 
+        const double    s2   ) const { return P_R31  ( s , s1 , s2 ) ; }
+      /// momentum of 1st particle in (2,3)-rest frame 
+      double P3_R31  
+      ( const double    s   , 
+        const double    s1  , 
+        const double    s2  ) const ;
+      // ======================================================================
+      /** cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+       *  \f$ \cos \theta_{23}^{R(3,1)}
+       * - the same as <c>Ostap::Kinematics::cosThetaRest (p2,p3,p1+p3)</c>
+       * - the same as <c>Ostap::Kinematics::cos_theta    (p2,p3,p1+p3)</c>
+       * - the same as <c>Ostap::Kinematics::decayAngle   (p2,p1+p3,-p3)</c>
+       */
+      double cos_23_R31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      /** sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
+       *  \f$ \sin^2 \theta_{23}^{R(3,1)}
+       */
+      double sin2_23_R31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // ======================================================================
+    public: // Use formalism from [...] 
+      // ======================================================================
+      ///  \f$ \sigma_1 \equiv  s_2 = \left( p_2+p_3\right)^2 \f$ 
+      inline double sigma1 
+      ( const double /* s  */ , 
+        const double /* s1 */ , 
+        const double    s2    ) const { return s2 ; }
+      ///  \f$ \sigma_2 \equiv s_3 = \left( p_3+p_1\right)^2 \f$ 
+      inline double sigma2 
+      ( const double    s     , 
+        const double    s1    , 
+        const double    s2    ) const { return s3 ( s , s1 , s2 ) ; }
+      ///  \f$ \sigma_3 \equiv s_1 = \left( p_1+p_2\right)^2 \f$ 
+      inline double sigma3 
+      ( const double /* s  */ , 
+        const double    s1    , 
+        const double /* s2 */ ) const { return s1 ; }
+      // ======================================================================
+      /**  \f$ \cos \theta_{12} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta12 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return - cos_31_R12 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** \f$ \cos \theta_{23} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta23 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return - cos_12_R23 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /**  \f$ \cos \theta_{31} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta31 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return - cos_23_R31 ( s , s1 , s2 ) ; }
+      // ====================================================================
+      /// \f$ \\cos \zeta^{)}_{ij} \f$ or \f$ \cos \hat{\theta}_{ij}\f$  
+      // ====================================================================
+      /** \f$ \cos \zeta_{1(2)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */          
+      inline double cos_zeta120 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return cos_12 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta230 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return cos_23 ( s , s1 , s2 ) ; }
+      // ======================================================================
+      /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta310 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return cos_31 ( s , s1 , s2 ) ; }
+      // =====================================================================
+      // Zetas      
+      // =====================================================================
+      /** \f$ \cos \zeta_{1(3)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      double cos_zeta131 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;      
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(1)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      double cos_zeta211
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      double cos_zeta212
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      double cos_zeta322
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      double cos_zeta323
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      double cos_zeta133
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(3)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      double cos_zeta231
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      double cos_zeta312
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      double cos_zeta123
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const ;      
+      // =====================================================================
     public:
       // ======================================================================
       /// variable transformation \f$ (s,s_1,s_2) \leftrigtharrow (s,x_1,x_2) \f$
@@ -423,6 +891,22 @@ namespace Ostap
       double P2 ( const double s , const double s1  , const double s2 ) const ;
       /// momentum of the 3rd particle 
       double P3 ( const double s , const double s1  , const double s2 ) const ;
+      // ======================================================================
+      /// kinetic energy of 1st particle 
+      inline double T1 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return E1 ( s , s1 , s2 ) - m1 () ; } ;
+      /// kinetic energy of 2nd particle 
+      inline double T2 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return E2 ( s , s1 , s2 ) - m2 () ; }
+      /// kinetic energy of 3rd particle 
+      inline double T3 
+      ( const double s  , 
+        const double s1 , 
+        const double s2 ) const { return E3 ( s , s1 , s2 ) - m3 () ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -562,43 +1046,37 @@ namespace Ostap
       /** get the product of 4-momenta
        *  \f$ \left(p_1p_2\right) = \frac{1}{2}\left( s_{12} - m_1^2 - m_2^2 \right) \f$
        */
-      inline double p1p2 ( const double s1 ,
-                           const double s2 )  const
+      inline double p1p2 ( const double s1 , const double s2 )  const
       { return p1p2 ( s () , s1 , s2 ) ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(p_2p_3\right) = \frac{1}{2}\left( s_{23} - m_2^2 - m_3^2 \right) \f$      
        */
-      inline double p2p3 ( const double s1 ,
-                           const double s2 ) const
+      inline double p2p3 ( const double s1 , const double s2 ) const
       { return p2p3 ( s () , s1 , s2  ) ; }      
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(p_1p_3\right) = \frac{1}{2}\left( s_{13} - m_1^2 - m_3^2 \right) \f$      
        */
-      inline double p1p3 ( const double s1 ,
-                           const double s2 ) const
+      inline double p1p3 ( const double s1 , const double s2 ) const
       { return p1p3 ( s() , s1  , s2 ) ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp1\right) = \frac{1}{2}\left( s - s_{23} + m_1^2 \right) \f$
        */
-      inline double pp1 ( const double s1 ,
-                          const double s2 ) const
+      inline double pp1 ( const double s1 , const double s2 ) const
       { return pp1 ( s () , s1 , s2 )  ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp2\right) = \frac{1}{2}\left( s - s_{13} + m_2^2 \right) \f$
        */
-      inline double pp2 ( const double s1 ,
-                          const double s2 ) const
+      inline double pp2 ( const double s1 , const double s2 ) const
       { return pp2 ( s () , s1 , s2 )  ; }
       // ======================================================================
       /** get the product of 4-momenta
        *  \f$ \left(pp3\right) = \frac{1}{2}\left( s - s_{12} + m_3^2 \right) \f$
        */
-      inline double pp3 ( const double s1 ,
-                          const double s2 ) const
+      inline double pp3 ( const double s1 , const double s2 ) const
       { return pp3 ( s () , s1 , s2 )  ; }
       // ======================================================================
     public: 
@@ -612,37 +1090,44 @@ namespace Ostap
       using Dalitz0::E3 ;
       // ======================================================================
       /// Energy of the 1st particle 
-      inline double E1 ( const double /* s1 */ , const double s2        ) const 
-      { return  ( s () + m1sq () - s2             ) / ( 2 *  sqs () ) ; }
+      inline double E1 ( const double s1 , const double s2 ) const 
+      { return E1 ( s () , s1 , s2 ) ; }
       // ============-=========================================================
       /// Energy of the 2nd particle 
-      inline double E2 ( const double s1       , const double s2        ) const 
-      { return  ( s () + m2sq () - s3 ( s1 , s2 ) ) / ( 2 *  sqs () ) ; }
+      inline double E2 ( const double s1 , const double s2 ) const 
+      { return E2 ( s () , s1 , s2 ) ; }
       // ======================================================================
       /// Energy of the 3rd particle 
-      inline double E3 ( const double s1       , const double /* s2 */  ) const 
-      { return  ( s () + m3sq () - s1             ) / ( 2 *  sqs () ) ; }
+      inline double E3 ( const double s1 , const double s2 ) const 
+      { return E3 ( s () , s1 , s2 ) ; }
       // ======================================================================
       using Dalitz0::P1 ;
       using Dalitz0::P2 ;
       using Dalitz0::P3 ;
       // ======================================================================
       /// momentum of the 1st particle 
-      double P1 ( const double s1  , const double s2 ) const ;
+      inline double P1 ( const double s1 , const double s2 ) const 
+      { return P1 ( s() , s1 , s2 ) ; }
       /// momentum of the 2nd particle 
-      double P2 ( const double s1  , const double s2 ) const ;
+      inline double P2 ( const double s1 , const double s2 ) const 
+      { return P2 ( s() , s1 , s2 ) ; }
       /// momentum of the 3rd particle 
-      double P3 ( const double s1  , const double s2 ) const ;
+      inline double P3 ( const double s1 , const double s2 ) const 
+      { return P3 ( s() , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::T1 ;
+      using Dalitz0::T2 ;
+      using Dalitz0::T3 ;
       // ======================================================================
       /// kinetic energy of 1st particle 
-      inline double T1 ( const double s1 , const double s2        ) const 
-      { return E1 ( s1 , s2 ) -  m1 () ; }
+      inline double T1 ( const double s1 , const double s2 ) const 
+      { return T1 ( s () , s1 , s2 ) ; }
       /// kinetic energy of 2nd particle 
-      inline double T2 ( const double s1 , const double s2        ) const 
-      { return E2 ( s1 , s2 ) -  m2 () ; }
+      inline double T2 ( const double s1 , const double s2 ) const 
+      { return T2 ( s () , s1 , s2 ) ; }
       /// kinetic energy of 3rd particle 
-      inline double T3 ( const double s1 , const double s2        ) const 
-      { return E3 ( s1 , s2 ) -  m3 () ; }          
+      inline double T3 ( const double s1 , const double s2 ) const 
+      { return T3 ( s () , s1 , s2 ) ; }          
       // ======================================================================
     public:  // limits for E1 , E2 and E3
       // ======================================================================
@@ -650,30 +1135,41 @@ namespace Ostap
       double E2_max () const { return m_cache2 [ 6 ] ; }
       double E3_max () const { return m_cache2 [ 7 ] ; }
       // ======================================================================
-    public:
+    public: // Eq. (V.1.4) from Byckling & Kajantie 
+      // ======================================================================
+      using Dalitz0::cos_12 ;
+      using Dalitz0::cos_23 ;
+      using Dalitz0::cos_31 ;
       // ======================================================================
       /**  \f$ \theta^{*}_{12}\f$ is angle between 
        *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{12} = 
        *   \left.\frac { p_1p_2}{P_1P_2}\right|_{\vec{P}=0}\f$
        */
-      double cos_12  ( const double s1 , const double s2 ) const ;
+      double cos_12  ( const double s1 , const double s2 ) const 
+      { return cos_12 ( s () , s1 , s2 ) ; } 
       // =====================================================================
       /**  \f$ \theta^{*}_{23}\f$ is angle between 
        *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{23} = 
        *   \left.\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
        */
-      double cos_23  ( const double s1 , const double s2 ) const ;
+      double cos_23  ( const double s1 , const double s2 ) const 
+      { return cos_23 ( s () , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{31}\f$ is angle between 
        *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
        *   \f$ \cos \theta^{*}_{31} = 
        *   \left.\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
        */
-      double cos_31  ( const double s1 , const double s2 ) const ;
+      double cos_31  ( const double s1 , const double s2 ) const 
+      { return cos_31 ( s () , s1 , s2 ) ; }
       // ======================================================================
-    public:
+    public: // Eq. (V.1.5) from Byckling & Kajantie 
+      // ======================================================================
+      using Dalitz0::sin2_12 ;
+      using Dalitz0::sin2_23 ;
+      using Dalitz0::sin2_31 ;      
       // ======================================================================
       /**  \f$ \theta^{*}_{12}\f$ is angle between 
        *  \f$ p_1\f$  and \f$ p_2 \f$  in the rest frame:
@@ -681,7 +1177,8 @@ namespace Ostap
        *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
        *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3 ) } \f$
        */
-      double sin2_12 ( const double s1 , const double s2 ) const ;
+      double sin2_12 ( const double s1 , const double s2 ) const 
+      { return sin2_12 ( s() , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{23}\f$ is angle between 
        *  \f$ p_2\f$  and \f$ p_3 \f$  in the rest frame:
@@ -689,7 +1186,8 @@ namespace Ostap
        *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
        *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
        */
-      double sin2_23 ( const double s1 , const double s2 ) const ;
+      double sin2_23 ( const double s1 , const double s2 ) const 
+      { return sin2_23 ( s() , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{31}\f$ is angle between 
        *  \f$ p_3\f$  and \f$ p_1 \f$  in the rest frame:
@@ -697,68 +1195,104 @@ namespace Ostap
        *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
        *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
        */
-      double sin2_31 ( const double s1 , const double s2 ) const ;
+      double sin2_31 ( const double s1 , const double s2 ) const 
+      { return sin2_31 ( s() , s1 , s2 ) ; }
       // ======================================================================
     public: // (1,2)-rest frame 
       // ======================================================================
+      using Dalitz0::E_R12  ;
+      using Dalitz0::E1_R12 ;
+      using Dalitz0::E2_R12 ;
+      using Dalitz0::E3_R12 ;
+      // ======================================================================
       ///  full energy in (1,2)-rest frame 
-      inline double E_R12  ( const double s1 , const double /* s2 */ ) const    
-      { return ( s () + s1 - m3sq ()  )     / ( 2 * std::sqrt ( s1 ) ) ; }      
-      /// energy of 1st  particle in (2,3)-rest frame 
-      inline double E1_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s1   + m1sq () - m2sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
-      /// energy of 2nd  particle in (2,3)-rest frame 
-      inline double E2_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s1   + m2sq () - m1sq () ) / ( 2 * std::sqrt ( s1 ) ) ; }
-      /// energy of 3rd  particle in (2,3)-rest frame 
-      inline double E3_R12 ( const double s1 , const double /* s2 */ ) const    
-      { return ( s () - s1 - m3sq ()  )     / ( 2 * std::sqrt ( s1 ) ) ; }
+      inline double E_R12  ( const double s1 , const double s2 ) const   
+      { return E_R12  ( s () , s1 , s2 ) ; }
+      /// energy of 1st  particle in (1,2)-rest frame 
+      inline double E1_R12 ( const double s1 , const double s2 ) const    
+      { return E1_R12 ( s () , s1 , s2 ) ; }
+      /// energy of 2nd  particle in (1,2)-rest frame 
+      inline double E2_R12 ( const double s1 , const double s2 ) const    
+      { return E2_R12 ( s () , s1 , s2 ) ; }
+      /// energy of 3rd  particle in (1,2)-rest frame 
+      inline double E3_R12 ( const double s1 , const double s2 ) const    
+      { return E3_R12 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::P_R12  ;
+      using Dalitz0::P1_R12 ;
+      using Dalitz0::P2_R12 ;
+      using Dalitz0::P3_R12 ;
+      // ======================================================================
       /// total momentum in (1,2)-rest frame
-      double P_R12   ( const double    s1 , const double s2 ) const ;
+      inline double P_R12  ( const double s1 , const double s2 ) const 
+      { return P_R12  ( s () , s1 , s2 ) ; }
       /// momentum of 3rd particle in (1,2)-rest frame 
-      double P3_R12  ( const double    s1    , const double s2 ) const 
-      { return P_R12  ( s1 , s2 ) ; }
+      inline double P3_R12 ( const double s1 , const double s2 ) const 
+      { return P3_R12 ( s () , s1 , s2 ) ; }
       /// momentum of 1st particle in (1,2)-rest frame 
-      double P1_R12  ( const double    s1    , const double s2 ) const ;
+      inline double P1_R12 ( const double s1 , const double s2 ) const 
+      { return P1_R12 ( s () , s1 , s2 ) ; }
       /// momentum of 2nd particle in (1,2)-rest frame 
-      double P2_R12  ( const double    s1    , const double s2 ) const 
-      { return P1_R12 ( s1 , s2 ) ; }
+      inline double P2_R12 ( const double s1 , const double s2 ) const 
+      { return P2_R12 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::cos_31_R12  ;
+      using Dalitz0::sin2_31_R12 ;
+      // ======================================================================
       /** cosine on the angle between 3rd and 1st particles in the  (1,2) rest frame
        *  \f$ \cos \theta_{31}^{R(1,2)}
        * - the same as <c>Ostap::Kinematics::cosThetaRest (p3,p1,p1+p2)</c>
        * - the same as <c>Ostap::Kinematics::cos_theta    (p3,p1,p1+p2)</c>
        * - the same as <c>Ostap::Kinematics::decayAngle   (p1,p1+p2,-p3)</c>
        */
-      double cos_31_R12 ( const double    s1    , const double s2 ) const ;
+      inline double cos_31_R12  ( const double s1 , const double s2 ) const 
+      { return cos_31_R12 ( s() , s1 , s2 ) ; }
       /** sine squared  on the angle between 3rd and 1st particles in the  (1,2) rest frame
        *  \f$ \sin^2 \theta_{31}^{R(1,2)}
        */
-      double sin2_31_R12 ( const double   s1    , const double s2 ) const ;
+      inline double sin2_31_R12 ( const double s1 , const double s2 ) const 
+      { return sin2_31_R12 ( s() , s1 , s2 ) ; }      
       // ======================================================================
     public: // (2,3)-rest frame 
       // ======================================================================
+      using Dalitz0::E_R23  ;
+      using Dalitz0::E1_R23 ;
+      using Dalitz0::E2_R23 ;
+      using Dalitz0::E3_R23 ;
+      // ======================================================================
       ///  full energy in (2,3)-rest frame 
-      inline double E_R23  ( const double /* s1 */ , const double s2 ) const    
-      { return ( s () + s2 - m1sq () )        / ( 2 * std::sqrt ( s2 ) ) ; }
+      inline double E_R23  ( const double s1 , const double s2 ) const   
+      { return E_R23  ( s () , s1 , s2 ) ; }
       /// energy of 1st  particle in (2,3)-rest frame 
-      inline double E1_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s () - s2 - m1sq ()  )       / ( 2 * std::sqrt ( s2 ) ) ; }
+      inline double E1_R23 ( const double s1 , const double s2 ) const    
+      { return E1_R23 ( s () , s1 , s2 ) ; }
       /// energy of 2nd  particle in (2,3)-rest frame 
-      inline double E2_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s2   +  m2sq () - m3sq ()  ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      inline double E2_R23 ( const double s1 , const double s2 ) const    
+      { return E2_R23 ( s () , s1 , s2 ) ; }
       /// energy of 3rd  particle in (2,3)-rest frame 
-      inline double E3_R23 ( const double /* s1 */ , const double s2 ) const    
-      { return ( s2   +  m3sq () - m2sq () ) / ( 2 * std::sqrt ( s2 ) ) ; }
+      inline double E3_R23 ( const double s1 , const double s2 ) const    
+      { return E3_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::P_R23  ;
+      using Dalitz0::P1_R23 ;
+      using Dalitz0::P2_R23 ;
+      using Dalitz0::P3_R23 ;
+      // ======================================================================
       /// total momentum in (2,3)-rest frame
-      double P_R23   ( const double /* s1 */ , const double s2 ) const ;
+      inline double P_R23   ( const double s1 , const double s2 ) const 
+      { return P_R23  ( s () , s1 , s2 ) ; }
       /// momentum of 1st particle in (2,3)-rest frame 
-      double P1_R23  ( const double    s1    , const double s2 ) const 
-      { return P_R23  ( s1 , s2 ) ; }
+      inline double P1_R23  ( const double s1 , const double s2 ) const 
+      { return P1_R23 ( s () , s1 , s2 ) ; }
       /// momentum of 2nd particle in (2,3)-rest frame 
-      double P2_R23  ( const double    s1    , const double s2 ) const ;
+      inline double P2_R23  ( const double s1 , const double s2 ) const 
+      { return P2_R23 ( s () , s1 , s2 ) ; }
       /// momentum of 3rd particle in (2,3)-rest frame 
-      double P3_R23  ( const double    s1    , const double s2 ) const 
-      { return P2_R23 ( s1 , s2 ) ; }
+      inline double P3_R23  ( const double s1 , const double s2 ) const 
+      { return P3_R23 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::cos_12_R23  ;
+      using Dalitz0::sin2_12_R23 ;
       // ======================================================================
       /** cosine on the angle between 1st and 2nd particles in the  (2,3) rest frame
        *  \f$ \cos \theta_{12}^{R(2,3)}
@@ -766,60 +1300,236 @@ namespace Ostap
        * - the same as <c>Ostap::Kinematics::cos_theta    (p1,p2,p2+p3)</c>
        * - the same as <c>Ostap::Kinematics::decayAngle   (p1,p2+p3,-p2)</c>
        */
-      double cos_12_R23  ( const double    s1    , const double s2 ) const ;
+      inline double cos_12_R23  ( const double s1 , const double s2 ) const 
+      { return cos_12_R23 ( s() , s1 , s2 ) ; }
       /** sine squared  on the angle between 1st and 2nd particles in the  (2,3) rest frame
        *  \f$ \sin^2 \theta_{12}^{R(2,3)}
        */
-      double sin2_12_R23 ( const double    s1    , const double s2 ) const ;
+      inline double sin2_12_R23 ( const double s1 , const double s2 ) const 
+      { return sin2_12_R23 ( s() , s1 , s2 ) ; }
       // ======================================================================
     public: // (3,1)-rest frame 
       // ======================================================================
+      using Dalitz0::E_R31  ;
+      using Dalitz0::E1_R31 ;
+      using Dalitz0::E2_R31 ;
+      using Dalitz0::E3_R31 ;
+      // ======================================================================
       ///  full energy in (3,1)-rest frame 
       inline double E_R31  ( const double s1 , const double s2 ) const    
-      { 
-        const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s () + s3_ - m2sq ()  )     / ( 2 * std::sqrt ( s3_) ) ; 
-      }
+      { return E_R31  ( s () , s1 , s2 ) ; }
       /// energy of 1st  particle in (3,1)-rest frame 
       inline double E1_R31 ( const double  s1 , const double s2 ) const    
-      { 
-        const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s3_ +  m1sq ()  - m3sq () ) / ( 2 * std::sqrt ( s3_ ) ) ;
-      }
+      { return E1_R31 ( s () , s1 , s2 ) ; }
       /// energy of 2nd  particle in (3,1)-rest frame 
       inline double E2_R31 ( const double s1 , const double s2 ) const    
-      { 
-        const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s () - s3_ - m2sq ()  )    / ( 2 * std::sqrt ( s3_ ) ) ; 
-      }
+      { return E2_R31 ( s () , s1 , s2 ) ; }
       /// energy of 3rd  particle in (2,3)-rest frame 
       inline double E3_R31 ( const double s1 , const double s2 ) const    
-      { 
-        const double s3_ = s3 ( s1 , s2 ) ;
-        return ( s3_ +  m3sq ()  - m1sq () ) / ( 2 * std::sqrt ( s3_ ) ) ; 
-      }
+      { return E3_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::P_R31  ;
+      using Dalitz0::P1_R31 ;
+      using Dalitz0::P2_R31 ;
+      using Dalitz0::P3_R31 ;
+      // ======================================================================
       /// total momentum in (3,1)-rest frame
-      double P_R31   ( const double /* s1 */ , const double s2 ) const ;
-      /// momentum of 2nd particle in (3,1)-rest frame 
-      double P2_R31  ( const double    s1    , const double s2 ) const 
-      { return P_R31  ( s1 , s2 ) ; }
-      /// momentum of 1st particle in (2,3)-rest frame 
-      double P3_R31  ( const double    s1    , const double s2 ) const ;
+      inline double P_R31   ( const double s1 , const double s2 ) const 
+      { return P_R31  ( s () , s1 , s2 ) ; }
       /// momentum of 3rd particle in (2,3)-rest frame 
-      double P1_R31  ( const double    s1    , const double s2 ) const 
-      { return P3_R31 ( s1 , s2 ) ; }
+      inline double P1_R31  ( const double s1 , const double s2 ) const 
+      { return P1_R31 ( s () , s1 , s2 ) ; }
+      /// momentum of 2nd particle in (3,1)-rest frame 
+      inline double P2_R31  ( const double    s1    , const double s2 ) const 
+      { return P2_R31 ( s () , s1 , s2 ) ; }
+      /// momentum of 1st particle in (2,3)-rest frame 
+      inline double P3_R31  ( const double    s1    , const double s2 ) const 
+      { return P3_R31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::cos_23_R31  ;
+      using Dalitz0::sin2_23_R31 ;
+      // ======================================================================
       /** cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
        *  \f$ \cos \theta_{23}^{R(3,1)}
        * - the same as <c>Ostap::Kinematics::cosThetaRest (p2,p3,p1+p3)</c>
        * - the same as <c>Ostap::Kinematics::cos_theta    (p2,p3,p1+p3)</c>
        * - the same as <c>Ostap::Kinematics::decayAngle   (p2,p1+p3,-p3)</c>
        */
-      double cos_23_R31 ( const double    s1    , const double s2 ) const ;
+      inline double cos_23_R31 ( const double s1 , const double s2 ) const 
+      { return cos_23_R31 ( s() , s1 , s2 ) ; }
       /** sine squared  on the angle between 2nd and 3rd particles in the  (3,1) rest frame
        *  \f$ \sin^2 \theta_{23}^{R(3,1)}
        */
-      double sin2_23_R31 ( const double    s1    , const double s2 ) const ;
+      inline double sin2_23_R31 ( const double s1 , const double s2 ) const 
+      { return sin2_23_R31 ( s() , s1 , s2 ) ; }
       // ======================================================================
+    public: // Use formalism from [...] 
+      // ======================================================================
+      using Dalitz0::sigma1 ;
+      using Dalitz0::sigma2 ;
+      using Dalitz0::sigma3 ;
+      // ======================================================================
+      ///  \f$ \sigma_1 \equiv s_2 = \left( p_2+p_3\right)^2 \f$ 
+      inline double sigma1 ( const double /* s1 */ , const double    s2    ) const 
+      { return s2  ; }
+      ///  \f$ \sigma_2 \equiv s_3 = \left( p_3+p_1\right)^2 \f$ 
+      inline double sigma2 ( const double    s1    , const double    s2    ) const 
+      { return s3 ( s1 , s2 ) ; }
+      ///  \f$ \sigma_3 \equiv s_1 = \left( p_1+p_2\right)^2 \f$ 
+      inline double sigma3 ( const double    s1    , const double /* s2 */ ) const 
+      { return s1 ; }
+      // ======================================================================
+      using Dalitz0::cos_theta12 ;
+      using Dalitz0::cos_theta23 ;
+      using Dalitz0::cos_theta31 ;
+      // ======================================================================
+      /**  \f$ \cos \theta_{12} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta12 ( const double s1 , const double s2 ) const
+      { return cos_theta12 ( s () , s1 , s2 ) ; }
+      /** \f$ \cos \theta_{23} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta23 ( const double s1 , const double s2 ) const 
+      { return cos_theta23 ( s () , s1 , s2 ) ; }
+      /**  \f$ \cos \theta_{31} \f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_theta31 ( const double s1 , const double s2 ) const
+      { return cos_theta31 ( s () , s1 , s2 ) ; }
+      // ======================================================================
+      using Dalitz0::cos_zeta120 ;
+      using Dalitz0::cos_zeta230 ;
+      using Dalitz0::cos_zeta310 ;
+      // ======================================================================
+      /** \f$ \cos \zeta_{1(2)}^{0} \f$  or \f$ \cos \hat{\theta}_{12}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */          
+      inline double cos_zeta120 ( const double s1 , const double s2 ) const 
+      { return cos_zeta120 ( s () , s1 , s2 ) ; }
+      /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{23}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta230 ( const double s1 , const double s2 ) const 
+      { return cos_zeta230 ( s () , s1 , s2 ) ; }
+      /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{31}\f$  
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta310 ( const double s1 , const double s2 ) const 
+      { return cos_zeta310 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      using Dalitz0::cos_zeta131 ;
+      using Dalitz0::cos_zeta211 ;
+      using Dalitz0::cos_zeta212 ;
+      using Dalitz0::cos_zeta322 ;
+      using Dalitz0::cos_zeta323 ;
+      using Dalitz0::cos_zeta133 ;
+      using Dalitz0::cos_zeta231 ;
+      using Dalitz0::cos_zeta312 ;
+      using Dalitz0::cos_zeta123 ;
+      // =====================================================================
+      // Zetas      
+      // =====================================================================
+      /** \f$ \cos \zeta_{1(3)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      inline double cos_zeta131 ( const double s1 , const double s2 ) const 
+      { return cos_zeta131 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(1)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      inline double cos_zeta211 ( const double s1 , const double s2 ) const 
+      { return cos_zeta211 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta212 ( const double s1 , const double s2 ) const 
+      { return cos_zeta212 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      inline double cos_zeta322 ( const double s1 , const double s2 ) const 
+      { return cos_zeta322 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta323 ( const double s1 , const double s2 ) const 
+      { return cos_zeta323 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta133 ( const double s1 , const double s2 ) const 
+      { return cos_zeta133 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{2(3)}^{1} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */      
+      inline double cos_zeta231 ( const double s1 , const double s2 ) const 
+      { return cos_zeta231 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta312 ( const double s1 , const double s2 ) const 
+      { return cos_zeta312 ( s () , s1 , s2 ) ; }
+      // =====================================================================
+      /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *                            Phys. Rev. D 101, 034033 (2020)
+       *   @see https://doi.org/10.48550/arXiv.1910.04566
+       *   @see https://arxiv.org/abs/1910.04566
+       */
+      inline double cos_zeta123 ( const double s1 , const double s2 ) const 
+      { return cos_zeta123 ( s () , s1 , s2 ) ; }
+      // =====================================================================
     public:
       // ======================================================================
       /** Dalitz plot density:
@@ -905,7 +1615,8 @@ namespace Ostap
        *  Distance is defined as 
        *  \f$ d \equiv = \lambda ( P_1^2 , P_2^2 , P_3^2 ) \f$ 
        */
-      double distance ( const double s1 , const double s2 ) const ;
+      inline double distance ( const double s1 , const double s2 ) const 
+      { return distance ( s () , s1 , s2 ) ; }
       // ======================================================================
       /// Dalitz plot boundaries \f$ s_1^{min/max} ( s_2 ) \f$ 
       std::pair<double,double>  s1_minmax_for_s2 ( const double s2 ) const
