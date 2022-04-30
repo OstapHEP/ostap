@@ -45,55 +45,55 @@ namespace Ostap
     public:  // trivial getters 
       // ====================================================================== 
       ///   the first mass 
-      double m1     () const  { return m_m1  ; }
+      inline double m1     () const  { return m_m1  ; }
       ///   the second mass 
-      double m2     () const  { return m_m2  ; }
+      inline double m2     () const  { return m_m2  ; }
       ///   the third  mass 
-      double m3     () const  { return m_m3  ; }
+      inline double m3     () const  { return m_m3  ; }
       // ======================================================================
       /// minimal value of s1: \f$ \left. s_1\right|_{min} =  (m_1+m_2)^2 \f$
-      double s1_min () const { return m_cache [ 0 ] ; }
+      inline double s1_min () const { return m_cache [ 0 ] ; }
       /// minimal value of s2: \f$ \left. s_2\right|_{min} =  (m_2+m_3)^2 \f$
-      double s2_min () const { return m_cache [ 1 ] ; }
+      inline double s2_min () const { return m_cache [ 1 ] ; }
       /// minimal value of s3: \f$ \left. s_3\right|_{min} =  (m_3+m_1)^2 \f$
-      double s3_min () const { return m_cache [ 2 ] ; }
+      inline double s3_min () const { return m_cache [ 2 ] ; }
       // ======================================================================
       /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
-      double s1_max ( const double M ) const { const double d = M - m3 () ; return d * d ; }
+      inline double s1_max ( const double M ) const { const double d = M - m3 () ; return d * d ; }
       /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
-      double s2_max ( const double M ) const { const double d = M - m1 () ; return d * d ; }
+      inline double s2_max ( const double M ) const { const double d = M - m1 () ; return d * d ; }
       /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
-      double s3_max ( const double M ) const { const double d = M - m2 () ; return d * d ; }
+      inline double s3_max ( const double M ) const { const double d = M - m2 () ; return d * d ; }
       // ======================================================================
       /// \f$ m_1^2\f$  precalculated 
-      double m1sq   () const { return m_cache [ 3 ] ; }
+      inline double m1sq   () const { return m_cache [ 3 ] ; }
       /// \f$ m_2^2\f$  precalculated 
-      double m2sq   () const { return m_cache [ 4 ] ; }
+      inline double m2sq   () const { return m_cache [ 4 ] ; }
       /// \f$ m_3^2\f$ precalculated 
-      double m3sq   () const { return m_cache [ 5 ] ; }
+      inline double m3sq   () const { return m_cache [ 5 ] ; }
       /// sum of squared masses  \f$  m_1^2+m_2^1+m_3^3\f$ 
-      double summ2  () const { return m_cache [ 6 ] ; }
+      inline double summ2  () const { return m_cache [ 6 ] ; }
       /// sum of masses  \f$  m_1 + m_2 + m_3 \f$ 
-      double summ   () const { return m_cache [ 7 ] ; }
+      inline double summ   () const { return m_cache [ 7 ] ; }
       /// squared sum of masses  \f$  (m_1 + m_2 + m_3)^2 \f$ 
-      double sqsumm () const { return m_cache [ 8 ] ; }
+      inline double sqsumm () const { return m_cache [ 8 ] ; }
       ///  minimal value of s: \f$ s_{min} = \left(  m_1 +m_2+ m_3 \right)^2\f$
-      double s_min  () const { return sqsumm () ; }      
+      inline double s_min  () const { return sqsumm () ; }      
       // ======================================================================
     public:
       // ======================================================================
       /// Is m1 equal to zero ? 
-      bool m1_zero () const { return m_cacheb [ 0 ] ; }
+      inline bool m1_zero () const { return m_cacheb [ 0 ] ; }
       /// Is m1 equal to zero ? 
-      bool m2_zero () const { return m_cacheb [ 1 ] ; }
+      inline bool m2_zero () const { return m_cacheb [ 1 ] ; }
       /// Is m1 equal to zero ? 
-      bool m3_zero () const { return m_cacheb [ 2 ] ; }
+      inline bool m3_zero () const { return m_cacheb [ 2 ] ; }
       // ======================================================================
     public:  // limits for E1 , E2 and E3
       // ======================================================================
-      double E1_min () const { return m_m1          ; }
-      double E2_min () const { return m_m2          ; }
-      double E3_min () const { return m_m3          ; }
+      inline double E1_min () const { return m_m1          ; }
+      inline double E2_min () const { return m_m2          ; }
+      inline double E3_min () const { return m_m3          ; }
       // ======================================================================
     public:
       // ======================================================================
@@ -605,7 +605,7 @@ namespace Ostap
         const double /* s2 */ ) const { return s1 ; }
       // ======================================================================
       /**  \f$ \cos \theta_{12} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -616,7 +616,7 @@ namespace Ostap
         const double s2 ) const { return - cos_31_R12 ( s , s1 , s2 ) ; }
       // ======================================================================
       /** \f$ \cos \theta_{23} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -627,7 +627,7 @@ namespace Ostap
         const double s2 ) const { return - cos_12_R23 ( s , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \cos \theta_{31} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -640,7 +640,7 @@ namespace Ostap
       /// \f$ \\cos \zeta^{)}_{ij} \f$ or \f$ \cos \hat{\theta}_{ij}\f$  
       // ====================================================================
       /** \f$ \cos \zeta_{1(2)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -651,7 +651,7 @@ namespace Ostap
         const double s2 ) const { return cos_12 ( s , s1 , s2 ) ; }
       // ======================================================================
       /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -662,7 +662,7 @@ namespace Ostap
         const double s2 ) const { return cos_23 ( s , s1 , s2 ) ; }
       // ======================================================================
       /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -675,7 +675,7 @@ namespace Ostap
       // Zetas      
       // =====================================================================
       /** \f$ \cos \zeta_{1(3)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -686,7 +686,7 @@ namespace Ostap
         const double s2 ) const ;      
       // =====================================================================
       /** \f$ \cos \zeta_{2(1)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -697,7 +697,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{2(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -708,7 +708,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -719,7 +719,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -730,7 +730,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -741,7 +741,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{2(3)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -752,7 +752,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -763,7 +763,7 @@ namespace Ostap
         const double s2 ) const ;
       // =====================================================================
       /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -986,33 +986,33 @@ namespace Ostap
     public:  // trivial getters 
       // ====================================================================== 
       /// \f$ s =  (p_1 + p^2 + p^3)^2 \f$
-      double s      () const  { return S ()  ; }
-      double sqs    () const  { return m_M   ; }
+      inline double s      () const  { return S ()  ; }
+      inline double sqs    () const  { return m_M   ; }
       ///   total mass 
-      double M      () const  { return m_M   ; }
+      inline double M      () const  { return m_M   ; }
       // ======================================================================
       using Dalitz0::s1_max ;
       using Dalitz0::s2_max ;
       using Dalitz0::s3_max ;
       // ======================================================================
       /// maximal value of s1: \f$ \left. s_1\right|_{max} =  (M-m_3)^2 \f$
-      double s1_max () const { return m_cache2 [ 0 ] ; }
+      inline double s1_max () const { return m_cache2 [ 0 ] ; }
       /// maximal value of s2: \f$ \left. s_1\right|_{max} =  (M-m_1)^2 \f$
-      double s2_max () const { return m_cache2 [ 1 ] ; }
+      inline double s2_max () const { return m_cache2 [ 1 ] ; }
       /// maximal value of s3: \f$ \left. s_3\right|_{max} =  (M-m_2)^2 \f$
-      double s3_max () const { return m_cache2 [ 2 ] ; }
+      inline double s3_max () const { return m_cache2 [ 2 ] ; }
       // ======================================================================
       /** Get the sum of all invariants 
        *    \f$ s_1 +  s_2 + s_3 = s_{12} + s_{23} + s_{31} = 
        *           s + m_1^2 + m_2^2 + m_3^2 \f$ 
        *  - The sum is precalculated 
        */
-      double sums   () const { return m_cache2 [ 3 ] ; }
+      inline double sums   () const { return m_cache2 [ 3 ] ; }
       // ======================================================================
       /// \f$ M^2\f$   precalculated 
-      double Msq    () const { return m_cache2 [ 4 ] ; }
+      inline double Msq    () const { return m_cache2 [ 4 ] ; }
       /// \f$ s \f$    precalculated 
-      double S      () const { return Msq ()      ; }
+      inline double S      () const { return Msq ()         ; }
       // ======================================================================
     public:  // only two s_i are independent 
       // ======================================================================
@@ -1146,7 +1146,7 @@ namespace Ostap
        *   \f$ \cos \theta^{*}_{12} = 
        *   \left.\frac { p_1p_2}{P_1P_2}\right|_{\vec{P}=0}\f$
        */
-      double cos_12  ( const double s1 , const double s2 ) const 
+      inline double cos_12  ( const double s1 , const double s2 ) const 
       { return cos_12 ( s () , s1 , s2 ) ; } 
       // =====================================================================
       /**  \f$ \theta^{*}_{23}\f$ is angle between 
@@ -1154,7 +1154,7 @@ namespace Ostap
        *   \f$ \cos \theta^{*}_{23} = 
        *   \left.\frac { p_2p_3}{P_2P_3}\right|_{\vec{P}=0}\f$
        */
-      double cos_23  ( const double s1 , const double s2 ) const 
+      inline double cos_23  ( const double s1 , const double s2 ) const 
       { return cos_23 ( s () , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{31}\f$ is angle between 
@@ -1162,7 +1162,7 @@ namespace Ostap
        *   \f$ \cos \theta^{*}_{31} = 
        *   \left.\frac { p_3p_1}{P_3P_1}\right|_{\vec{P}=0}\f$
        */
-      double cos_31  ( const double s1 , const double s2 ) const 
+      inline double cos_31  ( const double s1 , const double s2 ) const 
       { return cos_31 ( s () , s1 , s2 ) ; }
       // ======================================================================
     public: // Eq. (V.1.5) from Byckling & Kajantie 
@@ -1177,7 +1177,7 @@ namespace Ostap
        *   -4s \frac{ G(s_1,s_2,s, m_2^2, m_1^2,m_3^2) }
        *   {\lambda(s, m_1^2, s2) \lambda(s, m_2^2, s3 ) } \f$
        */
-      double sin2_12 ( const double s1 , const double s2 ) const 
+      inline double sin2_12 ( const double s1 , const double s2 ) const 
       { return sin2_12 ( s() , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{23}\f$ is angle between 
@@ -1186,7 +1186,7 @@ namespace Ostap
        *   -4s \frac{ G(s_2,s_3,s, m_3^2, m_2^2,m_1^2) }
        *   {\lambda(s, m_2^2, s3 ) \lambda(s, m_3^2, s1 ) } \f$
        */
-      double sin2_23 ( const double s1 , const double s2 ) const 
+      inline double sin2_23 ( const double s1 , const double s2 ) const 
       { return sin2_23 ( s() , s1 , s2 ) ; }
       // ======================================================================
       /**  \f$ \theta^{*}_{31}\f$ is angle between 
@@ -1195,7 +1195,7 @@ namespace Ostap
        *   -4s \frac{ G(s_3,s_1,s, m_1^2, m_3^2,m_2^2) }
        *   {\lambda(s, m_3^2, s1 ) \lambda(s, m_1^2, s2 ) } \f$
        */
-      double sin2_31 ( const double s1 , const double s2 ) const 
+      inline double sin2_31 ( const double s1 , const double s2 ) const 
       { return sin2_31 ( s() , s1 , s2 ) ; }
       // ======================================================================
     public: // (1,2)-rest frame 
@@ -1384,7 +1384,7 @@ namespace Ostap
       using Dalitz0::cos_theta31 ;
       // ======================================================================
       /**  \f$ \cos \theta_{12} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1392,7 +1392,7 @@ namespace Ostap
       inline double cos_theta12 ( const double s1 , const double s2 ) const
       { return cos_theta12 ( s () , s1 , s2 ) ; }
       /** \f$ \cos \theta_{23} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1400,7 +1400,7 @@ namespace Ostap
       inline double cos_theta23 ( const double s1 , const double s2 ) const 
       { return cos_theta23 ( s () , s1 , s2 ) ; }
       /**  \f$ \cos \theta_{31} \f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1413,7 +1413,7 @@ namespace Ostap
       using Dalitz0::cos_zeta310 ;
       // ======================================================================
       /** \f$ \cos \zeta_{1(2)}^{0} \f$  or \f$ \cos \hat{\theta}_{12}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1421,7 +1421,7 @@ namespace Ostap
       inline double cos_zeta120 ( const double s1 , const double s2 ) const 
       { return cos_zeta120 ( s () , s1 , s2 ) ; }
       /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{23}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1429,7 +1429,7 @@ namespace Ostap
       inline double cos_zeta230 ( const double s1 , const double s2 ) const 
       { return cos_zeta230 ( s () , s1 , s2 ) ; }
       /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{31}\f$  
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1450,7 +1450,7 @@ namespace Ostap
       // Zetas      
       // =====================================================================
       /** \f$ \cos \zeta_{1(3)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1459,7 +1459,7 @@ namespace Ostap
       { return cos_zeta131 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{2(1)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1468,7 +1468,7 @@ namespace Ostap
       { return cos_zeta211 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{2(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1477,7 +1477,7 @@ namespace Ostap
       { return cos_zeta212 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1486,7 +1486,7 @@ namespace Ostap
       { return cos_zeta322 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1495,7 +1495,7 @@ namespace Ostap
       { return cos_zeta323 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{3(2)}^{3} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1504,7 +1504,7 @@ namespace Ostap
       { return cos_zeta133 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{2(3)}^{1} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1513,7 +1513,7 @@ namespace Ostap
       { return cos_zeta231 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1522,7 +1522,7 @@ namespace Ostap
       { return cos_zeta312 ( s () , s1 , s2 ) ; }
       // =====================================================================
       /** \f$ \cos \zeta_{3(1)}^{2} \f$ 
-       *   @see M.Mikhasenko et al, "Dalitz plot decomposiiton for three-body decays", 
+       *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
        *   @see https://arxiv.org/abs/1910.04566
@@ -1544,7 +1544,7 @@ namespace Ostap
       /** Dalitz density as  function of masses 
        *  \f$m_{12},m_{23}=\sqrt{s_1},\sqrt{s_2} \f$
        */
-      double density_mass  ( const double m12 , const double m23 ) const 
+      inline double density_mass  ( const double m12 , const double m23 ) const 
       { return 
           m12 < ( m1 () + m2 () ) ? 0 : m12 > ( m_M  - m3 () ) ? 0 :
           m23 < ( m2 () + m3 () ) ? 0 : m23 > ( m_M  - m1 () ) ? 0 : 
@@ -1629,14 +1629,14 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the tag/hash value  
-      std::size_t tag () const { return m_tag2 ; }
+      inline std::size_t tag () const { return m_tag2 ; }
       // ======================================================================
     private :
       // ======================================================================
       /// the total mass 
       double m_M ;                                       //      the total mass
-      /// the precalcualted quantities 
-      // std::array<double,8> m_cache2 ;           // the precalcualted quantities
+      /// the precalculated quantities 
+      // std::array<double,8> m_cache2 ;        // the precalcualted quantities
       double m_cache2 [8] ;                     // the precalcualted quantities
       /// tag/hash value
       std::size_t          m_tag2   ;                         // tag/hash value
