@@ -13,6 +13,7 @@
 ## Backward incompatible:  
  
 ## Bug fixes:
+  1. Bug fix in `Dalitz0::P1_R31`
 
 
 # v1.7.1.8

@@ -775,7 +775,7 @@ double Ostap::Kinematics::Dalitz0::P3_R31
 {
   const double s3_ = s3 ( s , s1 , s2 ) ;
   const double f1 = Ostap::Kinematics::triangle ( s3_ , m3sq () , m1sq () ) ;
-  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s2 ) : 0.0 ;
+  return 0 < f1 ? 0.5 * std::sqrt ( f1 / s3_ ) : 0.0 ;
 }
 // ============================================================================
 /* cosine on the angle between 2nd and 3rd particles in the  (3,1) rest frame
