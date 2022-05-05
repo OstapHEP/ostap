@@ -277,6 +277,8 @@ class SelectorWithCuts (Ostap.SelectorWithCuts) :
         
         if self.cuts () and not self.silence :
             self.logger.info ( 'SelectorWithCuts: %s' % self.cuts() )
+
+        print ( 'AFTER CONSTRUCTOR!' )
         
     @property
     def silence ( self ) :
@@ -590,7 +592,7 @@ class Variables(object) :
 def valid_formula ( expression , varset ) :
     """Is this expression corresponds to a valid RooFit formula?
     """
-    
+
     if isinstance ( expression , ROOT.TCut ) : expression =  str ( expression )
     
     expression = expression.strip()
@@ -613,7 +615,8 @@ def valid_formula ( expression , varset ) :
     from ostap.logger.utils import mute 
     with mute ( True , True ) :
         return Ostap.validFormula ( expression , varset )
-    
+        
+
     
 # ==============================================================================
 ## @class SelStat
@@ -904,7 +907,7 @@ class SelectorWithVars(SelectorWithCuts) :
         ## selection using RooFit machinery 
         self.__roo_cuts    = ''
         self.__roo_formula = None
-        
+
         if roo_cuts :
             varlist = self.__data.varlist() 
             roosel  = Ostap.FormulaVar    ( roo_cuts, varlist , False )          
@@ -1281,6 +1284,7 @@ class SelectorWithVars(SelectorWithCuts) :
         """Initialize the selector
         - see Ostap::SelectorWithCuts::Init 
         """
+
         ## reset the formula 
         self.reset_formula ( tree )
         if valid_pointer ( tree ) :
@@ -1288,6 +1292,7 @@ class SelectorWithVars(SelectorWithCuts) :
             
         if self.__progress and not self.silence :
             self.__progress.update_amount ( self.event () )
+
 
     # ===========================================================
     ## Start master processing
@@ -1647,7 +1652,7 @@ def make_dataset_old ( tree              ,
     total     = len ( tree )
     processed = tree.statVar ( '1' , selection ).nEntries()
     skipped   = tree.statVar ( '1' , cuts      ).nEntries() 
-
+ 
     stat = SelStat ( total , processed , processed - skipped )
 
     f1 = len ( varsete ) * 1.0 / len ( tree.branches() )

@@ -979,10 +979,12 @@ def _rt_print_ ( t ) :
     >>> print tree
     """
     ##
+
     from   ostap.logger.utils     import multicolumn
 
     res = "Name: %s Entries/#%d" %  ( t.GetName() , t.GetEntries() ) 
     if hasattr ( t , 'GetNtrees' ) : res += " Chain/#%d " %       t.GetNtrees()
+
     ##
     _l          = list ( set ( t.leaves () ) ) 
     _l . sort ()
@@ -991,7 +993,7 @@ def _rt_print_ ( t ) :
 
     ## collect non-trivial branches 
     _b          = t.branches ()
-    
+
     _bs = set  ( _b )
     _ls = set  ( _l )
     _b  = list ( _bs - _ls ) 

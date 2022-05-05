@@ -76,7 +76,7 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
     abscissas = ( ( 'Uniform'   , Abscissas ( N , low , high, 0 ) ) ,
                   ( 'Chebyshev' , Abscissas ( N , low , high, 1 ) ) ,
                   ( 'Lobatto'   , Abscissas ( N , low , high, 2 ) ) ,
-                  ( 'Random'    , Abscissas ( doubles (  random.uniform ( low , high ) for i in range ( N ) ) ) )
+                  ( 'Random'    , Abscissas ( doubles ( [ x for x in more_uniform ( low , high , N , N ) ] ) ) ) 
                   ) 
     
     tables       = [ ( a[0] , points ( fun , a[1] ) )  for a in abscissas ]
@@ -188,10 +188,14 @@ def run_func_interpolation ( fun , N , low , high , scale = 1.e-5 , logger = log
 
         n1 , n2 , ff = item
         
-        c   = counters [ item ]
+        c    = counters [ item ]        
+        d    = distance ( ff , fun , low , high ) / scale
+        vmax = c.max()
         
-        d   = distance ( ff , fun , low , high ) / scale 
-        row = n1 , n2  , '%9.2f +/- %-09.1f' % ( c.mean().value() , c.rms() ) , '%-9.1f' % c.max() , '%.3g' % d 
+        if 1.e+6 < vmax : vmax = '+inf'
+        else            : vmax = '%-9.1f' % vmax 
+        
+        row  = n1 , n2  , '%9.2f +/- %-09.1f' % ( c.mean().value() , c.rms() ) , vmax , '%.3g' % d 
         rows.append ( row )
 
     title = 'Interpolation precision (%d random points)[x%s]' % ( NP , scale  ) 
@@ -402,6 +406,34 @@ def test_PW () :
     random.seed ( 50948524584 )
     return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = 'PW') 
 
+# =============================================================================
+## interpolate Gauss function 
+def test_gauss () :
+    
+    logger = getLogger ( 'test_gauss' ) 
+
+    fun = lambda x : Ostap.Math.gauss_pdf ( x ) 
+
+    N , low , high = 12 , -4 , 5 
+    logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'Gauss' , N , low , high )  ) 
+    
+    random.seed ( 50948524584 )
+    return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = 'Gauss') 
+
+# =============================================================================
+## interpolate Runge function 
+def test_runge () :
+    
+    logger = getLogger ( 'test_runge' ) 
+
+    fun = lambda x : 1.0 / ( 1 + x * x ) 
+
+    N , low , high = 12 , -4 , 5 
+    logger.info ( 'Interpolate %12s, %3d points, (%s,%s) interval' %  ( 'Runge' , N , low , high )  ) 
+    
+    random.seed ( 50948524584 )
+    return run_func_interpolation ( fun , N , low , high , scale = 1.e-3 , logger = logger , name = 'Runge') 
+
 
 # =============================================================================
 ## interpolate the table of values 
@@ -548,16 +580,19 @@ if '__main__' == __name__ :
     
     test_cos                () 
     test_abssin             ()
-    test_PW                 ()
+    test_PW                 ()  
+    test_gauss              ()
+    test_runge              ()
+
     test_random_grid_sin    ()
     test_random_grid_abssin ()
     test_random_grid_sin2   ()
     test_random_grid_gauss  ()
 
-    ## ## check finally that everything is serializeable:
-    ## test_pickle () 
-    ## with timing ('test_db' , logger ) :
-    ##     test_db ()
+    ## check finally that everything is serializeable:
+    test_pickle () 
+    with timing ('test_db' , logger ) :
+        test_db ()
     
 # =============================================================================
 ##                                                                      The END 

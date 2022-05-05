@@ -972,20 +972,20 @@ bool Ostap::Math::BSpline::insert ( const double t )
   std::vector<double>::iterator iu = 
     std::upper_bound ( il               , m_knots.end   () , t , s_less ) ;
   //
-  // such not is laready in the list! 
+  // such knot is already in the list! 
   if ( iu != il ) { return false ; }
   //
   return _insert_ ( t , 1 , m_knots , m_pars , m_order ) ;
 }
 // ============================================================================
-/*  calculate the value of spline defined by vector of knot and vector of 
+/*  calculate the value of spline defined by vector of knots and vector of 
  *  points using de-boor-cox algorithm
  *  @see https://en.wikipedia.org/wiki/De_Boor%27s_algorithm
  *  @param x     (INPUT) value of x 
  *  @param order (INPUT) the order of spline 
- *  @param knots (INPUT) the vector of knots 
+ *  @param knots (INPUT) the vector of knots
  *  @param pars  (INPUT) the vector of control points 
- *  @return the valeu of b-spline at point x 
+ *  @return the value of b-spline at point x 
  */
 // ============================================================================
 double Ostap::Math::deboor
@@ -995,13 +995,16 @@ double Ostap::Math::deboor
   const std::vector<double>& pars  ) 
 {
   //
-  const double tf = knots.front ()  ;
-  const double tb = knots.back  ()  ;
-  if ( x < tf || x > tb    ||  
-       s_equal ( x , tf )  ||
-       s_equal ( x , tb )   ) { return 0 ; }
+  if ( knots.empty () || pars.empty() ) { return 0 ; }
   //
-  const unsigned short j = find_i ( knots.begin () , knots.end   () , x ) - knots.begin() ;
+  const double tf = knots.front () ;
+  const double tb = knots.back  () ;
+  //
+  if      ( x < tf || x > tb   ) { return 0             ; }
+  else if ( s_equal ( x , tf ) ) { return pars.front () ; }
+  else if ( s_equal ( x , tb ) ) { return pars.back  () ; }
+  //
+  const unsigned short j = find_i ( knots.begin () , knots.end () , x ) - knots.begin() ;
   //
   return _deboor_ ( order , order , j , x , knots , pars ) ;  
 }

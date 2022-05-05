@@ -54,8 +54,9 @@ namespace Ostap
        *  - min/max value will be used as interval boundaries
        *  - extra knots will added at the end of interval
        */
-      BSpline ( const std::vector<double>& knots     ,
-                const unsigned short       order = 3 ) ;
+      BSpline
+      ( const std::vector<double>& knots     ,
+        const unsigned short       order = 3 ) ;
       // ======================================================================
       /** Constructor from the list of knots and list of parameters
        *  The spline order will be calculated automatically
@@ -66,8 +67,9 @@ namespace Ostap
        *  - duplicated knots will be ignored
        *  - extra knots will added at the end of interval
        */
-      BSpline ( const std::vector<double>& knots     ,
-                const std::vector<double>& pars      ) ;
+      BSpline 
+      ( const std::vector<double>& knots     ,
+        const std::vector<double>& pars      ) ;
       // ======================================================================
       /** Constructor for uniform binning
        *  @param xmin   low  edge of spline interval
@@ -75,19 +77,21 @@ namespace Ostap
        *  @param inner  number of inner points in   (xmin,xmax) interval
        *  @param order  the degree of splline
        */
-      BSpline ( const double         xmin   = 0 ,
-                const double         xmax   = 1 ,
-                const unsigned short inner  = 3 ,   // number of inner points
-                const unsigned short order  = 3 ) ;
+      BSpline
+      ( const double         xmin   = 0 ,
+        const double         xmax   = 1 ,
+        const unsigned short inner  = 3 ,   // number of inner points
+        const unsigned short order  = 3 ) ;
       // ======================================================================
       /** constructor from another spline with the different range 
        *  @param b b-spline 
        *  @param xmin minimal x-value 
        *  @param xmax maximal y-value 
        */
-      BSpline ( const BSpline& b     , 
-                const double   xmin  , 
-                const double   xmax  ) ;
+      BSpline
+      ( const BSpline& b     , 
+        const double   xmin  , 
+        const double   xmax  ) ;
       // ======================================================================
       /** constructor from Bernstein polynomial 
        *  @param b Bernstein polynomial 
@@ -107,37 +111,37 @@ namespace Ostap
     public:
       // ======================================================================
       /// get number of parameters
-      std::size_t npars  () const { return m_pars.size() ; }
+      inline std::size_t npars  () const { return m_pars.size() ; }
       /// are all parameters zero?
       // bool        zero   () const ;
       /// set k-parameter
       bool setPar        ( const unsigned short k , const double value ) ;
       /// set k-parameter
-      bool setParameter  ( const unsigned short k , const double value )
+      inline bool setParameter  ( const unsigned short k , const double value )
       { return setPar    ( k , value ) ; }
       /// get the parameter value
-      double  par        ( const unsigned short k ) const
+      inline double  par        ( const unsigned short k ) const
       { return ( k < m_pars.size() ) ? m_pars[k] : 0.0 ; }
       /// get the parameter value
-      double  parameter ( const unsigned short k ) const { return par ( k ) ; }
+      inline double  parameter ( const unsigned short k ) const { return par ( k ) ; }
       /// get lower edge
-      double xmin () const { return m_xmin ; }
+      inline double xmin () const { return m_xmin ; }
       /// get upper edge
-      double xmax () const { return m_xmax ; }
+      inline double xmax () const { return m_xmax ; }
       /// get all parameters:
-      const std::vector<double>& pars  () const { return m_pars  ; }
+      inline const std::vector<double>& pars  () const { return m_pars  ; }
       /// get all knots
-      const std::vector<double>& knots () const { return m_knots ; }
+      inline const std::vector<double>& knots () const { return m_knots ; }
       /// the spline order
-      unsigned short order  () const { return m_order   ; }
+      inline unsigned short order  () const { return m_order   ; }
       /// the spline order
-      unsigned short degree () const { return   order() ; }
+      inline unsigned short degree () const { return   order() ; }
       // number of inner knots
-      unsigned short inner  () const { return m_inner   ; }
+      inline unsigned short inner  () const { return m_inner   ; }
       // ======================================================================
     public: // technical: get the effective position for knot "index"
       // ======================================================================
-      double knot_i ( const int index ) const
+      inline double knot_i ( const int index ) const
       {
         return
           index <  0                   ? m_knots.front() :
@@ -227,7 +231,7 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the underlying spline
-      const Ostap::Math::BSpline& bspline () const { return *this ; }
+      inline const Ostap::Math::BSpline& bspline () const { return *this ; }
       // ======================================================================
     public: // simple  manipulations with  B-splines
       // ======================================================================

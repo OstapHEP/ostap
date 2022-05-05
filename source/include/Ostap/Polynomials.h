@@ -2216,9 +2216,10 @@ namespace Ostap
      */
     template <unsigned short N, class FUNCTION>
     inline ChebyshevSum 
-    chebyshev_sum ( FUNCTION     func  , 
-                    const double x_min , 
-                    const double x_max ) 
+    chebyshev_sum
+    ( FUNCTION     func  , 
+      const double x_min , 
+      const double x_max ) 
     { 
       // array of precomputed function values 
       std::array<double,N>   fv ;
@@ -2264,10 +2265,11 @@ namespace Ostap
      *  @endcode 
      */
     ChebyshevSum 
-    chebyshev_sum ( std::function<double(double)> func  , 
-                    const unsigned short          N     , 
-                    const double                  x_min , 
-                    const double                  x_max ) ;    
+    chebyshev_sum
+    ( std::function<double(double)> func  , 
+      const unsigned short          N     , 
+      const double                  x_min , 
+      const double                  x_max ) ;    
     // ========================================================================
   } //                                             end of namespace Ostap::Math 
   // ==========================================================================

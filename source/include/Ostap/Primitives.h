@@ -218,6 +218,30 @@ namespace  Ostap
         : Linear ( Linear ( f1 , c1 , f2 , c2 ) , 1.0 , args... )
       {}
       // ======================================================================
+      /** constructor for linear function
+       *  \f[ f(x) =  ax + b  +\f] 
+       *  @param a    \f$ a\f$  coefficient
+       *  @param b    \f$ b\f$ coefficient 
+       */
+      Linear ( const double  a , 
+               const double  b ) 
+        : Linear ( Id() , a , Const(1) , b )
+      {}
+      // ======================================================================
+      /** constructor for linear function passing points 
+       *  \f$ (x_1,y_1) \f$ and \f$ (x_2,y_2) \f$
+       *  @param x1    \f$ x_1\f$ 
+       *  @param y1    \f$ y_1\f$ 
+       *  @param x2    \f$ x_2\f$ 
+       *  @param y2    \f$ y_2\f$ 
+       */
+      Linear ( const double x1 ,
+               const double y1 ,               
+               const double x2 ,  
+               const double y2 )
+        : Linear ( ( y2 - y1 ) / ( x2 - x1 ) , ( x2 * y1 - y2 * x1 ) / ( x2 - x1 ) )
+      {}
+      // ======================================================================
     public:
       // ======================================================================
       /// the main method
