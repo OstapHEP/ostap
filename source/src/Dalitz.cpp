@@ -480,7 +480,7 @@ double Ostap::Kinematics::Dalitz0::P1
   const double    s2     ) const 
 {
   const double v = Ostap::Kinematics::triangle ( s , m1sq () , s2 ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v  ) / ( 2 * std::sqrt ( s ) ) ;
+  return 0 < v ? 0.5 * std::sqrt ( v / s ) :  0.0 ;
 }
 // ============================================================================
 // momentum of the 2nd particle 
@@ -491,7 +491,7 @@ double Ostap::Kinematics::Dalitz0::P2
   const double s2 ) const 
 {
   const double v = Ostap::Kinematics::triangle ( s , m2sq () , s3 ( s , s1 , s2 ) ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v ) / ( 2 * std::sqrt ( s ) ) ;
+  return 0 < v ? 0.5 * std::sqrt ( v / s ) : 0.0 ;
 }
 // =============================================================================
 /// momentum of the 3rd particle 
@@ -502,7 +502,7 @@ double Ostap::Kinematics::Dalitz0::P3
   const double /* s2 */ ) const 
 {
   const double v = Ostap::Kinematics::triangle ( s  , m3sq () , s1 ) ;
-  return 0 <= v ? std::sqrt ( v ) / ( 2 * std::sqrt ( s ) ) : -std::sqrt ( -v ) / ( 2 * std::sqrt ( s ) ) ;
+  return 0 < v ? 0.5 * std::sqrt ( v /s ) : 0.0 ;
 }
 // ============================================================================
 /*   \f$ \theta^{*}_{12}\f$ is angle between 
