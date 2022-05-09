@@ -51,7 +51,7 @@ namespace Ostap
       /// get the Dalitz configuration 
       const Ostap::Kinematics::Dalitz0& dalitz () const { return m_dalitz ; }
       // ======================================================================
-    public:
+    public: // 1D integrals 
       // ======================================================================
       /** evaluate integral over \f$s\f$ for \f$ f(s,s_1,s_2) \f$
        *  \f[ F(s_1,s_2)  = \int_{s_{min}}^{s_{max}} ds f(s,s_1,s_2) \f]
@@ -60,7 +60,8 @@ namespace Ostap
        *  @param s2    value of \f$ s_2\f$
        *  @param smax  upper inntegration limit for  \f$s\f$
        */      
-      template <class FUNCTION3> 
+      template <class FUNCTION3, 
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
       double integrate_s 
       ( FUNCTION3         f3      , 
         const double      s1      ,  
@@ -76,13 +77,51 @@ namespace Ostap
        *  @param s     value of \f$ s\f$
        *  @param s2    value of \f$ s_2\f$
        */
-      template <class FUNCTION23>
-      double integrate_s1
-      ( FUNCTION23        f23     ,
-        const double      s       ,
-        const double      s2      , 
-        const std::size_t tag = 0 ) const 
+      template <class FUNCTION23,
+                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
+                                          std::is_convertible<FUNCTION23,function3>::value > > 
+        double integrate_s1
+        ( FUNCTION23        f23     ,
+          const double      s       ,
+          const double      s2      , 
+          const std::size_t tag = 0 ) const 
       { return integrate_s1 ( std::cref ( f23 ) , s , s2 ,  m_dalitz , m_workspace , tag ) ; }
+      // ======================================================================
+      // integrate over s2  
+      // ======================================================================
+      template <class FUNCTION2,
+                typename = std::enable_if<std::is_convertible<FUNCTION2,function2>::value> >
+      double integrate_s2 
+      ( FUNCTION2         f2      , 
+        const double      s       ,
+        const double      s1      , 
+        const std::size_t tag = 0 ) const 
+      {
+        // swap arguments   
+        auto fc = std::cref ( f2 ) ;
+        auto ff = [fc]( const double s_1 , const double s_2 )-> double
+          { return fc ( s_2 , s_1 ) ; } ;
+        return integrate_s1 ( std::cref ( ff) , s , s1 ,  m_dalitz321 , m_workspace , tag ) ; 
+      }
+      // ======================================================================
+      // integrate over s2  
+      // ======================================================================
+      template <class FUNCTION3, 
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
+      double integrate3_s2 
+      ( FUNCTION3         f3      ,
+        const double      s       ,
+        const double      s1      , 
+        const std::size_t tag = 0 ) const 
+      {
+        // swap arguments   
+        auto fc = std::cref ( f3 ) ;
+        auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
+          { return fc ( s , s_2 , s_1 ) ; } ;
+        return integrate_s1 ( std::cref ( ff ) , s , s1 ,  m_dalitz321 , m_workspace , tag ) ; 
+      }
+      // ======================================================================
+    public:  // 2D integrals 
       // ======================================================================
       /** evaluate the integral over \f$s_1\f$ , \f$s_2\f$ variables 
        *  \f[ \int\int ds_1 ds_2 f(s, s_1,s_2) = 
@@ -91,13 +130,15 @@ namespace Ostap
        *  @param f3 the function \f$ f(s, s_1,s_2)\f$ 
        *  @return integral over Dalitz plot
        */
-      template <class FUNCTION23> 
-      double integrate_s1s2
-      ( FUNCTION23           f23     ,
-        const double         s       , 
-        const std::size_t    tag = 0 , 
-        const unsigned short n1  = 0 , 
-        const unsigned short n2  = 0 ) const 
+      template <class FUNCTION23,
+                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
+                                          std::is_convertible<FUNCTION23,function3>::value > >
+        double integrate_s1s2
+        ( FUNCTION23           f23     ,
+          const double         s       , 
+          const std::size_t    tag = 0 , 
+          const unsigned short n1  = 0 , 
+          const unsigned short n2  = 0 ) const 
       { return integrate_s1s2 ( std::cref ( f23 ) , s , m_dalitz , tag , n1 , n2 ) ; }
       // ======================================================================
       /** evaluate the integral over \f$s\f$ , \f$s_1\f$ variables 
@@ -108,7 +149,8 @@ namespace Ostap
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
-      template <class FUNCTION3> 
+      template <class FUNCTION3 ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -127,7 +169,8 @@ namespace Ostap
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
-      template <class FUNCTION3> 
+      template <class FUNCTION3 ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -146,7 +189,8 @@ namespace Ostap
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
-      template <class FUNCTION3> 
+      template <class FUNCTION3 ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
@@ -160,7 +204,7 @@ namespace Ostap
         auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
                   { return fc ( s , s_2 , s_1 ) ; } ;
         // invoke integration over s,s1 with swapped arguments 
-        return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz2 , tag , n1 , n2 ) ;
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smax , m_dalitz321 , tag , n1 , n2 ) ;
       }
       // ===================================================================== 
       /** evaluate the integral over \f$s\f$ , \f$s_s\f$ variables 
@@ -172,7 +216,8 @@ namespace Ostap
        *  @param d  helper Dalitz-object 
        *  @return integral over \f$ s, s_1\f$
        */
-      template <class FUNCTION3> 
+      template <class FUNCTION3 ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
@@ -187,7 +232,7 @@ namespace Ostap
         auto ff = [fc]( const double s , const double s_1 , const double s_2 )-> double
           { return fc ( s , s_2 , s_1 ) ; } ;
         // invoke integration over s,s1 with swapped arguments 
-        return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz2 , tag , n1 , n2 ) ;
+        return integrate_ss1 ( std::cref ( ff ) , s1 , smin , smax , m_dalitz321 , tag , n1 , n2 ) ;
       }
       // ======================================================================
     public : // 1D integrations  (with workspace) 
@@ -320,10 +365,12 @@ namespace Ostap
        *  \f[ F(s_1,s_2)  = \int_{s_{min}}^{s_{max}} ds f(s,s_1,s_2) \f]
        *  @see Ostap::Math::DalitzIntegrator::integrate_s
        */
-      template <class FUNCTION, typename... ARGS>
+      template <class FUNCTION3  , 
+                typename... ARGS ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
       static inline double 
       integral_s
-      ( FUNCTION        f    , 
+      ( FUNCTION3        f    , 
         const double    s1   , 
         const double    s2   , 
         const double    smax , 
@@ -334,34 +381,42 @@ namespace Ostap
        *  over \f$ \f$ s_1 \f$
        *  @see Ostap::Math::DalitzIntegrator::integrate_s1
        */
-      template <class FUNCTION, typename... ARGS>
-      static inline double 
-      integral_s1 
-      ( FUNCTION        f    , 
-        const double    x    , 
-        const ARGS& ... args )
+      template <class FUNCTION23 ,  
+                typename... ARGS ,
+                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
+                                          std::is_convertible<FUNCTION23,function3>::value > >
+        static inline double 
+        integral_s1 
+        ( FUNCTION23      f    , 
+          const double    x    , 
+          const ARGS& ... args )
       { return integrate_s1 ( std::cref ( f ) , x , args... ) ; }
       // ======================================================================
      /** integrate the function \f$ f(s,s_1,s_2)\f$ or \f$ f(s_1,s_2) 
        *  over \f$ \f$ s_1,s_2 \f$
        *  @see Ostap::Math::DalitzIntegrator::integrate_s1s2
        */
-      template <class FUNCTION, typename... ARGS>
-      static inline double 
-      integral_s1s2 
-      ( FUNCTION        f , 
-        const double    s , 
-        const ARGS& ... args )
+      template <class FUNCTION23 , 
+                typename... ARGS ,
+                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
+                                          std::is_convertible<FUNCTION23,function3>::value > >
+        static inline double 
+        integral_s1s2 
+        ( FUNCTION23      f , 
+          const double    s , 
+          const ARGS& ... args )
       { return integrate_s1s2 ( std::cref ( f ) , s , args... ) ; }
       // =====================================================================
       /** integrate the function \f$ f(s,s_1,s_2)\f$ or \f$ f(s_1,s_2) 
        *  over \f$ s\f$  and \f$s_1\f$
        *  @see Ostap::Math::DalitzIntegrator::integrate_ss1
        */
-      template <class FUNCTION, typename... ARGS>
+      template <class FUNCTION3  , 
+                typename... ARGS ,
+                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >                
       static inline double 
       integral_ss1 
-      ( FUNCTION        f    , 
+      ( FUNCTION3       f    , 
         const ARGS& ... args )
       { return integrate_ss1 ( std::cref ( f ) , args... ) ; }
       // =====================================================================
@@ -402,7 +457,9 @@ namespace Ostap
       /// Dalitz configuration
       Ostap::Kinematics::Dalitz0 m_dalitz    {} ; //  Dalitz configuration
       /// Dalitz configuration (rotated) 3-2-1, \f$ s_1 \leftrghtarrow s_2\f$ 
-      Ostap::Kinematics::Dalitz0 m_dalitz2   {} ; //  Dalitz configuration (3,2,1)
+      Ostap::Kinematics::Dalitz0 m_dalitz321 {} ; //  Dalitz configuration (3,2,1)
+      /// Dalitz configuration (rotated) 1-3-2, \f$ s_1 \leftrghtarrow s_3\f$ 
+      Ostap::Kinematics::Dalitz0 m_dalitz132 {} ; //  Dalitz configuration (1,3,2)
       /// integration  workspace  
       Ostap::Math::WorkSpace     m_workspace {} ; // integration workspace
       // ======================================================================

@@ -9,6 +9,7 @@
   1. `Ostap::Kinematoics::Dalitz0` and `Ostap::Kinematoics::Dalitz` : and methods to calcualte Wigner angles 
   1. add methods `random` to `Dalitz` and `Dalitz0` to generat erandom distrobutions in Dalizt plane 
   1. a few minor improvements 
+  1. improvements for `Dalits0/Dalitz/DaltzIntegrator`
  
 ## Backward incompatible:  
  

@@ -650,7 +650,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const { return cos_12 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
+      /** \f$ \cos \zeta_{2(3)}^{0} \f$ or \f$ \cos \hat{\theta}_{23}\f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
@@ -661,7 +661,7 @@ namespace Ostap
         const double s1 , 
         const double s2 ) const { return cos_23 ( s , s1 , s2 ) ; }
       // ======================================================================
-      /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{12}\f$  
+      /** \f$ \cos \zeta_{3(1)}^{0} \f$ or \f$ \cos \hat{\theta}_{31}\f$  
        *   @see M.Mikhasenko et al, "Dalitz plot decomposition for three-body decays", 
        *                            Phys. Rev. D 101, 034033 (2020)
        *   @see https://doi.org/10.48550/arXiv.1910.04566
