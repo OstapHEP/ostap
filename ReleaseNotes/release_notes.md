@@ -15,6 +15,7 @@
  
 ## Bug fixes:
   1. Bug fix in `Dalitz0::P1_R31`
+  1. `DalitzIntegrator` fix incorrect use of `std::enable_if`
 
 
 # v1.7.1.8

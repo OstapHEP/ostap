@@ -61,7 +61,7 @@ namespace Ostap
        *  @param smax  upper inntegration limit for  \f$s\f$
        */      
       template <class FUNCTION3, 
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>      
       double integrate_s 
       ( FUNCTION3         f3      , 
         const double      s1      ,  
@@ -78,8 +78,8 @@ namespace Ostap
        *  @param s2    value of \f$ s_2\f$
        */
       template <class FUNCTION23,
-                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
-                                          std::is_convertible<FUNCTION23,function3>::value > > 
+                std::enable_if_t<std::is_convertible<FUNCTION23,function2>::value ||
+                                 std::is_convertible<FUNCTION23,function3>::value, bool> = true> 
         double integrate_s1
         ( FUNCTION23        f23     ,
           const double      s       ,
@@ -87,10 +87,16 @@ namespace Ostap
           const std::size_t tag = 0 ) const 
       { return integrate_s1 ( std::cref ( f23 ) , s , s2 ,  m_dalitz , m_workspace , tag ) ; }
       // ======================================================================
-      // integrate over s2  
+      // integrate 2over s2  
       // ======================================================================
+      /** evaluate integral over \f$s_2\f$ for \f$ f(s_1,s_2) \f$
+       *  \f[ F(s,s_1)  = \int  ds_2 f(s_1,s_2) \f] 
+       *  @param f3  the function \f$ f(s_1,s_2)\f$
+       *  @param s     value of \f$ s\f$
+       *  @param s1    value of \f$ s_1\f$
+       */      
       template <class FUNCTION2,
-                typename = std::enable_if<std::is_convertible<FUNCTION2,function2>::value> >
+                std::enable_if_t<std::is_convertible<FUNCTION2,function2>::value,bool> = true >
       double integrate_s2 
       ( FUNCTION2         f2      , 
         const double      s       ,
@@ -106,9 +112,15 @@ namespace Ostap
       // ======================================================================
       // integrate over s2  
       // ======================================================================
+      /** evaluate integral over \f$s_2\f$ for \f$ f(s,s_1,s_2) \f
+       *  \f[ F(s,s_1)  = \int  ds_2 f(s,s_1,s_2) \f] or 
+       *  @param f3  the function \f$  f(s,s_1,s_2)\f$
+       *  @param s     value of \f$ s\f$
+       *  @param s1    value of \f$ s_1\f$
+       */
       template <class FUNCTION3, 
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
-      double integrate3_s2 
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>      
+      double integrate_s2 
       ( FUNCTION3         f3      ,
         const double      s       ,
         const double      s1      , 
@@ -131,8 +143,8 @@ namespace Ostap
        *  @return integral over Dalitz plot
        */
       template <class FUNCTION23,
-                typename = std::enable_if<std::is_convertible<FUNCTION23,function2>::value ||
-                                          std::is_convertible<FUNCTION23,function3>::value > >
+                std::enable_if_t<std::is_convertible<FUNCTION23,function2>::value ||
+                                 std::is_convertible<FUNCTION23,function3>::value, bool > = true>
         double integrate_s1s2
         ( FUNCTION23           f23     ,
           const double         s       , 
@@ -150,7 +162,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class FUNCTION3 ,
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >      
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>      
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -170,7 +182,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class FUNCTION3 ,
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>
       double integrate_ss1
       ( FUNCTION3            f3      ,
         const double         s2      ,
@@ -190,7 +202,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class FUNCTION3 ,
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true >
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
@@ -217,7 +229,7 @@ namespace Ostap
        *  @return integral over \f$ s, s_1\f$
        */
       template <class FUNCTION3 ,
-                typename = std::enable_if<std::is_convertible<FUNCTION3,function3>::value> >
+                std::enable_if_t<std::is_convertible<FUNCTION3,function3>::value,bool> = true>
       double integrate_ss2
       ( FUNCTION3            f3      ,
         const double         s1      ,
