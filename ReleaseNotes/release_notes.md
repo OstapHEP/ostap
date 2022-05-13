@@ -1,5 +1,6 @@
 # v1.7.2.0
 
+
 ## New features: 
 
   1. add new method `make_soft_constraint2 to create asymmetryc constraint
