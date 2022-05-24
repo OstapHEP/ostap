@@ -5,6 +5,7 @@
 ## Bug fixes:
   1. fix minor typo in `CMakeROOT_6_*.txt`
 
+
 # v1.7.2.0
 
 ## New features: 
