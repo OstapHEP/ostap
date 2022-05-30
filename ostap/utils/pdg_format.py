@@ -107,17 +107,17 @@ def ref_error ( mode , error , *errors ) :
         return math.sqrt ( result )
     
     elif umode == ErrMode.MIN :        
-        result = abs ( erorr )  
+        result = abs ( error )  
         for e in errors : result = min ( result , abs ( e ) )            
         return result
     
     elif umode == ErrMode.MAX :        
-        result = abs ( erorr )  
+        result = abs ( error )  
         for e in errors : result = max ( result , abs ( e ) )            
         return result
     
     elif umode == ErrMode.GEOMETRIC :        
-        result = abs ( erorr )
+        result = abs ( error )
         ne     = 1 
         for e in errors :
             ae = abs ( e )
@@ -127,7 +127,7 @@ def ref_error ( mode , error , *errors ) :
         return result if 0 == result else pow ( result , 1.0 / ne )
     
     else :
-        result = abs ( erorr )
+        result = abs ( error )
         ne     = 1 
         for e in errors :
             result += ae

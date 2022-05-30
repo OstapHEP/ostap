@@ -4,6 +4,7 @@
  
 ## Bug fixes:
   1. fix minor typo in `CMakeROOT_6_*.txt`
+  1. fix typos in `ostap.utils.pdg_format`
 
 
 # v1.7.2.0
