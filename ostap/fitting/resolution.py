@@ -34,6 +34,7 @@
 - generalized Hyperbolic              (tails are exponential or heavier)
 - Hypatia model                       (tails are exponential or heavier)
 - Das model                           (gaussian with exponential tails)
+- Generalized Gaussian v1             (family that included Gaussian, Laplace, uniform etc...)
 """
 # =============================================================================
 __version__ = "$Revision:"
@@ -54,7 +55,8 @@ __all__     = (
     'ResoHyperbolic'    , ## Hyperbolic resolution model
     'ResoGenHyperbolic' , ## Generalised Hyperbolic resolution model
     'ResoHypatia'       , ## Hypatia resoltuion model
-    'ResoDas'           , ## Das resolution model     
+    'ResoDas'           , ## Das resolution model
+    'ResoGenGaussV1'    , ## Generalized  Gaussian v1 
     )
 # =============================================================================
 import ROOT
@@ -1764,9 +1766,140 @@ class ResoDas(RESOLUTION) :
         return self.__kR
      
 # =============================================================================
+## @class ResoGenGaussV1
+#  Simple class that implements the generalized normal distribution v1
+#  @see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
+#
+#  Known also as the exponential power distribution, or the generalized error distribution,
+#  this is a parametric family of symmetric distributions.
+#  It includes all normal and Laplace distributions, and as limiting cases it includes all
+#  continuous uniform distributions on bounded intervals of the real line.
+#
+#  This family includes the normal distribution when beta=2
+#  (with mean mu and variance alpha^2/2)
+#  and it includes the Laplace distribution when beta=1
+#  As beta->inf, the density converges pointwise to a uniform density on (mu-alpha,mu+alpha)
+# 
+#  This family allows for tails that are either heavier than normal (when beta<2)
+#  or lighter than normal (when beta>2).
+#  It is a useful way to parametrize a continuum of symmetric, platykurtic densities
+#  spanning from the normal (beta=2) to the uniform density (beta=inf),
+#  and a continuum of symmetric, leptokurtic densities spanning from the Laplace
+#  (beta=1) to the normal density (beta=2).
+#    
+#  Parameters:
+#  - mu         : location/mean  
+#  - alpha > 0  : scale 
+#  - beta  > 0  : shape   (beta=2 corresponds to Gaussian distribution)
+#
+#  @see Ostap::Models::GenGaussV1 
+#  @see Ostap::Math::GenGaussV1
+#  @see GenGaussV1_pdf 
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @date 2013-12-01
+#  @see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+#  @see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
+#  @see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+#       Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
+#  @see https://doi.org/10.1080%2F02664760500079464
+class ResoGenGaussV1(RESOLUTION) :
+    """Generalized Normal distribution v1
+    see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
+
+    Known also as the exponential power distribution, or the generalized error distribution,
+    this is a parametric family of symmetric distributions.
+    It includes all normal and Laplace distributions, and as limiting cases it includes all
+    continuous uniform distributions on bounded intervals of the real line.
+
+    This family includes the normal distribution when beta=2
+    (with mean mu and variance alpha^2/2)
+    and it includes the Laplace distribution when beta=1
+    As beta->inf, the density converges pointwise to a uniform density on (mu-alpha,mu+alpha)
+    
+    This family allows for tails that are either heavier than normal (when beta<2)
+    or lighter than normal (when beta>2).
+    It is a useful way to parametrize a continuum of symmetric, platykurtic densities
+    spanning from the normal (beta=2) to the uniform density (beta=inf),
+    and a continuum of symmetric, leptokurtic densities spanning from the Laplace
+    (beta=1) to the normal density (beta=2).
+    
+    - see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+    - see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
+    - see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+    Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
+    - see https://doi.org/10.1080%2F02664760500079464
+    
+    Parameters:
+    - mu         : location/mean  
+    - alpha > 0  : scale 
+    - beta  > 0  : shape   (beta=2 corresponds to Gaussian distribution)
+    """
+    def __init__ ( self             ,
+                   name             ,
+                   xvar             ,
+                   alpha     = None ,
+                   beta      = 2    ,  ## beta=2 is gaussian distribution
+                   fudge     = 1    , 
+                   mean      = None ) :
+
+        ## initialize the base
+        super(ResoGenGaussV1,self).__init__( name        = name  ,
+                                             xvar        = xvar  ,
+                                             sigma       = alpha ,                                     
+                                             mean        = mean  ,
+                                             fudge       = fudge ,
+                                             sigma_name  = 'alpha_%s'   % name , 
+                                             sigma_title = '#alpha(%s)' % name ) 
+        
+        self.__alpha = self.sigma         
+        self.__beta  = self.make_var ( beta ,
+                                       'beta_%s'        % name  ,
+                                       '#beta_{v1}(%s)' % name  , beta , 
+                                       2 , 1.e-4  , 1.e+6 ) 
+        #
+        ## finally build PDF
+        #
+        self.pdf = Ostap.Models.GenGaussV1 (
+            self.roo_name ( 'gaussgv1_' ) , 
+            "Resolution generalized Gauss-V1 %s" % self.name ,
+            self.xvar       ,
+            self.mean       ,
+            self.alpha_corr , ## attention 
+            self.beta       )
+        
+        ## save the configuration
+        self.config = {
+            'name'      : self.name  ,
+            'xvar'      : self.xvar  ,
+            'mean'      : self.mean  ,
+            'alpha'     : self.alpha ,            
+            'beta'      : self.beta  ,
+            'fudge'     : self.fudge 
+            }
 
 
+    @property
+    def alpha ( self ) :
+        """``alpha''-parameter for Generalized V1 Gaussian (the same as ``sigma'')"""
+        return self.__alpha
+    @alpha.setter
+    def alpha ( self, value ) :
+        self.set_value ( self.__alpha , value ) 
 
+    @property
+    def alpha_corr ( self ) :
+        """Cprrected ``alpha''-parameter for Generalized V1 Gaussian (the same as ``sigma_corr'')"""
+        return self.sigma_corr
+
+    @property
+    def beta ( self ) :
+        """``beta''-parameter for Generalized  V1 Gaussian"""
+        return self.__beta
+    @beta.setter
+    def beta ( self, value ) :
+        self.set_value ( self.__beta , value )
+
+        
 # =============================================================================
 if '__main__' == __name__ :
     

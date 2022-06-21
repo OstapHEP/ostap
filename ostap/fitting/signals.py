@@ -968,6 +968,12 @@ models.append ( DoubleGauss_pdf )
 #  @see Ostap::Math::GenGaussV1 
 #  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
 #  @date 2013-12-01
+#
+#  @see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+#  @see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
+#  @see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+#       Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
+#  @see https://doi.org/10.1080%2F02664760500079464
 class GenGaussV1_pdf(MASS) :
     """Generalized Normal distribution v1
     see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
@@ -988,7 +994,13 @@ class GenGaussV1_pdf(MASS) :
     spanning from the normal (beta=2) to the uniform density (beta=inf),
     and a continuum of symmetric, leptokurtic densities spanning from the Laplace
     (beta=1) to the normal density (beta=2).
-    
+
+    - see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+    - see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
+    - see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+          Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
+    - see https://doi.org/10.1080%2F02664760500079464
+
     Parameters:
     - mu         : location/mean  
     - alpha > 0  : scale 

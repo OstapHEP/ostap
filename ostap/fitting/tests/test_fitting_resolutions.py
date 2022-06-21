@@ -62,11 +62,11 @@ def make_print ( pdf , fitresult , title , logger = logger ) :
     row = 'mean'       , '%+.6g' % pdf.get_mean  () , '%+.6g' % pdf.roo_mean  ()
     rows.append ( row )
     
-    row = 'mode'       , '%+.6g' % pdf.mode      () , ''
+    row = 'mode'       , '%+.3g' % pdf.mode      () , ''
     rows.append ( row )
-    row = 'median'     , '%+.6g' % pdf.median    () , ''
+    row = 'median'     , '%+.3g' % pdf.median    () , ''
     rows.append ( row )
-    row = 'midpoint'   , '%+.6g' % pdf.mid_point () , ''
+    row = 'midpoint'   , '%+.3g' % pdf.mid_point () , ''
     rows.append ( row )
     row = 'rms'        , '%+.6g' % pdf.rms       () , '%+.6g' % pdf.roo_rms  ()
     rows.append ( row )    
@@ -87,8 +87,8 @@ models = set()
 # =============================================================================
 ## Single gauss
 # =============================================================================
-## def test_gauss () :
-if 1 < 2 :
+def test_gauss () :
+## if 1 < 2 :
     
     logger = getLogger ( 'test_gauss' )
     
@@ -405,6 +405,35 @@ def test_hypatia () :
  
     models.add ( reso)
 
+
+# =============================================================================
+## Generalized Gauss v1 
+# =============================================================================
+def test_gengaussv1  () : 
+    
+    logger = getLogger ( 'test_generalized_gauss_v1' )
+    
+    logger.info ('Test GenGaussV1 : symmetric generalised gaussian resolution model' )
+    from   ostap.fitting.resolution import ResoGenGaussV1
+    reso = ResoGenGaussV1 ( 'GenGaussV1' , mass ,
+                            alpha  = ( 0.1 , 0.0001 , 10.0  ) ,
+                            beta   = ( 2.0 , 1.e-5  , 1.e+5 ) )
+    
+    for i in range ( 6 ) :
+        result, frame = reso. fitTo ( dataset , silent = True  )
+        
+    with wait ( 1 ) , use_canvas ( 'test_gengaussv1' ) : 
+        result, frame = reso. fitTo ( dataset , silent = True , draw = True )
+        
+    if 0 != result.status() or 3 != result.covQual() :
+        logger.warning('Fit is not perfect MIGRAD=%d QUAL=%d ' % ( result.status() , result.covQual () ) )
+        print(result)
+    else :     
+        make_print ( reso , result , 'Symmetric GenGaussv1', logger )
+ 
+    models.add ( reso)
+
+
 # =============================================================================
 ## Das 
 # =============================================================================
@@ -448,14 +477,14 @@ def dump_models () :
     for m in sorted ( mods ) :
         model = mods [ m ] 
         row = m , \
-              '%+.4g' % model.get_mean  () , \
-              '%+.4g' % model.mode      () , \
-              '%+.4g' % model.median    () , \
-              '%+.4g' % model.mid_point () , \
-              '%+.4g' % model.rms       () , \
-              '%+.4g' % model.fwhm      () , \
-              '%+.4g' % model.skewness  () , \
-              '%+.4g' % model.kurtosis  ()
+              '%+.3g' % model.get_mean  () , \
+              '%+.3g' % model.mode      () , \
+              '%+.3g' % model.median    () , \
+              '%+.3g' % model.mid_point () , \
+              '%+.5g' % model.rms       () , \
+              '%+.5g' % model.fwhm      () , \
+              '%+.5g' % model.skewness  () , \
+              '%+.5g' % model.kurtosis  ()
         rows.append ( row )
 
     table = T.table ( rows , title = "Model's features" ,  prefix = '# ' )
@@ -487,49 +516,52 @@ def test_db() :
         
 # =============================================================================
 if '__main__' == __name__ :
-
-    ## with timing ("Gauss"     , logger ) :  
-    ## test_gauss      () ## single Gaussian resolution model
-        
-    ## with timing ("2-Gauss"   , logger ) :  
-    ##     test_2gauss     () ## double Gaussian resolution model
-        
-    ## with timing ("Apo2"      , logger ) :  
-    ##     test_apo2       () ## symmetric Apollonios resoltuion model
-        
-    ## with timing ("CB2"       , logger ) :  
-    ##     test_cb2        () ## double-sided Crystal Ball resoltuion model
-        
-    ## with timing ("Sech"      , logger ) :  
-    ##     test_sech       () ## hyperbolic secant resolution model
-
-    ## with timing ("Logistic"  , logger ) :  
-    ##     test_logistic   () ## logistic resolution model
-        
-    ## with timing ("Bukin"     , logger ) :  
-    ##     test_bukin      () ## Bukin resolution model
     
-    ## with timing ("SinhAsinh" , logger ) :  
-    ##     test_sinhasinh  () ## SinhAsinh resolution model
+    with timing ("Gauss"     , logger ) :  
+        test_gauss      () ## single Gaussian resolution model
+        
+    with timing ("2-Gauss"   , logger ) :  
+        test_2gauss     () ## double Gaussian resolution model
+        
+    with timing ("Apo2"      , logger ) :  
+        test_apo2       () ## symmetric Apollonios resoltuion model
+        
+    with timing ("CB2"       , logger ) :  
+        test_cb2        () ## double-sided Crystal Ball resoltuion model
+        
+    with timing ("Sech"      , logger ) :  
+        test_sech       () ## hyperbolic secant resolution model
 
-    ## with timing ("JohnsonSU" , logger ) :  
-    ##     test_johnsonSU  () ## JohnsonSU resolution model
-
-    ## with timing ("Hyperbolic" , logger ) :  
-    ##     test_hyperbolic  () ## Hyperbolic resolution model
+    with timing ("Logistic"  , logger ) :  
+        test_logistic   () ## logistic resolution model
+        
+    with timing ("Bukin"     , logger ) :  
+        test_bukin      () ## Bukin resolution model
     
-    ## with timing ("GenHyperbolic" , logger ) :  
-    ##     test_genhyperbolic  () ## generalised Hyperbolic resolution model
+    with timing ("SinhAsinh" , logger ) :  
+        test_sinhasinh  () ## SinhAsinh resolution model
 
-    ## with timing ("Hypatia" , logger ) :  
-    ##     test_hypatia       () ## generalised Hyperbolic resolution model
+    with timing ("JohnsonSU" , logger ) :  
+        test_johnsonSU  () ## JohnsonSU resolution model
 
-    ## with timing ("Das"        , logger ) :  
-    ##     test_das          ()   ## Das resolution model
+    with timing ("Hyperbolic" , logger ) :  
+        test_hyperbolic  () ## Hyperbolic resolution model
+    
+    with timing ("GenHyperbolic" , logger ) :  
+        test_genhyperbolic  () ## generalised Hyperbolic resolution model
 
-    ## ## check finally that everything is serializeable:
-    ## with timing ("Save to DB"    , logger ) :  
-    ##     test_db ()          
+    with timing ("Hypatia" , logger ) :  
+        test_hypatia       () ## generalised Hyperbolic resolution model
+
+    with timing ("GenGaussV1" , logger ) :  
+        test_gengaussv1     ()   ## Das resolution model
+
+    with timing ("Das"        , logger ) :  
+        test_das           ()   ## Das resolution model
+        
+    ## check finally that everything is serializeable:
+    with timing ("Save to DB"    , logger ) :  
+        test_db ()          
 
     ## prit all models for comparion
     with timing ("Dump models"    , logger ) :  

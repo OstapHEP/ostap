@@ -279,6 +279,11 @@ namespace Ostap
      *  @see http://en.wikipedia.org/wiki/Generalized_normal_distribution#Version_1
      *  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
      *  @date 2013-08-25
+     *  @see M. T. Subbotin, “On the Law of Frequency of Error”, Mat. Sb., 31:2 (1923), 296–301
+     *  @see http://www.mathnet.ru/php/archive.phtml?wshow=paper&jrnid=sm&paperid=6854&option_lang=eng
+     *  @see Nadarajah, Saralees (September 2005). "A generalized normal distribution".
+     *       Journal of Applied Statistics. 32 (7): 685–694. doi:10.1080/02664760500079464.
+     *  @see https://doi.org/10.1080%2F02664760500079464     
      */
     class  GenGaussV1
     {
