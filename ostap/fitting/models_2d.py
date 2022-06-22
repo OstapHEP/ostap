@@ -28,6 +28,8 @@ __all__     = (
     'Spline2D_pdf'    , ## 2D generic   positive spline 
     'Spline2Dsym_pdf' , ## 2D symmetric positive spline
     #
+    'Gauss2D_pdf'     , ## 2D gaussian 
+    # 
     'RooKeys2D_pdf'   , ## wrapper for native RooNDKeysPdf
     #
     'make_B2D'        , ## create           2D "background" function 
@@ -1503,6 +1505,141 @@ class Spline2Dsym_pdf(PolyBase2) :
         return self.__spline
 
 models.append ( Spline2Dsym_pdf )
+
+
+# =============================================================================        
+## @class Gauss2D_pdf
+#  Simple 2D gaussian function
+#  @see Ostap::Models::Gauss2D 
+#  @see Ostap::Math::Gauss2D 
+class Gauss2D_pdf(PDF2) :
+    """ Simple 2D gaussian function
+    - see Ostap.Models.Gauss2D 
+    - see Ostap.Math.Gauss2D 
+    """
+    
+    ## constructor
+    def __init__ ( self            ,
+                   name            ,   ## the name 
+                   xvar            ,   ## the variable
+                   yvar            ,   ## the variable
+                   muX      = None ,
+                   muY      = None ,
+                   sigmaX   = None ,
+                   sigmaY   = None ,
+                   theta    = None ) : 
+    
+        ## initialize the base class 
+        PDF2.__init__ (  self , name , xvar , yvar )
+        
+        sx_lims = ()
+        mx_lims = ()
+        sy_lims = ()
+        my_lims = ()
+
+        xlims = self.xminmax()        
+        if xlims :
+            dx = xlims[1] - xlims[0] 
+            sx_lims = 0 , 1.0 * dx 
+            mx_lims = xlims[0] - 0.1 * dx , xlims[1] + 0.1 * dx 
+
+        ylims = self.yminmax()
+        if ylims :
+            dy = ylims[1] - ylims[0] 
+            sy_lims = 0 , 1.0 * dy 
+            my_lims = ylims[0] - 0.1 * dy , ylims[1] + 0.1 * dy 
+
+            
+        self.__muX = self.make_var ( muX  ,
+                                     'mu_x_%s'     % self.name ,
+                                     '#mu_{x}(%s)' % self.name ,
+                                     None , muX , *mx_lims )
+        
+        self.__muY = self.make_var ( muY  ,
+                                     'mu_y_%s'     % self.name ,
+                                     '#mu_{y}(%s)' % self.name ,
+                                     None , muY , *my_lims )
+        
+        
+        self.__sigmaX = self.make_var ( sigmaX  ,
+                                        'sigma_x_%s'     % self.name ,
+                                        '#sigma_{x}(%s)' % self.name ,
+                                        None     ,  sigmaX , *sx_lims )
+        
+        self.__sigmaY = self.make_var ( sigmaY  ,
+                                        'sigma_y_%s'     % self.name ,
+                                        '#sigma_{y}(%s)' % self.name ,
+                                        None     ,  sigmaY , *sy_lims )
+        
+        self.__theta   = self.make_var ( theta  ,
+                                         'theta_%s'   % self.name ,
+                                         '#theta(%s)' % self.name ,
+                                         None     ,  theta , -10 , +10  )
+        
+        ## make PDF
+        self.pdf = Ostap.Models.Gauss2D (
+            self.roo_name ( 'gauss2d'  ) , 
+            'Gauss2D %s' % self.name     ,
+            self.x      ,
+            self.y      ,
+            self.muX    ,
+            self.muY    ,
+            self.sigmaX ,
+            self.sigmaY ,
+            self.theta  ,            
+            )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name   ,            
+            'xvar'     : self.xvar   ,
+            'yvar'     : self.yvar   ,            
+            'muX'      : self.muX    ,
+            'muY'      : self.muY    ,
+            'sigmaX'   : self.sigmaX ,
+            'sigmaY'   : self.sigmaY ,
+            'theta'    : self.theta
+            }
+        
+    @property
+    def muX ( self ) :
+        """``x-locaiton for 2D gaussian"""
+        return self.__muX
+    @muX.setter
+    def muX ( self , value ) :
+        self.set_value ( self.__muX , value )
+
+    @property
+    def muY ( self ) :
+        """``y-locaiton for 2D gaussian"""
+        return self.__muY
+    @muY.setter
+    def muX ( self , value ) :
+        self.set_value ( self.__muY , value )
+        
+    @property
+    def sigmaX ( self ) :
+        """``sigma-X for 2D gaussian"""
+        return self.__sigmaX
+    @sigmaX.setter
+    def sigmaX ( self , value ) :
+        self.set_value ( self.__sigmaX , value )
+
+    @property
+    def sigmaY ( self ) :
+        """``sigma-Y for 2D gaussian"""
+        return self.__sigmaY
+    @sigmaY.setter
+    def sigmaY ( self , value ) :
+        self.set_value ( self.__sigmaY , value )
+        
+    @property
+    def theta ( self ) :
+        """``theta-rotation for 2D gaussian"""
+        return self.__theta
+    @theta.setter
+    def theta ( self , value ) :
+        self.set_value ( self.__theta , value )
 
 
 # =============================================================================        

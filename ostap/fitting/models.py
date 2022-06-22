@@ -209,6 +209,8 @@ __all__ = (
     'PSPol2D2sym_pdf' , ## Symmetric product of phase spaces, modulated with 2D polynomial
     'ExpoPol2Dsym_pdf', ## Symmetric version of above
     'Spline2Dsym_pdf' , ## Symmetric 2D positive spline
+    ##
+    'Gauss2D_pdf'     , ## 2D gauss 
     #
     ## models for Pt-spectra fitting
     #

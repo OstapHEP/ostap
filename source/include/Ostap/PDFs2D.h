@@ -1201,7 +1201,90 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-  } //                                      The end of  namespace Ostap::Models
+    /** @class Gauss2D
+     *  Two-dimentional Gaussian function 
+     *  @see Ostap::Math::Gauss2D
+     *  @author Vanya BELYAEV  Ivan.Belyaev@itep.ru
+     *  @date 2022-06-22
+     */
+    class Gauss2D: public RooAbsPdf
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Gauss2D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// linear
+      Gauss2D
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& y         ,
+        RooAbsReal& muX       , 
+        RooAbsReal& muY       , 
+        RooAbsReal& sigmaX    , 
+        RooAbsReal& sigmaY    , 
+        RooAbsReal& theta     ) ;
+      /// copy
+      Gauss2D
+      ( const Gauss2D&      right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~Gauss2D() ;
+      /// clone
+      Gauss2D* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Gauss2D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Gauss2D& function() const { return m_gauss2D ; }
+      /// access to underlying function
+      const Ostap::Math::Gauss2D& gauss2d () const { return m_gauss2D ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_y      ;
+      RooRealProxy m_muX    ;
+      RooRealProxy m_muY    ;
+      RooRealProxy m_sigmaX ;
+      RooRealProxy m_sigmaY ;
+      RooRealProxy m_theta  ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Gauss2D m_gauss2D ;           // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+  } //                                      The end of  namespace Ostap::Models    
   // ==========================================================================
 } //                                              The end of namespace Analysis 
 // ============================================================================

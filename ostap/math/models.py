@@ -123,7 +123,7 @@ def tf2 ( self ,
           npars = 0            ,
           args  = ()           ,
           npx   = 50           ,
-          npy   = 50           ) :
+          npy   = 50           , **kwargs ) :
     """Convert the function to TF2
     >>> obj = ...    
     >>> fun = obj.tf2 ( 3.0 , 3.2 , 3.0 , 3.2 )    
@@ -131,7 +131,7 @@ def tf2 ( self ,
     """
     ##
     callme   = kwargs.pop ( 'callable' , self ) 
-    title    = kwargs.pop ( 'title'    , self ) 
+    title    = kwargs.pop ( 'title'    , None ) 
     ##
     if not hasattr ( self , '_wo2' ) : self._wo2 = _WO2_ ( callme )
     if not self._wo2                 : self._wo2 = _WO2_ ( callme )
@@ -172,9 +172,10 @@ def tf2 ( self ,
     fun.SetNpx ( npx ) 
     fun.SetNpy ( npy ) 
     #
-    if title is None : title = str ( self ) 
+    if title is None : title = str ( self )
     fun.SetTitle ( title ) 
     #
+    if kwargs : logger.warning ("Unused arguments %s" % [ a for a in kwargs ] )  
     return fun 
 
 # =============================================================================
@@ -190,7 +191,7 @@ def tf3 ( self ,
           args  = ()           , 
           npx   = 25           ,
           npy   = 25           ,
-          npz   = 25           ) :
+          npz   = 25           , **kwargs ) :
     """Convert the function to TF3
     >>> obj = ...    
     >>> fun = obj.tf3 ( 3.0 , 3.2 , 3.0 , 3.2 , 1 , 2 )    
@@ -253,6 +254,9 @@ def tf3 ( self ,
     fun.SetNpy ( npy ) 
     fun.SetNpy ( npz ) 
     #
+    
+    if kwargs : logger.warning ("Unused arguments %s" % [ a for a in kwargs ] )
+    
     return fun 
 
 positives = ( Ostap.Math.Positive          ,
@@ -1278,7 +1282,8 @@ for model in ( Ostap.Math.BSpline2D           ,
                Ostap.Math.Expo2DPol           ,
                Ostap.Math.Expo2DPolSym        ,
                Ostap.Math.LegendreSum2        ,
-               Ostap.Math.Histo2D             ) :
+               Ostap.Math.Histo2D             ,
+               Ostap.Math.Gauss2D             ) :
     
     model . tf2  =  tf2 
     model . tf   =  tf2
@@ -1448,6 +1453,7 @@ for pdf in ( Ostap.Models.Poly2DPositive     ,
              Ostap.Models.Expo2DPol          ,
              Ostap.Models.Expo2DPolSym       , 
              Ostap.Models.Spline2D           ,
+             Ostap.Models.Gauss2D            ,
              Ostap.Models.Spline2DSym        ) :
     
     pdf.sp_integrate = sp_integrate_2D_
@@ -2393,6 +2399,7 @@ _decorated_classes_ = set( [
     Ostap.Math.PositiveSpline ,
     Ostap.Math.Spline2D       ,
     Ostap.Math.Spline2DSym    ,
+    Ostap.Math.Gauss2D        ,
     ## 
     Ostap.Math.PolySum        ,
     ## 

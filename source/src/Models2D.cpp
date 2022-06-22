@@ -1692,6 +1692,310 @@ std::size_t Ostap::Math::Expo2DPolSym::tag () const
 
 
 
+
+// ============================================================================
+/// constructor 
+// ============================================================================
+Ostap::Math::Gauss2D::Gauss2D 
+( const double  muX    , 
+  const double  muY    , 
+  const double  sigmaX , 
+  const double  sigmaY ,
+  const double  theta  ) 
+  : m_muX    ( muX )
+  , m_muY    ( muY )
+  , m_sigmaX ( std::abs ( sigmaX ) )
+  , m_sigmaY ( std::abs ( sigmaY ) )
+  , m_theta  ( theta ) 
+{}
+// ============================================================================
+// set mux-parameter
+// ============================================================================
+bool Ostap::Math::Gauss2D::setMuX ( const double value )
+{
+  if ( s_equal ( m_muX , value ) ) { return false ; }
+  m_muX = value ;
+  return true ;
+}
+// ============================================================================
+// set muy-parameter
+// ============================================================================
+bool Ostap::Math::Gauss2D::setMuY ( const double value )
+{
+  if ( s_equal ( m_muY , value ) ) { return false ; }
+  m_muY = value ;
+  return true ;
+}
+// ============================================================================
+// set theta-parameter
+// ============================================================================
+bool Ostap::Math::Gauss2D::setTheta ( const double value )
+{
+  if ( s_equal ( m_theta , value ) ) { return false ; }
+  m_theta = value ;
+  return true ;
+}
+// ============================================================================
+// set sigmax-parameter
+// ============================================================================
+bool Ostap::Math::Gauss2D::setSigmaX ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_sigmaX , avalue ) ) { return false ; }
+  m_sigmaX = avalue ;
+  return true ;
+}
+// ============================================================================
+// set sigmay-parameter
+// ============================================================================
+bool Ostap::Math::Gauss2D::setSigmaY ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_sigmaY , avalue ) ) { return false ; }
+  m_sigmaY = avalue ;
+  return true ;
+}
+// ============================================================================
+// get the value
+// ============================================================================
+double Ostap::Math::Gauss2D::operator () 
+  ( const double x , const double y ) const 
+{
+  const double dx = x - m_muX ;
+  const double dy = y - m_muY ;
+  //
+  const double ct = std::cos ( m_theta ) ;
+  const double st = std::sin ( m_theta ) ;
+  //
+  const double dxp = ( ct * dx + st * dy ) / m_sigmaX ;
+  const double dyp = ( ct * dy - st * dx ) / m_sigmaY ;
+  //
+  return 
+    std::exp ( -0.5 * ( dxp * dxp + dyp * dyp ) ) / ( 2 * M_PI * m_sigmaX * m_sigmaY ) ;
+}
+// ============================================================================
+// get the integral over the whole 2D-region
+// ============================================================================
+double Ostap::Math::Gauss2D::integral () const { return 1 ; }
+// ============================================================================
+/* get the integral over 2D-region
+ *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
+ *  @param xlow  low  edge in x
+ *  @param xhigh high edge in x
+ *  @param ylow  low  edge in y
+ *  @param yhigh high edge in y
+ */
+// ============================================================================
+double Ostap::Math::Gauss2D::integral 
+( const double xlow  ,
+  const double xhigh ,
+  const double ylow  , 
+  const double yhigh ) const 
+{ 
+  if      ( s_equal ( xlow , xhigh ) || s_equal ( ylow  , yhigh ) ) { return 0 ; }
+  //
+  else if ( xlow  > xhigh ) { return -1*integral ( xhigh , xlow  , ylow  , yhigh ) ; }
+  else if ( ylow  > yhigh ) { return -1*integral ( xlow  , xhigh , yhigh , ylow  ) ; }
+  //
+  // very far from the peak?
+  // 
+  if      ( xhigh <= m_muX - 45 * m_sigmaX ) { return 0 ; }
+  else if ( xlow  >= m_muX + 45 * m_sigmaX ) { return 0 ; }
+  else if ( yhigh <= m_muY - 45 * m_sigmaY ) { return 0 ; }
+  else if ( ylow  >= m_muY + 45 * m_sigmaY ) { return 0 ; }
+  //
+  // split into smaller regions 
+  //
+  typedef  std::array<short,9> SPLITS ;
+  static const SPLITS splits = { -10 , -5 , -3 , -1 , 0 , 1 , 3 , 5 , 10 } ;
+  //
+  for ( SPLITS::const_iterator ix = splits.begin() ; splits.end() != ix  ; ++ix ) 
+  {
+    const double px = m_muX + (*ix) * m_sigmaX ;
+    if ( xlow < px && px < xhigh ) 
+    {
+      return 
+        integral ( xlow , px    , ylow , yhigh ) +
+        integral ( px   , xhigh , ylow , yhigh ) ;
+    }
+  }
+  //
+  for ( SPLITS::const_iterator iy = splits.begin() ; splits.end() != iy  ; ++iy ) 
+  {
+    const double py = m_muY + (*iy) * m_sigmaY ;
+    if ( ylow < py && py < yhigh ) 
+    {
+      return 
+        integral ( xlow , xhigh , ylow , py    ) +
+        integral ( xlow , xhigh , py   , yhigh ) ;
+    }
+  }
+  //
+  const bool in_tail = 
+    ( xhigh <= m_muX + m_sigmaX * splits.front () ) || 
+    ( xlow  >= m_muX + m_sigmaX * splits.back  () ) || 
+    ( yhigh <= m_muY + m_sigmaY * splits.front () ) || 
+    ( ylow  >= m_muY + m_sigmaY * splits.back  () ) ;
+  // 
+  // use 2D-cubature   
+  //
+  static const Ostap::Math::GSL::Integrator2D<Gauss2D> s_cubature{} ;
+  static const char s_message[] = "Integral(Gauss2D)" ;
+  const auto F = s_cubature.make_function ( this , xlow , xhigh , ylow , yhigh ) ;
+  //
+  int    ierror  =  0 ;
+  double  result =  1 ;
+  double  error  = -1 ;
+  std::tie ( ierror , result , error ) = s_cubature.cubature
+    ( tag () , &F , 20000 , 
+      in_tail ? s_PRECISION_TAIL : s_PRECISION ,
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , 
+      s_message , __FILE__ , __LINE__ ) ;
+  return  result ;
+}
+// ======================================================================
+/*  integral over x-dimension
+ *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
+ *  @param y     variable
+ *  @param xlow  low  edge in y
+ *  @param xhigh high edge in y
+ */
+// ============================================================================
+double Ostap::Math::Gauss2D::integrateX 
+( const double y     ,
+  const double xlow  , 
+  const double xhigh ) const 
+{
+  //
+  if      ( s_equal ( xlow , xhigh ) ) { return 0 ; }
+  else if ( xlow  > xhigh ) { return -1 * integrateX ( y , xhigh , xlow ) ; }
+  //
+  // very far from the peak?
+  // 
+  if      ( y     <= m_muY - 45 * m_sigmaY ) { return 0 ; }
+  else if ( y     >= m_muY + 45 * m_sigmaY ) { return 0 ; }
+  else if ( xhigh <= m_muX - 45 * m_sigmaX ) { return 0 ; }
+  else if ( xlow  >= m_muX + 45 * m_sigmaX ) { return 0 ; }
+  //
+  //
+  // split into smaller regions 
+  //
+  typedef  std::array<short,8> SPLITS ;
+  static const SPLITS splits = { -10 , -5 , -3 , -1 , 1 , 3 , 5 , 10 } ;
+  //
+  for ( SPLITS::const_iterator ix = splits.begin() ; splits.end() != ix  ; ++ix ) 
+  {
+    const double px = m_muX + (*ix) * m_sigmaX ;
+    if ( xlow < px && px < xhigh ) 
+    { return integrateX ( y , xlow , px    ) + integrateX ( y , px   , xhigh ) ; }
+  }
+  //
+  const bool in_tail = 
+    ( xhigh <= m_muX + m_sigmaX * splits.front () ) || 
+    ( xlow  >= m_muX + m_sigmaX * splits.back  () ) || 
+    ( y     <= m_muY + m_sigmaY * splits.front () ) || 
+    ( y     >= m_muY + m_sigmaY * splits.back  () ) ;
+  // 
+  typedef Ostap::Math::IntegrateX<Gauss2D> IX ;
+  static const Ostap::Math::GSL::Integrator1D<IX> s_integrator ;
+  static const char message[] = "IntegrateX(Gauss2D)" ;
+  //
+  const IX fx { this , y } ;
+  const auto F = s_integrator.make_function ( &fx ) ;
+  //  
+  int    ierror    =  0   ;
+  double result    =  1.0 ;
+  double error     = -1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( std::hash_combine ( tag() , 'Y' , y ) , 
+      &F                        ,   // the function
+      xlow    , xhigh           ,   // low & high edges
+      workspace ( m_workspace ) ,   // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size()        ,   // maximum number of subintervals
+      message                   ,   // message 
+      __FILE__  , __LINE__      ) ; // filename & line number 
+  //
+  return result ;
+}
+// ======================================================================
+/* integral over x-dimension
+ *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
+ *  @param x     variable
+ *  @param ylow  low  edge in x
+ *  @param yhigh high edge in x
+ */
+// ============================================================================
+double Ostap::Math::Gauss2D::integrateY 
+( const double x     ,
+  const double ylow  ,
+  const double yhigh ) const 
+{
+  //
+  if      ( s_equal ( ylow , yhigh ) ) { return 0 ; }
+  else if ( ylow  > yhigh ) { return -1 * integrateY ( x , yhigh , ylow ) ; }
+  //
+  // very far from the peak?
+  // 
+  if      ( x     <= m_muX - 45 * m_sigmaX ) { return 0 ; }
+  else if ( x     >= m_muX + 45 * m_sigmaX ) { return 0 ; }
+  else if ( yhigh <= m_muY - 45 * m_sigmaY ) { return 0 ; }
+  else if ( ylow  >= m_muY + 45 * m_sigmaY ) { return 0 ; }
+  //
+  
+  // split into smaller regions 
+  //
+  typedef  std::array<short,8> SPLITS ;
+  static const SPLITS splits = { -10 , -5 , -3 , -1 , 1 , 3 , 5 , 10 } ;
+  //
+  for ( SPLITS::const_iterator iy = splits.begin() ; splits.end() != iy  ; ++iy ) 
+  {
+    const double py = m_muY + (*iy) * m_sigmaY ;
+    if ( ylow < py && py < yhigh ) 
+    { return integrateY ( x , ylow , py ) + integrateY ( x , py , yhigh ) ; }
+  }
+  //
+  const bool in_tail = 
+    ( yhigh <= m_muY + m_sigmaY * splits.front () ) || 
+    ( ylow  >= m_muY + m_sigmaY * splits.back  () ) || 
+    ( x     <= m_muX + m_sigmaX * splits.front () ) || 
+    ( x     >= m_muX + m_sigmaX * splits.back  () ) ;
+  // 
+  typedef Ostap::Math::IntegrateY<Gauss2D> IY ;
+  static const Ostap::Math::GSL::Integrator1D<IY> s_integrator ;
+  static const char message[] = "IntegrateY(Gauss2D)" ;
+  //
+  const IY fy { this , x } ;
+  const auto F = s_integrator.make_function ( &fy ) ;
+  //  
+  int    ierror    =  0   ;
+  double result    =  1.0 ;
+  double error     = -1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( std::hash_combine ( tag() , 'X' , x ) , 
+      &F                        ,   // the function
+      ylow    , yhigh           ,   // low & high edges
+      workspace ( m_workspace ) ,   // workspace
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
+      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      m_workspace.size()        ,   // maximum number of subintervals
+      message                   ,   // message 
+      __FILE__  , __LINE__      ) ; // filename & line number 
+  //
+  return result ;
+}
+// ============================================================================
+// get the tag 
+// ============================================================================
+std::size_t Ostap::Math::Gauss2D::tag () const 
+{ return std::hash_combine ( m_muX    , 
+                             m_muY    , 
+                             m_sigmaX , 
+                             m_sigmaY , 
+                             m_theta  ) ; }
+// ============================================================================
+
 // ============================================================================
 // The END 
 // ============================================================================

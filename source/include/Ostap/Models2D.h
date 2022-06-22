@@ -51,19 +51,21 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPol ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
-                const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
-                const unsigned short  Nx   =   1 ,
-                const unsigned short  Ny   =   1 ) ;
+      PS2DPol
+      ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
+        const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
+        const unsigned short  Nx   =   1 ,
+        const unsigned short  Ny   =   1 ) ;
       /// constructor from the order
-      PS2DPol ( const PhaseSpaceNL&   psx        ,
-                const PhaseSpaceNL&   psy        ,
-                const unsigned short  Nx         ,
-                const unsigned short  Ny         ,
-                const double          xmin       ,
-                const double          xmax       ,
-                const double          ymin       ,
-                const double          ymax       ) ;
+      PS2DPol
+      ( const PhaseSpaceNL&   psx        ,
+        const PhaseSpaceNL&   psy        ,
+        const unsigned short  Nx         ,
+        const unsigned short  Ny         ,
+        const double          xmin       ,
+        const double          xmax       ,
+        const double          ymin       ,
+        const double          ymax       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -107,28 +109,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral 
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -192,13 +199,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPolSym ( const PhaseSpaceNL&   ps   = PhaseSpaceNL() ,
-                   const unsigned short  N    =  1             ) ;
+      PS2DPolSym 
+      ( const PhaseSpaceNL&   ps   = PhaseSpaceNL() ,
+        const unsigned short  N    =  1             ) ;
       /// constructor from the order
-      PS2DPolSym ( const PhaseSpaceNL&   ps         ,
-                   const unsigned short  N          ,
-                   const double          xmin       ,
-                   const double          xmax       ) ;
+      PS2DPolSym 
+      ( const PhaseSpaceNL&   ps         ,
+        const unsigned short  N          ,
+        const double          xmin       ,
+        const double          xmax       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -242,28 +251,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  , 
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral 
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -326,21 +340,23 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPol2 ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
-                 const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
-                 const double          mmax =  -1 ,  
-                 const unsigned short  Nx   =   1 ,
-                 const unsigned short  Ny   =   1 ) ;
+      PS2DPol2
+      ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
+        const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
+        const double          mmax =  -1 ,  
+        const unsigned short  Nx   =   1 ,
+        const unsigned short  Ny   =   1 ) ;
       /// constructor from the order
-      PS2DPol2 ( const PhaseSpaceNL&   psx        ,
-                 const PhaseSpaceNL&   psy        ,
-                 const double          mmax       ,  
-                 const unsigned short  Nx         ,
-                 const unsigned short  Ny         ,
-                 const double          xmin       ,
-                 const double          xmax       ,
-                 const double          ymin       ,
-                 const double          ymax       ) ;
+      PS2DPol2
+      ( const PhaseSpaceNL&   psx        ,
+        const PhaseSpaceNL&   psy        ,
+        const double          mmax       ,  
+        const unsigned short  Nx         ,
+        const unsigned short  Ny         ,
+        const double          xmin       ,
+        const double          xmax       ,
+        const double          ymin       ,
+        const double          ymax       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -385,28 +401,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral 
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -475,15 +496,17 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPol2Sym ( const PhaseSpaceNL&   ps   = PhaseSpaceNL() ,
-                    const double          mmax =  -1            ,  
-                    const unsigned short  N    =   1            ) ;
+      PS2DPol2Sym
+      ( const PhaseSpaceNL&   ps   = PhaseSpaceNL() ,
+        const double          mmax =  -1            ,  
+        const unsigned short  N    =   1            ) ;
       /// constructor from the order
-      PS2DPol2Sym ( const PhaseSpaceNL&   ps         ,
-                    const double          mmax       ,  
-                    const unsigned short  N          ,
-                    const double          xmin       ,
-                    const double          xmax       ) ;
+      PS2DPol2Sym
+      ( const PhaseSpaceNL&   ps         ,
+        const double          mmax       ,  
+        const unsigned short  N          ,
+        const double          xmin       ,
+        const double          xmax       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -528,28 +551,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  , 
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral 
+      ( const double xlow  , 
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -620,25 +648,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPol3 ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
-                 const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
-                 const double          mmax =  -1 ,  
-                 const unsigned short  Nx   =   1 ,
-                 const unsigned short  Ny   =   1 ) ;
+      PS2DPol3 
+      ( const PhaseSpaceNL&   psx  = PhaseSpaceNL () ,
+        const PhaseSpaceNL&   psy  = PhaseSpaceNL () ,
+        const double          mmax =  -1 ,  
+        const unsigned short  Nx   =   1 ,
+        const unsigned short  Ny   =   1 ) ;
       /// constructor from the order
-      PS2DPol3 ( const PhaseSpacePol&  psx        ,
-                 const PhaseSpacePol&  psy        ,
-                 const double          mmax =  -1 ) ;
+      PS2DPol3
+      ( const PhaseSpacePol&  psx        ,
+        const PhaseSpacePol&  psy        ,
+        const double          mmax =  -1 ) ;
       /// constructor from the order
-      PS2DPol3 ( const PhaseSpaceNL&   psx        ,
-                 const PhaseSpaceNL&   psy        ,
-                 const double          mmax       ,  
-                 const unsigned short  Nx         ,
-                 const unsigned short  Ny         ,
-                 const double          xmin       ,
-                 const double          xmax       ,
-                 const double          ymin       ,
-                 const double          ymax       ) ;
+      PS2DPol3
+      ( const PhaseSpaceNL&   psx        ,
+        const PhaseSpaceNL&   psy        ,
+        const double          mmax       ,  
+        const unsigned short  Nx         ,
+        const unsigned short  Ny         ,
+        const double          xmin       ,
+        const double          xmax       ,
+        const double          ymin       ,
+        const double          ymax       ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -699,28 +730,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -786,18 +822,21 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      PS2DPol3Sym ( const PhaseSpaceNL&   ps   = PhaseSpaceNL () ,
-                    const double          mmax =  -1 ,  
-                    const unsigned short  N    =   1 ) ;
+      PS2DPol3Sym 
+      ( const PhaseSpaceNL&   ps   = PhaseSpaceNL () ,
+        const double          mmax =  -1 ,  
+        const unsigned short  N    =   1 ) ;
       /// constructor from the order
-      PS2DPol3Sym ( const PhaseSpacePol&  ps         ,
-                    const double          mmax =  -1 ) ;
+      PS2DPol3Sym
+      ( const PhaseSpacePol&  ps         ,
+        const double          mmax =  -1 ) ;
       /// constructor from the order
-      PS2DPol3Sym ( const PhaseSpaceNL&   ps         ,
-                    const double          mmax       ,  
-                    const unsigned short  N          ,
-                    const double          xmin       ,
-                    const double          xmax       );
+      PS2DPol3Sym
+      ( const PhaseSpaceNL&   ps         ,
+        const double          mmax       ,  
+        const unsigned short  N          ,
+        const double          xmin       ,
+        const double          xmax       );
       // ======================================================================
     public:
       // ======================================================================
@@ -849,28 +888,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  , 
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -916,21 +960,23 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      ExpoPS2DPol ( const PhaseSpaceNL&   psy  = PhaseSpaceNL() ,
-                    const double          xmin = 0 ,
-                    const double          xmax = 1 ,
-                    const unsigned short  Nx   = 1 ,
-                    const unsigned short  Ny   = 1 ,
-                    const double          tau  = 0 ) ;
+      ExpoPS2DPol 
+      ( const PhaseSpaceNL&   psy  = PhaseSpaceNL() ,
+        const double          xmin = 0 ,
+        const double          xmax = 1 ,
+        const unsigned short  Nx   = 1 ,
+        const unsigned short  Ny   = 1 ,
+        const double          tau  = 0 ) ;
       /// constructor from the order
-      ExpoPS2DPol ( const PhaseSpaceNL&   psy      ,
-                    const double          xmin     ,
-                    const double          xmax     ,
-                    const unsigned short  Nx       ,
-                    const unsigned short  Ny       ,
-                    const double          ymin     ,
-                    const double          ymax     ,
-                    const double          tau  = 0 ) ;
+      ExpoPS2DPol 
+      ( const PhaseSpaceNL&   psy      ,
+        const double          xmin     ,
+        const double          xmax     ,
+        const unsigned short  Nx       ,
+        const unsigned short  Ny       ,
+        const double          ymin     ,
+        const double          ymax     ,
+        const double          tau  = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -979,28 +1025,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const ;
+      double integrateX 
+      ( const double y     ,
+        const double xlow  ,
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  ,
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1047,14 +1098,15 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Expo2DPol ( const double          xmin = 0  ,
-                  const double          xmax = 1  ,
-                  const double          ymin = 0  ,
-                  const double          ymax = 1  ,
-                  const unsigned short  Nx   =  1 ,
-                  const unsigned short  Ny   =  1 ,
-                  const double          taux =  0 ,
-                  const double          tauy =  0 ) ;            
+      Expo2DPol
+      ( const double          xmin = 0  ,
+        const double          xmax = 1  ,
+        const double          ymin = 0  ,
+        const double          ymax = 1  ,
+        const unsigned short  Nx   =  1 ,
+        const unsigned short  Ny   =  1 ,
+        const double          taux =  0 ,
+        const double          tauy =  0 ) ;            
       // ======================================================================
     public:
       // ======================================================================
@@ -1105,28 +1157,33 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow  ,
-                        const double xhigh ,
-                        const double ylow  , 
-                        const double yhigh ) const ;
+      double integral
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
        *  @param y     variable
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y     ,
-                          const double xlow  ,
-                          const double xhigh ) const ;
+      double integrateX
+      ( const double y     ,
+        const double xlow  ,
+        const double xhigh ) const ;
+      // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
        *  @param x     variable
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x     ,
-                          const double ylow  , 
-                          const double yhigh ) const ;
+      double integrateY 
+      ( const double x     ,
+        const double ylow  , 
+        const double yhigh ) const ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1165,10 +1222,11 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Expo2DPolSym ( const double          xmin = 0 ,
-                     const double          xmax = 1 ,
-                     const unsigned short  N    = 1 ,
-                     const double          tau  = 0 ) ;
+      Expo2DPolSym
+      ( const double          xmin = 0 ,
+        const double          xmax = 1 ,
+        const unsigned short  N    = 1 ,
+        const double          tau  = 0 ) ;
       // ======================================================================
     public:
       // ======================================================================
@@ -1218,8 +1276,9 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integral ( const double xlow , const double xhigh ,
-                        const double ylow , const double yhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
@@ -1227,8 +1286,9 @@ namespace Ostap
        *  @param xlow  low  edge in y
        *  @param xhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double xlow , const double xhigh ) const ;
+      double integrateX 
+      ( const double y    ,
+        const double xlow , const double xhigh ) const ;
       // ======================================================================
       /** integral over y-dimension
        *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
@@ -1236,8 +1296,9 @@ namespace Ostap
        *  @param ylow  low  edge in x
        *  @param yhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY 
+      ( const double x    ,
+        const double ylow , const double yhigh ) const ;
       // ======================================================================
     public:  // expose some internmals
       // ======================================================================
@@ -1252,8 +1313,9 @@ namespace Ostap
     private: // helper function to make the calculations
       // ======================================================================
       /// helper function to make calculations
-      double calculate ( const std::vector<double>& fx , 
-                         const std::vector<double>& fy ) const ;
+      double calculate 
+      ( const std::vector<double>& fx , 
+        const std::vector<double>& fy ) const ;
       // ======================================================================
     private:
       // ======================================================================
@@ -1263,6 +1325,124 @@ namespace Ostap
       double                     m_tau      ;
       // ======================================================================
     }; 
+    // ========================================================================
+    /** @class Gauss2D 
+     *  Simple 2D rotated Gaussian fnuction 
+     *  \f[ f(x,y) = \frac{1}{2\pi\sqrt{\sigma_x}\sqrt{\sigma_y}}
+     *   \mathrm{e}^{\left( -\frac{1}{2} \delta x^{\prime2}}{\sigma_x^2} 
+     *   -\frac{1}{2} \delta y^{\prime2}}{\sigma_y^2} 
+     *   \right) }\f]
+     * - where 
+     *   \f[ \left( \begin{array}{c} \delta x^prime \\ \delta y^\prime \end{array} \right) = 
+     *    \left( \begin{array}{cc} \cos \theta & \sin\theta \\
+     *                             -\sin\theta & \cos\theta \end{array} \right) \times   
+     *     \left( \begin{array}{c} x - \mu_x \\ y - \mu_y\end{array} \right)\f] 
+     * 
+     *  @date 2022-06-22
+     */
+    class Gauss2D 
+    {
+      // ======================================================================
+    public: 
+      // ======================================================================
+      /// constructor 
+      Gauss2D 
+      ( const double muX    = 0 , 
+        const double muY    = 0 , 
+        const double sigmaX = 1 , 
+        const double sigmaY = 1 ,
+        const double theta  = 0 ) ;
+      // =====================================================================
+    public:
+      // ======================================================================
+      /// get the value
+      double operator () ( const double x , const double y ) const ;
+      // ======================================================================
+    public:  // getters 
+      // ======================================================================      
+      // mux                                    
+      double muX    () const { return m_muX    ; }
+      // mux                                   
+      double muY    () const { return m_muY    ; }
+      // sigmax                                    
+      double sigmaX () const { return m_sigmaX ; }
+      // sigmay                                   
+      double sigmaY () const { return m_sigmaY ; }
+      // theta 
+      double theta  () const { return m_theta  ; }
+      // ======================================================================
+    public:  // setters 
+      // ======================================================================      
+      bool setMuX      ( const double value ) ;
+      bool setMuY      ( const double value ) ;
+      bool setSigmaX   ( const double value ) ;
+      bool setSigmaY   ( const double value ) ;
+      bool setTheta    ( const double value ) ;
+      // ======================================================================      
+    public:
+      // ======================================================================      
+      /// get the integral over the whole 2D-region
+      double integral () const ;
+      // ======================================================================      
+      /** get the integral over 2D-region
+       *  \f[ \int_{x_low}^{x_high}\int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}x\mathrm{d}y\f]
+       *  @param xlow  low  edge in x
+       *  @param xhigh high edge in x
+       *  @param ylow  low  edge in y
+       *  @param yhigh high edge in y
+       */
+      double integral 
+      ( const double xlow  ,
+        const double xhigh ,
+        const double ylow  , 
+        const double yhigh ) const ;
+      // ======================================================================
+      /** integral over x-dimension
+       *  \f[ \int_{y_low}^{y_high} \mathcal{B}(x,y) \mathrm{d}y\f]
+       *  @param y     variable
+       *  @param xlow  low  edge in y
+       *  @param xhigh high edge in y
+       */
+      double integrateX 
+      ( const double y     ,
+        const double xlow  , 
+        const double xhigh ) const ;
+      // ======================================================================
+      /** integral over x-dimension
+       *  \f[ \int_{x_low}^{x_high} \mathcal{B}(x,y) \mathrm{d}x\f]
+       *  @param x     variable
+       *  @param ylow  low  edge in x
+       *  @param yhigh high edge in x
+       */
+      double integrateY 
+      ( const double x     ,
+        const double ylow  ,
+        const double yhigh ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the tag 
+      std::size_t tag () const ;
+      // ======================================================================
+    private: 
+      // ======================================================================
+      /// mux 
+      double m_muX    { 0.0 } ; // mux
+      /// muy 
+      double m_muY    { 0.0 } ; // muy 
+      /// sigmax 
+      double m_sigmaX { 1.0 } ; // sigmax 
+      /// sigmay 
+      double m_sigmaY { 1.0 } ; // sigmay 
+      /// theta 
+      double m_theta  { 0.0 } ; // theta 
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace for numerical integration
+      Ostap::Math::WorkSpace m_workspace {} ;
+      // ======================================================================
+    } ;
     // ========================================================================
   } //                                             end of namespace Ostap::Math
   // ==========================================================================

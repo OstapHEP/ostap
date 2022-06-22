@@ -1572,8 +1572,113 @@ Double_t Ostap::Models::Spline2DSym::analyticalIntegral
 
 
 
+// ============================================================================
+// 2D Gaussian
+// ============================================================================
+Ostap::Models::Gauss2D::Gauss2D
+( const char* name    , 
+  const char* title   ,
+  RooAbsReal& x       ,
+  RooAbsReal& y       ,
+  RooAbsReal& muX     ,
+  RooAbsReal& muY     ,
+  RooAbsReal& sigmaX  ,
+  RooAbsReal& sigmaY  ,
+  RooAbsReal& theta   ) 
+  : RooAbsPdf  ( name    , title ) 
+  , m_x        ( "x"     , "Observable-X" , this , x      ) 
+  , m_y        ( "y"     , "Observable-Y" , this , y      ) 
+  , m_muX      ( "muX"   , "x-locaiton"   , this , muX    ) 
+  , m_muY      ( "muY"   , "y-locaiton"   , this , muY    ) 
+  , m_sigmaX   ( "sX"    , "sigma-x"      , this , sigmaX ) 
+  , m_sigmaY   ( "sY"    , "sigma-y"      , this , sigmaY ) 
+  , m_theta    ( "theta" , "rotation"     , this , theta  ) 
+  , m_gauss2D  ()
+{
+  setPars () ;
+}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Gauss2D::Gauss2D
+( const Ostap::Models::Gauss2D&  right ,      
+  const char*                              name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"     , this , right.m_x      ) 
+  , m_y        ( "y"     , this , right.m_y      ) 
+  , m_muX      ( "muX"   , this , right.m_muX    ) 
+  , m_muY      ( "muY"   , this , right.m_muY    ) 
+  , m_sigmaX   ( "sX"    , this , right.m_sigmaX ) 
+  , m_sigmaY   ( "sY"    , this , right.m_sigmaY ) 
+  , m_theta    ( "theta" , this , right.m_theta  ) 
+    //
+  , m_gauss2D  ( right.m_gauss2D ) 
+{
+  setPars () ;
+}
+// ============================================================================
+// destructor 
+// ============================================================================
+Ostap::Models::Gauss2D::~Gauss2D(){}
+// ============================================================================
+// clone 
+// ============================================================================
+Ostap::Models::Gauss2D*
+Ostap::Models::Gauss2D::clone( const char* name ) const 
+{ return new Ostap::Models::Gauss2D(*this,name) ; }
+// ============================================================================
+void Ostap::Models::Gauss2D::setPars () const 
+{ 
+  m_gauss2D.setMuX    ( m_muX    ) ;
+  m_gauss2D.setMuY    ( m_muY    ) ;
+  m_gauss2D.setSigmaX ( m_sigmaX ) ;
+  m_gauss2D.setSigmaY ( m_sigmaY ) ;
+  m_gauss2D.setTheta  ( m_theta  ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Gauss2D::evaluate() const 
+{
+  //
+  setPars () ;
+  //
+  return m_gauss2D ( m_x , m_y ) ; 
+}
+// ============================================================================
+Int_t Ostap::Models::Gauss2D::getAnalyticalIntegral
+( RooArgSet&     allVars      , 
+  RooArgSet&     analVars     ,
+  const char* /* rangename */ ) const 
+{
+  if      ( matchArgs ( allVars , analVars , m_x , m_y ) ) { return 1 ; }
+  else if ( matchArgs ( allVars , analVars , m_x       ) ) { return 2 ; }
+  else if ( matchArgs ( allVars , analVars       , m_y ) ) { return 3 ; }
+  //
+  return 0 ;
+}
+//_____________________________________________________________________________
+Double_t Ostap::Models::Gauss2D::analyticalIntegral 
+( Int_t       code       , 
+  const char* rangeName  ) const 
+{
+  //
+  assert ( 1 == code || 2 == code || 3 == code ) ;
+  //
+  setPars () ;
+  //
+  return 
+    1 == code ? m_gauss2D.integral   (        m_x.min(rangeName) , m_x.max(rangeName) , 
+                                              m_y.min(rangeName) , m_y.max(rangeName) ) : 
+    2 == code ? m_gauss2D.integrateX ( m_y  , m_x.min(rangeName) , m_x.max(rangeName) ) : 
+    3 == code ? m_gauss2D.integrateY ( m_x  , m_y.min(rangeName) , m_y.max(rangeName) ) : 0.0 ;  
+}
+// ============================================================================
+
 
 // ============================================================================
+ClassImp(Ostap::Models::Gauss2D              ) 
 ClassImp(Ostap::Models::Poly2DPositive       ) 
 ClassImp(Ostap::Models::Poly2DSymPositive    )
 ClassImp(Ostap::Models::PS2DPol              )
