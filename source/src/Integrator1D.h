@@ -703,22 +703,22 @@ namespace Ostap
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL
     // ========================================================================
-    /** @class IntegrateX 
+    /** @class IntegrateX2 
      *  helper class to perform X-integration of 2D-funtion
      *  @author Vanya Belyaev
      *  @date   2018-09-21
      */
     template <class FUNCTION2D> 
-    class IntegrateX  
+    class IntegrateX2  
     {
     public:
       // ======================================================================
-      IntegrateX ( const FUNCTION2D* f2d , 
+      IntegrateX2 ( const FUNCTION2D* f2d , 
                    const double      y   ) 
         : m_f2d  ( f2d ) 
         , m_y    ( y   ) 
       {}
-      IntegrateX () =delete ;
+      IntegrateX2 () =delete ;
       // ======================================================================
       double operator() ( const double x ) const 
       { return (*m_f2d) ( x , m_y ) ; }
@@ -728,28 +728,112 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
-    /** @class IntegrateY 
+    /** @class IntegrateY2 
      *  helper class to perform Y-integration of 2D-funtion
      *  @author Vanya Belyaev
      *  @date   2018-09-21
      */
     template <class FUNCTION2D> 
-    class IntegrateY  
+    class IntegrateY2  
     {
     public:
       // ======================================================================
-      IntegrateY ( const FUNCTION2D* f2d , 
-                   const double      x   ) 
+      IntegrateY2 ( const FUNCTION2D* f2d , 
+                    const double      x   ) 
         : m_f2d  ( f2d ) 
         , m_x    ( x   ) 
       {}
-      IntegrateY () = delete ;
+      IntegrateY2 () = delete ;
       // ======================================================================
       double operator() ( const double y ) const 
       { return (*m_f2d) ( m_x , y ) ; }
       // ======================================================================
       const FUNCTION2D* m_f2d ;
       double            m_x   ;
+      // ======================================================================
+    } ;
+    // =======================================================================
+    /** @class IntegrateX3 
+     *  helper class to perform X-integration of 3D-funtion
+     *  @author Vanya Belyaev
+     *  @date   2018-09-21
+     */
+    template <class FUNCTION3D> 
+    class IntegrateX3  
+    {
+    public:
+      // ======================================================================
+      IntegrateX3 ( const FUNCTION3D* f3d ,
+                    const double       y  , 
+                    const double       z  ) 
+        : m_f3d  ( f3d ) 
+        , m_y    ( y   ) 
+        , m_z    ( z   ) 
+      {}
+      IntegrateX3 () =delete ;
+      // ======================================================================
+      double operator() ( const double x ) const 
+      { return (*m_f3d) ( x , m_y , m_z ) ; }
+      // ======================================================================
+      const FUNCTION3D* m_f3d ;
+      double            m_y   ;
+      double            m_z   ;
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class IntegrateY3 
+     *  helper class to perform Y-integration of 3D-funtion
+     *  @author Vanya Belyaev
+     *  @date   2018-09-21
+     */
+    template <class FUNCTION3D> 
+    class IntegrateY3  
+    {
+    public:
+      // ======================================================================
+      IntegrateY3 ( const FUNCTION3D* f3d , 
+                    const double      x   , 
+                    const double      z   ) 
+        : m_f3d  ( f3d ) 
+        , m_x    ( x   ) 
+        , m_z    ( z   ) 
+      {}
+      IntegrateY3 () = delete ;
+      // ======================================================================
+      double operator() ( const double y ) const 
+      { return (*m_f3d) ( m_x , y , m_z ) ; }
+      // ======================================================================
+      const FUNCTION3D* m_f3d ;
+      double            m_x   ;
+      double            m_z   ;
+      // ======================================================================
+    } ;
+    // =======================================================================
+    /** @class IntegrateZ3 
+     *  helper class to perform Z-integration of 3D-funtion
+     *  @author Vanya Belyaev
+     *  @date   2018-09-21
+     */
+    template <class FUNCTION3D> 
+    class IntegrateZ3  
+    {
+    public:
+      // ======================================================================
+      IntegrateZ3 ( const FUNCTION3D* f3d , 
+                    const double      x   , 
+                    const double      y   ) 
+        : m_f3d  ( f3d ) 
+        , m_x    ( x   ) 
+        , m_y    ( y   ) 
+      {}
+      IntegrateZ3 () = delete ;
+      // ======================================================================
+      double operator() ( const double z ) const 
+      { return (*m_f3d) ( m_x , m_y , z ) ; }
+      // ======================================================================
+      const FUNCTION3D* m_f3d ;
+      double            m_x   ;
+      double            m_y   ;
       // ======================================================================
     } ;
     // ========================================================================

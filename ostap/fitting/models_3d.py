@@ -17,11 +17,12 @@ __all__     = (
     'PolyPos3Dsym_pdf'  , ## A positive symmetric polynomial in 3D
     'PolyPos3DmixXY_pdf', ## A positive partly symmetric (x<-->y) polynomial in 3D 
     'PolyPos3DmixYZ_pdf', ## A positive partly symmetric (y<-->z) polynomial in 3D 
-    'PolyPos3DmixXZ_pdf', ## A positive partly symmetric (x<-->z) polynomial in 3D 
+    'PolyPos3DmixXZ_pdf', ## A positive partly symmetric (x<-->z) polynomial in 3D
+    #
+    'Gauss3D_pdf'       , ## 3D Gaussain 
     #
     'RooKeys3D_pdf'     , ## wrapper for native RooNDKeysPdf
     #
-
     'make_B3D'          , ## create                         3D "background" function 
     'make_B3Dsym'       , ## create symmetric               3D "background" function 
     'make_B3DmixXY'     , ## create mixed symmetry (x<-->y) 3D "background" function 
@@ -529,6 +530,215 @@ class PolyPos3DmixXZ_pdf(PolyBase3) :
 
 models.append ( PolyPos3DmixXZ_pdf ) 
 
+
+
+# =============================================================================        
+## @class Gauss2D_pdf
+#  Simple 3D gaussian function
+#  @see Ostap::Models::Gauss3D 
+#  @see Ostap::Math::Gauss3D 
+class Gauss3D_pdf(PDF3) :
+    """ Simple 3D gaussian function
+    - see Ostap.Models.Gauss3D 
+    - see Ostap.Math.Gauss3D 
+    """
+    
+    ## constructor
+    def __init__ ( self            ,
+                   name            ,   ## the name 
+                   xvar            ,   ## the variable
+                   yvar            ,   ## the variable
+                   zvar            ,   ## the variable
+                   muX      = None ,
+                   muY      = None ,
+                   muZ      = None ,
+                   sigmaX   = None ,
+                   sigmaY   = None ,
+                   sigmaZ   = None ,
+                   phi      = None ,
+                   theta    = None ,
+                   psi      = None ) : 
+    
+        ## initialize the base class 
+        PDF3.__init__ (  self , name , xvar , yvar , zvar )
+        
+        sx_lims = ()
+        mx_lims = ()
+        sy_lims = ()
+        my_lims = ()
+        sz_lims = ()
+        mz_lims = ()
+
+        xlims = self.xminmax()        
+        if xlims :
+            dx = xlims[1] - xlims[0] 
+            sx_lims = 0 , 1.0 * dx 
+            mx_lims = xlims[0] - 0.1 * dx , xlims[1] + 0.1 * dx 
+
+        ylims = self.yminmax()
+        if ylims :
+            dy = ylims[1] - ylims[0] 
+            sy_lims = 0 , 1.0 * dy 
+            my_lims = ylims[0] - 0.1 * dy , ylims[1] + 0.1 * dy 
+
+        zlims = self.zminmax()
+        if zlims :
+            dz = zlims[1] - zlims[0] 
+            sz_lims = 0 , 1.0 * dy 
+            mz_lims = zlims[0] - 0.1 * dz , zlims[1] + 0.1 * dz 
+
+            
+        self.__muX = self.make_var ( muX  ,
+                                     'mu_x_%s'     % self.name ,
+                                     '#mu_{x}(%s)' % self.name ,
+                                     None , muX , *mx_lims )
+        
+        self.__muY = self.make_var ( muY  ,
+                                     'mu_y_%s'     % self.name ,
+                                     '#mu_{y}(%s)' % self.name ,
+                                     None , muY , *my_lims )
+
+        self.__muZ = self.make_var ( muZ  ,
+                                     'mu_z_%s'     % self.name ,
+                                     '#mu_{z}(%s)' % self.name ,
+                                     None , muZ , *mz_lims )
+        
+        
+        self.__sigmaX = self.make_var ( sigmaX  ,
+                                        'sigma_x_%s'     % self.name ,
+                                        '#sigma_{x}(%s)' % self.name ,
+                                        None     ,  sigmaX , *sx_lims )
+        
+        self.__sigmaY = self.make_var ( sigmaY  ,
+                                        'sigma_y_%s'     % self.name ,
+                                        '#sigma_{y}(%s)' % self.name ,
+                                        None     ,  sigmaY , *sy_lims )
+
+        self.__sigmaZ = self.make_var ( sigmaZ  ,
+                                        'sigma_z_%s'     % self.name ,
+                                        '#sigma_{z}(%s)' % self.name ,
+                                        None     ,  sigmaZ , *sy_lims )
+        
+        self.__phi    = self.make_var ( phi  ,
+                                        'phi_%s'   % self.name ,
+                                        '#phi(%s)' % self.name ,
+                                        None     ,  phi , -10 , +10  )
+        
+        self.__theta   = self.make_var ( theta  ,
+                                         'theta_%s'   % self.name ,
+                                         '#theta(%s)' % self.name ,
+                                         None     ,  theta , -10 , +10  )
+        self.__psi    = self.make_var ( psi  ,
+                                        'psi_%s'   % self.name ,
+                                        '#psi(%s)' % self.name ,
+                                        None     ,  psi , -10 , +10  )
+        
+        ## make PDF
+        self.pdf = Ostap.Models.Gauss3D (
+            self.roo_name ( 'gauss3d'  ) , 
+            'Gauss3D %s' % self.name     ,
+            self.x      ,
+            self.y      ,
+            self.z      ,
+            self.muX    ,
+            self.muY    ,
+            self.muZ    ,
+            self.sigmaX ,
+            self.sigmaY ,
+            self.sigmaZ ,
+            self.phi    ,            
+            self.theta  ,            
+            self.psi    ,            
+            )
+        
+        ## save configuration
+        self.config = {
+            'name'     : self.name   ,            
+            'xvar'     : self.xvar   ,
+            'yvar'     : self.yvar   ,            
+            'zvar'     : self.zvar   ,            
+            'muX'      : self.muX    ,
+            'muY'      : self.muY    ,
+            'muZ'      : self.muZ    ,
+            'sigmaX'   : self.sigmaX ,
+            'sigmaY'   : self.sigmaY ,
+            'sigmaZ'   : self.sigmaZ ,
+            'phi'      : self.phi    ,
+            'theta'    : self.theta  ,
+            'psi'      : self.psi  
+            }
+        
+    @property
+    def muX ( self ) :
+        """``x-location for 3D gaussian"""
+        return self.__muX
+    @muX.setter
+    def muX ( self , value ) :
+        self.set_value ( self.__muX , value )
+
+    @property
+    def muY ( self ) :
+        """``y-location for 3D gaussian"""
+        return self.__muY
+    @muY.setter
+    def muY ( self , value ) :
+        self.set_value ( self.__muY , value )
+
+    @property
+    def muZ ( self ) :
+        """``z-location for 3D gaussian"""
+        return self.__muZ
+    @muZ.setter
+    def muZ ( self , value ) :
+        self.set_value ( self.__muZ , value )
+
+    @property
+    def sigmaX ( self ) :
+        """``sigma-X for 3D gaussian"""
+        return self.__sigmaX
+    @sigmaX.setter
+    def sigmaX ( self , value ) :
+        self.set_value ( self.__sigmaX , value )
+
+    @property
+    def sigmaY ( self ) :
+        """``sigma-Y for 3D gaussian"""
+        return self.__sigmaY
+    @sigmaY.setter
+    def sigmaY ( self , value ) :
+        self.set_value ( self.__sigmaY , value )
+
+    @property
+    def sigmaZ ( self ) :
+        """``sigma-Z for 3D gaussian"""
+        return self.__sigmaZ
+    @sigmaZ.setter
+    def sigmaZ ( self , value ) :
+        self.set_value ( self.__sigmaZ , value )
+        
+    @property
+    def phi  ( self ) :
+        """``phi'' : Euler angle ``phi'' for 3D gaussian"""
+        return self.__phi
+    @phi.setter
+    def phi  ( self , value ) :
+        self.set_value ( self.__phi , value )
+
+    @property
+    def theta ( self ) :
+        """``theta'' : Euler anlgle ``theta'' for 3D gaussian"""
+        return self.__theta
+    @theta.setter
+    def theta ( self , value ) :
+        self.set_value ( self.__theta , value )
+
+    @property
+    def psi ( self ) :
+        """``psi'' : Euler angle ``psi'' for 3D gaussian"""
+        return self.__psi
+    @psi.setter
+    def psi ( self , value ) :
+        self.set_value ( self.__psi , value )
 
 
 # ==============================================================================

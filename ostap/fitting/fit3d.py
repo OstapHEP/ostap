@@ -100,7 +100,7 @@ class PDF3 (PDF2,FUNC3) :
             nb1 = self.zvar.getBins( 'cache' ) 
             zv  = getattr ( dataset , self.zvar.name , None )
             if   zv and zv.hasBinning ( 'cache' ) :
-                nb2 = yv.getBins('cache')
+                nb2 = zv.getBins('cache')
                 if  nb1 != nb2 :
                     zv.setBins ( max (  nb1 , nb2 ) , 'cache' )
                     self.info ('Adjust binning cache %s->%s for variable %s in dataset' % ( nb2 , nb1 , zv.name ) )
@@ -109,15 +109,15 @@ class PDF3 (PDF2,FUNC3) :
                 self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , zv.name )  )
                                 
         
-        result,f = PDF2.fitTo ( self    ,
-                                dataset = dataset ,
-                                draw    = False   , ## False here!
-                                nbins   = 50      , ## fake  here!
-                                ybins   = 20      , ## fake  here!
-                                silent  = silent  ,
-                                refit   = refit   ,
-                                timer   = timer   ,
-                                args    = args    , **kwargs )
+        result , f = PDF2.fitTo ( self    ,
+                                  dataset = dataset ,
+                                  draw    = False   , ## False here!
+                                  nbins   = 50      , ## fake  here!
+                                  ybins   = 20      , ## fake  here!
+                                  silent  = silent  ,
+                                  refit   = refit   ,
+                                  timer   = timer   ,
+                                  args    = args    , **kwargs )
         
         return result
     

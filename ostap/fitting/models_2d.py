@@ -1614,7 +1614,7 @@ class Gauss2D_pdf(PDF2) :
         """``y-locaiton for 2D gaussian"""
         return self.__muY
     @muY.setter
-    def muX ( self , value ) :
+    def muY ( self , value ) :
         self.set_value ( self.__muY , value )
         
     @property

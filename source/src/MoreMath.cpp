@@ -899,7 +899,7 @@ double Ostap::Math::gauss_cdf
  *  @param a low integration limit
  *  @param b high integration limit
  *  @param mu location of Gaussian
- *  @param sigm awidth of the Gaussian
+ *  @param sigma width of the Gaussian
  */
 // ============================================================================
 double Ostap::Math::gauss_int

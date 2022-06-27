@@ -36,24 +36,24 @@ __author__  = "Vanya BELYAEV Ivan.Belyaev@itep.ru"
 __date__    = "2014-06-06"
 __all__     = (
     #
-    "integral"       , ## (1D) numerical integration (as function, using scipy if possible)
-    "integral2"      , ## (2D) numerical integration (as function, using scipy if possible)
-    "integral3"      , ## (3D) numerical integration (as function, using scipy if possible)
+    "integral"       , ## (1D) numerical integration (as function, using scipy when/if possible)
+    "integral2"      , ## (2D) numerical integration (as function, using scipy when/if possible)
+    "integral3"      , ## (3D) numerical integration (as function, using scipy when/if possible)
     #
-    "Integral"       , ## (1D) numerical integration (as as object, using scipy if possible)
-    "Integral2"      , ## (2D) numerical integration (as as object, using scipy if possible)
-    "Integral3"      , ## (3D) numerical integration (as as object, using scipy if possible)
+    "Integral"       , ## (1D) numerical integration (as as object, using scipy when/if possible)
+    "Integral2"      , ## (2D) numerical integration (as as object, using scipy when/if possible)
+    "Integral3"      , ## (3D) numerical integration (as as object, using scipy when/if possible)
     #
     'Integrate2D_X'  , ## partial integration of 2D-function over x-range  
     'Integrate2D_Y'  , ## partial integration of 2D-function over y-range
     #
-    'Integrate3D_X'  , ## partial integration of 2D-function over x-range  
-    'Integrate3D_Y'  , ## partial integration of 2D-function over y-range
-    'Integrate3D_Z'  , ## partial integration of 2D-function over z-range
+    'Integrate3D_X'  , ## partial integration of 3D-function over x-range  
+    'Integrate3D_Y'  , ## partial integration of 3D-function over y-range
+    'Integrate3D_Z'  , ## partial integration of 3D-function over z-range
     #
-    'Integrate3D_XY' , ## partial integration of 2D-function over xy-range  
-    'Integrate3D_XZ' , ## partial integration of 2D-function over xz-range
-    'Integrate3D_YZ' , ## partial integration of 2D-function over yz-range
+    'Integrate3D_XY' , ## partial integration of 3D-function over xy-range  
+    'Integrate3D_XZ' , ## partial integration of 3D-function over xz-range
+    'Integrate3D_YZ' , ## partial integration of 3D-function over yz-range
     #
     "romberg"        , ## (1D) numerical integration using romberg's method 
     'genzmalik2'     , ## (2D) numerical integration using Genz&Malik's method
@@ -1112,7 +1112,7 @@ class Integrate2D_X(IntegralBase) :
     def xmin ( self ) :
         """Low integration limit"""
         return self.__xmin
-    
+        
     @property 
     def xmax ( self ) :
         """High integration limit"""
@@ -1327,6 +1327,7 @@ class Integrate3D_Z(IntegralBase) :
     def zmin ( self ) :
         """Low integration limit"""
         return self.__zmin
+
     @property 
     def zmax ( self ) :
         """High integration limit"""

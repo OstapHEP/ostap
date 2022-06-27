@@ -38,15 +38,16 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Bernstein3D ( const unsigned short       nX    =  1 ,
-                    const unsigned short       nY    =  1 ,
-                    const unsigned short       nZ    =  1 ,
-                    const double               xmin  =  0 ,
-                    const double               xmax  =  1 ,
-                    const double               ymin  =  0 ,
-                    const double               ymax  =  1 ,
-                    const double               zmin  =  0 ,
-                    const double               zmax  =  1 ) ;
+      Bernstein3D
+      ( const unsigned short       nX    =  1 ,
+        const unsigned short       nY    =  1 ,
+        const unsigned short       nZ    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 ) ;
       // ======================================================================
       /** As a product of three 1D-polynomials:
        *  \f[  B_{n^x,n^y,n^z}(x,y,z) \equiv 
@@ -60,9 +61,10 @@ namespace Ostap
        *   \alpha_{i}\beta_{j}\gamma_{k} 
        *    B_{n^{x}}^i(x) B_{n^{y}}^j(y) B_{n^{z}}^k(z) \f]
        */          
-      Bernstein3D ( const Bernstein& bx , 
-                    const Bernstein& by ,
-                    const Bernstein& bz ) ;
+      Bernstein3D 
+      ( const Bernstein& bx , 
+        const Bernstein& by ,
+        const Bernstein& bz ) ;
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3D ( const Bernstein3DSym& right ) ;
@@ -72,66 +74,77 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ,
-                           const double y , 
-                           const double z ) const ;
+      double evaluate
+      ( const double x ,
+        const double y , 
+        const double z ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x ,
-                           const double y , 
-                           const double z ) const 
+      double operator () 
+      ( const double x ,
+        const double y , 
+        const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
     public: // setters
       // ======================================================================
       /// set k-parameter
-      bool setPar       ( const unsigned int   k     ,
-                          const double         value ) ;
+      bool setPar 
+      ( const unsigned int   k     ,
+        const double         value ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int   k     ,
-                          const double         value )
+      bool setParameter 
+      ( const unsigned int   k     ,
+        const double         value )
       { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
       /// set (l,m)-parameter
-      bool setPar       ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value )
+      bool setPar
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value )
       {
         const unsigned int k = index ( l , m , n ) ;
         return  ( k < m_pars.size() ) && setPar ( k , value )  ;
       }
       /// set (l,m)-parameter
-      bool setParameter ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value )
+      bool setParameter 
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value )
       { return setPar   ( l , m  , n , value ) ; }
       // ======================================================================
     public: // getters
       // ======================================================================
       /// get (l,m,n)-parameter
-      double  par       ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const 
+      double  par
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const 
       {  return par ( index ( l , m , n ) ) ; }
       /// get (l,m,n)-parameter
-      double  parameter ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const { return par (  l , m , n ) ; }
+      double  parameter
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const { return par (  l , m , n ) ; }
       /// get k-parameter
-      double  par       ( const unsigned int k ) const
+      double  par   
+      ( const unsigned int k ) const
       { return k < m_pars.size() ? m_pars[k] : 0.0 ; }
       /// get k-parameter
-      double  parameter ( const unsigned int k ) const { return par ( k ) ; }
+      double  parameter
+      ( const unsigned int k ) const { return par ( k ) ; }
       /// get all parameters at once
       const std::vector<double>& pars() const { return m_pars ; }
       // ======================================================================
     public: // convert (l,m,n) into single index k
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m , 
-                           const unsigned short n ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m , 
+        const unsigned short n ) const 
       {
         return 
           ( l > m_nx || m > m_ny || n > m_nz ) ? -1  :  // NB!
@@ -228,9 +241,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\f]
@@ -239,9 +253,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const ;
+      double integrateX
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param y     variable
@@ -249,9 +264,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const ;
+      double integrateY
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const ;
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
@@ -259,9 +275,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const ;
+      double integrateZ 
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral over x&y-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
@@ -272,9 +289,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const ;
+      double integrateXY
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\mathrm{d}z\f]
@@ -284,9 +302,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const ;      
+      double integrateXZ 
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const ;      
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\mathrm{d}z\f]
@@ -296,9 +315,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const ;
+      double integrateYZ
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================      
     public: // special cases
       // ======================================================================
@@ -313,23 +333,25 @@ namespace Ostap
        *  @param y     variable
        *  @param z     variable
        */
-      double integrateX ( const double y , 
-                          const double z ) const ;
+      double integrateX 
+      ( const double y , 
+        const double z ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param x     variable
        *  @param z     variable
        */
-      double integrateY ( const double x , 
-                          const double z ) const ;
+      double integrateY 
+      ( const double x , 
+        const double z ) const ;
       /** integral over z-dimension
        *  \f[ \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
        *  @param y     variable
        */
-      double integrateZ ( const double x , 
-                          const double y ) const ;
-
+      double integrateZ 
+      ( const double x , 
+        const double y ) const ;
       // ======================================================================
     public: // special cases
       // ======================================================================
@@ -458,59 +480,68 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Bernstein3DSym ( const unsigned short       N     =  1 ,
-                       const double               xmin  =  0 ,
-                       const double               xmax  =  1 ) ;
+      Bernstein3DSym 
+      ( const unsigned short       N     =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ,
-                           const double y , 
-                           const double z ) const ;
+      double evaluate 
+      ( const double x ,
+        const double y , 
+        const double z ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x ,
-                           const double y , 
-                           const double z ) const 
+      double operator ()
+      ( const double x ,
+        const double y , 
+        const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
     public: // setters
       // ======================================================================
       /// set k-parameter
-      bool setPar       ( const unsigned int   k     ,
-                          const double         value ) ;
+      bool setPar  
+      ( const unsigned int   k     ,
+        const double         value ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int   k     ,
-                          const double         value )
+      bool setParameter 
+      ( const unsigned int   k     ,
+        const double         value )
       { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
       /// set (l,m)-parameter
-      bool setPar       ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value ) 
+      bool setPar
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value ) 
       {
         const unsigned int k = index ( l , m , n ) ;
         return  ( k < m_pars.size() ) && setPar ( k , value )  ;
       }
       /// set (l,m)-parameter
-      bool setParameter ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value )
+      bool setParameter
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value )
       { return setPar   ( l , m  , n , value ) ; }
       // ======================================================================
     public: // getters
       // ======================================================================
       /// get (l,m,n)-parameter
-      double  par       ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const 
+      double  par 
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const 
       { return par ( index ( l , m , n ) ) ; }
       /// get (l,m,n)-parameter
-      double  parameter ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const 
+      double  parameter 
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const 
       { return par (  l , m , n ) ; }
       /// get k-parameter
       double  par       ( const unsigned int k ) const
@@ -523,9 +554,10 @@ namespace Ostap
     public : // convert (i,j,k) into single index 
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m , 
-                           const unsigned short n ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m , 
+        const unsigned short n ) const 
       {
         return 
           m  > l   ?  index ( m , l , n )    :
@@ -624,9 +656,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\f]
@@ -635,9 +668,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const ;
+      double integrateX 
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param y     variable
@@ -645,9 +679,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const 
+      double integrateY
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const 
       { return integrateX ( x , z , ylow , yhigh ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
@@ -656,9 +691,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const 
+      double integrateZ 
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const 
       { return integrateX ( x , y , zlow , zhigh ) ; }
       // ======================================================================
       /** integral over x&y-dimensions
@@ -670,9 +706,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const ;
+      double integrateXY
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\mathrm{d}z\f]
@@ -682,9 +719,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateXZ
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const 
       { return integrateXY (  y , xlow , xhigh , zlow , zhigh ) ; }
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
@@ -695,9 +733,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateYZ 
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const 
       { return integrateXY (  x , ylow , yhigh , zlow , zhigh ) ; }
       // ======================================================================      
     public: // special cases
@@ -841,12 +880,13 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Bernstein3DMix ( const unsigned short       N     =  1 ,
-                       const unsigned short       Nz    =  1 ,
-                       const double               xmin  =  0 ,
-                       const double               xmax  =  1 ,
-                       const double               zmin  =  0 ,
-                       const double               zmax  =  1 ) ;
+      Bernstein3DMix
+      ( const unsigned short       N     =  1 ,
+        const unsigned short       Nz    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 ) ;
       // ======================================================================
       /// from symmetric variant 
       explicit Bernstein3DMix ( const Bernstein3DSym&  right ) ;
@@ -854,48 +894,56 @@ namespace Ostap
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x ,
-                           const double y , 
-                           const double z ) const ;
+      double evaluate
+      ( const double x ,
+        const double y , 
+        const double z ) const ;
       // ======================================================================
       /// get the value
-      double operator () ( const double x ,
-                           const double y , 
-                           const double z ) const 
+      double operator () 
+      ( const double x ,
+        const double y , 
+        const double z ) const 
       { return evaluate ( x ,   y , z ) ; }
       // ======================================================================
     public: // setters
       // ======================================================================
       /// set k-parameter
-      bool setPar       ( const unsigned int   k     ,
-                          const double         value ) ;
+      bool setPar
+      ( const unsigned int   k     ,
+        const double         value ) ;
       /// set k-parameter
-      bool setParameter ( const unsigned int   k     ,
-                          const double         value )
+      bool setParameter 
+      ( const unsigned int   k     ,
+        const double         value )
       { return ( k < m_pars.size() ) && setPar ( k , value ) ; }
       /// set (l,m)-parameter
-      bool setPar       ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value ) ;
+      bool setPar
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value ) ;
       /// set (l,m)-parameter
-      bool setParameter ( const unsigned short l     ,
-                          const unsigned short m     ,
-                          const unsigned short n     ,
-                          const double         value )
+      bool setParameter 
+      ( const unsigned short l     ,
+        const unsigned short m     ,
+        const unsigned short n     ,
+        const double         value )
       { return setPar   ( l , m  , n , value ) ; }
       // ======================================================================
     public: // getters
       // ======================================================================
       /// get (l,m,n)-parameter
-      double  par       ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const 
+      double  par
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const 
       { return par ( index ( l , m , n ) ) ; }
       /// get (l,m,n)-parameter
-      double  parameter ( const unsigned short l ,
-                          const unsigned short m ,
-                          const unsigned short n ) const 
+      double  parameter 
+      ( const unsigned short l ,
+        const unsigned short m ,
+        const unsigned short n ) const 
       { return par (  l , m , n ) ; }
       /// get k-parameter
       double  par       ( const unsigned int k ) const
@@ -909,9 +957,10 @@ namespace Ostap
     public:  // convert (i,j,k) into single index 
       // ======================================================================
       /// convert (l,m,n)-index into single index k  
-      unsigned int index ( const unsigned short l , 
-                           const unsigned short m , 
-                           const unsigned short n ) const 
+      unsigned int index 
+      ( const unsigned short l , 
+        const unsigned short m , 
+        const unsigned short n ) const 
       {
         return 
           m > l    ?   index ( m , l , n )    :
@@ -1008,9 +1057,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral over x-dimension
        *  \f[ \int_{x_{low}}^{x_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\f]
@@ -1019,9 +1069,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const ;
+      double integrateX
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const ;
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param y     variable
@@ -1029,9 +1080,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const 
+      double integrateY 
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const 
       { return integrateX ( x , z , ylow  , yhigh ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
@@ -1040,9 +1092,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const ;
+      double integrateZ
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
       /** integral over x&y-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
@@ -1053,9 +1106,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const ;
+      double integrateXY 
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const ;
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}x\mathrm{d}z\f]
@@ -1065,9 +1119,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const ;      
+      double integrateXZ 
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const ;      
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
        *      \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\mathrm{d}z\f]
@@ -1077,9 +1132,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateYZ
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const 
       { return integrateXZ ( x , ylow , yhigh , zlow , zhigh ) ; }
       // ======================================================================      
     public: // special cases
@@ -1231,28 +1287,31 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Positive3D ( const unsigned short       Nx    =  1 ,
-                   const unsigned short       Ny    =  1 ,
-                   const unsigned short       Nz    =  1 ,
-                   const double               xmin  =  0 ,
-                   const double               xmax  =  1 ,
-                   const double               ymin  =  0 ,
-                   const double               ymax  =  1 ,
-                   const double               zmin  =  0 ,
-                   const double               zmax  =  1 ) ;
+      Positive3D 
+      ( const unsigned short       Nx    =  1 ,
+        const unsigned short       Ny    =  1 ,
+        const unsigned short       Nz    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               ymin  =  0 ,
+        const double               ymax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 ) ;
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double evaluate   
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return m_bernstein ( x , y , z ) ; }
       // ======================================================================
       /// get the value
-      double operator () ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double operator () 
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return evaluate  ( x , y , z ) ; }
       // ======================================================================
     public:
@@ -1313,9 +1372,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
     public: //  partial integrals 
       // ======================================================================
@@ -1326,9 +1386,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const 
+      double integrateX
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const 
       { return m_bernstein.integrateX ( y ,  z , xlow , xhigh ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
@@ -1337,9 +1398,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const 
+      double integrateY 
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateY ( x ,  z , ylow , yhigh ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
@@ -1348,9 +1410,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const 
+      double integrateZ
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateZ ( x ,  y , zlow , zhigh ) ; }
       // ======================================================================
       /** integral over x&y-dimensions
@@ -1362,9 +1425,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const 
+      double integrateXY 
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateXY ( z , xlow , xhigh , ylow , yhigh ) ; }
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
@@ -1375,9 +1439,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateXZ 
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateXZ ( y , xlow , xhigh , zlow , zhigh ) ; }
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
@@ -1388,9 +1453,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateYZ
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateYZ ( x , ylow , yhigh , zlow , zhigh ) ; }
       // ======================================================================      
     public: // Integrals: special cases
@@ -1406,24 +1472,27 @@ namespace Ostap
        *  @param y     variable
        *  @param z     variable
        */
-      double integrateX ( const double y , 
-                          const double z ) const 
+      double integrateX
+      ( const double y , 
+        const double z ) const 
       { return m_bernstein.integrateX ( y , z ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param x     variable
        *  @param z     variable
        */
-      double integrateY ( const double x , 
-                          const double z ) const 
+      double integrateY 
+      ( const double x , 
+        const double z ) const 
       { return m_bernstein.integrateY ( x , z ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
        *  @param y     variable
        */
-      double integrateZ ( const double x , 
-                          const double y ) const 
+      double integrateZ
+      ( const double x , 
+        const double y ) const 
       { return m_bernstein.integrateZ ( x , y ) ; }
       // ======================================================================
     public: // Integrals: special cases
@@ -1503,22 +1572,25 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Positive3DSym ( const unsigned short       N     =  1 ,
-                      const double               xmin  =  0 ,
-                      const double               xmax  =  1 );
+      Positive3DSym 
+      ( const unsigned short       N     =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 );
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double evaluate 
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return m_bernstein ( x , y , z ) ; }
       // ======================================================================
       /// get the value
-      double operator () ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double operator () 
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return evaluate  ( x , y , z ) ; }
       // ======================================================================
     public:
@@ -1579,9 +1651,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
     public: //  partial integrals 
       // ======================================================================
@@ -1592,9 +1665,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const 
+      double integrateX 
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const 
       { return m_bernstein.integrateX ( y ,  z , xlow , xhigh ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
@@ -1603,9 +1677,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const 
+      double integrateY
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateY ( x ,  z , ylow , yhigh ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
@@ -1614,9 +1689,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const 
+      double integrateZ
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateZ ( x ,  y , zlow , zhigh ) ; }
       // ======================================================================
       /** integral over x&y-dimensions
@@ -1628,9 +1704,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const 
+      double integrateXY 
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateXY ( z , xlow , xhigh , ylow , yhigh ) ; }
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
@@ -1641,9 +1718,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateXZ 
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateXZ ( y , xlow , xhigh , zlow , zhigh ) ; }
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
@@ -1654,9 +1732,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateYZ 
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateYZ ( x , ylow , yhigh , zlow , zhigh ) ; }
       // ======================================================================      
     public: // Integrals: special cases
@@ -1672,24 +1751,27 @@ namespace Ostap
        *  @param y     variable
        *  @param z     variable
        */
-      double integrateX ( const double y , 
-                          const double z ) const 
+      double integrateX 
+      ( const double y , 
+        const double z ) const 
       { return m_bernstein.integrateX ( y , z ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param x     variable
        *  @param z     variable
        */
-      double integrateY ( const double x , 
-                          const double z ) const 
+      double integrateY 
+      ( const double x , 
+        const double z ) const 
       { return m_bernstein.integrateY ( x , z ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
        *  @param y     variable
        */
-      double integrateZ ( const double x , 
-                          const double y ) const 
+      double integrateZ
+      ( const double x , 
+        const double y ) const 
       { return m_bernstein.integrateZ ( x , y ) ; }
       // ======================================================================
     public: // Integrals: special cases
@@ -1770,25 +1852,28 @@ namespace Ostap
     public:
       // ======================================================================
       /// constructor from the order
-      Positive3DMix ( const unsigned short       N     =  1 ,
-                      const unsigned short       Nz    =  1 ,
-                      const double               xmin  =  0 ,
-                      const double               xmax  =  1 ,
-                      const double               zmin  =  0 ,
-                      const double               zmax  =  1 );
+      Positive3DMix 
+      ( const unsigned short       N     =  1 ,
+        const unsigned short       Nz    =  1 ,
+        const double               xmin  =  0 ,
+        const double               xmax  =  1 ,
+        const double               zmin  =  0 ,
+        const double               zmax  =  1 );
       // ======================================================================
     public:
       // ======================================================================
       /// get the value
-      double evaluate    ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double evaluate  
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return m_bernstein ( x , y , z ) ; }
       // ======================================================================
       /// get the value
-      double operator () ( const double x , 
-                           const double y , 
-                           const double z ) const
+      double operator ()
+      ( const double x , 
+        const double y , 
+        const double z ) const
       { return evaluate  ( x , y , z ) ; }
       // ======================================================================
     public:
@@ -1849,9 +1934,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integral   ( const double xlow , const double xhigh ,
-                          const double ylow , const double yhigh ,
-                          const double zlow , const double zhigh ) const ;
+      double integral 
+      ( const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const ;
       // ======================================================================
     public: //  partial integrals 
       // ======================================================================
@@ -1862,9 +1948,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateX ( const double y    ,
-                          const double z    ,                          
-                          const double xlow , const double xhigh ) const 
+      double integrateX
+      ( const double y    ,
+        const double z    ,                          
+        const double xlow , const double xhigh ) const 
       { return m_bernstein.integrateX ( y ,  z , xlow , xhigh ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{low}}^{y_{high}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
@@ -1873,9 +1960,10 @@ namespace Ostap
        *  @param xlow  low  edge in x
        *  @param xhigh high edge in x
        */
-      double integrateY ( const double x    ,
-                          const double z    ,
-                          const double ylow , const double yhigh ) const 
+      double integrateY 
+      ( const double x    ,
+        const double z    ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateY ( x ,  z , ylow , yhigh ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{low}}^{z_{high}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
@@ -1884,9 +1972,10 @@ namespace Ostap
        *  @param zlow  low  edge in z
        *  @param zhigh high edge in z
        */
-      double integrateZ ( const double x    ,
-                          const double y    ,
-                          const double zlow , const double zhigh ) const 
+      double integrateZ
+      ( const double x    ,
+        const double y    ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateZ ( x ,  y , zlow , zhigh ) ; }
       // ======================================================================
       /** integral over x&y-dimensions
@@ -1898,9 +1987,10 @@ namespace Ostap
        *  @param ylow  low  edge in y
        *  @param yhigh high edge in y
        */
-      double integrateXY ( const double z    ,                          
-                           const double xlow , const double xhigh ,
-                           const double ylow , const double yhigh ) const 
+      double integrateXY 
+      ( const double z    ,                          
+        const double xlow , const double xhigh ,
+        const double ylow , const double yhigh ) const 
       { return m_bernstein.integrateXY ( z , xlow , xhigh , ylow , yhigh ) ; }
       /** integral over x&z-dimensions
        *  \f[ \int_{x_{low}}^{x_{high}}
@@ -1911,9 +2001,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateXZ ( const double y    ,                          
-                           const double xlow , const double xhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateXZ 
+      ( const double y    ,                          
+        const double xlow , const double xhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateXZ ( y , xlow , xhigh , zlow , zhigh ) ; }
       /** integral over y&z-dimensions
        *  \f[ \int_{y_{low}}^{y_{high}}
@@ -1924,9 +2015,10 @@ namespace Ostap
        *  @param zlow  low  edge in y
        *  @param zhigh high edge in y
        */
-      double integrateYZ ( const double x    ,                          
-                           const double ylow , const double yhigh ,
-                           const double zlow , const double zhigh ) const 
+      double integrateYZ
+      ( const double x    ,                          
+        const double ylow , const double yhigh ,
+        const double zlow , const double zhigh ) const 
       { return m_bernstein.integrateYZ ( x , ylow , yhigh , zlow , zhigh ) ; }
       // ======================================================================      
     public: // Integrals: special cases
@@ -1942,24 +2034,27 @@ namespace Ostap
        *  @param y     variable
        *  @param z     variable
        */
-      double integrateX ( const double y , 
-                          const double z ) const 
+      double integrateX 
+      ( const double y , 
+        const double z ) const 
       { return m_bernstein.integrateX ( y , z ) ; }
       /** integral over y-dimension
        *  \f[ \int_{y_{min}}^{y_{max}} \mathcal{B}(x,y,z) \mathrm{d}y\f]
        *  @param x     variable
        *  @param z     variable
        */
-      double integrateY ( const double x , 
-                          const double z ) const 
+      double integrateY
+      ( const double x , 
+        const double z ) const 
       { return m_bernstein.integrateY ( x , z ) ; }
       /** integral over z-dimension
        *  \f[ \int_{z_{min}}^{z_{max}} \mathcal{B}(x,y,z) \mathrm{d}z\f]
        *  @param x     variable
        *  @param y     variable
        */
-      double integrateZ ( const double x , 
-                          const double y ) const 
+      double integrateZ 
+      ( const double x , 
+        const double y ) const 
       { return m_bernstein.integrateZ ( x , y ) ; }
       // ======================================================================
     public: // Integrals: special cases

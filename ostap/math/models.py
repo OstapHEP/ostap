@@ -1311,7 +1311,8 @@ for model in ( Ostap.Math.Bernstein3D    ,
                Ostap.Math.Positive3DSym  ,
                Ostap.Math.Positive3DMix  ,
                Ostap.Math.LegendreSum3   ,
-               Ostap.Math.Histo3D        ) :
+               Ostap.Math.Histo3D        ,
+               Ostap.Math.Gauss3D        ) :
     
     model . tf3  =  tf3 
     model . tf   =  tf3 

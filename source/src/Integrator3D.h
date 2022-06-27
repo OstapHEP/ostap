@@ -1,6 +1,5 @@
-// ============================================================================
-#ifndef OSTAP_INTEGRATOR2D_H 
-#define OSTAP_INTEGRATOR2D_H 1
+#ifndef OSTAP_INTEGRATOR3D_H 
+#define OSTAP_INTEGRATOR3D_H 1
 // ============================================================================
 // Include  files
 // ============================================================================
@@ -25,14 +24,14 @@ namespace Ostap
     namespace GSL 
     {
       // ======================================================================
-      /** @class Integrator2D  Integrator2D.h 
-       *  Helper class to simplify operations with integration of 2D-functions 
+      /** @class Integrator3D  Integrator3D.h 
+       *  Helper class to simplify operations with integration of 3D-functions 
        *  @see https://www.gnu.org/software/gsl/doc/html/integration.html
        *  @author Vanya Belyaev Ivan.Belyaev@itep.ru
-       *  @date   2018-09-21
+       *  @date   2022-06-23
        */
       template <class FUNCTION>
-      class Integrator2D
+      class Integrator3D
       {
       public:
         // ====================================================================
@@ -40,21 +39,24 @@ namespace Ostap
         {
           integrand  fun     ;
           void*      fdata   ;
-          double     min [2] ;
-          double     max [2] ;
+          double     min [3] ;
+          double     max [3] ;
         } ;  
         // ====================================================================
         Fun make_function ( const FUNCTION* f                     , 
                             const double xmin , const double xmax , 
-                            const double ymin , const double ymax ) const 
+                            const double ymin , const double ymax , 
+                            const double zmin , const double zmax ) const 
         {
           Fun F ;
           F.fdata   = const_cast<FUNCTION*>( f ) ;
-          F.fun     = &adapter2d ;
+          F.fun     = &adapter3d ;
           F.min [0] = xmin ;
           F.min [1] = ymin ;
+          F.min [2] = zmin ;
           F.max [0] = xmax ;
           F.max [1] = ymax ;
+          F.max [2] = zmax ;
           return F ;
         } ;
         // ====================================================================
@@ -83,7 +85,7 @@ namespace Ostap
           double error  = -1 ;
           const int ierror = hcubature 
             ( 1 , fun -> fun   , fun->fdata , // f-dimension, function  & data 
-              2 , fun -> min   , fun->max   , // dimension and integration range 
+              3 , fun -> min   , fun->max   , // dimension and integration range 
               maxcalls         ,              // maximal number of  function calls 
               aprecision       ,              // absolute precision 
               rprecision       ,              // relative precision
@@ -107,7 +109,8 @@ namespace Ostap
           //
           const std::size_t key = std::hash_combine 
             ( tag  , fun->fdata  , 
-              fun->min[0] , fun->min[1] , fun->max[0] , fun->max[1] ,
+              fun->min[0] , fun->min[1] , fun->min[2] , 
+              fun->max[0] , fun->max[1] , fun->max[2] , 
               maxcalls    , aprecision  , rprecision  , 
               reason      , file        , line        ) ;
           // ==================================================================
@@ -138,7 +141,7 @@ namespace Ostap
       public:
         // ====================================================================
         /// the actual adapter for cubature 
-        static int adapter2d 
+        static int adapter3d 
         ( unsigned      ndim  , 
           const double* x     , 
           void*         fdata ,
@@ -146,12 +149,12 @@ namespace Ostap
           double*       fval  )   
         {
           if ( 1       != fdim  || 
-               2       != ndim  || 
+               3       != ndim  || 
                nullptr == x     || 
                nullptr == fdata || 
                nullptr == fval  ) { return 1 ; }
           const FUNCTION* f = (FUNCTION*) fdata  ; 
-          fval [ 0 ] = (*f) ( x [ 0 ] , x [ 1 ] ) ;
+          fval [ 0 ] = (*f) ( x [ 0 ] , x [ 1 ] , x [ 2 ] ) ;
           return 0 ;
         }
         // ====================================================================
@@ -166,88 +169,13 @@ namespace Ostap
       };  
       // ======================================================================
       template <class FUNCTION>
-      typename Integrator2D<FUNCTION>::CACHE 
-      Integrator2D<FUNCTION>::s_cache = Integrator2D<FUNCTION>::CACHE{} ;
+      typename Integrator3D<FUNCTION>::CACHE 
+      Integrator3D<FUNCTION>::s_cache = Integrator3D<FUNCTION>::CACHE{} ;
       // ======================================================================
       template <class FUNCTION>
-      const unsigned int Integrator2D<FUNCTION>::s_CACHESIZE = 50000 ;
+      const unsigned int Integrator3D<FUNCTION>::s_CACHESIZE = 75000 ;
       // ======================================================================
     } //                                  The end of namespace Ostap::Math::GSL 
-    // ========================================================================
-    /** @class IntegrateXY 
-     *  helper class to perform XY-integration of 3D-funtion
-     *  @author Vanya Belyaev
-     *  @date   2018-09-21
-     */
-    template <class FUNCTION3D> 
-    class IntegrateXY  
-    {
-    public:
-      // ======================================================================
-      IntegrateXY ( const FUNCTION3D* f3d , 
-                    const double      z   ) 
-        : m_f3d  ( f3d ) 
-        , m_z    ( z   ) 
-      {}
-      IntegrateXY () =delete ;
-      // ======================================================================
-      double operator() ( const double x , const double y ) const 
-      { return (*m_f3d) ( x , y ,  m_z ) ; }
-      // ======================================================================
-      const FUNCTION3D* m_f3d ;
-      double            m_z   ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class IntegrateXZ 
-     *  helper class to perform XZ-integration of 3D-funtion
-     *  @author Vanya Belyaev
-     *  @date   2018-09-21
-     */
-    template <class FUNCTION3D> 
-    class IntegrateXZ  
-    {
-    public:
-      // ======================================================================
-      IntegrateXZ ( const FUNCTION3D* f3d , 
-                    const double      y   ) 
-        : m_f3d  ( f3d ) 
-        , m_y    ( y   ) 
-      {}
-      IntegrateXZ () =delete ;
-      // ======================================================================
-      double operator() ( const double x , const double z ) const 
-      { return (*m_f3d) ( x , m_y ,  z ) ; }
-      // ======================================================================
-      const FUNCTION3D* m_f3d ;
-      double            m_y   ;
-      // ======================================================================
-    } ;
-    // ========================================================================
-    /** @class IntegrateYZ 
-     *  helper class to perform YZ-integration of 3D-funtion
-     *  @author Vanya Belyaev
-     *  @date   2018-09-21
-     */
-    template <class FUNCTION3D> 
-    class IntegrateYZ  
-    {
-    public:
-      // ======================================================================
-      IntegrateYZ ( const FUNCTION3D* f3d , 
-                    const double      x   ) 
-        : m_f3d  ( f3d ) 
-        , m_x    ( x   ) 
-      {}
-      IntegrateYZ () =delete ;
-      // ======================================================================
-      double operator() ( const double y , const double z ) const 
-      { return (*m_f3d) ( m_x , y ,  z ) ; }
-      // ======================================================================
-      const FUNCTION3D* m_f3d ;
-      double            m_x   ;
-      // ======================================================================
-    } ;
     // ========================================================================
   } //                                         The end of namespace Ostap::Math
   // ==========================================================================
@@ -255,5 +183,5 @@ namespace Ostap
 // ============================================================================
 //                                                                      The END 
 // ============================================================================
-#endif // OSTAP_INTEGRATOR2D_H
+#endif // OSTAP_INTEGRATOR3D_H
 // ============================================================================

@@ -797,8 +797,40 @@ _parallel_lines_ . __doc__ += '\n' + _GeomFun.parallel . __doc__
 if not hasattr ( Ostap.XYZLine , 'parallel' ) :
     Ostap.XYZLine.parallel = _parallel_lines_
 
-
 Ostap.Math.LorentzVector = Ostap.LorentzVector
+
+
+
+# ============================================================================
+## printout for the Euler Anlges object
+#  @see ROOT::Math::EulerAngles 
+def _ea_print_ ( ea ) :
+    """Printout for the Euler Anlges objetc
+    - see ROOT.Math.EulerAngles 
+    """
+    return "EulerAngles(phi=%+.5g,theta=%+.5g,psi=%+.5g)" % ( ea.Phi   () ,
+                                                              ea.Theta () ,
+                                                              ea.Psi   () )
+# ==============================================================================
+## printout for the Rotation3D  object
+#  @see ROOT::Math::Rotation3D 
+def _r3_print_ ( r3d ) :
+    """Printout for the Euler Anlges objetc
+    - see ROOT.Math.EulerAngles 
+    """
+    ea = ROOT.Math.EulerAngles ( r3d ) 
+    return "Rotation3D(phi=%+.5g,theta=%+.5g,psi=%+.5g)" % ( ea.Phi   () ,
+                                                             ea.Theta () ,
+                                                             ea.Psi   () )
+
+
+Ostap.Rotation3D  = ROOT.Math.Rotation3D
+Ostap.EulerAngles = ROOT.Math.EulerAngles
+
+Ostap.Rotation3D.__str__   = _r3_print_
+Ostap.Rotation3D.__repr__  = _r3_print_
+Ostap.EulerAngles.__str__  = _ea_print_
+Ostap.EulerAngles.__repr__ = _ea_print_
 
 # =============================================================================
 _decorated_classes_ = set( [
@@ -810,6 +842,8 @@ _decorated_classes_ = set( [
     Ostap.Vector3D               ,
     Ostap.XYZLine                ,
     Ostap.LorentzVector          ,
+    Ostap.Rotation3D             ,
+    Ostap.EulerAngles            ,    
     ] )
 
 _new_methods_ = (

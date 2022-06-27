@@ -1427,15 +1427,19 @@ namespace Ostap
     private: 
       // ======================================================================
       /// mux 
-      double m_muX    { 0.0 } ; // mux
+      double m_muX      { 0.0 } ; // mux
       /// muy 
-      double m_muY    { 0.0 } ; // muy 
+      double m_muY      { 0.0 } ; // muy 
       /// sigmax 
-      double m_sigmaX { 1.0 } ; // sigmax 
+      double m_sigmaX   { 1.0 } ; // sigmax 
       /// sigmay 
-      double m_sigmaY { 1.0 } ; // sigmay 
+      double m_sigmaY   { 1.0 } ; // sigmay 
       /// theta 
-      double m_theta  { 0.0 } ; // theta 
+      double m_theta    { 0.0 } ; // theta 
+      /// sin(theta) 
+      double m_sintheta { 0.0 } ; // sin(theta)
+      /// cos(theta) 
+      double m_costheta { 1.0 } ; // sin(theta)      
       // ======================================================================
     private:
       // ======================================================================

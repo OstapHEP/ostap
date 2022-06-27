@@ -7,6 +7,7 @@
 // Ostap
 // ============================================================================
 #include "Ostap/Bernstein3D.h"
+#include "Ostap/Models3D.h"
 // ============================================================================
 // ROOT
 // ============================================================================
@@ -279,6 +280,98 @@ namespace Ostap
       // ======================================================================
       /// the actual function
       mutable Ostap::Math::Positive3DMix m_positive ;           // the function
+      // ======================================================================
+    } ;
+    // ========================================================================
+    /** @class Gauss3D 
+     *  Simple 3D rotated Gaussian function 
+     *  @see Ostap::Math::Gauss3D
+     *  @date 2022-06-22
+     */
+    class Gauss3D: public RooAbsPdf
+    {
+    public :
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Gauss3D, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      ///
+      Gauss3D
+      ( const char* name      ,
+        const char* title     ,
+        RooAbsReal& x         ,
+        RooAbsReal& y         ,
+        RooAbsReal& z         ,
+        RooAbsReal& muX       , 
+        RooAbsReal& muY       , 
+        RooAbsReal& muZ       , 
+        RooAbsReal& sigmaX    , 
+        RooAbsReal& sigmaY    , 
+        RooAbsReal& sigmaZ    , 
+        RooAbsReal& phi       ,
+        RooAbsReal& theta     , 
+        RooAbsReal& psi       ) ;
+      /// copy
+      Gauss3D
+      ( const Gauss3D&      right     ,
+        const char*          name = 0  ) ;
+      /// destructor
+      virtual ~Gauss3D() ;
+      /// clone
+      Gauss3D* clone ( const char* name ) const override;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Gauss3D () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Gauss3D& function() const { return m_gauss3D ; }
+      /// access to underlying function
+      const Ostap::Math::Gauss3D& gauss3d () const { return m_gauss3D ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy m_x      ;
+      RooRealProxy m_y      ;
+      RooRealProxy m_z      ;
+      RooRealProxy m_muX    ;
+      RooRealProxy m_muY    ;
+      RooRealProxy m_muZ    ;
+      RooRealProxy m_sigmaX ;
+      RooRealProxy m_sigmaY ;
+      RooRealProxy m_sigmaZ ;
+      RooRealProxy m_phi    ;
+      RooRealProxy m_theta  ;
+      RooRealProxy m_psi    ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Gauss3D m_gauss3D ;           // the function
       // ======================================================================
     } ;
     // ========================================================================
