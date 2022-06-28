@@ -650,7 +650,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    if (6,26) <= root_info : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
+    if (6,27) <= root_info : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
     else                   : rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
@@ -691,7 +691,7 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
             
             mxr , mxv = r.max_cor    ( p )
 
-            if (6,26)<= root_info : 
+            if (6,27)<= root_info : 
                 gc = -1.0 
                 gc    = r.globalCorr ( p ) if 3 == cq else -1.00
                 if 0 <= gc :  cc = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100   , mxv )
