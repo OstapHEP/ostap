@@ -77,6 +77,7 @@ class PDF3 (PDF2,FUNC3) :
                 silent = False ,
                 refit  = False ,
                 timer  = False ,
+                draw   = False , 
                 args   = ()    , **kwargs ) :
         """
         Perform the actual fit (and draw it)
@@ -109,16 +110,26 @@ class PDF3 (PDF2,FUNC3) :
                 self    .info ('Set binning cache %s for variable %s in dataset' %  ( nb1 , zv.name )  )
                                 
         
-        result , f = PDF2.fitTo ( self    ,
-                                  dataset = dataset ,
-                                  draw    = False   , ## False here!
-                                  nbins   = 50      , ## fake  here!
-                                  ybins   = 20      , ## fake  here!
-                                  silent  = silent  ,
-                                  refit   = refit   ,
-                                  timer   = timer   ,
-                                  args    = args    , **kwargs )
-        
+        result , f2 = PDF2.fitTo ( self    ,
+                                   dataset = dataset ,
+                                   draw    = False   , ## False here!
+                                   nbins   = 50      , ## fake  here!
+                                   ybins   = 20      , ## fake  here!
+                                   silent  = silent  ,
+                                   refit   = refit   ,
+                                   timer   = timer   ,
+                                   args    = args    , **kwargs )
+
+        if   draw and draw in ( 1 , '1' , 'x' , 'X' , self.xvar.name ) :
+            f = self.draw1 ( daatset , silent = silent , args = args , **kwargs )
+            return result, f
+        elif draw and draw in ( 2 , '2' , 'y' , 'Y' , self.yvar.name ) :
+            f = self.draw2 ( daatset , silent = silent , args = args , **kwargs )
+            return result, f
+        elif draw and draw in ( 3 , '3' , 'z' , 'Z' , self.zvar.name ) :
+            f = self.draw3 ( daatset , silent = silent , args = args , **kwargs )
+            return result, f
+
         return result
     
     # =========================================================================
@@ -178,10 +189,10 @@ class PDF3 (PDF2,FUNC3) :
                 self.zvar.setRange ( in_range , in_range3[0] , in_range3[1] )
                 if dataset:
                     dataset.get_var(self.zvar.GetName()).setRange ( in_range, in_range3[0] , in_range3[1] )
-     #       in_range3  = range_name 
-
+#    in_range3  = range_name 
+                    
        
-      #  if in_range2 and in_range3: 
+       #  if in_range2 and in_range3: 
        #     in_range= in_range3 
        # elif in_range2:
        #     in_range=  in_range2 

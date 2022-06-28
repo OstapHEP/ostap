@@ -2099,8 +2099,8 @@ double Ostap::Math::carlson_RF_int
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION        ,          // absolute precision
+      s_RPRECISION        ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;  
@@ -2112,8 +2112,8 @@ double Ostap::Math::carlson_RF_int
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION        ,          // absolute precision
+      s_RPRECISION        ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2124,8 +2124,8 @@ double Ostap::Math::carlson_RF_int
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION        ,          // absolute precision
+      s_RPRECISION        ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2167,8 +2167,8 @@ double Ostap::Math::carlson_RJ_int
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;  
@@ -2180,8 +2180,8 @@ double Ostap::Math::carlson_RJ_int
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2192,8 +2192,8 @@ double Ostap::Math::carlson_RJ_int
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2236,8 +2236,8 @@ double Ostap::Math::carlson_RC_int
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;  
@@ -2249,8 +2249,8 @@ double Ostap::Math::carlson_RC_int
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2261,8 +2261,8 @@ double Ostap::Math::carlson_RC_int
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2302,8 +2302,8 @@ double Ostap::Math::carlson_RD_int
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;  
@@ -2315,8 +2315,8 @@ double Ostap::Math::carlson_RD_int
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2327,8 +2327,8 @@ double Ostap::Math::carlson_RD_int
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2369,8 +2369,8 @@ double Ostap::Math::carlson_RG_int
     ( &F     ,
       a2     ,                       // low limit 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;  
@@ -2382,8 +2382,8 @@ double Ostap::Math::carlson_RG_int
       0      ,  a1              ,    // integrtaion limits 
       std::vector<double>()     ,    // no internal singular points 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2394,8 +2394,8 @@ double Ostap::Math::carlson_RG_int
     ( &F     ,
       a1     , a2         ,          // integration limits 
       workspace ( s_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       s_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;

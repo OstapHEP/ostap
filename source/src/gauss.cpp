@@ -77,8 +77,8 @@ double Ostap::Math::details::gaussian_int_num
   const int ierror = gsl_integration_qag
     ( &F                 ,            // the function
       a     ,   b        ,            // low & high edges
-      s_PRECISION        ,            // absolute precision
-      s_PRECISION        ,            // relative precision
+      s_APRECISION       ,            // absolute precision
+      s_RPRECISION       ,            // relative precision
       ws.size()          ,            // size of workspace
       GSL_INTEG_GAUSS31  ,            // integration rule
       workspace ( ws )   ,            // workspace

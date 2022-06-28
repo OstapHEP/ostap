@@ -3,6 +3,8 @@
    1. re-enable pritout of the Global correlation for `RooFitResult` objects 
    1. add 2D Gaussian function and PDF 
    1. add 3D Gaussian function and PDF 
+   1. adjust integration precision for all numercial integration calls 
+ 
  
 ## Backward incompatible:  
  

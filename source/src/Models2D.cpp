@@ -113,8 +113,8 @@ namespace
         &F                   ,   // the function
         xlow   , xhigh       ,   // low & high edges
         workspace ( work )   ,   // workspace
-        s_PRECISION          ,   // absolute precision
-        s_PRECISION          ,   // relative precision
+        s_APRECISION         ,   // absolute precision
+        s_RPRECISION         ,   // relative precision
         work.size ()         ,   // maximum number of subintervals
         message              ,   // message 
         __FILE__  , __LINE__ ) ; // filename & line number 
@@ -560,7 +560,7 @@ double Ostap::Math::PS2DPol2::integral
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+    ( tag () , &F , 20000 , s_APRECISION , s_RPRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return result ;
 }
@@ -596,8 +596,8 @@ double Ostap::Math::PS2DPol2::integrateY
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -638,8 +638,8 @@ double Ostap::Math::PS2DPol2::integrateX
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -741,7 +741,7 @@ double Ostap::Math::PS2DPol2Sym::integral
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+    ( tag () , &F , 20000 , s_APRECISION , s_RPRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return  result ;
 }
@@ -778,8 +778,8 @@ double Ostap::Math::PS2DPol2Sym::integrateY
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -934,7 +934,7 @@ double Ostap::Math::PS2DPol3::integral
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+    ( tag () , &F , 20000 , s_APRECISION , s_RPRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return result ;
 }
@@ -969,8 +969,8 @@ double Ostap::Math::PS2DPol3::integrateY
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -1008,8 +1008,8 @@ double Ostap::Math::PS2DPol3::integrateX
       &F                        ,   // the function
       x_low   , x_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -1111,7 +1111,7 @@ double Ostap::Math::PS2DPol3Sym::integral
   double  result =  1 ;
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
-    ( tag () , &F , 20000 , s_PRECISION , s_PRECISION , s_message , __FILE__ , __LINE__ ) ;
+    ( tag () , &F , 20000 , s_APRECISION , s_RPRECISION , s_message , __FILE__ , __LINE__ ) ;
   // ==========================================================================
   return  result ;
 }
@@ -1146,8 +1146,8 @@ double Ostap::Math::PS2DPol3Sym::integrateY
       &F                        ,   // the function
       y_low   , y_high          ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      s_PRECISION               ,   // absolute precision
-      s_PRECISION               ,   // relative precision
+      s_APRECISION               ,   // absolute precision
+      s_RPRECISION               ,   // relative precision
       m_workspace.size()                    ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -1867,8 +1867,8 @@ double Ostap::Math::Gauss2D::integral
   double  error  = -1 ;
   std::tie ( ierror , result , error ) = s_cubature.cubature
     ( tag () , &F , 20000 , 
-      in_tail ? s_PRECISION_TAIL : s_PRECISION ,
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , 
+      in_tail ? s_APRECISION_TAIL : s_APRECISION ,
+      in_tail ? s_APRECISION_TAIL : s_RPRECISION , 
       s_message , __FILE__ , __LINE__ ) ;
   return  result ;
 }
@@ -1940,8 +1940,8 @@ double Ostap::Math::Gauss2D::integrateX
       &F                        ,   // the function
       xlow    , xhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       m_workspace.size()        ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 
@@ -2017,8 +2017,8 @@ double Ostap::Math::Gauss2D::integrateY
       &F                        ,   // the function
       ylow    , yhigh           ,   // low & high edges
       workspace ( m_workspace ) ,   // workspace
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       m_workspace.size()        ,   // maximum number of subintervals
       message                   ,   // message 
       __FILE__  , __LINE__      ) ; // filename & line number 

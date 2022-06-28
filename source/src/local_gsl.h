@@ -62,7 +62,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_APRECISION  = s_PRECISION ;
+  const double s_APRECISION  = 1.e-9 ;
   // ==========================================================================
   /** @var s_RPRECISION
    *  the default relative precision for various calculations,
@@ -70,7 +70,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_RPRECISION  = s_PRECISION ;
+  const double s_RPRECISION  = 1.e-8 ;
   // ==========================================================================
 
   // ==========================================================================
@@ -79,7 +79,7 @@ namespace
    *  @author Vanya BELYAEV Ivan.Belyaev@cern.ch
    *  @date 2010-05-23
    */
-  const double s_PRECISION_TAIL = 1.e-6 ;
+  const double s_PRECISION_TAIL = 1.e-7 ;
   // ===========================================================================
 
   // ==========================================================================

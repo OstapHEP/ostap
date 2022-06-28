@@ -112,8 +112,8 @@ double  Ostap::Math::Voigt::integral
     ( &F , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -450,8 +450,8 @@ double  Ostap::Math::PseudoVoigt::integral
     ( &F , 
       low , high          ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      in_tail ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       m_workspace.size () ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;

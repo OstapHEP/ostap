@@ -594,8 +594,8 @@ Ostap::Math::Integrator::integrate_
   std::tie ( ierror , value , error ) = s_cubature.cubature 
     ( &F          ,   // the function  
       100000      ,   // limits  
-      s_PRECISION ,   // absolute precision 
-      s_PRECISION ,   // relative precision 
+      s_APRECISION ,   // absolute precision 
+      s_RPRECISION ,   // relative precision 
       //
       s_message   ,   // message 
       __FILE__    ,   // the file name 

@@ -132,8 +132,8 @@ double Ostap::Math::DalitzIntegrator::integrate_s
       smin              ,   // lower integration edge  
       smax              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_PRECISION       ,   // absolute precision 
-      s_PRECISION       ,   // relative precision 
+      s_APRECISION       ,   // absolute precision 
+      s_RPRECISION       ,   // relative precision 
       -1                ,   // limit 
       s_MESSAGE1        ,   // reason of failure 
       __FILE__          ,   // the file 
@@ -210,8 +210,8 @@ double Ostap::Math::DalitzIntegrator::integrate_s1
       s1mn              ,   // lower integration edge  
       s1mx              ,   // upper integration edge
       workspace ( ws )  ,   // workspace 
-      s_PRECISION       ,   // absolute precision 
-      s_PRECISION       ,   // relative precision 
+      s_APRECISION       ,   // absolute precision 
+      s_RPRECISION       ,   // relative precision 
       -1                ,   // limit 
       s_MESSAGE1        ,   // reason of failure 
       __FILE__          ,   // the file 
@@ -314,8 +314,8 @@ double Ostap::Math::DalitzIntegrator::integrate_s1s2
   std::tie ( ierror , result , error ) = s_DI21.cubature
     ( &F          , 
       s_MAXCALLS1 , 
-      s_PRECISION , 
-      s_PRECISION , 
+      s_APRECISION , 
+      s_RPRECISION , 
       s_MESSAGE2  , 
       __FILE__    ,
       __LINE__    , 
@@ -404,8 +404,8 @@ double Ostap::Math::DalitzIntegrator::integrate_ss1
   std::tie ( ierror , result , error ) = s_DI22.cubature
     ( &F          , 
       s_MAXCALLS1 , 
-      s_PRECISION , 
-      s_PRECISION , 
+      s_APRECISION , 
+      s_RPRECISION , 
       s_MESSAGE2  , 
       __FILE__    , 
       __LINE__    , 

@@ -1244,6 +1244,9 @@ double  Ostap::Math::BW::integral
   static const Ostap::Math::GSL::Integrator1D<BW> s_integrator {} ;
   static char s_message[] = "Integral(BW)" ;
   //
+  const bool in_tail = high <= x_low || x_high <= low ;
+  //
+
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   =  0 ;
   double result   =  1 ;
@@ -1253,10 +1256,8 @@ double  Ostap::Math::BW::integral
       &F     , 
       low    , high       ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace      
-      s_PRECISION * 10    ,          // absolute precision
-      ( high   <= x_low  ) ? s_PRECISION_TAIL :
-      ( x_high <=   low  ) ? s_PRECISION_TAIL :
-      s_PRECISION * 10    ,          // relative precision
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // absolute precision
       m_workspace.size () ,          // size of workspace
       s_message           ,          // message  
       __FILE__ , __LINE__ ,          // file&line 
@@ -1291,11 +1292,11 @@ double  Ostap::Math::BW::integral () const
   std::tie ( ierror , result , error ) = s_integrator.gaqiu_integrate
     ( tag () , 
       &F     , 
-      x_high              ,          // low edge
+      x_high               ,          // low edge
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION_TAIL    ,          // relative precision
-      m_workspace.size () ,          // size of workspace
+      s_APRECISION_TAIL    ,          // absolute precision
+      s_RPRECISION_TAIL    ,          // relative precision
+      m_workspace.size ()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
   //
@@ -2847,8 +2848,8 @@ double Ostap::Math::BWPS::integral
       &F      , 
       xlow    , xhigh     ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2980,8 +2981,8 @@ double Ostap::Math::BW3L::integral
       &F      , 
       xlow    , xhigh     ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()  ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;

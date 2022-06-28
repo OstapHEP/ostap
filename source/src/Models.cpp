@@ -275,10 +275,10 @@ double Ostap::Math::GramCharlierA::integral
       &F      , 
       low     , high ,                                        // low & high edges
       workspace ( m_workspace ) ,                             // workspace
-      ( high   <= x_low  ) ? s_PRECISION_TAIL :
-      ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // absolute precision
-      ( high   <= x_low  ) ? s_PRECISION_TAIL :
-      ( x_high <=   low  ) ? s_PRECISION_TAIL : s_PRECISION , // relative precision
+      ( high   <= x_low  ) ? s_APRECISION_TAIL :
+      ( x_high <=   low  ) ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      ( high   <= x_low  ) ? s_RPRECISION_TAIL :
+      ( x_high <=   low  ) ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
       m_workspace.size()              ,                                   // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -456,8 +456,8 @@ double  Ostap::Math::PhaseSpacePol::integral
       &F     , 
       xlow   , xhigh      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -632,8 +632,8 @@ double Ostap::Math::PhaseSpaceLeftExpoPol::integral
       &F     , 
       xlow   , xhigh      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2072,8 +2072,8 @@ double Ostap::Math::Sigmoid::integral
       &F      , 
       low     , high ,               // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2467,8 +2467,8 @@ double Ostap::Math::Tsallis::integral
       &F      , 
       low     , high  ,              // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
@@ -2575,8 +2575,8 @@ double Ostap::Math::QGSM::integral
       &F      , 
       low     , high      ,          // low & high edges
       workspace ( m_workspace ) ,    // workspace
-      s_PRECISION         ,          // absolute precision
-      s_PRECISION         ,          // relative precision
+      s_APRECISION         ,          // absolute precision
+      s_RPRECISION         ,          // relative precision
       m_workspace.size()              ,          // size of workspace
       s_message           , 
       __FILE__ , __LINE__ ) ;
