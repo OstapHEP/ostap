@@ -650,8 +650,12 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     if 0 < nbadnll :
         rows.append ( ( 'Invalid FCN/NLL evaluations' , '' , '  %d' % nbadnll , '' ) )
 
-    if (6,27) <= root_info : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
-    else                   : rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
+
+    with_globcorr = not ( (6,24) <= root_info < (6,27) )
+
+
+    if with_globcorr : rows = [ ( '', 'Unit', 'Value' , 'Global/max correlation [%]') ] + rows
+    else             : rows = [ ( '', 'Unit', 'Value' , 'Max correlation [%]') ] + rows
 
     pars_all   = r.params ( float_only = False )
     pars_float = r.params ( float_only = True  )
@@ -686,25 +690,33 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
         else : n = '' 
 
 
-        cc = 'Not available' if root_info < ( 6 , 24 ) else ''
-        if 0 <= cq and not  ( 6 , 24 ) <= root_info < ( 6 , 25 ) and 1 < len ( pars_float ) :
-            
-            mxr , mxv = r.max_cor    ( p )
+        if 0 <= cq and 1 < len ( pars_float ) :
 
-            if (6,27)<= root_info : 
+            if with_globcorr :
+                
+                mxr , mxv = r.max_cor    ( p )
+                
                 gc = -1.0 
                 gc    = r.globalCorr ( p ) if 3 == cq else -1.00
                 if 0 <= gc :  cc = '% +5.1f/(% +5.1f,%s)' % ( gc*100 , mxr*100   , mxv )
                 else       :  cc = '% +5.1f : %-s'        % (          mxr * 100 , mxv )                
                 if 0.95 < abs ( mxr ) or 0.95 < gc : cc = attention ( cc )
-                
-            else : 
-                cc        = '% +5.1f : %-s' % ( mxr * 100 , mxv )                
-                if 0.95 < abs ( mxr ) : cc = attention ( cc )
-            
-            max_corr = True
 
-        row = p , n , s , cc
+            else :
+                
+                mxr , mxv = r.max_cor    ( p )
+                
+                cc = '% +5.1f : %-s'  % (          mxr * 100 , mxv )                
+                if 0.95 < abs ( mxr ) : cc = attention ( cc )
+
+                max_corr = True
+
+            row = p , n , s , cc
+            
+        else :
+            
+            row = p , n , s
+            
         frows.append ( row ) 
 
     ## more parameters
@@ -728,9 +740,6 @@ def _rfr_table_ ( r , title = '' , prefix = '' , more_vars = {} ) :
     frows.sort()
 
     all = rows + crows + frows + mrows  
-
-    if not max_corr :
-        all = [ row[:-1] for row in all ] 
 
     import ostap.logger.table as T
 
