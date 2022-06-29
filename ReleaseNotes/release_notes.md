@@ -1,4 +1,7 @@
+# v1.7.3.0
+
 ## New features: 
+
    1. add resolution model based on Generalised Gaussian v1 distribution
    1. re-enable pritout of the Global correlation for `RooFitResult` objects 
    1. add 2D Gaussian function and PDF 
