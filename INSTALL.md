@@ -19,10 +19,10 @@ After setting the enviroments clone and build ostap package:
     make install
     source <INSTALL_DIRECTORY>/thisostap.sh 
     
-On lxplus/7 you can do it with several LCG versions (95,96,97), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 97 and  x86_64-centos7-gcc8-opt:
+On lxplus/7 you can do it with several LCG versions (95,96,97), using the scripts/setup.sh. Check the location of the preffered LCG version. For instance for LCG 102rc1_LHCB_7 and  x86_64-centos7-gcc11-opt:
 <ul>
-  <li><a name="L24"> lb-set-platform x86_64-centos7-gcc8-opt</li>
-  <li><a name="L25">  source /cvmfs/sft.cern.ch/lcg/views/LCG_97/${CMTCONFIG}/setup.sh</li>
+  <li><a name="L24"> lb-set-platform x86_64-centos7-gcc11-opt</li>
+  <li><a name="L25">  source /cvmfs/sft.cern.ch/lcg/views/LCG_102rc1_LHCB_7/${CMTCONFIG}/setup.sh</li>
   <li><a name="L26">  ./scripts/setup.sh</li>
   <li><a name="L27">  source build/INSTALL/thisostap.sh</li>
 </ul>
