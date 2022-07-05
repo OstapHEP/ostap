@@ -6160,6 +6160,91 @@ namespace Ostap
       // ======================================================================
     };
     // ========================================================================
+    /** @class Rice
+     *  @see Ostap::Math::Rice
+     *  Rice distribution 
+     *  \f$ f(x; \nu , \varsigma) = 
+     *  \frac{\delta x}{\varsigma^2} \mathrm{e}^{-\frac{ \delta x^2+\nu^2}{2\varsigma^2} } 
+     *   I_0 (\frac{\delta x\nu}{\varsigma^2}) \f$, 
+     *   where  \f$ \delta x = x - \x_0\f$ and 
+     *    - \f$ x\ge x_0\f$  
+     *    - \f$ \nu \ge 0 \f$ 
+     *    - \f$ \varsigma \ge 0 \f$ 
+     *  @see https://en.wikipedia.org/wiki/Rice_distribution
+     */
+    class Rice : public RooAbsPdf 
+    {
+    public:
+      // ======================================================================
+      ClassDefOverride(Ostap::Models::Rice, 1) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      Rice ( const char*  name      , 
+             const char*  title     , 
+             RooAbsReal&  x         ,
+             RooAbsReal&  nu        ,
+             RooAbsReal&  varsigma  ,
+             RooAbsReal&  shift     ) ;
+      Rice ( const char*  name      , 
+             const char*  title     , 
+             RooAbsReal&  x         ,
+             RooAbsReal&  nu        ,
+             RooAbsReal&  varsigma  ) ;
+      /// copy constructor 
+      Rice ( const Rice& right , const char* name = nullptr ) ;
+      /// clone method
+      Rice* clone ( const char* name ) const override ;
+      // virtual destructor  
+      virtual ~Rice() ;
+      // ======================================================================
+    public: // some fake functionality
+      // ======================================================================
+      // fake default contructor, needed just for proper (de)serialization
+      Rice () {} ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      // the actual evaluation of function
+      Double_t evaluate() const override;
+      // ======================================================================
+    public:  // integrals
+      // ======================================================================
+      Int_t    getAnalyticalIntegral
+      ( RooArgSet&     allVars      ,
+        RooArgSet&     analVars     ,
+        const char* /* rangename */ ) const override;
+      Double_t analyticalIntegral
+      ( Int_t          code         ,
+        const char*    rangeName    ) const override;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// set all parameters
+      void setPars () const ; // set all parameters
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// access to underlying function
+      const Ostap::Math::Rice& function() const { return m_rice ; }
+      const Ostap::Math::Rice& rice    () const { return m_rice ; }
+      // ======================================================================
+    protected :
+      // ======================================================================
+      RooRealProxy   m_x         { } ;
+      RooRealProxy   m_nu        { } ;
+      RooRealProxy   m_varsigma  { } ;
+      RooRealProxy   m_shift     { } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// the actual function
+      mutable Ostap::Math::Rice m_rice ;          // the function
+      // ======================================================================
+    } ;
+
+
+    // ========================================================================
     /** @class Shape1D
      *  simple generic PDF
      */

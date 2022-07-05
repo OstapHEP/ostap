@@ -775,7 +775,17 @@ namespace Ostap
                 const double u1 , 
                 const double u2 ) ;
     
-    
+
+    // ========================================================================
+    /** modified Bessel function of the fist kind  
+     *  \f$ I_n(x) \f$ for \f$ x>0 \f$
+     * @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions:_I%CE%B1,_K%CE%B1 
+     * @see gsl_sf_bessel_I0
+     * @see gsl_sf_bessel_I1
+     * @see gsl_sf_bessel_I2
+     */
+    double bessel_In ( const int n , const double x ) ;
+
     // ========================================================================
     /** modified Bessel function of the second kind  
      *  \f$ K_n(x) \f$ for \f$ x>0 \f$
@@ -808,8 +818,16 @@ namespace Ostap
      *  @see gsl_sf_bessel_Knu_scaled_e 
      */
     double bessel_Knu_scaled ( const double  nu , const double x ) ;
+    // ========================================================================
     
     
+    
+    // ========================================================================
+    /** Laguerre polynomila of non-integher order 
+     *  \f$ L_{q}(x) = {}_1F_1(-1; 1; x ) \f$, where 
+     *  \f$ {}_1F_1(-1; 1; x ) \f$ is a confluent hypergeometrical function 
+     */
+    double laguerre_q ( const double q , const double x ) ;
     
     // ========================================================================
     // clenshaw summation algorithms 

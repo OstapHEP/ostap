@@ -7473,6 +7473,97 @@ Double_t Ostap::Models::Uniform::analyticalIntegral
 
 
 
+// ============================================================================
+// ============================================================================
+Ostap::Models::Rice::Rice
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  nu        ,
+  RooAbsReal&  varsigma  ,
+  RooAbsReal&  shift     ) 
+  : RooAbsPdf ( name , title ) 
+  , m_x        ( "x"        , "x-observable"       , this , x        )
+  , m_nu       ( "nu"       , "nu-parameter"       , this , nu       )
+  , m_varsigma ( "varsigma" , "varsigma-parameter" , this , varsigma )
+  , m_shift    ( "shift"    , "shift-parameter"    , this , shift    )
+  , m_rice () 
+{
+  setPars() ;
+}
+// ============================================================================
+Ostap::Models::Rice::Rice
+( const char*  name      , 
+  const char*  title     , 
+  RooAbsReal&  x         ,
+  RooAbsReal&  nu        ,
+  RooAbsReal&  varsigma  ) 
+  : Rice ( name , title , x , nu , varsigma , RooFit::RooConst ( 0.0 ) ) 
+{}
+// ============================================================================
+// copy constructor
+// ============================================================================
+Ostap::Models::Rice::Rice
+( const Ostap::Models::Rice& right ,
+  const char*                   name  ) 
+  : RooAbsPdf  ( right , name ) 
+    //
+  , m_x        ( "x"        , this , right.m_x        ) 
+  , m_nu       ( "nu"       , this , right.m_nu       ) 
+  , m_varsigma ( "varsigma" , this , right.m_varsigma ) 
+  , m_shift    ( "shift"    , this , right.m_shift    ) 
+  , m_rice     ( right.m_rice ) 
+{}  
+// ============================================================================
+// clone method
+// ============================================================================
+Ostap::Models::Rice* 
+Ostap::Models::Rice::clone ( const char* name ) const 
+{ return new Ostap::Models::Rice( *this , name ) ; }
+// ============================================================================
+Ostap::Models::Rice::~Rice(){}
+// ============================================================================
+void Ostap::Models::Rice::setPars () const 
+{
+  m_rice.setNu       ( m_nu       ) ;
+  m_rice.setVarsigma ( m_varsigma ) ;
+  m_rice.setShift    ( m_shift    ) ;
+}
+// ============================================================================
+// the actual evaluation of function 
+// ============================================================================
+Double_t Ostap::Models::Rice::evaluate() const 
+{
+  setPars() ;
+  return m_rice( m_x ) ;
+}
+// ============================================================================
+Int_t Ostap::Models::Rice::getAnalyticalIntegral
+( RooArgSet&  allVars       , 
+  RooArgSet&  analVars      ,
+  const char* /*rangeName*/ ) const
+{
+  if ( matchArgs ( allVars , analVars , m_x ) ) { return 1 ; }
+  return 0 ;
+}
+// ============================================================================
+Double_t Ostap::Models::Rice::analyticalIntegral
+( Int_t       code      , 
+  const char* rangeName ) const
+{
+  assert ( code == 1 ) ;
+  if ( 1 != code ){}
+  //
+  const double xmin =  m_x.min ( rangeName ) ;
+  const double xmax =  m_x.max ( rangeName ) ;
+  //
+  setPars() ;
+  return m_rice.integral ( xmin , xmax ) ;
+}
+// ============================================================================
+
+
+
 
 
 // ============================================================================
@@ -7556,6 +7647,7 @@ ClassImp(Ostap::Models::ConvexOnlySpline   )
 ClassImp(Ostap::Models::ConvexSpline       )
 ClassImp(Ostap::Models::CutOffGauss        )
 ClassImp(Ostap::Models::CutOffStudent      )
+ClassImp(Ostap::Models::Rice               )
 // ============================================================================
 //                                                                      The END 
 // ============================================================================

@@ -19,6 +19,7 @@
 - Argus_pdf          : ARGUS distribution 
 - TwoExpos_pdf       : Difference of two exponents
 - Gumbel_pdf         : Gumbel distributions
+- Rice_pdf           : Rice distribution
 - Weibull_pdf        : Weibull distributions
 - Tsallis_pdf        : Tsallis PDF 
 - QGSM_pdf           : QGSM PDF 
@@ -40,6 +41,7 @@ __all__     = (
     'Argus_pdf'          , ## ARGUS distribution 
     'TwoExpos_pdf'       , ## difference of two exponents
     'Gumbel_pdf'         , ## Gumbel distributions
+    'Rice_pdf'           , ## Rice distribution 
     'Weibull_pdf'        , ## Weibull distributions
     'Tsallis_pdf'        , ## Tsallis PDF 
     'QGSM_pdf'           , ## QGSM PDF 
@@ -1059,7 +1061,91 @@ class Gumbel_pdf(PDF) :
   
 models.append ( Gumbel_pdf ) 
 
+# =============================================================================
+## @class Rice_pdf
+#  Rice distribution
+#  @see Ostap::Math::Rice
+#  Rice distribution 
+#  \f$ f(x; \nu , \varsigma) = 
+#  \frac{\delta x}{\varsigma^2} \mathrm{e}^{-\frac{ \delta x^2+\nu^2}{2\varsigma^2} } 
+#   I_0 (\frac{\delta x\nu}{\varsigma^2}) \f$, 
+#   where  \f$ \delta x = x - \x_0\f$ and 
+#    - \f$ x\ge x_0\f$  
+#    - \f$ \nu \ge 0 \f$ 
+#    - \f$ \varsigma \ge 0 \f$ 
+#  @see https://en.wikipedia.org/wiki/Rice_distribution
+#  @author Vanya BELYAEV Ivan.Belyaev@itep.ru
+#  @see Ostap::Math::Rice
+#  @see Ostap::Models::Rice 
+class Rice_pdf(PDF) :
+    """Rice distribution
+    - see https://en.wikipedia.org/wiki/Rice_distribution
+    """
+    ## constructor
+    def __init__ ( self         ,   
+                   name         ,                               ## the name 
+                   xvar         ,                               ## the variable 
+                   nu       = 0 ,                               ## parameter nu 
+                   varsigma = 1 ,                               ## parameter varsigma
+                   shift    = ROOT.RooFit.RooConst ( 0.0 )  ) : ## shift parameter
+        #
+        PDF.__init__ ( self , name , xvar )
+        #
 
+        
+
+        self.__nu       = self.make_var ( nu        ,
+                                          'nu_%s'                  % name ,
+                                          '#nu_{Rice}(%s)'         % name , nu        , 0 , 0.0    , 1.e+6 )
+        self.__varsigma = self.make_var ( varsigma ,
+                                          'varsigma_%s'            % name ,
+                                          '#varsigma_{Rice}(%s)'   % name , varsigma  , 0 , 1.e-6  , 1.e+4 )
+        self.__shift   = self.make_var ( shift        ,
+                                         'shift_%s'                % name ,
+                                         'shift_{Rice}(%s)'        % name , shift     , 0 , -1.e+6 , 1.e+6 )
+        
+        self.pdf  = Ostap.Models.Rice (
+            self.roo_name ( 'rice_' )   ,
+            'Rice %s' % self.name  , 
+            self.x        ,
+            self.nu       ,
+            self.varsigma ,
+            self.shift    )
+        
+        ## save the configuration:
+        self.config = {
+            'name'     : self.name     ,
+            'xvar'     : self.xvar     ,
+            'nu'       : self.nu       ,            
+            'varsigma' : self.varsigma ,            
+            'shift'    : self.shift    ,            
+            }
+        
+    @property
+    def nu ( self ) :
+        """``nu''-parameter of Rice function"""
+        return self.__nu
+    @nu.setter
+    def nu ( self , value ) :
+        self.set_value ( self.__nu , value )
+
+    @property
+    def varsigma ( self ) :
+        """``varsigma''-parameter of Rice function"""
+        return self.__varsigma
+    @varsigma.setter
+    def varsigma ( self , value ) :
+        self.set_value ( self.__varsigma , value )
+
+    @property
+    def shift ( self ) :
+        """``shift''-parameter of Rice function"""
+        return self.__shift
+    @shift.setter
+    def shift ( self , value ) :
+        self.set_value ( self.__shift , value )
+
+models.append ( Rice_pdf ) 
 
 
 # =============================================================================

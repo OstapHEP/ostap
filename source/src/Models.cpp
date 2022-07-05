@@ -264,7 +264,7 @@ double Ostap::Math::GramCharlierA::integral
   // use GSL to evaluate the integral
   //
   static const Ostap::Math::GSL::Integrator1D<GramCharlierA> s_integrator ;
-  static const char s_message[] = "Ingegral(GramCharlierA)" ;
+  static const char s_message[] = "Integral(GramCharlierA)" ;
   //
   const auto F = s_integrator.make_function ( this ) ;
   int    ierror   = 0   ;
@@ -2776,6 +2776,159 @@ std::size_t Ostap::Math::CutOffStudent::tag () const
   return std::hash_combine ( s_name , m_right , m_x0 , m_nu , m_sigma ) ;
 }
 // ============================================================================
+
+
+
+
+// ============================================================================
+// contructor with all parameters
+// ============================================================================
+Ostap::Math::Rice::Rice
+( const double nu       , 
+  const double varsigma ,
+  const double shift    ) 
+  : m_nu         ( std::abs ( nu       ) ) 
+  , m_varsigma   ( std::abs ( varsigma ) ) 
+  , m_shift      ( shift ) 
+  , m_workspace ()
+{}
+// ============================================================================
+// update nu
+// ============================================================================
+bool Ostap::Math::Rice::setNu ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_nu , avalue ) ) { return false ; }
+  m_nu = avalue ;
+  return true ;
+}
+// ============================================================================
+// update varsigma
+// ============================================================================
+bool Ostap::Math::Rice::setVarsigma ( const double value )
+{
+  const double avalue = std::abs ( value ) ;
+  if ( s_equal ( m_varsigma , avalue ) ) { return false ; }
+  m_varsigma = avalue ;
+  return true ;
+}
+// ============================================================================
+// update shift 
+// ============================================================================
+bool Ostap::Math::Rice::setShift ( const double value )
+{
+  if ( s_equal ( m_shift , value ) ) { return false ; }
+  m_shift = value ;
+  return true ;
+}
+// ============================================================================
+// mean value 
+// ============================================================================
+double Ostap::Math::Rice::mean       () const 
+{
+  return m_shift + m_varsigma * s_SQRTPIHALF * 
+    Ostap::Math::laguerre_q ( 0.5 , -0.5 * std::pow ( m_nu / m_varsigma , 2 ) ) ;
+}
+// ============================================================================
+// variance 
+// ============================================================================
+double Ostap::Math::Rice::variance   () const 
+{
+  const double s2 = m_varsigma * m_varsigma ;
+  const double n2 = m_nu       * m_nu       ;
+  const double l  = Ostap::Math::laguerre_q ( 0.5 , - 0.5 * n2 / s2 ) ;
+  return 2 * s2 + n2 - 0.5 * M_PI * s2 * l * l ;  
+}
+// ============================================================================
+/// evaluate the function
+// ============================================================================
+double Ostap::Math::Rice::operator() ( const double x ) const 
+{
+  if ( x <= m_shift ) { return 0 ; }
+  const double s2 = m_varsigma * m_varsigma ;
+  const double n2 = m_nu       * m_nu       ;
+  const double dx = x - m_shift ;
+  return 
+    ( dx / s2 ) * std::exp ( -0.5 *  (dx * dx + n2 ) / s2 ) * 
+    Ostap::Math::bessel_In ( 0 , dx * m_nu / s2 ) ; 
+}
+
+// ============================================================================
+// get the integral
+// ============================================================================
+double Ostap::Math::Rice::integral   () const { return 1 ; }
+// ============================================================================
+// get the integral between low and high
+// ============================================================================
+double Ostap::Math::Rice::integral   
+( const double low  ,
+  const double high ) const
+{
+  // 
+  if ( s_equal ( low , high ) ) { return 0 ; }
+  else if ( high < low )        { return - integral ( high , low ) ; }
+  //
+  if ( high <= m_shift ) { return 0 ; }
+  //
+  const double xmin = std::max ( low , m_shift ) ;
+  //
+  const double x0 = m_nu + m_shift ;
+  //
+  // split at x0 
+  if ( xmin < x0 && x0 < high ) 
+  { return integral ( xmin , x0 ) + integral ( x0 , high ) ; }
+  //
+  // split at x1 
+  const double x1 = x0 - 3 * m_varsigma ;
+  if ( xmin < x1 && x1 < high ) 
+  { return integral ( xmin , x1 ) + integral ( x1 , high ) ; }
+  //
+  // split at x2 
+  const double x2 = x0 + 4 * m_varsigma ;
+  if ( xmin < x2 && x2 < high ) 
+  { return integral ( xmin , x2 ) + integral ( x2 , high ) ; }
+  //
+  // split at x3 
+  const double x3 = x0 + 10 * m_varsigma ;
+  if ( xmin < x3 && x3 < high ) 
+  { return integral ( xmin , x3 ) + integral ( x3 , high ) ; }
+  //
+  //
+  const bool in_tail = ( x0 + 10 * m_varsigma ) <= low ;
+  //
+  // use GSL to evaluate the integral
+  //
+  static const Ostap::Math::GSL::Integrator1D<Rice> s_integrator ;
+  static const char s_message[] = "Integral(Rice)" ;
+  //
+  const auto F = s_integrator.make_function ( this ) ;
+  int    ierror   = 0   ;
+  double result   = 1.0 ;
+  double error    = 1.0 ;
+  std::tie ( ierror , result , error ) = s_integrator.gaq_integrate
+    ( tag  () , 
+      &F      , 
+      low     , high ,                             // low & high edges
+      workspace ( m_workspace ) ,                  // workspace
+      in_tail ? s_APRECISION_TAIL : s_APRECISION , // absolute precision
+      in_tail ? s_RPRECISION_TAIL : s_RPRECISION , // relative precision
+      m_workspace.size()                         , // size of workspace
+      s_message           , 
+      __FILE__ , __LINE__ ) ;
+  //
+  return result ;
+}
+
+// ============================================================================
+// get the tag
+// ============================================================================
+std::size_t Ostap::Math::Rice::tag () const 
+{ 
+  static const std::string s_name = "Rice" ;
+  return std::hash_combine ( s_name , m_nu , m_varsigma , m_shift ) ;
+}
+  
+
 
 // ============================================================================
 //                                                                      The END

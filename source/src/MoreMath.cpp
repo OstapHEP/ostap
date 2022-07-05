@@ -2474,6 +2474,34 @@ Ostap::Math::barrier_g
 }
 // ============================================================================
 
+// ============================================================================
+/*  modified Bessel function of the fist kind  
+ *  \f$ I_n(x) \f$ for \f$ x>0 \f$
+ * @see https://en.wikipedia.org/wiki/Bessel_function#Modified_Bessel_functions:_I%CE%B1,_K%CE%B1 
+ * @see gsl_sf_bessel_I0
+ * @see gsl_sf_bessel_I1
+ * @see gsl_sf_bessel_I2
+ */
+// ============================================================================
+double Ostap::Math::bessel_In ( const int n , const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = 
+    ( 0 == n ) ? gsl_sf_bessel_I0_e ( x , &result ) :
+    ( 1 == n ) ? gsl_sf_bessel_I1_e ( x , &result ) :
+    gsl_sf_bessel_In_e ( n , x , &result )  ;
+  //
+  if ( ierror ) 
+  {
+    gsl_error ( 0 == n ? "Error from gsl_sf_bessel_I0_e" : 
+                1 == n ? "Error from gsl_sf_bessel_I1_e" : 
+                "Error from gsl_sf_bessel_In_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  //
+  return result.val ;  
+}
 
 // ============================================================================
 /*  modified Bessel function of the second kind 
@@ -2594,7 +2622,24 @@ double Ostap::Math::bessel_Knu_scaled
 // ============================================================================
 
 
-
+// ============================================================================
+/*  Laguerre polynomila of non-integher order 
+ *  \f$ L_{q}(x) = {}_1F_1(-q; 1; x ) \f$, where 
+ *  \f$ {}_1F_1(-1; 1; x ) \f$ is a confluent hypergeometrical function 
+ */
+// ============================================================================
+double Ostap::Math::laguerre_q ( const double q , const double x ) 
+{
+  gsl_sf_result result ;
+  const int ierror = gsl_sf_hyperg_1F1_e ( -q , 1.0 , x , &result ) ;
+  if ( ierror ) 
+  {
+    gsl_error ( "Error from gsl_sf_hyperg_1F1_e" , __FILE__ , __LINE__ , ierror ) ;
+    if      ( ierror == GSL_EDOM     ) // input domain error, e.g sqrt(-1)
+    { return std::numeric_limits<double>::quiet_NaN(); }
+  }
+  return result.val ;
+}
 
 // ============================================================================
 /* Helpful function \f$ H_a(a,u_1,u_2)\f$ for the relativistic Voigt profile

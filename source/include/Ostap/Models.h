@@ -1645,6 +1645,84 @@ namespace Ostap
       // ======================================================================
     } ;
     // ========================================================================
+    /** @class Rice
+     *  Rice distribution 
+     *  \f$ f(x; \nu , \varsigma) = 
+     *  \frac{\delta x}{\varsigma^2} \mathrm{e}^{-\frac{ \delta x^2+\nu^2}{2\varsigma^2} } 
+     *   I_0 (\frac{\delta x\nu}{\varsigma^2}) \f$, 
+     *   where  \f$ \delta x = x - \x_0\f$ and 
+     *    - \f$ x\ge x_0\f$  
+     *    - \f$ \nu \ge 0 \f$ 
+     *    - \f$ \varsigma \ge 0 \f$ 
+     *  @see https://en.wikipedia.org/wiki/Rice_distribution
+     */
+    class Rice
+    {
+    public: 
+      // ======================================================================
+      /// contructor with all parameters
+      Rice
+      ( const double nu       = 0 , 
+        const double varsigma = 1 ,
+        const double shift    = 0 ) ;
+      // ======================================================================
+    public: // 
+      // ======================================================================
+      /// evaluate the function
+      double operator() ( const double x ) const ;
+      // ======================================================================
+    public: // setters & getters 
+      // ======================================================================
+      /// parameter nu 
+      double nu       () const { return m_nu       ; }
+      /// parameter varsigma 
+      double varsigma () const { return m_varsigma ; }
+      // parameger shift 
+      double shift    () const { return m_shift    ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      bool setNu       ( const double value ) ;
+      bool setVarsigma ( const double value ) ;
+      bool setShift    ( const double value ) ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// get the integral 
+      double integral   () const ;
+      /// get the integral between low and high
+      double integral   ( const double low  ,
+                          const double high ) const ;
+      // ======================================================================
+    public:
+      // ======================================================================
+      /// mean value 
+      double mean       () const ;
+      /// variance 
+      double variance   () const ;
+      /// dispersion 
+      double dispersion () const { return variance () ; }
+      // ======================================================================
+    public:
+      // ======================================================================
+      // get the tag
+      std::size_t tag() const ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      double m_nu       { 0 } ;
+      double m_varsigma { 1 } ;
+      double m_shift    { 0 } ;
+      // ======================================================================
+    private:
+      // ======================================================================
+      /// workspace
+      Ostap::Math::WorkSpace m_workspace {} ; // workspace
+      // ======================================================================
+    } ;
+    
+
+    // ========================================================================
     /** @class Tsallis
      *
      *  Useful function to describe pT-spectra of particles
@@ -1939,10 +2017,11 @@ namespace Ostap
        *  @param nu    parameter nu 
        *  @param sigma parameter sigma  
        */
-      CutOffStudent ( const bool   right = true , 
-                      const double x0    = 0    , 
-                      const double n     = 1    ,
-                      const double sigma = 1    ) ;
+      CutOffStudent 
+      ( const bool   right = true , 
+        const double x0    = 0    , 
+        const double n     = 1    ,
+        const double sigma = 1    ) ;
       // ======================================================================
     public :
       // ======================================================================

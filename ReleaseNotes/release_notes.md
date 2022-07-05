@@ -1,4 +1,5 @@
 ## New features: 
+  1. Add Rice functioni and corresponding pdf 
 
 ## Backward incompatible:  
  
